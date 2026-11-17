@@ -687,6 +687,10 @@ public class ComposerVoicePresenter(
      */
     public fun doneAndSend() {
         if (mutable.value.mode == VoiceMode.Conversation) return
+        // The box's Send while listening (owner 2026-11-17): a second press before the words are written down is the
+        // same request, never a second send.
+        if (sendAfterWrite) return
+        if (mutable.value.phase != MicPhase.Starting && mutable.value.phase != MicPhase.Listening) return
         sendAfterWrite = true
         done()
     }

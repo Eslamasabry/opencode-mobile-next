@@ -159,6 +159,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerAddToTurn
 import io.github.eslamasabry.oc.ui.words.res.kitComposerField
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSend
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceTranscribing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
@@ -831,6 +833,7 @@ public fun BasicComposer(
             },
             onDismiss = { projectFilesOpen = false },
         )
+        // The hands-free voice conversation's pill (dictation draws inside the box, below).
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-attachments")) {
@@ -953,7 +956,13 @@ public fun BasicComposer(
         // button never changes under a finger.
         val voiceActive = voice?.isActive(voiceField) == true
         val inlineAtStart = remember(voiceActive) { typed }
-        val inlineMic = if (voiceActive) inlineAtStart else typed
+        // Owner 2026-11-17 ("Wtf is this ugly microphone flow?"): while words are dictated the box itself is the
+        // recorder: ✕, the live waveform and the time, ✓ in one row inside it, the words above. A tapped dictation's
+        // mic gives way to that row and Send keeps its place, meaning "write down and send"; a held mic stays under
+        // the finger where the hold began.
+        val recording = voice?.recording(voiceField)
+        val tapRecording = recording != null && !recording.held
+        val inlineMic = if (voiceActive) inlineAtStart && !tapRecording else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
         val stopsFirst = (busy && state.restarts) || SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
@@ -1088,7 +1097,13 @@ public fun BasicComposer(
                     modelPart()
                 },
                 fieldEnd = { if (stopShown) stopPart() },
+                recorder =
+                    if (recording != null && voice != null) ({ voice.Recorder(voiceField, Modifier.weight(1f)) })
+                    else null,
                 above = {
+                    // A dictation that ended with something to say (nothing heard, the microphone is off, it failed,
+                    // no speech model) says it here, inside the box, with its way forward.
+                    voice?.Note(voiceField, Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp))
                     phraseRow()
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(
@@ -1239,10 +1254,20 @@ public fun BasicComposer(
                         KitComposerPrimaryAction(
                             // Without voice the empty box shows a disabled Send, never an empty slot
                             // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).
-                            hasMessage = inlineMic || voice == null,
+                            hasMessage = inlineMic || voice == null || tapRecording,
                             mic = { voice?.Mic(voiceField, Modifier) },
                             send = {
-                                if (stopsFirst && typed && sendReady)
+                                if (tapRecording)
+                                    // While a tapped dictation runs, Send writes the words down and sends them, once.
+                                    KitComposerSend(
+                                        label = recording?.sendLabel ?: sendLabel,
+                                        onClick = { recording?.sendNow?.invoke() },
+                                        enabled =
+                                            if (sendReady && !state.sending && recording?.sendNow != null) KitEnabled.Enabled
+                                            else KitEnabled.Disabled(stringResource(Res.string.kitVoiceTranscribing)),
+                                        modifier = Modifier.testTag("chat-send-button"),
+                                    )
+                                else if (stopsFirst && typed && sendReady)
                                     KitStopAndSendPill(
                                         label = stringResource(Res.string.kitComposerStopAndSend),
                                         onClick = stopAndSend,

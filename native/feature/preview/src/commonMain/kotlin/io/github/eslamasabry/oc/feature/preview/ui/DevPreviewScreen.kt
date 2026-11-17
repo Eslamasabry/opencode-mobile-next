@@ -224,6 +224,9 @@ public fun DevPreviewScreen(
                                     multilineLines = 1..4,
                                 )
                                 voices.forEach { it.Panel(voiceField, Modifier.fillMaxWidth()) }
+                                // Dictation's own row (✕, the live waveform and time, ✓) and its note after it ends.
+                                voices.forEach { it.Recorder(voiceField, Modifier.fillMaxWidth()) }
+                                voices.forEach { it.Note(voiceField, Modifier.fillMaxWidth()) }
                                 voices.forEach { it.Mic(voiceField, Modifier) }
                                 KitActionBlock(
                                     primary =

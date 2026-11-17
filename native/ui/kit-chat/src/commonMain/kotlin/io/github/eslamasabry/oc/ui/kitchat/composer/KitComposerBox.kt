@@ -58,7 +58,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.animation.togetherWith
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -133,6 +136,12 @@ public fun KitComposerBox(
     hasLeading: Boolean = false,
     /** At the end of the words' own row when [stacked] (the slab's Stop while a reply runs): the row under keeps still. */
     fieldEnd: @Composable RowScope.() -> Unit = {},
+    /**
+     * While the person dictates (owner 2026-11-17, "the box itself becomes the recorder"): the recorder row
+     * ([KitVoiceRecorderRow]) takes the place of the plus and the chips, inside this box, with [trailing] (Send) kept at
+     * the end in its place. The words stay above it. Null: the box's own row.
+     */
+    recorder: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val tokens = LocalKitTokens.current
     val largeText = LocalDensity.current.fontScale >= 1.5f
@@ -234,6 +243,8 @@ public fun KitComposerBox(
                 // Send's disc sits a target's margin in), so the two read as one column of actions.
                 if (!stacked) trailing() else Row(Modifier.composerActionInset(tokens.minTarget), verticalAlignment = Alignment.CenterVertically) { fieldEnd() }
             }
+            // One row box (no stacking): the recorder takes its own line under the words, inside the box.
+            if (!stacked && recorder != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { recorder() }
             if (stacked) {
               androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
                 // B-438 (chips never cut): the plus and the round control keep their 48 dp; the approval control is the
@@ -258,7 +269,7 @@ public fun KitComposerBox(
                 // directly above it keep a Space.S1 gap (layout rule `tight`, LAYOUT-RULES.md; the guard's
                 // kit_composer_idle_empty found 0.0 dp between the field and Add).
                 Spacer(Modifier.height(Space.S1.dp))
-                if (ownLine)
+                if (ownLine && recorder == null)
                     FlowRow(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -270,16 +281,23 @@ public fun KitComposerBox(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    leading()
-                    if (ownLine) Spacer(Modifier.weight(1f))
-                    else
-                        // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
-                        // (the model) shows its name; the later ones (the approval mode) shorten first.
-                        KitComposerChipLine(
-                            Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
-                        ) {
-                            chips()
+                    // The mic grows into the recorder row from the end where it stood, and back (Full); Calm fades;
+                    // Off is instant. Send ([trailing]) never moves.
+                    KitRecorderSwap(recorder, Modifier.weight(1f)) { rec ->
+                        if (rec != null) rec()
+                        else {
+                            leading()
+                            if (ownLine) Spacer(Modifier.weight(1f))
+                            else
+                                // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
+                                // (the model) shows its name; the later ones (the approval mode) shorten first.
+                                KitComposerChipLine(
+                                    Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
+                                ) {
+                                    chips()
+                                }
                         }
+                    }
                     trailing()
                 }
                 }
@@ -680,3 +698,61 @@ private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> U
         }
     }
 }
+
+/**
+ * The box's own row ⇄ the recorder row. The recorder grows from the end (where the mic stood) as it fades in, on the
+ * SpatialFast spring, and shrinks back the same way (Full); Calm cross-fades; Off is instant. The leaving row ignores
+ * touches and is hidden from TalkBack while it goes.
+ */
+@Composable
+private fun KitRecorderSwap(
+    recorder: (@Composable RowScope.() -> Unit)?,
+    modifier: Modifier,
+    content: @Composable RowScope.(rec: (@Composable RowScope.() -> Unit)?) -> Unit,
+) {
+    // The leaving recorder keeps drawing what it last drew while it goes.
+    val last = androidx.compose.runtime.remember { arrayOfNulls<@Composable RowScope.() -> Unit>(1) }
+    if (recorder != null) last[0] = recorder
+    val state = KitMotion.state
+    if (state.reduced) {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) { content(recorder) }
+        return
+    }
+    val specs = KitMotion.specs
+    androidx.compose.animation.AnimatedContent(
+        targetState = recorder != null,
+        modifier = modifier,
+        contentAlignment = Alignment.CenterEnd,
+        transitionSpec = {
+            val fadeIn = androidx.compose.animation.fadeIn(specs.pace(io.github.eslamasabry.oc.ui.kit.motion.KitPace.Quick))
+            val fadeOut = androidx.compose.animation.fadeOut(specs.pace(io.github.eslamasabry.oc.ui.kit.motion.KitPace.Quick))
+            if (state.travels && targetState)
+                (fadeIn + androidx.compose.animation.expandHorizontally(specs.spatialFast(), expandFrom = Alignment.End))
+                    .togetherWith(fadeOut)
+            else if (state.travels)
+                fadeIn.togetherWith(fadeOut + androidx.compose.animation.shrinkHorizontally(specs.spatialFast(), shrinkTowards = Alignment.End))
+            else fadeIn.togetherWith(fadeOut)
+        },
+        label = "kit.composer.recorder",
+    ) { recording ->
+        Row(
+            Modifier.fillMaxWidth()
+                .recorderLeaving(transition.targetState == androidx.compose.animation.EnterExitState.PostExit),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            content(if (recording) recorder ?: last[0] else null)
+        }
+    }
+}
+
+/** The row on its way out is picture only: no touch lands on it and TalkBack does not read it (as the kit's swaps). */
+private fun Modifier.recorderLeaving(leaving: Boolean): Modifier =
+    if (!leaving) this
+    else
+        this.clearAndSetSemantics {}.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial).changes.forEach { it.consume() }
+                }
+            }
+        }

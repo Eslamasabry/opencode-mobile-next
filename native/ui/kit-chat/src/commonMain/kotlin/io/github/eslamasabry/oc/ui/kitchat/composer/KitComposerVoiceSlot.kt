@@ -69,10 +69,26 @@ public interface KitComposerVoice {
     @Composable public fun Actions(field: KitVoiceField, modifier: Modifier) {}
 
     /**
-     * Above the field while voice is active: what is heard, the countdown, the notes. Draws nothing
-     * when idle.
+     * Above the field: the hands-free voice conversation's own pill and controls, and the effects voice needs (words
+     * typed during a recording, leaving the app). Dictation draws nothing here: the box itself is the recorder
+     * ([recording], [Recorder], [Note]).
      */
     @Composable public fun Panel(field: KitVoiceField, modifier: Modifier)
+
+    /**
+     * While words are dictated into [field] (owner 2026-11-17: the message box itself becomes the recorder): how the
+     * box hosts the recorder. Null while idle and in a voice conversation; the box is then as always.
+     */
+    @Composable public fun recording(field: KitVoiceField): KitVoiceRecording? = null
+
+    /** The recorder row inside the box while [recording] is not null: ✕, the live waveform and time, ✓. */
+    @Composable public fun Recorder(field: KitVoiceField, modifier: Modifier) {}
+
+    /**
+     * The one note after dictation ends (nothing heard, the microphone is off, it failed, no speech model), inside the
+     * box above the words, with its way forward. Draws nothing when there is none.
+     */
+    @Composable public fun Note(field: KitVoiceField, modifier: Modifier) {}
 
     /**
      * Stops any dictation into [field] when this composer leaves the screen (a switch to another conversation, Files,
@@ -84,6 +100,23 @@ public interface KitComposerVoice {
     @Composable
     public fun Options(field: KitVoiceField, modifier: Modifier, onSelected: () -> Unit) {}
 }
+
+/**
+ * How the message box hosts a dictation (kit-chat `KitComposerVoice.recording`).
+ *
+ * [held]: the finger is on the mic (hold to talk). The mic stays exactly where the hold began, so the touch is never
+ * cut; the recorder row shows only what letting go does.
+ *
+ * [sendNow]: the box's own Send while a tapped dictation runs: stop, write the words into the box and send them once
+ * through the composer's one send. Null while it cannot (the words are already being written down).
+ */
+@androidx.compose.runtime.Immutable
+public class KitVoiceRecording(
+    public val held: Boolean,
+    public val sendNow: (() -> Unit)?,
+    /** What Send says while it means "write down and send" (its spoken label). */
+    public val sendLabel: String,
+)
 
 /**
  * A reply the person asked to hear (the message menu's "Read aloud"). [id] changes on every ask.

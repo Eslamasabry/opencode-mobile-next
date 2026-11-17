@@ -365,4 +365,44 @@ class ComposerVoicePresenterTest {
         rig.presenter.fieldChanged(rig.field.value)
         assertNull(rig.presenter.state.value.note)
     }
+
+    @Test
+    fun `B-MEDIA-063 the box's Send while listening writes the words down and sends them once, however often it is pressed`() =
+        runTest {
+            val rig = Rig(this)
+            runCurrent()
+            rig.presenter.tapMic()
+            runCurrent()
+            rig.listening("ship it")
+            runCurrent()
+            rig.presenter.doneAndSend()
+            rig.presenter.doneAndSend()
+            runCurrent()
+            assertEquals(1, rig.dictation.finishes, "a second press before the words are written is the same request")
+            rig.dictation.state.value = VoiceState.Writing("ship it")
+            runCurrent()
+            rig.presenter.doneAndSend()
+            runCurrent()
+            assertEquals(1, rig.dictation.finishes, "a press while writing asks nothing more")
+            rig.dictation.state.value = VoiceState.Done("ship it", VoiceEnd.Person)
+            runCurrent()
+            assertEquals(listOf("ship it"), rig.field.sent, "the words go once")
+            assertEquals(MicPhase.Idle, rig.presenter.state.value.phase)
+        }
+
+    @Test
+    fun `B-MEDIA-061 discard puts the box back as it was and sends nothing`() = runTest {
+        val rig = Rig(this)
+        rig.field.value = "Whats next"
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("and the tests")
+        runCurrent()
+        rig.presenter.cancel()
+        runCurrent()
+        assertEquals(listOf(false), rig.dictation.cancels)
+        assertEquals("Whats next", rig.field.value)
+        assertTrue(rig.field.sent.isEmpty(), "nothing is sent on discard")
+    }
 }
