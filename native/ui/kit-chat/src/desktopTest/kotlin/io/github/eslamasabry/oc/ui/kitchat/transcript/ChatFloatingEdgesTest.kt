@@ -79,6 +79,10 @@ class ChatFloatingEdgesTest {
         val picture: Color = Color.White,
         val motion: MotionLevel = MotionLevel.Off,
         val style: Style = Style.Solid,
+        /** A phone's real numbers: its density and its status and gesture bars, dp (the default is the harness's own). */
+        val density: Float = 1f,
+        val statusDp: Int = STATUS_DP,
+        val navDp: Int = NAV_DP,
     )
 
     private val rows = (0 until 40).map { i -> if (i == 0) "Row zero the newest line of the conversation" else "Row $i: the build finished and every check passed, then the notes were written." }
@@ -86,7 +90,7 @@ class ChatFloatingEdgesTest {
     private fun ComposeUiTest.show(scene: Scene) {
         setContent {
             CompositionLocalProvider(
-                LocalDensity provides Density(1f, scene.fontScale),
+                LocalDensity provides Density(scene.density, scene.fontScale),
                 LocalLayoutDirection provides if (scene.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
             ) {
                 KitTheme(
@@ -96,7 +100,7 @@ class ChatFloatingEdgesTest {
                     stillFrame = true,
                 ) {
                     CompositionLocalProvider(
-                        LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = if (scene.keyboard) 330.dp else NAV_DP.dp),
+                        LocalKitScreenInsets provides WindowInsets(top = scene.statusDp.dp, bottom = if (scene.keyboard) 330.dp else scene.navDp.dp),
                     ) {
                         Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                             val source = rememberKitFrostState()
@@ -171,7 +175,7 @@ class ChatFloatingEdgesTest {
         waitForIdle()
     }
 
-    private fun run(scene: Scene, body: ComposeUiTest.() -> Unit) = runDesktopComposeUiTest(W, H) { show(scene); body() }
+    private fun run(scene: Scene, body: ComposeUiTest.() -> Unit) = runDesktopComposeUiTest((W * scene.density).toInt(), (H * scene.density).toInt()) { show(scene); body() }
 
     @Test
     fun `B-CHAT-EDGE-001 the last line of a conversation rests fully above the box at rest`() =
@@ -352,6 +356,88 @@ class ChatFloatingEdgesTest {
             }
             val under = image[W / 2, H - NAV_DP - 3]
             assertTrue(under.red < 0.5f, "the picture shows between the box and the gesture area")
+        }
+
+
+    /** A phone's numbers (a 2.625 density, a tall status bar, a gesture bar), every style that floats, dark and light. */
+    private val phone = listOf(Style.Solid, Style.Glass, Style.Soft).flatMap { st -> listOf(true, false).map { d -> Scene(density = 2.625f, statusDp = 52, navDp = 24, style = st, dark = d, motion = MotionLevel.Full) } }
+
+    private fun ComposeUiTest.scrolled(): androidx.compose.ui.graphics.ImageBitmap {
+        onNodeWithTag("transcript-list").performScrollToIndex(12)
+        mainClock.advanceTimeBy(800)
+        waitForIdle()
+        return onNodeWithTag("scene").captureToImage()
+    }
+
+    private fun same(a: Color, b: Color, tol: Float = 0.02f) =
+        kotlin.math.abs(a.red - b.red) <= tol && kotlin.math.abs(a.green - b.green) <= tol && kotlin.math.abs(a.blue - b.blue) <= tol
+
+    @Test
+    fun `B-CHAT-EDGE-024 the status area shows the ground only, down to the capsule, with the phone's real insets`() {
+        for (scene in phone) run(scene.copy(white = false)) {
+            val image = scrolled().toPixelMap()
+            val capsule = bounds("kit-header-capsule")
+            val d = scene.density
+            val ground = image[2, 2]
+            // From the top of the window to the capsule's top edge, the whole width: one colour, the page's ground.
+            var y = 0
+            while (y < capsule.top.toInt() - 1) {
+                var x = 0
+                while (x < (W * d).toInt()) {
+                    assertTrue(same(image[x, y], ground), "words show above the capsule at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground; capsule top ${capsule.top}")
+                    x += 3
+                }
+                y += 1
+            }
+        }
+    }
+
+    @Test
+    fun `B-CHAT-EDGE-025 no transcript text shows below the box's top, outside its rounded corners, nor in the gesture area`() {
+        for (scene in phone) run(scene) {
+            val image = scrolled().toPixelMap()
+            val box = bounds("kit-composer-box")
+            val d = scene.density
+            val r = 24f * d
+            // The box's two lower corners: what lies outside the rounded outline is page ground, never a letter.
+            for (corner in listOf(true, false)) {
+                var y = (box.bottom - r).toInt()
+                while (y < box.bottom.toInt()) {
+                    var x = 0
+                    while (x < r.toInt()) {
+                        val px = if (corner) box.left.toInt() + x else box.right.toInt() - 1 - x
+                        val cx = if (corner) box.left + r else box.right - r
+                        val cy = box.bottom - r
+                        val out = Math.hypot((px - cx).toDouble(), (y - cy).toDouble()) > r + 2
+                        if (out && y > cy) assertTrue(lum(image[px, y]) < 0.35f, "a letter shows outside the box's corner at ($px,$y), ${scene.style} dark=${scene.dark}")
+                        x += 1
+                    }
+                    y += 1
+                }
+            }
+            // Below the box: the ground, one colour, to the bottom of the window (the gesture area).
+            val ground = image[2, (box.bottom + 2).toInt().coerceAtMost((H * d).toInt() - 1)]
+            var y = box.bottom.toInt() + 3
+            while (y < (H * d).toInt()) {
+                var x = 0
+                while (x < (W * d).toInt()) {
+                    assertTrue(same(image[x, y], ground, 0.04f), "the gesture area is not one ground at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground")
+                    x += 7
+                }
+                y += 3
+            }
+        }
+    }
+
+    @Test
+    fun `B-CHAT-EDGE-026 the gesture area is dark in Glass dark with the live background off`() =
+        run(Scene(density = 2.625f, statusDp = 52, navDp = 24, style = Style.Glass, dark = true, motion = MotionLevel.Full)) {
+            val image = scrolled().toPixelMap()
+            val d = 2.625f
+            for (y in listOf((H * d).toInt() - 3, (H * d).toInt() - (12 * d).toInt(), (H * d).toInt() - (23 * d).toInt())) for (x in listOf(3, (W * d / 2).toInt(), (W * d).toInt() - 4)) {
+                val c = image[x, y]
+                assertTrue(c.alpha > 0.99f && lum(c) < 0.1f, "the gesture area at ($x,$y) is $c, not the dark ground")
+            }
         }
 
     private companion object {
