@@ -33,7 +33,7 @@
     <string name="collectExit">Proses yang berakhir tidak semestinya (process_exit). Penghentian yang disebut Android sebagai user_requested hanya dihitung dengan Penggunaan dan kesehatan aplikasi dan tidak dikirim sebagai pengecualian</string>
     <string name="collectSteps">30 langkah terakhir Anda, dalam kata singkat seperti chat.send</string>
     <string name="collectCrashKeys">Versi aplikasi, cara pemasangannya, jenis server, apakah server ponsel ini berjalan, jumlah koneksi yang terbuka, versi server, serta jenis dan kode laporan</string>
-    <string name="collectNever">Perintah dan balasan Anda, nama file atau path, alamat web, nama host, alamat IP, teks pesan kesalahan, kunci atau token, ID iklan, atau ID Android</string>
+    <string name="collectNever">Perintah dan balasan Anda, audio suara yang direkam (ditranskripsikan di perangkat oleh model ucapan yang diunduh dari huggingface.co sehingga audio tidak pernah keluar dari ponsel, atau oleh pengenal di perangkat Android createOnDeviceSpeechRecognizer pada Android 12 dan yang lebih baru dengan preferensi offline, tempat ketentuan privasi layanan sistem tersebut berlaku), nama file atau path, alamat web, nama host, alamat IP, teks pesan kesalahan, kunci atau token, ID iklan, atau ID Android</string>
     <string name="collectReport">Apa yang Anda tulis tentang masalahnya, terakhir kali aplikasi tertutup tak terduga, versi aplikasi dan Android, rentang memori, dan jenis server, dengan kunci, alamat, dan path disamarkan. Tanpa log dan tanpa percakapan. Anda melihat semuanya dan memilih Kirim atau Batal.</string>
     <string name="privacyCrashSendTitle">Kirim data kerusakan otomatis</string>
     <string name="privacyCrashAskTitle">Tanya saya setelah kerusakan</string>

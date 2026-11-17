@@ -3,7 +3,7 @@
 <resources>
     <string name="voiceNativeDetect">Определить по речи</string>
     <string name="voiceNativeSizeMb">%1$d МБ</string>
-    <string name="voiceNativePhoneEngine">Голосовой ввод использует встроенное распознавание речи телефона, поэтому аудио остаётся на этом телефоне. Если его нет, значок микрофона не показывается. Эта версия пока не использует модели речи ниже.</string>
+    <string name="voiceNativePhoneEngine">Голосовой ввод запрашивает у Android службу распознавания речи на устройстве на этом телефоне (createOnDeviceSpeechRecognizer, Android 12 и новее) с предпочтением офлайн-распознавания; применяются собственные условия конфиденциальности этой системной службы. Если её нет, значок микрофона не показывается. Эта версия пока не использует модели речи ниже.</string>
     <string name="voiceNativeNaturalNeedsEngine">Нужен офлайн-движок речи, которого в этой версии пока нет.</string>
     <string name="voiceNativeSettingsAction">Настройки голоса</string>
     <string name="voiceNativeStoppedAfterPause">Остановлено после паузы. Ваш текст в поле ввода.</string>

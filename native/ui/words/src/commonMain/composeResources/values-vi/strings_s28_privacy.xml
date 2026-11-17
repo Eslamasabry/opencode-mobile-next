@@ -33,7 +33,7 @@
     <string name="collectExit">Các lần tiến trình kết thúc bất thường (process_exit). Những lần dừng mà Android gọi là user_requested chỉ được đếm khi bật Mức sử dụng và tình trạng ứng dụng, không gửi dưới dạng ngoại lệ</string>
     <string name="collectSteps">30 bước gần nhất của bạn, dưới dạng từ ngắn như chat.send</string>
     <string name="collectCrashKeys">Phiên bản ứng dụng, cách cài đặt, loại máy chủ, máy chủ của điện thoại này có đang chạy không, số kết nối đang mở, phiên bản máy chủ, và loại cũng như mã của một báo cáo</string>
-    <string name="collectNever">Lời nhắc và phản hồi, tên hoặc đường dẫn tệp, địa chỉ web, tên máy chủ, địa chỉ IP, nội dung thông báo lỗi, khóa hoặc mã thông báo, ID quảng cáo hay ID Android</string>
+    <string name="collectNever">Lời nhắc và phản hồi, âm thanh giọng nói đã ghi (được chuyển thành văn bản trên thiết bị bằng mô hình giọng nói tải từ huggingface.co nên âm thanh không bao giờ rời khỏi điện thoại, hoặc bằng bộ nhận dạng trên thiết bị của Android createOnDeviceSpeechRecognizer trên Android 12 trở lên với ưu tiên ngoại tuyến, nơi áp dụng điều khoản quyền riêng tư của dịch vụ hệ thống đó), tên hoặc đường dẫn tệp, địa chỉ web, tên máy chủ, địa chỉ IP, nội dung thông báo lỗi, khóa hoặc mã thông báo, ID quảng cáo hay ID Android</string>
     <string name="collectReport">Những gì bạn viết về sự cố, lần gần nhất ứng dụng đóng đột ngột, phiên bản ứng dụng và Android, khoảng bộ nhớ và loại máy chủ; khóa, địa chỉ và đường dẫn được che đi. Không có nhật ký và không có cuộc trò chuyện. Bạn xem được toàn bộ và chọn Gửi hoặc Hủy.</string>
     <string name="privacyCrashSendTitle">Tự động gửi dữ liệu sự cố</string>
     <string name="privacyCrashAskTitle">Hỏi tôi sau khi có sự cố</string>

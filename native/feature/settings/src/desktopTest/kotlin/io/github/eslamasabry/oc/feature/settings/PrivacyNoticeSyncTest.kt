@@ -460,7 +460,7 @@ class PrivacyNoticeSyncTest {
 
     @Test
     fun `B-SEC-213 privacy policy, What we collect and voice settings name both voice paths truthfully in every offered language`() {
-        val md = section(File(repo, "PRIVACY.md").readText(), "## Microphone and local voice input", "## Optional read-aloud")
+        val md = section(File(repo, "PRIVACY.md").readText(), "## Microphone and local voice input", "## Optional assistant on this phone")
         val mdFacts = listOf(
             "huggingface.co",
             "never leaves the phone",
@@ -478,7 +478,10 @@ class PrivacyNoticeSyncTest {
         assertTrue("SpeechRecognizer.createSpeechRecognizer(" !in wiring, "fallback voice never uses the default speech recognizer")
         val kdocPath = "native/engine/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/voice/dictation/OnDeviceSpeech.kt"
         val kdoc = File(repo, kdocPath).readText()
-        assertTrue("so recorded audio stays on the phone" !in kdoc, "OnDeviceSpeech KDoc must not overclaim for the system fallback")
+        assertTrue(
+            "audio never leaves the phone" !in kdoc && "Android guarantees" !in kdoc,
+            "OnDeviceSpeech KDoc must not overclaim for the system fallback",
+        )
         val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
         for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
             val locale = File(resources, if (tag == "en") "values" else "values-$tag")

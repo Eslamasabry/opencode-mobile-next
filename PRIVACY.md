@@ -363,11 +363,23 @@ context. Copy and Clear remain local actions.
 
 ## Microphone and local voice input
 
-Microphone access is requested only when you start voice input. Recorded audio
-is transcribed locally on the device with a downloaded speech model. The app
-does not upload the recording, and voice input never sends a prompt
-automatically. Transcribed text is sent only if you choose to submit it as part
-of a prompt.
+Microphone access is requested only when you start voice input. Voice input has
+two paths:
+
+- **Downloaded speech models:** when a speech model downloaded from
+  `huggingface.co` is used, recorded audio is transcribed on the device by that
+  model and never leaves the phone; the model download carries only the file's
+  address and your IP address, and Hugging Face's own terms apply to it.
+- **Android's on-device speech recognizer (fallback):** when a downloaded
+  speech model is not used, the app asks Android for its on-device speech
+  recognizer (`SpeechRecognizer.createOnDeviceSpeechRecognizer`, Android 12 and
+  later) and sets the offline preference
+  (`RecognizerIntent.EXTRA_PREFER_OFFLINE`), and never uses Android's default
+  speech recognizer; that system recognition service's own privacy terms apply.
+
+The app does not upload the recording, and voice input never sends a prompt on
+its own. Transcribed text is sent only if you choose to submit it as part of a
+prompt.
 
 ## Optional assistant on this phone
 

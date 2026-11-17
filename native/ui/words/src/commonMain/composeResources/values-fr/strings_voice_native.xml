@@ -3,7 +3,7 @@
 <resources>
     <string name="voiceNativeDetect">Détecter à partir de la voix</string>
     <string name="voiceNativeSizeMb">%1$d Mo</string>
-    <string name="voiceNativePhoneEngine">La saisie vocale utilise la reconnaissance vocale propre à votre téléphone, donc l'audio reste sur ce téléphone. Les téléphones qui n'en ont pas n'affichent pas le micro. Cette version n'utilise pas encore les modèles vocaux ci-dessous.</string>
+    <string name="voiceNativePhoneEngine">La saisie vocale demande à Android la reconnaissance vocale sur l'appareil de ce téléphone (createOnDeviceSpeechRecognizer, Android 12 et versions ultérieures) en privilégiant la reconnaissance hors ligne ; les conditions de confidentialité propres à ce service système s'appliquent. Les téléphones qui n'en ont pas n'affichent pas le micro. Cette version n'utilise pas encore les modèles vocaux ci-dessous.</string>
     <string name="voiceNativeNaturalNeedsEngine">Nécessite le moteur vocal hors ligne, que cette version n'inclut pas encore.</string>
     <string name="voiceNativeSettingsAction">Paramètres vocaux</string>
     <string name="voiceNativeStoppedAfterPause">Arrêté après une pause. Vos mots sont dans la zone de saisie.</string>

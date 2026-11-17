@@ -33,7 +33,7 @@
     <string name="collectExit">意外的进程退出（process_exit）。Android 标记为 user_requested 的停止仅在开启“使用情况和应用健康”时统计，不作为异常发送</string>
     <string name="collectSteps">你最后 30 步操作，以 chat.send 这样的简短词语表示</string>
     <string name="collectCrashKeys">应用版本、安装方式、服务器类型、手机上的服务器是否运行、打开的连接数、服务器版本，以及报告的类型和代码</string>
-    <string name="collectNever">你的提示词和回复、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>
+    <string name="collectNever">你的提示词和回复、录制的语音音频（由从 huggingface.co 下载的语音模型在设备上转写因而音频绝不会离开手机，或在 Android 12 及更高版本上由 Android 设备端识别器 createOnDeviceSpeechRecognizer 以离线优先方式转写并适用该系统服务的隐私条款）、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>
     <string name="collectReport">你所写的关于问题的描述、应用上次意外关闭的时间、应用和 Android 版本、内存范围以及服务器类型，其中的密钥、地址和路径已被抹去。不含日志和对话。你会看到全部内容，并选择“发送”或“取消”。</string>
     <string name="privacyCrashSendTitle">自动发送崩溃数据</string>
     <string name="privacyCrashAskTitle">崩溃后先询问我</string>
