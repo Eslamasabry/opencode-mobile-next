@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.core.net
 
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -394,6 +395,12 @@ public class NetClient(
     public fun close() {
         closed.store(true)
         http.close()
-        closeEngine()
+        // Every disconnect, switch, removal and probe ends here, often in a view model's coroutine with no handler:
+        // a fault while releasing the engine is logged (by its shape) and never takes the app down with it.
+        try {
+            closeEngine()
+        } catch (@Suppress("TooGenericExceptionCaught") e: RuntimeException) {
+            AppLog.tagged("net").e(e) { "releasing a closed client's engine failed" }
+        }
     }
 }
