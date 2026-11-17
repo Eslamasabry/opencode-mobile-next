@@ -802,6 +802,7 @@ jobs:
           { echo "code=$code"; echo "abis=$abis"; echo "mapping=$mapping"; } >> "$GITHUB_OUTPUT"
       - uses: ./.github/actions/native-setup
       - name: Write the build number into this runner's copy
+        working-directory: ${{ github.workspace }}
         env:
           CODE: ${{ steps.req.outputs.code }}
         run: sed -i "s/^versionCode=.*/versionCode=$CODE/" native/version.properties
@@ -817,7 +818,7 @@ jobs:
           echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
           echo "Firebase config installed"
       - name: Compile the unsigned switch release
-        working-directory: native
+        working-directory: ${{ github.workspace }}/native
         run: |
           set -euo pipefail
           export JAVA_HOME="$JAVA_HOME_21_X64"
@@ -831,6 +832,7 @@ jobs:
         run: rm -rf "$RUNNER_TEMP/oc-firebase"
       - name: Collect the unsigned APKs and print their sha256
         id: collect
+        working-directory: ${{ github.workspace }}
         env:
           ABIS: ${{ steps.req.outputs.abis }}
           MAPPING: ${{ steps.req.outputs.mapping }}
