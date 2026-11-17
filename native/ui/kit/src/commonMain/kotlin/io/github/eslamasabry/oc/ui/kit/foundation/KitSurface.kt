@@ -753,3 +753,17 @@ public fun Modifier.kitHairlineBorder(width: Dp, color: Color, shape: Shape): Mo
             translate(w / 2f, w / 2f) { drawOutline(outline, color, style = stroke) }
         }
     }
+
+
+/**
+ * The fill of a part that floats over a chat's transcript (the header capsule, the message box and what rides in the
+ * box), B-438: one surface step away from the content bubbles ([kitPromptBubbleFill]: dark `surface2`, light a grey
+ * tint of the ground) and never the same. Dark: one step lighter than the bubbles (`surface3`); light: the white
+ * `surface2`, one step lighter than the bubbles' grey. A style's own face (Glass's pane, Brutal's ink box, Paper's sheet)
+ * still resolves through [kitSurfaceLook]; this is the colour it is given to paint.
+ */
+public fun kitFloatingFill(colors: KitColors): Color = if (colors.dark) colors.surface3 else colors.surface2
+
+/** The surface level matching [kitFloatingFill], for the style's resolver. */
+public fun kitFloatingLevel(colors: KitColors): io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel =
+    if (colors.dark) io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface3 else io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2

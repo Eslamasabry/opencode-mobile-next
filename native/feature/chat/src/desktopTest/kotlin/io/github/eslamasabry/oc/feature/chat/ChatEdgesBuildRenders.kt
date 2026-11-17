@@ -236,10 +236,14 @@ class ChatEdgesBuildRenders {
         }
 
     @Composable
-    private fun Screen(scene: Scene, style: Style, facts: TurnFactsUi, still: Boolean, dark: Boolean = true) {
+    private fun Screen(scene: Scene, style: Style, facts: TurnFactsUi, still: Boolean, dark: Boolean = true, owner: Boolean = false) {
         CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
             KitTheme(
-                appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, style = style, motion = MotionLevel.Off),
+                appearance =
+                    // The owner's phone (inferred from his screenshots): the Midnight pack (a blue accent, near-black fills, a
+                    // light hairline) over a live background (the soft blue-grey gradient); the default is Solid on its ground.
+                    if (owner) KitAppearance(mode = AppearanceMode.Dark, style = style, motion = MotionLevel.Off, pack = io.github.eslamasabry.oc.ui.design.color.PackId.Midnight, liveBackground = true, liveStyle = "aurora")
+                    else KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, style = style, motion = MotionLevel.Off),
                 platform = DesktopKitPlatform(),
                 localeTag = "en",
                 stillFrame = still,
@@ -265,14 +269,14 @@ class ChatEdgesBuildRenders {
     @Test
     fun `chat edges build renders`() {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        for (dark in listOf(true, false)) {
+        for ((owner, dark) in listOf(false to true, false to false, true to true)) {
             runDesktopComposeUiTest(360 * 3, 780 * 3) {
                 setContent {
                     CompositionLocalProvider(
                         LocalDensity provides Density(3f),
                         io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets provides androidx.compose.foundation.layout.WindowInsets(top = 28.dp, bottom = 20.dp),
                     ) {
-                        Screen(Scene.Commands, Style.Solid, facts(Scene.Commands, NOW), still = true, dark = dark)
+                        Screen(Scene.Commands, Style.Solid, facts(Scene.Commands, NOW), still = true, dark = dark, owner = owner)
                     }
                 }
                 waitForIdle()
@@ -280,7 +284,7 @@ class ChatEdgesBuildRenders {
                 waitForIdle()
                 mainClock.advanceTimeBy(1_000)
                 waitForIdle()
-                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (dark) "dark" else "light"}-2.png"))
+                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (owner) "owner" else "default"}-${if (dark) "dark" else "light"}-3.png"))
             }
         }
     }

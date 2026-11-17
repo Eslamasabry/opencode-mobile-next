@@ -51,8 +51,8 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
             io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
                 role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
                 shape = io.github.eslamasabry.oc.ui.design.tokens.KitShapeId.Panel,
-                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
-                ownFill = colors.surface2,
+                level = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingLevel(colors),
+                ownFill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors),
                 radius = tokens.composerRadius.dp,
             )
         )

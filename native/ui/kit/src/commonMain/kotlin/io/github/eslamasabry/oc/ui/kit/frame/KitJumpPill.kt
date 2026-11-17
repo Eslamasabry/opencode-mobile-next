@@ -444,8 +444,8 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
             io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
                 role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
                 shape = KitShapeId.Circle,
-                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface3,
-                ownFill = colors.surface3,
+                level = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingLevel(colors),
+                ownFill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors),
                 faceAlpha = JUMP_BUTTON_FILL_ALPHA,
             )
         )

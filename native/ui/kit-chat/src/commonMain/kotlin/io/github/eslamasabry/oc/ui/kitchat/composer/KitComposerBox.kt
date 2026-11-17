@@ -161,8 +161,8 @@ public fun KitComposerBox(
                 KitSurfaceInput(
                     role = SurfaceRole.Floating,
                     shape = KitShapeId.Panel,
-                    level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
-                    ownFill = colors.surface2,
+                    level = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingLevel(colors),
+                    ownFill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors),
                     radius = radius,
                     faceAlpha = composerFaceAlpha(veil, style.style),
                 )
@@ -298,7 +298,9 @@ public fun KitComposerChip(
         when {
             active -> colors.accent.copy(alpha = if (LocalKitComposerSlab.current) .18f else .14f)
             LocalKitComposerSlab.current -> colors.text1.copy(alpha = SLAB_CHIP_TINT)
-            else -> colors.surface3
+            // Inside the lifted box (dark: one step lighter than the bubbles) the controls sit one step down, so they still
+            // separate from it; light keeps the grey chip on the white box.
+            else -> if (colors.dark) colors.surface2 else colors.surface3
         }
     // Brutal and Paper dress the chip as a control nested in the box's outline (audit 2026-11-14: the model chip stayed
     // a soft grey capsule beside Brutal's ink box): the style's edge and corner, no shadow of its own. An "on" chip keeps
