@@ -4,7 +4,7 @@
 # runs that failed. Run from native/. Scratch measuring tool of the pin-test-race branch; never merged.
 set -uo pipefail
 N=${N:-30}
-CLASSES=${CLASSES:-io.github.eslamasabry.oc.core.net.okhttp.TransportTrustTest}
+CLASSES=${CLASSES:-"io.github.eslamasabry.oc.core.net.okhttp.TransportTrustTest io.github.eslamasabry.oc.core.net.okhttp.LiveCallsTest"}
 out="$PWD/reports/measure"; mkdir -p "$out"
 summary="$out/summary.txt"; : > "$summary"
 
