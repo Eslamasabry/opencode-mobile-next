@@ -477,12 +477,12 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
         }
     }
     if (KitMotion.state.reduced) {
-        if (visible) Box(modifier) { face() }
+        if (visible) Box(modifier.semantics(mergeDescendants = true) {}) { face() }
         return
     }
     AnimatedVisibility(
         visible,
-        modifier,
+        modifier.semantics(mergeDescendants = true) {},
         enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(initialScale = 0.8f),
         exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 0.8f),
     ) { face() }

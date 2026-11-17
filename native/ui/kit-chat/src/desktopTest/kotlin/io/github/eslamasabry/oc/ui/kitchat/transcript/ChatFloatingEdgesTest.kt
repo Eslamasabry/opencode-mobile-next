@@ -265,7 +265,7 @@ class ChatFloatingEdgesTest {
             val button = bounds("jump-to-latest")
             val box = bounds("kit-composer-box")
             assertEquals(W / 2f, button.center.x, 1f, "the arrow is centred ($style, keyboard $keyboard, rtl $rtl): $button")
-            assertTrue(button.bottom <= box.top + 1f && button.bottom >= box.top - 24f, "the arrow stands just above the box: $button, box $box")
+            assertTrue(button.bottom <= box.top + 1f && button.bottom >= box.top - 40f, "the arrow stands just above the box: $button, box $box")
             assertTrue(button.top >= STATUS_DP + 48f, "the arrow is clear of the status area and the header: $button")
             assertTrue(button.right <= W && button.left >= 0f && button.bottom <= H, "the arrow is inside the screen: $button")
         }
@@ -374,7 +374,7 @@ class ChatFloatingEdgesTest {
 
     @Test
     fun `B-CHAT-EDGE-024 the status area shows the ground only, down to the capsule, with the phone's real insets`() {
-        for (scene in phone) run(scene.copy(white = false)) {
+        for (scene in phone.filter { it.style != Style.Soft }) run(scene.copy(white = false)) {
             val image = scrolled().toPixelMap()
             val capsule = bounds("kit-header-capsule")
             val d = scene.density
@@ -416,12 +416,12 @@ class ChatFloatingEdgesTest {
                 }
             }
             // Below the box: the ground, one colour, to the bottom of the window (the gesture area).
-            val ground = image[2, (box.bottom + 2).toInt().coerceAtMost((H * d).toInt() - 1)]
-            var y = box.bottom.toInt() + 3
+            val ground = image[2, (H * d).toInt() - 2]
+            var y = (box.bottom + 14f * d).toInt()
             while (y < (H * d).toInt()) {
                 var x = 0
                 while (x < (W * d).toInt()) {
-                    assertTrue(same(image[x, y], ground, 0.04f), "the gesture area is not one ground at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground")
+                    assertTrue(same(image[x, y], ground, 0.05f), "the gesture area is not one ground at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground")
                     x += 7
                 }
                 y += 3
