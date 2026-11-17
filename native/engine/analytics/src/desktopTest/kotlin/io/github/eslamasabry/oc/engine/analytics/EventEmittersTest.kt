@@ -47,6 +47,7 @@ class EventEmittersTest {
             ProductEvent.StarPromptDismissed to listOf("ProductEvent.StarPromptDismissed"),
             ProductEvent.JourneyMilestone to listOf("ProductEvent.JourneyMilestone", "telemetry.attachJourney("),
             ProductEvent.ShareIn to listOf("ProductEvent.ShareIn"),
+            ProductEvent.AppExit to listOf("ProductEvent.AppExit", "reportAnalyticsExit("),
             ProductEvent.StarterUsed to listOf("ProductEvent.StarterUsed", "AppTelemetry.current.starterUsed("),
         )
 
