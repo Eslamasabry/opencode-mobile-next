@@ -401,7 +401,7 @@ jobs:
   apk:
     name: apk
     needs: where
-    if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' && inputs.lane != 'candidate' }}
+    if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' && (inputs.lane != 'candidate' || inputs.apk_only) }}
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}

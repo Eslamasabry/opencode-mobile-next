@@ -73,9 +73,9 @@ they can never be delivered.
    `:quality:test` fails until the newest release note is linked there.
 2. Prove the commit. A release needs two things for the exact commit on master, and both the dry run and `--go` refuse
    without them (the dry run still builds, so the APK exists to test):
-   - a **passing Native CI run** of that commit: dispatch Native CI on master (fast or full lane, "android_unit" left
-     ticked, it is on by default). The script reads the `ci-verdict` file the run's summary job wrote (summary.py's
-     verdict, not the job colour) of the newest such run; a newer red run is not rescued by an older green one.
+   - a **passing Native CI run** of that commit: dispatch Native CI on master with `lane=candidate`. This includes pictures, whole quality/security,
+     Android units/host tests, build-logic tests and release-tool self-tests. Fast/full/custom runs cannot qualify. The script reads the `ci-verdict` file the run's summary job wrote (summary.py's
+     verdict, not the job colour) of the newest such run; a newer red or incomplete candidate is not rescued by an older green one. A missing, unknown or wrong-commit verdict also refuses release.
      `gh` must be signed in as the person releasing.
    - a **passing device smoke result**: `OC_SMOKE_SERIAL=<adb serial> native/tool/qa/release_smoke.sh --new-apk <the
      switch arm64-v8a APK the dry run built>` on one phone or emulator that holds the previous release with a
