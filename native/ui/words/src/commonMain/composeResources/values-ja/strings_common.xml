@@ -650,7 +650,7 @@
     <string name="tourMakeItYoursTitle">自分好みにカスタマイズ</string>
     <string name="tourMakeItYoursOffer">自分好みにカスタマイズ：ライト・ダーク、カラー、スタイルを4ステップで設定できます</string>
     <string name="tourMakeItYoursColours">まずはライトまたはダーク、テーマ、アクセントを選びます。上のプレビューにすべての変更がすぐに反映されます。</string>
-    <string name="tourMakeItYoursStyle">カードとバーの質感を選びます。Solid、Glass、Soft、Brutal、Paper、Signalから選択できます。</string>
+    <string name="tourMakeItYoursStyle">カードとバーの質感を選びます。ソリッド、ガラス、ソフト、シャープ、ペーパー、シグナルから選択できます。</string>
     <string name="appearanceGroupBackground">背景</string>
     <string name="tourMakeItYoursBackground">画面の背景に動く演出を選ぶか、オフにできます。</string>
     <string name="tourMakeItYoursComfort">文字を大きくしたり、動きを抑えたり、返信生成中の発光エフェクトを選んだりできます。</string>

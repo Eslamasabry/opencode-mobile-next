@@ -6571,6 +6571,11 @@ exec gc supervisor run
     var message: String? = null
         private set
 
+    /** The technical text of a failed install, for the Details page only; never copy. */
+    @Volatile
+    var failureDetails: String? = null
+        private set
+
     /** Starts [install] on its own thread; [phase] says how it went. */
     @Synchronized
     fun installInBackground() {
@@ -6581,6 +6586,7 @@ exec gc supervisor run
         }
         phase = "installing"
         message = null
+        failureDetails = null
         Thread {
             try {
                 install { step -> message = step }
@@ -6588,8 +6594,9 @@ exec gc supervisor run
                 message = null
             } catch (error: Throwable) {
                 Log.e(TAG, "install failed", error)
+                failureDetails = InstallFailure.details(error)
                 phase = "failed"
-                message = error.message ?: error.javaClass.simpleName
+                message = InstallFailure.shown(error)
             }
         }
             .start()

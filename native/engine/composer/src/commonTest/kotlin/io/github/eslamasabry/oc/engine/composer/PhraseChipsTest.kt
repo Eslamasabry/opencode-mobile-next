@@ -192,6 +192,38 @@ class PhraseChipsTest {
     }
 
     @Test
+    fun `B-STATE-060 a corrupt blob is kept aside, never erased, when the next phrase is learned`() = runTest {
+        prefs.rawPut(PhraseChipStore.keyFor("alpha"), "{not json")
+        send("Run the tests", PhraseMoment.Idle, 2)
+        assertEquals("{not json", prefs.string(PhraseChipStore.asideKeyFor("alpha")))
+        assertEquals(listOf("Run the tests"), chips(PhraseMoment.Idle))
+        // A second damage keeps both texts.
+        prefs.rawPut(PhraseChipStore.keyFor("alpha"), "[broken")
+        send("Commit it", PhraseMoment.Idle, 2)
+        assertEquals("{not json\n[broken", prefs.string(PhraseChipStore.asideKeyFor("alpha")))
+    }
+
+    @Test
+    fun `B-STATE-060 an unreadable blob is told once however often it is read`() = runTest {
+        var told = 0
+        val watched = PhraseChipStore(prefs, "alpha", clock, redactor, unreadable = { told++ })
+        prefs.rawPut(PhraseChipStore.keyFor("alpha"), "{not json")
+        repeat(3) { watched.chipsFor(PhraseMoment.Idle) }
+        watched.record("Run the tests", PhraseMoment.Idle)
+        assertEquals(1, told)
+    }
+
+    @Test
+    fun `B-STATE-060 a readable blob tells nobody and keeps nothing aside`() = runTest {
+        var told = 0
+        val watched = PhraseChipStore(prefs, "alpha", clock, redactor, unreadable = { told++ })
+        watched.record("Run the tests", PhraseMoment.Idle)
+        watched.chipsFor(PhraseMoment.Idle)
+        assertEquals(0, told)
+        assertNull(prefs.string(PhraseChipStore.asideKeyFor("alpha")))
+    }
+
+    @Test
     fun `B-STATE-059 a Flutter blob reads unchanged and writes keep its shape`() = runTest {
         prefs.rawPut(
             PhraseChipStore.keyFor("alpha"),
