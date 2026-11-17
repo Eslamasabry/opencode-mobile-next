@@ -152,9 +152,14 @@ every fast and full lane run and every push run, and a failure there is FAIL. Un
 without them. Only the complete candidate lane counts for a release; fast/full/custom runs never qualify. Candidate ignores this opt-out and includes Android host tests as well. The summary job also writes `verdict.json` (artifact `ci-verdict`),
 which `scripts/native-release.sh` reads through `release_verdict.py`. The newest candidate decides; missing/unknown/wrong-commit verdict artifacts fail closed rather than rescuing an older pass; missing completeness/security evidence or a red candidate cannot fall back to an older pass. Candidate plan/test artifacts include the SHA, complete task inventory, executed test statuses, whole quality/security and picture counts, and passing self-test counts. `ci-verdict.sh` can validate these reports without relying on job colours.
 
-Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
-`known_failures.txt`, or is quarantined. `known_failures.txt` can only shrink (`KnownFailuresCeiling` in `test_gate.py`) and a
-line may name one test (`<module> :: <Class> > <test>`, exact). `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
+Noise (does not FAIL), fast and full lanes: an individual failing test from a test report that also fails in the base reports, is
+named in `known_failures.txt`, or is quarantined. In the CANDIDATE lane nothing else is absorbed: only a test named EXACTLY in
+`known_failures.txt` counts (never the base's reports, never quarantine, no class wildcard), and the verdict prints
+`known failures by reason: ...`. The list is frozen at the cut of a release: one line per test
+(`<module> :: <Class> > <test> | <reason>[: detail]`), the reason from a fixed set (`flutter-era-rule`, `unsorted-rule`,
+`visible-fault-next-update` with B-443, `reference-not-in-history`, `known-noise-before-ci-goldens`), and it can only shrink
+(`KnownFailuresCeiling` in `test_gate.py` against `known_failures_ceiling.txt`; a wildcard or a reason outside the set is refused).
+`tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
 
 ## Self-hosted runner (`oc-native`)
 

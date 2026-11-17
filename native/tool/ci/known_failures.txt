@@ -1,31 +1,218 @@
-# Known-noise failures: a failing test matching a line here does not make Native CI red (tool/ci/summary.py gates on
-# anything else). This list can only SHRINK: tool/ci/test_gate.py (KnownFailuresCeiling) fails when a line is added or
-# widened, so fix the test and delete its line, never add a line for a regression. A line is either
-#   <module> :: <fully.qualified.Class> > <test name> | <reason>   one test, compared exactly (the form any new line
-#                                                                  would have to take, and even then it is refused), or
-#   <fnmatch on "<module> :: <fully.qualified.Class>"> | <reason>  a whole class: only what is below, shrink-only.
-# The tests still run and are listed in the run summary. Generated from CI runs 42510361705 (fast) and the full lane.
-# ConversationDraftsTest, E06RequestCardsTest (their 2 + 2 failures were fixed by the draft-opening and file-ask changes:
-# both classes pass on the pinned line) and the two tools/strings lines (a gate module, never absorbed) are gone.
-# Flutter golden gates compare with frozen Flutter pictures that are not re-recordable; the runner differs from the PC.
-* :: *.rb.*GateTest | Flutter golden gate (FlutterGoldenGate): reference is a frozen Flutter picture
-engine/runtime :: io.github.eslamasabry.oc.engine.runtime.install.VerbatimScriptsTest | known noise before CI goldens (1 failing)
-feature/background :: io.github.eslamasabry.oc.feature.background.BackgroundScreenUiTest | known noise before CI goldens (2 failing)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ServerSwitcherSheetTest | known noise before CI goldens (2 failing)
-feature/devservices :: io.github.eslamasabry.oc.feature.devservices.DevServicesScreenTest | known noise before CI goldens (2 failing)
-feature/devservices :: io.github.eslamasabry.oc.feature.devservices.rb.o47.DevServicesPageTest | known noise before CI goldens (2 failing)
-feature/files :: io.github.eslamasabry.oc.feature.files.FolderPolishTest | known noise before CI goldens (1 failing)
-feature/phone :: io.github.eslamasabry.oc.feature.phone.PhoneScreensTest | known noise before CI goldens (2 failing)
-feature/phonesetup :: io.github.eslamasabry.oc.feature.phonesetup.PhoneSetupScreenTest | known noise before CI goldens (2 failing)
-feature/servers :: io.github.eslamasabry.oc.feature.servers.PhoneOwnServerMarkTest | known noise before CI goldens (2 failing)
-feature/updates :: io.github.eslamasabry.oc.feature.updates.UpdatesScreenUiTest | known noise before CI goldens (2 failing)
-feature/usage :: io.github.eslamasabry.oc.feature.usage.LimitsScreenTest | known noise before CI goldens (2 failing)
-feature/usage :: io.github.eslamasabry.oc.feature.usage.UsageScreenTest | known noise before CI goldens (4 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.E20S09StateActionsTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.Kita1FrameInsetsTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.S7PolishKitTest | known noise before CI goldens (4 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest | known noise before CI goldens (4 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTaskSheetParityTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTextHaloParityTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest | known noise before CI goldens (2 failing)
+# Known failures of the candidate lane, FROZEN at the cut of 3.0.1. One line per failing test, compared EXACTLY:
+#   <module> :: <fully.qualified.Class> > <test name> | <reason>[: detail]
+# No wildcard line exists any more (tool/ci/test_gate.py KnownFailuresCeiling refuses one). <reason> is one word of this
+# fixed set, and the guard refuses any other:
+#   flutter-era-rule            bucket A: an old Flutter-era layout rule (columns inside chips and boxes), no visible fault
+#   unsorted-rule               bucket C: icon/label, gap and spacing-step rules waiting for a designer look; does NOT block
+#                               3.0.1, sorting resumes after the release (also: gate scenes that fail in their setup)
+#   visible-fault-next-update   bucket B: a visible fault not fixed in 3.0.1; each points at backlog B-443
+#   reference-not-in-history    the test needs the Glass reference commit (rb_gate.py GREF), which is not in this
+#                               repository's history; its count in the candidate run of the cut: 0
+#   known-noise-before-ci-goldens   a line that existed before this list was made exact
+# The list can only SHRINK: known_failures_ceiling.txt holds the names at the cut and the guard refuses a name that is not
+# in it; fix the test and delete its line from BOTH files. The candidate lane absorbs nothing else: not the base's reports,
+# not quarantine.txt. Built from candidate run 44159231276 (line tip 28d455272d). The message-box and chat-page bucket-B tests
+# that native/chat-edges-rules fixes by the cut are NOT listed: until they are fixed the candidate reads FAIL naming them.
+feature/agents :: io.github.eslamasabry.oc.feature.agents.rb.o49.AgentsGateTest > signed_in[desktop] | flutter-era-rule: start-edge
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > failed[desktop] | unsorted-rule: gap-step
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > loading[desktop] | unsorted-rule: gap-step
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > transcriptWide[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > transcript[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatStatesGateTest > modelError[desktop] | visible-fault-next-update: B-443: edge-tap
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatStatesGateTest > sendError[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o43.ChatApprovalGateTest > approvalAsk[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o43.ChatApprovalGateTest > approvalAuto[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o43.ChatApprovalGateTest > approvalConfirm[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o43.ChatApprovalGateTest > approvalEverything[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o43.ChatApprovalGateTest > approvalPlus[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > archived[desktop] | unsorted-rule: icon-label
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > empty[desktop] | flutter-era-rule: start-edge
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > error[desktop] | flutter-era-rule: start-edge
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > loadedWide[desktop] | unsorted-rule: icon-label
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > loaded[desktop] | unsorted-rule: icon-label
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > moveConfirm[desktop] | unsorted-rule: icon-label
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > emptyWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > empty[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > leftoverWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > leftover[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > mixedWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > mixed[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > noMatchWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > noMatch[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > projectSheetWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > projectSheet[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > runningWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > running[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
+feature/phone :: io.github.eslamasabry.oc.feature.phone.rb.o48.PhoneGateTest > running[desktop] | unsorted-rule: icon-label
+feature/servers :: io.github.eslamasabry.oc.feature.servers.rb.o45.ServersGateTest > saved_servers[desktop] | unsorted-rule: gap-step, icon-label
+feature/servers :: io.github.eslamasabry.oc.feature.servers.rb.o45.ServersGateTest > saved_servers_wide[desktop] | unsorted-rule: gap-step, icon-label
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_brutal_home[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_brutal_style[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_soft_home[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_soft_style[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_solid_look[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_solid_mode[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_solid_style[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.AppearanceGuideGateTest > settings_appearance_guided_solid_theme[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.LibraryGateTest > library_commands_failed[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.LibraryGateTest > library_references_loaded[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.LibraryGateTest > library_references_sheet[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.LibraryGateTest > library_skill_sheet_preview[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.LibraryGateTest > library_skills_loaded[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.LibraryGateTest > library_skills_loaded_1280x800[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.SettingsHubGateTest > settings_hub_loaded[desktop] | flutter-era-rule: title-edge
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.SettingsScreensGateTest > settings_about[desktop] | unsorted-rule: icon-label
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.SettingsScreensGateTest > settings_appearance_guided_solid_returning[desktop] | visible-fault-next-update: B-443: rest-cut
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.SettingsScreensGateTest > settings_hub_loaded_1280x800[desktop] | flutter-era-rule: content-edge, title-edge
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.SettingsScreensGateTest > settings_hub_report_problem[desktop] | flutter-era-rule: content-edge, title-edge
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.ThemePreviewGateTest > settings_theme_pack_preview_sheet_in_use[desktop] | unsorted-rule: gap-step
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.ThemePreviewGateTest > settings_theme_pack_preview_sheet_other[desktop] | unsorted-rule: gap-step
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.ThemePreviewGateTest > settings_theme_pack_preview_sheet_other_1280x800[desktop] | unsorted-rule: gap-step
+feature/settings :: io.github.eslamasabry.oc.feature.settings.rb.o44.ThemePreviewGateTest > settings_theme_pack_preview_sheet_unavailable[desktop] | unsorted-rule: gap-step
+feature/widget-panels :: io.github.eslamasabry.oc.feature.widgetpanels.rb.o52.WidgetPanelGateTest > widget_overlay_after_reply[desktop] | flutter-era-rule: start-edge
+feature/widget-panels :: io.github.eslamasabry.oc.feature.widgetpanels.rb.o52.WidgetPanelGateTest > widget_overlay_failed[desktop] | flutter-era-rule: start-edge
+feature/widget-panels :: io.github.eslamasabry.oc.feature.widgetpanels.rb.o52.WidgetPanelGateTest > widget_overlay_steer[desktop] | flutter-era-rule: start-edge
+feature/widget-panels :: io.github.eslamasabry.oc.feature.widgetpanels.rb.o52.WidgetPanelGateTest > widget_overlay_voice[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop] | known-noise-before-ci-goldens: N1 B-KIT-029 title width, existing known line
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o01.KitTabSwitcherGateTest > default_text2[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o01.KitTabSwitcherGateTest > focused[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o01.KitTabSwitcherGateTest > states[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o01.KitTappableGateTest > focused[desktop] | flutter-era-rule: wide-control
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o02.KitTokensGateTest > foundationWorkArabic[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o02.KitTokensGateTest > foundationWorkText2[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o02.KitTokensGateTest > foundationWorkWide[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o02.KitTokensGateTest > foundationWork[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o06.KitSectionLabelGateTest > kit_section_label_page[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o06.KitSectionLabelGateTest > kit_section_label_page_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o06.KitSectionLabelGateTest > kit_section_label_page_text2[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_default[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_default_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_disabled[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_focused[desktop] | visible-fault-next-update: B-443: row-height
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_hover[desktop] | visible-fault-next-update: B-443: row-height
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_menu_default[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_selected[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_server[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o08.KitRowGateTest > kit_row_unavailable[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitDetailsFoldGateTest > kit_details_fold_open_values_in_sheet[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitDetailsFoldGateTest > kit_details_fold_technical_details_sheet[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitSliverRowGroupGateTest > kit_sliver_row_group_default[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitSliverRowGroupGateTest > kit_sliver_row_group_default_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitSliverRowGroupGateTest > kit_sliver_row_group_default_text2[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitSwipeActionGateTest > kit_swipe_action_acted[desktop] | visible-fault-next-update: B-443: row-height
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitSwipeActionGateTest > kit_swipe_action_revealing[desktop] | visible-fault-next-update: B-443: row-height
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitSwipeActionGateTest > kit_swipe_action_revealing_1280x800[desktop] | visible-fault-next-update: B-443: row-height
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_attention[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_consequences[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_default[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_disabled[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_full_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_half[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_keyboard_open[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_loading[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_not_dismissible[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_with_icon[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_with_icon_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_with_icon_text2[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > kit_sheet_with_icon_text2_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_1280x800[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_1600x1000[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_360x800[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_800x1280[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_ar[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_ar_1280x800[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_text2[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_destructive_text2_1280x800[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_sheet_alternative[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_sheet_alternative_1280x800[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o12.KitConfirmSheetGateTest > kit_confirm_typed_ready[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o13.KitNavGateTest > kit_nav_rail_needs_you_1280x800[desktop] | flutter-era-rule: start-edge
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o13.KitScreenGateTest > kit_screen_search[desktop] | unsorted-rule: gap-step
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitBoardLaneGateTest > kit_board_lane_lane_empty[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitBoardLaneGateTest > kit_board_lane_loaded[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitBoardLaneGateTest > kit_board_lane_loaded_1280x800[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitBoardLaneGateTest > kit_board_lane_loaded_text2[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitBoardLaneGateTest > kit_board_lane_loaded_text2_1280x800[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitBoardLaneGateTest > kit_board_lane_needs_you[desktop] | visible-fault-next-update: B-443: rest-cut
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_auto_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_layers[desktop] | visible-fault-next-update: B-443: ellipsis-frame
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_rows[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_rows_text2[desktop] | unsorted-rule: icon-label
+ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_rows_text2_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerGateTest > model_above[desktop] | unsorted-rule: gap-step
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerGateTest > voice[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitDiffViewGateTest > loading_empty_error[desktop] | unsorted-rule: gap-step
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitMarkdownGateTest > pictures[desktop] | visible-fault-next-update: B-443: small-target, target
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitMarkdownGateTest > reply[desktop] | visible-fault-next-update: B-443: small-target, target
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitMarkdownGateTest > roles_paths_empty[desktop] | visible-fault-next-update: B-443: overlap, small-target
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > agent[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > default_sizes[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > done_states[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > failed_and_not_run[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > running_and_waiting[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitTurnGateTest > kit_turn_failed[desktop] | unsorted-rule: icon-label
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitTurnGateTest > kit_turn_interrupted[desktop] | unsorted-rule: icon-label
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o15.KitStepTimelineGateTest > expanded_sizes[desktop] | flutter-era-rule: wide-control
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o15.KitStepTimelineGateTest > scenes[desktop] | flutter-era-rule: wide-control
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o15.KitWorkLineGateTest > states[desktop] | visible-fault-next-update: B-443: tight
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > arabic_text2[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > changes_of_state[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > first_and_last[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > running_laps[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > still_looks[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > waiting_background_stalled[desktop] | flutter-era-rule: start-edge
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_answered[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_answered_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_answered_text2[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_answered_text2_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_default[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_default_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_default_text2[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_default_text2_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_disabled[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_disabled_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_disabled_text2[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_disabled_text2_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_note[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_note_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_note_text2[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_note_text2_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_working[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_working_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_working_text2[desktop] | unsorted-rule: off-scale
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o20.KitSteerBoxGateTest > kit_steer_box_working_text2_1280x800[desktop] | unsorted-rule: off-scale
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_disabled[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_disabled_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_error[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_error_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_loading[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_loading_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_working[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_working_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_working_text2[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageGalleryGateTest > kit_image_gallery_working_text2_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_error[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_error_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_loading[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_loading_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_working[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_working_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_working_text2[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitImageMarkupGateTest > kit_image_markup_working_text2_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_empty[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_all[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_tail[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_tail_ar[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_tail_ar_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_tail_text2[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_tail_text2_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitTerminalViewGateTest > kit_terminal_view_output_too_long[desktop] | flutter-era-rule: start-edge
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitViewerGateTest > kit_viewer_loading[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitViewerGateTest > kit_viewer_loading_1280x800[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitViewerGateTest > kit_viewer_truncated[desktop] | unsorted-rule: gap-step
+ui/kit-content :: io.github.eslamasabry.oc.ui.kit.content.rb.o18.KitViewerGateTest > kit_viewer_truncated_1280x800[desktop] | unsorted-rule: gap-step

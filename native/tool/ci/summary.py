@@ -14,7 +14,8 @@ Always real, never noise:
   * a selected module that produced no test results;
   * a failing test in a gate module (HARD_MODULES) or a drift / Konsist / detekt / lint class (HARD_CLASS), whatever
     the lists or the base say.
-Noise (does not fail): an individual failing test class that also fails in the base reports, matches
+Noise (does not fail): in the CANDIDATE lane only a test named exactly in the frozen tool/ci/known_failures.txt (no wildcard,
+no base reports, no quarantine). In the other lanes: an individual failing test class that also fails in the base reports, matches
 tool/ci/known_failures.txt (one test "<module> :: <class> > <test>", exact; or fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
 failures can be absorbed this way.
 
@@ -62,6 +63,21 @@ def patterns(name, quarantine=False):
 
 known_pats = patterns('known_failures.txt')
 quar_pats = patterns('quarantine.txt', quarantine=True)
+candidate_lane = lane == 'candidate'
+
+
+def known_reasons():
+    """name -> the reason word of its line in known_failures.txt (the frozen list's fixed set, test_gate.py)."""
+    out = {}
+    try:
+        for line in open(os.path.join(here, 'known_failures.txt')):
+            line = line.strip()
+            if line and not line.startswith('#'):
+                head, _, reason = line.partition('|')
+                out[head.strip()] = (reason.strip().split(':')[0].split() or ['(no reason)'])[0]
+    except OSError:
+        pass
+    return out
 
 
 HARD_MODULES = {'quality', 'tools/strings', 'ui/words', 'core/security', 'ui/gate'}
@@ -80,11 +96,15 @@ def is_known(f):
     full = f'{mod} :: {rest}'
     cls = rest.split(' > ')[0]
     for p in known_pats:
+        if candidate_lane and ' > ' not in p:
+            continue  # a candidate counts only tests named exactly: a class wildcard absorbs nothing
         if ' > ' in p:  # one test: "<module> :: <class> > <test name>", compared exactly (test names hold brackets and stars)
             if full == p:
                 return True
         elif fnmatch.fnmatchcase(f'{mod} :: {cls}', p):  # a whole class (only the frozen Flutter golden gates remain)
             return True
+    if candidate_lane:
+        return False  # nothing else is absorbed: not quarantine.txt, and (below) not the base's reports
     test = rest.split(' > ', 1)[1] if ' > ' in rest else ''
     for q in quar_pats:  # "<FQCN>" or "<FQCN> > <test name prefix>"
         qc, _, qt = q.partition(' > ')
@@ -93,7 +113,10 @@ def is_known(f):
     return False
 
 
-new = [f for f in failed if is_hard(f) or (f['id'] not in base_failed and not is_known(f))]
+if candidate_lane:  # the release candidate: only the frozen known list counts, never the base's own failures
+    new = [f for f in failed if is_hard(f) or not is_known(f)]
+else:
+    new = [f for f in failed if is_hard(f) or (f['id'] not in base_failed and not is_known(f))]
 known = [f for f in failed if f not in new]
 real = [f'{s["name"]}: {r}' for s in shards for r in s.get('real_failures', [])]
 broken = [s['name'] for s in shards if s.get('build_failed') and not s['failures'] and not s.get('real_failures')]
@@ -287,8 +310,17 @@ if new:
         print(f'- `{f["id"]}`: {f["message"]}')
     if len(new) > 40:
         print(f'- ... {len(new) - 40} more')
+elif failed and candidate_lane:
+    print(f'\n{len(failed)} failing test(s), every one named exactly in the frozen tool/ci/known_failures.txt.')
 elif failed:
     print(f'\n{len(failed)} failing test(s) are all known noise (also failing on the base, or on tool/ci/known_failures.txt).')
+if candidate_lane and known:
+    reasons_of = known_reasons()
+    by_reason = {}
+    for f in known:
+        word = reasons_of.get(f['id'], '(no reason)')
+        by_reason[word] = by_reason.get(word, 0) + 1
+    print('\nknown failures by reason: ' + ', '.join(f'{k} {v}' for k, v in sorted(by_reason.items())))
 if not red:
     print('\nPASS: nothing here needs anyone.')
 sys.exit(2 if integrity else (1 if red else 0))

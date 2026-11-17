@@ -79,7 +79,7 @@ class Gate(unittest.TestCase):
                "Execution failed for task ':ui:kit:testAndroidHostTest'.\n"
                "> There were failing tests. See the report at: file:///x\n")
         code, md = run_gate(log, ':ui:kit:verifyRoborazziAndroidHostTest',
-                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('known picture difference',))])
+                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop]',))])
         self.assertEqual(code, 0, md)
         self.assertIn('known noise', md)
 
