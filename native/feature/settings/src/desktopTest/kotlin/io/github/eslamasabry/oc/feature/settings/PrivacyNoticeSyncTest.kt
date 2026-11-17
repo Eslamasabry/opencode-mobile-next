@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import io.github.eslamasabry.oc.engine.analytics.DeviceClass
+import io.github.eslamasabry.oc.engine.analytics.NeverCollected
 import io.github.eslamasabry.oc.engine.analytics.health.BreadcrumbWords
 import io.github.eslamasabry.oc.engine.analytics.health.HealthWords
 import io.github.eslamasabry.oc.engine.analytics.health.PerfSchema
@@ -349,17 +351,51 @@ class PrivacyNoticeSyncTest {
 
     @Test
     fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
-        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"))
+        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "browser", 16, DeviceClass.Phone))
         for ((name, fields) in productSchema) {
             val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
                 source, 1000)!!
-            assertEquals(setOf("version", "build"), event.payload.data.keys - fields.keys, name)
+            assertEquals(setOf("version", "build", "os_major", "device_class"), event.payload.data.keys - fields.keys, name)
         }
         val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
         assertTrue("UsageTelemetryVendor" in wiring && "UmamiSender(" in wiring, "the notice covers the sender that the app actually builds")
         assertTrue("BuildConfig.VERSION_NAME" in wiring && "BuildConfig.VERSION_CODE" in wiring, "version facts come from this build")
         val firebase = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/FirebaseTelemetryVendor.kt").readText()
         assertTrue("setUserProperty(\"app_build\", null)" in firebase, "usage off clears the Google build property")
+    }
+
+    @Test
+    fun `B-SEC-217 guard - the telemetry wiring reads no device fact beyond the Android major and the class`() {
+        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
+        val device = wiring.substringAfter("val device = {").substringBefore("val configured")
+        val allowed = setOf("Build.VERSION.RELEASE", "smallestScreenWidthDp", "Locale.getDefault")
+        for (word in listOf(
+            "displayMetrics", "widthPixels", "heightPixels", "densityDpi", "Build.MODEL", "Build.MANUFACTURER", "Build.BRAND",
+            "Build.DEVICE", "Build.PRODUCT", "Build.HARDWARE", "Build.FINGERPRINT", "Build.SERIAL", "Build.ID", "SDK_INT",
+            "TimeZone", "ANDROID_ID", "Settings.Secure", "advertising", "telephony", "Display",
+        )) assertTrue(word !in device, "the Umami device may not read $word")
+        assertTrue(allowed.all { it in device }, "the device reads the Android major, the width class and the language")
+    }
+
+    @Test
+    fun `B-SEC-218 the notices name the three device fields for our server and no screen size for it`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        for (fact in listOf("`os_major`", "`device_class`", "`build`", "main version", "phone or tablet")) {
+            assertTrue(fact in umami, "PRIVACY.md Umami part must name $fact")
+        }
+        assertTrue(Regex("(?i)and\\s+screen\\s+resolution").find(umami) == null, "PRIVACY.md must not say Umami gets the resolution")
+        assertTrue("no screen size or resolution" in umami, "PRIVACY.md says the screen size is not sent to Umami")
+        val en = File(repo, "native/ui/words/src/commonMain/composeResources/values")
+        val policy = xmlString(File(en, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+        val detail = xmlString(File(en, "strings_s28_privacy.xml"), "nativeTelemetryUsageDetail")
+        val device = xmlString(File(en, "strings_s28_privacy.xml"), "collectDevice")
+        for ((name, text) in listOf("policy" to policy, "usage detail" to detail)) {
+            assertTrue("main version number" in text && "phone or a tablet" in text, "$name names the major and the class")
+            assertTrue("not the screen size" in text, "$name says the screen size is not sent to Umami")
+        }
+        assertTrue("screen size, Android version" !in device && "Google Analytics also receives the screen size" in device, "the page puts the screen size on Google's side only")
+        assertTrue(NeverCollected.entries.none { it.name == "ScreenSize" }, "the never-list cannot claim a screen size Google receives")
     }
 
     // ---- the tests ----

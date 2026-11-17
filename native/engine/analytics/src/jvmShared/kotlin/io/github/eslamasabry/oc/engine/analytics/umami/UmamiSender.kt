@@ -230,15 +230,14 @@ public class UmamiSender(
         if (old.format != 1) return
         // Parsing, schema checks and per-record JSON sizing happen entirely on the worker, outside the lock.
         val restored = ArrayList<StoredEvent>()
-        val userAgent = device().userAgent
         for ((index, item) in old.events.takeLast(MAX_EVENTS).withIndex()) {
             val p = item.event.payload
             val knownPage = umamiPages.values.firstOrNull { it.url == p.url } ?: continue
             val oldBuild = try {
                 UmamiBuild(p.data["version"] ?: continue, p.data["build"] ?: continue, p.tag)
             } catch (_: IllegalArgumentException) { continue }
-            val mapped = umamiEvent(p.name ?: "screen_view", p.data - setOf("version", "build"), knownPage,
-                UmamiSource(website, oldBuild, UmamiDevice(p.language, p.screen, userAgent)), item.atMs) ?: continue
+            val mapped = umamiEvent(p.name ?: "screen_view", p.data - (setOf("version", "build") + umamiDeviceKeys), knownPage,
+                UmamiSource(website, oldBuild, device().copy(language = p.language)), item.atMs) ?: continue
             // Restored ordinals are negative; new producer ordinals are nonnegative. Nothing is sent from this field.
             restored += StoredEvent(-(index.toLong() + 1), item.atMs, mapped)
         }
