@@ -9,7 +9,9 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
@@ -20,6 +22,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.kitEnterSends
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -78,7 +81,81 @@ class KitComposerFieldInputTest {
             runOnIdle {
                 assertTrue(shows > beforeRetap, "Retapping a focused composer reopens the keyboard")
             }
-            field.performImeAction()
-            runOnIdle { assertEquals(listOf("first second"), submitted) }
+            // Issue 148: the on-screen keyboard's action key is a new line, never a send.
+            field.assert(SemanticsMatcher.expectValue(SemanticsProperties.ImeAction, ImeAction.Default))
+            runOnIdle { assertEquals(emptyList(), submitted) }
         }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.messageBox(
+        text: TextFieldState,
+        submitted: MutableList<String>,
+    ) {
+        setContent {
+            KitTheme(
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                platform = FakeKitPlatform(),
+                localeTag = "en",
+            ) {
+                KitField(
+                    state = text,
+                    label = "Message",
+                    kind = KitFieldKind.Multiline,
+                    labelShown = false,
+                    framed = false,
+                    composer = true,
+                    multilineLines = 1..5,
+                    imeAction = ImeAction.Send,
+                    onSubmit = { submitted += text.text.toString() },
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `issue 148 a message box never offers a send key on the keyboard`() = runComposeUiTest {
+        val submitted = mutableListOf<String>()
+        messageBox(TextFieldState(), submitted)
+        val field = onNode(hasSetTextAction())
+        field.performTouchInput { click() }
+        field.performTextInput("one")
+        field.assert(SemanticsMatcher.expectValue(SemanticsProperties.ImeAction, ImeAction.Default))
+        runOnIdle { assertEquals(emptyList(), submitted) }
+    }
+
+    @Test
+    fun `issue 148 a real keyboard Enter sends and Shift Enter makes a new line`() = runComposeUiTest {
+        val submitted = mutableListOf<String>()
+        val text = TextFieldState()
+        messageBox(text, submitted)
+        val field = onNode(hasSetTextAction())
+        field.performTouchInput { click() }
+        field.performTextInput("one")
+        field.performKeyInput { pressKey(Key.Enter) }
+        runOnIdle { assertEquals(listOf("one"), submitted) }
+        field.performKeyInput {
+            keyDown(Key.ShiftLeft)
+            pressKey(Key.Enter)
+            keyUp(Key.ShiftLeft)
+        }
+        runOnIdle {
+            assertEquals(listOf("one"), submitted)
+            assertEquals("one\n", text.text.toString())
+        }
+        field.performKeyInput {
+            keyDown(Key.CtrlLeft)
+            pressKey(Key.Enter)
+            keyUp(Key.CtrlLeft)
+        }
+        runOnIdle { assertEquals(listOf("one", "one\n"), submitted) }
+    }
+
+    @Test
+    fun `issue 148 the Enter rule is decided by the key source, not the pointer`() {
+        assertTrue(kitEnterSends(fromSoftKeyboard = false, shift = false, ctrlOrMeta = false))
+        assertTrue(!kitEnterSends(fromSoftKeyboard = false, shift = true, ctrlOrMeta = false))
+        assertTrue(kitEnterSends(fromSoftKeyboard = false, shift = true, ctrlOrMeta = true))
+        assertTrue(!kitEnterSends(fromSoftKeyboard = true, shift = false, ctrlOrMeta = false))
+        assertTrue(!kitEnterSends(fromSoftKeyboard = true, shift = true, ctrlOrMeta = false))
+        assertTrue(kitEnterSends(fromSoftKeyboard = true, shift = false, ctrlOrMeta = true))
+    }
 }

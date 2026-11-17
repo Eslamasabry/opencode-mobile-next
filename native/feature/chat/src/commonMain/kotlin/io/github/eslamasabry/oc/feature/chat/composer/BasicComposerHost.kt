@@ -30,7 +30,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.contentDescription
@@ -1185,7 +1184,6 @@ public fun BasicComposer(
                             // keyboard.
                             multilineLines = 1..5,
                             composer = true,
-                            imeAction = ImeAction.Send,
                             onSubmit = {
                                 if (
                                     sendReady &&
