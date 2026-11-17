@@ -9,6 +9,9 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.graphics.toAwtImage
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -165,4 +168,46 @@ class TurnFailSignInTest {
             waitForIdle()
             onNodeWithText("refresh token is no longer valid", substring = true).assertExists()
         }
+
+    /**
+     * The picture of the block for the owner's case, 360 dp wide at density 3, dark, text 1.0 and 1.3. Written to
+     * build/turn-fail-render (this test's working folder) for review; asserts only that each was drawn.
+     */
+    @Test
+    fun `B-AGENT-189 render the turn failure block at 360 dp, text 1_0 and 1_3`() {
+        for (scale in listOf(1.0f, 1.3f)) {
+            androidx.compose.ui.test.v2.runDesktopComposeUiTest(1080, 1900) {
+                val p = block(RecordingNavigator())
+                val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+                setContent {
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(3f, scale)
+                    ) {
+                        KitTheme(
+                            platform = platform,
+                            appearance =
+                                KitAppearance(
+                                    mode = io.github.eslamasabry.oc.ui.design.effects.AppearanceMode.Dark,
+                                    motion = MotionLevel.Off,
+                                ),
+                            localeTag = "en",
+                            stillFrame = true,
+                        ) {
+                            KitStandaloneRedaction {
+                                val state by states.collectAsState()
+                                ChatScreen(state, p, composer)
+                            }
+                        }
+                    }
+                }
+                waitForIdle()
+                val image = onRoot().captureToImage().toAwtImage()
+                val file = java.io.File("build/turn-fail-render/block-dark-360-text-$scale.png")
+                file.parentFile.mkdirs()
+                javax.imageio.ImageIO.write(image, "png", file)
+                assertEquals(1080, image.width)
+            }
+        }
+    }
 }
