@@ -80,16 +80,29 @@ class KitLiquidJoinKitTest {
         }
     }
 
+    /**
+     * Lets the joined glass settle on the TEST clock in a few large jumps. With the clock on auto-advance every
+     * `waitForIdle` and every 16 ms step of `advanceTimeBy` draws a whole frame, and a frame of joined glass (the
+     * lens pass, in software on a runner) costs far more than the animation needs: about a hundred and fifty frames
+     * took close to the test's one-minute limit when the machine was busy. A jump of [ignoreFrameDuration] draws one.
+     */
+    private fun androidx.compose.ui.test.ComposeUiTest.settle(totalMs: Long = 1_500) {
+        repeat((totalMs / 250).toInt()) {
+            mainClock.advanceTimeBy(250, ignoreFrameDuration = true)
+            waitForIdle()
+        }
+    }
+
     private fun joinedPanes(appearance: KitAppearance, joins: Boolean, open: Boolean): Int {
         var count = -1
         runDesktopComposeUiTest(412, 800) {
+            mainClock.autoAdvance = false
             var shown by mutableStateOf(false)
             setContent { KitTheme(appearance = appearance, platform = platform(joins), localeTag = "en") { Scene(shown) { shown = false } } }
             waitForIdle()
             shown = open
             waitForIdle()
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
+            settle()
             count = onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
         }
         return count
@@ -117,17 +130,16 @@ class KitLiquidJoinKitTest {
 
     @Test
     fun `liquid join - nothing joins once the menu has closed`() = runDesktopComposeUiTest(412, 800) {
+        mainClock.autoAdvance = false
         var shown by mutableStateOf(false)
         setContent { KitTheme(appearance = glass, platform = platform(true), localeTag = "en") { Scene(shown) { shown = false } } }
         shown = true
         waitForIdle()
-        mainClock.advanceTimeBy(1_000)
-        waitForIdle()
+        settle()
         onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(2)
         shown = false
         waitForIdle()
-        mainClock.advanceTimeBy(1_000)
-        waitForIdle()
+        settle()
         onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(0)
     }
 
