@@ -16,7 +16,13 @@ import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.text.kitResetInWords
 import io.github.eslamasabry.oc.ui.kit.text.kitTenthsSecondsWords
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitLogQuiet
+import io.github.eslamasabry.oc.ui.words.res.linuxSvcRunningFor
+import io.github.eslamasabry.oc.ui.words.res.replySpeedNoWords
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsResetsIn
 import java.util.Locale
+import org.jetbrains.compose.resources.stringResource
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.days
@@ -153,6 +159,30 @@ class DurationWordsTest {
                     onNodeWithText(text).assertExists()
                 }
             }
+        }
+    }
+
+    @Test
+    fun `B-L10N-023 Japanese sub-minute duration fits standalone, ago, running-for, and reset-in shapes`() {
+        Locale.setDefault(Locale.forLanguageTag("ja"))
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "ja", stillFrame = true) {
+                    val subMinute = kitDurationWords(15.seconds)
+                    Column {
+                        KitText(subMinute)
+                        KitText(stringResource(Res.string.linuxSvcRunningFor, subMinute))
+                        KitText(stringResource(Res.string.kitLogQuiet, subMinute))
+                        KitText(stringResource(Res.string.s9LimitsResetsIn, subMinute))
+                        KitText(stringResource(Res.string.replySpeedNoWords, subMinute))
+                    }
+                }
+            }
+            onNodeWithText("数秒").assertExists()
+            onNodeWithText("数秒間実行中").assertExists()
+            onNodeWithText("最後の行：数秒前").assertExists()
+            onNodeWithText("あと数秒でリセット").assertExists()
+            onNodeWithText("前回の返信：文字出力がないまま数秒後に終了").assertExists()
         }
     }
 }

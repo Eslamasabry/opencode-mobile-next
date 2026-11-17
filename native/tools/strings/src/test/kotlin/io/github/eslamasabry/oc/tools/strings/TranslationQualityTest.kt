@@ -142,6 +142,24 @@ class TranslationQualityTest {
         }
     }
 
+    @Test
+    fun `japanese spacing - no space between Japanese and Latin letters, digits, or counters`() {
+        val jaChar = """[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff々〆ヵヶー]"""
+        val forbidden = listOf(
+            Regex("""$jaChar [A-Za-z0-9]"""),
+            Regex("""[A-Za-z0-9] $jaChar"""),
+            Regex("""%(?:\d+\$)?d $jaChar"""),
+            Regex("""%(?:\d+\$)?s (?:件|行|回|個|つ|秒|分|時間|日|週|か月|年|前|間|後|以内|ステップ|ポイント|ファイル|文字|系列|種|種類|目)"""),
+        )
+        val offenders = mutableListOf<String>()
+        for ((l, en, tr) in pairs()) {
+            if (l != "ja" || en.key.endsWith("Aliases")) continue
+            val hit = tr.texts().firstNotNullOfOrNull { t -> forbidden.firstNotNullOfOrNull { it.find(t)?.value } }
+            if (hit != null) offenders += "${en.key}: \"$hit\""
+        }
+        assertTrue(offenders.isEmpty(), "ja spacing: ${offenders.size} strings have spaces adjacent to Latin/digits/counters\n" + offenders.take(100).joinToString("\n"))
+    }
+
     // ---- no English left ----
 
     private val stopwords = setOf("the", "and", "your", "with", "this", "that", "could", "from", "have", "please", "again", "you", "will", "can't", "isn't", "are")
