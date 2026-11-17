@@ -86,8 +86,10 @@ for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
             if is_security:
                 security_counts[1] += 1
             msg = (bad.get('message') or (bad.text or '')).strip().splitlines()
+            first = (msg[0] if msg else '')[:200]
+            # A layout guard or ALIGN rule finding is its own kind of failure: never a picture difference.
             failures.append({'id': f'{mod} :: {tc.get("classname")} > {tc.get("name")}', 'module': mod,
-                             'message': (msg[0] if msg else '')[:200]})
+                             'message': first, 'kind': 'rule' if re.search(r'(layout guard|align gate):', first) else 'test'})
 
 def analyse(lines, mods, expected):
     """-> real failure strings from the Gradle log; see the module docstring."""

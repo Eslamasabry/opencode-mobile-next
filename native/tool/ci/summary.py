@@ -14,6 +14,8 @@ Always real, never noise:
   * a selected module that produced no test results;
   * a failing test in a gate module (HARD_MODULES) or a drift / Konsist / detekt / lint class (HARD_CLASS), whatever
     the lists or the base say.
+A layout guard or ALIGN rule failure (kind 'rule' in the shard report) is never absorbed by a class pattern or the base: it
+is green, or fixed, or listed by its exact name in tool/ci/known_rule_failures.txt, else it is a new failure.
 Noise (does not fail): an individual failing test class that also fails in the base reports, matches
 tool/ci/known_failures.txt (one test "<module> :: <class> > <test>", exact; or fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
 failures can be absorbed this way.
@@ -59,6 +61,7 @@ def patterns(name, quarantine=False):
 
 
 known_pats = patterns('known_failures.txt')
+rule_pats = set(patterns('known_rule_failures.txt'))  # layout/align rule failures, exact names only
 quar_pats = patterns('quarantine.txt', quarantine=True)
 
 
@@ -71,9 +74,15 @@ def is_hard(f):
     return mod in HARD_MODULES or bool(HARD_CLASS.search(rest.split(' > ')[0].split('.')[-1]))
 
 
+def is_rule(f):
+    return f.get('kind') == 'rule'
+
+
 def is_known(f):
     if is_hard(f):
         return False
+    if is_rule(f):  # a layout/align rule is judged by its exact name alone: no blanket pattern, no base diff, no quarantine
+        return f['id'] in rule_pats
     mod, rest = f['id'].split(' :: ', 1)
     full = f'{mod} :: {rest}'
     cls = rest.split(' > ')[0]
@@ -91,7 +100,9 @@ def is_known(f):
     return False
 
 
-new = [f for f in failed if is_hard(f) or (f['id'] not in base_failed and not is_known(f))]
+new = [f for f in failed if is_hard(f) or (is_rule(f) and not is_known(f)) or (f['id'] not in base_failed and not is_known(f))]
+rule_known = [f for f in failed if is_rule(f) and f not in new]
+rule_new = [f for f in new if is_rule(f)]
 known = [f for f in failed if f not in new]
 real = [f'{s["name"]}: {r}' for s in shards for r in s.get('real_failures', [])]
 broken = [s['name'] for s in shards if s.get('build_failed') and not s['failures'] and not s.get('real_failures')]
@@ -245,6 +256,7 @@ for r in reasons[:12]:
 if len(reasons) > 12:
     print(f'- ... {len(reasons) - 12} more reasons')
 print(f'\n{guards_skipped} guards skipped (references not fetched)')
+print(f'{len(rule_known)} layout/align rule failures listed by name, {len(rule_new)} not listed (tool/ci/known_rule_failures.txt)')
 print('\n| step | result |\n|---|---|')
 for k, v in rows:
     print(f'| {k} | {v} |')

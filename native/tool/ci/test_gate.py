@@ -237,6 +237,49 @@ class OneTestAtATime(unittest.TestCase):
         self.assertEqual(code, 0, md)
 
 
+class RuleFailures(unittest.TestCase):
+    """B-CI-320: layout and align rule failures are their own result, outside the blanket `*.rb.*GateTest` pattern."""
+    CLS = f'{PKG}.feature.chat.rb.o42.Chat3ComposerGateTest'
+
+    def gate(self, known_rules, message='java.lang.AssertionError: layout guard: x breaks 4 layout rule(s)'):
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = os.path.join(tmp, 'ci'); reports = os.path.join(tmp, 'reports'); os.makedirs(ci); os.makedirs(reports)
+            for f in ('summary.py', 'known_failures.txt'):
+                shutil.copy(os.path.join(HERE, f), ci)
+            open(os.path.join(ci, 'known_rule_failures.txt'), 'w').write(known_rules)
+            fail = {'id': f'feature/chat :: {self.CLS} > composerBusy[desktop]', 'module': 'feature/chat', 'message': message,
+                    'kind': 'rule' if 'layout guard' in message or 'align gate' in message else 'test'}
+            json.dump({'name': 'fast-0', 'tests': 1, 'failed': 1, 'failures': [fail], 'modules': {}, 'security': {
+                'executed': True, 'full': True, 'tests': 1, 'failed': 0, 'skipped': 0}}, open(os.path.join(reports, 'report-fast-0.json'), 'w'))
+            json.dump({'failed': False, 'gradle_ran': True}, open(os.path.join(reports, 'compile.json'), 'w'))
+            env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', PLANNED_SHARDS='0')
+            p = subprocess.run([sys.executable, '-I', os.path.join(ci, 'summary.py'), reports, os.path.join(tmp, 'base'), 'fast'],
+                               env=env, capture_output=True, text=True)
+            return p.returncode, p.stdout
+
+    def test_B_CI_320_a_rule_failure_is_not_absorbed_by_the_blanket_gate_class_pattern(self):
+        code, md = self.gate('')
+        self.assertEqual(code, 1, md)
+        self.assertIn('1 not listed', md)
+
+    def test_B_CI_320_a_rule_failure_listed_by_exact_name_is_counted_on_its_own_line(self):
+        code, md = self.gate(f'feature/chat :: {self.CLS} > composerBusy[desktop] | a reason\n')
+        self.assertEqual(code, 0, md)
+        self.assertIn('\n1 layout/align rule failures listed by name, 0 not listed', md)
+
+    def test_B_CI_320_a_picture_difference_in_a_gate_class_stays_known_noise(self):
+        code, md = self.gate('', message='java.lang.AssertionError: chat_3_composer_busy_light: 3.2 % of the box differs')
+        self.assertEqual(code, 0, md)
+        self.assertIn('0 layout/align rule failures listed by name, 0 not listed', md)
+
+    def test_the_listed_rule_failures_only_shrink(self):
+        names = [l.split('|')[0].strip() for l in open(os.path.join(HERE, 'known_rule_failures.txt')) if l.strip() and not l.startswith('#')]
+        self.assertEqual(len(names), len(set(names)), 'a name is listed twice')
+        self.assertLessEqual(len(names), 202, 'known_rule_failures.txt only shrinks: fix the screen and delete the line')
+        for n in names:
+            self.assertRegex(n, r'^\S+ :: \S+ > .+$', 'one exact test per line, no pattern')
+
+
 class KnownFailuresCeiling(unittest.TestCase):
     """known_failures.txt only shrinks: a new or wider line fails here. To delete a line, delete it from the file AND
     from CEILING (the ceiling then stays lower for good)."""
