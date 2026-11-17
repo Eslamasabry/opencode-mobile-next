@@ -2,7 +2,7 @@
 
 > OpenCode Mobile is a native Kotlin Android app (version 3.0.x) for running coding agents from your phone. It runs Claude Code, Codex, OpenCode and other agents in a Linux that the app installs on the phone through an agent helper, or connects to OpenCode 2 and other agents running on your computer.
 
-The app needs Android 8 or newer; agents on the phone need a 64-bit phone. You ask for a change in a conversation, approve commands from a notification, a widget or the conversation, review the diff and use Git without leaving the app. It talks only to servers you choose, and it is MIT licensed. Version 3 installs over the 2.1 releases and keeps their data. The links below are the documents that are current for the native app; the Optional section is for people building or releasing it.
+The app needs Android 8 or newer; agents on the phone need a 64-bit phone. You ask for a change in a conversation, approve commands from a notification, a widget or the conversation, review the diff and use Git without leaving the app. Your conversations and code go only to the servers you choose, and it is MIT licensed. Version 3 installs over the 2.1 releases and keeps their data. The links below are the documents that are current for the native app; the Optional section is for people building or releasing it.
 
 ## Docs
 

@@ -63,7 +63,7 @@ OpenCode Mobile is a younger project and several of its agents are less tested o
 - **Scheduled prompts.** Run a prompt at a time you choose, once or repeating, even with the app closed.
 - **Home-screen widgets.** Conversations and Status widgets show what your agents are doing and let you act on requests.
 - **Make it yours.** Five styles (Solid, Soft, Brutal, Paper and Signal), light and dark.
-- **Private by design.** The app talks only to servers you choose. Voice is transcribed on the phone.
+- **Private by design.** Your conversations and code go only to the servers you choose. Voice is transcribed on the phone.
 
 ## Screens
 
@@ -113,7 +113,7 @@ so each release installs over the previous one and keeps your servers, sign-ins 
 
 ## Privacy
 
-The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
+Your conversations and code go only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
 
 ### What is sent
 

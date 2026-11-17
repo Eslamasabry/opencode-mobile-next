@@ -270,8 +270,8 @@ assistance".
     address after an explicit yes, or a self-signed certificate you pin
     yourself [needs proof: B3, B4, B5]; works over Tailscale), or run the agent
     on the phone in an Ubuntu sandbox the app installs. Free, MIT, no
-    analytics or accounts. Passwords stay in the Android keystore. The app
-    talks only to servers you choose. Built with substantial AI assistance;
+    analytics or accounts. Passwords stay in the Android keystore. Your conversations
+    and code go only to the servers you choose. Built with substantial AI assistance;
     independent, not affiliated with OpenCode or Anthropic. Public alpha.
     https://github.com/Eslamasabry/opencode-mobile-next
 
@@ -436,7 +436,7 @@ Attach: S3 or the video.
   [needs proof: SIZE].
 - "Is it on Play / F-Droid?" No. GitHub releases and Obtainium only. Do not
   promise either (CHANNELS.md).
-- "Does it send my code anywhere?" The app talks only to the servers you
+- "Does it send my code anywhere?" Your conversations and code go only to the servers you
   choose; no ads, analytics or automatic crash upload (PRIVACY.md). The model
   provider you configure receives your prompts.
 - "Can I use my Claude subscription?" The app does not collect a Claude
