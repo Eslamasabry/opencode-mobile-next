@@ -224,7 +224,13 @@ class ExpiredSignInBubbleTest {
                 val world = if (runtime == null) FakeChatWorld(ref) else AgentWorld(ref)
                 world.pending.value =
                     persistentListOf(
-                        PendingSend(4, "Whats next", PendingState.Failed, Failure.ComputerDidNotAnswer(Redacted(ownerText)))
+                        // "today" stands in for the unrecognised answer (the old words read "couldn't reach your computer").
+                        PendingSend(
+                            4,
+                            "Whats next",
+                            PendingState.Failed,
+                            Failure.ComputerDidNotAnswer(Redacted(if (runtime == null) "ComputerDidNotAnswer" else ownerText)),
+                        )
                     )
                 val p = ChatPresenter(world, RecordingNavigator(), Immediate, outside = if (runtime == null) Outside(null) else Outside(owner))
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
