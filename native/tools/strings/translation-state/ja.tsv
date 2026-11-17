@@ -1134,7 +1134,7 @@ composerToolSaveForLater	22ef822580
 composerToolSavedSubtitle	91e861c1d6
 composerToolsAgentTextOnly	46d33978b6
 composerToolsMore	c128486b1d
-composerToolsPicturesOnlyUse	20bfa0f8c2
+composerToolsPicturesOnlyUse	8a550dc9ac
 composerToolsTextOnly	92deaba741
 composerTrayCamera	c2d911fc73
 composerTrayFile	7e575f8a42
@@ -1654,7 +1654,6 @@ formRendererSending	b25beedab4
 formRendererUseDate	11e5b7cc6c
 freeModelNotice	316ed5da68
 freeModelSignIn	ab4c6f011a
-<<<<<<< HEAD
 gitRepairAction	b43ecb3fca
 gitRepairAgain	0396225cca
 gitRepairAllow	b8fd6733de
@@ -1910,10 +1909,8 @@ kitAgentLabel__other	0d4ff9e7ea
 kitAgentLabel__yes	1601a20720
 kitAgentOpen	4e9f65a018
 kitAgentStripLabel	c633b30da0
-=======
 kitApproxMinutes	af31057115
 kitApproxSeconds	e506f4f004
->>>>>>> native/duration-words
 kitAttachmentFile	872fcea58f
 kitAttachmentFolder	0ca16f17e7
 kitAttachmentImage	ce73267d06

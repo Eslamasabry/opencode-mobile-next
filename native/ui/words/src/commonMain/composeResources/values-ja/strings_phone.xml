@@ -47,7 +47,7 @@
     <string name="termuxStorageCatAgentScratch">エージェントの一時領域</string>
     <string name="termuxStorageNoteAgentScratch">一時フォルダには未完了の作業や他のツールが使うファイルが含まれている場合があります。サイズは参考用に表示されており、ここからは削除できません。</string>
     <string name="termuxStorageCatProjectBuildOutputs">ビルド関連名のフォルダ</string>
-    <string name="termuxStorageNoteProjectBuildOutputs">build、.dart_tool、node_modules、targetという名前のフォルダにも独自のファイルが含まれている場合があります。名前だけでは不要と判断できないため、ここからは削除できません。</string>
+    <string name="termuxStorageNoteProjectBuildOutputs">build や .dart_tool、node_modules、target という 名前 の フォルダ にも、独自 の ファイル が 含まれている 場合 が あります。名前 だけでは 不要 と 判断 できない ため、ここから 削除 すること は できません。</string>
     <string name="termuxStorageCatToolchains">ツールチェーン</string>
     <string name="termuxStorageCatAiTeam">AI Team</string>
     <string name="termuxStorageNoteAiTeam">チームのフォルダ、データベース、ツールには保持すべき作業が含まれている場合があります。チームが停止していてもここからは削除できません。</string>

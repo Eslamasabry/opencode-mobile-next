@@ -164,7 +164,7 @@
     <string name="e7SetupInvalidAddress">&lt;無効なアドレス&gt;</string>
     <string name="e7SetupEnterUrl">サーバーURLを入力してください。</string>
     <string name="e7SetupIncludeScheme">https://またはhttp://を含めてください。リモートHTTPには許可が必要です。</string>
-    <string name="e7SetupCompleteUrl">https://server.example:4096のような完全なサーバーURLを入力してください。</string>
+    <string name="e7SetupCompleteUrl">https://server.example:4096 など、完全な サーバー URL を 入力 してください。</string>
     <string name="e7SetupUrlScheme">サーバーURLにはhttps://またはhttp://を指定してください。</string>
     <string name="e7SetupUrlCredentials">URLに認証情報を含めないでください。下の入力欄を使用してください。</string>
     <string name="e7SetupUrlQuery">サーバーURLからクエリパラメーターやフラグメントを削除してください。</string>

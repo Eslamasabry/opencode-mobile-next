@@ -375,7 +375,7 @@
     <string name="claudeAgentNotInstalledTitle">このスマートフォンにClaude Codeがインストールされていません</string>
     <string name="claudeAgentNotInstalledBody">Claude AgentはこのスマートフォンのClaude Codeを実行します。「エージェント」からインストールしてから、もう一度確認してください。</string>
     <string name="claudeAgentBlockedTitle">ここではClaude Agentをセットアップできません</string>
-    <string name="claudeAgentBlockedBody">このスマートフォンのLinuxの/usr/local/sbinにclaudeという別のプログラムがすでにあるため、アプリはそのままにしています。</string>
+    <string name="claudeAgentBlockedBody">この スマートフォン の Linux には、すでに /usr/local/sbin に claude という 別の プログラム が あるため、アプリ は そのまま に しています。</string>
     <string name="claudeAgentFailedTitle">Claude Agentを起動できませんでした</string>
     <string name="claudeAgentFailedBody">モデル一覧を取得できませんでした。しばらくしてからもう一度確認してください。</string>
     <string name="claudeAgentOpenAgents">エージェントを開く</string>
