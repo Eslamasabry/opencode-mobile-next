@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.agents.models
 
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
+
 /**
  * The first meaningful line of a server error, without the stack trace or the `SomethingError: ` class prefix
  * (B-SEC-103). What the person reads; the full text stays behind Details.
@@ -31,12 +33,6 @@ public enum class MessageErrorKind {
     public companion object {
         private val NON_LETTERS = Regex("[^a-z]")
         private val HEAD_SPLIT = Regex("[:\\s]")
-        private val SIGN_IN_GONE = Regex(
-            "not logged in|please run /login|failed to authenticate|" +
-                "oauth (session|token) (has )?expired|could not be refreshed|" +
-                "invalid api key|authentication_error",
-            RegexOption.IGNORE_CASE,
-        )
 
         /** Null when [name] is null or blank (no error); [Unknown] for any unrecognised name. */
         public fun fromName(name: String?): MessageErrorKind? {
@@ -58,7 +54,7 @@ public enum class MessageErrorKind {
         /** Recovers the kind from the text's leading class name when the name gave nothing better. */
         public fun refineFromText(kind: MessageErrorKind, text: String?): MessageErrorKind {
             if (kind != Unknown || text == null) return kind
-            if (SIGN_IN_GONE.containsMatchIn(text)) return ProviderAuth
+            if (AgentSignInWords.gone(text)) return ProviderAuth
             val head = text.trimStart().split(HEAD_SPLIT).first()
             return fromName(head) ?: Unknown
         }

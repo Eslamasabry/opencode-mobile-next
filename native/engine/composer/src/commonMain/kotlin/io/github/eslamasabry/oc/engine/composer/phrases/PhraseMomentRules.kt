@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.composer.phrases
 
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -84,17 +85,10 @@ public object PhraseMomentRules {
         }
     }
 
-    private val SIGN_IN_GONE =
-        Regex(
-            "not logged in|please run /login|failed to authenticate|oauth (session|token) (has )?expired|" +
-                "could not be refreshed|invalid api key|authentication_error",
-            RegexOption.IGNORE_CASE,
-        )
-
     /** Dart `MessageErrorKind.refineFromText`. */
     internal fun refineFromText(kind: MessageErrorKind, text: String?): MessageErrorKind {
         if (kind != MessageErrorKind.Unknown || text == null) return kind
-        if (SIGN_IN_GONE.containsMatchIn(text)) return MessageErrorKind.ProviderAuth
+        if (AgentSignInWords.gone(text)) return MessageErrorKind.ProviderAuth
         val head = text.trimStart().split(Regex("[:\\s]")).first()
         return fromName(head) ?: MessageErrorKind.Unknown
     }

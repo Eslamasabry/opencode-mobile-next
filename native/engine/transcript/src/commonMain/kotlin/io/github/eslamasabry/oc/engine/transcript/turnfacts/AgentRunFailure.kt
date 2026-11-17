@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.transcript.turnfacts
 
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
+
 // B-AGENT-024. Port of lib/domain/agent_run_failure.dart classifyAgentRunFailure: the few kinds of a failed or
 // refused turn a person can act on. It reuses the server-cause rules of B-CHAT-016 (RetryStatus.kt causeOf), so
 // the app has one classifier for the server's error text. The text itself is never copy: only Details shows it,
@@ -150,7 +152,7 @@ public fun agentRunFailure(reason: String?, nowMs: Long? = null): AgentRunFailur
     val noCredit = NO_CREDIT.containsMatchIn(text)
     return when {
         text.isEmpty() -> AgentRunFailure(AgentRunFailureKind.Unknown)
-        SIGN_IN.containsMatchIn(text) && !noCredit -> AgentRunFailure(AgentRunFailureKind.SignIn)
+        (SIGN_IN.containsMatchIn(text) || AgentSignInWords.gone(text)) && !noCredit -> AgentRunFailure(AgentRunFailureKind.SignIn)
         // Waiting cannot add credit.
         noCredit -> AgentRunFailure(AgentRunFailureKind.NoCredit, out = true)
         MODEL_UNAVAILABLE.containsMatchIn(text) -> AgentRunFailure(AgentRunFailureKind.ModelUnavailable)

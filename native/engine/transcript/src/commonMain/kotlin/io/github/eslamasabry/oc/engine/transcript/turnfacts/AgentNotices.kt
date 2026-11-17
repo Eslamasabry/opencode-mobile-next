@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.transcript.turnfacts
 
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import kotlin.math.roundToLong
 
@@ -26,12 +27,7 @@ public enum class AgentErrorClass {
  * An agent's own words for a sign-in it can no longer use (Dart paseoSignInFailure). Not the transient "another
  * process is refreshing it", which passes on retry.
  */
-public val AgentSignInFailure: Regex =
-    Regex(
-        "failed to authenticate|oauth (session|token) (has )?expired|could not be refreshed|please run /login|" +
-            "invalid api key|authentication_error|not logged in",
-        RegexOption.IGNORE_CASE,
-    )
+public fun agentSignInFailure(text: String): Boolean = AgentSignInWords.gone(text)
 
 private val SIGN_IN_ASK = Regex("\\b(sign|log) ?in\\b", RegexOption.IGNORE_CASE)
 private val CLAUDE_TURN_FAILURE = Regex("^\\s*(?:API Error\\b|Claude AI usage limit reached\\b|Credit balance is too low\\b)")
@@ -47,7 +43,7 @@ public fun isHelperSystemError(text: String): Boolean = text.trimStart().startsW
 public fun classifyAgentError(text: String): AgentErrorClass {
     val system = isHelperSystemError(text)
     return when {
-        AgentSignInFailure.containsMatchIn(text) || (system && SIGN_IN_ASK.containsMatchIn(text)) -> AgentErrorClass.SignIn
+        agentSignInFailure(text) || (system && SIGN_IN_ASK.containsMatchIn(text)) -> AgentErrorClass.SignIn
         system -> AgentErrorClass.HelperError
         CLAUDE_TURN_FAILURE.containsMatchIn(text) -> AgentErrorClass.TurnFailure
         else -> AgentErrorClass.Other

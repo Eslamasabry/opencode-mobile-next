@@ -1,10 +1,12 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse
 import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
+import io.github.eslamasabry.oc.feature.chat.world.AgentSignInNeed
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 
@@ -77,6 +79,23 @@ internal object AgentSetUpRules {
     /** The catalog agent behind [runtimeId] when it is set up at first use ([AgentFirstUse.applies]); else null. */
     fun firstUseAgent(runtimeId: String, catalog: AgentCatalog = AgentCatalog.builtIn): String? =
         catalog.agents.firstOrNull { it.providerId == runtimeId }?.takeIf(AgentFirstUse::applies)?.id?.raw
+
+    /**
+     * The agent whose sign-in ran out, for a counted [bubble] (see [counts]) whose failure carries the agent's words for an
+     * expired sign-in ([AgentSignInWords.expired]); null otherwise. Read before any "could not reach" wording: the helper
+     * answered, with the agent's own error. Never signed in is the other meaning and stays with [need].
+     */
+    fun signInNeed(
+        bubble: PendingSend,
+        runtimeId: String?,
+        catalog: AgentCatalog = AgentCatalog.builtIn,
+    ): AgentSignInNeed? {
+        if (!counts(bubble)) return null
+        val text = bubble.failure?.details?.text ?: return null
+        if (!AgentSignInWords.expired(text)) return null
+        val agent = runtimeId?.let { id -> catalog.agents.firstOrNull { it.providerId == id } } ?: return null
+        return AgentSignInNeed(agent.providerId, agent.name)
+    }
 
     /** The bubbles whose failure is the agent's own answer: the ones [need] reads. */
     fun counts(bubble: PendingSend): Boolean {

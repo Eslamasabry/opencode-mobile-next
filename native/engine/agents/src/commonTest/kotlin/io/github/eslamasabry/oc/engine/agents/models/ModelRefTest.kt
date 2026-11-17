@@ -62,3 +62,11 @@ class ModelRefTest {
         assertEquals(MessageErrorKind.ModelNotFound, MessageErrorKind.fromName("ProviderModelNotFoundError"))
     }
 }
+
+class ExpiredSignInKindTest {
+    @Test
+    fun `B-AGENT-189 the refresh token notice reads as a provider sign-in`() {
+        val raw = "Unable to validate model: OAuth refresh token is no longer valid; run /login to re-authenticate"
+        assertEquals(MessageErrorKind.ProviderAuth, MessageErrorKind.refineFromText(MessageErrorKind.Unknown, raw))
+    }
+}

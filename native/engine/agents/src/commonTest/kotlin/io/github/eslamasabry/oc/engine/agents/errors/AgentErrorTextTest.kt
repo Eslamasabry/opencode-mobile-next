@@ -57,7 +57,11 @@ class AgentErrorTextTest {
         assertTrue(AgentErrorText.signInExpired("Failed to authenticate: OAuth session expired and could not be refreshed"))
         assertTrue(AgentErrorText.signInExpired("Your login session has expired"))
         assertTrue(AgentErrorText.signInExpired("token has been revoked"))
+        assertTrue(AgentErrorText.signInExpired("Unable to validate model: OAuth refresh token is no longer valid; run /login to re-authenticate"))
+        assertTrue(AgentErrorText.signInExpired("run /login to re-authenticate"))
+        // Never signed in is the other meaning: "sign in", not "sign in again".
         assertFalse(AgentErrorText.signInExpired("Not logged in. Please run /login"))
+        assertFalse(AgentErrorText.signInExpired("Not logged in · Run /login"))
         assertFalse(AgentErrorText.signInExpired("401 Unauthorized: invalid api key"))
     }
 

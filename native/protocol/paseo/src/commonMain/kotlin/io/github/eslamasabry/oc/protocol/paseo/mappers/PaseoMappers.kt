@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.SessionContextUse
 import io.github.eslamasabry.oc.core.model.SessionSelection
 import io.github.eslamasabry.oc.core.model.SessionStatus
@@ -286,14 +287,6 @@ public fun paseoItemId(item: JsonObject, fallbackSeq: Long?): String {
     return "$prefix:${fallbackSeq ?: 0}"
 }
 
-/** An agent's own words for a sign-in it can no longer use (not the transient "another process is refreshing"). */
-private val SIGN_IN_FAILURE = Regex(
-    "failed to authenticate|oauth (session|token) (has )?expired|" +
-        "could not be refreshed|please run /login|invalid api key|" +
-        "authentication_error|not logged in",
-    RegexOption.IGNORE_CASE,
-)
-
 /** How Paseo's ACP bridge words an agent's RPC failure in the reply text: an error, never prose. */
 private fun systemError(text: String): Boolean = text.trimStart().startsWith("[System Error]")
 
@@ -338,7 +331,7 @@ private val NOT_SIGN_IN = Regex(
  * never a sign-in.
  */
 internal fun paseoFailureMeansSignIn(text: String): Boolean =
-    !NOT_SIGN_IN.containsMatchIn(text) && (SIGN_IN_FAILURE.containsMatchIn(text) || SIGN_IN_ASK.containsMatchIn(text))
+    !NOT_SIGN_IN.containsMatchIn(text) && (AgentSignInWords.gone(text) || SIGN_IN_ASK.containsMatchIn(text))
 
 /** Whether a reply's whole [text] is the agent's own failure line, not prose ([FAILURE_LINE]). */
 private fun failureLine(text: String): Boolean = text.length <= FAILURE_LINE_MAX && FAILURE_LINE.containsMatchIn(text)
@@ -558,7 +551,7 @@ public fun paseoTimeline(agentId: String, payload: JsonObject, busy: Boolean): P
     }
 
 /** An agent's own words for a sign-in it can no longer use (Dart `paseoSignInFailure`). */
-public fun paseoSignInFailure(text: String): Boolean = SIGN_IN_FAILURE.containsMatchIn(text)
+public fun paseoSignInFailure(text: String): Boolean = AgentSignInWords.gone(text)
 
 // ---- pictures (B-AGENT-170)
 
