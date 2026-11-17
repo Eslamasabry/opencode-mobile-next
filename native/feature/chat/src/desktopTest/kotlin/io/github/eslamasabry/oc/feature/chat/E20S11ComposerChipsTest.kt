@@ -79,6 +79,7 @@ class E20S11ComposerChipsTest {
                 kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
                 selected = true,
                 onClick = {},
+                wraps = false, // the production chip (KitComposerChip, shrinks) ends in "…", never wraps
                 modifier = Modifier.testTag("approval-chip"),
             )
         })
