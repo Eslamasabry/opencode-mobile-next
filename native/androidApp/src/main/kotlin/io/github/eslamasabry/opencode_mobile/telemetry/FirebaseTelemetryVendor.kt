@@ -46,7 +46,10 @@ private constructor(
         )
         analytics.setAnalyticsCollectionEnabled(usage)
         // Off clears the analytics data kept on the phone, with its random install id (PRIVACY.md).
-        if (!usage) analytics.resetAnalyticsData()
+        if (!usage) {
+            analytics.setUserProperty("app_build", null)
+            analytics.resetAnalyticsData()
+        }
         performance.isPerformanceCollectionEnabled = usage
         perfOn = usage
     }

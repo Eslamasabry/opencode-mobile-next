@@ -264,7 +264,6 @@ class TelemetryServiceTest {
         val s = TelemetryService(vendor, available = true, scope = this)
         s.start(TelemetryConsent(), store, MemoryTelemetryReportStore())
         assertTrue(s.setConsent(usage = true, crashes = false))
-        s.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
         assertTrue(s.setConsent(usage = false, crashes = false))
         s.track(ProductEvent.AppOpen, mapOf("kind" to "warm"))
         s.setReportingConsent(true)

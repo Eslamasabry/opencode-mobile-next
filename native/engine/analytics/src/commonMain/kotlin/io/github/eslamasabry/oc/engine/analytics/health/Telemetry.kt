@@ -229,6 +229,8 @@ public class TelemetryService(
     private val keys = LinkedHashMap<String, String>()
     private val turns = AtomicInt(0)
     private val journeyRef = AtomicReference<JourneyMilestones?>(null)
+    // Current UI context only: one schema-listed word, with no off-consent event history or timestamps.
+    private val visibleScreen = AtomicReference<String?>(null)
 
     override val usage: StateFlow<Boolean> = usageFlow.asStateFlow()
     override val crashes: StateFlow<Boolean> = crashesFlow.asStateFlow()
@@ -262,10 +264,21 @@ public class TelemetryService(
     }
 
     private fun apply(usage: Boolean, crashes: Boolean) {
+        val newlyEnabled = usage && !usageFlow.value
         if (available) safely { vendor.setCollection(usage, crashes) }
-        // Listeners send what needs collection on already, so the flows change after the vendor switch.
+        // StateFlow observers can run immediately. Publish the opening/page before enabling their event feed.
+        val opening = newlyEnabled && available
+        val page = if (opening) visibleScreen.load()?.let { mapOf("screen" to it) } else null
+        if (opening) {
+            deliver(ProductEvent.AppOpen, mapOf("kind" to "cold"), startingConsent = true)
+            if (page != null) deliver(ProductEvent.ScreenView, page, startingConsent = true)
+        }
         usageFlow.value = usage
         crashesFlow.value = crashes
+        if (opening && usageLive) {
+            safely { journeyRef.load()?.observe(ProductEvent.AppOpen, mapOf("kind" to "cold")) }
+            if (page != null) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page) }
+        }
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -329,12 +342,25 @@ public class TelemetryService(
     }
 
     override fun track(event: ProductEvent, props: Map<String, Any?>) {
-        if (!usageLive) return
+        if (!usageLive && event != ProductEvent.ScreenView) return
         val safe = cleanProductProps(event, props) ?: return
+        if (event == ProductEvent.ScreenView) safe["screen"]?.let { visibleScreen.store(it) }
+        if (!usageLive) return
+        if (!deliver(event, safe)) return
+        val page = if (event == ProductEvent.AppOpen) visibleScreen.load()?.let { mapOf("screen" to it) } else null
+        val pageDelivered = page != null && deliver(ProductEvent.ScreenView, page)
+        if (!usageLive) return
+        // Publish both session records before derived milestones, then observe them in their original order.
+        safely { journeyRef.load()?.observe(event, safe) }
+        if (page != null && pageDelivered) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page) }
+    }
+
+    private fun deliver(event: ProductEvent, safe: Map<String, String>, startingConsent: Boolean = false): Boolean {
+        if (!usageLive && !startingConsent) return false
         ring.add("event ${event.wire}" + safe.entries.joinToString("") { " ${it.key}=${it.value}" })
         safely { vendor.event(event.wire, safe) }
         if (event == ProductEvent.SendResult && safe["result"] == "ok") turns.incrementAndFetch()
-        safely { journeyRef.load()?.observe(event, safe) }
+        return true
     }
 
     override fun takeSessionTurns(): Int = turns.exchange(0)
@@ -356,6 +382,7 @@ public class TelemetryService(
         journeyRef.store(journey)
         if (usageLive) {
             journey.reach(Milestone.Opened)
+            visibleScreen.load()?.let { journey.observe(ProductEvent.ScreenView, mapOf("screen" to it)) }
             journey.publishStage()
         }
     }

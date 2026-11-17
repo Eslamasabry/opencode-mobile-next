@@ -56,7 +56,7 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
                     checked = on,
                     modifier = Modifier.testTag("privacy-send-usage"),
                     leading = KitRowLeading.Glyph(KitIcons.shield),
-                    supporting = stringResource(Res.string.telemetryUsageDetail),
+                    supporting = stringResource(Res.string.nativeTelemetryUsageDetail),
                     supportingMaxLines = Int.MAX_VALUE,
                     onCheckedChange = actions::onUsage,
                 )
@@ -112,6 +112,7 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
             liveRegion = false,
         )
     }
+    KitGroupNote(stringResource(Res.string.collectRules))
     KitRowGroup(
         label = stringResource(Res.string.collectUsageLabel),
         modifier = Modifier.testTag("collect-usage"),
@@ -144,7 +145,6 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
     KitRowGroup(label = stringResource(Res.string.collectNeverLabel)) {
         KitRow(title = stringResource(Res.string.collectNever), titleMaxLines = Int.MAX_VALUE)
     }
-    KitGroupNote(stringResource(Res.string.collectRules))
 }
 
 @Composable

@@ -9,7 +9,12 @@ import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
+import io.github.eslamasabry.oc.engine.analytics.umami.umamiPages
+import io.github.eslamasabry.oc.engine.analytics.umami.umamiEvent
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
 import io.github.eslamasabry.oc.feature.settings.presentation.HealthContract
+import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -204,6 +209,101 @@ class PrivacyNoticeSyncTest {
             if (token !in known) out += "The in-app policy names `$token`, which the code cannot send"
         }
         return out.distinct()
+    }
+
+    /** Receiver brands are deliberately untranslated in every offered locale. */
+    internal fun recipientViolations(text: String): List<String> =
+        listOf("Google", "Umami", "Railway").filterNot(text::contains)
+
+    @Test
+    fun `B-SEC-207 every offered privacy locale names both senders and self hosting`() {
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (page in listOf(
+            "native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/PrivacyPages.kt",
+            "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ContinuityWiring.kt",
+        )) {
+            val source = File(repo, page).readText()
+            assertTrue("Res.string.nativeTelemetryUsageDetail" in source, "the actual Settings and consent UI use the current notice")
+            assertTrue("Res.string.telemetryUsageDetail" !in source, "the frozen Google-only notice is not shown")
+        }
+        val consent = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ContinuityWiring.kt").readText()
+        assertTrue("Res.string.nativeTelemetryConsentBody" in consent, "the first consent question must name the current receivers")
+        assertTrue("Res.string.telemetryConsentBody" !in consent, "the frozen Google-only consent question is not shown")
+        val offered = AppLanguage.entries.mapNotNull { it.tag }
+        val code = liveCode()
+        for (tag in offered) {
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            assertTrue(File(locale, "strings_s28_privacy.xml").isFile, "$tag offers translated disclosure copy")
+            assertTrue(File(locale, "strings_native_privacy.xml").isFile, "$tag offers a translated policy")
+            val detail = File(locale, "strings_s28_privacy.xml").readText()
+            val policy = File(locale, "strings_native_privacy.xml").readText()
+            for (key in listOf("collectRules", "nativeTelemetryUsageDetail", "nativeTelemetryConsentBody")) {
+                val match = Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(detail)
+                assertTrue(match != null, "${locale.name}: $key is translated")
+                val text = match.groupValues[1]
+                assertEquals(emptyList(), recipientViolations(text), "${locale.name}: $key names the receivers")
+            }
+            assertEquals(emptyList(), recipientViolations(policy), "${locale.name}: policy receivers")
+            assertTrue("app_build" in policy, "${locale.name}: policy build property")
+            for (name in code.events.keys + code.properties + code.keys + code.failures + code.allFields) {
+                assertTrue(has(policy, name), "${locale.name}: the translated policy must name $name")
+            }
+        }
+        assertEquals(emptyList(), recipientViolations(File(repo, "PRIVACY.md").readText()))
+        assertTrue("Umami" in recipientViolations("Google hosted with Railway"), "omitting the actual sender must fail")
+        assertTrue("Railway" in recipientViolations("Google and Umami"), "omitting the host must fail")
+    }
+
+    /** The phrase each offered language uses for "every month", and the words that would say a day instead. */
+    private val monthly = mapOf(
+        "en" to ("every month" to Regex("(?i)daily|every day|each day")),
+        "ar" to ("كل شهر" to Regex("يومي|كل يوم")),
+        "es" to ("cada mes" to Regex("(?i)diari[oa]|cada día")),
+        "fr" to ("chaque mois" to Regex("(?i)quotidien|journalier|chaque jour")),
+        "id" to ("setiap bulan" to Regex("(?i)harian|setiap hari")),
+        "ja" to ("毎月" to Regex("毎日|日ごと")),
+        "pt" to ("cada mês" to Regex("(?i)diári[oa]|cada dia")),
+        "ru" to ("каждый месяц" to Regex("(?i)ежедневн|каждый день|суточн")),
+        "vi" to ("mỗi tháng" to Regex("(?i)hằng ngày|hàng ngày|mỗi ngày")),
+        "zh" to ("每月" to Regex("每日|每天")),
+    )
+
+    @Test
+    fun `B-SEC-210 every offered language says the anonymous visitor hash changes every month and never daily`() {
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        val offered = AppLanguage.entries.mapNotNull { it.tag }
+        assertEquals(monthly.keys, offered.toSet(), "every offered language has its month phrase in this guard")
+        for (tag in offered) {
+            val (month, day) = monthly.getValue(tag)
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            val detail = File(locale, "strings_s28_privacy.xml").readText()
+            val policy = File(locale, "strings_native_privacy.xml").readText()
+            fun text(source: String, key: String) =
+                Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(source)!!.groupValues[1]
+            for ((source, key) in listOf(detail to "nativeTelemetryUsageDetail", detail to "collectRules", policy to "nativeBundledPrivacy")) {
+                val words = text(source, key)
+                assertTrue(month in words, "${locale.name}: $key says the visitor hash changes \"$month\"")
+                assertTrue(day.find(words) == null, "${locale.name}: $key must not say the hash changes by the day")
+            }
+            assertTrue(day.find(text(detail, "nativeTelemetryConsentBody")) == null, "${locale.name}: consent sentence")
+        }
+        val md = File(repo, "PRIVACY.md").readText()
+        assertTrue("changes every month" in md, "PRIVACY.md says the hash changes every month")
+        assertTrue(Regex("(?i)daily visitor|daily hash").find(md) == null, "PRIVACY.md must not say daily")
+    }
+
+    @Test
+    fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
+        for ((name, fields) in productSchema) {
+            val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
+                "website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"), 1000)!!
+            assertEquals(setOf("version", "build"), event.payload.data.keys - fields.keys, name)
+        }
+        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
+        assertTrue("UsageTelemetryVendor" in wiring && "UmamiSender(" in wiring, "the notice covers the sender that the app actually builds")
+        assertTrue("BuildConfig.VERSION_NAME" in wiring && "BuildConfig.VERSION_CODE" in wiring, "version facts come from this build")
+        val firebase = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/FirebaseTelemetryVendor.kt").readText()
+        assertTrue("setUserProperty(\"app_build\", null)" in firebase, "usage off clears the Google build property")
     }
 
     // ---- the tests ----

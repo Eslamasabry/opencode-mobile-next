@@ -14,7 +14,6 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
 import io.github.eslamasabry.oc.engine.analytics.product.ConsentQuestion
-import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
 import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashOffer
 import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashOfferFacts
@@ -40,12 +39,12 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.shell.ShellOverlay
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.telemetryConsentBody
+import io.github.eslamasabry.oc.ui.words.res.nativeTelemetryConsentBody
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentChoose
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentSave
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashesDetail
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashesTitle
-import io.github.eslamasabry.oc.ui.words.res.telemetryUsageDetail
+import io.github.eslamasabry.oc.ui.words.res.nativeTelemetryUsageDetail
 import io.github.eslamasabry.oc.ui.words.res.telemetryUsageTitle
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentNever
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentNotNow
@@ -132,8 +131,6 @@ class TelemetryContinuity(
         asking.value = ConsentAsk.Closed
         if (!share) return
         telemetry.setConsent(usage = true, crashes = true)
-        // This start's cold open happened before the answer and was dropped.
-        telemetry.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
     }
 
     /** "Choose": the two switches, each with what it sends. */
@@ -145,7 +142,6 @@ class TelemetryContinuity(
     suspend fun saveChoice(usage: Boolean, crashes: Boolean) {
         asking.value = ConsentAsk.Closed
         telemetry.setConsent(usage, crashes)
-        if (usage) telemetry.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
     }
 
     fun dismissChoice() {
@@ -241,7 +237,7 @@ class TelemetryConsentOverlay(private val continuity: AppTelemetryContinuity) : 
                         title = stringResource(Res.string.telemetryConsentTitle),
                         confirmLabel = stringResource(Res.string.telemetryConsentShare),
                         kind = KitConfirmKind.Neutral,
-                        body = stringResource(Res.string.telemetryConsentBody),
+                        body = stringResource(Res.string.nativeTelemetryConsentBody),
                         consequenceItems =
                             listOf(
                                 KitConsequence(stringResource(Res.string.telemetryConsentSends)),
@@ -284,8 +280,8 @@ private fun ConsentChoiceSheet(visible: Boolean, onSave: (Boolean, Boolean) -> U
                 checked = usage,
                 modifier = Modifier.testTag("telemetry-consent-usage"),
                 leading = KitRowLeading.Glyph(KitIcons.shield),
-                supporting = stringResource(Res.string.telemetryUsageDetail),
-                supportingMaxLines = 8,
+                supporting = stringResource(Res.string.nativeTelemetryUsageDetail),
+                supportingMaxLines = Int.MAX_VALUE,
                 onCheckedChange = { usage = it },
             )
             KitSwitchRow(

@@ -159,6 +159,7 @@ public object HealthContract {
             CollectItem.Memory to listOf("memory_pressure"),
             CollectItem.Device to
                 listOf(
+                    "app_build",
                     "ram_range",
                     "free_storage_range",
                     "abi",

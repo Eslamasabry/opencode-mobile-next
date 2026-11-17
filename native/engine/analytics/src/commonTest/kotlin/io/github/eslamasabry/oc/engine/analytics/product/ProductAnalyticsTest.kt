@@ -9,11 +9,15 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import io.github.eslamasabry.oc.engine.analytics.health.MemoryTelemetryReportStore
+import io.github.eslamasabry.oc.engine.analytics.health.MemoryJourneyMemory
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsentStore
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.runTest
 
 /** The vendor side as the tests read it: events only. */
@@ -62,6 +66,55 @@ class ProductAnalyticsTest {
 
     private object NoStore : TelemetryConsentStore {
         override suspend fun write(consent: TelemetryConsent): Boolean = true
+    }
+
+    @Test
+    fun `B-180 app open precedes startup health journey and screen and is not duplicated by the async version read`() {
+        val telemetry = analytics()
+        val lifecycle = ProductLifecycle(telemetry, StepClock())
+        lifecycle.beginColdStart()
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Chat))
+        telemetry.attachJourney(MemoryJourneyMemory())
+        telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
+        lifecycle.coldStart("3.0.1+10081", "3.0.1+10081")
+        assertEquals(listOf("app_open", "screen_view", "journey_milestone", "journey_milestone", "memory_pressure"), sink.events.map { it.first })
+        assertEquals(listOf("opened", "chat_opened"), sink.events.filter { it.first == "journey_milestone" }.map { it.second["step"] })
+    }
+
+    @Test
+    fun `B-180 enabling usage opens on the current screen without collecting the off-consent history`() = runTest {
+        val telemetry = analytics(usage = false)
+        telemetry.attachJourney(MemoryJourneyMemory())
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Settings))
+        telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Chat))
+        assertTrue(sink.events.isEmpty())
+        telemetry.setConsent(usage = true, crashes = false)
+        assertEquals(listOf("app_open", "screen_view", "journey_milestone", "journey_milestone"), sink.events.map { it.first })
+        assertEquals(listOf("opened", "chat_opened"), sink.events.filter { it.first == "journey_milestone" }.map { it.second["step"] })
+        assertEquals(mapOf("screen" to "chat"), sink.events[1].second)
+        telemetry.track(ProductEvent.AppOpen, mapOf("kind" to "warm"))
+        assertEquals(listOf("app_open", "screen_view", "journey_milestone", "journey_milestone", "app_open", "screen_view"), sink.events.map { it.first })
+        assertEquals(mapOf("screen" to "chat"), sink.events.last().second)
+        telemetry.setConsent(usage = false, crashes = false)
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Settings))
+        assertEquals(6, sink.events.size, "off-consent screen changes are not sent")
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @Test
+    fun `B-180 immediate consent observers cannot put health before the opening and current page`() = runTest {
+        val telemetry = analytics(usage = false)
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Chat))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            telemetry.usage.collect { on ->
+                if (on) telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
+            }
+        }
+        assertTrue(sink.events.isEmpty())
+        telemetry.setConsent(usage = true, crashes = false)
+        assertEquals(listOf("app_open", "screen_view", "memory_pressure"), sink.events.map { it.first })
+        assertEquals(mapOf("screen" to "chat"), sink.events[1].second)
     }
 
     @Test

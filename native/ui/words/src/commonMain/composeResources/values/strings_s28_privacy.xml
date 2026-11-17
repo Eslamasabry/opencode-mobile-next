@@ -9,7 +9,7 @@
     <string name="collectTitle">What we collect</string>
     <string name="collectRowSummary">Usage and Crash reports are off until you turn them on. See exactly what each one sends.</string>
     <string name="collectUsageNotSentYet">This version does not send usage and app health yet. Your answer is kept and used once it does.</string>
-    <string name="collectRules">Only fixed words and number ranges are sent, never free text. Turning a switch off deletes what was not sent yet.</string>
+    <string name="collectRules">When usage is on, usage reports go to Google and to our own Umami analytics server, hosted with Railway. Umami stores no IP address or identifier of the person, and its anonymous visitor hash changes every month and cannot be turned back into your address or your device. Only fixed words, ranges and the app version and build are sent, never free text. Turning usage off deletes unsent reports.</string>
     <string name="collectUsageLabel">With Usage and app health</string>
     <string name="collectCrashesLabel">With Crash reports</string>
     <string name="collectReportLabel">Only when you send a problem report</string>
@@ -18,7 +18,7 @@
     <string name="collectDrop">Why a connection dropped and whether it came back</string>
     <string name="collectSend">Whether sending a message worked or waited in the queue, how you made it (typed, spoken or attached), which agent, and how soon the first reply came</string>
     <string name="collectTurns">How each turn ended (done, finished with nothing to show, stopped, error, connection lost or no answer to an approval), how long until you saw a first reply and until the agent first showed any sign of work, how long it took, how many tools it used and whether it recovered from a dropped connection</string>
-    <string name="collectApprovals">What kind of request you were asked (run, edit, read, web or a question), your answer or that a saved choice answered it or the run was stopped, where you answered (chat, home, a notification or a widget), and how long it waited. Never the command, file or question itself</string>
+    <string name="collectApprovals">What kind of request you were asked (run, edit, read, web or a question), your answer or that a saved choice answered it or the run was stopped, where you answered (conversation, home, a notification or a widget), and how long it waited. Never the command, file or question itself</string>
     <string name="collectStall">Where a long wait happened (a tool, an approval) and for how long</string>
     <string name="collectQueue">How many queued messages were sent or failed</string>
     <string name="collectPhoneSetup">How far setup on this phone got, how long each step took, the kind of failure, and whether you left it unfinished and came back</string>
@@ -31,13 +31,15 @@
     <string name="collectShareIn">How many pictures or files you shared into the app, and whether they were images or files. Never their names or contents</string>
     <string name="collectStarAsk">Whether the one-time ask to star the project on GitHub was shown, tapped or dismissed</string>
     <string name="collectStart">How fast the app starts</string>
-    <string name="collectSmooth">How smooth pages are (the share of late and slow frames, and frozen frames), the screen’s refresh rate, and in the chat what was going on (a reply arriving, scrolling, a menu or sheet open, the keyboard up or nothing)</string>
+    <string name="collectSmooth">How smooth pages are (the share of late and slow frames, and frozen frames), the screen’s refresh rate, and in the conversation what was going on (a reply arriving, scrolling, a menu or sheet open, the keyboard up or nothing)</string>
     <string name="collectMemory">Memory warnings from Android</string>
-    <string name="collectDevice">Ranges for your phone’s memory and free storage, its processor type and WebView version, whether notifications are allowed, and the kind and version of server you use</string>
+    <string name="collectDevice">Ranges for your phone’s memory and free storage, its processor type and WebView version, whether notifications are allowed, and the kind and version of server you use. The app version and build number, language, screen size, Android version and device class are also reported.</string>
     <string name="collectCrashKind">The kind of error and where in the app’s code it happened, never its message</string>
     <string name="collectExit">Why Android ended the app last time (for example a crash, a freeze or low memory)</string>
     <string name="collectSteps">Your last 30 steps, as short words such as chat.send</string>
     <string name="collectCrashKeys">The app version, how it was installed, the kind of server, whether this phone’s server is running, how many connections are open, the server version, and the kind and code of a report</string>
     <string name="collectReport">What you write about the problem, the last time the app closed unexpectedly, the app and Android versions, a memory range and the kind of server, with keys, addresses and paths blanked. No log and no conversation. You see all of it and choose Send or Cancel.</string>
     <string name="collectNever">Your prompts and replies, file names or paths, web addresses, host names, IP addresses, error message text, keys or tokens, the advertising ID or the Android ID</string>
+    <string name="nativeTelemetryUsageDetail">Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone's memory, free storage, CPU and WebView version. Also sends timings to Firebase Performance Monitoring: how long app start, connecting, the first reply, setup steps and starting an agent take. Only fixed words, ranges and numbers, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID. Usage reports also go to an analytics server we run ourselves: Umami, hosted with Railway. Umami stores no IP address and no identifier of the person. It uses the connection address once to work out a coarse location. It keeps an anonymous visitor hash that changes every month; the hash cannot be turned back into your address or your device. Reports include the app version and build number, language, screen size, Android version and device class. No device or installation ID is sent to Umami.</string>
+    <string name="nativeTelemetryConsentBody">If you agree, usage and app health reports go to Google Firebase and our own Umami server hosted with Railway. Crash reports go to Google Firebase. Umami stores no IP address or personal identifier. You can change each choice in Settings › Privacy and data.</string>
 </resources>

@@ -117,6 +117,13 @@ class PrivacyLeakGuardTest {
     }
 
     @Test
+    fun `B-180 public collection build settings pass every privacy leak rule`() {
+        val config = File(root, "androidApp/analytics.properties")
+        assertTrue(config.isFile, "public build settings exist")
+        assertEquals(emptySet(), PrivacyLeakGuard.rulesIn(config.readText()), "public settings must not match a private detail or token")
+    }
+
+    @Test
     fun `documentation addresses and ordinary text pass`() {
         val text = "tailnet range 100.64.0.0/10, example 100.100.100.100 and 100.64.0.10, path /home/owner/x, mail a@example.com"
         assertTrue(PrivacyLeakGuard.check(mapOf("docs/a.md" to text), emptySet()).isEmpty())

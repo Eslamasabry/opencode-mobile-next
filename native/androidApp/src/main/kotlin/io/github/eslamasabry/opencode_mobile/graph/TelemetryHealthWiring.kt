@@ -130,6 +130,9 @@ class AppTelemetryHealth(
                 interaction = chatInteraction::word,
             )
         this.health = health
+        lifecycle.beginColdStart()
+        // Seed the already-visible page before startup health/journey events, then follow actual route changes.
+        followScreens(health)
         health.start()
         // The install-to-first-reply funnel watches the events below, so it is attached before any of them is sent.
         telemetry.attachJourney(PrefsJourneyMemory(TelemetryAnswers(stores.prefs, stores.lanes.app), scope))
@@ -141,7 +144,6 @@ class AppTelemetryHealth(
         }
         startJourneys()
         followUpdates()
-        followScreens(health)
         followConnections(health)
         // agent_start and its trace, from the agent host's create call (the protocol module knows no telemetry).
         PaseoGateway.agentStartObserver = { provider, failure, elapsedMs ->
@@ -212,20 +214,26 @@ class AppTelemetryHealth(
     // ---- pages ----
 
     private fun followScreens(health: HealthTelemetry) {
+        fun visible(route: AppRoute) {
+            val screen = screenOf(route)
+            telemetry.track(ProductEvent.ScreenView, mapOf("screen" to screen))
+            // The person chose to connect a computer: the new-server form opened (from any of its entries).
+            if (choseToConnectComputer(route)) HealthFlow().connectComputerChosen()
+            telemetry.breadcrumb("nav.open:${screen.wire}")
+            health.jank.screen(screen)
+            // Opening the review page is the review_open feature (a page change, not a recomposition).
+            ProductFeature.openedBy(screen)?.let(telemetry::feature)
+        }
+        val routes = navigator.value.top
+        var previous = routes.value
+        previous?.let(::visible)
         scope.launch {
-            navigator.value.top
-                .filterNotNull()
-                .distinctUntilChanged()
-                .collect { route ->
-                    val screen = screenOf(route)
-                    // The person chose to connect a computer: the new-server form opened (from any of its entries).
-                    if (choseToConnectComputer(route)) HealthFlow().connectComputerChosen()
-                    telemetry.breadcrumb("nav.open:${screen.wire}")
-                    health.jank.screen(screen)
-                    telemetry.track(ProductEvent.ScreenView, mapOf("screen" to screen))
-                    // Opening the review page is the review_open feature (a page change, not a recomposition).
-                    ProductFeature.openedBy(screen)?.let(telemetry::feature)
+            routes.filterNotNull().collect { route ->
+                if (route != previous) {
+                    previous = route
+                    visible(route)
                 }
+            }
         }
     }
 

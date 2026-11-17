@@ -18,15 +18,23 @@ import io.github.eslamasabry.oc.engine.analytics.health.Telemetry
 @OptIn(ExperimentalAtomicApi::class)
 public class ProductLifecycle(private val analytics: Telemetry, private val clock: Clock) {
     private val away = AtomicBoolean(false)
+    private val earlyOpening = AtomicBoolean(false)
     private val since = AtomicLong(clock.now().toEpochMilliseconds())
 
-    /**
-     * The process started. [previousVersion] is the stored `oc.telemetry.lastVersion`; returns the version to store
-     * now, or null when it is unchanged.
-     */
-    public fun coldStart(currentVersion: String, previousVersion: String?): String? {
+    /** Establishes app_open before startup health, journey or navigation events can be emitted. */
+    public fun beginColdStart() {
+        if (!earlyOpening.compareAndSet(expectedValue = false, newValue = true)) return
+        emitColdOpening()
+    }
+
+    /** Reads the stored version asynchronously without sending a second cold opening. Returns a changed version. */
+    private fun emitColdOpening() {
         analytics.breadcrumb("app.start")
         analytics.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
+    }
+
+    public fun coldStart(currentVersion: String, previousVersion: String?): String? {
+        if (!earlyOpening.exchange(false)) emitColdOpening()
         if (previousVersion == currentVersion) return null
         if (previousVersion != null) {
             analytics.track(ProductEvent.UpdateInstalled)

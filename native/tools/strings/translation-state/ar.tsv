@@ -2343,13 +2343,13 @@ codexTokenLabel	646b556494
 codexTokenReentry	0d659e9919
 codexTokenStorageHelp	3015a1a14b
 collectAgents	d720bc6e84
-collectApprovals	be736b70c0
+collectApprovals	3417b5da91
 collectBackground	42ece457ec
 collectConnect	46cca38725
 collectCrashKeys	7fd4e40f3b
 collectCrashKind	cffc0cbf8b
 collectCrashesLabel	9ecbc9dad7
-collectDevice	16e1d68658
+collectDevice	4cc9ad81e8
 collectDrop	13bd95a3dd
 collectExit	34e19a2690
 collectMemory	39a3b87916
@@ -2361,10 +2361,10 @@ collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
 collectRowSummary	55533aebc0
-collectRules	cb60c61eac
+collectRules	fd4128a65b
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
-collectSmooth	073b1e5372
+collectSmooth	ad0735212d
 collectStall	acce6fdb1a
 collectStarAsk	b3b26f0ab5
 collectStart	6f2a8cf39d
@@ -7775,7 +7775,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	63e26b40e1
+nativeBundledPrivacy	2e67af5c45
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -7926,6 +7926,8 @@ nativeSearchShortcutRefresh	70bd063bf7
 nativeSearchShortcutSend	2343b816ac
 nativeSearchShortcutTabs	91be216915
 nativeSearchShortcutsBody	8b0dad5f24
+nativeTelemetryConsentBody	ef4f42e264
+nativeTelemetryUsageDetail	5d0cf20ff6
 nativeToolsChooseModel	09388d8f7f
 nativeToolsCoding	b35ab0829c
 nativeToolsNoParameters	a09c14afa3
