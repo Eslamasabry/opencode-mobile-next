@@ -441,7 +441,7 @@ class ChatFloatingEdgesTest {
         }
 
     @Test
-    fun `B-CHAT-EDGE-027 the header capsule is one part in every style: nothing is cast beside or under it`() {
+    fun `B-CHAT-EDGE-027 the header capsule is one part in every style, nothing is cast beside or under it`() {
         for (style in listOf(Style.Brutal, Style.Paper, Style.Signal, Style.Solid)) for (dark in listOf(true, false)) run(Scene(style = style, dark = dark)) {
             val image = onNodeWithTag("scene").captureToImage().toPixelMap()
             val c = bounds("kit-header-capsule")
