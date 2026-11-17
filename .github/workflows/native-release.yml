@@ -100,6 +100,12 @@ jobs:
             echo "::error::$notes must exist and start with '# OpenCode Mobile $name+$code'"
             exit 1
           fi
+          # A public release never reuses a version name: no other tag may carry v<name>+<build> (test builds are never tagged).
+          other="$(git tag -l "v$name+*" | grep -v -x -F -e "$TAG" | grep -v -e '-test' || true)"
+          if [ -n "$other" ]; then
+            echo "::error::version $name is already published as $(echo "$other" | head -n 1); every public release needs a name no earlier release used"
+            exit 1
+          fi
           if gh release view "$TAG" --json isDraft > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
             python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("isDraft") is True else "Refusing to touch a published release")' "$RUNNER_TEMP/release-state.json"
           fi
@@ -177,7 +183,7 @@ jobs:
           set -euo pipefail
           export JAVA_HOME="$JAVA_HOME_21_X64"
           # The same build memory as native CI (native-setup): R8 on the full app does not fit the project default.
-          ./gradlew --console=plain "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8" :androidApp:assembleSwitchRelease
+          ./gradlew --console=plain "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8" :androidApp:assembleSwitchRelease -Poc.publicRelease=true
 
       - name: Delete the signing file
         if: always()

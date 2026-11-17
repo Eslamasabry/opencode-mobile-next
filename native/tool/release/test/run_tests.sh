@@ -108,6 +108,19 @@ expect "E01-S01 gate refuses splits with different versionCodes" 1 "$GATE" --exp
 check "E01-S01 the refusal names the versionCode split" has "different versionCodes"
 expect "E01-S01 gate reads version.properties by default" 1 "$GATE" --expect-signer "$PUBLIC" "$A/dev.apk"
 
+# Version names (2026-11-17): the public release carries the plain name, a build that is not the public release carries
+# <name>-test.<build> and never counts as the public version.
+apk "$A/test.apk" "$PKG" 10081 3.0.1-test.10081 "$OWNER"
+expect "V301 gate passes a test build carrying -test.<its build>" 0 "$GATE" --test-build --expect-signer "$OWNER" --version-code 10081 --version-name 3.0.1-test.10081 "$A/test.apk"
+expect "V301 gate refuses a test build as a public release" 1 "$GATE" --expect-signer "$OWNER" --version-code 10081 --version-name 3.0.1-test.10081 "$A/test.apk"
+check "V301 the refusal says a public release never carries -test" has "a public release never carries -test"
+apk "$A/plain301.apk" "$PKG" 10080 3.0.1 "$PUBLIC"
+expect "V301 gate refuses the plain name on a test build" 1 "$GATE" --test-build --expect-signer "$PUBLIC" --version-code 10080 --version-name 3.0.1 "$A/plain301.apk"
+expect "V301 gate passes the plain name on the public release" 0 "$GATE" --plain-release --expect-signer "$PUBLIC" --version-code 10080 --version-name 3.0.1 "$A/plain301.apk"
+apk "$A/test-other.apk" "$PKG" 10081 3.0.1-test.10070 "$OWNER"
+expect "V301 gate refuses a test name that names another build" 1 "$GATE" --test-build --expect-signer "$OWNER" --version-code 10081 --version-name 3.0.1-test.10070 "$A/test-other.apk"
+check "V301 the refusal names the build the name must carry" has "is not X.Y.Z-test.10081"
+
 # ---- kept classes on the built APK (E01-S08) --------------------------------------------------------------------------
 KEPT="$NATIVE/tool/release/kept_classes_check.sh"
 cat >"$FAKE/dexdump" <<'EOF2'
@@ -289,6 +302,29 @@ check "E01-S05 the named key file is used" has "key file present ($KEYP)"
 rm -f "$R/native/key.properties" "$R/android/key.properties"
 expect "E01-S05 without any key file the dry run still runs" 0 bash "$R/scripts/native-release.sh" --no-build
 check "E01-S05 the missing key is reported" has "no complete key file"
+
+# V301: a public release never reuses a published version name (a tag v<name>+<build>), locally or on the remote.
+R="$(new_release_repo)"
+pass_smoke "$R"
+git -C "$R" tag v3.0.0+10005
+expect "V301 a public release refuses a name that has a tag" 1 bash "$R/scripts/native-release.sh" --no-build
+check "V301 the refusal names the existing tag" has "version 3.0.0 is already published as v3.0.0+10005"
+git -C "$R" push -q origin v3.0.0+10005 && git -C "$R" tag -d v3.0.0+10005 >/dev/null
+expect "V301 the same on the remote only" 1 bash "$R/scripts/native-release.sh" --no-build
+check "V301 the remote tag is named too" has "already published as v3.0.0+10005"
+expect "V301 --go refuses it too and tags nothing new" 1 env OC_KEY_PROPERTIES="$KEYP" bash "$R/scripts/native-release.sh" --go
+check "V301 --go left no commit" bash -c "[[ \"\$(git -C '$R' rev-list --count HEAD)\" == 1 ]]"
+printf 'versionName=3.0.1\nversionCode=10010\n' >"$R/native/version.properties"
+git -C "$R" commit -q -am "next name [skip ci]" && git -C "$R" push -q origin master
+pass_smoke "$R"
+expect "V301 a new name passes beside the old tag" 0 bash "$R/scripts/native-release.sh" --no-build
+check "V301 the dry run says the APKs carry the plain name" has "name        3.0.1 (public release"
+git -C "$R" tag v3.0.1+10020-test.10020
+expect "V301 a test tag does not spend the name" 0 bash "$R/scripts/native-release.sh" --no-build
+expect "V301 the owner lineage dry run is a test build" 0 bash "$R/scripts/native-release.sh" --lineage owner --no-build
+check "V301 it says its name carries -test" has "3.0.1-test.<build> (owner lineage = test build"
+expect "V301 the owner lineage never tags" 1 env OC_KEY_PROPERTIES="$KEYP" bash "$R/scripts/native-release.sh" --lineage owner --go
+check "V301 the refusal says a test build is never tagged" has "a test build is never tagged"
 
 R="$(new_release_repo 3.0.0-dev)"
 expect "E01-S05 refuses a suffixed versionName" 1 bash "$R/scripts/native-release.sh" --no-build

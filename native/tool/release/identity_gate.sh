@@ -3,11 +3,13 @@
 # Flutter app as an update on the phones that hold the expected signing lineage.
 #
 #   native/tool/release/identity_gate.sh --expect-signer <SHA-256> [--version-code N] [--version-name X.Y.Z]
-#                                         [--package P] <apk>...
+#                                         [--plain-release | --test-build] [--package P] <apk>...
 #
 # Every APK must:
 #   - be package io.github.eslamasabry.opencode_mobile (the switch build; --package only for a planted test);
-#   - carry versionCode N and versionName X.Y.Z (default: native/version.properties), N at least 10010, X.Y.Z plain;
+#   - carry versionCode N and versionName X.Y.Z (default: native/version.properties), N at least 10010, X.Y.Z plain
+#     (the public release, --plain-release, the default); a build that is not the public release (--test-build, the
+#     owner lineage) carries X.Y.Z-test.N instead, with the same N, and --version-name then names that full name;
 #   - verify with apksigner and print exactly ONE signer whose SHA-256 equals --expect-signer;
 # and all APKs given (the ABI splits and the universal one) must carry the same versionCode.
 # --expect-signer must be one of the two live lineages (Owner local 1DE5BF08…, Public CI 842284B2…); the Legacy CI
@@ -23,11 +25,11 @@ readonly OWNER_LOCAL="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A624
 readonly PUBLIC_CI="842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
 readonly LEGACY_CI="2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC"
 
-usage() { sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; }
 cannot() { echo "identity gate: cannot run: $*" >&2; exit 2; }
 
 native_dir="$(cd "$(dirname "$0")/../.." && pwd)"
-expect="" want_code="" want_name="" package="$SWITCH_PACKAGE"
+expect="" want_code="" want_name="" package="$SWITCH_PACKAGE" kind=plain
 apks=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,6 +37,8 @@ while [[ $# -gt 0 ]]; do
     --expect-signer) [[ $# -ge 2 ]] || cannot "--expect-signer needs a value"; expect="$2"; shift 2 ;;
     --version-code) [[ $# -ge 2 ]] || cannot "--version-code needs a value"; want_code="$2"; shift 2 ;;
     --version-name) [[ $# -ge 2 ]] || cannot "--version-name needs a value"; want_name="$2"; shift 2 ;;
+    --plain-release) kind=plain; shift ;;
+    --test-build) kind=test; shift ;;
     --package) [[ $# -ge 2 ]] || cannot "--package needs a value"; package="$2"; shift 2 ;;
     --) shift; apks+=("$@"); break ;;
     -*) cannot "unknown option $1 (see --help)" ;;
@@ -57,7 +61,10 @@ prop() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*\([^[:space:]#]*\).*/
 if [[ -z "$want_code" || -z "$want_name" ]]; then
   [[ -f "$props" ]] || cannot "no $props (pass --version-code and --version-name)"
   [[ -n "$want_code" ]] || want_code="$(prop versionCode)"
-  [[ -n "$want_name" ]] || want_name="$(prop versionName)"
+  if [[ -z "$want_name" ]]; then
+    want_name="$(prop versionName)"
+    [[ "$kind" == test ]] && want_name="$want_name-test.$want_code"
+  fi
 fi
 [[ "$want_code" =~ ^[1-9][0-9]*$ ]] || cannot "expected versionCode '$want_code' is not a number"
 
@@ -107,7 +114,13 @@ for apk in "${apks[@]}"; do
     refuse "$name" "versionCode $got_code is below the first native release number $FIRST_RELEASE_CODE"
   fi
   [[ "$got_name" == "$want_name" ]] || refuse "$name" "versionName is ${got_name:-<none>}, expected $want_name"
-  [[ "$got_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || refuse "$name" "versionName ${got_name:-<none>} is not a plain X.Y.Z"
+  if [[ "$kind" == test ]]; then
+    [[ "$got_name" == *-test."$want_code" && "${got_name%-test.*}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+      refuse "$name" "versionName ${got_name:-<none>} is not X.Y.Z-test.$want_code (a build that is not the public release carries -test.<build>)"
+  else
+    [[ "$got_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+      refuse "$name" "versionName ${got_name:-<none>} is not a plain X.Y.Z (a public release never carries -test.<build>)"
+  fi
 
   if ! certs="$("$apksigner" verify --print-certs "$apk" 2>/dev/null)"; then
     refuse "$name" "apksigner does not verify the signature (unsigned or broken)"; continue

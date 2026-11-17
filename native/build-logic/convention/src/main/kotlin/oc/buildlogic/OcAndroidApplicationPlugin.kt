@@ -45,7 +45,13 @@ class OcAndroidApplicationPlugin : Plugin<Project> {
                         versionProps
                             .getProperty("versionCode")
                             .toInt() // ≥ 10000, never goes back (D3)
-                    versionName = versionProps.getProperty("versionName")
+                    // Only a build marked public carries the plain name; every other one is <name>-test.<code>.
+                    versionName =
+                        ReleaseVersionName.forBuild(
+                            versionProps.getProperty("versionName"),
+                            versionProps.getProperty("versionCode").toInt(),
+                            ReleaseVersionName.isPublicBuild(target),
+                        )
                 }
                 flavorDimensions += "channel"
                 productFlavors {
