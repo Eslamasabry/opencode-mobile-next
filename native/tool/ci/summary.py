@@ -118,6 +118,24 @@ if candidate_lane:  # the release candidate: only the frozen known list counts, 
 else:
     new = [f for f in failed if is_hard(f) or (f['id'] not in base_failed and not is_known(f))]
 known = [f for f in failed if f not in new]
+# A named, bounded exception (reason real-time-under-load in known_failures.txt): tests that wait on real time and may time out
+# under load. They are NOT absorbed: a candidate that fails ONLY on them may be re-run ONCE (and the verdict says so); a second
+# failure of the same test, or any other failure, fails the candidate. OC_PRIOR_FAILURES names the failures file of the first
+# attempt (ci_verdict.sh writes one per run); OC_FAILURES_OUT is where this run's failing ids are written.
+rt_names = {h for h, w in known_reasons().items() if w == 'real-time-under-load'} if candidate_lane else set()
+rt_failed = [f for f in known if f['id'] in rt_names]
+known = [f for f in known if f['id'] not in rt_names]
+prior = None
+if candidate_lane and env('OC_PRIOR_FAILURES'):
+    try:
+        prior = set(json.load(open(env('OC_PRIOR_FAILURES'))))
+    except (OSError, ValueError):
+        prior = set()
+if env('OC_FAILURES_OUT'):
+    try:
+        json.dump(sorted(f['id'] for f in failed), open(env('OC_FAILURES_OUT'), 'w'))
+    except OSError:
+        pass
 real = [f'{s["name"]}: {r}' for s in shards for r in s.get('real_failures', [])]
 broken = [s['name'] for s in shards if s.get('build_failed') and not s['failures'] and not s.get('real_failures')]
 real += [f'{n}: the Gradle run failed with no readable cause' for n in broken]
@@ -288,6 +306,17 @@ if lane == 'candidate' and android.get('failed') and not any(s['failures'] or s.
 reasons += [f'real failure, {r}' for r in real]
 if new:
     reasons.append(f'{len(new)} failing test(s) that are not known noise')
+if rt_failed:
+    names = ', '.join(f'`{f["id"].split(" > ")[-1]}`' for f in rt_failed[:5]) + (f' (+{len(rt_failed) - 5} more)' if len(rt_failed) > 5 else '')
+    if new or real or integrity:
+        reasons.append(f'{len(rt_failed)} real-time-under-load failure(s) together with other failures: no re-run allowed ({names})')
+    elif prior is None:
+        reasons.append(f'RE-RUN ALLOWED (once): only real-time-under-load test(s) failed: {names}. Re-run the candidate ONCE and read it '
+                       'with OC_PRIOR_FAILURES=<the failures file of this run>')
+    elif any(f['id'] in prior for f in rt_failed):
+        reasons.append(f'a real-time-under-load test failed AGAIN after its one re-run: {names}')
+    else:
+        reasons.append(f'real-time-under-load failure(s) in the re-run too ({names}): the one re-run is used, no second one')
 reasons = [f'INTEGRITY, {r}' for r in integrity] + reasons
 red = bool(reasons)
 
@@ -314,6 +343,10 @@ elif failed and candidate_lane:
     print(f'\n{len(failed)} failing test(s), every one named exactly in the frozen tool/ci/known_failures.txt.')
 elif failed:
     print(f'\n{len(failed)} failing test(s) are all known noise (also failing on the base, or on tool/ci/known_failures.txt).')
+if candidate_lane and prior is not None and not rt_failed:
+    print('\nre-run: the real-time-under-load failures of the first attempt did not repeat; this re-run is the one allowed')
+if candidate_lane and rt_failed:
+    print(f'\nreal-time-under-load failures (counted separately, never absorbed): {len(rt_failed)}')
 if candidate_lane and known:
     reasons_of = known_reasons()
     by_reason = {}

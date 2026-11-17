@@ -65,8 +65,9 @@ RC=$(res compile) RT=$(res "desktop tests") RA=$(res apk) RR=$(res "record golde
 [ "$RC" = skipped ] && [ "$RT" = skipped ] && [ "$RCU" = skipped ] && [ "$RR" = skipped ] && [ "$RA" != skipped ] && \
   printf '%s' "$title" | grep -qi "apk" && lane="apk only"
 out=$(RESULT_COMPILE=$RC RESULT_TEST=$RT RESULT_APK=$RA RESULT_RECORD=$RR RESULT_CUSTOM=$RCU RESULT_DETEKT=$RD \
-  python3 -I "$TREE/native/tool/ci/summary.py" "$D/reports" "$D/base" "$lane")
+  OC_FAILURES_OUT="$D/failures-$RUN.json" python3 -I "$TREE/native/tool/ci/summary.py" "$D/reports" "$D/base" "$lane")
 rc=$?; printf '%s\n' "$out"
+[ -f "$D/failures-$RUN.json" ] && echo "failures file (OC_PRIOR_FAILURES for the one allowed re-run): $D/failures-$RUN.json"
 # A guard that could not run (its reference picture was not fetched) is never a pass: always one line with the count.
 printf '%s\n' "$out" | grep -q 'guards skipped (references not fetched)' || \
   python3 -I -c "import json,glob; print(sum(json.load(open(p)).get('guards_skipped',0) for p in glob.glob('$D/reports/**/report-*.json',recursive=True)), 'guards skipped (references not fetched)')"
