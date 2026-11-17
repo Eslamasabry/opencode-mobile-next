@@ -14,6 +14,13 @@ pass=0 fail=0 failed=()
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/oc-tool-test.XXXXXX")"
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
+# The ladder's own checks (oc_check_jdk wants a JDK 21) are not what these cases test, so the cases never depend on the
+# machine's Java: a stand-in JDK 21 that only answers the version question. Before, a PC whose JAVA_HOME is JDK 17 failed 18
+# ladder cases that pass on a runner (the cases that really run Gradle use the fake gradlew below, never this java).
+FAKE_JDK="$TMP_ROOT/jdk21"; mkdir -p "$FAKE_JDK/bin"
+printf '#!/bin/sh\necho "    java.specification.version = 21" >&2\n' >"$FAKE_JDK/bin/java"; chmod +x "$FAKE_JDK/bin/java"
+export JAVA_HOME="$FAKE_JDK"
+
 # Private-looking values, built so no literal appears in this file.
 P192="$((191 + 1)).$((84 * 2)).1.20"
 P10="$((5 * 2)).4.5.6"
@@ -377,7 +384,7 @@ else
   echo "skip vps end-to-end tests: rsync is not installed"
 fi
 # Local Gradle runs through a fake gradlew: cwd must be native/, one -p at most, exit classes and MISSING tasks.
-if command -v java >/dev/null; then
+if [ -x "$JAVA_HOME/bin/java" ]; then
   R="$(new_repo)"; cd "$R" || exit 1
   cat >native/gradlew <<'SH'
 #!/usr/bin/env bash
