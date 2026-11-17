@@ -1,8 +1,9 @@
 package io.github.eslamasabry.oc.android.voice
 
+import io.github.eslamasabry.oc.android.voice.device.ConnectedNetworkFacts
+import io.github.eslamasabry.oc.android.voice.device.LinkKind
 import io.github.eslamasabry.oc.android.voice.device.NetworkFacts
 import io.github.eslamasabry.oc.android.voice.device.SetupNetworkRules
-import io.github.eslamasabry.oc.android.voice.device.UnderlyingNetworkFacts
 import io.github.eslamasabry.oc.android.voice.tts.SystemTtsRules
 import io.github.eslamasabry.oc.android.voice.tts.VoiceInfo
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
@@ -76,31 +77,47 @@ class RulesTest {
         assertEquals(listOf("x".repeat(3000), "x"), SystemTtsRules.chunks("x".repeat(3001), 3000))
     }
 
-    private fun wifi(validated: Boolean = true) = UnderlyingNetworkFacts(internet = true, validated = validated, cellular = false, notMetered = true)
-
-    private fun mobile() = UnderlyingNetworkFacts(internet = true, validated = true, cellular = true, notMetered = false)
-
-    @Test
-    fun `B-ANDR-102 a VPN over unmetered Wi-Fi is free whatever the VPN network itself says`() {
-        // The VPN's own record is neither validated nor marked not-metered (seen on the owner's phone): Wi-Fi decides.
-        val vpn = facts(vpn = true, validated = false, metered = true, notMetered = false)
-        assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(vpn.copy(underlying = listOf(wifi()))))
-        assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true).copy(underlying = listOf(wifi()))))
-    }
-
-    @Test
-    fun `B-ANDR-102 a VPN over mobile data still waits, and one metered carrier among several holds it`() {
-        assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true).copy(underlying = listOf(mobile()))))
-        assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true).copy(underlying = listOf(wifi(), mobile()))))
-    }
-
     @Test
     fun `B-ANDR-102 plain Wi-Fi is free, plain mobile data waits, and a network that cannot be told stays ask`() {
         assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts()))
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(cellular = true)))
         assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(validated = false)))
         // A VPN over a Wi-Fi nobody validated is not known to be free either.
-        val unchecked = facts(vpn = true, validated = false).copy(underlying = listOf(wifi(validated = false)))
-        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(unchecked))
+        val unchecked = ConnectedNetworkFacts(setOf(LinkKind.Wifi), internet = true, validated = false, notMetered = true)
+        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Wifi), unchecked, own = facts(vpn = true, validated = false)))
+    }
+
+    private val wifiNet = ConnectedNetworkFacts(setOf(LinkKind.Wifi), internet = true, validated = true, notMetered = true)
+    private val mobileNet = ConnectedNetworkFacts(setOf(LinkKind.Cellular), internet = true, validated = true, notMetered = false)
+
+    private fun decide(vpnLinks: Set<LinkKind>, vararg connected: ConnectedNetworkFacts, own: NetworkFacts) =
+        SetupNetworkRules.classify(own.copy(underlying = SetupNetworkRules.carriersOf(vpnLinks, connected.toList())))
+
+    @Test
+    fun `B-ANDR-102 Wi-Fi and mobile data both connected, a VPN over Wi-Fi downloads, read by its own links`() {
+        // Its own record is unvalidated, so the carriers speak: mobile data beside it is not read.
+        assertEquals(
+            SetupNetwork.Unmetered,
+            decide(setOf(LinkKind.Wifi), wifiNet, mobileNet, own = facts(vpn = true, validated = false, metered = true, notMetered = false)),
+        )
+        // Its own record is validated and not metered: it is used first.
+        assertEquals(SetupNetwork.Unmetered, decide(setOf(LinkKind.Wifi), wifiNet, mobileNet, own = facts(vpn = true)))
+    }
+
+    @Test
+    fun `B-ANDR-102 Wi-Fi connected but the VPN pinned to mobile data waits`() {
+        val unsure = facts(vpn = true, validated = false, metered = true, notMetered = false)
+        assertEquals(SetupNetwork.Metered, decide(setOf(LinkKind.Cellular), wifiNet, mobileNet, own = unsure))
+        // Its own record says so too (validated, cellular link): waits whatever the plan.
+        assertEquals(SetupNetwork.Metered, decide(setOf(LinkKind.Cellular), wifiNet, mobileNet, own = facts(vpn = true, cellular = true)))
+    }
+
+    @Test
+    fun `B-ANDR-102 a validated VPN's own metered answer comes first, no carriers known stays ask`() {
+        assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true, metered = true)))
+        assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true)))
+        // Unvalidated and nothing known about what carries it: never free data.
+        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
+        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Bluetooth), wifiNet, mobileNet, own = facts(vpn = true, validated = false)))
     }
 }

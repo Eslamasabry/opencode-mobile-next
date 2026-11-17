@@ -22,6 +22,17 @@ public data class UnderlyingNetworkFacts(
     val notMetered: Boolean,
 )
 
+/** The kinds of link a network can be, as the VPN's own record names them. */
+public enum class LinkKind { Wifi, Cellular, Ethernet, Bluetooth }
+
+/** One connected non-VPN network as Android describes it. */
+public data class ConnectedNetworkFacts(
+    val links: Set<LinkKind>,
+    val internet: Boolean,
+    val validated: Boolean,
+    val notMetered: Boolean,
+)
+
 /** What the classifier needs; null fields mean "not answered". */
 public data class NetworkFacts(
     val hasManager: Boolean,
@@ -48,26 +59,37 @@ public data class NetworkFacts(
  * Metered, and a VPN whose two answers disagree is Unknown (never free data).
  */
 public object SetupNetworkRules {
+    /**
+     * The networks a VPN really runs over, from every connected non-VPN network: those whose links the VPN's own
+     * record carries (a VPN over Wi-Fi carries Wi-Fi, so mobile data that merely stays connected beside it is not
+     * read; a VPN pinned to mobile data carries cellular, so the Wi-Fi beside it is not read). Null when none fits.
+     */
+    public fun carriersOf(vpnLinks: Set<LinkKind>, connected: List<ConnectedNetworkFacts>): List<UnderlyingNetworkFacts>? =
+        connected
+            .filter { it.links.isNotEmpty() && vpnLinks.containsAll(it.links) }
+            .map { UnderlyingNetworkFacts(it.internet, it.validated, LinkKind.Cellular in it.links, it.notMetered) }
+            .ifEmpty { null }
+
     public fun classify(facts: NetworkFacts?): SetupNetwork {
         if (facts == null || !facts.hasManager) return SetupNetwork.Unknown
         if (!facts.hasActiveNetwork || !facts.internet) return SetupNetwork.Offline
         if (facts.vpn) {
-            // Decide by the network that really carries the traffic. Several: all of them must be free.
-            val carriers = facts.underlying.orEmpty().filter { it.internet }
-            if (carriers.isNotEmpty()) {
-                if (!facts.validated && carriers.none { it.validated }) return SetupNetwork.Unknown
-                return if (carriers.all { it.notMetered && !it.cellular }) SetupNetwork.Unmetered else SetupNetwork.Metered
+            // First the VPN's own answer, when it is validated: Android derives its metered-ness from the networks it
+            // runs over (Android 10 and later). Only when that is unvalidated or contradicts itself do the networks
+            // it runs over speak (carriers), each by its own NOT_METERED; none known stays "ask".
+            if (facts.validated) {
+                when {
+                    facts.cellular || facts.activeMetered -> return SetupNetwork.Metered
+                    facts.notMetered -> return SetupNetwork.Unmetered
+                }
             }
+            val carriers = facts.underlying.orEmpty().filter { it.internet }
+            if (carriers.isEmpty()) return SetupNetwork.Unknown
+            if (!facts.validated && carriers.none { it.validated }) return SetupNetwork.Unknown
+            return if (carriers.all { it.notMetered && !it.cellular }) SetupNetwork.Unmetered else SetupNetwork.Metered
         }
         if (!facts.validated) return SetupNetwork.Unknown
         if (facts.cellular) return SetupNetwork.Metered
-        if (facts.vpn) {
-            return when {
-                facts.activeMetered -> SetupNetwork.Metered
-                facts.notMetered -> SetupNetwork.Unmetered
-                else -> SetupNetwork.Unknown
-            }
-        }
         if (facts.activeMetered) return SetupNetwork.Metered
         return SetupNetwork.Unmetered
     }
@@ -130,33 +152,26 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
             null
         }
 
-    /**
-     * The networks a VPN can be riding on: connected non-VPN networks whose transports the VPN's own record carries
-     * (Android copies its underlying networks' transports onto it). Their own NOT_METERED answers decide; the name of
-     * the transport only picks which networks to read. Empty or unreadable: null (the VPN's own record decides).
-     */
     @Suppress("DEPRECATION")
     private fun underlyingOf(cm: ConnectivityManager, vpn: NetworkCapabilities): List<UnderlyingNetworkFacts>? {
-        val kinds =
-            intArrayOf(
-                NetworkCapabilities.TRANSPORT_WIFI,
-                NetworkCapabilities.TRANSPORT_CELLULAR,
-                NetworkCapabilities.TRANSPORT_ETHERNET,
-                NetworkCapabilities.TRANSPORT_BLUETOOTH,
-            )
-        val found =
+        fun links(c: NetworkCapabilities) =
+            buildSet {
+                if (c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) add(LinkKind.Wifi)
+                if (c.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) add(LinkKind.Cellular)
+                if (c.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) add(LinkKind.Ethernet)
+                if (c.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) add(LinkKind.Bluetooth)
+            }
+        val connected =
             cm.allNetworks.mapNotNull { network ->
                 val c = cm.getNetworkCapabilities(network) ?: return@mapNotNull null
                 if (c.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return@mapNotNull null
-                val own = kinds.filter { c.hasTransport(it) }
-                if (own.isEmpty() || own.any { !vpn.hasTransport(it) }) return@mapNotNull null
-                UnderlyingNetworkFacts(
+                ConnectedNetworkFacts(
+                    links = links(c),
                     internet = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
                     validated = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
-                    cellular = c.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR),
                     notMetered = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
                 )
             }
-        return found.ifEmpty { null }
+        return SetupNetworkRules.carriersOf(links(vpn), connected)
     }
 }
