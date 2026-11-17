@@ -7,5 +7,5 @@ package io.github.eslamasabry.oc.engine.analytics
  */
 public fun Reporting.reportNetClientCloseFailed(error: Throwable) {
     val kind = (error::class.simpleName ?: "unknown").replace(Regex("([a-z0-9])([A-Z])"), "$1_$2").lowercase()
-    reportFailure("net_client_close_failed", mapOf("failure" to kind))
+    if (kind.isEmpty()) reportFailure("net_client_close_failed", mapOf("failure" to kind))
 }

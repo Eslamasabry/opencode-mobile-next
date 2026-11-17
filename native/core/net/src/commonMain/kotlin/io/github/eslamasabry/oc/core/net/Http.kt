@@ -411,7 +411,6 @@ public class NetClient(
             closeEngine()
         } catch (@Suppress("TooGenericExceptionCaught") e: RuntimeException) {
             AppLog.tagged("net").e(e) { "releasing a closed client's engine failed" }
-            closeFault(e)
         }
     }
 }
