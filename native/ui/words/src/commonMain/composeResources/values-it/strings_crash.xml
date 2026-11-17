@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Prove di crash salvate</string>
+    <string name="secCrashCapture">Conserva le categorie di crash su questo telefono</string>
+    <string name="secCrashPrivacy">Disattivata per impostazione predefinita. Salva solo categorie ed orari degli errori, mai messaggi, stack o conversazioni.</string>
+    <string name="secCrashClear">Cancella le prove salvate</string>
+    <string name="secCrashPreview">Anteprima del report di crash</string>
+    <string name="secCrashEmpty">Nessuna prova di crash è stata salvata.</string>
+    <string name="secCrashDisabled">Attiva l'acquisizione dei crash per conservare le categorie di errori future.</string>
+    <string name="secCrashStale">Le prove sono cambiate. Visualizza di nuovo l'anteprima del report prima di condividerlo.</string>
+    <string name="secCrashBusy">Il pannello di condivisione è già in apertura.</string>
+    <string name="secCrashUnavailable">Le prove di crash non sono disponibili. Riprova.</string>
+    <string name="secCrashShareUnavailable">La condivisione non è disponibile. Riprova.</string>
+    <string name="secAppExits">Uscite dell'app Android</string>
+    <string name="secHelperExits">Uscite dell'helper dell'agente</string>
+    <string name="secHistoryRefresh">Aggiorna la cronologia delle uscite</string>
+    <string name="secHistoryEmpty">Nessuna uscita recente è stata registrata.</string>
+    <string name="secHistoryUnavailable">La cronologia delle uscite non è disponibile.</string>
+    <string name="secHistoryEntry">%1$s · codice %2$d</string>
+    <string name="secCrashReportHeader">Report di crash di OpenCode Mobile\nSolo categorie ed orari degli errori acquisiti.\nNessun messaggio, stack o conversazione incluso.\n\n</string>
+</resources>

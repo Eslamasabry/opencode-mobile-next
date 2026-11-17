@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Controlla gli altri server salvati mentre l'app è aperta o mentre la connessione in background è attiva. Ogni server richiede la tua autorizzazione. Il monitoraggio non attiva mai la connessione in background.</string>
+    <string name="andrMonitorEnabled">Controlla questo server</string>
+    <string name="andrMonitorOff">Disattivato. Nessun controllo in background.</string>
+    <string name="andrMonitorWaiting">In attesa del prossimo controllo. Le informazioni precedenti potrebbero non essere aggiornate.</string>
+    <string name="andrMonitorChecking">Controllo in corso. Le informazioni precedenti potrebbero non essere aggiornate.</string>
+    <string name="andrMonitorCurrent">Aggiornato dopo l'ultimo controllo.</string>
+    <string name="andrMonitorUnavailable">Impossibile effettuare il controllo. Apri questo server per rivedere la sua attività più recente.</string>
+    <string name="andrMonitorWifi">In attesa del Wi-Fi.</string>
+    <string name="andrMonitorPaused">In pausa mentre l'app e la connessione in background sono arrestate.</string>
+    <string name="andrMonitorSaveFailed">Impossibile salvare questa scelta. Riprova.</string>
+    <string name="andrMonitorCheckIn">Ricordami le risposte lunghe</string>
+    <string name="andrMonitorCheckInDetail">Un promemoria dopo che una conversazione lavora per questo tempo. I controlli falliti non contano come lavoro.</string>
+    <string name="andrMonitorMinutes">%1$s minuti</string>
+</resources>

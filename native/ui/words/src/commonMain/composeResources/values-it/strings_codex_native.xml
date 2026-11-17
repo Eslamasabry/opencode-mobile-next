@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Verifica della connessione a Codex</string>
+    <string name="codexNativeIntro">Esegui questo comando a riga singola sul tuo computer. Inserisci l'indirizzo, un percorso assoluto di cartella e il token di capacità per verificare la connessione autenticata.</string>
+    <string name="codexNativeCopy">Copia comando di avvio</string>
+    <string name="codexNativeTokenHelp">Usa il tuo percorso assoluto al file del token. Mantieni il token privato. WebSocket in chiaro è consentito solo su questo dispositivo; per un altro computer usa un WebSocket sicuro.</string>
+    <string name="codexNativeAddress">Indirizzo WebSocket</string>
+    <string name="codexNativeDirectory">Percorso assoluto della cartella</string>
+    <string name="codexNativeToken">Token di capacità</string>
+    <string name="codexNativeWorking">Verifica della connessione…</string>
+    <string name="codexNativeProbe">Verifica connessione</string>
+    <string name="codexNativeProbed">La connessione autenticata ha risposto a una lettura limitata alla cartella. Un risultato vuoto non conferma che la cartella esista.</string>
+    <string name="codexNativeFailed">La verifica della connessione non è riuscita. Controlla che Codex sia in esecuzione e riprova.</string>
+    <string name="codexNativeAuthFailed">Codex ha rifiutato il token di capacità. Controllalo e riprova.</string>
+    <string name="codexNativeScopeFailed">Controlla l'indirizzo, il percorso assoluto della cartella e l'ambito di connessione consentito.</string>
+    <string name="codexNativeVersion">Questa connessione non può fornire l'utilizzo dell'account. Le letture dell'account richiedono il protocollo qualificato Codex 0.153.4.</string>
+    <string name="codexNativeOpen">Apri lettore account</string>
+    <string name="codexNativeReaderOpen">Il lettore account è aperto. Apri Plans per aggiornare i limiti dell'account. Chiudilo qui quando hai finito.</string>
+    <string name="codexNativePlans">Apri Plans</string>
+    <string name="codexNativeClose">Chiudi lettore account</string>
+    <string name="codexNativeReadOnly">Questa pagina verifica la connessione e legge l'utilizzo dell'account. Non avvia una conversazione, non effettua l'accesso e non invia un prompt.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="configInspectionTitle">Configurazione del server</string>
+    <string name="configInspectionExplanation">Quali file di configurazione legge questo server, i più importanti per primi. Chiavi, password e altri segreti sono nascosti. Questa pagina non modifica nulla.</string>
+    <string name="configInspectionUnavailable">Non è stato possibile caricare la configurazione del server. Riconnetti e riprova.</string>
+    <string name="configInspectionRefresh">Aggiorna configurazione</string>
+    <string name="configFilesLabel">File di configurazione</string>
+    <string name="configFoldersLabel">Cartelle in cui il server cerca</string>
+    <string name="configNoFileTitle">Ancora nessun file di configurazione</string>
+    <string name="configNoFileBody">Questo server funziona con le sue impostazioni integrate. Un file di configurazione in una delle cartelle seguenti le modificherebbe. Questa pagina si limita a leggerlo.</string>
+</resources>

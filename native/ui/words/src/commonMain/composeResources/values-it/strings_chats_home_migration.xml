@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningFailed">%1$s non risponde</string>
+    <string name="homeOpeningFailedBody">Verifica che il server sia acceso e che questo telefono possa raggiungerlo, poi riprova.</string>
+    <string name="homeWatchedServers">Server osservati</string>
+    <string name="homeInboxCount">In arrivo · %1$s</string>
+    <string name="homeSourcesFailed">Non è stato possibile modificare le connessioni di questo elenco. Riprova.</string>
+    <string name="homeWatchedOpenBody">Prima di aprire la conversazione, verificheremo che questa richiesta sia effettivamente ancora in attesa su questo server.</string>
+    <string name="homeWatchedOpenFailed">Impossibile aprire questa richiesta. Aggiorna i server osservati e riprova.</string>
+    <string name="homeRefreshWatched">Aggiorna i server osservati</string>
+    <string name="homeMonitorOff">Disattivato. Attivalo per controllare le richieste in attesa di questo server.</string>
+    <string name="homeMonitorWaiting">In attesa del prossimo controllo</string>
+    <string name="homeMonitorChecking">Controllo delle richieste in attesa</string>
+    <string name="homeMonitorCurrent">Le richieste in attesa sono aggiornate</string>
+    <string name="homeMonitorUnavailable">Non risponde. Le sue richieste non vengono mostrate.</string>
+    <string name="homeMonitorWifi">In attesa del Wi-Fi</string>
+    <string name="homeMonitorPaused">I controlli sono sospesi finché l'app e il servizio in background sono fermi.</string>
+    <string name="homeNewBlockedBody">Le nuove conversazioni partono su %1$s. Non risponde ancora, quindi non ne è stata avviata nessuna.</string>
+    <string name="homeNewBlockedOpening">%1$s è ancora in apertura. Riprova tra poco.</string>
+    <string name="homePhoneOffStart">Avvia OpenCode su questo telefono</string>
+    <string name="homePhoneOffTitle">OpenCode su questo telefono è spento</string>
+</resources>

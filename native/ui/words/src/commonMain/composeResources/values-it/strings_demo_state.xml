@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">Prova offline</string>
+    <string name="stateDemoTitle">Demo offline</string>
+    <string name="stateDemoDisclosure">Conversazione simulata. Non vengono modificati server, file o impostazioni salvate. Uscendo, la demo viene dimenticata.</string>
+    <string name="stateDemoPrompt">Rendi più amichevole il messaggio di benvenuto.</string>
+    <string name="stateDemoReply">Modifico il saluto in welcome.txt da “%1$s” a “%2$s”.</string>
+    <string name="stateDemoAllowed">Fatto. welcome.txt ora dice “%1$s”.</string>
+    <string name="stateDemoDenied">Ok, ho lasciato welcome.txt com'è.</string>
+    <string name="stateDemoBefore">Ciao</string>
+    <string name="stateDemoAfter">Benvenuto a bordo!</string>
+    <string name="stateDemoMore">La demo finisce qui. Collega un server per lavorare sui tuoi progetti.</string>
+    <string name="stateDemoModel">Modello di esempio</string>
+    <string name="stateDemoReset">Ripristina la demo</string>
+    <string name="stateDemoLeave">Esci dalla demo</string>
+</resources>

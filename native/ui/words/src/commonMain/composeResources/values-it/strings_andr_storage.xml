@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">Memoria interna</string>
+    <string name="andrStorageUp">Vai alla cartella superiore</string>
+    <string name="andrStorageUseFolder">Apri questa cartella</string>
+    <string name="andrStorageFoldersEmpty">Non ci sono cartelle qui.</string>
+    <string name="andrStorageFolderMissing">Questa cartella non esiste più. Torna su e scegli un'altra cartella.</string>
+    <string name="andrStorageFolderDenied">Consenti l'accesso alle cartelle nelle Impostazioni di Android, poi riprova.</string>
+    <string name="andrStorageFolderFailed">Impossibile leggere questa cartella. Riprova.</string>
+    <string name="andrStorageAccess">Consenti l'accesso alle cartelle</string>
+    <string name="andrStorageWorking">Attendi il completamento del caricamento della cartella.</string>
+    <string name="andrStorageTitle">Memoria del telefono</string>
+    <string name="andrStorageNearlyFull">La memoria è quasi piena: %1$s disponibili. Libera spazio prima di installare strumenti o avviare un'attività lunga.</string>
+    <string name="andrStorageAvailable">%1$s disponibili per questa app.</string>
+    <string name="andrStorageUnknown">Impossibile leggere lo spazio disponibile. Ripeti la misurazione.</string>
+    <string name="andrStorageMeasure">Misura memoria e file Linux</string>
+    <string name="andrStorageMeasuring">Misurazione della memoria…</string>
+    <string name="andrStorageHostSizes">Linux e strumenti: %1$s · Progetti: %2$s. Sono dimensioni di file, non tutta la memoria dell'app.</string>
+    <string name="andrStorageHostUnknown">Impossibile misurare le dimensioni dei file Linux. I file restano salvati.</string>
+    <string name="andrStorageRootHere">La memoria interna stessa non può essere un progetto. Apri una cartella al suo interno.</string>
+</resources>
