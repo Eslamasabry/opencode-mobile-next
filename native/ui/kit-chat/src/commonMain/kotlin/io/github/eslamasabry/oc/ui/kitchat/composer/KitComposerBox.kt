@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -253,6 +254,10 @@ public fun KitComposerBox(
                 // Flow wraps the model and approval mode instead of squeezing either into a sliver.
                 CompositionLocalProvider(LocalComposerChipsCollapsed provides collapsed) {
                 Column(Modifier.fillMaxWidth()) {
+                // The field's 48 dp target and the controls' 48 dp targets are neighbours: a control and the words
+                // directly above it keep a Space.S1 gap (layout rule `tight`, LAYOUT-RULES.md; the guard's
+                // kit_composer_idle_empty found 0.0 dp between the field and Add).
+                Spacer(Modifier.height(Space.S1.dp))
                 if (ownLine)
                     FlowRow(
                         Modifier.fillMaxWidth(),
