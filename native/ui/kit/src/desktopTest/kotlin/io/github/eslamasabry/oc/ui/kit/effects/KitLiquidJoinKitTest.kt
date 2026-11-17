@@ -84,17 +84,31 @@ class KitLiquidJoinKitTest {
         onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
 
     /**
-     * Steps the TEST clock, in jumps of half a second, until [expected] panes are joined (at most [maxSteps] jumps), and
-     * returns the count it ended on. A frame of joined glass costs seconds in software on a runner while it animates,
-     * and a frame is drawn for every `waitForIdle` and every 16 ms of an auto-advancing clock: about a hundred and
-     * fifty of them took close to the test's one-minute limit when the machine was busy. A jump draws one frame, and
-     * stopping as soon as the join (or its end) is seen draws no more than the join needs. The count is still read
-     * and asserted by the caller, so a join that never comes (or never goes) still fails.
+     * One jump of the test clock that is past the join's WHOLE motion, read from the kit's own numbers
+     * ([io.github.eslamasabry.oc.ui.design.effects.LiquidJoin]): the panel's 120 ms wait for the join, the drop, the
+     * fill that starts a beat after the drop's turn, the close hold and the draw-up, with three turns of each spring as
+     * its settling and half a second over. Each stage of the chain needs one frame to start and ends within the same
+     * jump, so a stage costs one frame however long it is.
      */
-    private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, maxSteps: Int = 12): Int {
+    private val fullMotionMs: Long =
+        io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.let { j ->
+            (120 + j.CLOSE_MS + j.DRAW_UP_AFTER_MS + j.FILL_AFTER_TURN_MS +
+                3 * j.turnMs(j.DROP_ZETA, j.DROP_K) + 3 * j.turnMs(j.FILL_ZETA, j.FILL_K) + 500).toLong()
+        }
+
+    /**
+     * Steps the TEST clock, in jumps of [fullMotionMs], until [expected] panes are joined, and returns the count it ended
+     * on (the caller asserts it, so a join that never comes or never goes still fails). A frame of joined glass costs
+     * about 6.3 s in software on a runner while it animates (measured on CI: run 44087366721) and a frame is drawn for
+     * every `waitForIdle` and every 16 ms of an auto-advancing clock, so the old test drew a hundred and fifty and timed
+     * out at the one-minute limit. Here a jump draws one frame, at most [MOTION_STAGES] jumps are made, so the worst case
+     * is MOTION_STAGES frames per phase: 3 x 6.3 s = 19 s, and 38 s for the test that opens and closes: under the limit
+     * by construction, not by luck.
+     */
+    private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, maxSteps: Int = MOTION_STAGES): Int {
         repeat(maxSteps) {
             if (joined() == expected) return expected
-            mainClock.advanceTimeBy(500, ignoreFrameDuration = true)
+            mainClock.advanceTimeBy(fullMotionMs, ignoreFrameDuration = true)
             waitForIdle()
         }
         return joined()
@@ -110,7 +124,7 @@ class KitLiquidJoinKitTest {
             shown = open
             waitForIdle()
             // Where nothing is to join, wait the same time so a late join would show; where it joins, stop when it has.
-            count = settleTo(if (open && joins && appearance.glassLook != GlassLookId.Frosted) 2 else -1, maxSteps = if (open && joins && appearance.glassLook != GlassLookId.Frosted) 12 else 4)
+            count = settleTo(if (open && joins && appearance.glassLook != GlassLookId.Frosted) 2 else -1, maxSteps = if (open && joins && appearance.glassLook != GlassLookId.Frosted) MOTION_STAGES else 2)
         }
         return count
     }
@@ -240,5 +254,10 @@ class KitLiquidJoinKitTest {
         val toward = kotlin.math.abs(lum(seen.getValue("glass")) - lum(seen.getValue("text1")))
         val before = kotlin.math.abs(lum(seen.getValue("text2")) - lum(seen.getValue("text1")))
         kotlin.test.assertTrue(toward < before * .5f, "the second line on glass is most of the way to the first line's ink")
+    }
+
+    private companion object {
+        /** Frames a join needs at most: start, drop and fill, settle. */
+        const val MOTION_STAGES = 3
     }
 }
