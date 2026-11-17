@@ -167,10 +167,15 @@ object FlutterGoldenGate {
         if (LayoutGuard.surveying()) return emptyMap() // a layout survey does not render or compare the pictures
         guard?.let { failures += it }
         val result = LinkedHashMap<String, Double>()
+        var missingGolden: String? = null
         for (mode in modes) {
             try {
                 val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
                 val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
+                if (!goldenFile("${name}_$mode", ref).isFile && ReferenceGuard.outcome() == ReferenceGuard.Outcome.Skip) {
+                    missingGolden = "picture ${name}_$mode"
+                    continue
+                }
                 result[mode] = compare("${name}_$mode", ref, native)
                 emptyComposition("${name}_$mode", ref, native)?.let { failures += AssertionError(it) }
             } catch (e: IllegalStateException) { // a missing golden (compare's check); other exceptions propagate
@@ -183,6 +188,8 @@ object FlutterGoldenGate {
             failures.drop(1).forEach { first.addSuppressed(it) }
             throw first
         }
+        // Outside the lanes that fetch the references a missing golden is a counted skip, never a pass.
+        missingGolden?.let { ReferenceGuard.missing(it) }
         return result
     }
 
@@ -353,7 +360,7 @@ object FlutterGoldenGate {
         return best
     }
 
-    /** True when the light golden of [name] has been fetched (the proof cases of other orders skip otherwise). */
+    /** True when the light golden of [name] has been fetched. A caller that finds it missing calls [ReferenceGuard.missing]. */
     fun hasGolden(name: String, ref: GateRef = GateRef.Product): Boolean = goldenFile("${name}_light", ref).isFile
 
     private fun goldenFile(shot: String, ref: GateRef): File {

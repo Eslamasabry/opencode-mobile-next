@@ -9,5 +9,6 @@ kotlin {
         implementation(project(":ui:kit"))
         implementation(project(":ui:design"))
         implementation(libs.compose.ui.test) // runDesktopComposeUiTest, captureToImage
+        implementation(libs.junit4) // ReferenceGuard: a missing reference is a counted skip outside the lanes that fetch them
     }
 }

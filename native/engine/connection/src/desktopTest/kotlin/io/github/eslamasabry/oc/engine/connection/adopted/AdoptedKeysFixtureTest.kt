@@ -163,7 +163,10 @@ class AdoptedKeysFixtureTest {
     fun `B-MIGR-005 the seeded E00-S02 dump reads in place when it exists`() = runTest {
         val dump = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .map { File(it, "native/e2e/fixtures/flutter-2.1.4/prefs.json") }
-            .firstOrNull { it.isFile } ?: return@runTest // Not seeded yet (tools/flutter-fixtures/README.md).
+            .firstOrNull { it.isFile }
+            // Not seeded yet (tools/flutter-fixtures/README.md): a SKIPPED test, never a silent pass.
+            ?: throw org.junit.AssumptionViolatedException("the seeded E00-S02 dump is not in this checkout")
+
         val raw = prefsJson(dump.readText())
         val disk = Disk(raw)
         val store = storeOver(disk, StandardTestDispatcher(testScheduler))

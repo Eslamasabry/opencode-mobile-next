@@ -6,7 +6,7 @@
 Looks at the completed Native CI runs for exactly that commit, newest first, and reads each run's `ci-verdict` artifact:
 the small verdict.json the summary job writes next to the run summary (summary.py's exit code, never a job colour).
 The newest run that counts decides. A run counts only when it was a complete candidate lane run that
-compiled, ran the desktop tests AND the Android library unit tests, with an executed passing full security suite; a tasks-only, apk-only, goldens or no-Android-tests
+compiled, ran the desktop tests AND the Android library unit tests, with an executed passing full security suite and no skipped guard test (a guard whose reference picture was missing); a tasks-only, apk-only, goldens or no-Android-tests
 run (including daily fast/full runs) says nothing about a release and is skipped. A missing or mismatched verdict is unproved candidate coverage and refuses release. Older green runs never
 rescue a newer red one. Uses `gh` as the person running it (OC_GH overrides the binary); no token is read or printed.
 Prints one line naming the run it used.
@@ -59,6 +59,12 @@ for r in runs:
     elif v.get('security') is not True:
         print(f'release verdict: FAIL, the newest counting run {rid} ({lane} lane) has no executed passing full security suite '
               '(older green runs do not count)')
+        sys.exit(1)
+    elif v.get('guards_skipped') != 0:
+        count = v.get('guards_skipped')
+        print(f'release verdict: FAIL, the newest counting run {rid} ({lane} lane) left '
+              f'{"an unknown number of" if count is None else count} guard test(s) skipped because their references were not fetched; '
+              'a candidate must run every guard (older green runs do not count)')
         sys.exit(1)
     elif v.get('exit') == 0:
         print(f'release verdict: PASS, run {rid} ({lane} lane, with the Android unit tests)')

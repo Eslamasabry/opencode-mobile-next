@@ -3,7 +3,7 @@
 
     python3 -I tool/ci/test_report.py <name> <out-dir>      (markdown goes to stdout)
 
-report JSON: {"name", "tests", "failed", "skipped", "failures": [{"id", "module", "message"}], "modules": {mod: [tests, failed]}}
+report JSON: {"name", "tests", "failed", "skipped", "guards_skipped", "failures": [{"id", "module", "message"}], "modules": {mod: [tests, failed]}}
 A failure id is "<module> :: <class> > <test>"; the summary job compares ids between two runs.
 
 Gradle log (env GRADLE_LOG, the shard's tee'd output) and the shard's task list (env TASKS, space separated) add
@@ -14,6 +14,9 @@ Gradle log (env GRADLE_LOG, the shard's tee'd output) and the shard's task list 
   * `FAILURE: Build failed` / a build that failed with no failed task named at all.
 """
 import glob, json, os, re, shlex, sys, xml.etree.ElementTree as ET
+
+GUARD_MARKER = 'OC-GUARD-SKIPPED'
+
 
 def log_lines():
     path = os.environ.get('GRADLE_LOG', '')
@@ -36,6 +39,7 @@ for line in lines:
 
 name, out = sys.argv[1], sys.argv[2]
 mods, failures, skipped = {}, [], 0
+guard_skips = []  # `OC-GUARD-SKIPPED <what>` lines the guard tests print (ReferenceGuard): a guard that could not run
 suites, picture_tests = {}, 0
 arguments = shlex.split(os.environ.get('TASKS', ''))
 expected_tasks = [t for t in arguments if t.startswith(':')]
@@ -51,7 +55,10 @@ for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
     if os.environ.get('LANE') == 'candidate' and task not in task_status:
         continue  # other suites in this module may be stale outputs on a warm runner
     count = suites.setdefault(task, {'tests': 0, 'failed': 0, 'skipped': 0})
-    for tc in ET.parse(p).getroot().iter('testcase'):
+    root = ET.parse(p).getroot()
+    for out_el in root.iter('system-out'):
+        guard_skips += [l.strip() for l in (out_el.text or '').splitlines() if l.strip().startswith(GUARD_MARKER)]
+    for tc in root.iter('testcase'):
         count['tests'] += 1
         is_quality = mod == 'quality' and suite == 'test'
         if is_quality:
@@ -150,7 +157,7 @@ if os.environ.get('GRADLE_OUTCOME') == 'failure' and not failures and not real_f
     real_failures.append('the Gradle run failed and left no failing test and no readable task failure')
 tests = sum(v[0] for v in mods.values())
 report = {'name': name, 'lane': os.environ.get('LANE', ''), 'sha': os.environ.get('GITHUB_SHA', ''),
-          'candidate': candidate, 'quality': quality, 'task_status': task_status, 'suites': suites, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods,
+          'candidate': candidate, 'quality': quality, 'task_status': task_status, 'suites': suites, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'guards_skipped': len(guard_skips), 'guards_skipped_names': sorted(set(guard_skips))[:50], 'failures': failures, 'modules': mods,
           'build_failed': os.environ.get('GRADLE_OUTCOME') == 'failure', 'real_failures': real_failures,
           # integrity facts for summary.py: did this shard plan work, and did Gradle really start?
           'security': security, 'planned': expected_tasks, 'gradle_ran': gradle_ran(log_lines()),
@@ -158,6 +165,8 @@ report = {'name': name, 'lane': os.environ.get('LANE', ''), 'sha': os.environ.ge
 os.makedirs(out, exist_ok=True)
 json.dump(report, open(os.path.join(out, f'report-{name}.json'), 'w'))
 print(f'**{name}**: {tests} tests, {len(failures)} failed, {skipped} skipped\n')
+if guard_skips:
+    print(f'{len(guard_skips)} guards skipped (references not fetched)\n')
 if mods:
     print('| module | tests | failed |\n|---|---|---|')
     for m, (t, f) in sorted(mods.items(), key=lambda kv: (-kv[1][1], kv[0])):

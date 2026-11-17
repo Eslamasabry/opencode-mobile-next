@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
+import io.github.eslamasabry.oc.ui.gate.ReferenceGuard
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
@@ -41,9 +42,10 @@ class GateProofTest {
     private val redactor: @androidx.compose.runtime.Composable (@androidx.compose.runtime.Composable () -> Unit) -> Unit =
         { CompositionLocalProvider(LocalKitRedactor provides Redactor()) { it() } }
 
-    /** These three goldens belong to other orders (08, 14); the proof runs only where they have been fetched. */
+    /** These three goldens belong to other orders (08, 14); a missing one fails where the lane fetches them, else it is a counted skip. */
     private fun proof(name: String, frame: FlutterGoldenGate.Frame = FlutterGoldenGate.Frame.Part, content: @androidx.compose.runtime.Composable () -> Unit) {
-        if (FlutterGoldenGate.hasGolden(name)) FlutterGoldenGate.check(name, frame, wrap = redactor, content = content)
+        if (!FlutterGoldenGate.hasGolden(name)) ReferenceGuard.missing("picture ${name}_light")
+        FlutterGoldenGate.check(name, frame, wrap = redactor, content = content)
     }
 
     @Test
