@@ -160,6 +160,7 @@ if [[ -n "$new_against" ]]; then
   lock="$(oc_build_lock_file)"
   scan() { # scan <dir> <base-path> <report.txt>: no baseline; 0 clean, 2 findings, anything else could not run
     local out rc
+    rm -f "$3"
     out="$(oc_with_lock "$lock" "${runner[@]}" --input "$1" --excludes '**/build/**,**/.gradle/**' --config "$config" \
       --build-upon-default-config --max-issues 0 --jvm-target 17 --language-version 2.0 --base-path "$2" \
       --report "txt:$3" 2>&1)"; rc=$?
