@@ -188,9 +188,10 @@ class Gate(unittest.TestCase):
         self.assertIn('feature/usage: no test results', md)
 
     def test_known_test_class_failure_is_pass(self):
-        cls = f'{PKG}.feature.usage.LimitsScreenTest'  # listed in known_failures.txt
+        cls = f'{PKG}.feature.usage.LimitsScreenTest'
         log = TEST_FAILED_LOG.replace('feature:chats', 'feature:usage')
-        code, md = run_gate(log, ':feature:usage:desktopTest', [('feature/usage', cls, ('a provider without limits',))])
+        known = f'feature/usage :: {cls} > a provider without limits | known-noise-before-ci-goldens\n'  # a planted list: named exactly
+        code, md = run_gate(log, ':feature:usage:desktopTest', [('feature/usage', cls, ('a provider without limits',))], known=known)
         self.assertEqual(code, 0, md)
         self.assertIn('known noise', md)
 
@@ -204,10 +205,14 @@ class Gate(unittest.TestCase):
         code, md = run_gate(log, ':quality:test', [('quality', f'{PKG}.quality.KonsistRulesTest', ('K5 no Log',))])
         self.assertEqual(code, 1, md)
 
-    def test_flutter_gate_failure_is_noise(self):
+    def test_flutter_gate_failure_is_noise_only_when_named_exactly(self):
         cls = f'{PKG}.feature.chats.rb.o41.ChatsGateTest'
-        code, md = run_gate(TEST_FAILED_LOG, ':feature:chats:desktopTest', [('feature/chats', cls, ('chats_loaded',))])
+        known = f'feature/chats :: {cls} > chats_loaded | flutter-era-rule\n'
+        code, md = run_gate(TEST_FAILED_LOG, ':feature:chats:desktopTest', [('feature/chats', cls, ('chats_loaded',))], known=known)
         self.assertEqual(code, 0, md)
+        # the same class failing another test is NOT excused (the class wildcard is gone)
+        code, md = run_gate(TEST_FAILED_LOG, ':feature:chats:desktopTest', [('feature/chats', cls, ('chats_loaded', 'another'))], known=known)
+        self.assertEqual(code, 1, md)
 
     def test_failed_compile_job_is_fail(self):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
