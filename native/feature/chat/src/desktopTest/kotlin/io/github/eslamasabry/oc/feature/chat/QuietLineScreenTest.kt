@@ -101,6 +101,29 @@ class QuietLineScreenTest {
         onNodeWithText(prefix, substring = true, useUnmergedTree = true).assertDoesNotExist()
         onNodeWithTag(SWEEP_TAG, useUnmergedTree = true).assertDoesNotExist()
     }
+    /** Pictures only (density 3, 360 dp wide, dark): the live line at 1 min and at 5 min with the calm hint. */
+    private fun pictures(locale: String, motion: MotionLevel) {
+        val beforeLocale = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag(locale))
+            runDesktopComposeUiTest(1080, 2400) {
+                val scene = ChatScene()
+                val state = scene.live().copy(status = null, rows = persistentListOf(prompt("t", "Explain this carefully")), live = LiveTurnUi(false))
+                var facts by mutableStateOf(TurnFactsUi(nowMs = 72_000, runStartedAtMs = 0, live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow)))
+                setContent { Root(locale, 1.3f, motion) { scene.Screen(state, facts = facts, projectName = null) } }
+                for ((name, now) in listOf("1min" to 72_000L, "5min" to 312_000L)) {
+                    runOnIdle { facts = facts.copy(nowMs = now) }
+                    waitForIdle()
+                    val picture = File("build/reports/quiet-line/shot-$locale-${motion.name}-$name.png")
+                    picture.parentFile.mkdirs()
+                    ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", picture)
+                }
+            }
+        } finally { Locale.setDefault(beforeLocale) }
+    }
+    @Test fun `B-435 pictures at density 3`() {
+        for (l in listOf("en", "ar")) for (m in listOf(MotionLevel.Full, MotionLevel.Off)) pictures(l, m)
+    }
     @Test fun `B-435 en 360dp text 1 live clock and real loss`() { check("en", 1f, MotionLevel.Full) }
     @Test fun `B-435 en 360dp text 1 point 3 live clock and real loss`() { check("en", 1.3f, MotionLevel.Full) }
     @Test fun `B-435 ar 360dp text 1 live clock and real loss`() { check("ar", 1f, MotionLevel.Full) }

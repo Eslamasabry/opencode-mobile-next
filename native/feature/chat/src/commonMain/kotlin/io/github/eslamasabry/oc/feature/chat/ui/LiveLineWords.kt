@@ -51,7 +51,7 @@ internal fun liveLineWords(
     elapsedMs: Long?,
 ): LiveLineWords? {
     val mask = rememberKitMask()
-    val quietThinking = false
+    val quietThinking = notice is LiveNoticeUi.Stall && notice.notice == TurnStallNotice.ModelSlow
     // A stop or a note about the turn replaces what it is doing, without the time (F: kit_turn.dart:920-937).
     val held =
         when {
