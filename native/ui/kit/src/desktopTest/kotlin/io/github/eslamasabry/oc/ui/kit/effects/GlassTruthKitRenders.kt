@@ -107,6 +107,7 @@ class GlassTruthKitRenders {
 
     private fun shot(file: File, look: Look, dark: Boolean, heightDp: Int, motion: MotionLevel = MotionLevel.Full, content: @Composable () -> Unit) {
         runDesktopComposeUiTest((W * D).toInt(), (heightDp * D).toInt()) {
+            mainClock.autoAdvance = false
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(
@@ -126,7 +127,13 @@ class GlassTruthKitRenders {
                     }
                 }
             }
+            // The clock is ours (auto-advance off): a few half-second jumps, one frame each, instead of a frame per 16 ms
+            // of the live background. The still frame is what is drawn either way.
             waitForIdle()
+            repeat(3) {
+                mainClock.advanceTimeBy(500, ignoreFrameDuration = true)
+                waitForIdle()
+            }
             ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", file)
         }
     }

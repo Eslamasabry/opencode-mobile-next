@@ -274,6 +274,7 @@ class ChatWordsGlassTest {
         // The joined box and pill run the join shader on the CPU every frame; a slow runner took over the default minute
         // (runDesktopComposeUiTest keeps that minute whatever it is told, PaneRimScenes.SCENE_TIMEOUT).
         runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(W * D, H * D), testTimeout = SCENE_TIMEOUT) {
+            mainClock.autoAdvance = false
             val seen = arrayOfNulls<Any?>(2)
             val lazy = arrayOfNulls<LazyListState>(1)
             setContent {
@@ -283,9 +284,9 @@ class ChatWordsGlassTest {
                     }
                 }
             }
-            waitForIdle()
+            settle(1)
             onNodeWithTag("transcript-list").performScrollToIndex(scrollTo)
-            waitForIdle()
+            settle(1)
             // A person reading history drags the list, which stops it following the newest message; a scroll from code
             // keeps following, so the phrase row folding (the block's height changing) would pin it back to the newest.
             // The finger moves 120 dp toward older messages and rests before it lifts, so no fling carries the list on.
@@ -296,16 +297,15 @@ class ChatWordsGlassTest {
                     advanceEventTime(200)
                     up()
                 }
-            waitForIdle()
+            settle(1)
             // Near the newest message (not away from it): the newest row drawn [nudgeDp] past its resting place, so its
             // lower part lies under the bottom block.
             if (nudgeDp > 0) {
                 runOnIdle { lazy[0]!!.requestScrollToItem(scrollTo, (nudgeDp * D).roundToInt()) }
-                waitForIdle()
+                settle(1)
             }
             // The phrase row folding, the pill rising out of the box, the page's edges easing to their new place.
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
+            settle()
             val l = lazy[0]!!
             val visible = l.layoutInfo.visibleItemsInfo.map { it.key }
             val info = l.layoutInfo
@@ -339,6 +339,19 @@ class ChatWordsGlassTest {
                 )
         }
         return shot
+    }
+
+    /**
+     * Lets the scene settle on the TEST clock: a few jumps of half a second, one frame each. With the clock on
+     * auto-advance every `waitForIdle` and every 16 ms of `advanceTimeBy` drew a whole frame of the joined box and pill
+     * (the join shader runs on the CPU, seconds a frame on a loaded runner), which is why this file needed five minutes.
+     */
+    private fun androidx.compose.ui.test.ComposeUiTest.settle(jumps: Int = SETTLE_JUMPS) {
+        waitForIdle()
+        repeat(jumps) {
+            mainClock.advanceTimeBy(SETTLE_JUMP_MS, ignoreFrameDuration = true)
+            waitForIdle()
+        }
     }
 
     private fun luma(c: Color): Float = (0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue) * 255f
@@ -696,6 +709,10 @@ class ChatWordsGlassTest {
     private companion object {
         /** How long one scene may take to draw and settle (see [shot]). */
         val SCENE_TIMEOUT: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
+
+        /** Settling on the test clock: [SETTLE_JUMPS] jumps of [SETTLE_JUMP_MS] (1.5 s of animation, 3 frames). */
+        const val SETTLE_JUMPS = 3
+        const val SETTLE_JUMP_MS = 500L
 
         const val W = 240
         const val H = 480

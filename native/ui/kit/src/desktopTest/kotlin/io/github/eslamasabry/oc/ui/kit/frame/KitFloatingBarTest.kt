@@ -250,6 +250,7 @@ class KitFloatingBarTest {
         lateinit var shot: Shot
         val seen = Seen()
         runDesktopComposeUiTest((W * D).toInt(), (heightDp * D).toInt()) {
+            mainClock.autoAdvance = false
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D, fontScale)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = locale, stillFrame = true) {
@@ -259,9 +260,9 @@ class KitFloatingBarTest {
                     }
                 }
             }
-            waitForIdle()
+            settle()
             act(seen)
-            waitForIdle()
+            settle()
             val bounds = tags.associateWith { tag -> runCatching { onNodeWithTag(tag, useUnmergedTree = true).getBoundsInRoot() }.getOrNull() }
             shot = Shot(onNodeWithTag("scene").captureToImage().toPixelMap(), bounds)
             check(seen)
@@ -282,7 +283,20 @@ class KitFloatingBarTest {
             advanceEventTime(200)
             up()
         }
+        settle()
+    }
+
+    /**
+     * Lets the scene settle on the TEST clock: a few jumps of half a second, one frame each. With the clock on
+     * auto-advance every `waitForIdle` drew a frame per 16 ms of every animation still running (the live glass), which
+     * took close to the test's one-minute limit on a busy runner; the jumps draw the same settled picture in a few frames.
+     */
+    private fun ComposeUiTest.settle() {
         waitForIdle()
+        repeat(SETTLE_JUMPS) {
+            mainClock.advanceTimeBy(SETTLE_JUMP_MS, ignoreFrameDuration = true)
+            waitForIdle()
+        }
     }
 
     private fun dark(style: Style, look: GlassLookId = GlassLookId.Glossy, motion: MotionLevel = MotionLevel.Full) =
@@ -542,7 +556,7 @@ class KitFloatingBarTest {
                     val field = onNodeWithTag("field").getBoundsInRoot()
                     val target = STATUS_DP + 8f
                     runOnIdle { seen.scroll!!.dispatchRawDelta((field.top.value - target) * D) }
-                    waitForIdle()
+                    settle()
                     val placed = onNodeWithTag("field").getBoundsInRoot()
                     assertTrue(abs(placed.top.value - target) <= 1f, "the field was placed under the bar at $placed")
                     runOnIdle { seen.focus.requestFocus() }
@@ -569,10 +583,10 @@ class KitFloatingBarTest {
                     click(Offset(bar.right.toPx() - 24.dp.toPx(), ((bar.top + bar.bottom) / 2).toPx()))
                     click(Offset(4.dp.toPx(), ((pills.top + pills.bottom) / 2).toPx()))
                 }
-                waitForIdle()
+                settle()
                 assertEquals(emptyList(), seen.clicks.toList(), "no row under the chrome was tapped")
                 onNodeWithTag("scene").performTouchInput { click(Offset(width / 2f, height * 0.75f)) }
-                waitForIdle()
+                settle()
                 assertEquals(1, seen.clicks.size, "a row below the chrome still takes its tap")
             },
         )
@@ -664,6 +678,10 @@ class KitFloatingBarTest {
         const val ROWS = 40
         const val FIELD_AT = 14
         const val STEPS = 20
+
+        /** Settling on the test clock: [SETTLE_JUMPS] jumps of [SETTLE_JUMP_MS] (1.5 s of animation, 3 frames). */
+        const val SETTLE_JUMPS = 3
+        const val SETTLE_JUMP_MS = 500L
         const val LENS_BLUR_DP = 6f
 
         /** The loading line's room, kept even when it shows nothing (KitLoadingBar). */
