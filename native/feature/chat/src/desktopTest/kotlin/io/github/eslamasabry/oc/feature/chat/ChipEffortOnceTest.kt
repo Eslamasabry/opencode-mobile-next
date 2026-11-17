@@ -91,7 +91,7 @@ class ChipEffortOnceTest {
     private fun scene(
         locale: String,
         scale: Float,
-        picture: String?,
+        shot: String?,
         state: BasicComposerUi = ui(),
         check: ComposeUiTest.() -> Unit,
     ) =
@@ -103,10 +103,10 @@ class ChipEffortOnceTest {
             }
             waitForIdle()
             // The runner uploads no pictures: a recording run prints the scene's PNG bytes in its log, before it checks.
-            if (picture != null && System.getProperty("oc.goldens.record") == "true") {
-                val bytes = ByteArrayOutputStream().also { ImageIO.write(picture().let { img -> img }, "png", it) }.toByteArray()
+            if (shot != null && System.getProperty("oc.goldens.record") == "true") {
+                val bytes = ByteArrayOutputStream().also { ImageIO.write(picture(), "png", it) }.toByteArray()
                 val chunks = Base64.getEncoder().encodeToString(bytes).chunked(180)
-                chunks.forEachIndexed { i, c -> println("CHIP_PNG $picture $i/${chunks.size} $c") }
+                chunks.forEachIndexed { i, c -> println("CHIP_PNG $shot $i/${chunks.size} $c") }
             }
             check()
         }
@@ -120,7 +120,7 @@ class ChipEffortOnceTest {
     fun `B-CHAT-EFFORT-9 the chip names the model once and nothing is cut at 360 dp, text 1 and 1_3, en and ar`() {
         for (scale in listOf(1f, 1.3f)) for (locale in listOf("en", "ar")) {
             val where = "360 dp, text $scale, $locale"
-            scene(locale, scale, "after-$locale-$scale") {
+            scene(locale, scale, "chip-$locale-$scale") {
                 val words = chipWords()
                 assertTrue("Gemini 3.8 Flash (High)" in words, "$where: the chip says the model's own name; it says $words")
                 assertEquals(
