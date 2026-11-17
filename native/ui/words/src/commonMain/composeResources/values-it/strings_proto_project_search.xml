@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Strumenti per i progetti del server</string>
+    <string name="protoWorking">Elaborazione…</string>
+    <string name="protoGitInitialized">Questa cartella è un repository Git.</string>
+    <string name="protoWorktreeCreated">Il worktree è pronto nella cartella seguente.</string>
+    <string name="protoShellSaved">Shell predefinita salvata.</string>
+    <string name="protoGitInitialize">Inizializza Git in questa cartella</string>
+    <string name="protoWorktreeName">Nome del nuovo worktree</string>
+    <string name="protoWorktreeCreate">Crea worktree</string>
+    <string name="protoShellTitle">Shell predefinita del terminale</string>
+    <string name="protoShellDefault">Usa il valore predefinito del server</string>
+    <string name="protoShellUnavailable">Questa shell non può essere usata su questo server.</string>
+    <string name="protoWebSearch">Cerca sul web</string>
+    <string name="protoWebSearchHelp">Cerca con il provider di questo server. Le ricerche restano fuori dalla cronologia delle conversazioni.</string>
+    <string name="protoWebUnavailable">La ricerca sul web non è disponibile su questo server.</string>
+    <string name="protoWebFailed">Impossibile completare la ricerca sul web. Riprova con l'elenco dei provider o cerca di nuovo.</string>
+    <string name="protoWebQuery">Query di ricerca sul web</string>
+    <string name="protoWebProvider">Provider di ricerca</string>
+    <string name="protoWebEmpty">Nessun risultato web ricevuto.</string>
+    <string name="protoWebOpenQuestion">Aprire %1$s nel browser?</string>
+    <string name="protoWebOpenBrowser">Apri browser</string>
+    <string name="protoWebInsecure">Questo link usa una connessione non cifrata.</string>
+    <string name="protoWebLeaveApp">Si apre un sito web esterno all'app.</string>
+    <string name="protoGitToolsFailed">Non ha funzionato. Controlla il server e riprova.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>
