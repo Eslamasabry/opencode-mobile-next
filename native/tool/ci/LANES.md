@@ -88,6 +88,21 @@ Two kinds exist:
 * Flutter gate shots (`FlutterGoldenGate`, the `rb/*GateTest` classes): compared with the frozen Flutter picture
   extracted from git history; not re-recordable, they stay in the full and candidate lanes.
 
+## Guards that cannot run (a missing reference is never a pass)
+
+A guard test compares with a reference (a Flutter picture, a seeded fixture). When the reference is not on disk,
+`ReferenceGuard` (`ui/gate`, desktopMain) decides by the lane, never the test:
+
+| lane | missing reference |
+|---|---|
+| `full`, `candidate`, or any run with `OC_REFERENCES=required` (they fetch the references) | the test FAILS: "reference picture <name> is missing: this lane must fetch it" |
+| everything else (fast, custom tasks, a run by hand) | the test is SKIPPED (a JUnit assumption), never passed, and prints `OC-GUARD-SKIPPED <what>` |
+
+`test_report.py` counts those lines (`guards_skipped` in the shard report); `summary.py` and `ci-verdict.sh` print
+`N guards skipped (references not fetched)` on its own line, zero included; a candidate with any is FAIL; the summary job
+writes the count into `verdict.json` and `release_verdict.py` refuses a candidate whose count is not zero (or unknown).
+Self-tests: `test_gate.py`, `test_release_gate.py`, `ui/gate` `ReferenceGuardTest`.
+
 ## Re-recording
 
 1. `gh workflow run native-ci.yml --ref <branch> -f lane=goldens`

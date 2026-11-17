@@ -662,7 +662,8 @@ jobs:
           evidence = [json.load(open(p)).get('security', {}) for p in glob.glob('reports/**/report-*.json', recursive=True)]
           security = any(s.get('executed') and s.get('full') and s.get('tests', 0) > 0 and s.get('failed') == 0 and s.get('skipped') == 0 for s in evidence)
           security = security and not any(s.get('failed', 0) or s.get('skipped', 0) for s in evidence)
-          print(json.dumps({'sha': sha, 'lane': lane, 'exit': int(rc), 'android_unit': android not in ('', 'skipped'),
+          guards_skipped = sum(json.load(open(p)).get('guards_skipped', 0) for p in glob.glob('reports/**/report-*.json', recursive=True))
+          print(json.dumps({'sha': sha, 'lane': lane, 'exit': int(rc), 'guards_skipped': guards_skipped, 'android_unit': android not in ('', 'skipped'),
                             'desktop_tests': test not in ('', 'skipped'), 'compile': compile_ not in ('', 'skipped'),
                             'custom_tasks': custom not in ('', 'skipped'), 'security': security,
                             'candidate_complete': lane == 'candidate' and int(rc) == 0}))

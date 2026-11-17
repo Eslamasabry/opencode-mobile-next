@@ -32,8 +32,8 @@ else:
 '''
 
 
-def verdict(sha, exit_=0, lane='candidate', android=True, custom=False, security=True, complete=True):
-    return {'sha': sha, 'lane': lane, 'exit': exit_, 'android_unit': android, 'desktop_tests': True, 'compile': True,
+def verdict(sha, exit_=0, lane='candidate', android=True, custom=False, security=True, complete=True, guards_skipped=0):
+    return {'sha': sha, 'lane': lane, 'exit': exit_, 'guards_skipped': guards_skipped, 'android_unit': android, 'desktop_tests': True, 'compile': True,
             'custom_tasks': custom, 'security': security, 'candidate_complete': complete}
 
 
@@ -210,6 +210,24 @@ class ReleaseGate(unittest.TestCase):
         code, out = self.release()
         self.assertEqual(code, 1, out)
         self.assertIn('security', out)
+
+    def test_B_CI_310_a_candidate_with_a_skipped_guard_is_refused_even_if_the_exit_says_green(self):
+        """A guard whose reference picture was not fetched passed nothing: the release refuses it, with a plain message."""
+        self.runs([self.green(guards_skipped=2)])
+        self.smoke()
+        code, out = self.release()
+        self.assertEqual(code, 1, out)
+        self.assertIn('2 guard test(s) skipped', out)
+        self.assertIn('references were not fetched', out)
+
+    def test_B_CI_311_a_verdict_without_the_guard_count_cannot_prove_a_candidate(self):
+        old = verdict(self.sha)
+        del old['guards_skipped']
+        self.runs([{'id': 1, 'createdAt': '2026-01-01T10:00:00Z', 'verdict': old}])
+        self.smoke()
+        code, out = self.release()
+        self.assertEqual(code, 1, out)
+        self.assertIn('unknown number of guard', out)
 
     def test_a_newer_missing_security_fact_cannot_fall_back_to_an_older_green_run(self):
         missing = verdict(self.sha)

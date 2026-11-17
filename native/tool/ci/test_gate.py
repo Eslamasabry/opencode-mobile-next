@@ -13,22 +13,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = 'io.github.eslamasabry.oc'
 
 
-def junit(root, module, cls, failing=(), suite="desktopTest"):
+def junit(root, module, cls, failing=(), suite="desktopTest", out=""):
     d = os.path.join(root, module, 'build', 'test-results', suite)
     os.makedirs(d, exist_ok=True)
     cases = ''.join(f'<testcase name="{n}" classname="{cls}"><failure message="boom">x</failure></testcase>' for n in failing)
     cases += f'<testcase name="passes" classname="{cls}"/>'
     with open(os.path.join(d, f'TEST-{cls}.xml'), 'w') as fh:
-        fh.write(f'<testsuite name="{cls}">{cases}</testsuite>')
+        fh.write(f'<testsuite name="{cls}">{cases}<system-out><![CDATA[{out}]]></system-out></testsuite>')
 
 
-def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0', jobs=None, known=None, security=True):
+def run_gate(files_log, tasks, xml=(), results=None, guard_out='', report_env=None, planned='0', jobs=None, known=None, security=True):
     """Plants a shard (log + XML), runs test_report.py then summary.py. -> (exit code, markdown)."""
     with tempfile.TemporaryDirectory() as tmp:
         work, reports = os.path.join(tmp, 'native'), os.path.join(tmp, 'reports')
         os.makedirs(work)
         for module, cls, failing in xml:
-            junit(work, module, cls, failing)
+            junit(work, module, cls, failing, out=guard_out)
         log = os.path.join(tmp, 'gradle.log')
         with open(log, 'w') as fh:
             fh.write(files_log)
@@ -82,6 +82,16 @@ class Gate(unittest.TestCase):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
         self.assertEqual(code, 0, md)
         self.assertIn('## Native CI: PASS', md)
+
+    def test_B_CI_310_guards_skipped_are_counted_and_printed_on_their_own_line(self):
+        """A guard that could not run is never a clean pass: the count is printed, zero or not."""
+        xml = [('feature/chats', f'{PKG}.feature.chats.XTest', ())]
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', xml)
+        self.assertIn('\n0 guards skipped (references not fetched)\n', md)
+        out = 'OC-GUARD-SKIPPED picture kit_composer_idle_empty_light\nOC-GUARD-SKIPPED picture kit_row_default_light\nnoise\n'
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', xml, guard_out=out)
+        self.assertIn('\n2 guards skipped (references not fetched)\n', md)
+        self.assertEqual(code, 0, md)  # a fast or full lane reports it; only a candidate is refused for it
 
     def test_a_fast_run_whose_compile_and_tests_never_ran_is_integrity_not_pass(self):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
@@ -470,6 +480,16 @@ class CandidateGate(unittest.TestCase):
     def test_B_CI_303_complete_candidate_passes(self):
         code, text = self.gate()
         self.assertEqual(code, 0, text)
+
+    def test_B_CI_310_a_candidate_with_a_skipped_guard_is_not_a_pass(self):
+        code, text = self.gate()
+        self.assertEqual(code, 0, text)
+        self.assertIn('0 guards skipped (references not fetched)', text)
+        code, text = self.gate(lambda f: f['report-candidate-0.json'].update(guards_skipped=3))
+        self.assertEqual(code, 1, text)
+        self.assertIn('## Native CI: FAIL', text)
+        self.assertIn('3 guards skipped (references not fetched)', text)
+        self.assertIn('3 guard test(s) skipped', text)
 
     def test_B_CI_303_missing_or_stale_candidate_evidence_refuses_pass(self):
         mutations = {
