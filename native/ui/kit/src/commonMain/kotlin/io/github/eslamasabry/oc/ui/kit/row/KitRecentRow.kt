@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
@@ -368,6 +369,7 @@ private fun stateColor(colors: KitColors, tone: KitRowStateTone): Color =
  * Hidden: none
  * Replaces: none
  */
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitRowPanel(
     modifier: Modifier = Modifier,
@@ -382,6 +384,11 @@ public fun KitRowPanel(
      * them once when they change.
      */
     labelStatus: String? = null,
+    /**
+     * The one act that belongs to [labelStatus] ("Download on mobile data"): shown under the words, level with them, in
+     * the accent, in a 48 dp target. Null shows the words alone.
+     */
+    labelAction: KitLineAction? = null,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -391,7 +398,7 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus)) }
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, labelAction)) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -415,7 +422,7 @@ public fun KitRowPanel(
  * after that the last words stay while they fade out.
  */
 @Composable
-private fun kitLabelStatus(status: String?): (@Composable () -> Unit)? {
+private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Composable () -> Unit)? {
     val held = remember { mutableStateOf<String?>(null) }
     if (status != null && held.value != status) held.value = status
     val words = held.value ?: return null
@@ -423,19 +430,35 @@ private fun kitLabelStatus(status: String?): (@Composable () -> Unit)? {
     visible.targetState = status != null
     val reduced = KitMotion.state.reduced
     val specs = KitMotion.specs
+    val target = LocalKitTokens.current.minTarget.dp
     return {
         AnimatedVisibility(
             visibleState = visible,
             enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
             exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
         ) {
-            KitText(
-                words,
-                Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
-                role = TypeRole.Label,
-                tone = TextTone.Secondary,
-                maxLines = 1,
-            )
+            Column(if (action != null) Modifier.fillMaxWidth() else Modifier) {
+                KitText(
+                    words,
+                    Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
+                    role = TypeRole.Label,
+                    tone = TextTone.Secondary,
+                    maxLines = if (action != null) 2 else 1,
+                )
+                // The status's own act, under its words and level with them: a 48 dp target, the accent so it reads as
+                // something to tap (never a bar or a row of its own).
+                if (status != null && action != null)
+                    KitTappable(
+                        onClick = action.onClick,
+                        enabled = action.enabled,
+                        disabledReason = action.disabledReason,
+                        modifier = Modifier.heightIn(min = target).testTag("kit-row-panel-status-action"),
+                    ) {
+                        Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
+                            KitText(action.label, role = TypeRole.Label, tone = TextTone.Accent, maxLines = 2)
+                        }
+                    }
+            }
         }
     }
 }

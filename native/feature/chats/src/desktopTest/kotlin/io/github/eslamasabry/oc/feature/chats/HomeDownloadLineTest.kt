@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -11,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -113,4 +116,34 @@ class HomeDownloadLineTest {
         assertTrue(onAllNodesWithText("Updating OpenCode", substring = true).fetchSemanticsNodes().isEmpty())
         assertTrue(onAllNodesWithText("waiting for Wi-Fi", substring = true).fetchSemanticsNodes().isEmpty())
     }
+
+    private fun listed(fact: HomeDownloadFact?, stage: HomeStage? = null): ChatsUi {
+        val base = mixed()
+        return base.copy(download = fact, home = base.home.copy(stage = stage))
+    }
+
+    @Test
+    fun `B-HOME-211 on a list the waiting update sits in Recent's status place with its action, no bar`() =
+        runComposeUiTest {
+            val waiting = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
+            setContent { Home(listed(waiting)) }
+            waitForIdle()
+            onNodeWithTag("kit-row-panel-status", useUnmergedTree = true).assertExists()
+            onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
+            // The page's one status line (the bar above the title) is not used for it.
+            assertTrue(onAllNodesWithTag("kit-status-line", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+            onNodeWithText("Download on mobile data").performClick()
+            assertEquals(listOf("act"), actions.calls)
+        }
+
+    @Test
+    fun `B-HOME-211 while the helper starts its words win the place, the waiting update does not stack`() =
+        runComposeUiTest {
+            val waiting = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
+            setContent { Home(listed(waiting, HomeStage.Helper)) }
+            waitForIdle()
+            onNodeWithText("Starting the agents’ helper…").assertExists()
+            assertTrue(onAllNodesWithText("waiting for Wi-Fi", substring = true).fetchSemanticsNodes().isEmpty())
+            assertTrue(onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().isEmpty())
+        }
 }

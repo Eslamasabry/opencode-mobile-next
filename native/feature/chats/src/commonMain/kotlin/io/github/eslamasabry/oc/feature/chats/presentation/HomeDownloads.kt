@@ -51,6 +51,9 @@ public object HomeDownloadSizes {
         }
 }
 
+/** Whose words the line shows ([HomeDownloadRules.placeWins]). */
+public enum class HomeLineWinner { Stage, Download, None }
+
 public object HomeDownloadRules {
     /**
      * The one download the Home line talks about: one that downloads now first, then one that failed, then one that
@@ -58,6 +61,21 @@ public object HomeDownloadRules {
      */
     public fun shown(facts: List<HomeDownloadFact>): HomeDownloadFact? =
         facts.sortedWith(compareBy({ rank(it.phase) }, { it.kind.ordinal })).firstOrNull()
+
+    /**
+     * Home's one place for "what is happening to this phone" is the Recent label's end (stage words, or the download).
+     * Which says its words when both have some: a download that is running (the share done is the news) wins, then
+     * the start-up stage (it is what stands between the person and their agents and ends by itself in seconds), then a
+     * download that failed or waits for Wi-Fi (both stay until the person acts, so they show the moment the stage
+     * ends). Nothing is lost: the loser's words come back; nothing is stacked.
+     */
+    public fun placeWins(stage: HomeStage?, download: HomeDownloadFact?): HomeLineWinner =
+        when {
+            download?.phase is HomeDownloadPhase.Running -> HomeLineWinner.Download
+            stage != null -> HomeLineWinner.Stage
+            download != null -> HomeLineWinner.Download
+            else -> HomeLineWinner.None
+        }
 
     private fun rank(phase: HomeDownloadPhase): Int =
         when (phase) {

@@ -17,9 +17,10 @@ class FirstLaunchRulesTest {
         assertFalse(FirstLaunchRules.mirrorLocale(null, ""), "system language: nothing to mirror")
         assertFalse(FirstLaunchRules.mirrorLocale("ar", "es"), "a language set in system settings is kept")
         assertFalse(FirstLaunchRules.mirrorLocale("xx", ""), "not a 2.1.4 language")
-        // 2.1.x offered Japanese; native offers a language only at 95 % of English (LanguageCoverage), and Japanese
-        // is far below it, so that choice is not mirrored and the app is English as a whole.
-        assertFalse(FirstLaunchRules.mirrorLocale("ja", ""), "a 2.1.x language native does not offer yet")
+        // 2.1.x offered Japanese; native offers a language at 95 % of English (LanguageCoverage), and Japanese is now
+        // complete, so that choice is mirrored like the others.
+        assertTrue(FirstLaunchRules.mirrorLocale("ja", ""), "Japanese is offered, so a 2.1.x Japanese choice is kept")
+        assertFalse(FirstLaunchRules.mirrorLocale("ko", ""), "a language native does not offer")
         assertFalse(FirstLaunchRules.mirrorLocale("", ""))
     }
 

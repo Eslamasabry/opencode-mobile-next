@@ -45,6 +45,7 @@ import kotlin.test.Test
  */
 class KitLiquidJoinKitTest {
     private val glass = KitAppearance(style = Style.Glass)
+
     private val joinedPane = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(KitLiquidJoined)
 
     /** A platform with the lens and, when [joins], desktop's join shader and lens pass. */
@@ -80,17 +81,44 @@ class KitLiquidJoinKitTest {
         }
     }
 
+    private fun androidx.compose.ui.test.ComposeUiTest.joined(): Int =
+        onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
+
+    /**
+     * Steps the TEST clock in jumps of [STEP_MS], at most [BUDGET_MS] of simulated time in all, until [expected] panes are
+     * joined, and returns the count it ended on (the caller asserts it, so a join that never comes or never goes still
+     * fails, as an assertion and not as a timeout).
+     *
+     * Why the budget: what costs time is the animation the clock plays, not the number of calls. Measured on CI, an
+     * animating frame of joined glass costs about 0.4 s in software, which is 15 to 25 s of wall time per simulated
+     * second (runs 44087366721 and 44100715286: a 250 ms jump took 6.3 s, a 2.3 s jump over 30 s). The join is composed
+     * within the panel's 120 ms wait and a joined pane is gone once the 400 ms close hold ends, so each phase needs well
+     * under [BUDGET_MS]. Worst case by construction: open plus close, 2 x 0.8 s x 25 s = 40 s, under the 60 s limit. The old
+     * test played 2 x 1 s after waiting for idle on an auto-advancing clock (about 150 frames) and passed alone only.
+     * Motion stays Full: with motion Off the join is not drawn at all (the panes this test counts are not there).
+     */
+    private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, budgetMs: Long = BUDGET_MS): Int {
+        var spent = 0L
+        while (spent < budgetMs) {
+            if (joined() == expected) return expected
+            mainClock.advanceTimeBy(STEP_MS, ignoreFrameDuration = true)
+            waitForIdle()
+            spent += STEP_MS
+        }
+        return joined()
+    }
+
     private fun joinedPanes(appearance: KitAppearance, joins: Boolean, open: Boolean): Int {
         var count = -1
         runDesktopComposeUiTest(412, 800) {
+            mainClock.autoAdvance = false
             var shown by mutableStateOf(false)
             setContent { KitTheme(appearance = appearance, platform = platform(joins), localeTag = "en") { Scene(shown) { shown = false } } }
             waitForIdle()
             shown = open
             waitForIdle()
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
-            count = onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
+            // Where nothing is to join, wait the same time so a late join would show; where it joins, stop when it has.
+            count = settleTo(if (open && joins && appearance.glassLook != GlassLookId.Frosted) 2 else -1)
         }
         return count
     }
@@ -117,17 +145,15 @@ class KitLiquidJoinKitTest {
 
     @Test
     fun `liquid join - nothing joins once the menu has closed`() = runDesktopComposeUiTest(412, 800) {
+        mainClock.autoAdvance = false
         var shown by mutableStateOf(false)
         setContent { KitTheme(appearance = glass, platform = platform(true), localeTag = "en") { Scene(shown) { shown = false } } }
         shown = true
         waitForIdle()
-        mainClock.advanceTimeBy(1_000)
-        waitForIdle()
-        onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(2)
+        kotlin.test.assertEquals(2, settleTo(2), "open: the bar's side and the menu's side")
         shown = false
         waitForIdle()
-        mainClock.advanceTimeBy(1_000)
-        waitForIdle()
+        kotlin.test.assertEquals(0, settleTo(0), "closed: nothing joins")
         onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(0)
     }
 
@@ -222,5 +248,13 @@ class KitLiquidJoinKitTest {
         val toward = kotlin.math.abs(lum(seen.getValue("glass")) - lum(seen.getValue("text1")))
         val before = kotlin.math.abs(lum(seen.getValue("text2")) - lum(seen.getValue("text1")))
         kotlin.test.assertTrue(toward < before * .5f, "the second line on glass is most of the way to the first line's ink")
+    }
+
+    private companion object {
+        /** One jump of the test clock, ms (a few frames at 60 Hz). */
+        const val STEP_MS = 100L
+
+        /** Simulated time a phase may take: past the 120 ms wait for the join and the 400 ms close hold, with room. */
+        const val BUDGET_MS = 800L
     }
 }
