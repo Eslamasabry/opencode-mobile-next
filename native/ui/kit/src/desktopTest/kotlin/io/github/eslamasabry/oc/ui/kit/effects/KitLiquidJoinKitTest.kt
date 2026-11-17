@@ -91,11 +91,12 @@ class KitLiquidJoinKitTest {
      *
      * Why the budget: what costs time is the animation the clock plays, not the number of calls. Measured on CI, an
      * animating frame of joined glass costs about 0.4 s in software, which is 15 to 25 s of wall time per simulated
-     * second (runs 44087366721 and 44100715286: a 250 ms jump took 6.3 s, a 2.3 s jump over 30 s). The join is composed
-     * within the panel's 120 ms wait and a joined pane is gone once the 400 ms close hold ends, so each phase needs well
-     * under [BUDGET_MS]. Worst case by construction: open plus close, 2 x 0.8 s x 25 s = 40 s, under the 60 s limit. The old
-     * test played 2 x 1 s after waiting for idle on an auto-advancing clock (about 150 frames) and passed alone only.
-     * Motion stays Full: with motion Off the join is not drawn at all (the panes this test counts are not there).
+     * second (runs 44087366721 and 44100715286: a 250 ms jump took 6.3 s, a 2.3 s jump over 30 s). The join is
+     * composed within the panel's 120 ms wait and a joined pane is gone once the 400 ms close hold ends, so each phase
+     * needs well under [BUDGET_MS]. Worst case by construction: open plus close, 2 x 0.8 s x 25 s = 40 s, under the
+     * 60 s limit. The old test played 2 x 1 s after waiting for idle on an auto-advancing clock (about 150 frames) and
+     * passed alone only. Motion stays Full: with motion Off the join is not drawn at all (the panes this test counts
+     * are not there).
      */
     private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, budgetMs: Long = BUDGET_MS): Int {
         var spent = 0L
