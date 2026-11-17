@@ -21,7 +21,6 @@ import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
-import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
@@ -47,13 +46,6 @@ import kotlin.test.Test
 class KitLiquidJoinKitTest {
     private val glass = KitAppearance(style = Style.Glass)
 
-    /**
-     * The look of the MENU scenes, with motion Off: the joined glass's springs and its close hold become `snap()`
-     * (KitMotion.liquid / hold), so the clock does not play the animation. Measured on CI (run 44100715286): played, an
-     * animating frame costs seconds in software, about 15 to 25 s per simulated second, so a 2.3 s jump took over 30 s
-     * and the test timed out; the panes this test counts are composition state, not mid-animation pictures.
-     */
-    private val glassStill = glass.copy(motion = MotionLevel.Off)
     private val joinedPane = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(KitLiquidJoined)
 
     /** A platform with the lens and, when [joins], desktop's join shader and lens pass. */
@@ -93,30 +85,25 @@ class KitLiquidJoinKitTest {
         onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
 
     /**
-     * One jump of the test clock past the join's WHOLE chain of waits, read from the kit's own numbers
-     * ([io.github.eslamasabry.oc.ui.design.effects.LiquidJoin]): the panel's 120 ms wait for the join, the drop, the
-     * fill that starts a beat after the drop's turn, the close hold and the draw-up, with three turns of each spring and
-     * half a second over. With motion Off the springs snap, so the jump costs the frames of the changes it makes, not
-     * the frames of an animation.
+     * Steps the TEST clock in jumps of [STEP_MS], at most [BUDGET_MS] of simulated time in all, until [expected] panes are
+     * joined, and returns the count it ended on (the caller asserts it, so a join that never comes or never goes still
+     * fails, as an assertion and not as a timeout).
+     *
+     * Why the budget: what costs time is the animation the clock plays, not the number of calls. Measured on CI, an
+     * animating frame of joined glass costs about 0.4 s in software, which is 15 to 25 s of wall time per simulated
+     * second (runs 44087366721 and 44100715286: a 250 ms jump took 6.3 s, a 2.3 s jump over 30 s). The join is composed
+     * within the panel's 120 ms wait and a joined pane is gone once the 400 ms close hold ends, so each phase needs well
+     * under [BUDGET_MS]. Worst case by construction: open plus close, 2 x 0.8 s x 25 s = 40 s, under the 60 s limit. The old
+     * test played 2 x 1 s after waiting for idle on an auto-advancing clock (about 150 frames) and passed alone only.
+     * Motion stays Full: with motion Off the join is not drawn at all (the panes this test counts are not there).
      */
-    private val fullMotionMs: Long =
-        io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.let { j ->
-            (120 + j.CLOSE_MS + j.DRAW_UP_AFTER_MS + j.FILL_AFTER_TURN_MS +
-                3 * j.turnMs(j.DROP_ZETA, j.DROP_K) + 3 * j.turnMs(j.FILL_ZETA, j.FILL_K) + 500).toLong()
-        }
-
-    /**
-     * Steps the TEST clock, in jumps of [fullMotionMs], until [expected] panes are joined (at most [maxSteps] jumps),
-     * and returns the count it ended on (the caller asserts it, so a join that never comes or never goes still fails).
-     * A frame of joined glass animating costs seconds in software on a runner (see [glassStill]); with the springs
-     * snapped a jump draws the few frames its changes need. Worst case, measured not assumed: MOTION_STAGES jumps a
-     * phase, each at the measured cost of a still jump (the report gives it from the JUnit times).
-     */
-    private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, maxSteps: Int = MOTION_STAGES): Int {
-        repeat(maxSteps) {
+    private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, budgetMs: Long = BUDGET_MS): Int {
+        var spent = 0L
+        while (spent < budgetMs) {
             if (joined() == expected) return expected
-            mainClock.advanceTimeBy(fullMotionMs, ignoreFrameDuration = true)
+            mainClock.advanceTimeBy(STEP_MS, ignoreFrameDuration = true)
             waitForIdle()
+            spent += STEP_MS
         }
         return joined()
     }
@@ -126,12 +113,12 @@ class KitLiquidJoinKitTest {
         runDesktopComposeUiTest(412, 800) {
             mainClock.autoAdvance = false
             var shown by mutableStateOf(false)
-            setContent { KitTheme(appearance = appearance.copy(motion = MotionLevel.Off), platform = platform(joins), localeTag = "en") { Scene(shown) { shown = false } } }
+            setContent { KitTheme(appearance = appearance, platform = platform(joins), localeTag = "en") { Scene(shown) { shown = false } } }
             waitForIdle()
             shown = open
             waitForIdle()
             // Where nothing is to join, wait the same time so a late join would show; where it joins, stop when it has.
-            count = settleTo(if (open && joins && appearance.glassLook != GlassLookId.Frosted) 2 else -1, maxSteps = if (open && joins && appearance.glassLook != GlassLookId.Frosted) MOTION_STAGES else 2)
+            count = settleTo(if (open && joins && appearance.glassLook != GlassLookId.Frosted) 2 else -1)
         }
         return count
     }
@@ -160,7 +147,7 @@ class KitLiquidJoinKitTest {
     fun `liquid join - nothing joins once the menu has closed`() = runDesktopComposeUiTest(412, 800) {
         mainClock.autoAdvance = false
         var shown by mutableStateOf(false)
-        setContent { KitTheme(appearance = glassStill, platform = platform(true), localeTag = "en") { Scene(shown) { shown = false } } }
+        setContent { KitTheme(appearance = glass, platform = platform(true), localeTag = "en") { Scene(shown) { shown = false } } }
         shown = true
         waitForIdle()
         kotlin.test.assertEquals(2, settleTo(2), "open: the bar's side and the menu's side")
@@ -264,7 +251,10 @@ class KitLiquidJoinKitTest {
     }
 
     private companion object {
-        /** Frames a join needs at most: start, drop and fill, settle. */
-        const val MOTION_STAGES = 3
+        /** One jump of the test clock, ms (a few frames at 60 Hz). */
+        const val STEP_MS = 100L
+
+        /** Simulated time a phase may take: past the 120 ms wait for the join and the 400 ms close hold, with room. */
+        const val BUDGET_MS = 800L
     }
 }
