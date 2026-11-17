@@ -632,6 +632,14 @@ jobs:
             native/build/reports/detekt/
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
+      # The JUnit files of the custom run, so a test's duration can be read after the run (small: xml only).
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-junit-custom
+          path: native/**/build/test-results/**/*.xml
+          retention-days: 7
+          if-no-files-found: ignore
 
   detekt:
     name: detekt
@@ -678,14 +686,6 @@ jobs:
             native/reports/detekt.json
             native/build/reports/detekt/
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
-          if-no-files-found: ignore
-      # The JUnit files of the custom run, so a test's duration can be read after the run (small: xml only).
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: report-junit-custom
-          path: native/**/build/test-results/**/*.xml
-          retention-days: 7
           if-no-files-found: ignore
 
   android-unit:
