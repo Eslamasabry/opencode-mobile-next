@@ -10,7 +10,7 @@ internal object InstallFailure {
 
     /** What [BuiltinLinux.message] holds after [error]: the fixed word, never the exception's text. */
     @Suppress("UNUSED_PARAMETER")
-    fun shown(error: Throwable): String = CODE
+    fun shown(error: Throwable): String = error.message ?: error.javaClass.simpleName
 
     /** The technical text for Details. */
     fun details(error: Throwable): String = error.message ?: error.javaClass.simpleName

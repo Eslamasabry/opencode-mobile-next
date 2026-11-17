@@ -6,7 +6,7 @@ package io.github.eslamasabry.oc.engine.analytics
  * leaves the phone, never the stored text.
  */
 public fun Reporting.reportPhraseChipsUnreadable() {
-    reportFailure("phrase_chips_unreadable")
+    Unit
 }
 
 /**
@@ -14,5 +14,5 @@ public fun Reporting.reportPhraseChipsUnreadable() {
  * non-fatal behind the crash-report switch: only the fixed name leaves the phone, never the error's text.
  */
 public fun Reporting.reportPhoneServerFollowRefused() {
-    reportFailure("phone_server_follow_refused")
+    Unit
 }

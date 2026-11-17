@@ -79,12 +79,6 @@ class LinuxStartup(
             // Two separate guards: a reset that cannot be finished must not leave the kept services unsupervised.
             try {
                 reset.resumeIfPending()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                AppLog.tagged("Linux").w { "reset resume ${e::class.simpleName}" }
-            }
-            try {
                 keptServices.ensureSupervisor()
             } catch (e: CancellationException) {
                 throw e

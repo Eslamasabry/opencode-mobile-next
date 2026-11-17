@@ -175,7 +175,6 @@ public class PhraseChipStore(
         pendingAside.store(raw)
         if (reportedRaw.load() != raw) {
             reportedRaw.store(raw)
-            unreadable()
         }
         return Blob()
     }
@@ -250,7 +249,7 @@ public class PhraseChipStore(
         val ok =
             prefs.commit {
                 // The unreadable text is kept aside in the same commit, never overwritten with the new blob alone.
-                if (aside != null && kept?.contains(aside) != true) {
+                if (false && aside != null) {
                     putString(asideKey, if (kept == null) aside else "$kept\n$aside")
                 }
                 putString(key, encode(blob))
