@@ -32,6 +32,10 @@ on:
         description: Build only the preview APK (signed with the preview key), skip compile and test shards
         type: boolean
         default: false
+      references:
+        description: "Custom-tasks runs only: required = run the tests as a lane that fetches its pictures does (OC_REFERENCES=required), so a missing picture fails instead of skipping"
+        type: string
+        default: ""
       android_unit:
         description: "Run the Android library unit tests (native/android/*) and the :androidApp unit tests with the fast and full lanes; they count in the verdict. Untick for a quicker run that skips them"
         type: boolean
@@ -518,6 +522,7 @@ jobs:
         shell: bash
         env:
           CUSTOM_TASKS: ${{ inputs.tasks }}
+          OC_REFERENCES: ${{ inputs.references }}
         run: |
           set -o pipefail
           case "$CUSTOM_TASKS" in
@@ -529,6 +534,20 @@ jobs:
               exit 0 ;;
           esac
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
+      - name: Pack the goldens this run changed or added (a record run's result)
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          git status --porcelain --untracked-files=all -- 'native/*/src/desktopTest/goldens/*' 'native/*/*/src/desktopTest/goldens/*' | cut -c4- > "$RUNNER_TEMP/changed-goldens.txt" || true
+          mkdir -p native/reports
+          if [ -s "$RUNNER_TEMP/changed-goldens.txt" ]; then tar czf native/reports/goldens-custom.tgz -T "$RUNNER_TEMP/changed-goldens.txt"; cat "$RUNNER_TEMP/changed-goldens.txt" >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-goldens-custom
+          path: native/reports/goldens-custom.tgz
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Custom report
         if: always()
         env:
