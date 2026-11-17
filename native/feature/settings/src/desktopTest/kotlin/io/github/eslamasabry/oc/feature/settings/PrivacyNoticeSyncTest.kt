@@ -458,73 +458,37 @@ class PrivacyNoticeSyncTest {
         Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL)
             .find(file.readText())!!.groupValues[1]
 
+    private fun assertBothVoicePaths(where: String, text: String) {
+        val ok = "huggingface.co" in text && "createOnDeviceSpeechRecognizer" in text && "Android 12" in text
+        assertTrue(ok, "$where must name both voice paths")
+    }
+
     @Test
     fun `B-SEC-213 privacy policy, What we collect and voice settings name both voice paths truthfully`() {
-        val md = section(
-            File(repo, "PRIVACY.md").readText(),
-            "## Microphone and local voice input",
-            "## Optional assistant on this phone",
-        )
-        val mdFacts = listOf(
-            "huggingface.co",
-            "never leaves the phone",
-            "createOnDeviceSpeechRecognizer",
-            "Android 12",
-            "EXTRA_PREFER_OFFLINE",
-            "privacy terms apply",
-        )
-        for (fact in mdFacts) {
+        val mdText = File(repo, "PRIVACY.md").readText()
+        val md = section(mdText, "## Microphone and local voice input", "## Optional assistant on this phone")
+        assertBothVoicePaths("PRIVACY.md voice section", md)
+        for (fact in listOf("never leaves the phone", "EXTRA_PREFER_OFFLINE", "privacy terms apply")) {
             assertTrue(fact in md, "PRIVACY.md voice section must name '$fact'")
         }
-        val wiringPath =
-            "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/VoiceWiring.kt"
+        val wiringPath = "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/VoiceWiring.kt"
         val wiring = File(repo, wiringPath).readText()
-        assertTrue(
-            "SpeechRecognizer.createOnDeviceSpeechRecognizer(" in wiring,
-            "fallback voice uses createOnDeviceSpeechRecognizer",
-        )
-        assertTrue(
-            "RecognizerIntent.EXTRA_PREFER_OFFLINE" in wiring,
-            "fallback voice sets EXTRA_PREFER_OFFLINE",
-        )
-        assertTrue(
-            "SpeechRecognizer.createSpeechRecognizer(" !in wiring,
-            "fallback voice never uses the default speech recognizer",
-        )
+        assertTrue("SpeechRecognizer.createOnDeviceSpeechRecognizer(" in wiring, "uses on-device recognizer")
+        assertTrue("RecognizerIntent.EXTRA_PREFER_OFFLINE" in wiring, "sets EXTRA_PREFER_OFFLINE")
+        assertTrue("SpeechRecognizer.createSpeechRecognizer(" !in wiring, "never uses default recognizer")
         val kdocDir = "native/engine/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/voice/dictation"
         val kdoc = File(repo, "$kdocDir/OnDeviceSpeech.kt").readText()
-        assertTrue(
-            "audio never leaves the phone" !in kdoc && "Android guarantees" !in kdoc,
-            "OnDeviceSpeech KDoc must not overclaim for the system fallback",
-        )
+        assertTrue("audio never leaves the phone" !in kdoc && "Android guarantees" !in kdoc, "KDoc truthful")
         val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
         for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
             val locale = File(resources, if (tag == "en") "values" else "values-$tag")
             val policy = xmlString(File(locale, "strings_native_privacy.xml"), "nativeBundledPrivacy")
             val never = xmlString(File(locale, "strings_s28_privacy.xml"), "collectNever")
             val voice = xmlString(File(locale, "strings_voice_native.xml"), "voiceNativePhoneEngine")
-            assertTrue(
-                "huggingface.co" in policy &&
-                    "createOnDeviceSpeechRecognizer" in policy &&
-                    "Android 12" in policy,
-                "${locale.name}: nativeBundledPrivacy must name both voice paths",
-            )
-            assertTrue(
-                "huggingface.co" in never &&
-                    "createOnDeviceSpeechRecognizer" in never &&
-                    "Android 12" in never,
-                "${locale.name}: collectNever on What we collect must name both voice paths",
-            )
-            assertTrue(
-                "createOnDeviceSpeechRecognizer" in voice && "Android 12" in voice,
-                "${locale.name}: voiceNativePhoneEngine must name Android's on-device recognizer",
-            )
-            for (overclaim in voiceOverclaims) {
-                assertTrue(
-                    overclaim !in voice,
-                    "${locale.name}: voiceNativePhoneEngine must not overclaim '$overclaim'",
-                )
-            }
+            assertBothVoicePaths("${locale.name} policy", policy)
+            assertBothVoicePaths("${locale.name} never", never)
+            assertTrue("createOnDeviceSpeechRecognizer" in voice && "Android 12" in voice, "${locale.name}: voice")
+            for (overclaim in voiceOverclaims) assertTrue(overclaim !in voice, "${locale.name}: $overclaim")
         }
     }
 
