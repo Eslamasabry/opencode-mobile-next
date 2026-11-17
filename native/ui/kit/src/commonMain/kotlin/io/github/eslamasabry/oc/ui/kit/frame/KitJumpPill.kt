@@ -60,6 +60,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -465,7 +466,7 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
             Box(
                 Modifier.size(JUMP_BUTTON_FACE_DP.dp)
                     .then(look.modifier)
-                    .border(1.dp, colors.hairline, look.shape),
+                    .kitHairlineBorder(1.dp, colors.hairline, look.shape),
                 contentAlignment = Alignment.Center,
             ) {
                 KitGlyph(KitIcons.down, colors.text1, 20.dp)

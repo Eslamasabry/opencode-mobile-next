@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -82,7 +82,7 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
             .fillMaxWidth()
             .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
             .then(shadow)
-            .then(if (solid) Modifier.border(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
+            .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
             .then(look.modifier)
             .testTag("kit-header-capsule")
     ) {
