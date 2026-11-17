@@ -137,6 +137,11 @@ jobs:
         run: |
           set -o pipefail
           bash native/tool/release/test/run_tests.sh 2>&1 | tee "$RUNNER_TEMP/release-tools.log"
+      - name: detekt ratchet self-test (a new finding fails, an old one does not, also in a moved or renamed file)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-BUILD-024 2>&1 | tee "$RUNNER_TEMP/detekt-ratchet.log"
       - name: Pick the lane and the modules
         id: p
         env:
