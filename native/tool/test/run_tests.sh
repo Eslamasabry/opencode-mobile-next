@@ -561,6 +561,17 @@ expect_out "B-CI-308 base check: the warning is plain" 'warning: base=old'
 expect "B-CI-308 base check: the branch's merge-base is accepted" 0 native/tool/ci/base_check.sh "$(git merge-base HEAD line)" line native/my-branch
 expect "B-CI-308 base check: so is a base with a small diff" 0 native/tool/ci/base_check.sh HEAD~1 line native/my-branch
 
+# ------------------------------------------------------------------ base_check.sh (B-CI-334): the line's own throwaway copies
+# The line's quick lane is dispatched on native/night-<sha> copies of the tip: their merge-base with the line is their own tip,
+# so a refusal could only propose "base = HEAD" (a run of nothing). They are warned like the line; any ref at the tip is told
+# to dispatch on the line ref.
+expect "B-CI-334 base check: a native/night-* copy of the line is only warned, never refused" 0 native/tool/ci/base_check.sh old line native/night-abc123def456
+git checkout -q line
+expect "B-CI-334 base check: a night copy at the tip with a base from an old how-to is only warned" 0 native/tool/ci/base_check.sh old line native/night-abc123def456
+expect "B-CI-334 base check: any other ref at the line's tip is refused" 1 native/tool/ci/base_check.sh old line native/my-tip-copy
+expect_out "B-CI-334 base check: and told plainly to dispatch on the line ref" "this ref is the line's tip: dispatch on the line ref"
+expect_no_out "B-CI-334 base check: and never offered a base equal to its own tip" "-f base=$(git rev-parse --short=12 HEAD)"
+
 # ------------------------------------------------------------------------------------ qa/layout_baseline.sh (E02-S13)
 R="$(new_repo)"; cd "$R" || exit 1
 expect "E02-S13 layout ratchet: before any baseline exists it is the adoption bootstrap" 0 native/tool/qa/layout_baseline.sh --base native/main
