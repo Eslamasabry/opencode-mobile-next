@@ -138,6 +138,8 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
@@ -280,6 +282,11 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    // The phone's two automatic downloads say themselves at the end of the Recent label (the stage words' place), not
+    // in a bar above the title (owner, build 10077). Only a page with no Recent list falls back to the status line.
+    val downloadStatus = homeDownloadStatus(state.download, actions)
+    val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
+    val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download)
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
@@ -343,7 +350,7 @@ public fun ChatsScreen(
                     onFab = actions::newConversation,
                 )
             }),
-        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition } ?: homeDownloadStatus(state.download, actions),
+        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition } ?: downloadStatus.takeIf { !downloadInList },
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -552,7 +559,10 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
                                     prominentDividers = true,
-                                    labelStatus = state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    labelStatus =
+                                        if (lineWords == HomeLineWinner.Download) downloadStatus?.message
+                                        else state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    labelAction = if (lineWords == HomeLineWinner.Download) downloadStatus?.action else null,
                                 ) {
                                     recent.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
                                 }
@@ -1318,7 +1328,8 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                         if (openCode) Res.string.phoneDownloadWaitingOpenCode else Res.string.phoneDownloadWaitingHelper,
                         download.megabytes,
                     ),
-                tone = StatusTone.Attention,
+                // Waiting is not failing: a calm mark, no warning triangle.
+                tone = StatusTone.Neutral,
                 action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
             )
         is HomeDownloadPhase.Running -> {

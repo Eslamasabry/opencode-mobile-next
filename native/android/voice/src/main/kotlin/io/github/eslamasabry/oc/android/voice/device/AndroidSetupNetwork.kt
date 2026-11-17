@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.os.Build
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetworkSource
 import kotlinx.coroutines.channels.awaitClose
@@ -12,6 +13,15 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
+
+/** One network a VPN runs over, as Android describes it (Android 12 and later name them on the VPN's own record). */
+public data class UnderlyingNetworkFacts(
+    val internet: Boolean,
+    val validated: Boolean,
+    val cellular: Boolean,
+    /** NET_CAPABILITY_NOT_METERED of this network itself. */
+    val notMetered: Boolean,
+)
 
 /** What the classifier needs; null fields mean "not answered". */
 public data class NetworkFacts(
@@ -24,6 +34,11 @@ public data class NetworkFacts(
     val activeMetered: Boolean,
     /** The active network's NET_CAPABILITY_NOT_METERED; for a VPN, Android derives it from the underlying networks. */
     val notMetered: Boolean = !activeMetered,
+    /**
+     * For a VPN: the networks it really runs over (null when Android does not say). The traffic is paid for by those,
+     * so they decide, never the VPN's own transport or validation.
+     */
+    val underlying: List<UnderlyingNetworkFacts>? = null,
 )
 
 /**
@@ -37,6 +52,14 @@ public object SetupNetworkRules {
     public fun classify(facts: NetworkFacts?): SetupNetwork {
         if (facts == null || !facts.hasManager) return SetupNetwork.Unknown
         if (!facts.hasActiveNetwork || !facts.internet) return SetupNetwork.Offline
+        if (facts.vpn) {
+            // Decide by the network that really carries the traffic. Several: all of them must be free.
+            val carriers = facts.underlying.orEmpty().filter { it.internet }
+            if (carriers.isNotEmpty()) {
+                if (!facts.validated && carriers.none { it.validated }) return SetupNetwork.Unknown
+                return if (carriers.all { it.notMetered && !it.cellular }) SetupNetwork.Unmetered else SetupNetwork.Metered
+            }
+        }
         if (!facts.validated) return SetupNetwork.Unknown
         if (facts.cellular) return SetupNetwork.Metered
         if (facts.vpn) {
@@ -102,8 +125,23 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
                 vpn = caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true,
                 activeMetered = cm.isActiveNetworkMetered,
                 notMetered = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) == true,
+                underlying = if (caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true) underlyingOf(cm, caps) else null,
             )
         } catch (_: RuntimeException) {
             null
         }
+
+    private fun underlyingOf(cm: ConnectivityManager, caps: NetworkCapabilities): List<UnderlyingNetworkFacts>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+        val networks = caps.underlyingNetworks ?: return null
+        return networks.mapNotNull { network ->
+            val c = cm.getNetworkCapabilities(network) ?: return@mapNotNull null
+            UnderlyingNetworkFacts(
+                internet = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
+                validated = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
+                cellular = c.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR),
+                notMetered = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
+            )
+        }
+    }
 }

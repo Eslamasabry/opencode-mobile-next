@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
@@ -382,6 +383,11 @@ public fun KitRowPanel(
      * them once when they change.
      */
     labelStatus: String? = null,
+    /**
+     * The one act that belongs to [labelStatus] ("Download on mobile data"): the section label's own end act, in its
+     * 48 dp target. The status words may then run to two lines at large text instead of being cut.
+     */
+    labelAction: KitLineAction? = null,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -391,7 +397,7 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus)) }
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, maxLines = if (labelAction != null) 2 else 1), action = labelAction.takeIf { labelStatus != null }) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -415,7 +421,7 @@ public fun KitRowPanel(
  * after that the last words stay while they fade out.
  */
 @Composable
-private fun kitLabelStatus(status: String?): (@Composable () -> Unit)? {
+private fun kitLabelStatus(status: String?, maxLines: Int = 1): (@Composable () -> Unit)? {
     val held = remember { mutableStateOf<String?>(null) }
     if (status != null && held.value != status) held.value = status
     val words = held.value ?: return null
@@ -434,7 +440,7 @@ private fun kitLabelStatus(status: String?): (@Composable () -> Unit)? {
                 Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
                 role = TypeRole.Label,
                 tone = TextTone.Secondary,
-                maxLines = 1,
+                maxLines = maxLines,
             )
         }
     }
