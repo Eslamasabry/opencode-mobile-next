@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">朗读</string>
     <string name="voiceNativePartial">已下载 %1$s / %2$s</string>
     <string name="voiceNativePhoneRecognizer">手机语音识别</string>
+    <string name="kitVoiceDiscard">丢弃录音</string>
+    <string name="kitVoiceUseWords">将文字放入消息框</string>
+    <string name="kitVoiceSendSpoken">发送你说的话</string>
+    <string name="kitVoiceListeningFor">正在聆听，%1$s</string>
 </resources>

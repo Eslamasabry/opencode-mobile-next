@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">読み上げる</string>
     <string name="voiceNativePartial">%2$s中%1$sをダウンロード済み</string>
     <string name="voiceNativePhoneRecognizer">スマートフォンの音声認識</string>
+    <string name="kitVoiceDiscard">録音を破棄</string>
+    <string name="kitVoiceUseWords">メッセージ欄に入力</string>
+    <string name="kitVoiceSendSpoken">話した内容を送信</string>
+    <string name="kitVoiceListeningFor">聞き取り中、%1$s</string>
 </resources>
