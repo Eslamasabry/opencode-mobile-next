@@ -47,4 +47,32 @@ class Oc2RunRecoveryTest {
         assertIs<Outcome.Failed>(g.reconcileRuns(setOf(SessionId("session"))))
         g.close()
     }
+    @Test fun `B-435 recovery advances past a page hidden by staged undo`() = runTest {
+        val sid = SessionId("session")
+        var pages = 0
+        val engine = MockEngine { request ->
+            val body = when {
+                request.url.encodedPath.endsWith("/active") -> "{}"
+                request.url.encodedPath.endsWith("/message") -> {
+                    pages++
+                    if (request.url.parameters["cursor"] == "older")
+                        """{"data":[{"id":"msg_a","type":"user","text":"visible","time":{"created":1}}]}"""
+                    else """{"data":[""" + (1..100).joinToString(",") {
+                        """{"id":"msg_z$it","type":"user","text":"undone","time":{"created":2}}"""
+                    } + """],"cursor":{"next":"older"}}"""
+                }
+                else -> """{"data":{"id":"session","revert":{"messageID":"msg_m"}}}"""
+            }
+            respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
+        val g = Oc2Gateway(NetClient(HttpClient(engine), { TransportError.Other }), ServerOrigin("https", "example.test", 443),
+            ConnectionCredentials.None, io.github.eslamasabry.oc.core.testing.TestClock(), Redactor(), initialDialect = Oc2Dialect.Stable)
+        val ends = mutableListOf<GatewayEvent.RunEnded>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { g.events.all.collect { (it.event as? GatewayEvent.RunEnded)?.let(ends::add) } }
+        assertIs<Outcome.Ok<*>>(g.reconcileRuns(setOf(sid)))
+        assertEquals(2, pages, "recovery uses the ordinary staged-boundary history path")
+        assertEquals(listOf("msg_a"), ends.single().reconciledHistory?.map { it.info.id })
+        g.close()
+    }
+
 }

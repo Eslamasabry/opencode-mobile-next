@@ -28,7 +28,7 @@ import org.junit.Assume.assumeTrue
 /** Explicit build-server opt-in. Own server, own HOME/XDG dirs and generated password; no saved provider login. */
 class LiveOc2RunRecoveryTest {
     @Test
-    fun `B-435 live OC2 refetches a turn ended while its event stream was cut`() = runBlocking {
+    fun `B-435 live OC2 refetches a turn ended while its event stream was cut`(): Unit = runBlocking {
         assumeTrue("Isolated live recovery proof not requested", System.getProperty("oc.liveRecovery") == "true")
         val binary = System.getenv("OC2_BINARY")?.let(Path::of)
             ?: Path.of(System.getProperty("user.home"), "tools/oc2/node_modules/@opencode/cli-linux-x64/bin/opencode")
@@ -74,6 +74,7 @@ class LiveOc2RunRecoveryTest {
             val allowReconnect = CompletableDeferred<Unit>()
             val started = CompletableDeferred<Unit>()
             val recovered = CompletableDeferred<GatewayEvent.RunEnded>()
+            var naturalEnds = 0
             var streams = 0
             val delegate = KtorSseConnector(net.http) {
                 url(origin.toString() + "/api/event")
@@ -97,7 +98,7 @@ class LiveOc2RunRecoveryTest {
                 g.events.all.collect { envelope ->
                     when (val event = envelope.event) {
                         is GatewayEvent.RunStarted -> { cut.complete(Unit); started.complete(Unit) }
-                        is GatewayEvent.RunEnded -> if (event.reconciledHistory != null) recovered.complete(event)
+                        is GatewayEvent.RunEnded -> if (event.reconciledHistory != null) recovered.complete(event) else naturalEnds++
                         else -> Unit
                     }
                 }
@@ -124,6 +125,7 @@ class LiveOc2RunRecoveryTest {
                     idle = created.id !in statuses
                 }
             }
+            assertEquals(0, naturalEnds, "the natural ending was lost while the stream was cut")
             allowReconnect.complete(Unit)
             val end = withTimeout(30_000) { recovered.await() }
             assertEquals(created.id, end.sessionId)
