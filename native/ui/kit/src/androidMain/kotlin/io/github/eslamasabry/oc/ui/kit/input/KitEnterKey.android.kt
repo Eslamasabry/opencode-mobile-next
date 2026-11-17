@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.ui.kit.input
 import android.view.KeyCharacterMap
 import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.nativeKeyEvent
 
 public actual fun KeyEvent.fromSoftKeyboard(): Boolean = nativeKeyEvent.isFromSoftKeyboard()
 

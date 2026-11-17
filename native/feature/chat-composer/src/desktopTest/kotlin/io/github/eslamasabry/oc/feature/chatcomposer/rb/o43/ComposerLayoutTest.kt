@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chatcomposer.rb.o43
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.input.key.Key
 import kotlin.test.assertEquals
