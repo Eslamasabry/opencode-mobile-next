@@ -280,7 +280,7 @@ class ChatEdgesBuildRenders {
             waitForIdle()
             onNodeWithTag("transcript-list").performScrollToIndex(5)
             waitForIdle()
-            mainClock.advanceTimeBy(1_000)
+            if (!owner) mainClock.advanceTimeBy(1_000)
             waitForIdle()
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (owner) "owner" else "default"}-${if (dark) "dark" else "light"}-3.png"))
         }

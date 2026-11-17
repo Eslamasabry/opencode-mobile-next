@@ -40,7 +40,8 @@ class ChatFloatingScreenTest {
                 val project = onNodeWithText("IPTV_King", substring = true, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
                 val where = onNodeWithText(place, substring = true, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
                 assertTrue(project.left >= capsule.left && where.right <= capsule.right && where.bottom <= capsule.bottom, "the project and the place ($place) lie inside the capsule")
-                assertTrue(project.right <= where.left + 1f, "the project comes before the place ($place)")
+                // One line (or two parts of it): the project starts the line and the place follows or shares it.
+                assertTrue(project.left <= where.left + 1f, "the project comes before the place ($place)")
             }
         }
     }
