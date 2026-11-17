@@ -104,7 +104,7 @@ expect() {
   local out rc
   out="$("$@" 2>&1)"; rc=$?
   if [[ "$rc" == "$want" ]]; then pass=$((pass + 1)); echo "ok   $name"
-  else fail=$((fail + 1)); failed+=("$name"); echo "FAIL $name (exit $rc, want $want)"; sed 's/^/     | /' <<<"$out" | { if [ "$(wc -l <<<"$out")" -gt 30 ]; then head -8; echo "     | ..."; fi; tail -70; }; fi
+  else fail=$((fail + 1)); failed+=("$name"); echo "FAIL $name (exit $rc, want $want)"; shown="$(sed 's/^/     | /' <<<"$out")"; if [ "$(wc -l <<<"$shown")" -gt 80 ]; then sed -n 1,8p <<<"$shown"; echo "     | ..."; tail -70 <<<"$shown"; else echo "$shown"; fi; fi
   LAST_OUT="$out"
 }
 expect_out() { # expect_out <name> <grep -E pattern>  (on the last expect's output)
