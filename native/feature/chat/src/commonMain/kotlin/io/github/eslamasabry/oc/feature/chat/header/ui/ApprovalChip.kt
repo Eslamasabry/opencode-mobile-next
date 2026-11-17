@@ -96,9 +96,11 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
             opensPicker = false,
             semanticsLabel = words,
             active = state.choice != ApprovalChoice.Ask,
+            // B-438: the words only where both chips show whole: never on a phone, never at larger text.
             wordless =
                 io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow.current.cls ==
-                    io.github.eslamasabry.oc.ui.design.layout.WindowClass.Compact,
+                    io.github.eslamasabry.oc.ui.design.layout.WindowClass.Compact ||
+                    androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.0f,
         )
     }
     ApprovalSheet(state, actions)

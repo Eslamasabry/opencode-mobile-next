@@ -234,9 +234,20 @@ public fun KitComposerBox(
                 if (!stacked) trailing() else Row(Modifier.composerActionInset(tokens.minTarget), verticalAlignment = Alignment.CenterVertically) { fieldEnd() }
             }
             if (stacked) {
+              androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+                // B-438 (chips never cut): the plus and the round control keep their 48 dp; the approval control is the
+                // shield alone (40 dp with its gap); the model takes the rest on one line with an end ellipsis and always
+                // shows at least its first 12 characters. When the rest cannot hold that, or at large text, the choices
+                // take their own line inside the box, above the plus and send row.
+                val fontScale = LocalDensity.current.fontScale
+                val minModelDp = (COMPOSER_MODEL_MIN_CHARS * COMPOSER_CHAR_DP * fontScale + COMPOSER_CHIP_FRAME_DP).dp
+                val ownLine =
+                    largeText ||
+                        maxWidth - (tokens.minTarget * 2).dp - COMPOSER_SHIELD_SLOT_DP.dp < minModelDp
                 // At large text sizes choices get the full measure above the action targets.
                 // Flow wraps the model and approval mode instead of squeezing either into a sliver.
-                if (largeText)
+                Column(Modifier.fillMaxWidth()) {
+                if (ownLine)
                     FlowRow(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -249,7 +260,7 @@ public fun KitComposerBox(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     leading()
-                    if (largeText) Spacer(Modifier.weight(1f))
+                    if (ownLine) Spacer(Modifier.weight(1f))
                     else
                         // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
                         // (the model) shows its name; the later ones (the approval mode) shorten first.
@@ -260,6 +271,8 @@ public fun KitComposerBox(
                         }
                     trailing()
                 }
+                }
+              }
             }
         }
         }
@@ -605,6 +618,14 @@ private const val COMPOSER_CHIP_TAIL_MIN = 96
  * "…" first. Only when even that does not fit does the model's name give way too. Nothing ever draws past the line's
  * end. Right to left, the line starts on the right.
  */
+/** The model chip's least characters (B-438), the label's average glyph width in dp at text 1.0, and the chip's own frame. */
+private const val COMPOSER_MODEL_MIN_CHARS: Int = 12
+private const val COMPOSER_CHAR_DP: Float = 7.2f
+private const val COMPOSER_CHIP_FRAME_DP: Float = 58f
+
+/** The approval control's slot on the row when it is the shield alone: its 32 dp face and the gap beside it, dp. */
+private const val COMPOSER_SHIELD_SLOT_DP: Int = 40
+
 @Composable
 private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> Unit) {
     Layout(content, modifier) { measurables, constraints ->
