@@ -149,21 +149,41 @@ class TranslationQualityTest {
     }
 
     @Test
-    fun `japanese spacing - no space between Japanese and Latin letters, digits, or counters`() {
-        val jaChar = """[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff々〆ヵヶー]"""
+    fun `japanese spacing - no space between Japanese and Latin letters, digits, or placeholders across every values-ja file`() {
+        val jaChar = """[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff々〆ヵヶー、。（）「」『』【】：]"""
+        // Allowed exceptions:
+        // - Middle-dot separator `" · "` (U+00B7 is outside both character classes).
+        // - Spaces strictly inside ASCII/unit/code/placeholder runs (`Android 13`, `512 MB`, `%1$d / %2$d`).
+        // - Search `*Aliases` keys, which hold whitespace-delimited search tokens.
+        // - `tools/strings/src/test/resources/golden/` test fixtures, verified byte-for-byte by GoldenTest against frozen ARBs.
+        // - Generated Gradle `build/` output directories.
         val forbidden = listOf(
-            Regex("""$jaChar [A-Za-z0-9]"""),
-            Regex("""[A-Za-z0-9] $jaChar"""),
-            Regex("""%(?:\d+\$)?d $jaChar"""),
-            Regex("""%(?:\d+\$)?s (?:件|行|回|個|つ|秒|分|時間|日|週|か月|年|前|間|後|以内|ステップ|ポイント|ファイル|文字|系列|種|種類|目)"""),
+            Regex("""$jaChar [A-Za-z0-9%]"""),
+            Regex("""[A-Za-z0-9%] $jaChar"""),
         )
         val offenders = mutableListOf<String>()
-        for ((l, en, tr) in pairs()) {
-            if (l != "ja" || en.key.endsWith("Aliases")) continue
-            val hit = tr.texts().firstNotNullOfOrNull { t -> forbidden.firstNotNullOfOrNull { it.find(t)?.value } }
-            if (hit != null) offenders += "${en.key}: \"$hit\""
+        val jaDirs = nativeRoot.walkTopDown()
+            .filter { it.isDirectory && it.name == "values-ja" }
+            .filter { dir ->
+                val rel = dir.relativeTo(nativeRoot).invariantSeparatorsPath
+                "/build/" !in "/$rel/" && !rel.startsWith("tools/strings/src/test/resources/golden")
+            }
+            .sortedBy { it.path }
+            .toList()
+        for (dir in jaDirs) {
+            for ((key, entry) in TranslationCatalog.readDir(dir)) {
+                if (key.endsWith("Aliases")) continue
+                val hit = entry.texts().firstNotNullOfOrNull { t -> forbidden.firstNotNullOfOrNull { it.find(t)?.value } }
+                if (hit != null) {
+                    val relFile = File(dir, entry.file).relativeTo(nativeRoot).invariantSeparatorsPath
+                    offenders += "$relFile\t$key: \"$hit\""
+                }
+            }
         }
-        assertTrue(offenders.isEmpty(), "ja spacing: ${offenders.size} strings have spaces adjacent to Latin/digits/counters\n" + offenders.take(100).joinToString("\n"))
+        assertTrue(
+            offenders.isEmpty(),
+            "ja spacing: ${offenders.size} strings have spaces adjacent to Latin/digits/placeholders\n" + offenders.take(150).joinToString("\n"),
+        )
     }
 
     // ---- no English left ----
