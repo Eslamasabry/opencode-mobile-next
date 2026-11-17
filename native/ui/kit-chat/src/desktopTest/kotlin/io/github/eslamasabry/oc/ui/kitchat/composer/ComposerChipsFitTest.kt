@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -72,8 +73,11 @@ class ComposerChipsFitTest {
             val text = onNodeWithText(model, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             assertTrue(text.left >= box.left && text.right <= box.right, "the model chip's words are cut by the box: $text in $box (scale $fontScale, rtl $rtl)")
             assertTrue(onAllNodesWithText("Auto-approve on", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "the approval control still shows its words beside the model at 360 dp (scale $fontScale)")
-            val send = onNodeWithText("Send", useUnmergedTree = true, substring = true)
-            assertTrue(send.fetchSemanticsNode().boundsInRoot.height >= 48f - 1f, "send is smaller than 48 dp")
+            for (name in listOf("Send", "Tools")) {
+                val target = onNodeWithContentDescription(name, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                assertTrue(target.width >= 47f && target.height >= 47f, "$name is ${target.width} x ${target.height}, under 48 dp")
+                assertTrue(target.left >= box.left && target.right <= box.right, "$name is outside the box")
+            }
             // One line, or its own line above the plus and send row: the words are never wrapped into a sliver.
             assertTrue(text.width >= MIN_WIDTH * fontScale || text.top < box.bottom - 96f, "the model keeps fewer than 12 characters on the row: ${text.width} (scale $fontScale)")
         }
