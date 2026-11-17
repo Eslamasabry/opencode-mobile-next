@@ -241,11 +241,17 @@ public fun KitComposerBox(
                 // take their own line inside the box, above the plus and send row.
                 val fontScale = LocalDensity.current.fontScale
                 val minModelDp = (COMPOSER_MODEL_MIN_CHARS * COMPOSER_CHAR_DP * fontScale + COMPOSER_CHIP_FRAME_DP).dp
+                // The approval control (a chip marked collapsible) is the shield alone whenever both chips cannot show whole.
+                val collapsed =
+                    maxWidth <
+                        (tokens.minTarget * 2).dp + COMPOSER_GAP_DP.dp +
+                            (COMPOSER_APPROVAL_CHARS * COMPOSER_CHAR_DP * fontScale + COMPOSER_CHIP_FRAME_DP).dp + minModelDp
                 val ownLine =
                     largeText ||
                         maxWidth - (tokens.minTarget * 2).dp - COMPOSER_SHIELD_SLOT_DP.dp < minModelDp
                 // At large text sizes choices get the full measure above the action targets.
                 // Flow wraps the model and approval mode instead of squeezing either into a sliver.
+                CompositionLocalProvider(LocalComposerChipsCollapsed provides collapsed) {
                 Column(Modifier.fillMaxWidth()) {
                 if (ownLine)
                     FlowRow(
@@ -270,6 +276,7 @@ public fun KitComposerBox(
                             chips()
                         }
                     trailing()
+                }
                 }
                 }
               }
@@ -304,7 +311,10 @@ public fun KitComposerChip(
      * It needs an [icon] and a [semanticsLabel]: the words are still what a screen reader hears.
      */
     wordless: Boolean = false,
+    /** The approval control: it shows its icon alone while the box's row cannot hold both chips whole (B-438). */
+    collapsible: Boolean = false,
 ) {
+    val iconOnly = wordless || (collapsible && LocalComposerChipsCollapsed.current)
     val colors = LocalKitColors.current
     // On the slab the chip is a quiet tint of the glass it lies in, never an opaque plate.
     val face =
@@ -322,13 +332,13 @@ public fun KitComposerChip(
         kitDressedLook(
             KitSurfaceInput(
                 role = SurfaceRole.Control,
-                shape = if (wordless && icon != null) KitShapeId.Circle else KitShapeId.Pill,
+                shape = if (iconOnly && icon != null) KitShapeId.Circle else KitShapeId.Pill,
                 level = SurfaceLevel.Surface2,
                 color = if (active) colors.accent.copy(alpha = ACTIVE_CHIP_TINT).compositeOver(colors.surface2) else null,
                 nested = true,
             )
         )
-    if (wordless && icon != null) {
+    if (iconOnly && icon != null) {
         KitTappable(
             onClick = onClick,
             modifier = modifier.semantics { contentDescription = semanticsLabel ?: label },
@@ -622,6 +632,12 @@ private const val COMPOSER_CHIP_TAIL_MIN = 96
 private const val COMPOSER_MODEL_MIN_CHARS: Int = 12
 private const val COMPOSER_CHAR_DP: Float = 7.2f
 private const val COMPOSER_CHIP_FRAME_DP: Float = 58f
+private const val COMPOSER_APPROVAL_CHARS: Int = 15
+private const val COMPOSER_GAP_DP: Int = 8
+
+/** True while the box's row cannot show both chips whole: a chip marked `collapsible` then shows its icon alone. */
+internal val LocalComposerChipsCollapsed: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /** The approval control's slot on the row when it is the shield alone: its 32 dp face and the gap beside it, dp. */
 private const val COMPOSER_SHIELD_SLOT_DP: Int = 40

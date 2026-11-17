@@ -11,6 +11,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -54,7 +55,7 @@ class ComposerChipsFitTest {
                                     field = { KitText("Ask", role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Frame) },
                                     leading = { KitComposerAdd("Tools", onClick = {}, open = false) },
                                     chips = {
-                                        KitComposerChip(label = "Auto-approve on", onClick = {}, icon = KitIcons.shield, opensPicker = false, semanticsLabel = "Approval", wordless = true)
+                                        KitComposerChip(label = "Auto-approve on", onClick = {}, icon = KitIcons.shield, opensPicker = false, semanticsLabel = "Approval", collapsible = true)
                                         KitComposerChip(label = model, onClick = {}, icon = KitIcons.model, shrinks = true)
                                     },
                                     trailing = { KitComposerSend("Send", onClick = {}) },
@@ -70,6 +71,7 @@ class ComposerChipsFitTest {
             val box = b("box")
             val text = onNodeWithText(model, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             assertTrue(text.left >= box.left && text.right <= box.right, "the model chip's words are cut by the box: $text in $box (scale $fontScale, rtl $rtl)")
+            assertTrue(onAllNodesWithText("Auto-approve on", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "the approval control still shows its words beside the model at 360 dp (scale $fontScale)")
             val send = onNodeWithText("Send", useUnmergedTree = true, substring = true)
             assertTrue(send.fetchSemanticsNode().boundsInRoot.height >= 48f - 1f, "send is smaller than 48 dp")
             // One line, or its own line above the plus and send row: the words are never wrapped into a sliver.

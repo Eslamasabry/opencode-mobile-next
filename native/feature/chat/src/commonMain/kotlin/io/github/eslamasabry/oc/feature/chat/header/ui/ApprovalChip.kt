@@ -96,6 +96,7 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
             opensPicker = false,
             semanticsLabel = words,
             active = state.choice != ApprovalChoice.Ask,
+            collapsible = true,
             // B-438: the words only where both chips show whole: never on a phone, never at larger text.
             wordless =
                 io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow.current.cls ==
