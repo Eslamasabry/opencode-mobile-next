@@ -359,7 +359,8 @@ class PrivacyNoticeSyncTest {
             val added = event.payload.data.keys - fields.keys
             assertEquals(setOf("version", "build", "os_major", "device_class"), added, name)
         }
-        val wiringPath = "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt"
+        val wiringPath = "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/" +
+            "telemetry/Telemetry.kt"
         val wiring = File(repo, wiringPath).readText()
         assertTrue("UsageTelemetryVendor" in wiring && "UmamiSender(" in wiring, "the notice covers the sender that the app actually builds")
         assertTrue("BuildConfig.VERSION_NAME" in wiring && "BuildConfig.VERSION_CODE" in wiring, "version facts come from this build")
