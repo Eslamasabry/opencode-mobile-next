@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class ActivityFollowTest {
     private fun refusing(times: Int): (Boolean) -> Unit {
         var left = times
-        return { if (left-- > 0) throw IllegalStateException("refused") }
+        return { if (left-- > 0) error("refused") }
     }
 
     @Test
@@ -27,7 +27,7 @@ class ActivityFollowTest {
         val follow = ActivityFollow { told++ }
         val call: (Boolean) -> Unit = {
             asked++
-            throw IllegalStateException("refused")
+            error("refused")
         }
         follow.follow(true, call)
         follow.follow(true, call)
@@ -40,7 +40,7 @@ class ActivityFollowTest {
     fun `B-LINUX-207 a landed follow rearms the report`() {
         var told = 0
         val follow = ActivityFollow { told++ }
-        val bad: (Boolean) -> Unit = { throw IllegalStateException("refused") }
+        val bad: (Boolean) -> Unit = { error("refused") }
         follow.follow(true, bad)
         follow.follow(true, bad)
         follow.follow(false) {}

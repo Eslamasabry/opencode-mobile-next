@@ -86,7 +86,7 @@ class ProfileScopeTest {
     }
 
     @Test
-    fun `B-STATE-061 deleting a profile deletes the phrase suggestions kept aside as unreadable, and only its own`() = runTest {
+    fun `B-STATE-061 deleting a profile deletes its unreadable phrase suggestions kept aside`() = runTest {
         val backend = FakeBackend(
             mapOf(
                 "flutter.oc.phraseChipsAside.$doomed" to RawPref.Str("{not json"),

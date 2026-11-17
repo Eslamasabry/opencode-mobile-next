@@ -17,6 +17,11 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
@@ -73,8 +78,10 @@ class LinuxStartup(
     private val reset: LinuxResetFlow,
     private val scope: AppCoroutineScope,
     private val keptServices: io.github.eslamasabry.oc.engine.runtime.services.kept.KeptServices,
+    private val followReports: ActivityFollowReports,
 ) {
     fun start() {
+        followReports.arm()
         scope.launch {
             // Two separate guards: a reset that cannot be finished must not leave the kept services unsupervised.
             try {
@@ -84,12 +91,9 @@ class LinuxStartup(
             } catch (e: Exception) {
                 AppLog.tagged("Linux").w { "reset resume ${e::class.simpleName}" }
             }
-            try {
-                keptServices.ensureSupervisor()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                AppLog.tagged("Linux").w { "kept services supervisor ${e::class.simpleName}" }
+            val supervised = attempt({ Failure.Runtime(RuntimeProblem.Generic) }) { keptServices.ensureSupervisor() }
+            if (supervised is Outcome.Failed || supervised.getOrNull() is Outcome.Failed) {
+                AppLog.tagged("Linux").w { "kept services supervisor not ensured" }
             }
         }
     }

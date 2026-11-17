@@ -162,16 +162,16 @@ public class PhraseChipStore(
 
     private fun read(): Blob {
         val raw = prefs.string(key) ?: return Blob()
-        return try {
-            decode(parseJson(raw) as? JsonObject ?: return unreadableBlob(raw))
-        } catch (e: StoredFormatException) {
-            unreadableBlob(raw)
-        } catch (e: IllegalArgumentException) {
-            unreadableBlob(raw)
-        }
-    }
-
-    private fun unreadableBlob(raw: String): Blob {
+        val blob =
+            try {
+                (parseJson(raw) as? JsonObject)?.let(::decode)
+            } catch (e: StoredFormatException) {
+                null
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        if (blob != null) return blob
+        // Unreadable: nothing learned for this run, the text is kept aside by the next write, and one report is sent.
         pendingAside.store(raw)
         if (reportedRaw.load() != raw) {
             reportedRaw.store(raw)

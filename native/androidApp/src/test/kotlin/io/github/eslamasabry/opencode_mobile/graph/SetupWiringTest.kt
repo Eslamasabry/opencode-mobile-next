@@ -48,10 +48,10 @@ class SetupWiringTest {
     }
 
     @Test
-    fun `B-LINUX-206 an old server that cannot be stopped fails the restart instead of reporting the old version as new`() =
+    fun `B-LINUX-206 an old server that cannot be stopped fails the restart`() =
         runTest {
             val stopped = BuiltinSetupFinisher.replaceRunningServer(UnconfinedTestDispatcher(testScheduler)) {
-                throw IllegalStateException("still serving")
+                error("still serving")
             }
             assertTrue(stopped is Outcome.Failed, "a stop that throws must not read as success: $stopped")
         }

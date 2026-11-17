@@ -392,15 +392,9 @@ class BuiltinSetupFinisher(
         /** Stops the old server before a restart; a stop that throws is a failure, never a quiet success. */
         suspend fun replaceRunningServer(io: CoroutineDispatcher, stop: () -> Unit): Outcome<Unit> =
             withContext(io) {
-                try {
-                    stop()
-                    Outcome.Ok(Unit)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    AppLog.tagged("Setup").w { "stopping the old server ${e::class.simpleName}" }
-                    Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
-                }
+                val stopped = attempt({ Failure.Runtime(RuntimeProblem.Generic) }) { stop() }
+                if (stopped is Outcome.Failed) AppLog.tagged("Setup").w { "the old server could not be stopped" }
+                stopped
             }
 
         const val OWNER_KEY = "oc.builtinServerOwner"

@@ -28,8 +28,6 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.agents.phonecontext.PhoneAgentContext
-import io.github.eslamasabry.oc.engine.analytics.reportPhoneServerFollowRefused
-import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
@@ -114,7 +112,6 @@ object LinuxRuntimeWiring {
         policies: AppAutomationPolicies,
         consents: NativePhoneFirstStartConsents,
         gates: LocalServerGates,
-        reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
     ): BuiltinRuntime =
         BuiltinRuntime(
                 app,
@@ -129,10 +126,7 @@ object LinuxRuntimeWiring {
                 consents,
                 gates,
             )
-            .also {
-                it.activityFollow = ActivityFollow { reporting.reportPhoneServerFollowRefused() }
-                leases.start()
-            }
+            .also { leases.start() }
 
     @Provides fun linuxHost(runtime: BuiltinRuntime): LinuxHost = runtime.host
 
@@ -447,7 +441,7 @@ internal constructor(
     internal var onManualReady: (suspend () -> Unit)? = null
 
     /** Remembers a refused follow, so the next resume tries once more and a second refusal is reported once. */
-    internal var activityFollow: ActivityFollow = ActivityFollow {}
+    internal var activityFollow: ActivityFollow = ActivityFollow { gates.followRefused?.invoke() }
     val isForeground: Boolean
         get() = foreground
 
@@ -1858,29 +1852,7 @@ object OfflineSpeechEngine : SherpaRuntime {
 @dev.zacsweers.metro.Inject
 class LocalServerGates {
     @Volatile var gate: (suspend (ProfileId) -> LocalServerWait)? = null
-}
 
-/**
- * Following the activity (BuiltinLinux.setActivityResumed) can be refused. The next resume asks again (the one bounded
- * retry); a second refusal in a row is handed once to [refused] (a non-fatal with a fixed name, behind the
- * crash-report switch), and nothing loops: the following resumes ask as usual and report nothing until one lands.
- */
-internal class ActivityFollow(private val refused: () -> Unit) {
-    private var refusals = 0
-    private var told = false
-
-    fun follow(on: Boolean, call: (Boolean) -> Unit) {
-        try {
-            call(on)
-            refusals = 0
-            told = false
-        } catch (e: Exception) {
-            AppLog.tagged("Linux").w { "follow activity ${e::class.simpleName}" }
-            refusals++
-            if (refusals >= 2 && !told) {
-                told = true
-                refused()
-            }
-        }
-    }
+    /** Told when the phone server's recovery was refused twice in a row (set once at app start). */
+    @Volatile var followRefused: (() -> Unit)? = null
 }
