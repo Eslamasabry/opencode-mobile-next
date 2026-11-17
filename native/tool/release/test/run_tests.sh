@@ -234,7 +234,7 @@ sha="$(git rev-parse HEAD)"
 case "$1 $2" in
   "run list") echo '[{"databaseId":7,"createdAt":"2026-01-01T00:00:00Z"}]' ;;
   "run download") d="$(sed 's/.*-D //' <<<"$*" | cut -d' ' -f1)"
-    printf '{"sha":"%s","lane":"fast","exit":0,"android_unit":true,"desktop_tests":true,"compile":true,"custom_tasks":false,"security":true}' "$sha" >"$d/verdict.json" ;;
+    printf '{"sha":"%s","lane":"candidate","exit":0,"android_unit":true,"desktop_tests":true,"compile":true,"custom_tasks":false,"security":true,"candidate_complete":true}' "$sha" >"$d/verdict.json" ;;
   *) exit 3 ;;
 esac
 GH

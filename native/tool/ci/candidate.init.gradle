@@ -1,0 +1,8 @@
+// A candidate needs fresh Test execution; compilation/dependency caches remain usable.
+allprojects {
+    tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+        maxParallelForks = 1
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
+    }
+}

@@ -15,35 +15,6 @@ Gradle log (env GRADLE_LOG, the shard's tee'd output) and the shard's task list 
 """
 import glob, json, os, re, shlex, sys, xml.etree.ElementTree as ET
 
-name, out = sys.argv[1], sys.argv[2]
-mods, failures, skipped = {}, [], 0
-arguments = shlex.split(os.environ.get('TASKS', ''))
-expected_tasks = [t for t in arguments if t.startswith(':')]
-selected = {'/'.join(t.strip(':').split(':')[:-1]) for t in expected_tasks}
-security_counts = [0, 0, 0]
-for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
-    mod = p.split('/build/')[0]
-    if selected and mod not in selected:
-        continue  # a warm runner keeps other shards' results in build/: only this shard's modules count
-    for tc in ET.parse(p).getroot().iter('testcase'):
-        a = mods.setdefault(mod, [0, 0])
-        a[0] += 1
-        is_security = '/quality/' in '/' + p and '/test-results/secTest/' in p.replace(os.sep, '/')
-        if is_security:
-            security_counts[0] += 1
-        bad = tc.find('failure') if tc.find('failure') is not None else tc.find('error')
-        if tc.find('skipped') is not None:
-            skipped += 1
-            if is_security:
-                security_counts[2] += 1
-        if bad is not None:
-            a[1] += 1
-            if is_security:
-                security_counts[1] += 1
-            msg = (bad.get('message') or (bad.text or '')).strip().splitlines()
-            failures.append({'id': f'{mod} :: {tc.get("classname")} > {tc.get("name")}', 'module': mod,
-                             'message': (msg[0] if msg else '')[:200]})
-
 def log_lines():
     path = os.environ.get('GRADLE_LOG', '')
     try:
@@ -55,6 +26,61 @@ def log_lines():
 def clean(line):
     return re.sub(r'^\S+Z\s+', '', re.sub(r'\x1b\[[0-9;]*m', '', line)).rstrip()  # drop a timestamp and colours
 
+
+lines = log_lines()
+task_status = {}
+for line in lines:
+    match = re.match(r'^> Task (:\S+?)(?: ([A-Z-]+))?$', clean(line))
+    if match:
+        task_status[match[1]] = match[2] or 'RAN'
+
+name, out = sys.argv[1], sys.argv[2]
+mods, failures, skipped = {}, [], 0
+suites, picture_tests = {}, 0
+arguments = shlex.split(os.environ.get('TASKS', ''))
+expected_tasks = [t for t in arguments if t.startswith(':')]
+selected = {'/'.join(t.strip(':').split(':')[:-1]) for t in expected_tasks}
+security_counts = [0, 0, 0]
+quality_counts = [0, 0, 0]
+for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
+    mod = p.split('/build/')[0]
+    if selected and mod not in selected:
+        continue  # a warm runner keeps other shards' results in build/: only this shard's modules count
+    suite = p.split('/test-results/', 1)[1].split('/')[0]
+    task = ':' + mod.replace('/', ':') + ':' + suite
+    if os.environ.get('LANE') == 'candidate' and task not in task_status:
+        continue  # other suites in this module may be stale outputs on a warm runner
+    count = suites.setdefault(task, {'tests': 0, 'failed': 0, 'skipped': 0})
+    for tc in ET.parse(p).getroot().iter('testcase'):
+        count['tests'] += 1
+        is_quality = mod == 'quality' and suite == 'test'
+        if is_quality:
+            quality_counts[0] += 1
+        if tc.find('skipped') is None and re.search(r'Golden|\.rb\.|LooksCapture', tc.get('classname', '')):
+            picture_tests += 1
+        a = mods.setdefault(mod, [0, 0])
+        a[0] += 1
+        is_security = '/quality/' in '/' + p and '/test-results/secTest/' in p.replace(os.sep, '/')
+        if is_security:
+            security_counts[0] += 1
+        bad = tc.find('failure') if tc.find('failure') is not None else tc.find('error')
+        if tc.find('skipped') is not None:
+            skipped += 1
+            count['skipped'] += 1
+            if is_quality:
+                quality_counts[2] += 1
+            if is_security:
+                security_counts[2] += 1
+        if bad is not None:
+            a[1] += 1
+            count['failed'] += 1
+            if is_quality:
+                quality_counts[1] += 1
+            if is_security:
+                security_counts[1] += 1
+            msg = (bad.get('message') or (bad.text or '')).strip().splitlines()
+            failures.append({'id': f'{mod} :: {tc.get("classname")} > {tc.get("name")}', 'module': mod,
+                             'message': (msg[0] if msg else '')[:200]})
 
 def analyse(lines, mods, expected):
     """-> real failure strings from the Gradle log; see the module docstring."""
@@ -90,7 +116,6 @@ def gradle_ran(lines):
     return any(re.match(r'^(\S+Z\s+)?(\x1b\[[0-9;]*m)*(> Task :|BUILD (SUCCESSFUL|FAILED))', l) for l in lines)
 
 
-lines = log_lines()
 real_failures = analyse(lines, mods, expected_tasks)
 security_status = next((m.group(1) or 'RAN' for line in reversed(lines)
                         if (m := re.match(r'^> Task :quality:secTest(?: ([A-Z-]+))?$', clean(line)))), '')
@@ -103,10 +128,26 @@ for argument in arguments:
 security = {'executed': security_status in ('RAN', 'FAILED'), 'full': not filtered_security,
             'tests': security_counts[0], 'failed': security_counts[1], 'skipped': security_counts[2]}
 
+quality = {'executed': task_status.get(':quality:test') in ('RAN', 'FAILED'),
+           'full': '--tests' not in arguments, 'tests': quality_counts[0],
+           'failed': quality_counts[1], 'skipped': quality_counts[2]}
+flags = shlex.split(os.environ.get('TEST_FLAGS', ''))
+candidate = {
+    'fresh': all(task_status.get(task) in ('RAN', 'FAILED') for task in suites),
+    'unfiltered': not any(a in ('--tests', '-x', '--exclude-task') or a.startswith(('--tests=', '--exclude-task=', '-x'))
+                          for a in arguments + flags),
+    'pictures': all(a in flags for a in ('-PskipGoldens=false', '-PonlyGoldens=false',
+                                        '-Poc.recordGoldens=false', '-PrunQuarantined=true')) and
+                not any(a.startswith(('-PskipGoldens=', '-PonlyGoldens=', '-Poc.recordGoldens=')) and
+                        not a.endswith('=false') for a in arguments + flags),
+    'picture_tests': picture_tests,
+}
+
 if os.environ.get('GRADLE_OUTCOME') == 'failure' and not failures and not real_failures:
     real_failures.append('the Gradle run failed and left no failing test and no readable task failure')
 tests = sum(v[0] for v in mods.values())
-report = {'name': name, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods,
+report = {'name': name, 'lane': os.environ.get('LANE', ''), 'sha': os.environ.get('GITHUB_SHA', ''),
+          'candidate': candidate, 'quality': quality, 'task_status': task_status, 'suites': suites, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods,
           'build_failed': os.environ.get('GRADLE_OUTCOME') == 'failure', 'real_failures': real_failures,
           # integrity facts for summary.py: did this shard plan work, and did Gradle really start?
           'security': security, 'planned': expected_tasks, 'gradle_ran': gradle_ran(log_lines()),

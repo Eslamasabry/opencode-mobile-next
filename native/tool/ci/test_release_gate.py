@@ -167,7 +167,7 @@ class ReleaseGate(unittest.TestCase):
         self.smoke()
         code, out = self.release()
         self.assertEqual(code, 1, out)
-        self.assertIn('no fast or full lane run with the Android unit tests', out)
+        self.assertIn('incomplete candidate evidence', out)
 
     def test_a_red_security_suite_refuses_release_even_if_the_aggregate_exit_says_green(self):
         self.runs([self.green(security=False)])

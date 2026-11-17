@@ -137,7 +137,7 @@ if env('RESULT_TEST') not in (None, '', 'skipped') and planned:
         integrity.append(f'{len(missing)} of {len(planned)} planned test shard(s) left no report (shard {", ".join(missing)})')
 # A fast or full lane run whose compile or test jobs never ran (the plan job failed, or they were skipped) proved nothing:
 # no compile row and no test row is not a pass (2026-11-16: a failed plan job left a run reading PASS with zero tests).
-if lane.split(' ')[0] in ('fast', 'full'):
+if lane.split(' ')[0] in ('fast', 'full', 'candidate'):
     for key, label in (('RESULT_COMPILE', 'compile'), ('RESULT_TEST', 'desktop tests')):
         if env(key) in (None, '', 'skipped', 'cancelled'):
             integrity.append(f'{label}: the job did not run in a {lane.split(" ")[0]} lane run (did the plan job fail?)')
@@ -157,7 +157,7 @@ for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 
 security_facts = [shard.get('security', {}) for shard in shards]
 selected_quality = any(':quality:test' in shard.get('planned', []) for shard in shards)
 selected_security = any(':quality:secTest' in shard.get('planned', []) for shard in shards)
-security_required = lane.split(' ')[0] in ('fast', 'full') or selected_quality or (selected_security and any(f.get('full') for f in security_facts))
+security_required = lane.split(' ')[0] in ('fast', 'full', 'candidate') or selected_quality or (selected_security and any(f.get('full') for f in security_facts))
 security_ran = any(f.get('executed') and f.get('full') and f.get('tests', 0) > 0 for f in security_facts)
 security_bad = any(f.get('failed', 0) or f.get('skipped', 0) for f in security_facts)
 if security_required:
@@ -165,17 +165,64 @@ if security_required:
     if not security_ran:
         integrity.append('security suite: no executed full :quality:secTest report for this run')
 
+# Candidate evidence is report-derived so the host ci-verdict wrapper can read it too.
+if lane == 'candidate':
+    plan = (load('candidate-plan.json', reports) or [{}])[0]
+    desktop = [s for s in shards if s.get('name', '').startswith('candidate-')]
+    android_shards = [s for s in shards if s.get('name') == 'android-unit']
+    build_logic = [s for s in shards if s.get('name') == 'build-logic']
+    if plan.get('lane') != 'candidate' or not plan.get('sha'):
+        integrity.append('candidate: no complete plan/self-test artifact')
+    for name in ('ci', 'release', 'release_tools'):
+        fact = plan.get('self_tests', {}).get(name, {})
+        if fact.get('passed') is not True or fact.get('tests', 0) <= 0:
+            integrity.append(f'candidate: {name} self-tests not proved passing')
+    for label, selected, expected in (
+        ('desktop', desktop, plan.get('desktop_tasks', [])),
+        ('Android', android_shards, plan.get('android_tasks', [])),
+        ('build logic', build_logic, [':convention:test']),
+    ):
+        actual = [t for report in selected for t in report.get('planned', [])]
+        if not expected or not selected or set(actual) != set(expected) or len(actual) != len(set(actual)):
+            integrity.append(f'candidate: incomplete {label} task inventory')
+        for report in selected:
+            for task in report.get('planned', []):
+                status = report.get('task_status', {}).get(task)
+                # Android :test and verifyRoborazzi tasks are lifecycle tasks; the actual Test suites below must be fresh.
+                allowed = ('RAN', 'FAILED', 'NO-SOURCE', 'UP-TO-DATE') if label == 'Android' else ('RAN', 'FAILED', 'NO-SOURCE')
+                if status not in allowed:
+                    integrity.append(f'candidate: {task} was not executed ({status})')
+    for report in desktop + android_shards + build_logic:
+        proof = report.get('candidate', {})
+        if report.get('lane') != 'candidate' or report.get('sha') != plan.get('sha'):
+            integrity.append(f'candidate: {report["name"]} is not evidence for the planned commit')
+        if not all(proof.get(k) is True for k in ('fresh', 'unfiltered', 'pictures')):
+            integrity.append(f'candidate: {report["name"]} lacks fresh, unfiltered tests with pictures enabled')
+    if not any(s.get('candidate', {}).get('picture_tests', 0) > 0 for s in desktop + android_shards):
+        integrity.append('candidate: no executed picture test result')
+    qualities = [s.get('quality', {}) for s in desktop]
+    if not any(q.get('executed') and q.get('full') and q.get('tests', 0) > 0 and
+               q.get('failed') == 0 and q.get('skipped') == 0 for q in qualities):
+        integrity.append('candidate: no executed passing whole :quality:test report')
+    if not android.get('gradle_ran') or android.get('tests', 0) <= 0:
+        integrity.append('candidate: no Android unit result artifact')
+    if not compile_.get('gradle_ran'):
+        integrity.append('candidate: app compilation not proved')
+    rows.append(('candidate coverage', 'all modules, pictures, quality/security, Android, build logic, release tools'))
+
 reasons = []
 if security_required and security_bad:
     reasons.append("security suite has failing or skipped assertions")
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
     if env(key) in ('failure', 'cancelled') or rep.get('failed'):
         reasons.append(f'{label} job failed')
-if env('RESULT_ANDROID_UNIT') in ('failure', 'cancelled') or android.get('failed'):
+if lane != 'candidate' and (env('RESULT_ANDROID_UNIT') in ('failure', 'cancelled') or android.get('failed')):
     reasons.append('android unit tests failed' + (': ' + ', '.join(f'`{i}`' for i in android['failing'][:5]) if android.get('failing') else '') +
                    (' (' + '; '.join(android['real'][:3]) + ')' if android.get('real') else ''))
 if env('RESULT_TEST') not in (None, '', 'skipped') and not shards:
     reasons.append('the test shards left no reports at all')
+if lane == 'candidate' and android.get('failed') and not any(s['failures'] or s.get('real_failures') for s in android_shards):
+    reasons.append('candidate: Android job failed without a readable assertion or task cause')
 reasons += [f'real failure, {r}' for r in real]
 if new:
     reasons.append(f'{len(new)} failing test(s) that are not known noise')

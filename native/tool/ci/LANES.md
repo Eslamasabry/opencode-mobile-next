@@ -4,8 +4,9 @@ Workflow: `.github/workflows/native-ci.yml` (branches `native/screens-merge*`, `
 
 | lane | what runs | when |
 |---|---|---|
-| `fast` (default for a dispatch) | `plan` picks the modules changed against `base` plus their direct dependents (`tool/ci/fast_tasks.sh`); `compile` the app; desktop tests of those modules in 2-8 shards with `-PskipGoldens=true` (never more shards than tasks), plus one last shard that runs `:quality:test` alone on every dispatch; the preview APK. All jobs in parallel. | every iteration |
-| `full` (push default) | every module's desktop tests in 8 shards, picture tests included, compared with the committed CI-recorded goldens; `compileAllTests`; the APK | release gates, after merging |
+| `fast` (default for a dispatch) | `plan` picks the modules changed against `base` plus their direct dependents (`tool/ci/fast_tasks.sh`); `compile` the app; desktop tests of those modules in 2-8 shards with `-PskipGoldens=true` (never more shards than tasks), plus one last shard that runs `:quality:test` and `:quality:secTest` together on every dispatch; the preview APK. All jobs in parallel. | every iteration |
+| `candidate` | all modules’ desktop/JVM tests with pictures, a dedicated whole quality/security shard, all Android units plus KMP Android host tests (Roborazzi verification where configured), build-logic tests, CI/release Python self-tests and shell release-tool self-tests; app/test compilation; one report-derived verdict. Android cannot be disabled. Test results must be fresh; compilation caches stay usable. No APK or signing. | the only lane accepted for a release candidate |
+| `full` (push default) | every module's desktop tests in 8 shards, picture tests included, compared with the committed CI-recorded goldens; `compileAllTests`; the APK | broad development checks |
 | `goldens` | `-Poc.recordGoldens=true -PonlyGoldens=true` on every module that wires `oc.goldens.record`; uploads artifact `ci-goldens` (a tgz of the `src/desktopTest/goldens` trees) | after a deliberate look change, or when a runner image changes fonts |
 
 `tasks` (custom Gradle tasks) and `apk_only` work as before and ignore the lane. The last job, `summary`, prints one table
@@ -15,7 +16,7 @@ Workflow: `.github/workflows/native-ci.yml` (branches `native/screens-merge*`, `
 Shard counts and the quality shard come from `tool/ci/plan_shards.sh` (tested in `test_gate.py`). Before, the fast lane ran
 `:quality:test` only when `fast_tasks.sh` listed it (the module list contained `:quality` or one of its dependencies) and never
 when the plan fell back to ALL, because the shard picker removes `:quality:test` from the rotation. Now it always has the last
-shard. The full lane does not run `:quality:test` (unchanged; dispatch `-f tasks=":quality:test"` for it).
+shard. Full rotates the paired quality/security tasks among the module shards. Candidate always uses a dedicated final quality/security shard and checks its actual JUnit evidence.
 
 ## Quality gates on a builder's machine
 
@@ -39,6 +40,7 @@ means a PASS table.
 gh workflow run native-ci.yml --ref <branch> -f lane=fast                 # base defaults to native/screens-merge41
 gh workflow run native-ci.yml --ref <branch> -f lane=fast -f base=native/s33-theme-motion
 gh workflow run native-ci.yml --ref <branch> -f lane=full
+gh workflow run native-ci.yml --ref <branch> -f lane=candidate -f runner=github
 gh workflow run native-ci.yml --ref <branch> -f lane=goldens
 gh workflow run native-ci.yml --ref <branch> -f tasks=":ui:kit:desktopTest"   # as before
 gh workflow run native-ci.yml --ref <branch> -f apk_only=true                 # as before
@@ -76,7 +78,7 @@ A manual `gh workflow run native-ci.yml --ref native/next -f apk_only=true` stil
 
 ## What counts as a picture test (`-PskipGoldens`, `-PonlyGoldens`; tool/ci/goldens.gradle.kts)
 
-A class in a `*Test` source set (not `androidHostTest`, which CI does not run) that mentions `FlutterGoldenGate.`,
+A desktop/common test class that mentions `FlutterGoldenGate.`,
 `oc.goldens.dir|record`, `compareGolden`, `looks-out` or imports `LooksCapture`, plus files named `*Golden*` /
 `LooksCapture*` in `ui/` and `feature/`. Found by reading the sources: a new golden test needs no list edit.
 Two kinds exist:
@@ -84,7 +86,7 @@ Two kinds exist:
 * Skiko desktop goldens (`feature/{chat,chats,chat-composer,review,settings,usage,voice}/src/desktopTest/goldens`):
   compared with the committed PNG, re-recordable. The CI runner is the reference now.
 * Flutter gate shots (`FlutterGoldenGate`, the `rb/*GateTest` classes): compared with the frozen Flutter picture
-  extracted from git history; not re-recordable, they stay in the full lane only.
+  extracted from git history; not re-recordable, they stay in the full and candidate lanes.
 
 ## Re-recording
 
@@ -114,8 +116,8 @@ Always FAIL, never noise (`tool/ci/summary.py`, `tool/ci/test_report.py` reading
 
 The Android library unit tests (`:android:*:test`, `:androidApp:testPreviewDebugUnitTest`) run in the `android-unit` job of
 every fast and full lane run and every push run, and a failure there is FAIL. Untick the `android_unit` input for a quicker run
-without them; such a run does not count for a release. The summary job also writes `verdict.json` (artifact `ci-verdict`),
-which `scripts/native-release.sh` reads through `release_verdict.py`.
+without them. Only the complete candidate lane counts for a release; fast/full/custom runs never qualify. Candidate ignores this opt-out and includes Android host tests as well. The summary job also writes `verdict.json` (artifact `ci-verdict`),
+which `scripts/native-release.sh` reads through `release_verdict.py`. The newest candidate decides; missing completeness/security evidence or a red candidate cannot fall back to an older pass. Candidate plan/test artifacts include the SHA, complete task inventory, executed test statuses, whole quality/security and picture counts, and passing self-test counts. `ci-verdict.sh` can validate these reports without relying on job colours.
 
 Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
 `known_failures.txt`, or is quarantined. `known_failures.txt` can only shrink (`KnownFailuresCeiling` in `test_gate.py`) and a
