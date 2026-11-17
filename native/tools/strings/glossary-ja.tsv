@@ -1,0 +1,97 @@
+# Glossary for ja (Japanese: polite です/ます in sentences; concise noun or dictionary forms on buttons and labels). kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+keep	Claude Code
+keep	Linux
+term	\bThis phone\b	このスマートフォン
+term	\b[Cc]onversations?\b	会話
+term	\bTry again\b	もう一度試す|もう一度お試し
+term	\bSettings\b	設定
+term	\bServers?\b	サーバー
+term	\bProjects?\b	プロジェクト
+term	\b[Ff]olders?\b	フォルダ
+term	\b[Ss]chedules?\b	スケジュール
+term	\b(?<!Claude )Agents?\b	エージェント
+term	^Files$	ファイル
+term	^Cancel$	キャンセル
+term	^Offline$	オフライン
+term	^Disconnect$	切断
+term	^Allow$	許可
+term	\b[Aa]pprove\b	承認
+term	\b[Dd]eny\b	拒否
+term	^Delete$	削除
+term	^Search$	検索
+term	^Refresh$	更新
+term	\b[Mm]odels?\b	モデル
+term	\bSign in\b	サインイン
+term	\bSign out\b	サインアウト
+forbid	セッション(?!時間)	say 会話, not セッション
+forbid	チャット	say 会話, not チャット
+forbid	ログイン	say サインイン, not ログイン
+forbid	サーバ(?!ー)	use サーバー, not サーバ
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	KiB
+allow	MiB
+allow	GiB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git
+allow	Team
+allow	MCP
+allow	CLI
+allow	SDK
+allow	HTTP
+allow	HTTPS
+allow	IPv4
+allow	IPv6
+allow	TLS
+allow	DNS
+allow	OAuth
+allow	Ctrl
+allow	Alt
+allow	Escape
+allow	Home
+allow	Page
+allow	Down
