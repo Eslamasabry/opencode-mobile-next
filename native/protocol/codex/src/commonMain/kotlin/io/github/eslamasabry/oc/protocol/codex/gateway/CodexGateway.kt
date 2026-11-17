@@ -126,7 +126,8 @@ public class CodexGateway(
     FencedPromptGateway,
     PromptRunIdentityGateway,
     CodexProbeGateway,
-    InitialSessionDefaultsGateway {
+    InitialSessionDefaultsGateway,
+    io.github.eslamasabry.oc.core.domain.RunRecoveryGateway {
     private val lane = transport.lane
     private val job = SupervisorJob(scope.coroutineContext[Job])
     private val scope = CoroutineScope(scope.coroutineContext + job + lane)
@@ -430,6 +431,11 @@ public class CodexGateway(
         newEmptyThreads.remove(raw)
         approvals.entries.removeAll { it.value.permission.sessionId == id }
     }
+
+    override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> =
+        sessionStatuses()
+
+    override fun reconnectAfterRunCheck() = Unit
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         onLane {

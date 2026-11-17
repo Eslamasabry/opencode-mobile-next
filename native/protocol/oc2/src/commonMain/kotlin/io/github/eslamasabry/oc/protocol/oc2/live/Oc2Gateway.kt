@@ -81,7 +81,8 @@ internal class Oc2Gateway(
     SessionCreationGateway,
     WorktreeInspectionGateway,
     ConfigurationGateway,
-    BoundedHistoryGateway {
+    BoundedHistoryGateway,
+    RunRecoveryGateway {
     // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
     // by PROTO's Oc2Library and SEC-2's integrations below.
     private val inspection = Oc2WorktreeInspection(this)
@@ -1231,6 +1232,11 @@ internal class Oc2Gateway(
     override suspend fun archiveSession(id: SessionId): Outcome<Unit> =
         if (dialect.value != Oc2Dialect.Stable) unavailable("sessionArchive")
         else unit("/session/${sid(id)}", HttpMethod.Patch, buildJsonObject { put("archived", true) })
+
+    override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> =
+        sessionStatuses()
+
+    override fun reconnectAfterRunCheck() = Unit
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         read("/session/active") { root ->
