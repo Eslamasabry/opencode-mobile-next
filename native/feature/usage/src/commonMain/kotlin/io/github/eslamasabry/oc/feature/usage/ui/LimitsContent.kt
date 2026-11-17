@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.usage.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -185,8 +186,13 @@ private fun Headline(window: LimitWindowUi) {
     val pace = paceWords(window)
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitText(name, role = TypeRole.Label, tone = TextTone.Secondary)
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            KitText(left, Modifier.weight(1f).testTag("limit-left"), role = TypeRole.Title, tabular = true)
+        FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+            itemVerticalAlignment = Alignment.Bottom,
+        ) {
+            KitText(left, Modifier.padding(end = Space.S3.dp).testTag("limit-left"), role = TypeRole.Title, tabular = true)
             KitText(reset, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true)
         }
         KitLimitBar(
