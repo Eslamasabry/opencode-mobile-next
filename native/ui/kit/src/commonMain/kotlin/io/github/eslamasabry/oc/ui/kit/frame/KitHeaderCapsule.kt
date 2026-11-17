@@ -1,11 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -44,13 +42,23 @@ internal const val HEADER_CAPSULE_SIDE_EXTRA_DP: Int = 4
 public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val shape = RoundedCornerShape(tokens.composerRadius.dp)
+    // The face is the style's own (a floating pane at the message box's corner), never painted by hand here.
+    val look =
+        io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
+            io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
+                shape = io.github.eslamasabry.oc.ui.design.tokens.KitShapeId.Panel,
+                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface3,
+                ownFill = colors.surface3,
+                radius = tokens.composerRadius.dp,
+            )
+        )
     Box(
         modifier
             .fillMaxWidth()
             .padding(horizontal = tokens.gutter.dp + HEADER_CAPSULE_SIDE_EXTRA_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
-            .background(colors.surface3, shape)
-            .border(1.dp, colors.hairline, shape)
+            .then(look.modifier)
+            .border(1.dp, colors.hairline, look.shape)
             .testTag("kit-header-capsule")
     ) {
         CompositionLocalProvider(LocalKitHeaderCapsule provides true, content = content)

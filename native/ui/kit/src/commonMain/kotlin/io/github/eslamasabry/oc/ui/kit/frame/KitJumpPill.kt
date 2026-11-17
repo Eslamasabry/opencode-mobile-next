@@ -438,6 +438,17 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
     kitAssert(label.isNotBlank()) { "KitJumpButton: a button always carries words for a screen reader" }
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
+    // The face is the style's own, a little see-through (the one part of a floating chat that is).
+    val look =
+        io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
+            io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
+                shape = KitShapeId.Circle,
+                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface3,
+                ownFill = colors.surface3,
+                faceAlpha = JUMP_BUTTON_FILL_ALPHA,
+            )
+        )
     val face: @Composable () -> Unit = {
         Box(
             modifier
@@ -453,8 +464,8 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
         ) {
             Box(
                 Modifier.size(JUMP_BUTTON_FACE_DP.dp)
-                    .background(colors.surface3.copy(alpha = JUMP_BUTTON_FILL_ALPHA), androidx.compose.foundation.shape.CircleShape)
-                    .border(1.dp, colors.hairline, androidx.compose.foundation.shape.CircleShape),
+                    .then(look.modifier)
+                    .border(1.dp, colors.hairline, look.shape),
                 contentAlignment = Alignment.Center,
             ) {
                 KitGlyph(KitIcons.down, colors.text1, 20.dp)
