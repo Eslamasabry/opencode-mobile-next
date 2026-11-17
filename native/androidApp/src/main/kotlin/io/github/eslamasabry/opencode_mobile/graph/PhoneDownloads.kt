@@ -54,6 +54,9 @@ class PhoneDownloads(
     private val network = AndroidSetupNetwork(app)
 
     @Volatile private var now: SetupNetwork = SetupNetwork.Unknown
+
+    /** The network has been read at least once: until then "waiting for Wi-Fi" is not said (it is not known yet). */
+    private val networkRead = MutableStateFlow(false)
     @Volatile private var started = false
 
     /** The phone is on a network that is free to download over; false for mobile data, unknown and offline. */
@@ -67,22 +70,31 @@ class PhoneDownloads(
     fun start() {
         if (started) return
         started = true
-        scope.launch(dispatchers.io) { now = network.current() }
-        scope.launch(dispatchers.io) { network.changes.collect { now = it } }
+        scope.launch(dispatchers.io) {
+            now = network.current()
+            networkRead.value = true
+        }
+        scope.launch(dispatchers.io) {
+            network.changes.collect {
+                now = it
+                networkRead.value = true
+            }
+        }
     }
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
-        combine(openCodeWaiting, setup.progress, phones.state, agentStatus.decision) { waiting, progress, agentState, decision ->
+        combine(openCodeWaiting, setup.progress, phones.state, agentStatus.decision, networkRead) {
+                waiting, progress, agentState, decision, read ->
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =
                     when (decision.step) {
-                        AgentUpdateStep.WaitingMetered -> HomeHelperStep.Waiting
+                        AgentUpdateStep.WaitingMetered -> if (read) HomeHelperStep.Waiting else HomeHelperStep.None
                         AgentUpdateStep.Updating -> HomeHelperStep.Updating
                         else -> HomeHelperStep.None
                     }
                 HomeDownloadMapping.facts(
-                    openCodeWaiting = waiting,
+                    openCodeWaiting = downloadWaitingSaid(waiting, read),
                     openCodeRunning = update && progress.state == SetupState.Running,
                     openCodeFailed = update && progress.state == SetupState.Failed,
                     openCodePercent = (progress.overall * 100).roundToInt(),
@@ -130,3 +142,9 @@ class PhoneDownloads(
 
 /** Only an unmetered network is free: mobile data, a network that cannot be told, and no network all count as paid. */
 internal fun downloadNetworkMetered(network: SetupNetwork): Boolean = network != SetupNetwork.Unmetered
+
+/**
+ * "Waiting for Wi-Fi" is said only once the network was read: before the first read the phone is not known to be on
+ * mobile data, so the line stays quiet (the update itself still waits; unknown stays "ask").
+ */
+internal fun downloadWaitingSaid(waiting: Boolean, networkRead: Boolean): Boolean = waiting && networkRead

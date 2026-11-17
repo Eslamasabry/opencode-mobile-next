@@ -13,4 +13,11 @@ class DownloadNetworkTest {
         assertEquals(true, downloadNetworkMetered(SetupNetwork.Unknown))
         assertEquals(true, downloadNetworkMetered(SetupNetwork.Offline))
     }
+
+    @Test
+    fun `B-ANDR-103 waiting for Wi-Fi is not said before the network was read`() {
+        assertEquals(false, downloadWaitingSaid(waiting = true, networkRead = false))
+        assertEquals(true, downloadWaitingSaid(waiting = true, networkRead = true))
+        assertEquals(false, downloadWaitingSaid(waiting = false, networkRead = true))
+    }
 }
