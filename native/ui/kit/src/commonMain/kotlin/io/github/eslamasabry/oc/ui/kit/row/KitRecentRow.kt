@@ -397,7 +397,7 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, maxLines = if (labelAction != null) 2 else 1), action = labelAction.takeIf { labelStatus != null }) }
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, labelAction)) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -421,7 +421,7 @@ public fun KitRowPanel(
  * after that the last words stay while they fade out.
  */
 @Composable
-private fun kitLabelStatus(status: String?, maxLines: Int = 1): (@Composable () -> Unit)? {
+private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Composable () -> Unit)? {
     val held = remember { mutableStateOf<String?>(null) }
     if (status != null && held.value != status) held.value = status
     val words = held.value ?: return null
@@ -435,13 +435,28 @@ private fun kitLabelStatus(status: String?, maxLines: Int = 1): (@Composable () 
             enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
             exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
         ) {
-            KitText(
-                words,
-                Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
-                role = TypeRole.Label,
-                tone = TextTone.Secondary,
-                maxLines = maxLines,
-            )
+            Column(if (action != null) Modifier.fillMaxWidth() else Modifier) {
+                KitText(
+                    words,
+                    Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
+                    role = TypeRole.Label,
+                    tone = TextTone.Secondary,
+                    maxLines = if (action != null) 2 else 1,
+                )
+                // The status's own act, under its words and level with them: a 48 dp target, the accent so it reads as
+                // something to tap (never a bar or a row of its own).
+                if (status != null && action != null)
+                    KitTappable(
+                        onClick = action.onClick,
+                        enabled = action.enabled,
+                        disabledReason = action.disabledReason,
+                        modifier = Modifier.heightIn(min = LocalKitTokens.current.minTarget.dp).testTag("kit-row-panel-status-action"),
+                    ) {
+                        Box(Modifier.heightIn(min = LocalKitTokens.current.minTarget.dp), contentAlignment = androidx.compose.ui.Alignment.CenterStart) {
+                            KitText(action.label, role = TypeRole.Label, tone = TextTone.Accent, maxLines = 2)
+                        }
+                    }
+            }
         }
     }
 }
