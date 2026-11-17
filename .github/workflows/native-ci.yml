@@ -495,7 +495,7 @@ jobs:
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
-    timeout-minutes: 60
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -511,8 +511,13 @@ jobs:
           done
       - name: Run the custom tasks
         shell: bash
+        env:
+          CUSTOM_TASKS: ${{ inputs.tasks }}
         run: |
           set -o pipefail
+          case "$CUSTOM_TASKS" in
+            measure*) N="${MEASURE_N:-30}" bash tool/ci/measure_pin.sh ${CUSTOM_TASKS#measure} 2>&1 | tee "$RUNNER_TEMP/custom.log"; exit 0 ;;
+          esac
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
       - name: Custom report
         if: always()
@@ -532,6 +537,7 @@ jobs:
           path: |
             native/reports/custom.json
             native/reports/report-custom.json
+            native/reports/measure/
           retention-days: 7
           if-no-files-found: ignore
 
