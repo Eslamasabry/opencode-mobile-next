@@ -208,7 +208,8 @@ public class ConnectionDelivery(
             }
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
             is GatewayEvent.RunEnded -> {
-                event.reconciledHistory?.forEach { message ->
+                val history = event.reconciledHistory
+                history?.drop(history.indexOfLast { it.info.role == Role.User } + 1)?.forEach { message ->
                     trace.message(message.info.sessionId, message.info.id, message.info.role == Role.Assistant)
                     if (message.info.role == Role.Assistant) message.parts.forEach { part ->
                         if (part.type == PartType.Text && part.isRenderable) trace.text(part.sessionId, part.messageId, streamed = false)

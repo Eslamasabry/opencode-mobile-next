@@ -25,5 +25,6 @@ val repoRoot: String = rootProject.layout.projectDirectory.asFile.parentFile.abs
 tasks.withType<Test>().configureEach {
     systemProperty("oc.fixtures.oc2", fixtureRoot)
     systemProperty("oc.repo.root", repoRoot)
+    systemProperty("oc.liveRecovery", providers.gradleProperty("oc.liveRecovery").orElse("false").get())
     inputs.dir(fixtureRoot).withPropertyName("oc2Fixtures")
 }

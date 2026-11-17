@@ -431,6 +431,7 @@ internal class Oc2Gateway(
             }
         }
 
+    private val runLane = Mutex()
     private val runRevisions = mutableMapOf<SessionId, Long>()
     private fun observeRun(event: GatewayEvent) {
         val id = when (event) {
@@ -458,10 +459,11 @@ internal class Oc2Gateway(
         spec: GatewaySpec,
         dispatchers: AppDispatchers,
         network: NetworkStatus = UnknownNetworkStatus,
+        streamConnector: SseConnector? = null,
     ) {
         terminalScope = spec.scope
         terminalDispatchers = dispatchers
-        val connector = KtorSseConnector(net.http) { request("/event", HttpMethod.Get) }
+        val connector = streamConnector ?: KtorSseConnector(net.http) { request("/event", HttpMethod.Get) }
         val live =
             EventStreamLoop(
                 connector,
@@ -501,8 +503,10 @@ internal class Oc2Gateway(
                                 }
                             for (event in adapter.adapt(wire)) {
                                 val core = projection.toCore(event)
-                                observeRun(core)
-                                envelopes.emit(GatewayEnvelope(core, place, clock.now().toEpochMilliseconds()))
+                                runLane.withLock {
+                                    observeRun(core)
+                                    envelopes.emit(GatewayEnvelope(core, place, clock.now().toEpochMilliseconds()))
+                                }
                             }
                         }
                     }
@@ -1248,7 +1252,7 @@ internal class Oc2Gateway(
     override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> {
         val at = scopeRevision
         val place = location.value
-        val revisions = sessions.associateWith { runRevisions[it] }
+        val revisions = runLane.withLock { sessions.associateWith { runRevisions[it] } }
         val read = sessionStatuses()
         if (read is Outcome.Failed) return read
         val statuses = (read as Outcome.Ok).value
@@ -1256,12 +1260,14 @@ internal class Oc2Gateway(
             if (statuses[id] == SessionStatus.Busy || statuses[id] == SessionStatus.Retry) continue
             val history = messagePage(id, limit = 100)
             if (history is Outcome.Failed) return history
-            if (at != scopeRevision || revisions[id] != runRevisions[id] || closed)
-                return Failure.Refused(RefusalReason.StaleScope).failed()
-            envelopes.emit(GatewayEnvelope(
-                GatewayEvent.RunEnded(id, RunOutcome.Idle, (history as Outcome.Ok).value.items),
-                EventLocation(place.directory, null, place.workspace), clock.now().toEpochMilliseconds(),
-            ))
+            runLane.withLock {
+                if (at != scopeRevision || revisions[id] != runRevisions[id] || closed)
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                envelopes.emit(GatewayEnvelope(
+                    GatewayEvent.RunEnded(id, RunOutcome.Idle, (history as Outcome.Ok).value.items),
+                    EventLocation(place.directory, null, place.workspace), clock.now().toEpochMilliseconds(),
+                ))
+            }
         }
         return read
     }
