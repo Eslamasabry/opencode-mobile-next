@@ -338,9 +338,9 @@ public fun KitModelSheet(
     above: @Composable ColumnScope.() -> Unit = {},
     below: @Composable ColumnScope.() -> Unit = {},
     /**
-     * The caller's choice that frames the whole list (the chat's Thinking levels): drawn right under the title, above the
-     * search field, and it stays put while the list scrolls under it. Empty content takes no room. It is part of the
-     * sheet's head, not a new row level; it shows once the list has models.
+     * The caller's choice that frames the whole list (the chat's Thinking levels): drawn right under the title,
+     * above the search field, and it stays put while the list scrolls under it. Empty content takes no room. It is
+     * part of the sheet's head, not a new row level; it shows once the list has models.
      */
     header: @Composable ColumnScope.() -> Unit = {},
     morphFrom: Any? = null,
