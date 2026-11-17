@@ -178,7 +178,7 @@ public fun KitTopBar(
                 role = TypeRole.Title,
                 kind = KitTextKind.Frame,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = if (LocalKitHeaderCapsule.current) 1 else 2,
             )
             Box(
                 Modifier.width((tokens.minTarget + Space.S1).dp),
@@ -273,7 +273,7 @@ public fun KitTopBar(
                         Modifier.semantics { heading() }.kitContentEdge("bar-title").kitGrowPageTitle().testTag("kit-top-bar-title"),
                         role = TypeRole.LargeTitle,
                         kind = KitTextKind.Frame,
-                        maxLines = 2,
+                        maxLines = if (LocalKitHeaderCapsule.current) 1 else 2,
                         pageTitle = true,
                     )
                     if (scope != null) scope()
@@ -312,7 +312,7 @@ public fun KitTopBar(
                 role = if (branded) TypeRole.Headline else titleRole,
                 kind = KitTextKind.Frame,
                 // Flutter's chat header: a long title takes a second line before it ends in "…" beside the chevron.
-                maxLines = 2,
+                maxLines = if (LocalKitHeaderCapsule.current) 1 else 2,
                 pageTitle = true,
             )
             if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
