@@ -76,6 +76,7 @@ class ChatFloatingEdgesTest {
         val longTitle: Boolean = false,
         val white: Boolean = false,
         val dark: Boolean = true,
+        val picture: Color = Color.White,
     )
 
     private val rows = (0 until 40).map { i -> if (i == 0) "Row zero the newest line of the conversation" else "Row $i: the build finished and every check passed, then the notes were written." }
@@ -140,7 +141,7 @@ class ChatFloatingEdgesTest {
                                 Box(Modifier.fillMaxSize().kitFrostSource(source)) {
                                     KitTranscriptList(state, rows.first(), "Jump to latest", KitMotionLevel.Off) {
                                         items(rows.indices.toList(), key = { it }) { i ->
-                                            if (scene.white && i == 3) Box(Modifier.fillMaxWidth().height(900.dp).background(Color.White).testTag("white-picture"))
+                                            if (scene.white && i == 3) Box(Modifier.fillMaxWidth().height(900.dp).background(scene.picture).testTag("white-picture"))
                                             else KitText(rows[i], Modifier.padding(horizontal = 16.dp, vertical = 8.dp), role = TypeRole.Body)
                                         }
                                     }
@@ -223,12 +224,11 @@ class ChatFloatingEdgesTest {
         }
 
     @Test
-    fun `B-CHAT-EDGE-007 the header is one capsule across the width with the box's side margins`() =
+    fun `B-CHAT-EDGE-007 the header is one capsule across the width with the chat's side margin on both sides`() =
         run(Scene()) {
             val capsule = bounds("kit-header-capsule")
-            val box = bounds("kit-composer-box")
-            assertEquals(box.left, capsule.left, 1f, "the capsule starts where the box starts")
-            assertEquals(box.right, capsule.right, 1f, "the capsule ends where the box ends")
+            assertEquals(14f, capsule.left, 1f, "the capsule's start margin")
+            assertEquals(W - 14f, capsule.right, 1f, "the capsule's end margin")
             assertTrue(capsule.top >= STATUS_DP, "the capsule stands clear of the status area")
         }
 
@@ -258,8 +258,8 @@ class ChatFloatingEdgesTest {
 
     @Test
     fun `B-CHAT-EDGE-013 the jump arrow reads over a white picture and over text, in dark and in light`() {
-        for (dark in listOf(true, false)) for (white in listOf(true, false)) {
-            run(Scene(white = white, dark = dark)) {
+        for (dark in listOf(true, false)) for (white in listOf(true, false)) for (picture in listOf(Color.White, Color(0xFF0D1117))) {
+            run(Scene(white = white, dark = dark, picture = picture)) {
                 scrollAway(white)
                 val b = bounds("jump-to-latest")
                 val image = onNodeWithTag("scene").captureToImage().toPixelMap()
@@ -274,7 +274,7 @@ class ChatFloatingEdgesTest {
                 val fill = px[px.size / 2]
                 val ink = px.maxByOrNull { kotlin.math.abs(lum(it) - lum(fill)) }!!
                 val ratio = (maxOf(lum(fill), lum(ink)) + 0.05f) / (minOf(lum(fill), lum(ink)) + 0.05f)
-                assertTrue(ratio >= 4.5f, "the arrow's contrast is $ratio (dark=$dark, white picture=$white)")
+                assertTrue(ratio >= 4.5f, "the arrow's contrast is $ratio (dark=$dark, picture behind=$white $picture)")
             }
         }
     }
@@ -287,6 +287,18 @@ class ChatFloatingEdgesTest {
             assertEquals(listOf("Jump to latest"), node.config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription])
             assertEquals(androidx.compose.ui.semantics.Role.Button, node.config[androidx.compose.ui.semantics.SemanticsProperties.Role])
         }
+
+    @Test
+    fun `B-CHAT-EDGE-016 the jump arrow never sits on the box's top edge when the box grows, or with the keyboard open`() {
+        for (scene in listOf(Scene(multiline = true), Scene(keyboard = true), Scene(multiline = true, request = true))) {
+            run(scene) {
+                scrollAway()
+                val button = bounds("jump-to-latest")
+                val box = bounds("kit-composer-box")
+                assertTrue(button.bottom <= box.top, "the arrow's target ends at ${button.bottom}, the box starts at ${box.top} ($scene)")
+            }
+        }
+    }
 
     @Test
     fun `B-CHAT-EDGE-010 the header's targets are 48 dp, its title is one line and still a heading`() =

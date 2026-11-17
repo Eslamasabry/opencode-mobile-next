@@ -11,6 +11,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -27,8 +28,8 @@ public val LocalKitHeaderCapsule: ProvidableCompositionLocal<Boolean> = staticCo
 /** The margin above and below the capsule, dp; the frame starts the transcript's clip this far under the status area. */
 internal const val HEADER_CAPSULE_MARGIN_DP: Int = 4
 
-/** The message box stands this far in from the page gutter (its own pane inset); the capsule matches it, dp. */
-internal const val HEADER_CAPSULE_SIDE_EXTRA_DP: Int = 4
+/** The capsule's side margin, dp: where the message box and the transcript's bubbles stand (measured on the real chat). */
+internal const val HEADER_CAPSULE_SIDE_DP: Int = 14
 
 /**
  * The floating header of a chat (owner 2026-11-17, "one capsule will look cleaner"): one capsule across the width, on
@@ -42,23 +43,47 @@ internal const val HEADER_CAPSULE_SIDE_EXTRA_DP: Int = 4
 public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    // The face is the style's own (a floating pane at the message box's corner), never painted by hand here.
+    val style = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style
+    // EXACTLY the message box's material (owner 2026-11-17, one fill family): the same surface step, the same corner,
+    // the same soft shadow in Solid and the same hairline, so top and bottom read as one design in both themes.
     val look =
         io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
             io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
                 role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
                 shape = io.github.eslamasabry.oc.ui.design.tokens.KitShapeId.Panel,
-                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface3,
-                ownFill = colors.surface3,
+                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
+                ownFill = colors.surface2,
                 radius = tokens.composerRadius.dp,
             )
         )
+    val solid = style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+    val shadow =
+        if (!solid) Modifier
+        else
+            Modifier.kitDecorated(
+                        io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration(
+                            radii = io.github.eslamasabry.oc.ui.design.style.Radii.all(tokens.composerRadius.toFloat()),
+                            shadows =
+                                listOf(
+                                    io.github.eslamasabry.oc.ui.design.style.Shadow(
+                                        dxDp = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.FLOATING_SHADOWS_DX.toFloat(),
+                                        dyDp = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.FLOATING_SHADOWS_DY.toFloat(),
+                                        blurDp = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.FLOATING_SHADOWS_BLUR.toFloat(),
+                                        spreadDp = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.FLOATING_SHADOWS_SPREAD.toFloat(),
+                                        color =
+                                            io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current.elevationShadow
+                                                .withAlpha(io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.FLOATING_SHADOWS_ALPHA),
+                                    )
+                                ),
+                        )
+                    )
     Box(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = tokens.gutter.dp + HEADER_CAPSULE_SIDE_EXTRA_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
+            .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
+            .then(shadow)
+            .then(if (solid) Modifier.border(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
             .then(look.modifier)
-            .border(1.dp, colors.hairline, look.shape)
             .testTag("kit-header-capsule")
     ) {
         CompositionLocalProvider(LocalKitHeaderCapsule provides true, content = content)

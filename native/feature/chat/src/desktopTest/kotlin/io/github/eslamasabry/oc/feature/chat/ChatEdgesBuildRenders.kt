@@ -248,13 +248,14 @@ class ChatEdgesBuildRenders {
                     Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                         val state =
                             ChatUi.loading(Ref).copy(
-                                title = "Fix the flaky checkout test",
+                                title = "Continue the work from the previous conversation. Read the handover file",
                                 phase = ChatPhase.Live,
                                 rows = rows(scene).toPersistentList(),
                                 live = LiveTurnUi(stopping = false),
                                 reasoningExpanded = scene == Scene.Failed,
                             )
-                        ChatScreen(state, ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate), host, facts = facts)
+                        // The live header (title, the project and the place as its second line, only the overflow), as a phone-agent chat has it.
+                        io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene().Screen(state, canGoBack = true, projectName = "IPTV_King")
                     }
                 }
             }
@@ -279,7 +280,7 @@ class ChatEdgesBuildRenders {
                 waitForIdle()
                 mainClock.advanceTimeBy(1_000)
                 waitForIdle()
-                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (dark) "dark" else "light"}.png"))
+                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (dark) "dark" else "light"}-2.png"))
             }
         }
     }
