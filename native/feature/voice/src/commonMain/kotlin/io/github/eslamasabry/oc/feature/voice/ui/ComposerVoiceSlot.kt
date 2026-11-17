@@ -15,6 +15,8 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import dev.zacsweers.metrox.viewmodel.metroViewModel
+import io.github.eslamasabry.oc.feature.voice.screen.ReplyReaderViewModel
 import io.github.eslamasabry.oc.engine.voice.state.VoiceMode
 import io.github.eslamasabry.oc.feature.voice.presentation.ComposerVoicePresenter
 import io.github.eslamasabry.oc.feature.voice.presentation.ComposerVoiceUi
@@ -30,22 +32,26 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitMicButton
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitRecorderStage
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceRecorderRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceRecording
 import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiModelRequired
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiNotNow
-import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceDiscard
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceElapsed
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceListening
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceListeningFor
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceSendSpoken
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceLeave
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceSpeaking
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceStopReading
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceWaitingReply
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceReplyReady
+import io.github.eslamasabry.oc.ui.words.res.voiceConversationPausedDetail
+import io.github.eslamasabry.oc.ui.words.res.voiceConversationTitle
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceUseWords
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceMicDenied
-import io.github.eslamasabry.oc.ui.words.res.kitVoiceSend
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceStarting
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceTranscribing
 import io.github.eslamasabry.oc.ui.words.res.tipHoldMic
@@ -113,7 +119,6 @@ public class ComposerVoiceSlot : KitComposerVoice {
     override fun Panel(field: KitVoiceField, modifier: Modifier) {
         val presenter = presenterFor(field)
         val state by presenter.state.collectAsStateWithLifecycle()
-        val level = presenter.level.collectAsStateWithLifecycle()
         // Anything typed during the countdown cancels the send (Flutter `_autoSendText`).
         LaunchedEffect(presenter, field.key) {
             snapshotFlow { field.text() }.collect { presenter.fieldChanged(it) }
@@ -124,7 +129,6 @@ public class ComposerVoiceSlot : KitComposerVoice {
             presenter.hostChanged(inForeground = true)
             onStopOrDispose { presenter.hostChanged(inForeground = false) }
         }
-        VoicePanel(state, { level.value }, presenter, modifier)
         VoiceConversationControls(state, presenter, modifier)
         // The mic found no speech model: Flutter's first-mic "Voice typing" sheet offers it right here.
         VoiceSetupSheet(state.setup, presenter)
@@ -134,7 +138,14 @@ public class ComposerVoiceSlot : KitComposerVoice {
     override fun recording(field: KitVoiceField): KitVoiceRecording? {
         val presenter = presenterFor(field)
         val state by presenter.state.collectAsStateWithLifecycle()
-        return voiceRecording(state, presenter, dictationOnly = field.dictationOnly, sendLabel = stringResource(Res.string.kitVoiceSendSpoken))
+        val reading by readerFor().state.collectAsStateWithLifecycle()
+        return voiceRecording(
+            state,
+            presenter,
+            dictationOnly = field.dictationOnly,
+            sendLabel = stringResource(Res.string.kitVoiceSendSpoken),
+            reading = reading.reading != null,
+        )
     }
 
     @Composable
@@ -142,8 +153,15 @@ public class ComposerVoiceSlot : KitComposerVoice {
         val presenter = presenterFor(field)
         val state by presenter.state.collectAsStateWithLifecycle()
         val level = presenter.level.collectAsStateWithLifecycle()
-        VoiceRecorder(state, { level.value }, presenter, modifier)
+        val reader = readerFor()
+        val reading by reader.state.collectAsStateWithLifecycle()
+        VoiceRecorder(state, { level.value }, presenter, modifier, stopReading = if (reading.reading != null) reader::stop else null)
     }
+
+    /** "Read aloud" from the message menu: the same reader the chat's [ReplyReaderSlot] drives (one per screen). */
+    @Composable
+    private fun readerFor(): io.github.eslamasabry.oc.feature.voice.presentation.ReplyReaderPresenter =
+        metroViewModel<ReplyReaderViewModel>().presenter
 
     @Composable
     override fun Note(field: KitVoiceField, modifier: Modifier) {
@@ -228,77 +246,53 @@ internal fun VoiceMic(
 }
 
 /**
- * The hands-free voice conversation's pill (its own words heard, Send, Cancel). Dictation never draws here: the message
- * box itself is the recorder ([VoiceRecorder]) and its note sits inside the box ([VoiceNoteView]). Nothing when idle.
- */
-@Composable
-internal fun VoicePanel(
-    state: ComposerVoiceUi,
-    level: () -> Float,
-    presenter: ComposerVoicePresenter,
-    modifier: Modifier = Modifier,
-) {
-    if (state.mode != VoiceMode.Conversation) return
-    val cancel =
-        KitLineAction(
-            stringResource(Res.string.kitConfirmCancel),
-            presenter::cancel,
-            testTag = "voice-cancel",
-        )
-    when (state.phase) {
-        MicPhase.Starting ->
-            KitVoicePill(
-                title = stringResource(Res.string.kitVoiceStarting),
-                modifier = modifier,
-                secondary = cancel,
-            )
-        MicPhase.Listening -> {
-            val (minutes, seconds) = elapsedParts(state.elapsedSeconds)
-            KitVoicePill(
-                title = stringResource(Res.string.kitVoiceListening),
-                modifier = modifier,
-                words = state.words,
-                elapsed = stringResource(Res.string.kitVoiceElapsed, minutes, seconds),
-                level = level,
-                primary = KitLineAction(stringResource(Res.string.kitVoiceSend), presenter::done, testTag = "voice-done"),
-                secondary = cancel,
-            )
-        }
-        MicPhase.Writing ->
-            KitVoicePill(
-                title = stringResource(Res.string.kitVoiceTranscribing),
-                modifier = modifier,
-                words = state.words,
-            )
-        MicPhase.Idle -> Unit
-    }
-}
-
-/**
- * How the message box hosts a dictation (kit-chat [KitVoiceRecording]); null while idle and in a voice conversation.
- * Send means "write down and send" only for a tapped dictation that is still listening, and never on a draft-only box.
+ * How the message box hosts the recorder row (kit-chat [KitVoiceRecording]): a dictation, the hands-free voice mode, or
+ * a reply read aloud; null otherwise. Send means "write down and send" only for a tapped dictation that is still
+ * listening, and never on a draft-only box.
  */
 internal fun voiceRecording(
     state: ComposerVoiceUi,
     presenter: ComposerVoicePresenter,
     dictationOnly: Boolean,
     sendLabel: String,
+    reading: Boolean = false,
 ): KitVoiceRecording? {
-    if (!state.active || state.mode == VoiceMode.Conversation) return null
+    // The hands-free voice mode and "Read aloud" show the same row; Send keeps its usual meaning.
+    if (state.conversation || state.mode == VoiceMode.Conversation)
+        return KitVoiceRecording(held = false, sendNow = null, sendLabel = sendLabel, dictating = false)
+    if (!state.active) return if (reading) KitVoiceRecording(false, null, sendLabel, dictating = false) else null
     val held = state.mode == VoiceMode.Hold
     val sends = !held && !dictationOnly && state.phase != MicPhase.Writing
     return KitVoiceRecording(held = held, sendNow = if (sends) presenter::doneAndSend else null, sendLabel = sendLabel)
 }
 
-/** The recorder row inside the message box while words are dictated: ✕, the live waveform and the time, ✓. */
+/**
+ * The recorder row inside the message box: while words are dictated ✕, the live waveform and the time, ✓; in the
+ * hands-free voice mode the same row without ✓ (it sends by itself), ✕ ends the mode; while a reply is read aloud
+ * ([stopReading]) ✕ stops reading.
+ */
 @Composable
 internal fun VoiceRecorder(
     state: ComposerVoiceUi,
     level: () -> Float,
     presenter: ComposerVoicePresenter,
     modifier: Modifier = Modifier,
+    stopReading: (() -> Unit)? = null,
 ) {
-    if (!state.active || state.mode == VoiceMode.Conversation) return
+    if (state.conversation || state.mode == VoiceMode.Conversation) {
+        ConversationRecorder(state, level, presenter, modifier)
+        return
+    }
+    if (!state.active) {
+        if (stopReading != null)
+            KitVoiceRecorderRow(
+                stage = KitRecorderStage.Speaking,
+                status = stringResource(Res.string.kitVoiceSpeaking),
+                modifier = modifier,
+                cancel = KitLineAction(stringResource(Res.string.kitVoiceStopReading), stopReading, testTag = "read-aloud-stop"),
+            )
+        return
+    }
     val held = state.mode == VoiceMode.Hold
     // Tap dictation ends by a button: ✕ throws the words away, ✓ puts them in the box. A held mic ends by the finger.
     val cancel =
@@ -351,6 +345,56 @@ internal fun VoiceRecorder(
                 cancel = cancel,
             )
         MicPhase.Idle -> Unit
+    }
+}
+
+/**
+ * The hands-free voice mode in the box's row: listening (the live waveform and the time), writing it down, the agent
+ * working, the reply read aloud, or resting between turns. ✕ ends the mode; there is no ✓, the mode sends by itself.
+ */
+@Composable
+private fun ConversationRecorder(
+    state: ComposerVoiceUi,
+    level: () -> Float,
+    presenter: ComposerVoicePresenter,
+    modifier: Modifier,
+) {
+    val leave =
+        KitLineAction(stringResource(Res.string.kitVoiceLeave), { presenter.exitConversation() }, testTag = "voice-conversation-leave")
+    val (minutes, seconds) = elapsedParts(state.elapsedSeconds)
+    when (state.phase) {
+        MicPhase.Starting ->
+            KitVoiceRecorderRow(KitRecorderStage.Starting, stringResource(Res.string.kitVoiceStarting), modifier, cancel = leave)
+        MicPhase.Listening -> {
+            val listening = stringResource(Res.string.kitVoiceListening)
+            val step = state.elapsedSeconds / ANNOUNCE_EVERY_S * ANNOUNCE_EVERY_S
+            KitVoiceRecorderRow(
+                stage = KitRecorderStage.Listening,
+                status = listening,
+                modifier = modifier,
+                elapsed = stringResource(Res.string.kitVoiceElapsed, minutes, seconds),
+                announcement =
+                    if (step == 0) listening
+                    else stringResource(Res.string.kitVoiceListeningFor, kitElapsedSecondsMinutes(step.toLong())),
+                level = level,
+                cancel = leave,
+            )
+        }
+        MicPhase.Writing ->
+            KitVoiceRecorderRow(KitRecorderStage.Transcribing, stringResource(Res.string.kitVoiceTranscribing), modifier, cancel = leave)
+        MicPhase.Idle -> {
+            val note = state.replyNote
+            val (stage, words) =
+                when {
+                    state.speakingReply -> KitRecorderStage.Speaking to stringResource(Res.string.kitVoiceSpeaking)
+                    state.waitingReply -> KitRecorderStage.Waiting to stringResource(Res.string.kitVoiceWaitingReply)
+                    note != null -> KitRecorderStage.Resting to conversationNote(note)
+                    !state.canListen -> KitRecorderStage.Resting to stringResource(Res.string.voiceConversationPausedDetail)
+                    state.canReadReply -> KitRecorderStage.Resting to stringResource(Res.string.kitVoiceReplyReady)
+                    else -> KitRecorderStage.Resting to stringResource(Res.string.voiceConversationTitle)
+                }
+            KitVoiceRecorderRow(stage, words, modifier, cancel = leave)
+        }
     }
 }
 

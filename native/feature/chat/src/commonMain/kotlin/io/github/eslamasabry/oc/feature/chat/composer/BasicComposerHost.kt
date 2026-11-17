@@ -961,7 +961,7 @@ public fun BasicComposer(
         // mic gives way to that row and Send keeps its place, meaning "write down and send"; a held mic stays under
         // the finger where the hold began.
         val recording = voice?.recording(voiceField)
-        val tapRecording = recording != null && !recording.held
+        val tapRecording = recording != null && recording.dictating && !recording.held
         val inlineMic = if (voiceActive) inlineAtStart && !tapRecording else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.

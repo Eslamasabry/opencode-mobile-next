@@ -69,15 +69,16 @@ public interface KitComposerVoice {
     @Composable public fun Actions(field: KitVoiceField, modifier: Modifier) {}
 
     /**
-     * Above the field: the hands-free voice conversation's own pill and controls, and the effects voice needs (words
-     * typed during a recording, leaving the app). Dictation draws nothing here: the box itself is the recorder
-     * ([recording], [Recorder], [Note]).
+     * Above the field: the hands-free voice mode's extra controls (its tour, "Read aloud" switch, "Read the reply"), its
+     * sheets, and the effects voice needs (words typed during a recording, leaving the app). The listening, speaking
+     * and waiting states are the box's own recorder row ([recording], [Recorder]); notes are [Note].
      */
     @Composable public fun Panel(field: KitVoiceField, modifier: Modifier)
 
     /**
-     * While words are dictated into [field] (owner 2026-11-17: the message box itself becomes the recorder): how the
-     * box hosts the recorder. Null while idle and in a voice conversation; the box is then as always.
+     * While words are dictated into [field], the hands-free voice mode runs, or a reply is read aloud (owner
+     * 2026-11-17: the message box itself becomes the recorder; one look for one thing): how the box hosts the recorder
+     * row. Null otherwise; the box is then as always.
      */
     @Composable public fun recording(field: KitVoiceField): KitVoiceRecording? = null
 
@@ -116,6 +117,11 @@ public class KitVoiceRecording(
     public val sendNow: (() -> Unit)?,
     /** What Send says while it means "write down and send" (its spoken label). */
     public val sendLabel: String,
+    /**
+     * True while words are dictated into the box: Send then means "write down and send" ([sendNow]). False for the
+     * hands-free voice mode and "Read aloud", which show the same row while Send keeps its usual meaning.
+     */
+    public val dictating: Boolean = true,
 )
 
 /**

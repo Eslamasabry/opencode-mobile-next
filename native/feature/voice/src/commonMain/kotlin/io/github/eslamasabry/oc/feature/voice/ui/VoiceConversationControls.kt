@@ -22,7 +22,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -52,7 +51,7 @@ internal fun VoiceConversationEntry(
     }
 }
 
-/** Conversation mode uses the same kit pill as dictation; every action is visible. */
+/** The hands-free voice mode's extra controls; its states are the box's recorder row ([VoiceRecorder]). */
 @Composable
 internal fun VoiceConversationControls(
     state: ComposerVoiceUi,
@@ -95,45 +94,14 @@ internal fun VoiceConversationControls(
                     ),
             )
         }
-        if (state.phase == MicPhase.Idle) {
-            val title =
-                when {
-                    state.speakingReply -> Res.string.kitVoiceSpeaking
-                    state.waitingReply -> Res.string.kitVoiceWaitingReply
-                    !state.canListen -> Res.string.voiceConversationPausedDetail
-                    state.canReadReply -> Res.string.kitVoiceReplyReady
-                    else -> Res.string.voiceConversationTitle
-                }
-            KitVoicePill(
-                title = stringResource(title),
-                words = state.replyNote?.let { conversationNote(it) },
-                primary =
-                    when {
-                        state.speakingReply ->
-                            KitLineAction(
-                                stringResource(Res.string.kitVoiceStopReading),
-                                presenter::stopReply,
-                            )
-                        state.canListen ->
-                            KitLineAction(
-                                stringResource(Res.string.kitVoiceListen),
-                                presenter::listenConversation,
-                            )
-                        else -> null
-                    },
-                secondary =
-                    KitLineAction(
-                        stringResource(Res.string.kitVoiceLeave),
-                        { presenter.exitConversation() },
-                    ),
+        // Listening, the agent working, the reply read aloud and resting are the box's own recorder row (one look for
+        // one thing, coordinator 2026-11-17); its ✕ leaves the mode. Reading the reply again stays a visible action.
+        if (state.phase == MicPhase.Idle && state.canReadReply && !state.speakingReply) {
+            KitButton(
+                label = stringResource(Res.string.kitVoiceReadReply),
+                onClick = presenter::readReply,
+                role = KitButtonRole.Tertiary,
             )
-            if (state.canReadReply) {
-                KitButton(
-                    label = stringResource(Res.string.kitVoiceReadReply),
-                    onClick = presenter::readReply,
-                    role = KitButtonRole.Tertiary,
-                )
-            }
         }
         KitSwitchRow(
             title = stringResource(Res.string.kitVoiceReadAloud),
@@ -141,13 +109,6 @@ internal fun VoiceConversationControls(
             supporting = stringResource(Res.string.voiceConversationNativeSends),
             onCheckedChange = presenter::speakReplies,
         )
-        if (state.phase != MicPhase.Idle) {
-            KitButton(
-                label = stringResource(Res.string.kitVoiceLeave),
-                onClick = { presenter.exitConversation() },
-                role = KitButtonRole.Tertiary,
-            )
-        }
     }
     KitSheet(
         visible = state.pickingReplyVoice,
@@ -188,7 +149,7 @@ internal fun VoiceConversationControls(
 }
 
 @Composable
-private fun conversationNote(note: ConversationReplyNote): String =
+internal fun conversationNote(note: ConversationReplyNote): String =
     stringResource(
         when (note) {
             ConversationReplyNote.Review -> Res.string.voiceConversationReplyReviewNeeded

@@ -22,6 +22,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -37,6 +38,17 @@ import io.github.eslamasabry.oc.feature.voice.FakeHub
 import io.github.eslamasabry.oc.feature.voice.SchedulerClock
 import io.github.eslamasabry.oc.feature.voice.presentation.ComposerVoicePresenter
 import io.github.eslamasabry.oc.feature.voice.presentation.MicPhase
+import io.github.eslamasabry.oc.feature.voice.presentation.ComposerVoiceUi
+import io.github.eslamasabry.oc.feature.voice.presentation.VoiceConversationHandle
+import io.github.eslamasabry.oc.feature.voice.presentation.VoiceConversations
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSession
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSnapshot
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ok
+import kotlinx.coroutines.flow.MutableStateFlow
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -46,7 +58,6 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
-import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_PILL_TAG
 import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_RECORDER_STATUS_TAG
 import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_RECORDER_TAG
 import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_RECORDER_TIME_TAG
@@ -100,7 +111,12 @@ class MicInBoxTest {
     }
 
     @Composable
-    private fun Scene(rig: Rig, fontScale: Float = 1f, dir: LayoutDirection = LayoutDirection.Ltr) {
+    private fun Scene(
+        rig: Rig,
+        fontScale: Float = 1f,
+        dir: LayoutDirection = LayoutDirection.Ltr,
+        shown: ComposerVoiceUi? = null,
+    ) {
         CompositionLocalProvider(
             LocalDensity provides Density(LocalDensity.current.density, fontScale),
             LocalLayoutDirection provides dir,
@@ -112,7 +128,8 @@ class MicInBoxTest {
                 stillFrame = true,
             ) {
                 CompositionLocalProvider(LocalLayoutDirection provides dir) {
-                    val state by rig.presenter.state.collectAsState()
+                    val live by rig.presenter.state.collectAsState()
+                    val state = shown ?: live
                     val level by rig.presenter.level.collectAsState()
                     val recording = voiceRecording(state, rig.presenter, dictationOnly = false, sendLabel = "Send what you said")
                     // A 360 dp phone: the box keeps the page's 14 dp side margins.
@@ -127,7 +144,6 @@ class MicInBoxTest {
                             recorder =
                                 if (recording != null) ({ VoiceRecorder(state, { level }, rig.presenter, Modifier.weight(1f)) })
                                 else null,
-                            above = { VoicePanel(state, { level }, rig.presenter) },
                             trailing = {
                                 KitComposerSend(
                                     label = recording?.sendLabel ?: "Send",
@@ -150,6 +166,11 @@ class MicInBoxTest {
 
     private fun ComposeUiTest.buttonBounds(label: String): Rect = button(label).fetchSemanticsNode().boundsInRoot
 
+    /** The old pill's words: underlined Cancel and Send beside a boxed Done. */
+    private fun ComposeUiTest.noOldPill() {
+        for (words in listOf("Cancel", "Done", "Send")) onAllNodesWithText(words, useUnmergedTree = true).assertCountEquals(0)
+    }
+
     private fun ComposeUiTest.settle(ts: TestScope) {
         ts.runCurrent()
         waitForIdle()
@@ -169,8 +190,8 @@ class MicInBoxTest {
         runComposeUiTest {
             setContent { Scene(rig) }
             settle(ts)
-            // No second box: the old pill above the box is gone.
-            onAllNodesWithTag(VOICE_PILL_TAG, useUnmergedTree = true).assertCountEquals(0)
+            // No second box: the old pill's text links are gone.
+            noOldPill()
             val box = bounds("kit-composer-box").inflate(4f)
             val row = bounds(VOICE_RECORDER_TAG)
             assertTrue(row.top >= box.top - 0.5f && row.bottom <= box.bottom + 0.5f, "the recorder $row lies inside the box $box")
@@ -328,7 +349,85 @@ class MicInBoxTest {
             button("Put the words in the message box").assertDoesNotExist()
             onNodeWithTag(VOICE_RECORDER_STATUS_TAG, useUnmergedTree = true).assertExists()
             onNodeWithTag(VOICE_WAVE_TAG, useUnmergedTree = true).assertExists()
-            onAllNodesWithTag(VOICE_PILL_TAG, useUnmergedTree = true).assertCountEquals(0)
+            noOldPill()
         }
     }
+
+    /** A connected, ready conversation the hands-free mode can talk to. */
+    private class Talk : VoiceConversations {
+        val snapshot = MutableStateFlow(VoiceConversationSnapshot(connected = true, ready = true))
+
+        override fun open(ref: ConversationRef): VoiceConversationHandle =
+            VoiceConversationHandle(
+                object : VoiceConversationSession {
+                    override val voiceConversation = snapshot
+
+                    override suspend fun sendVoice(text: String): Outcome<Unit> = Unit.ok()
+
+                    override suspend fun readVoiceReply(id: String, automatic: Boolean): Outcome<String> = "".ok()
+                },
+                release = {},
+            )
+    }
+
+    @Test
+    fun `B-MEDIA-070 hands-free voice mode listens in the box's own row - waveform and time, discard ends the mode, no use-the-words`() =
+        runTest {
+            val ts = this
+            val rig = Rig(ts)
+            runCurrent()
+            rig.presenter.attachConversation(ConversationRef(ProfileId("p"), SessionId("s")), Talk())
+            runCurrent()
+            rig.presenter.startConversation()
+            runCurrent()
+            assertTrue(rig.presenter.state.value.conversation, "the hands-free mode started")
+            rig.listening("what changed", mode = VoiceMode.Conversation)
+            runCurrent()
+            runComposeUiTest {
+                setContent { Scene(rig) }
+                settle(ts)
+                val box = bounds("kit-composer-box").inflate(4f)
+                val row = bounds(VOICE_RECORDER_TAG)
+                assertTrue(row.top >= box.top - 0.5f && row.bottom <= box.bottom + 0.5f, "the hands-free row $row lies inside the box $box")
+                onNodeWithTag(VOICE_WAVE_TAG, useUnmergedTree = true).assertExists()
+                onNodeWithTag(VOICE_RECORDER_TIME_TAG, useUnmergedTree = true).assertExists()
+                button("Put the words in the message box").assertDoesNotExist()
+                noOldPill()
+                button("Leave voice mode").performClick()
+                settle(ts)
+            }
+            assertTrue(!rig.presenter.state.value.conversation, "✕ ends the hands-free mode")
+            assertTrue(rig.field.sent.isEmpty(), "leaving sends nothing")
+        }
+
+    @Test
+    fun `B-MEDIA-071 hands-free voice mode names its state in the row - listening, the reply read aloud, waiting for the reply`() =
+        runTest {
+            val ts = this
+            val rig = Rig(ts)
+            runCurrent()
+            val base = ComposerVoiceUi(available = true, conversationAvailable = true, conversation = true, canListen = true)
+            val cases =
+                listOf(
+                    base.copy(phase = MicPhase.Listening, mode = VoiceMode.Conversation) to "Listening",
+                    base.copy(speakingReply = true) to "Reading the reply aloud",
+                    base.copy(waitingReply = true) to "Waiting for the reply",
+                )
+            for ((state, words) in cases) {
+                runComposeUiTest {
+                    setContent { Scene(rig, shown = state) }
+                    settle(ts)
+                    onNode(
+                        SemanticsMatcher("live region saying $words") {
+                            it.config.getOrNull(SemanticsProperties.LiveRegion) != null &&
+                                it.config.getOrNull(SemanticsProperties.ContentDescription)?.any { d -> d.startsWith(words) } == true
+                        },
+                        useUnmergedTree = true,
+                    ).assertExists()
+                    button("Leave voice mode").assertExists()
+                    button("Put the words in the message box").assertDoesNotExist()
+                    noOldPill()
+                }
+            }
+        }
 }

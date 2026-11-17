@@ -43,7 +43,6 @@ import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPlainStandIn
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
@@ -57,7 +56,6 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerLimitStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitLimitNotice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitLimitReset
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffModel
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreviewCard
@@ -187,8 +185,6 @@ class GlassTruthChatRenders {
             )
             CompositionLocalProvider(LocalKitLiquidChrome provides frost) {
                 Column(Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = BLOCK_TOP_DP.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    KitVoicePill("Listening", words = "Fix the login and run the tests", elapsed = "0:07", secondary = KitLineAction("Cancel", {}), primary = KitLineAction("Done", {}))
-                    KitVoicePill("Let go to cancel", elapsed = "0:09", attention = true)
                     KitComposerBox(
                         running = false,
                         field = { KitText("Ask OpenCode…", maxLines = 1) },

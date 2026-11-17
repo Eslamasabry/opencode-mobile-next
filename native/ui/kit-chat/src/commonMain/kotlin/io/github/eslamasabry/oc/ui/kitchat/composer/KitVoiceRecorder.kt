@@ -68,6 +68,15 @@ public enum class KitRecorderStage {
 
     /** The words are being written down: the waveform settles into a calm progress and the stage is named. */
     Transcribing,
+
+    /** Hands-free voice mode or "Read aloud": the reply is being read aloud; the words say so, the bars lie still. */
+    Speaking,
+
+    /** Hands-free voice mode: the agent is working on the reply; a calm progress and the words. */
+    Waiting,
+
+    /** Hands-free voice mode between turns (paused, the reply ready): the words say what is next, the bars lie still. */
+    Resting,
 }
 
 /**
@@ -80,7 +89,10 @@ public enum class KitRecorderStage {
  * transcribing, and is always the row's polite live region, with [announcement] (the stage plus the time at sensible
  * steps) replacing it while listening so a screen reader hears the time without a tick every second.
  *
- * States: starting, listening, held (cancel armed = [attention]), transcribing
+ * The same row serves the hands-free voice mode (no [accept]: it sends by itself; [cancel] ends the mode) with its
+ * listening, speaking and waiting stages, and "Read aloud" ([cancel] stops reading). One look for one thing.
+ *
+ * States: starting, listening, held (cancel armed = [attention]), transcribing, speaking, waiting, resting
  * Text: frame (the status and the time; at most 1.3)
  * Cap: the box's own (it lives inside the message box)
  * Motion: the waveform scrolls with each level the microphone reports (no frame loop; still in silence); transcribing
@@ -120,7 +132,8 @@ public fun KitVoiceRecorderRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
-            KitSwap(stage == KitRecorderStage.Transcribing, Modifier.weight(1f)) { writing ->
+            val working = stage == KitRecorderStage.Transcribing || stage == KitRecorderStage.Waiting
+            KitSwap(working, Modifier.weight(1f)) { writing ->
                 if (writing) {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -154,14 +167,14 @@ public fun KitVoiceRecorderRow(
                                 maxLines = 2,
                             )
                         KitVoiceWave(
-                            level = level.takeIf { stage != KitRecorderStage.Starting },
+                            level = level.takeIf { stage == KitRecorderStage.Listening || stage == KitRecorderStage.Held },
                             attention = attention,
                             modifier = Modifier.weight(1f),
                         )
                     }
                 }
             }
-            if (elapsed != null && stage != KitRecorderStage.Transcribing)
+            if (elapsed != null && !working)
                 KitText(
                     elapsed,
                     Modifier.testTag(VOICE_RECORDER_TIME_TAG),

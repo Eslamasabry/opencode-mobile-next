@@ -29,7 +29,6 @@
     <ID>CyclomaticComplexMethod:KitRequestTargets.kt$@Composable public fun KitRequestTargets( targets: List&lt;KitRequestTarget&gt;, modifier: Modifier = Modifier, copyLabel: String? = null, copiedLabel: String? = null, )</ID>
     <ID>CyclomaticComplexMethod:KitStartingConversation.kt$@Composable public fun KitStartingConversation( text: String, project: String, model: String, status: String, backLabel: String, onBack: () -&gt; Unit, phase: KitStartingPhase = KitStartingPhase.Sending, agent: String? = null, reason: String? = null, details: Redacted? = null, detailsLabel: String? = null, copyLabel: String? = null, retryLabel: String? = null, onRetry: (() -&gt; Unit)? = null, editLabel: String? = null, onEdit: (() -&gt; Unit)? = null, reviewLabel: String? = null, onReview: (() -&gt; Unit)? = null, )</ID>
     <ID>CyclomaticComplexMethod:KitToolNode.kt$@Composable internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier)</ID>
-    <ID>CyclomaticComplexMethod:KitVoicePill.kt$@Composable public fun KitVoicePill( title: String, modifier: Modifier = Modifier, words: String? = null, elapsed: String? = null, level: (() -&gt; Float)? = null, attention: Boolean = false, primary: KitLineAction? = null, secondary: KitLineAction? = null, /** A third choice between Cancel and the main one (tap dictation: "Send" = insert and send). */ extra: KitLineAction? = null, )</ID>
     <ID>CyclomaticComplexMethod:KitWorkLine.kt$@Composable public fun KitWorkLine( label: String, stateWords: String?, state: KitWorkState, expanded: Boolean, onToggle: (Boolean) -&gt; Unit, modifier: Modifier = Modifier, earlier: KitLineAction? = null, steps: @Composable ColumnScope.() -&gt; Unit, )</ID>
     <ID>CyclomaticComplexMethod:StreamFeed.kt$StreamFeed$fun rows(text: String, ended: Boolean = false): List&lt;FeedRow&gt;</ID>
     <ID>CyclomaticComplexMethod:SyntaxMpCodeTokenizer.kt$SyntaxMpCodeTokenizer.Companion$fun roleOf(role: SyntaxRole): CodeRole</ID>
@@ -110,7 +109,6 @@
     <ID>LongParameterList:KitToolOutput.kt$( text: String, moreLabel: String, onMore: () -&gt; Unit, modifier: Modifier = Modifier, maxLines: Int = KIT_COMMAND_OUTPUT_LINES, errorLabel: String? = null, )</ID>
     <ID>LongParameterList:KitToolRow.kt$( view: KitToolView, opened: Boolean, onToggle: () -&gt; Unit, modifier: Modifier = Modifier, body: (@Composable () -&gt; Unit)? = null, rail: KitToolRail? = null, )</ID>
     <ID>LongParameterList:KitToolRowTest.kt$KitToolRowTest$( kind: KitToolKind = KitToolKind.Read, title: String = "Read file", subject: String? = "lib/main.dart", detail: String? = null, status: KitToolStatus = KitToolStatus.Done, durationLabel: String? = null, added: Int? = null, removed: Int? = null, statusLabel: String = "Done", )</ID>
-    <ID>LongParameterList:KitVoicePill.kt$( title: String, modifier: Modifier = Modifier, words: String? = null, elapsed: String? = null, level: (() -&gt; Float)? = null, attention: Boolean = false, primary: KitLineAction? = null, secondary: KitLineAction? = null, /** A third choice between Cancel and the main one (tap dictation: "Send" = insert and send). */ extra: KitLineAction? = null, )</ID>
     <ID>LongParameterList:KitWorkLine.kt$( label: String, stateWords: String?, state: KitWorkState, expanded: Boolean, onToggle: (Boolean) -&gt; Unit, modifier: Modifier = Modifier, earlier: KitLineAction? = null, steps: @Composable ColumnScope.() -&gt; Unit, )</ID>
     <ID>LongParameterList:MotionTestKit.kt$( level: MotionLevel = MotionLevel.Full, stillFrame: Boolean = false, saver: Boolean = false, dark: Boolean = true, platform: KitPlatform = RecordingPlatform(), localeTag: String = "en", content: @Composable () -&gt; Unit, )</ID>
     <ID>LongParameterList:ReplyStreamFrameBenchmark.kt$ReplyStreamFrameBenchmark.Frames$( val name: String, val ns: LongArray, val layoutChars: LongArray, val layouts: IntArray, val compositions: IntArray, val tenth: IntArray, val inFence: BooleanArray, val rows: Int, )</ID>
@@ -520,9 +518,6 @@
     <ID>MaxLineLength:KitToolRow.kt$Row</ID>
     <ID>MaxLineLength:KitToolRowTest.kt$KitToolRowTest$KitCommandBox(command = "pwd", output = "/root\n", moreLabel = "Show all", onMore = {}, exitLabel = null)</ID>
     <ID>MaxLineLength:KitToolView.kt$KitToolKind$public enum</ID>
-    <ID>MaxLineLength:KitVoicePill.kt$cornerRadius = CornerRadius(barWidth / 2, barWidth / 2)</ID>
-    <ID>MaxLineLength:KitVoicePill.kt$topLeft = Offset((slot * (barWidth + gap)).roundToInt().toFloat(), ((size.height - h) / 2).roundToInt().toFloat())</ID>
-    <ID>MaxLineLength:KitVoicePill.kt$val h = (shortest + (tallest - shortest) * kotlin.math.abs(i - center) / center).dp.toPx().roundToInt().toFloat()</ID>
     <ID>MaxLineLength:KitWorkLine.kt$KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>
     <ID>MaxLineLength:KitWorkLine.kt$KitWorkState.Done -&gt; KitIcon(KitIcons.fileText, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>
     <ID>MaxLineLength:KitWorkLine.kt$KitWorkState.EndedFailed -&gt; KitIcon(KitIcons.warning, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>

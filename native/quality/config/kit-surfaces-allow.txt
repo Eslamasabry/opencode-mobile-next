@@ -79,7 +79,5 @@ ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitSurfa
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitFrost.kt | drawRect\(colors\.ground\.copy | Engine: the frost engine's opaque ground under its blurred copy (L10)
 
 # glass-truth 2026-11-16: a part's attention state laid on its Glass face, and a floating part's liquid face
-ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitVoicePill.kt | kitLiquidFace\(LiquidRole\.Pill | Glass: the voice pill's liquid face over the bottom block's recording, as the chips' and the jump pill's
-ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitVoicePill.kt | val attentionMark = | the attention state's wash and line laid on the pill's glass or dressed face (a state mark)
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestFrame.kt | \.border\(kitHairline\(\), colors\.attention\.copy\(alpha = FlutterKitTokens\.NEEDS_YOU_LINE_ALPHA\), glass\.shape\) | the question look's half attention line on the Glass card (a state mark)
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestFrame.kt | Modifier\.kitSurface\(glass\)\.background\(colors\.attentionSurface\) | the standard look's attention wash and line on the Glass card (a state mark)
