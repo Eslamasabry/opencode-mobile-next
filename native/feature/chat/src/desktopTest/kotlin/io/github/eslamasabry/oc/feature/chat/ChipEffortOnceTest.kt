@@ -154,4 +154,11 @@ class ChipEffortOnceTest {
             assertTrue(words.any { it.contains("Gemini 4") && it.contains("high", ignoreCase = true) }, "$locale: model and effort are both said: $words")
         }
     }
+
+    /** Pictures only (no asserts), so a run on the old behaviour still prints its "before" scenes. */
+    @Test
+    fun `B-CHAT-EFFORT-11 pictures of the chip with the box's room to itself`() {
+        for (scale in listOf(1f, 1.3f)) for (locale in listOf("en", "ar"))
+            scene(locale, scale, "only-$locale-$scale", chrome = bare) {}
+    }
 }
