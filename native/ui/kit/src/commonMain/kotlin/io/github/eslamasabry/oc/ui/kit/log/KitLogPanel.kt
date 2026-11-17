@@ -19,7 +19,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
 import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMenuComponents
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.selection.SelectionContainer
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -133,7 +133,7 @@ public fun KitLogPanel(
         val style = LocalKitTypography.current.style(TypeRole.Mono).copy(color = colors.text1)
         val selectedColor = colors.accent
         val sideways = rememberScrollState()
-        SelectionContainer(Modifier.weight(1f).fillMaxWidth().copyOnly().then(if (wrap) Modifier else Modifier.clipToBounds().kitScrollFade(sideways))) {
+        KitClipboardSelection(KitClipboardMode.Sensitive, Modifier.weight(1f).fillMaxWidth().copyOnly().then(if (wrap) Modifier else Modifier.clipToBounds().kitScrollFade(sideways))) {
             LazyColumn(
                 state = scroll,
                 modifier =
@@ -189,7 +189,7 @@ public fun KitSelectableText(
     modifier: Modifier = Modifier,
     role: TypeRole = TypeRole.Body,
 ) {
-    SelectionContainer(modifier.copyOnly()) { KitText(text, role = role) }
+    KitClipboardSelection(KitClipboardMode.Sensitive, modifier.copyOnly()) { KitText(text, role = role) }
 }
 
 private object Math {

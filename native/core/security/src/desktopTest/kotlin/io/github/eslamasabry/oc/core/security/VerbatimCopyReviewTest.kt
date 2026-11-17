@@ -110,7 +110,7 @@ class VerbatimCopyReviewTest {
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/transcript/KitContextMessagePart.kt" to
                 (listOf("KitRedactedCopyIconButton(") to VERBATIM_PARTS),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LibraryWiring.kt" to
-                (listOf("KitCopy.safeText(redactor, text)", "KitAndroidClipboard.write(application, safe, KitClipboardMode.Sensitive)") to
+                (listOf("KitCopy.safeText(redactor, text)", "KitAndroidClipboard.write(application, safe, KitClipboardMode.Public)") to
                     listOf("ClipData.newPlainText(\"\", text)")),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitCopyButton.kt" to
                 (listOf("mask.apply(text())", "AnnotatedString(out.text)") to listOf("AnnotatedString(text())")),

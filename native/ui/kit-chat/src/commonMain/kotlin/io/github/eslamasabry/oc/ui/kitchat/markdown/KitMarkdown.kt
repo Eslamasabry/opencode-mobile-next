@@ -40,7 +40,8 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
 import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMenuComponents
 import androidx.compose.foundation.text.selection.DisableSelection
-import androidx.compose.foundation.text.selection.SelectionContainer
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardSelection
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -172,7 +173,8 @@ public class KitMdReveal(
  */
 @Composable
 public fun KitMarkdownSelection(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    SelectionContainer(
+    KitClipboardSelection(
+        KitClipboardMode.Public,
         modifier.filterTextContextMenuComponents {
             it.key == TextContextMenuKeys.CopyKey || it.key == TextContextMenuKeys.SelectAllKey
         },

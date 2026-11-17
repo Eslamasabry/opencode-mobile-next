@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.devservices.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -94,7 +95,7 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
         copyRevision += 1
         copyRequest = copyRevision to mask(it)
     }
-    KitClipboardEffect(copyRequest?.first, copyRequest?.second, onDone = { copyRequest = null })
+    KitClipboardEffect(copyRequest?.first, copyRequest?.second, onDone = { copyRequest = null }, mode = KitClipboardMode.Public)
     val canAdd = state.available && state.readable && !state.busy
     KitScreen(
         topBar = {

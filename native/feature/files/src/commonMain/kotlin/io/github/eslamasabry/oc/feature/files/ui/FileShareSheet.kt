@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,6 +67,7 @@ internal fun FileShareSheet(
         if (copying) 1L else null,
         (share as? ShareSheetUi.Running)?.url,
         onDone = { copying = false },
+        mode = KitClipboardMode.Sensitive,
     )
     val closeLabel = stringResource(Res.string.kitTopBarClose)
     KitSheet(

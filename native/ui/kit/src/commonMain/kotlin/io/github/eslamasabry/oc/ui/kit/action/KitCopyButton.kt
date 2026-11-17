@@ -46,6 +46,7 @@ public fun rememberKitCopyAction(
     enabled: KitEnabled = KitEnabled.Enabled,
     mask: KitCopyMask = KitCopyVerbatim,
     maskedLabel: String = copiedLabel,
+    clipboardMode: KitClipboardMode = KitClipboardMode.Sensitive,
 ): KitAction {
     @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     var copies by remember { mutableIntStateOf(0) }
@@ -61,7 +62,7 @@ public fun rememberKitCopyAction(
         if (!copied) label else if (masked) maskedLabel else copiedLabel,
         {
             val out = mask.apply(text())
-            clipboard.setText(AnnotatedString(out.text), KitClipboardMode.Sensitive)
+            clipboard.setText(AnnotatedString(out.text), clipboardMode)
             masked = out.masked
             copies++
             copied = true

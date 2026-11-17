@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.preview.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -122,7 +123,7 @@ public fun DevPreviewScreen(
                 dictationOnly = true,
             )
         }
-    KitClipboardEffect(state.copied, state.copyText, actions::copied)
+    KitClipboardEffect(state.copied, state.copyText, actions::copied, mode = KitClipboardMode.Sensitive)
     val lifecycle = LocalLifecycleOwner.current
     LaunchedEffect(state.logsOpen, lifecycle) {
         if (state.logsOpen)
