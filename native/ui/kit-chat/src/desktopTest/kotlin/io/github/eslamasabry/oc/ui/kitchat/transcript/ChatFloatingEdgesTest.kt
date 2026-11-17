@@ -440,6 +440,24 @@ class ChatFloatingEdgesTest {
             }
         }
 
+    @Test
+    fun `B-CHAT-EDGE-027 the header capsule is one part in every style: nothing is cast beside or under it`() {
+        for (style in listOf(Style.Brutal, Style.Paper, Style.Signal, Style.Solid)) for (dark in listOf(true, false)) run(Scene(style = style, dark = dark)) {
+            val image = onNodeWithTag("scene").captureToImage().toPixelMap()
+            val c = bounds("kit-header-capsule")
+            val ground = image[2, c.center.y.toInt()]
+            // The margin beside the capsule (x just past its end edge, over its height) is the page's ground: no offset block.
+            for (dx in listOf(3, 6)) {
+                var y = c.top.toInt() + 12
+                while (y < c.bottom.toInt() - 12) {
+                    val px = image[c.right.toInt() + dx, y]
+                    assertTrue(same(px, ground, 0.05f), "something is cast beside the capsule at (${c.right.toInt() + dx},$y), $style dark=$dark: $px vs $ground")
+                    y += 2
+                }
+            }
+        }
+    }
+
     private companion object {
         const val W = 360
         const val H = 780

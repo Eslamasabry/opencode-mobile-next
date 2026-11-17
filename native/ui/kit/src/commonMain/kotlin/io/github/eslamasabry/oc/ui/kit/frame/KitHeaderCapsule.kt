@@ -54,6 +54,10 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
                 level = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingLevel(colors),
                 ownFill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors),
                 radius = tokens.composerRadius.dp,
+                // One part, never two: where a style casts a hard offset block (Brutal, Signal) it reads as a second, shifted
+                // outline behind the capsule, most of all under a sheet's scrim (owner's picture, build 10077). The capsule
+                // takes the style's edge and corner and casts no block of its own.
+                nested = true,
             )
         )
     val solid = style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
