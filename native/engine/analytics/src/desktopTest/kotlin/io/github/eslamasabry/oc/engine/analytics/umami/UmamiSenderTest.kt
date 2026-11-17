@@ -124,7 +124,8 @@ class UmamiSenderTest {
             val event = assertNotNull(umamiEvent(name, props + mapOf("prompt" to "private", "id" to "secret", "model_key" to "private"),
                 umamiPages.getValue("chat"), UmamiSource("website", UmamiBuild("3.0.1", "10081"), device), 2000))
             assertEquals("event", event.type, name)
-            assertEquals(fields.keys + setOf("version", "build", "os_major", "device_class"), event.payload.data.keys, name)
+            val wanted = fields.keys + setOf("version", "build", "os_major", "device_class")
+            assertEquals(wanted, event.payload.data.keys, name)
             val wire = UmamiCodec.json.parseToJsonElement(UmamiCodec.batch(listOf(event))).jsonArray.single().jsonObject
             assertEquals(setOf("type", "payload"), wire.keys, name)
             val payload = wire.getValue("payload").jsonObject
@@ -133,7 +134,7 @@ class UmamiSenderTest {
             assertEquals(expected, payload.keys, name)
             // Umami rotates the anonymous visitor hash on this word (v3.5.0 request-schema.ts `salt`, crypto.ts getSalt).
             assertEquals("month", payload.getValue("salt").jsonPrimitive.content, "$name pins the monthly hash period")
-            assertEquals(fields.keys + setOf("version", "build", "os_major", "device_class"), payload.getValue("data").jsonObject.keys, name)
+            assertEquals(wanted, payload.getValue("data").jsonObject.keys, name)
             assertEquals(name.takeUnless { it == "screen_view" }, event.payload.name, name)
             val page = if (name == "screen_view" || name == "jank") umamiPages.getValue(props.getValue("screen")) else umamiPages.getValue("chat")
             assertEquals(page.url, event.payload.url, name)
@@ -375,7 +376,11 @@ class UmamiSenderTest {
         assertEquals(listOf("app_exit" to mapOf("exit_reason" to "crash", "foreground" to "yes")), google.filter { it.first == "app_exit" })
         val own = r.transport.batches.flatten().filter { it.payload.name == "app_exit" }
         assertEquals(1, own.size)
-        assertEquals(mapOf("exit_reason" to "crash", "foreground" to "yes", "version" to "3.0.1-test.10081", "build" to "10081", "os_major" to "16", "device_class" to "phone"), own.single().payload.data)
+        val expected = mapOf(
+            "exit_reason" to "crash", "foreground" to "yes", "version" to "3.0.1-test.10081", "build" to "10081",
+            "os_major" to "16", "device_class" to "phone",
+        )
+        assertEquals(expected, own.single().payload.data)
     }
 
 }

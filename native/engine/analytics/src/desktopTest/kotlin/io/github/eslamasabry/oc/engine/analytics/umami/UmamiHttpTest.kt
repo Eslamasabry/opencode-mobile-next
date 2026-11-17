@@ -112,7 +112,8 @@ class UmamiHttpTest {
         val (_, body) = capture("""{"sessionId":"s","visitId":"v"}""") { url ->
             kotlinx.coroutines.runBlocking { UmamiHttp(url) { "Mozilla/5.0" }.prepare(listOf(event)).execute() }
         }
-        assertTrue(!Regex("[0-9]{3,5}\\s*[x\u00d7]\\s*[0-9]{3,5}").containsMatchIn(body), "no resolution anywhere in the body")
+        val resolution = Regex("[0-9]{3,5}\\s*[x\u00d7]\\s*[0-9]{3,5}")
+        assertTrue(!resolution.containsMatchIn(body), "no resolution anywhere in the body")
         return UmamiCodec.json.parseToJsonElement(body).jsonObject.getValue("payload").jsonObject
     }
 
@@ -123,7 +124,7 @@ class UmamiHttpTest {
     }
 
     @Test
-    fun `B-SEC-215 the request body on the wire carries the Android major, the device class and the build with the tag`() = runTest {
+    fun `B-SEC-215 the wire carries the Android major, the device class, the build and the tag`() = runTest {
         val payload = wirePayload(source.device)
         val data = payload.getValue("data").jsonObject
         assertEquals("16", data["os_major"]?.jsonPrimitive?.content)
@@ -142,7 +143,8 @@ class UmamiHttpTest {
             setOf("website", "hostname", "language", "url", "title", "tag", "timestamp", "data", "name", "salt"),
             payload.keys,
         )
-        assertEquals(setOf("kind", "version", "build", "os_major", "device_class"), payload.getValue("data").jsonObject.keys)
+        val dataKeys = payload.getValue("data").jsonObject.keys
+        assertEquals(setOf("kind", "version", "build", "os_major", "device_class"), dataKeys)
         // A new fact about the device needs a decision: it fails here until the notices and this list say so.
         assertEquals(
             listOf("language", "userAgent", "osMajor", "deviceClass"),

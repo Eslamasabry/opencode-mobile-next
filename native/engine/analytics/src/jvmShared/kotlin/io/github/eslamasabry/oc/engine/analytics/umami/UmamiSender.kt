@@ -236,7 +236,8 @@ public class UmamiSender(
             val oldBuild = try {
                 UmamiBuild(p.data["version"] ?: continue, p.data["build"] ?: continue, p.tag)
             } catch (_: IllegalArgumentException) { continue }
-            val mapped = umamiEvent(p.name ?: "screen_view", p.data - (setOf("version", "build") + umamiDeviceKeys), knownPage,
+            val ownKeys = setOf("version", "build") + umamiDeviceKeys
+            val mapped = umamiEvent(p.name ?: "screen_view", p.data - ownKeys, knownPage,
                 UmamiSource(website, oldBuild, device().copy(language = p.language)), item.atMs) ?: continue
             // Restored ordinals are negative; new producer ordinals are nonnegative. Nothing is sent from this field.
             restored += StoredEvent(-(index.toLong() + 1), item.atMs, mapped)

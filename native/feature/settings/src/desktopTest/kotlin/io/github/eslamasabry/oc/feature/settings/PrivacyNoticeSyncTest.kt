@@ -351,13 +351,16 @@ class PrivacyNoticeSyncTest {
 
     @Test
     fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
-        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "browser", 16, DeviceClass.Phone))
+        val device = UmamiDevice("en", "browser", 16, DeviceClass.Phone)
+        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), device)
         for ((name, fields) in productSchema) {
             val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
                 source, 1000)!!
-            assertEquals(setOf("version", "build", "os_major", "device_class"), event.payload.data.keys - fields.keys, name)
+            val added = event.payload.data.keys - fields.keys
+            assertEquals(setOf("version", "build", "os_major", "device_class"), added, name)
         }
-        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
+        val wiringPath = "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt"
+        val wiring = File(repo, wiringPath).readText()
         assertTrue("UsageTelemetryVendor" in wiring && "UmamiSender(" in wiring, "the notice covers the sender that the app actually builds")
         assertTrue("BuildConfig.VERSION_NAME" in wiring && "BuildConfig.VERSION_CODE" in wiring, "version facts come from this build")
         val firebase = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/FirebaseTelemetryVendor.kt").readText()
@@ -370,8 +373,9 @@ class PrivacyNoticeSyncTest {
         val device = wiring.substringAfter("val device = {").substringBefore("val configured")
         val allowed = setOf("Build.VERSION.RELEASE", "smallestScreenWidthDp", "Locale.getDefault")
         for (word in listOf(
-            "displayMetrics", "widthPixels", "heightPixels", "densityDpi", "Build.MODEL", "Build.MANUFACTURER", "Build.BRAND",
-            "Build.DEVICE", "Build.PRODUCT", "Build.HARDWARE", "Build.FINGERPRINT", "Build.SERIAL", "Build.ID", "SDK_INT",
+            "displayMetrics", "widthPixels", "heightPixels", "densityDpi", "Build.MODEL", "Build.MANUFACTURER",
+            "Build.BRAND", "Build.DEVICE", "Build.PRODUCT", "Build.HARDWARE", "Build.FINGERPRINT", "Build.SERIAL",
+            "Build.ID", "SDK_INT",
             "TimeZone", "ANDROID_ID", "Settings.Secure", "advertising", "telephony", "Display",
         )) assertTrue(word !in device, "the Umami device may not read $word")
         assertTrue(allowed.all { it in device }, "the device reads the Android major, the width class and the language")
@@ -381,20 +385,26 @@ class PrivacyNoticeSyncTest {
     fun `B-SEC-218 the notices name the three device fields for our server and no screen size for it`() {
         val md = File(repo, "PRIVACY.md").readText()
         val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
-        for (fact in listOf("Android main version number", "device class (phone or tablet)", "build number", "no screen size or resolution")) {
+        val facts = listOf("Android main version number", "device class (phone or tablet)", "build number",
+            "no screen size or resolution")
+        for (fact in facts) {
             assertTrue(fact in umami, "PRIVACY.md Umami part must name $fact")
         }
-        assertTrue(Regex("(?i)and\\s+screen\\s+resolution").find(umami) == null, "PRIVACY.md must not say Umami gets the resolution")
+        val saysResolution = Regex("(?i)and\\s+screen\\s+resolution").find(umami) != null
+        assertTrue(!saysResolution, "PRIVACY.md must not say Umami gets the resolution")
         assertTrue("no screen size or resolution" in umami, "PRIVACY.md says the screen size is not sent to Umami")
         val en = File(repo, "native/ui/words/src/commonMain/composeResources/values")
         val policy = xmlString(File(en, "strings_native_privacy.xml"), "nativeBundledPrivacy")
         val detail = xmlString(File(en, "strings_s28_privacy.xml"), "nativeTelemetryUsageDetail")
         val device = xmlString(File(en, "strings_s28_privacy.xml"), "collectDevice")
         for ((name, text) in listOf("policy" to policy, "usage detail" to detail)) {
-            assertTrue("main version number" in text && "phone or a tablet" in text, "$name names the major and the class")
+            val namesFields = "main version number" in text && "phone or a tablet" in text
+            assertTrue(namesFields, "$name names the major and the class")
             assertTrue("not the screen size" in text, "$name says the screen size is not sent to Umami")
         }
-        assertTrue("screen size, Android version" !in device && "Google Analytics also receives the screen size" in device, "the page puts the screen size on Google's side only")
+        val googleOnly = "screen size, Android version" !in device &&
+            "Google Analytics also receives the screen size" in device
+        assertTrue(googleOnly, "the page puts the screen size on Google's side only")
         for (tag in AppLanguage.entries.mapNotNull { it.tag }.filter { it != "en" }) {
             val dir = File(en.parentFile, "values-$tag")
             val translated = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
@@ -403,7 +413,8 @@ class PrivacyNoticeSyncTest {
             val line = xmlString(File(dir, "strings_s28_privacy.xml"), "collectDevice")
             assertTrue("Umami" in line && "Google Analytics" in line, "$tag page puts the screen size on Google's side")
         }
-        assertTrue(NeverCollected.entries.none { it.name == "ScreenSize" }, "the never-list cannot claim a screen size Google receives")
+        val claimed = NeverCollected.entries.any { it.name == "ScreenSize" }
+        assertTrue(!claimed, "the never-list cannot claim a screen size Google receives")
     }
 
     // ---- the tests ----
@@ -478,7 +489,9 @@ class PrivacyNoticeSyncTest {
             val rows = File(locale, "strings_s28_privacy.xml").readText()
             for (field in listOf("cause", "app_exit", "exit_reason", "foreground"))
                 assertTrue(has(rows, field), "$tag What we collect must name $field")
-            for (word in listOf("cause", "thinking_silent", "tool_running", "retrying", "stream_dead_refetched", "stream_silent", "unknown", "app_exit", "exit_reason", "foreground"))
+            val stallWords = listOf("cause", "thinking_silent", "tool_running", "retrying", "stream_dead_refetched",
+                "stream_silent", "unknown", "app_exit", "exit_reason", "foreground")
+            for (word in stallWords)
                 assertTrue(has(policy, word), "$tag policy must name $word")
         }
         assertTrue(HealthContract.contractEvents.values.flatten().contains("app_exit"), "What we collect names the event")

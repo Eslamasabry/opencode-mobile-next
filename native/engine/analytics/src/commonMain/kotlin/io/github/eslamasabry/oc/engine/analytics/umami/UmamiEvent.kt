@@ -16,7 +16,7 @@ public data class UmamiPayload(
     val website: String,
     val hostname: String = "opencode-mobile.app",
     val language: String,
-    /** Never sent any more (the exact resolution is not collected); kept nullable so an older stored queue still reads. */
+    /** Never sent any more (no exact resolution); kept nullable so an older stored queue still reads. */
     val screen: String? = null,
     val url: String,
     val title: String,
@@ -55,6 +55,8 @@ public data class UmamiDevice(
 )
 
 /** The only device keys added to an event's data, besides `version` and `build`. */
+private const val MAX_OS_MAJOR = 999
+
 public val umamiDeviceKeys: Set<String> = setOf("os_major", "device_class")
 
 /** Where an event comes from: the site it counts under, the build that sent it and the device that sent it. */
@@ -116,7 +118,7 @@ public fun umamiEvent(
 }
 
 private fun deviceData(device: UmamiDevice): Map<String, String> = buildMap {
-    if (device.osMajor in 1..999) put("os_major", device.osMajor.toString())
+    if (device.osMajor in 1..MAX_OS_MAJOR) put("os_major", device.osMajor.toString())
     when (device.deviceClass) {
         DeviceClass.Phone -> put("device_class", "phone")
         DeviceClass.Tablet -> put("device_class", "tablet")

@@ -67,7 +67,8 @@ internal object Telemetry {
                     val mobile = if (tablet) "" else " Mobile"
                     UmamiDevice(
                         Locale.getDefault().toLanguageTag(),
-                        "Mozilla/5.0 (Linux; Android $osMajor; $modelClass) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0$mobile Safari/537.36",
+                        "Mozilla/5.0 (Linux; Android $osMajor; $modelClass) AppleWebKit/537.36 (KHTML, like Gecko) " +
+                            "Chrome/131.0.0.0$mobile Safari/537.36",
                         osMajor,
                         if (tablet) DeviceClass.Tablet else DeviceClass.Phone,
                     )
