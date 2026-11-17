@@ -275,7 +275,7 @@
     <string name="webSearchFailedTitle">搜索未完成</string>
     <string name="webSearchTryAgain">重新搜索</string>
     <string name="webSearchBusy">请等待搜索完成。</string>
-    <string name="webSearchQueryHint">例如：flutter golden tests</string>
+    <string name="webSearchQueryHint">例如：flutter golden 测试</string>
     <string name="webSearchNeedsProvider">请先在此服务器上设置搜索提供商。</string>
     <string name="webSearchEmptyDetail">请换用其他关键词，或在下方粘贴链接。</string>
     <plurals name="webSearchResults">

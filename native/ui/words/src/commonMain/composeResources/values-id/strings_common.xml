@@ -41,8 +41,8 @@
     <string name="usageCurrentProject">Proyek saat ini</string>
     <string name="usageSessions">Percakapan</string>
     <string name="usagePrompts">Perintah</string>
-    <string name="usageInput">Input</string>
-    <string name="usageOutput">Output</string>
+    <string name="usageInput">Masukan</string>
+    <string name="usageOutput">Keluaran</string>
     <string name="usageCacheRead">Baca cache</string>
     <string name="usageCacheWrite">Tulis cache</string>
     <string name="mcpAdd">Tambah server MCP</string>

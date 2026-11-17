@@ -35,8 +35,9 @@ class TranslationCatalog(private val nativeRoot: File) {
 
         /** Language tag of a values folder (`values-in` is Indonesian: `id`), or null for `values`/qualified ones. */
         fun tagOf(folder: String): String? {
+            if (!folder.startsWith("values-")) return null
             val t = folder.removePrefix("values-")
-            if (folder == "values" || !Regex("[a-z]{2,3}").matches(t)) return null
+            if (!Regex("[a-z]{2,3}").matches(t)) return null
             return if (t == "in") "id" else t
         }
 

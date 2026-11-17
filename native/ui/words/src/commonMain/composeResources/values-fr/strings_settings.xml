@@ -788,7 +788,7 @@
     <string name="appUpdateFailStorage">Il n’y avait pas assez de place pour enregistrer le téléchargement.</string>
     <string name="appUpdateFailInstaller">Android n’a pas pu terminer l’installation. Réessayez.</string>
     <string name="appUpdateCurrentVersion">Version %1$s</string>
-    <string name="appUpdateBuildLabel">Build</string>
+    <string name="appUpdateBuildLabel">Compilation</string>
     <string name="appUpdateOpenRelease">Ouvrir sur GitHub</string>
     <string name="appUpdateNotInstalled">%1$s n’a pas pu être installé</string>
     <string name="browserModeIntro">Voici OpenCode Mobile exécuté dans un navigateur web. Les serveurs OpenCode distants fonctionnent comme dans l’application du téléphone. Les fonctions qui nécessitent le téléphone lui-même ne sont pas proposées ici.</string>

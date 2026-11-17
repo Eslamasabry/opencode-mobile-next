@@ -182,7 +182,7 @@
     <string name="kitCodeCopyFailedOutput">Output tidak bisa disalin. Coba lagi.</string>
     <string name="kitCodeEmpty">Kosong</string>
     <string name="kitTabLabel">%1$s, %2$s</string>
-    <string name="kitLogTitle">Output</string>
+    <string name="kitLogTitle">Keluaran</string>
     <string name="kitLogShowOutput">Tampilkan output</string>
     <string name="kitLogLive">Langsung</string>
     <string name="kitLogQuiet">Baris terakhir %1$s lalu</string>
@@ -503,7 +503,7 @@
     <string name="liveStyleGlowSpill">Cahaya tumpah</string>
     <string name="liveStyleLightRays">Sinar cahaya</string>
     <string name="liveStyleConstellation">Rasi bintang</string>
-    <string name="liveStyleHalftone">Halftone</string>
+    <string name="liveStyleHalftone">Nada tengah</string>
     <string name="liveStyleLiquidBlobs">Gumpalan cair</string>
     <string name="liveStyleMatrixRain">Hujan Matrix</string>
     <string name="liveStyleBlueprint">Cetak biru</string>
@@ -530,7 +530,7 @@
     <string name="effectsLookPreviewOffLabel">Latar belakang hidup nonaktif. Membuka pilihan tampilan.</string>
     <string name="effectsLookPreviewOff">Mati</string>
     <string name="widgetV2BackgroundLabel">Latar belakang</string>
-    <string name="widgetV2BackgroundSolid">Solid</string>
+    <string name="widgetV2BackgroundSolid">Padat</string>
     <string name="widgetV2BackgroundTinted">Berwarna</string>
     <string name="widgetV2BackgroundTransparent">Transparan</string>
     <string name="widgetV2AccentLabel">Warna aksen</string>

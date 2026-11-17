@@ -408,7 +408,7 @@
     <string name="isolatedTaskRemoved">%1$s dihapus. Anda bisa mulai lagi.</string>
     <string name="isolatedTaskSetupOutput">Yang dilaporkan penyiapan</string>
     <string name="isolatedTaskCopyFolder">Folder salinan</string>
-    <string name="isolatedTaskBranchLabel">Branch</string>
+    <string name="isolatedTaskBranchLabel">Cabang</string>
     <string name="isolatedTaskStageSend">Membuka percakapan dan mengirim tugas Anda</string>
     <string name="exportMarkdownUnredacted">Transkrip tidak disamarkan. Isinya persis seperti yang Anda lihat, termasuk rahasia atau jalur pribadi di percakapan.</string>
     <plurals name="reviewSummary">

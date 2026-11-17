@@ -174,7 +174,7 @@
     <string name="externalAgentsKeyLabel">智能体密钥</string>
     <string name="externalAgentsKeyHelper">其所有者给你的密钥。它保存在此手机的安全存储中，只会发送给此智能体。</string>
     <string name="externalAgentsNoKey">此智能体不要求密钥。除非你信任它，否则不要发送私密信息。</string>
-    <string name="externalAgentsDetailCard">Agent Card</string>
+    <string name="externalAgentsDetailCard">智能体卡片</string>
     <string name="externalAgentsDetailEndpoint">端点</string>
     <string name="externalAgentsDetailVersion">版本</string>
     <string name="externalAgentsDetailConnection">连接</string>

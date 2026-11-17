@@ -29,7 +29,7 @@
     <string name="teamUiKeep">保留</string>
     <string name="teamUiLabelAccess">访问权限</string>
     <string name="teamUiLabelAddress">地址</string>
-    <string name="teamUiLabelCity">City</string>
+    <string name="teamUiLabelCity">城市</string>
     <string name="teamUiLabelHost">主机</string>
     <string name="teamUiLabelProvider">提供商</string>
     <string name="teamUiLabelVersion">版本</string>
@@ -135,7 +135,7 @@
     <string name="teamUiRunElapsedHours">%1$d 小时 %2$d 分钟</string>
     <string name="teamUiRunElapsedMinutes">%1$d 分钟</string>
     <string name="teamUiRunSinceHandoff">交接后已 %1$s</string>
-    <string name="teamUiRunLabelFormula">Formula</string>
+    <string name="teamUiRunLabelFormula">配方</string>
     <string name="teamUiRunLabelId">运行 ID</string>
     <string name="teamUiRunLabelKind">类型</string>
     <string name="teamUiRunLabelLastError">最后一次错误</string>

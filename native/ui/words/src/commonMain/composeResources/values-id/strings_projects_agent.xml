@@ -7,7 +7,7 @@
     <string name="agentProjectBranch">Branch saat ini</string>
     <string name="agentProjectBaseBranch">Branch dasar</string>
     <string name="agentProjectDetached">Checkout terlepas</string>
-    <string name="agentProjectWorkingTree">Working tree</string>
+    <string name="agentProjectWorkingTree">Pohon kerja</string>
     <string name="agentProjectBranchChanges">Sejak branch dasar</string>
     <string name="agentProjectAllFiles">Semua file yang berubah</string>
     <string name="agentProjectNoPatch">File ini tidak memiliki patch teks.</string>

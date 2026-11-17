@@ -219,3 +219,332 @@ glassLabSampleModel
 glassLabSampleHome
 glassLabOpenDialog
 glassLabSceneChat
+# Added by exacten: global product/brand/agent/endonym names and units (key<TAB>reason)
+addServerTypeCodex	name
+agentComputerCodex	name
+aiteamComponentTitle	name
+chatReplyFooterTokensK	unit
+chatReplyFooterTokensM	unit
+chatStartGit	name
+e7LocaleUiEnglish	name
+e7LocaleUiPortuguese	name
+e7LocaleUiSpanish	name
+e7SetupProbeV2	name
+firstRunAgentCodex	name
+firstRunAgentOpenCode	name
+gitPlaceGitHub	name
+gitSheetTitle	name
+kitCapTeamOnTitle	name
+kitDurMinutes	unit
+kitHostCodex	name
+kitTurnLiveMinutes	unit
+linuxComponentsTeam	name
+linuxMgrRow	name
+linuxRuntimeOpenCodeTitle	name
+linuxToolsAiTeam	name
+migration_deferred_ai_team	name
+modelPickerAgentBuildName	name
+modelPickerAgentPlanName	name
+nativeSearchPlaceAgents	name
+native_team_title	name
+notify_status_minutes	unit
+oc2DiscoveryEditorTitle	name
+openCodeConnectionLabel	name
+phoneScanGit	name
+phoneServerCardVersion	name
+quotaClaude	name
+quotaCodex	name
+reportR1Android	name
+runningPhoneGroup__aiTeam	name
+runningPhoneGroup__openCode	name
+runningPhoneName__git	name
+runningPhoneName__linux	name
+runningPhoneName__openCode	name
+setupRuntimeTwo	name
+teamChatOpenTeam	name
+teamChatSubtitle	name
+teamProgressOne	name
+teamProjectHome	name
+teamUiHomeTitle	name
+teamUiRowTitle	name
+termuxProcsKindAiTeam	name
+termuxStorageCatAiTeam	name
+tile_label	name
+tile_label_with_count	name
+# Added by exacten: language-specific cognates and technical tokens (locales<TAB>key<TAB>reason)
+fr	activeContextAssistant	cognate
+fr	activeContextMessageTitle__other	cognate
+fr	agentCardChartPoints	cognate
+fr	agentCardChartPoints__eq1	cognate
+id	agentCardDiffFile	cognate
+fr	agentCardPhotoName	cognate
+es,fr,id,pt	agentToolsTerminal	cognate
+fr	agentsSectionTitle	cognate
+fr	agentsStepVersion	cognate
+id	aiSetupModel	cognate
+fr	aiSetupSuggestionsLabel	cognate
+fr	andrMonitorMinutes	cognate
+fr	appUpdateCurrentVersion	cognate
+fr	appearanceAccentViolet	cognate
+fr	appearanceChipAccent	cognate
+fr,id	appearanceChipMode	cognate
+fr	appearanceChipStyle	cognate
+fr	appearanceGroupStyle	cognate
+fr	appearanceModeAuto	cognate
+fr	appearanceSpacingCompact	cognate
+id	appearanceSurfaceSolid	cognate
+es,fr,id,pt	capabilityTerminal	cognate
+id	chatHeaderServer	cognate
+fr	chatSendFailureDetailsAgent	cognate
+id	chatSendFailureDetailsModel	cognate
+id,pt	chatStartItemCount__eq1	cognate
+fr	chatUiAgent	cognate
+fr	chatUiAgentNote	cognate
+fr	chatUiAssistant	cognate
+es	chatUiError	cognate
+id	chatUiFile	cognate
+fr	chatUiMessage	cognate
+id	chatUiModel	cognate
+fr	chatUiQuestion	cognate
+fr	chatUiQuestionCount	cognate
+fr	chatUiQuestions	cognate
+fr	chatUiQuestionsSummary	cognate
+fr	chatsFilterChatCount	cognate
+fr	chatsFilterChatCount__eq1	cognate
+fr	chatsHomeTitle	cognate
+id	chatsNewModelRow	cognate
+id	chats_all_filter	cognate
+fr	chats_title	cognate
+fr	commandDestination	cognate
+fr	composerFullAgent	cognate
+id	composerPreviewModelButton	cognate
+id	composerSettingModel	cognate
+id	composerTrayFile	cognate
+fr	composerTrayPhotos	cognate
+fr	connectionCheckVersionValue	cognate
+fr	continueWithFactAgent	cognate
+id	continueWithFactModel	cognate
+fr	crashReportDetailSource	cognate
+fr,id	devPreviewPortTitle	cognate
+fr	diagnosticsExitImportance	cognate
+fr	e7LibraryAction	cognate
+es,fr,id,pt	e7LocaleUiTerminal	cognate
+fr	e7ModelUiAgent	cognate
+fr	e7SettingsDiagnosticOccurrences	cognate
+id	e7SettingsUi1	cognate
+fr	e7SettingsVersion	cognate
+es,fr,id,pt	e7SetupTerminalNumber	cognate
+fr	e7SharedMessages	cognate
+id	e7WorkspaceOffline	cognate
+fr	e7WorkspaceSessionId	cognate
+fr	edgeLightFace	cognate
+fr	edgeLightTitle	cognate
+fr	externalAgentsDetailVersion	cognate
+fr	fbCaptureNote	cognate
+fr	fbErrorCode	cognate
+fr	fbKindDocument	cognate
+fr	fbListDocuments	cognate
+fr	fbReminderDate	cognate
+fr	fbSettingsMinutes	cognate
+fr	fbSettingsMinutes__eq1	cognate
+fr	fbSettingsMinutes__eq2	cognate
+fr	fbSourceKindNote	cognate
+fr	fileImage	cognate
+fr	fileSource	cognate
+id	filesFolderLabel	cognate
+fr	filesRowActions	cognate
+id	gitIdentityEmail	cognate
+fr	gitPublishPublic	cognate
+id	importFileLabel	cognate
+id	importFolder	cognate
+fr	importMessages	cognate
+fr	importPreviewLabel	cognate
+id	intServers	cognate
+fr	isolatedTaskOptions	cognate
+fr	keptConversation	cognate
+fr,id	keptSvcPortNumber	cognate
+fr	keptSvcTitle	cognate
+id	kitAttachmentFile	cognate
+id	kitAttachmentFolder	cognate
+fr	kitAttachmentImage	cognate
+es,fr,id,pt	kitCapFlagTerminalTitle	cognate
+fr	kitCapPermMicTitle	cognate
+fr	kitCapPermNotificationsTitle	cognate
+fr	kitComposerField	cognate
+id	kitContextSheetModel	cognate
+fr	kitDateField	cognate
+id	kitDiffFiles__eq1	cognate
+fr	kitDiffShowSource	cognate
+es	kitFieldErrorLabel	cognate
+id	kitGalleryEdit	cognate
+fr	kitMarkdownImage	cognate
+fr,id,pt	kitMenu	cognate
+id	kitSearchFilter	cognate
+id	kitSearchFilterActive	cognate
+fr	kitSuggestionsLabel	cognate
+fr	kitTimeMinute	cognate
+fr	kitToolTookMinutes	cognate
+fr	kitToolTookMinutes__eq1	cognate
+es,fr,id,pt	libraryTerminalTitle	cognate
+id	linuxDevProgram	cognate
+fr	linuxIdleMinutesValue	cognate
+id	linuxLocalFolder	cognate
+fr	linuxMgrKindAgent	cognate
+fr,id	linuxMgrPortRow	cognate
+fr	linuxMgrPorts	cognate
+id	linuxMgrProcSummary__eq1	cognate
+id	linuxSvcFieldFolder	cognate
+fr,id	linuxSvcFieldPort	cognate
+id	linuxSvcLogTitle	cognate
+fr,id	linuxSvcPort	cognate
+fr	liveStyleCircuit	cognate
+fr	liveStyleConstellation	cognate
+fr	liveStyleOscilloscope	cognate
+id	m40PlansOfflineShort	cognate
+fr,id	modelEffortMinimal	cognate
+id	modelPickerSheetTitle	cognate
+fr	monitorMinutes	cognate
+fr	monitorMinutes__eq1	cognate
+fr	monitorNativeConversation	cognate
+fr	monitorSession	cognate
+fr	nativeSearchPlaceChats	cognate
+fr	nativeSearchPlaceNotifications	cognate
+es,fr,id,pt	nativeSearchPlaceProjectTerminal	cognate
+id	nativeSearchPlaceTips	cognate
+fr	nlibConversation	cognate
+fr	p12LogPause	cognate
+fr	p12NewAgent	cognate
+id,pt	p12PlansOffline	cognate
+fr	p12SearchConversationsWhat	cognate
+id	p12SearchServer	cognate
+id	p12UsageServer	cognate
+id	phoneScanKindGit	cognate
+es	phoneServerCardErrorDetail	cognate
+id	phoneServerCardLogTitle	cognate
+fr	queuedMoveConversationLabel	cognate
+id	queuedMoveFiles__eq1	cognate
+fr	r40RelationsActions	cognate
+es	readerUiSymbolConstructor	cognate
+id	readerUiSymbolFile	cognate
+fr	readerUiSymbolModule	cognate
+id	readerUiSymbolOperator	cognate
+es,fr	readerUiSymbolVariable	cognate
+es,fr,id,pt	remoteTerminalTitle	cognate
+es,fr,id,pt	runningPhoneGroup__terminal	cognate
+id	runningPhoneName__other	cognate
+fr	schedule40Conversation	cognate
+id	schedule40Model	cognate
+fr	scheduleTarget	cognate
+fr	searchB1Conversations	cognate
+fr	searchB1ProjectConversations	cognate
+fr	secHistoryEntry	cognate
+fr	serverRowDetailsVersion	cognate
+es,fr,id,pt	serverSettingsTerminal	cognate
+es,fr,id,pt	serversRemoteTerminal	cognate
+fr	servicesPorts	cognate
+fr,id	servicesPorts__eq1	cognate
+fr,id	sessionExportFormatLabel	cognate
+fr	sessionNoteFieldLabel	cognate
+fr	settingsHubGroupAgent	cognate
+fr	settingsHubGroupConversations	cognate
+id	settingsHubModelRow	cognate
+id	settingsHubServer	cognate
+fr	settingsV3Notifications	cognate
+id	settingsV3ServersCount__eq1	cognate
+fr	setupNativeSuggestions	cognate
+id	shellOutputDetailFolder	cognate
+fr	shellTabChats	cognate
+id	skillSheetLocation	cognate
+id,pt	statePlansCopy39	cognate
+id	teamProjectCostTotal	cognate
+id	teamProjectDemo	cognate
+id	teamProjectDemoChip	cognate
+fr	teamProjectEditorBudget	cognate
+fr	teamProjectEditorInstructions	cognate
+id	teamProjectEditorModel	cognate
+id	teamProjectEditorServer	cognate
+fr	teamProjectEditorVersion	cognate
+fr	teamProjectPlanPhase	cognate
+fr	teamProjectPlanSummary__phases	cognate
+id	teamProjectServerFilter	cognate
+fr	teamRefusalCode	cognate
+fr	teamRoleFieldInstructions	cognate
+id	teamRoleModelRow	cognate
+fr	teamRolesTitle	cognate
+id	teamUiAgentLabelModel	cognate
+fr	teamUiAgentRoleOther	cognate
+fr	teamUiControlMessage	cognate
+fr	teamUiGateFailureClassAgent	cognate
+fr	teamUiGateFailureClassInfrastructure	cognate
+fr	teamUiGateFailureClassTest	cognate
+fr	teamUiHomeGateKindFreeText	cognate
+fr	teamUiHomeGateLinkAgent	cognate
+fr	teamUiHomeGateOptions	cognate
+id	teamUiHostKindLaptop	cognate
+fr	teamUiLabelVersion	cognate
+id	teamUiMergeFiles__eq1	cognate
+fr	teamUiMergeLineTests	cognate
+fr	teamUiPolicySupervision	cognate
+id	teamUiRunLabelFormula	cognate
+fr	teamUiStartRunSupervisionLabel	cognate
+fr	teamUiWorkLabelParent	cognate
+fr	teamUiWorkLabelType	cognate
+fr	teamUiWorkSheetDescription	cognate
+fr	teamUiWorkSheetValidation	cognate
+id	terminal40FolderLabel	cognate
+es,fr,id,pt	terminal40Title	cognate
+id	terminalScreenDetailFolder	cognate
+id	termuxProcsFolder	cognate
+es,fr,id,pt	termuxProcsKindTerminal	cognate
+id	tipsTipsLabel	cognate
+id	tipsTitle	cognate
+id	upgNewChatEdit	cognate
+id	upgNewChatModel	cognate
+fr	upgradeFindVersion	cognate
+fr,id	upgradeMode	cognate
+fr	upgradeReadyVersion	cognate
+fr	usageBudgetTitle	cognate
+fr	usageSessions	cognate
+fr	widgetActionMessage	cognate
+fr	widgetPanelAccent	cognate
+fr	widgetPanelTransparent	cognate
+fr	widgetV2BackgroundTransparent	cognate
+fr	widget_conversations_title	cognate
+fr	widget_label	cognate
+fr	widget_label_wide	cognate
+id,pt	widget_status_offline	cognate
+id,pt	widget_status_offline_for	cognate
+id,pt	widget_status_online	cognate
+id	widget_status_server	cognate
+fr	workTimeoutFifteenMinutes	cognate
+fr	workTimeoutFiveMinutes	cognate
+fr	workTimeoutOneMinute	cognate
+id	workspaceContextFolder	cognate
+id	worktreesFolder	cognate
+fr	agentMakerOpenSource	token
+vi	agentToolsTerminal	token
+ar,id,ru,vi	agentToolsTerminalEscape	token
+id	appUpdateBuildLabel	token
+vi	capabilityTerminal	token
+vi	e7LocaleUiTerminal	token
+fr	e7SettingsDetailUi18	token
+vi	e7SetupTerminalNumber	token
+id	gitActionClone	token
+id	gitActionPull	token
+id	gitActionPush	token
+id	gitCloneButton	token
+vi	gitIdentityEmail	token
+vi	kitCapFlagTerminalTitle	token
+vi	kitMenu	token
+vi	libraryTerminalTitle	token
+vi	nativeSearchPlaceProjectTerminal	token
+es,id	readerUiSymbolEnum	token
+id	referencesScreenPathLabel	token
+vi	remoteTerminalTitle	token
+vi	runningPhoneGroup__terminal	token
+vi	serverSettingsTerminal	token
+vi	serversRemoteTerminal	token
+vi	teamBoardTypeEpic	token
+fr	teamUiTermAgent	token
+vi	terminal40Title	token
+vi	termuxProcsKindTerminal	token

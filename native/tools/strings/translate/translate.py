@@ -171,7 +171,8 @@ def analyse(loc):
                 have = next((tr[f][key] for f in ([fname] if fname in tr else []) + [x for x in tr if x != fname] if key in tr[f]), None)
                 h = digest(typ, val)
                 if have is None: work.append((root, kind, fname, key, typ, comment, val, None, "missing"))
-                elif skey(root, key) in st and st[skey(root, key)] != h: work.append((root, kind, fname, key, typ, comment, val, have[2], "changed"))
+                elif skey(root, key) not in st: work.append((root, kind, fname, key, typ, comment, val, have[2], "untracked"))
+                elif st[skey(root, key)] != h: work.append((root, kind, fname, key, typ, comment, val, have[2], "changed"))
                 else: done += 1
     return work, total, done
 
@@ -190,11 +191,15 @@ def cmd_status(a):
     for loc in a.locales:
         work, total, done = analyse(loc)
         byfile = {}
-        for w in work: byfile.setdefault(w[2], [0, 0])[0 if w[8] == "missing" else 1] += 1
+        for w in work:
+            col = 0 if w[8] == "missing" else (1 if w[8] == "changed" else 2)
+            byfile.setdefault(w[2], [0, 0, 0])[col] += 1
         miss = sum(1 for w in work if w[8] == "missing")
-        print("%s: %d of %d keys translated, %d missing, %d changed in English" % (loc, done, total, miss, len(work) - miss))
-        for f, (m, c) in sorted(byfile.items(), key=lambda kv: (priority_rank(kv[0]), kv[0]))[: a.top]:
-            print("   %-46s missing %4d  changed %3d" % (f, m, c))
+        chg = sum(1 for w in work if w[8] == "changed")
+        untr = len(work) - miss - chg
+        print("%s: %d of %d keys translated, %d missing, %d changed in English, %d untracked" % (loc, done, total, miss, chg, untr))
+        for f, (m, c, u) in sorted(byfile.items(), key=lambda kv: (priority_rank(kv[0]), kv[0]))[: a.top]:
+            print("   %-46s missing %4d  changed %3d  untracked %3d" % (f, m, c, u))
 
 
 def cmd_baseline(a):

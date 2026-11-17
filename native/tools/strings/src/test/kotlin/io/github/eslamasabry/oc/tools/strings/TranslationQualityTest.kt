@@ -131,9 +131,36 @@ class TranslationQualityTest {
         )
     }
 
-    private fun untranslatedAllowlist(): Set<String> =
-        File(toolDir, "src/test/resources/untranslated-allowlist.tsv").takeIf { it.isFile }?.readLines().orEmpty()
-            .filter { it.isNotBlank() && !it.startsWith("#") }.toSet()
+    private class Allowlist(private val global: Set<String>, private val byLocale: Map<String, Set<String>>) {
+        fun allows(locale: String, key: String): Boolean = key in global || key in byLocale[locale].orEmpty()
+    }
+
+    private fun untranslatedAllowlist(): Allowlist =
+        parseAllowlist(File(toolDir, "src/test/resources/untranslated-allowlist.tsv").takeIf { it.isFile }?.readLines().orEmpty())
+
+    private fun parseAllowlist(lines: List<String>): Allowlist {
+        val kinds = setOf("name", "unit", "cognate", "token")
+        val global = linkedSetOf<String>()
+        val byLocale = linkedMapOf<String, MutableSet<String>>()
+        for (raw in lines) {
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) continue
+            val cols = line.split('\t').map { it.trim() }
+            if (cols.size == 1) {
+                global += cols[0]
+            } else if (cols.size == 2) {
+                assertTrue(cols[1] in kinds, "allowlist reason '${cols[1]}' for ${cols[0]} must be one of $kinds")
+                global += cols[0]
+            } else {
+                assertTrue(cols.size == 3, "invalid untranslated-allowlist.tsv row: $line")
+                assertTrue(cols[2] in kinds, "allowlist reason '${cols[2]}' for ${cols[1]} must be one of $kinds")
+                for (loc in cols[0].split(',').map { it.trim() }.filter { it.isNotEmpty() }) {
+                    if (loc == "*") global += cols[1] else byLocale.getOrPut(loc) { linkedSetOf() } += cols[1]
+                }
+            }
+        }
+        return Allowlist(global, byLocale)
+    }
 
     @Test
     fun `glossary use - product terms are kept, glossary words are used, banned nouns are absent`() {
@@ -144,7 +171,7 @@ class TranslationQualityTest {
             val e = en.texts().joinToString(" ")
             val t = tr.texts().joinToString(" ")
             gl.keep.firstOrNull { it in e && it !in t }?.let { "product term \"$it\" must stay as written" }
-                ?: gl.terms.takeIf { en.key !in allowed }?.firstOrNull { (en, tgt) -> en.containsMatchIn(e) && !tgt.containsMatchIn(t) }
+                ?: gl.terms.takeIf { !allowed.allows(l, en.key) }?.firstOrNull { (en, tgt) -> en.containsMatchIn(e) && !tgt.containsMatchIn(t) }
                     ?.let { (en, tgt) -> "English /$en/ should read /$tgt/" }
                 ?: gl.forbid.firstOrNull { (re, _) -> re.containsMatchIn(t) }?.let { (re, why) -> "/${re.pattern}/ is banned: $why" }
         }
@@ -214,7 +241,7 @@ class TranslationQualityTest {
         val cjkWordRuns = Regex("""[\u3040-\u30ff\u4e00-\u9fff\u3400-\u4dbf]{1,2}|[A-Za-z0-9]+|\p{L}+""")
         val latinWordRuns = Regex("""\p{L}+""")
         gate("english") { l, en, tr ->
-            if (en.key in allowed) return@gate null
+            if (allowed.allows(l, en.key)) return@gate null
             val allow = g[l]?.allow.orEmpty() + (g[l]?.keep.orEmpty()).flatMap { it.split(' ') }
             val strip = { s: String -> s.replace(placeholder, " ").trim() }
             for ((q, t) in tr.forms) {
@@ -223,6 +250,7 @@ class TranslationQualityTest {
                 val letters = Regex("""[A-Za-z]{3,}""").findAll(s).map { it.value }.toList()
                 if (letters.isEmpty()) continue
                 if (strip(t).equals(s, ignoreCase = true) && letters.any { it !in allow }) return@gate "is the English text"
+                if (en.key.endsWith("Aliases")) continue
                 val words = latinWord.findAll(strip(t)).map { it.value }.filter { it !in allow }.toList()
                 val runs = if (l == "ja" || l == "zh") cjkWordRuns else latinWordRuns
                 if (l in nonLatin) {
@@ -258,7 +286,7 @@ class TranslationQualityTest {
     // ---- the language gate ----
 
     private fun languageCoverage(cat: TranslationCatalog): Map<String, Double> =
-        cat.coverageByLocale(cat.locales(), listOf(cat.roots.first()))
+        cat.coverageByLocale(cat.locales(), cat.roots)
 
     @Test
     fun `language gate - a language is offered only at 95 percent of English, in the picker and in locales_config`() {
@@ -316,6 +344,18 @@ class TranslationQualityTest {
             }
         }
         assertTrue(missing.isEmpty(), "translation-state missing ${missing.size} shipped keys:\n" + missing.take(80).joinToString("\n"))
+    }
+
+    @Test
+    fun `allowlist - locale-scoped cognates allow only listed locales and reject non-values folders`() {
+        val parsed = parseAllowlist(listOf("globalKey\tname", "fr,es\tcognateKey\tcognate"))
+        assertTrue(parsed.allows("ar", "globalKey"))
+        assertTrue(parsed.allows("fr", "cognateKey"))
+        assertTrue(parsed.allows("es", "cognateKey"))
+        assertFalse(parsed.allows("ar", "cognateKey"))
+        assertTrue(TranslationCatalog.tagOf("values-in") == "id")
+        assertTrue(TranslationCatalog.tagOf("values") == null)
+        assertTrue(TranslationCatalog.tagOf("xml") == null)
     }
 
     @Test

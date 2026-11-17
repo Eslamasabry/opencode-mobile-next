@@ -14,12 +14,12 @@
     <string name="widgetV2ConfigureTitle">Gaya widget</string>
     <string name="widgetProjectTitle">Tampilkan percakapan dari</string>
     <string name="widgetProjectUnavailable">Pilihan ini tidak dapat disimpan. Coba lagi.</string>
-    <string name="widgetV2AccentWallpaper">Wallpaper</string>
+    <string name="widgetV2AccentWallpaper">Gambar latar</string>
     <string name="widgetV2AccentApp">Tema aplikasi</string>
     <string name="widgetV2AccentGreen">Hijau</string>
-    <string name="widgetV2AccentTeal">Teal</string>
+    <string name="widgetV2AccentTeal">Hijau kebiruan</string>
     <string name="widgetV2AccentBlue">Biru</string>
-    <string name="widgetV2AccentAmber">Amber</string>
+    <string name="widgetV2AccentAmber">Kuning keemasan</string>
     <string name="widgetV2SaveStyle">Simpan gaya</string>
     <string name="widgetV2SteerTitle">Tambahkan ke giliran ini</string>
     <string name="widgetV2AfterReplyTitle">Kirim setelah balasan ini</string>

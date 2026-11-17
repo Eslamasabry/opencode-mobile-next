@@ -616,7 +616,7 @@
     <string name="teamBoardPrioritySomeday">Un jour</string>
     <string name="teamBoardTypeBug">Bogue</string>
     <string name="teamBoardTypeFeature">Fonctionnalité</string>
-    <string name="teamBoardTypeEpic">Epic</string>
+    <string name="teamBoardTypeEpic">Épopée</string>
     <string name="teamBoardTypeChore">Corvée</string>
     <string name="teamBoardEpicProgress">%1$d sur %2$d terminées</string>
     <string name="teamBoardFlagNeedsYou">Votre avis est requis</string>

@@ -173,7 +173,7 @@
     <string name="externalAgentsKeyLabel">Kunci agen</string>
     <string name="externalAgentsKeyHelper">Kunci yang diberikan pemiliknya kepada Anda. Kunci disimpan di penyimpanan aman ponsel ini dan hanya dikirim ke agen ini.</string>
     <string name="externalAgentsNoKey">Agen ini tidak meminta kunci. Jangan kirim informasi pribadi kecuali Anda memercayainya.</string>
-    <string name="externalAgentsDetailCard">Agent Card</string>
+    <string name="externalAgentsDetailCard">Kartu Agen</string>
     <string name="externalAgentsDetailEndpoint">Endpoint</string>
     <string name="externalAgentsDetailVersion">Versi</string>
     <string name="externalAgentsDetailConnection">Koneksi</string>
@@ -224,7 +224,7 @@
     <string name="agentMakerAnthropic">oleh Anthropic</string>
     <string name="agentMakerOpenAI">oleh OpenAI</string>
     <string name="agentMakerGoogle">oleh Google</string>
-    <string name="agentMakerOpenSource">open source</string>
+    <string name="agentMakerOpenSource">sumber terbuka</string>
     <string name="agentsChooseTitle">Pilih agen</string>
     <string name="agentsStateReady">Siap</string>
     <string name="agentsStateNotInstalled">Belum terpasang · %1$s</string>

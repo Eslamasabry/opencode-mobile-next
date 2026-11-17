@@ -173,7 +173,7 @@
     <string name="externalAgentsKeyLabel">Khóa tác nhân</string>
     <string name="externalAgentsKeyHelper">Khóa do chủ sở hữu của nó cấp cho bạn. Khóa được lưu trong bộ nhớ bảo mật của điện thoại này và chỉ gửi cho tác nhân này.</string>
     <string name="externalAgentsNoKey">Tác nhân này không yêu cầu khóa. Đừng gửi thông tin riêng tư nếu bạn không tin tưởng nó.</string>
-    <string name="externalAgentsDetailCard">Agent Card</string>
+    <string name="externalAgentsDetailCard">Thẻ tác nhân</string>
     <string name="externalAgentsDetailEndpoint">Điểm cuối</string>
     <string name="externalAgentsDetailVersion">Phiên bản</string>
     <string name="externalAgentsDetailConnection">Kết nối</string>

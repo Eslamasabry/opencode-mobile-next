@@ -28,7 +28,7 @@
     <string name="teamUiKeep">Оставить</string>
     <string name="teamUiLabelAccess">Доступ</string>
     <string name="teamUiLabelAddress">Адрес</string>
-    <string name="teamUiLabelCity">City</string>
+    <string name="teamUiLabelCity">Город</string>
     <string name="teamUiLabelHost">Хост</string>
     <string name="teamUiLabelProvider">Поставщик</string>
     <string name="teamUiLabelVersion">Версия</string>

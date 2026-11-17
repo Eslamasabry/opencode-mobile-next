@@ -773,7 +773,7 @@
     <string name="gitProblemInvalidFolderName">Đó không phải tên thư mục dùng được. Hãy dùng chữ cái, số, dấu chấm, dấu gạch ngang hoặc dấu gạch dưới.</string>
     <string name="gitProblemFolderExists">Đã có thư mục với tên đó. Hãy chọn tên khác.</string>
     <string name="gitActionAddRemote">Thêm kho từ xa</string>
-    <string name="gitActionClone">Clone</string>
+    <string name="gitActionClone">Nhân bản</string>
     <string name="gitBusyAddRemote">Đang thêm kho từ xa…</string>
     <string name="gitBusyClone">Đang clone…</string>
     <string name="gitDoneRemoteAdded">Đã thêm kho từ xa.</string>
@@ -802,7 +802,7 @@
     <string name="gitCloneAddressLabel">Địa chỉ kho</string>
     <string name="gitCloneFolderLabel">Tên thư mục</string>
     <string name="gitCloneInto">Sẽ clone vào %1$s</string>
-    <string name="gitCloneButton">Clone</string>
+    <string name="gitCloneButton">Nhân bản</string>
     <string name="gitRemotesRow">Kho từ xa</string>
     <string name="gitRemotesRowNone">Chưa có</string>
     <string name="gitRemotesTitle">Kho từ xa</string>
