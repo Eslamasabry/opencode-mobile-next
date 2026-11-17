@@ -64,7 +64,9 @@ public fun KitComposerStatusStrip(
             val room = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
             val modelMin = Space.S3.dp * 2 + glyph * 2 + Space.S2.dp + Space.S1.dp + labelWidth + 1.dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:303-308
             when {
-                !hasChips -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { model?.invoke() }
+                !hasChips -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    androidx.compose.runtime.CompositionLocalProvider(LocalComposerChipWraps provides true) { model?.invoke() }
+                }
                 model == null -> Row(
                     Modifier.fillMaxWidth().testTag("composer-status-scroll").kitShadowRoom(room, start = room, end = room).kitScrollFade(scroll).horizontalScroll(scroll).padding(all = room),
                     horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), content = chips,
@@ -76,7 +78,9 @@ public fun KitComposerStatusStrip(
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), content = chips,
                     )
                     Spacer(Modifier.width(Space.S2.dp))
-                    Box(Modifier.weight(1f, fill = false)) { model() }
+                    Box(Modifier.weight(1f, fill = false)) {
+                        androidx.compose.runtime.CompositionLocalProvider(LocalComposerChipWraps provides true) { model() }
+                    }
                 }
             }
         }

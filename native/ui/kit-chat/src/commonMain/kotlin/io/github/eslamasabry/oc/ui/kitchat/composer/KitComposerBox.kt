@@ -217,7 +217,9 @@ public fun KitComposerBox(
                 .padding(Space.S1.dp + io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset())
                 .testTag("kit-composer-box")
         ) {
-            above()
+            // Whatever rides above the field (a note, the attachments, the suggestions) keeps a Space.S1 gap from it
+            // (layout rule `tight`): the gap exists only when something is above, so an empty slot adds nothing.
+            Box(Modifier.fillMaxWidth().gapBelowWhenFilled(Space.S1.dp)) { above() }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 if (!stacked) leading()
                 Box(
@@ -320,6 +322,9 @@ public fun KitComposerChip(
     collapsible: Boolean = false,
 ) {
     val iconOnly = wordless || (collapsible && LocalComposerChipsCollapsed.current)
+    // Beside the status strip's chips the model's words wrap onto a second line instead of ending in "…" (frame words
+    // wrap or the part grows, screen standard 5).
+    val wrapsWords = LocalComposerChipWraps.current
     val colors = LocalKitColors.current
     // On the slab the chip is a quiet tint of the glass it lies in, never an opaque plate.
     val face =
@@ -383,11 +388,11 @@ public fun KitComposerChip(
                 // The chip line gives a bounded width (it no longer scrolls), so the words take what the glyphs
                 // leave and the caret stays. Only a chip that [shrinks] may end in "…".
                 Modifier.weight(1f, fill = false).widthIn(max = COMPOSER_CHIP_WORDS_MAX.dp)
-                    .then(if (shrinks) Modifier.kitMayTruncate("composer-chip") else Modifier),
+                    .then(if (shrinks && !wrapsWords) Modifier.kitMayTruncate("composer-chip") else Modifier),
                 role = TypeRole.Label,
                 tone = if (active) TextTone.Accent else TextTone.Primary,
                 kind = KitTextKind.Frame,
-                maxLines = if (LocalDensity.current.fontScale >= 1.5f) Int.MAX_VALUE else 1,
+                maxLines = if (LocalDensity.current.fontScale >= 1.5f || wrapsWords) Int.MAX_VALUE else 1,
             )
             if (opensPicker)
                 Image(
@@ -640,6 +645,10 @@ private const val COMPOSER_CHIP_FRAME_DP: Float = 58f
 private const val COMPOSER_APPROVAL_CHARS: Int = 15
 private const val COMPOSER_GAP_DP: Int = 8
 
+/** True inside the status strip's model slot: the chip's words wrap instead of ending in "…". */
+internal val LocalComposerChipWraps: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.compositionLocalOf { false }
+
 /** True while the box's row cannot show both chips whole: a chip marked `collapsible` then shows its icon alone. */
 internal val LocalComposerChipsCollapsed: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
     androidx.compose.runtime.staticCompositionLocalOf { false }
@@ -680,3 +689,11 @@ private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> U
         }
     }
 }
+
+/** Adds [gap] under this part only when it measured taller than nothing. */
+private fun Modifier.gapBelowWhenFilled(gap: androidx.compose.ui.unit.Dp): Modifier =
+    this.layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        val extra = if (placeable.height > 0) gap.roundToPx() else 0
+        layout(placeable.width, placeable.height + extra) { placeable.place(0, 0) }
+    }

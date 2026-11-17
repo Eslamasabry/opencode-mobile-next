@@ -78,14 +78,16 @@ public fun KitAskLine(
             Spacer(Modifier.width(Space.S3.dp))
             if (stacked) {
                 Column(Modifier.weight(1f)) {
-                    KitText(question, role = TypeRole.Body, maxLines = 2) // F: lib/ui/kit/kit_ask_line.dart:106
+                    // The question wraps whole (words are never cut), and the answers keep a Space.S1 gap under it.
+                    KitText(question, role = TypeRole.Body)
+                    Spacer(Modifier.height(Space.S1.dp))
                     FlowRow(Modifier.offset(x = -Space.S2.dp), horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                         KitButton(accept, role = KitButtonRole.Tertiary)
                         KitButton(decline, role = KitButtonRole.Tertiary)
                     }
                 }
             } else {
-                KitText(question, Modifier.weight(1f), role = TypeRole.Body, maxLines = 2) // F: lib/ui/kit/kit_ask_line.dart:106
+                KitText(question, Modifier.weight(1f), role = TypeRole.Body)
                 Row {
                     KitButton(decline, role = KitButtonRole.Tertiary)
                     KitButton(accept, role = KitButtonRole.Tertiary)
