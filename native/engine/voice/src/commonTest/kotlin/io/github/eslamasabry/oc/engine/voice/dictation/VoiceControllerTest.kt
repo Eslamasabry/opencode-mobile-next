@@ -383,7 +383,7 @@ class VoiceControllerTest {
         }
 
     @Test
-    fun `B-MEDIA-077 an engine that streams nothing, as Whisper, keeps partial words empty and the final text lands as before`() =
+    fun `B-MEDIA-077 an engine that streams nothing keeps partial words empty, the final text as before`() =
         runTest {
             val voice = controller()
             voice.start(tap)

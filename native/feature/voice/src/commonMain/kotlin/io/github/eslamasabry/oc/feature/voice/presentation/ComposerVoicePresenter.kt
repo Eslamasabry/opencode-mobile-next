@@ -691,13 +691,14 @@ public class ComposerVoicePresenter(
      * send them through the composer's own send. A dictation that hears nothing sends nothing.
      */
     public fun doneAndSend() {
-        if (mutable.value.mode == VoiceMode.Conversation) return
         // The box's Send while listening (owner 2026-11-17): a second press before the words are written down is the
-        // same request, never a second send.
-        if (sendAfterWrite) return
-        if (mutable.value.phase != MicPhase.Starting && mutable.value.phase != MicPhase.Listening) return
-        sendAfterWrite = true
-        done()
+        // same request, never a second send; a voice conversation sends by itself.
+        val phase = mutable.value.phase
+        val asks = phase == MicPhase.Starting || phase == MicPhase.Listening
+        if (mutable.value.mode != VoiceMode.Conversation && !sendAfterWrite && asks) {
+            sendAfterWrite = true
+            done()
+        }
     }
 
     /** "Cancel": the words said are dropped and the field stays as it was. */
@@ -1037,7 +1038,10 @@ public class ComposerVoicePresenter(
         val forming = partial.trim()
         val unconfirmed =
             if (forming.isEmpty()) null
-            else DraftMerge.inserted(base.first, base.second, base.third, heard)?.let { r -> (r.last + 1 - forming.length)..r.last }
+            else
+                DraftMerge.inserted(base.first, base.second, base.third, heard)?.let { r ->
+                    (r.last + 1 - forming.length)..r.last
+                }
         if (mutable.value.unconfirmed != unconfirmed) mutable.update { it.copy(unconfirmed = unconfirmed) }
     }
 

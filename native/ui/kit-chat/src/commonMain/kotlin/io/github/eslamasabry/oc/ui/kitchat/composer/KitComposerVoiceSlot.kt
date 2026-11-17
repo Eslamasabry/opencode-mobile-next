@@ -69,9 +69,9 @@ public interface KitComposerVoice {
     @Composable public fun Actions(field: KitVoiceField, modifier: Modifier) {}
 
     /**
-     * Above the field: the hands-free voice mode's extra controls (its tour, "Read aloud" switch, "Read the reply"), its
-     * sheets, and the effects voice needs (words typed during a recording, leaving the app). The listening, speaking
-     * and waiting states are the box's own recorder row ([recording], [Recorder]); notes are [Note].
+     * Above the field: the hands-free voice mode's extra controls (its tour, "Read aloud" switch, "Read the reply"),
+     * its sheets, and the effects voice needs (words typed during a recording, leaving the app). The listening,
+     * speaking and waiting states are the box's own recorder row ([recording], [Recorder]); notes are [Note].
      */
     @Composable public fun Panel(field: KitVoiceField, modifier: Modifier)
 
@@ -81,13 +81,6 @@ public interface KitComposerVoice {
      * row. Null otherwise; the box is then as always.
      */
     @Composable public fun recording(field: KitVoiceField): KitVoiceRecording? = null
-
-    /**
-     * Where in [field]'s text the dictated words still forming sit (UTF-16 indices): the box draws them in the quieter
-     * text colour until they are confirmed. Null when nothing is unconfirmed (always, with an engine that does not
-     * stream).
-     */
-    @Composable public fun unconfirmed(field: KitVoiceField): IntRange? = null
 
     /** The recorder row inside the box while [recording] is not null: ✕, the live waveform and time, ✓. */
     @Composable public fun Recorder(field: KitVoiceField, modifier: Modifier) {}
@@ -129,6 +122,12 @@ public class KitVoiceRecording(
      * hands-free voice mode and "Read aloud", which show the same row while Send keeps its usual meaning.
      */
     public val dictating: Boolean = true,
+    /**
+     * Where in the field's text the dictated words still forming sit (UTF-16 indices): the box draws them in the
+     * quieter text colour until they are confirmed. Null when nothing is unconfirmed (always, with an engine that does
+     * not stream).
+     */
+    public val unconfirmed: IntRange? = null,
 )
 
 /**

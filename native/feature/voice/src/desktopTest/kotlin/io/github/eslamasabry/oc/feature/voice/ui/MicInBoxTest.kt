@@ -57,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
+import io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerRecorder
+import androidx.compose.foundation.layout.RowScope
 import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_RECORDER_STATUS_TAG
 import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_RECORDER_TAG
 import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_RECORDER_TIME_TAG
@@ -130,9 +132,13 @@ class MicInBoxTest {
                     val live by rig.presenter.state.collectAsState()
                     val state = shown ?: live
                     val level by rig.presenter.level.collectAsState()
-                    val recording = voiceRecording(state, rig.presenter, dictationOnly = false, sendLabel = "Send what you said")
+                    val recording = voiceRecording(state, rig.presenter, dictationOnly = false, sendLabel = SEND_NOW)
+                    val recorder: (@Composable RowScope.() -> Unit)? =
+                        if (recording == null) null
+                        else ({ VoiceRecorder(state, { level }, rig.presenter, Modifier.weight(1f)) })
                     // A 360 dp phone: the box keeps the page's 14 dp side margins.
                     Box(Modifier.width(360.dp).padding(horizontal = 14.dp)) {
+                        CompositionLocalProvider(LocalKitComposerRecorder provides recorder) {
                         KitComposerBox(
                             running = false,
                             field = { KitText("Whats next", Modifier.testTag("field")) },
@@ -140,9 +146,6 @@ class MicInBoxTest {
                             hasLeading = true,
                             leading = { KitComposerAdd("Attach and more", {}, Modifier.testTag("plus")) },
                             chips = { KitComposerChip("Fable 5.2", {}) },
-                            recorder =
-                                if (recording != null) ({ VoiceRecorder(state, { level }, rig.presenter, Modifier.weight(1f)) })
-                                else null,
                             trailing = {
                                 KitComposerSend(
                                     label = recording?.sendLabel ?: "Send",
@@ -151,6 +154,7 @@ class MicInBoxTest {
                                 )
                             },
                         )
+                        }
                     }
                 }
             }
@@ -161,14 +165,37 @@ class MicInBoxTest {
         onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
 
     private fun ComposeUiTest.button(label: String) =
-        onNode(hasContentDescription(label) and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick), useUnmergedTree = true)
+        onNode(
+            hasContentDescription(label) and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick),
+            useUnmergedTree = true,
+        )
 
     private fun ComposeUiTest.buttonBounds(label: String): Rect = button(label).fetchSemanticsNode().boundsInRoot
 
     /** The old pill's words: underlined Cancel and Send beside a boxed Done. */
     private fun ComposeUiTest.noOldPill() {
-        for (words in listOf("Cancel", "Done", "Send")) onAllNodesWithText(words, useUnmergedTree = true).assertCountEquals(0)
+        for (words in listOf("Cancel", "Done", "Send")) {
+            onAllNodesWithText(words, useUnmergedTree = true).assertCountEquals(0)
+        }
     }
+
+    private fun assertInside(part: Rect, box: Rect, what: String) =
+        assertTrue(
+            part.left >= box.left - 0.5f && part.right <= box.right + 0.5f &&
+                part.top >= box.top - 0.5f && part.bottom <= box.bottom + 0.5f,
+            "$what $part lies inside the box $box",
+        )
+
+    /** The row's one polite live region, saying [words]. */
+    private fun ComposeUiTest.liveRegion(words: String) =
+        onNode(
+            SemanticsMatcher("polite live region saying $words") {
+                val said = it.config.getOrNull(SemanticsProperties.ContentDescription)
+                val live = it.config.getOrNull(SemanticsProperties.LiveRegion) != null
+                live && said?.any { d -> d.startsWith(words) } == true
+            },
+            useUnmergedTree = true,
+        )
 
     private fun ComposeUiTest.settle(ts: TestScope) {
         ts.runCurrent()
@@ -193,14 +220,14 @@ class MicInBoxTest {
             noOldPill()
             val box = bounds("kit-composer-box").inflate(4f)
             val row = bounds(VOICE_RECORDER_TAG)
-            assertTrue(row.top >= box.top - 0.5f && row.bottom <= box.bottom + 0.5f, "the recorder $row lies inside the box $box")
-            assertTrue(row.left >= box.left - 0.5f && row.right <= box.right + 0.5f, "the recorder $row lies inside the box $box")
+            assertInside(row, box, "the recorder")
             assertTrue(row.top >= bounds("field").bottom - 0.5f, "the words stay above the row")
             // Three round actions, no text links: ✕ at the start, ✓ at the end of the row, Send in its own place.
             val discard = buttonBounds("Discard recording")
             val use = buttonBounds("Put the words in the message box")
             val send = bounds("send")
-            assertTrue(discard.left < bounds(VOICE_WAVE_TAG).left && bounds(VOICE_WAVE_TAG).right < use.left, "✕ $discard · wave · ✓ $use")
+            val wave = bounds(VOICE_WAVE_TAG)
+            assertTrue(discard.left < wave.left && wave.right < use.left, "✕ $discard · wave $wave · ✓ $use")
             assertTrue(use.right <= send.left + 0.5f, "✓ $use ends the row, Send $send keeps the box's end")
             for ((what, r) in listOf("✕" to discard, "✓" to use, "Send" to send)) {
                 assertTrue(r.width >= 47.5f && r.height >= 47.5f, "$what keeps a 48 dp target: $r")
@@ -209,13 +236,7 @@ class MicInBoxTest {
             onAllNodesWithTag("plus", useUnmergedTree = true).assertCountEquals(0)
             onNodeWithTag(VOICE_RECORDER_TIME_TAG, useUnmergedTree = true).assertExists()
             // Spoken: the row is one polite live region that says it is listening.
-            onNode(
-                SemanticsMatcher("polite live region saying Listening") {
-                    it.config.getOrNull(SemanticsProperties.LiveRegion) != null &&
-                        it.config.getOrNull(SemanticsProperties.ContentDescription)?.any { d -> d.startsWith("Listening") } == true
-                },
-                useUnmergedTree = true,
-            ).assertExists()
+            liveRegion("Listening").assertExists()
         }
     }
 
@@ -242,7 +263,8 @@ class MicInBoxTest {
     }
 
     @Test
-    fun `B-MEDIA-062 use the words puts them in the box after the earlier text, editable, and sends nothing`() = runTest {
+    fun `B-MEDIA-062 use the words puts them in the box after the earlier text, editable, sends nothing`() =
+        runTest {
         val ts = this
         val rig = Rig(ts, text = "Whats next")
         runCurrent()
@@ -272,7 +294,8 @@ class MicInBoxTest {
     }
 
     @Test
-    fun `B-MEDIA-063 Send while listening writes the words down and sends them once, however often it is pressed`() = runTest {
+    fun `B-MEDIA-063 Send while listening writes the words down and sends them once, however often pressed`() =
+        runTest {
         val ts = this
         val rig = Rig(ts)
         runCurrent()
@@ -285,7 +308,7 @@ class MicInBoxTest {
             settle(ts)
             // The box's own Send, in its place, now named for what it does.
             onNodeWithTag("send", useUnmergedTree = true).assertExists()
-            val send = onNode(hasContentDescription("Send what you said") and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick), useUnmergedTree = true)
+            val send = button(SEND_NOW)
             send.performClick()
             send.performClick()
             settle(ts)
@@ -299,7 +322,8 @@ class MicInBoxTest {
     @Test
     fun `B-MEDIA-064 nothing in the recorder is cut at 360 dp, text 1 and 1_3, and Arabic mirrors it`() = runTest {
         val ts = this
-        for ((scale, dir) in listOf(1f to LayoutDirection.Ltr, 1.3f to LayoutDirection.Ltr, 1.3f to LayoutDirection.Rtl)) {
+        val looks = listOf(1f to LayoutDirection.Ltr, 1.3f to LayoutDirection.Ltr, 1.3f to LayoutDirection.Rtl)
+        for ((scale, dir) in looks) {
             val rig = Rig(ts, text = "Whats next")
             runCurrent()
             rig.presenter.tapMic()
@@ -313,17 +337,19 @@ class MicInBoxTest {
                 val discard = buttonBounds("Discard recording")
                 val use = buttonBounds("Put the words in the message box")
                 val send = bounds("send")
-                for ((what, r) in listOf("✕" to discard, "✓" to use, "Send" to send, "time" to bounds(VOICE_RECORDER_TIME_TAG))) {
-                    assertTrue(r.left >= box.left - 0.5f && r.right <= box.right + 0.5f, "$what $r inside the box $box at $scale $dir")
+                val time = bounds(VOICE_RECORDER_TIME_TAG)
+                for ((what, r) in listOf("✕" to discard, "✓" to use, "Send" to send, "time" to time)) {
+                    assertInside(r, box, "$what at $scale $dir")
                 }
-                val time = onNodeWithTag(VOICE_RECORDER_TIME_TAG, useUnmergedTree = true).fetchSemanticsNode()
-                    .config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.let { get ->
-                        mutableListOf<TextLayoutResult>().also { get(it) }.firstOrNull()
-                    }
-                if (time != null) assertTrue(!time.hasVisualOverflow, "the time is whole at $scale $dir")
+                val timeText =
+                    onNodeWithTag(VOICE_RECORDER_TIME_TAG, useUnmergedTree = true).fetchSemanticsNode()
+                        .config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.let { get ->
+                            mutableListOf<TextLayoutResult>().also { get(it) }.firstOrNull()
+                        }
+                if (timeText != null) assertTrue(!timeText.hasVisualOverflow, "the time is whole at $scale $dir")
                 assertTrue(bounds(VOICE_WAVE_TAG).width >= 24f, "the waveform keeps room at $scale $dir")
                 if (dir == LayoutDirection.Rtl) {
-                    assertTrue(discard.left > use.right, "Arabic: ✕ at the start (right) $discard, ✓ toward Send (left) $use")
+                    assertTrue(discard.left > use.right, "Arabic: ✕ at the start (right) $discard, ✓ toward Send $use")
                     assertTrue(send.right <= use.left + 0.5f, "Arabic: Send keeps the box's end (left)")
                 } else {
                     assertTrue(discard.right < use.left, "✕ $discard before ✓ $use")
@@ -370,7 +396,7 @@ class MicInBoxTest {
     }
 
     @Test
-    fun `B-MEDIA-070 hands-free voice mode listens in the box's own row - waveform and time, discard ends the mode, no use-the-words`() =
+    fun `B-MEDIA-070 hands-free mode listens in the box's row - waveform, time, discard ends it, no check`() =
         runTest {
             val ts = this
             val rig = Rig(ts)
@@ -387,7 +413,7 @@ class MicInBoxTest {
                 settle(ts)
                 val box = bounds("kit-composer-box").inflate(4f)
                 val row = bounds(VOICE_RECORDER_TAG)
-                assertTrue(row.top >= box.top - 0.5f && row.bottom <= box.bottom + 0.5f, "the hands-free row $row lies inside the box $box")
+                assertInside(row, box, "the hands-free row")
                 onNodeWithTag(VOICE_WAVE_TAG, useUnmergedTree = true).assertExists()
                 onNodeWithTag(VOICE_RECORDER_TIME_TAG, useUnmergedTree = true).assertExists()
                 button("Put the words in the message box").assertDoesNotExist()
@@ -400,12 +426,13 @@ class MicInBoxTest {
         }
 
     @Test
-    fun `B-MEDIA-071 hands-free voice mode names its state in the row - listening, the reply read aloud, waiting for the reply`() =
+    fun `B-MEDIA-071 hands-free mode names its state in the row - listening, reading aloud, waiting`() =
         runTest {
             val ts = this
             val rig = Rig(ts)
             runCurrent()
-            val base = ComposerVoiceUi(available = true, conversationAvailable = true, conversation = true, canListen = true)
+            val base =
+                ComposerVoiceUi(available = true, conversationAvailable = true, conversation = true, canListen = true)
             val cases =
                 listOf(
                     base.copy(phase = MicPhase.Listening, mode = VoiceMode.Conversation) to "Listening",
@@ -416,17 +443,15 @@ class MicInBoxTest {
                 runComposeUiTest {
                     setContent { Scene(rig, shown = state) }
                     settle(ts)
-                    onNode(
-                        SemanticsMatcher("live region saying $words") {
-                            it.config.getOrNull(SemanticsProperties.LiveRegion) != null &&
-                                it.config.getOrNull(SemanticsProperties.ContentDescription)?.any { d -> d.startsWith(words) } == true
-                        },
-                        useUnmergedTree = true,
-                    ).assertExists()
+                    liveRegion(words).assertExists()
                     button("Leave voice mode").assertExists()
                     button("Put the words in the message box").assertDoesNotExist()
                     noOldPill()
                 }
             }
         }
+
+    private companion object {
+        const val SEND_NOW = "Send what you said"
+    }
 }

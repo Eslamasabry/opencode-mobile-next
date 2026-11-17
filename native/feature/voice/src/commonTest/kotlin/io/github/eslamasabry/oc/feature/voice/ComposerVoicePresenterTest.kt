@@ -31,7 +31,8 @@ class ComposerVoicePresenterTest {
         }
 
         fun listening(words: String, partial: String = "") {
-            dictation.state.value = VoiceState.Listening(Instant.fromEpochMilliseconds(0), VoiceMode.Tap, 0, words, partial)
+            dictation.state.value =
+                VoiceState.Listening(Instant.fromEpochMilliseconds(0), VoiceMode.Tap, 0, words, partial)
         }
     }
 
@@ -367,7 +368,7 @@ class ComposerVoicePresenterTest {
     }
 
     @Test
-    fun `B-MEDIA-063 the box's Send while listening writes the words down and sends them once, however often it is pressed`() =
+    fun `B-MEDIA-063 the box's Send while listening writes the words down and sends them once`() =
         runTest {
             val rig = Rig(this)
             runCurrent()
@@ -416,16 +417,17 @@ class ComposerVoicePresenterTest {
     }
 
     @Test
-    fun `B-MEDIA-072 words still forming appear in the box while listening, quieter, after the text typed before`() = runTest {
+    fun `B-MEDIA-072 words still forming appear in the box while listening, after the text typed before`() =
+        runTest {
         val rig = streaming()
         rig.listening("", partial = "hel")
         runCurrent()
         assertEquals("Whats next hel", rig.field.value)
-        assertEquals(11..13, rig.presenter.state.value.unconfirmed, "the forming words are marked for the quieter colour")
+        assertEquals(11..13, rig.presenter.state.value.unconfirmed, "the forming words are marked to draw quieter")
         rig.listening("", partial = "hello wor")
         runCurrent()
         assertEquals("Whats next hello wor", rig.field.value)
-        assertEquals(17..19, rig.presenter.state.value.unconfirmed)
+        assertEquals(11..19, rig.presenter.state.value.unconfirmed, "all of it is still forming")
     }
 
     @Test

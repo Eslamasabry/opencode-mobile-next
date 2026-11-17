@@ -106,6 +106,10 @@ public class VoiceController(
 
         /** The words being heard now, not yet confirmed (an engine that streams; "" for Whisper). */
         var partial = ""
+
+        /** Watches the open session's partial words; ends with the recording. */
+        var partialWatch: Job? = null
+        var watched: RecognizerSession? = null
         var chunksDone = 0
         var bytesSeen = 0L
         var listening = false
@@ -318,49 +322,48 @@ public class VoiceController(
 
     private suspend fun transcribeLoop(recording: Recording) {
         val first = openSession(recording) ?: return
+        watchPartial(recording, first)
         recording.listening = true
         publishProgress(recording)
-        // The words being heard now, from an engine that streams them (Whisper streams nothing: this stays quiet).
-        var watched: RecognizerSession = first
-        var partials = watchPartial(recording, first)
-        try {
-            for (samples in recording.queue) {
-                val session = openSession(recording) ?: return
-                if (session !== watched) {
-                    partials.cancel()
-                    watched = session
-                    partials = watchPartial(recording, session)
+        for (samples in recording.queue) {
+            val session = openSession(recording) ?: return
+            watchPartial(recording, session)
+            val result = decodeLock.withLock { session.transcribe(samples) }
+            when (result) {
+                is Outcome.Failed -> {
+                    chunkFailed(recording)
+                    return
                 }
-                val result = decodeLock.withLock { session.transcribe(samples) }
-                when (result) {
-                    is Outcome.Failed -> {
-                        chunkFailed(recording)
-                        return
-                    }
-                    is Outcome.Ok -> {
-                        recording.words += result.value.trim()
-                        recording.partial = "" // confirmed words replace the partial ones
-                        recording.chunksDone++
-                        publishProgress(recording)
-                    }
-                }
-                if (closeBetweenChunks()) closeWarm()
-            }
-        } finally {
-            partials.cancel()
-        }
-    }
-
-    private fun watchPartial(recording: Recording, session: RecognizerSession): Job =
-        scope.launch {
-            session.partial.collect { heard ->
-                val next = heard.trim()
-                if (next != recording.partial) {
-                    recording.partial = next
+                is Outcome.Ok -> {
+                    recording.words += result.value.trim()
+                    recording.partial = "" // confirmed words replace the partial ones
+                    recording.chunksDone++
                     publishProgress(recording)
                 }
             }
+            if (closeBetweenChunks()) closeWarm()
         }
+    }
+
+    /**
+     * The words being heard now, from an engine that streams them (Whisper streams nothing: this stays quiet). One
+     * watch per open session; it ends with the recording.
+     */
+    private fun watchPartial(recording: Recording, session: RecognizerSession) {
+        if (recording.watched === session) return
+        recording.partialWatch?.cancel()
+        recording.watched = session
+        recording.partialWatch =
+            scope.launch {
+                session.partial.collect { heard ->
+                    val next = heard.trim()
+                    if (next != recording.partial) {
+                        recording.partial = next
+                        publishProgress(recording)
+                    }
+                }
+            }
+    }
 
     private fun publishProgress(recording: Recording) {
         if (current !== recording || recording.over) return
@@ -368,7 +371,13 @@ public class VoiceController(
             if (recording.stopping) {
                 VoiceState.Writing(recording.text)
             } else {
-                VoiceState.Listening(recording.since, recording.start.mode, recording.chunksDone, recording.text, recording.partial)
+                VoiceState.Listening(
+                    recording.since,
+                    recording.start.mode,
+                    recording.chunksDone,
+                    recording.text,
+                    recording.partial,
+                )
             }
     }
 
@@ -428,6 +437,7 @@ public class VoiceController(
     /** Under [lane]. */
     private suspend fun endRecording(recording: Recording) {
         recording.over = true
+        recording.partialWatch?.cancel()
         current = null
         mutableLevel.value = 0f
         withContext(NonCancellable) { audio.endCapture() }

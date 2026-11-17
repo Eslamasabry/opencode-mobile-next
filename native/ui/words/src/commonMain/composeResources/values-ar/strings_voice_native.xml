@@ -9,4 +9,8 @@
     <string name="voiceNativeReadAloud">اقرأ بصوت عالٍ</string>
     <string name="voiceNativePartial">تم تنزيل %1$s من %2$s</string>
     <string name="voiceNativePhoneRecognizer">التعرّف على الكلام في الهاتف</string>
+    <string name="kitVoiceDiscard">تجاهل التسجيل</string>
+    <string name="kitVoiceUseWords">ضع الكلمات في مربع الرسالة</string>
+    <string name="kitVoiceSendSpoken">أرسل ما قلته</string>
+    <string name="kitVoiceListeningFor">جارٍ الاستماع، %1$s</string>
 </resources>

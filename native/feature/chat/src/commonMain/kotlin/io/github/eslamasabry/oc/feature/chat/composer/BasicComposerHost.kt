@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.RowScope
+import io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerRecorder
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitFieldQuietRange
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -962,6 +966,8 @@ public fun BasicComposer(
         // the finger where the hold began.
         val recording = voice?.recording(voiceField)
         val tapRecording = recording != null && recording.dictating && !recording.held
+        val recorderPart: (@Composable RowScope.() -> Unit)? =
+            if (recording != null && voice != null) ({ voice.Recorder(voiceField, Modifier.weight(1f)) }) else null
         val inlineMic = if (voiceActive) inlineAtStart && !tapRecording else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
@@ -1088,6 +1094,12 @@ public fun BasicComposer(
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
         KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = true) { stacked ->
+            // While dictating, the hands-free voice mode or a reply read aloud, the box itself is the recorder (its
+            // row in the place of the plus and the chips); dictated words still forming are drawn quieter in the field.
+            CompositionLocalProvider(
+                LocalKitComposerRecorder provides recorderPart,
+                LocalKitFieldQuietRange provides recording?.unconfirmed,
+            ) {
             KitComposerBox(
                 running = RunTailRules.boxRunning(RunTailRules.tail(busy, chrome.stopping(), waitingRequest)),
                 stacked = stacked,
@@ -1097,9 +1109,6 @@ public fun BasicComposer(
                     modelPart()
                 },
                 fieldEnd = { if (stopShown) stopPart() },
-                recorder =
-                    if (recording != null && voice != null) ({ voice.Recorder(voiceField, Modifier.weight(1f)) })
-                    else null,
                 above = {
                     // A dictation that ended with something to say (nothing heard, the microphone is off, it failed,
                     // no speech model) says it here, inside the box, with its way forward.
@@ -1201,8 +1210,6 @@ public fun BasicComposer(
                             },
                             labelShown = false,
                             framed = false,
-                            // Dictation streams into the box (owner 2026-11-17): words still forming are quieter.
-                            quietRange = voice?.unconfirmed(voiceField),
                             focusRequester = focus,
                             enabled =
                                 if (editorReady && state.draft.ready) KitEnabled.Enabled
@@ -1265,8 +1272,11 @@ public fun BasicComposer(
                                         label = recording?.sendLabel ?: sendLabel,
                                         onClick = { recording?.sendNow?.invoke() },
                                         enabled =
-                                            if (sendReady && !state.sending && recording?.sendNow != null) KitEnabled.Enabled
-                                            else KitEnabled.Disabled(stringResource(Res.string.kitVoiceTranscribing)),
+                                            if (sendReady && !state.sending && recording?.sendNow != null) {
+                                                KitEnabled.Enabled
+                                            } else {
+                                                KitEnabled.Disabled(stringResource(Res.string.kitVoiceTranscribing))
+                                            },
                                         modifier = Modifier.testTag("chat-send-button"),
                                     )
                                 else if (stopsFirst && typed && sendReady)
@@ -1311,6 +1321,7 @@ public fun BasicComposer(
                         )
                 },
             )
+            }
         }
         }
     }

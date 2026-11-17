@@ -251,11 +251,6 @@ public fun KitField(
     framed: Boolean = true,
     /** Flutter KitField.composer: center text in the control target and omit an empty footer. */
     composer: Boolean = false,
-    /**
-     * Words in the value still forming (UTF-16 indices; dictation streaming into the message box, owner 2026-11-17):
-     * drawn in the quieter text colour until they are confirmed. Paint only: the value and its selection are unchanged.
-     */
-    quietRange: IntRange? = null,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -309,7 +304,6 @@ public fun KitField(
                 // Flutter `InputDecoration.labelText`: a label standing in the empty box keeps the body face, even
                 // over a monospaced value (kit_confirm_sheet.dart:556-560); only a given placeholder follows the kind.
                 placeholderIsLabel = placeholder == null && !labelShown,
-                quietRange = quietRange,
             )
         }
         val disabledNote = error == null && !enabled.isEnabled
@@ -400,7 +394,6 @@ private fun FieldBox(
     framed: Boolean = true,
     composer: Boolean = false,
     placeholderIsLabel: Boolean = false,
-    quietRange: IntRange? = null,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -648,9 +641,10 @@ private fun FieldBox(
                     multilineLines.last.coerceAtLeast(multilineLines.first.coerceAtLeast(1)),
             )
         else TextFieldLineLimits.SingleLine
+    // Dictation streaming into the message box (owner 2026-11-17): the words still forming, quieter until confirmed.
     val quietInk = colors.text2
     val quiet =
-        quietRange?.let { range ->
+        LocalKitFieldQuietRange.current?.let { range ->
             OutputTransformation {
                 val from = range.first.coerceIn(0, length)
                 val to = (range.last + 1).coerceIn(from, length)
@@ -776,3 +770,11 @@ private fun rememberFieldLook(ownFill: Color, selected: Boolean): FieldLook {
         )
     return FieldLook(look, style.style == Style.Solid)
 }
+
+/**
+ * Words in a [KitField]'s value still forming (UTF-16 indices; dictation streaming into the message box, owner
+ * 2026-11-17): the field draws them in the quieter text colour until they are confirmed. Paint only: the value and its
+ * selection are unchanged. The host provides it around the one field it is for; null (the default) draws nothing quiet.
+ */
+public val LocalKitFieldQuietRange: androidx.compose.runtime.ProvidableCompositionLocal<IntRange?> =
+    androidx.compose.runtime.compositionLocalOf { null }

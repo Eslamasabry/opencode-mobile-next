@@ -1,6 +1,20 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -75,24 +89,38 @@ public enum class KitRecorderStage {
     /** Hands-free voice mode: the agent is working on the reply; a calm progress and the words. */
     Waiting,
 
-    /** Hands-free voice mode between turns (paused, the reply ready): the words say what is next, the bars lie still. */
+    /** Hands-free voice mode between turns (paused, the reply ready): the words say what is next. */
     Resting,
 }
 
 /**
+ * What the recorder row says: its [stage], the stage in words ([status]: "Listening…", "Writing down what you said…"),
+ * the time ([elapsed], "0:05"), the spoken line while listening ([announcement]: the stage plus the time at sensible
+ * steps, so a screen reader hears the time without a tick every second), and [attention] (a held finger slid away:
+ * letting go cancels).
+ */
+@androidx.compose.runtime.Immutable
+public data class KitRecorderLine(
+    val stage: KitRecorderStage,
+    val status: String,
+    val elapsed: String? = null,
+    val announcement: String? = null,
+    val attention: Boolean = false,
+)
+
+/**
  * The message box while the person dictates (owner 2026-11-17, "the box itself becomes the recorder"): one row INSIDE
  * the box, never a second box. A round ✕ at the start ([cancel]: the words said are thrown away), the live waveform
- * drawn from [level] with the time ([elapsed]) beside it, and a round ✓ at the end ([accept]: the words land in the box,
- * editable). The box's own Send keeps its place and is the third action; nothing here is a text link.
+ * drawn from [level] with the time beside it, and a round ✓ at the end ([accept]: the words land in the box, editable).
+ * The box's own Send keeps its place and is the third action; nothing here is a text link.
  *
- * [status] names the real stage ("Listening…", "Writing down what you said…"); it is drawn while starting, held and
- * transcribing, and is always the row's polite live region, with [announcement] (the stage plus the time at sensible
- * steps) replacing it while listening so a screen reader hears the time without a tick every second.
+ * The [line]'s status names the real stage; it is drawn while starting, held, transcribing, speaking, waiting and
+ * resting, and is always the row's polite live region (the announcement replaces it while listening).
  *
  * The same row serves the hands-free voice mode (no [accept]: it sends by itself; [cancel] ends the mode) with its
  * listening, speaking and waiting stages, and "Read aloud" ([cancel] stops reading). One look for one thing.
  *
- * States: starting, listening, held (cancel armed = [attention]), transcribing, speaking, waiting, resting
+ * States: starting, listening, held (cancel armed = attention), transcribing, speaking, waiting, resting
  * Text: frame (the status and the time; at most 1.3)
  * Cap: the box's own (it lives inside the message box)
  * Motion: the waveform scrolls with each level the microphone reports (no frame loop; still in silence); transcribing
@@ -100,17 +128,12 @@ public enum class KitRecorderStage {
  */
 @Composable
 public fun KitVoiceRecorderRow(
-    stage: KitRecorderStage,
-    status: String,
+    line: KitRecorderLine,
     modifier: Modifier = Modifier,
-    elapsed: String? = null,
-    announcement: String? = null,
     level: (() -> Float)? = null,
-    attention: Boolean = false,
     cancel: KitLineAction? = null,
     accept: KitLineAction? = null,
 ) {
-    val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     Row(
         modifier
@@ -120,73 +143,77 @@ public fun KitVoiceRecorderRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (cancel != null) RecorderDisc(cancel, KitIcons.close, TextTone.Secondary, VOICE_RECORDER_CANCEL_TAG)
-        // The spoken half: one polite live region with the stage (and, while listening, the time at sensible steps).
-        val spoken = if (stage == KitRecorderStage.Listening) announcement ?: status else status
-        Row(
-            Modifier.weight(1f)
-                .padding(horizontal = Space.S2.dp)
-                .semantics {
-                    liveRegion = LiveRegionMode.Polite
-                    contentDescription = spoken
-                },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
-            val working = stage == KitRecorderStage.Transcribing || stage == KitRecorderStage.Waiting
-            KitSwap(working, Modifier.weight(1f)) { writing ->
-                if (writing) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                    ) {
-                        if (KitMotion.state.ambientLoops) KitWorkingMark(colors.accent, size = tokens.smallIcon.dp)
-                        KitText(
-                            status,
-                            Modifier.weight(1f).testTag(VOICE_RECORDER_STATUS_TAG).clearAndSetSemantics {},
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                            kind = KitTextKind.Frame,
-                            maxLines = 2,
-                        )
-                    }
-                } else {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                    ) {
-                        // Listening shows the voice itself; the other stages say what is happening first.
-                        if (stage != KitRecorderStage.Listening)
-                            KitText(
-                                status,
-                                Modifier.weight(1f, fill = false).testTag(VOICE_RECORDER_STATUS_TAG).clearAndSetSemantics {},
-                                role = TypeRole.Secondary,
-                                tone = if (attention) TextTone.Attention else TextTone.Secondary,
-                                kind = KitTextKind.Frame,
-                                maxLines = 2,
-                            )
-                        KitVoiceWave(
-                            level = level.takeIf { stage == KitRecorderStage.Listening || stage == KitRecorderStage.Held },
-                            attention = attention,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            }
-            if (elapsed != null && !working)
-                KitText(
-                    elapsed,
-                    Modifier.testTag(VOICE_RECORDER_TIME_TAG),
-                    role = TypeRole.Caption,
-                    tone = if (attention) TextTone.Attention else TextTone.Secondary,
-                    kind = KitTextKind.Frame,
-                    maxLines = 1,
-                    tabular = true,
-                )
-        }
+        RecorderMiddle(line, level, Modifier.weight(1f))
         if (accept != null) RecorderDisc(accept, KitIcons.check, TextTone.Accent, VOICE_RECORDER_ACCEPT_TAG)
     }
+}
+
+/** The row's middle: the waveform or the calm progress, the stage in words, the time; one polite live region. */
+@Composable
+private fun RecorderMiddle(line: KitRecorderLine, level: (() -> Float)?, modifier: Modifier) {
+    val stage = line.stage
+    val spoken = if (stage == KitRecorderStage.Listening) line.announcement ?: line.status else line.status
+    val tone = if (line.attention) TextTone.Attention else TextTone.Secondary
+    Row(
+        modifier
+            .padding(horizontal = Space.S2.dp)
+            .semantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = spoken
+            },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        val working = stage == KitRecorderStage.Transcribing || stage == KitRecorderStage.Waiting
+        KitSwap(working, Modifier.weight(1f)) { writing ->
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                if (writing && KitMotion.state.ambientLoops) {
+                    KitWorkingMark(LocalKitColors.current.accent, size = LocalKitTokens.current.smallIcon.dp)
+                }
+                // Listening shows the voice itself; the other stages say what is happening first.
+                if (stage != KitRecorderStage.Listening) {
+                    KitText(
+                        line.status,
+                        Modifier.weight(1f, fill = writing)
+                            .testTag(VOICE_RECORDER_STATUS_TAG)
+                            .clearAndSetSemantics {},
+                        role = TypeRole.Secondary,
+                        tone = tone,
+                        kind = KitTextKind.Frame,
+                        maxLines = 2,
+                    )
+                }
+                if (!writing) {
+                    val live = stage == KitRecorderStage.Listening || stage == KitRecorderStage.Held
+                    KitVoiceWave(
+                        level = level.takeIf { live },
+                        attention = line.attention,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+        val elapsed = line.elapsed
+        if (elapsed != null && !working) RecorderTime(elapsed, tone)
+    }
+}
+
+/** The time since listening began, in figures that keep their width. */
+@Composable
+private fun RecorderTime(elapsed: String, tone: TextTone) {
+    KitText(
+        elapsed,
+        Modifier.testTag(VOICE_RECORDER_TIME_TAG),
+        role = TypeRole.Caption,
+        tone = tone,
+        kind = KitTextKind.Frame,
+        maxLines = 1,
+        tabular = true,
+    )
 }
 
 /**
@@ -276,8 +303,8 @@ internal class WaveRing {
 
 /**
  * One of the recorder's round buttons: the composer's 40 dp disc (as Send's) in a 48 dp target, on the style's control
- * face nested in the box (Brutal's edge, never a second shadow). Only Send is filled with the accent, so ✓ and Send never
- * look alike: ✓ is the accent glyph on the quiet disc.
+ * face nested in the box (Brutal's edge, never a second shadow). Only Send is filled with the accent, so ✓ and Send
+ * never look alike: ✓ is the accent glyph on the quiet disc.
  */
 @Composable
 private fun RecorderDisc(action: KitLineAction, icon: ImageVector, tone: TextTone, tag: String) {
@@ -300,7 +327,10 @@ private fun RecorderDisc(action: KitLineAction, icon: ImageVector, tone: TextTon
         Box(Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp).then(look.modifier))
         KitTappable(
             onClick = action.onClick,
-            modifier = Modifier.size(tokens.minTarget.dp).semantics { contentDescription = action.semanticsLabel ?: action.label },
+            modifier =
+                Modifier.size(tokens.minTarget.dp).semantics {
+                    contentDescription = action.semanticsLabel ?: action.label
+                },
             enabled = action.enabled,
             disabledReason = action.disabledReason,
             shape = KitShapeId.Circle,
@@ -323,3 +353,71 @@ public const val VOICE_RECORDER_ACCEPT_TAG: String = "kit-voice-recorder-accept"
 public const val VOICE_RECORDER_STATUS_TAG: String = "kit-voice-recorder-status"
 public const val VOICE_RECORDER_TIME_TAG: String = "kit-voice-recorder-time"
 public const val VOICE_WAVE_TAG: String = "kit-voice-wave"
+
+/**
+ * The recorder row the message box shows in the place of its plus and chips while the person dictates, runs the
+ * hands-free voice mode or hears a reply read aloud ([KitComposerBox] reads it). Null: the box's own row. The host
+ * provides it around the box (`CompositionLocalProvider(LocalKitComposerRecorder provides { … })`).
+ */
+public val LocalKitComposerRecorder: ProvidableCompositionLocal<(@Composable RowScope.() -> Unit)?> =
+    compositionLocalOf { null }
+
+/**
+ * The box's own row ⇄ the recorder row. The recorder grows from the end (where the mic stood) as it fades in, on the
+ * SpatialFast spring, and shrinks back the same way (Full); Calm cross-fades; Off is instant. The leaving row ignores
+ * touches and is hidden from TalkBack while it goes.
+ */
+@Composable
+internal fun KitRecorderSwap(
+    recorder: (@Composable RowScope.() -> Unit)?,
+    modifier: Modifier,
+    content: @Composable RowScope.(rec: (@Composable RowScope.() -> Unit)?) -> Unit,
+) {
+    // The leaving recorder keeps drawing what it last drew while it goes.
+    val last = remember { arrayOfNulls<@Composable RowScope.() -> Unit>(1) }
+    if (recorder != null) last[0] = recorder
+    val state = KitMotion.state
+    if (state.reduced) {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) { content(recorder) }
+        return
+    }
+    val specs = KitMotion.specs
+    AnimatedContent(
+        targetState = recorder != null,
+        modifier = modifier,
+        contentAlignment = Alignment.CenterEnd,
+        transitionSpec = {
+            val appear = fadeIn(specs.pace(KitPace.Quick))
+            val vanish = fadeOut(specs.pace(KitPace.Quick))
+            when {
+                state.travels && targetState ->
+                    (appear + expandHorizontally(specs.spatialFast(), expandFrom = Alignment.End)).togetherWith(vanish)
+                state.travels ->
+                    appear.togetherWith(vanish + shrinkHorizontally(specs.spatialFast(), shrinkTowards = Alignment.End))
+                else -> appear.togetherWith(vanish)
+            }
+        },
+        label = "kit.composer.recorder",
+    ) { recording ->
+        Row(
+            Modifier.fillMaxWidth().recorderLeaving(transition.targetState == EnterExitState.PostExit),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            content(if (recording) recorder ?: last[0] else null)
+        }
+    }
+}
+
+/** The row on its way out is picture only: no touch lands on it and TalkBack does not read it (as the kit's swaps). */
+private fun Modifier.recorderLeaving(leaving: Boolean): Modifier =
+    if (!leaving) {
+        this
+    } else {
+        this.clearAndSetSemantics {}.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+                }
+            }
+        }
+    }
