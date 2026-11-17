@@ -130,6 +130,16 @@ class ReleaseGate(unittest.TestCase):
                 self.assertEqual(code, 1, out)
                 self.assertIn('candidate', out)
 
+    def test_B_CI_304_newest_missing_or_mismatched_verdict_cannot_use_an_older_candidate(self):
+        """B-CI-304: unknown run coverage cannot silently rescue an older candidate."""
+        for proof in (None, verdict(self.sha, lane=''), verdict('0' * 40)):
+            with self.subTest(proof=proof):
+                self.runs([self.green(), {'id': 2, 'createdAt': '2026-01-02T10:00:00Z', 'verdict': proof}])
+                self.smoke()
+                code, out = self.release()
+                self.assertEqual(code, 1, out)
+                self.assertIn('candidate', out)
+
     def test_a_name_that_already_has_a_release_tag_is_refused_and_the_tag_is_named(self):
         # Every public release needs a version name no earlier release used (tags v<name>+<build>).
         self.runs([self.green()])
