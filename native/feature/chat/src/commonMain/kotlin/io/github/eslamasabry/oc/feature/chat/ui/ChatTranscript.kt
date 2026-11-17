@@ -1364,7 +1364,11 @@ private fun ChatRow(
                         val limitForSignIn = reply?.let { LocalLimitSwitchReply.current?.limitSwitch?.get(row.turnId) }
                         val setUpForSignIn = LocalAgentSetUpReply.current?.needs?.get(row.turnId)
                         val signInAgainEarly =
-                            if (setUpForSignIn == null && limitForSignIn == null && AgentErrorText.signInExpired(reason))
+                            if (
+                                setUpForSignIn == null &&
+                                    limitForSignIn == null &&
+                                    AgentErrorText.signInExpired(reason)
+                            )
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
                         if (signInAgainEarly == null)
