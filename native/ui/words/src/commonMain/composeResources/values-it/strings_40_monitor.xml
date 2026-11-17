@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Posta in arrivo</string>
+    <string name="monitorInboxEmpty">Nessuna richiesta o promemoria dai server osservati in questo momento.</string>
+    <string name="monitorInboxFailedRun">Un'esecuzione richiede attenzione</string>
+    <string name="monitorInboxOpening">Apertura della richiesta…</string>
+    <string name="monitorInboxSettings">Scegli in Notifiche quali server salvati tenere sotto controllo.</string>
+    <string name="monitorInboxSwitchBody">Apri la richiesta su questo server. Il lavoro già in esecuzione sugli altri tuoi server continua.</string>
+</resources>

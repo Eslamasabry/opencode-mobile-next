@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">Prompt conservato</string>
+    <string name="composerKeptRestoreRefused">Impossibile ripristinare questo prompt. È ancora tra i prompt conservati. Aprilo di nuovo per ripristinarlo.</string>
+    <string name="composerKeptMissingFiles">Impossibile ripristinare questi file: %1$s. Il prompt conservato è invariato.</string>
+</resources>
