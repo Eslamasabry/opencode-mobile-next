@@ -106,12 +106,15 @@ public class UmamiSender(
             if (!enabled) return
             val at = now()
             val details = device()
-            val mapped = umamiEvent(name, props, page, website, build, details, at) ?: return
+            val source = UmamiSource(website, build, details)
+            val mapped = umamiEvent(name, props, page, source, at) ?: return
             if (name == "screen_view") page = umamiPages.getValue(mapped.payload.data.getValue("screen"))
             // First consent may happen after coldStart. Establish its session without replaying pre-consent events.
             if (!opened) {
                 opened = true
-                if (name != "app_open") append(umamiEvent("app_open", mapOf("kind" to "cold"), page, website, build, details, at)!!, at)
+                if (name != "app_open") {
+                    append(umamiEvent("app_open", mapOf("kind" to "cold"), page, source, at)!!, at)
+                }
             }
             append(mapped, at)
             dirty = true
@@ -235,7 +238,7 @@ public class UmamiSender(
                 UmamiBuild(p.data["version"] ?: continue, p.data["build"] ?: continue, p.tag)
             } catch (_: IllegalArgumentException) { continue }
             val mapped = umamiEvent(p.name ?: "screen_view", p.data - setOf("version", "build"), knownPage,
-                website, oldBuild, UmamiDevice(p.language, p.screen, userAgent), item.atMs) ?: continue
+                UmamiSource(website, oldBuild, UmamiDevice(p.language, p.screen, userAgent)), item.atMs) ?: continue
             // Restored ordinals are negative; new producer ordinals are nonnegative. Nothing is sent from this field.
             restored += StoredEvent(-(index.toLong() + 1), item.atMs, mapped)
         }

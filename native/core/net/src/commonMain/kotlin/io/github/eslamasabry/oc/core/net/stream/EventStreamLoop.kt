@@ -25,6 +25,26 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
 import kotlin.time.Clock
 
+private const val DEFAULT_READ_BUFFER_BYTES = 16 * 1024
+
+/** How a stream dials: the pace, the kind of host, whether it resumes, and the size of one read. */
+public class StreamPlan(
+    public val policy: BackoffPolicy,
+    public val hostClass: HostClass,
+    public val resume: ResumeMode = ResumeMode.None,
+    public val readBufferBytes: Int = DEFAULT_READ_BUFFER_BYTES,
+)
+
+/** What the loop watches while it runs; each is bound at graph level and defaults to "nothing special". */
+public class StreamInputs(
+    /** Plan 13 §11.1, bound from `LinkDemand` at graph level; picks the hidden pace (A2). */
+    public val visibility: StateFlow<Visibility> = MutableStateFlow(Visibility.Foreground),
+    /** N4-D21, from `GatewaySpec.reconnectAllowed`: whether the loop may dial again on its own. */
+    public val reconnectAllowed: StateFlow<Boolean> = MutableStateFlow(true),
+    /** Battery Saver is on: a background-watching loop retries at the slow pace at once. */
+    public val batterySaver: StateFlow<Boolean> = MutableStateFlow(false),
+)
+
 /**
  * One event stream with reconnect (plan 04 §6.2; port of Flutter `Api2EventStream`).
  *
@@ -65,20 +85,20 @@ import kotlin.time.Clock
  */
 public class EventStreamLoop(
     private val connector: SseConnector,
-    private val policy: BackoffPolicy,
-    private val hostClass: HostClass,
+    private val plan: StreamPlan,
     private val gate: NetworkGate,
     private val clock: Clock,
     private val random: Random,
-    /** Plan 13 §11.1, bound from `LinkDemand` at graph level; picks the hidden pace (A2). */
-    private val visibility: StateFlow<Visibility> = MutableStateFlow(Visibility.Foreground),
-    private val resume: ResumeMode = ResumeMode.None,
-    private val readBufferBytes: Int = 16 * 1024,
-    /** N4-D21, from `GatewaySpec.reconnectAllowed`: whether the loop may dial again on its own. */
-    private val reconnectAllowed: StateFlow<Boolean> = MutableStateFlow(true),
-    /** Battery Saver is on: a background-watching loop retries at the slow pace at once. */
-    private val batterySaver: StateFlow<Boolean> = MutableStateFlow(false),
+    private val inputs: StreamInputs = StreamInputs(),
 ) {
+    private val policy: BackoffPolicy get() = plan.policy
+    private val hostClass: HostClass get() = plan.hostClass
+    private val resume: ResumeMode get() = plan.resume
+    private val readBufferBytes: Int get() = plan.readBufferBytes
+    private val visibility: StateFlow<Visibility> get() = inputs.visibility
+    private val reconnectAllowed: StateFlow<Boolean> get() = inputs.reconnectAllowed
+    private val batterySaver: StateFlow<Boolean> get() = inputs.batterySaver
+
     private val retry = Channel<Unit>(Channel.CONFLATED)
     private val failed = Channel<Unit>(Channel.CONFLATED)
 

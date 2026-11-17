@@ -57,14 +57,11 @@ class EventStreamLoopTest {
         val visibility = MutableStateFlow(Visibility.Foreground)
         val loop = EventStreamLoop(
             connector = connector,
-            policy = policy,
-            hostClass = host,
+            plan = StreamPlan(policy, host, resume),
             gate = NetworkGate(network),
             clock = VirtualClock(this),
             random = Random(7),
-            visibility = visibility,
-            resume = resume,
-            reconnectAllowed = reconnectAllowed,
+            inputs = StreamInputs(visibility = visibility, reconnectAllowed = reconnectAllowed),
         )
         return Harness(this, connector, network, loop, visibility)
     }
