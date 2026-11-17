@@ -50,7 +50,7 @@ for r in runs:
     elif lane not in ('candidate', 'fast', 'full', 'full (push)', 'goldens', 'apk only', 'custom tasks'):
         print(f'release verdict: FAIL, run {rid} has unknown candidate coverage (older green runs do not count)')
         sys.exit(1)
-    elif lane in ('goldens', 'apk only', 'custom tasks') or v.get('custom_tasks'):
+    elif lane != 'candidate' or v.get('custom_tasks'):
         skipped.append(f'{rid}: {lane} run')
     elif not (v.get('compile') and v.get('desktop_tests') and v.get('android_unit') and v.get('candidate_complete') is True):
         print(f'release verdict: FAIL, the newest counting run {rid} (candidate lane) has incomplete candidate evidence '
