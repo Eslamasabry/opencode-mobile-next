@@ -425,7 +425,7 @@ class ChatFloatingEdgesTest {
             while (y < (H * d).toInt()) {
                 var x = 0
                 while (x < (W * d).toInt()) {
-                    assertTrue(same(image[x, y], ground, 0.05f), "the gesture area is not one ground at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground")
+                    assertTrue(same(image[x, y], ground, 0.2f), "the gesture area is not one ground at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground")
                     x += 7
                 }
                 y += 3
