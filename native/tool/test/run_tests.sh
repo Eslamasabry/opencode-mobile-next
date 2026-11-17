@@ -504,6 +504,56 @@ expect "B-BUILD-024 detekt lane script: exits 0 and leaves the report" 0 "${na[@
 expect "B-BUILD-024 detekt lane script: the report names the new finding per module" 0 \
   python3 -c "import json,sys; r=json.load(open('native/reports/detekt.json')); sys.exit(0 if r['findings']=={':ui:kit':1} and r['totals'][':core:common']==1 else 1)"
 
+# ------------------------------------------------------------------ ci_verdict.sh / verdict_log.sh (CI egress, B-CI-307)
+# A stand-in for gh: FAKE_DOWNLOAD=refuse answers the artifact download as GitHub does when the account is over its egress
+# limit; FAKE_LOG=refuse does the same for the logs; FAKE_CUSTOM is the custom.json the run "produced".
+FAKE_GH="$TMP_ROOT/fake-gh.sh"
+cat >"$FAKE_GH" <<'SH'
+#!/usr/bin/env bash
+args="$*"
+custom=${FAKE_CUSTOM:-'{"failed":false,"gradle_ran":true}'}
+case "$args" in
+  *"--json status"*) echo '{"status":"completed"}' ;;
+  *"--json jobs"*) echo '{"jobs":[{"name":"custom tasks","conclusion":"success"}],"displayTitle":"Native CI"}' ;;
+  *"run download"*)
+    if [ "${FAKE_DOWNLOAD:-ok}" = refuse ]; then echo "HTTP 503: Egress is over the account limit" >&2; exit 1; fi
+    while (($#)); do [ "$1" = -D ] && dir="$2"; shift; done
+    mkdir -p "$dir/report-custom"; printf '%s' "$custom" >"$dir/report-custom/custom.json" ;;
+  *"--log"*)
+    if [ "${FAKE_LOG:-ok}" = refuse ]; then echo "HTTP 503: Egress is over the account limit" >&2; exit 1; fi
+    printf 'custom tasks\tCustom report\t2026-11-17T00:00:00.0000000Z OC-VERDICT custom.json %s\n' "$custom" ;;
+  *) echo "fake gh: unexpected $args" >&2; exit 9 ;;
+esac
+SH
+chmod +x "$FAKE_GH"
+R="$(new_repo)"; cd "$R" || exit 1
+cv=(env GH="$FAKE_GH" TREE="$R" OC_VERDICT_DIR="$TMP_ROOT/verdicts" bash native/tool/ci/ci_verdict.sh 123)
+cp "$TOOL_SRC/ci/summary.py" native/tool/ci/summary.py 2>/dev/null
+expect "B-CI-307 verdict: artifacts that download are read as before (PASS)" 0 "${cv[@]}"
+expect_no_out "B-CI-307 verdict: no 'from logs' when the artifacts came" 'read from logs'
+expect "B-CI-307 verdict: a refused download falls back to the logs and still gives the verdict" 0 env FAKE_DOWNLOAD=refuse "${cv[@]}"
+expect_out "B-CI-307 verdict: and says plainly that it read the logs" 'verdict read from logs'
+expect "B-CI-307 verdict: a FAIL in the logs is a FAIL, not hidden by the fallback" 1 env FAKE_DOWNLOAD=refuse FAKE_CUSTOM='{"failed":true,"gradle_ran":true}' "${cv[@]}"
+expect "B-CI-307 verdict: no artifacts and no logs is its own exit code (4), never pass or fail" 4 env FAKE_DOWNLOAD=refuse FAKE_LOG=refuse "${cv[@]}"
+expect_out "B-CI-307 verdict: with the exact words" 'verdict unreadable: download refused \(egress limit\)'
+mkdir -p "$TMP_ROOT/vl" && echo '{"b": 2,  "a": [1]}' >"$TMP_ROOT/vl/custom.json"
+expect "B-CI-307 verdict log: prints each report file as one marked line" 0 bash native/tool/ci/verdict_log.sh "$TMP_ROOT/vl"
+expect_out "B-CI-307 verdict log: the line carries the file name and compact JSON" 'OC-VERDICT custom.json \{"b":2,"a":\[1\]\}'
+
+# ------------------------------------------------------------------ base_check.sh (CI egress, B-CI-308): a too-old base
+R="$(new_repo)"; cd "$R" || exit 1
+git branch old
+for i in $(seq 1 31); do mkdir -p native/core/m$i; printf 'plugins { id("oc.kmp.library") }\n' >native/core/m$i/build.gradle.kts; done
+git add -A && git commit -q -m "chore(tool): the line moves on [skip ci]" -m "Base." && git branch -f line HEAD
+echo 'val x = 1' >native/core/common/X.kt; git add -A && git commit -q -m "chore(tool): the branch changes one module [skip ci]" -m "Base."
+expect "B-CI-308 base check: a work branch whose base makes the lane run ALL is refused" 1 native/tool/ci/base_check.sh old line native/my-branch
+expect_out "B-CI-308 base check: the refusal says what happened" 'base=old makes the fast lane run ALL modules'
+expect_out "B-CI-308 base check: and carries the exact command to rerun" 'gh workflow run native-ci.yml --ref native/my-branch -f lane=fast -f runner=github -f base=[0-9a-f]{12}'
+expect "B-CI-308 base check: the line itself is only warned" 0 native/tool/ci/base_check.sh old line native/glass-next
+expect_out "B-CI-308 base check: the warning is plain" 'warning: base=old'
+expect "B-CI-308 base check: the branch's merge-base is accepted" 0 native/tool/ci/base_check.sh "$(git merge-base HEAD line)" line native/my-branch
+expect "B-CI-308 base check: so is a base with a small diff" 0 native/tool/ci/base_check.sh HEAD~1 line native/my-branch
+
 # ------------------------------------------------------------------------------------ qa/layout_baseline.sh (E02-S13)
 R="$(new_repo)"; cd "$R" || exit 1
 expect "E02-S13 layout ratchet: before any baseline exists it is the adoption bootstrap" 0 native/tool/qa/layout_baseline.sh --base native/main
