@@ -46,6 +46,18 @@ class AndroidComposerInsertedPictures(
         }
     }
 
+    /** minSdk 26: no readNBytes; read in chunks and stop one byte past [max]. */
+    private fun readUpTo(input: java.io.InputStream, max: Int): java.io.ByteArrayOutputStream {
+        val out = java.io.ByteArrayOutputStream()
+        val chunk = ByteArray(64 * 1024)
+        while (out.size() <= max) {
+            val n = input.read(chunk)
+            if (n < 0) break
+            out.write(chunk, 0, n)
+        }
+        return out
+    }
+
     private fun readOne(uri: Uri, described: String?): Outcome<InsertedPicture> {
         val resolver = application.contentResolver
         val mime = resolver.getType(uri) ?: described
@@ -54,14 +66,7 @@ class AndroidComposerInsertedPictures(
         return try {
             val stream = resolver.openInputStream(uri) ?: return Outcome.Failed(Failure.Device())
             stream.use { input ->
-                // minSdk 26: no readNBytes; read in chunks and stop one byte past the limit.
-                val out = java.io.ByteArrayOutputStream()
-                val chunk = ByteArray(64 * 1024)
-                while (out.size() <= max) {
-                    val n = input.read(chunk)
-                    if (n < 0) break
-                    out.write(chunk, 0, n)
-                }
+                val out = readUpTo(input, max)
                 if (out.size() > max) Outcome.Failed(Failure.Media(MediaProblem.ClipboardImageTooLarge))
                 else Outcome.Ok(InsertedPicture(mime, out.toByteArray()))
             }

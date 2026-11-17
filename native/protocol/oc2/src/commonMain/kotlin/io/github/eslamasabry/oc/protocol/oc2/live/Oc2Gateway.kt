@@ -467,12 +467,14 @@ internal class Oc2Gateway(
         val live =
             EventStreamLoop(
                 connector,
-                BackoffPolicy(500, 16_000, true, null, stallTimeoutMs = 45_000),
-                AddressRules.classify(origin.host),
+                StreamPlan(
+                    BackoffPolicy(500, 16_000, true, null, stallTimeoutMs = 45_000),
+                    AddressRules.classify(origin.host),
+                ),
                 NetworkGate(network),
                 clock,
                 Random.Default,
-                reconnectAllowed = spec.reconnectAllowed,
+                StreamInputs(reconnectAllowed = spec.reconnectAllowed),
             )
         loop = live
         stream =

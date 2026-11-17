@@ -62,6 +62,7 @@ class EdgeLightPanelMapTest {
 
     @AfterTest fun unpin() { Numbers.pinned = null }
 
+    @Suppress("LongParameterList") // a test builder: every input has a default, a test names the ones it changes
     private fun row(
         key: String,
         state: LampState,

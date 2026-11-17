@@ -125,8 +125,12 @@ class AppEntryContractTest {
         val space = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ManageSpaceActivity.kt")
         assertTrue(space.contains("class ManageSpaceActivity : ComponentActivity()"))
         assertTrue(space.contains("setContent {") && !space.contains("setContentView("))
-        // The idle-start trampoline shows nothing: no content, finishes, and its theme turns the highlight off.
         val idle = activities.single { it.second.getAttributeNS(ns, "name") == ".IdleStartActivity" }.second
+        assertIdleStartTrampoline(idle)
+    }
+
+    /** The idle-start trampoline shows nothing: no content, finishes, and its theme turns the highlight off. */
+    private fun assertIdleStartTrampoline(idle: Element) {
         assertEquals("@style/NativeTrampolineTheme", idle.getAttributeNS(ns, "theme"))
         assertEquals("true", idle.getAttributeNS(ns, "noHistory"))
         val idleSource = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/IdleStartActivity.kt")

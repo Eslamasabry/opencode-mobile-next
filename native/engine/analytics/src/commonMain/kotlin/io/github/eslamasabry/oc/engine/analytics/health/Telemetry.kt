@@ -38,6 +38,8 @@ import kotlinx.coroutines.launch
 public data class TelemetryConsent(val usage: Boolean = false, val crashes: Boolean = false)
 
 /** What the app reports. Never throws, never blocks. Every send is dropped unless its consent is on. */
+// One method per kind of report: the single door every feature reports through (one consent gate).
+@Suppress("TooManyFunctions")
 public interface Telemetry : Reporting {
     /** Usage and app health: the events, Performance traces and device context. */
     public val usage: StateFlow<Boolean>
@@ -214,6 +216,8 @@ public class MemoryTelemetryReportStore : TelemetryReportStore {
  * Until then the vendor keeps its own last setting (off in the manifest on a first run).
  */
 @OptIn(ExperimentalAtomicApi::class)
+// The implementation of that one door; its inputs are the graph's injected parts, each with a default for tests.
+@Suppress("TooManyFunctions", "LongParameterList")
 public class TelemetryService(
     private val vendor: TelemetryVendor,
     override val available: Boolean,
@@ -472,25 +476,29 @@ public class TelemetryService(
             val out = LinkedHashMap<String, String>()
             for ((key, v) in raw.entries.take(MAX_KEYS)) {
                 if (!NAME.matches(key)) continue
-                val value =
-                    when (v) {
-                        is Int, is Long -> v.toString()
-                        is Boolean -> v.toString()
-                        is String -> v
-                        else -> null
-                    } ?: continue
-                if (!TOKEN.matches(value)) continue
-                val listed = key in healthKeyWords || key in healthKeyPatterns
-                if (listed) {
-                    if (cleanListed(mapOf(key to value), healthKeyWords, healthKeyPatterns).isEmpty()) continue
-                } else if (ReportRedactor.value(value) != value || LeakDetector.detect(key) != null) {
-                    // Stricter than Flutter's KitRedact check: a host, address, path, id or credential shape drops.
-                    continue
-                }
+                val value = keyToken(v)?.takeIf { TOKEN.matches(it) } ?: continue
+                if (keyDropped(key, value)) continue
                 out[key] = value
             }
             return out
         }
+
+        private fun keyToken(v: Any?): String? =
+            when (v) {
+                is Int, is Long -> v.toString()
+                is Boolean -> v.toString()
+                is String -> v
+                else -> null
+            }
+
+        /** A listed key must hold a listed value; any other key drops on a host, address, path, id or secret shape. */
+        private fun keyDropped(key: String, value: String): Boolean =
+            if (key in healthKeyWords || key in healthKeyPatterns) {
+                cleanListed(mapOf(key to value), healthKeyWords, healthKeyPatterns).isEmpty()
+            } else {
+                // Stricter than Flutter's KitRedact check: a host, address, path, id or credential shape drops.
+                ReportRedactor.value(value) != value || LeakDetector.detect(key) != null
+            }
 
         /** [raw] reduced to the keys of [words] or [patterns] whose value is listed or matches. The rest drops. */
         public fun cleanListed(

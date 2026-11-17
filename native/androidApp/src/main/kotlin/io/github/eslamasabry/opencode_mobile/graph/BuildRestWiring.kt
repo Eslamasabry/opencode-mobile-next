@@ -33,6 +33,8 @@ internal object ShadeReplyAnswers {
  */
 @dev.zacsweers.metro.ContributesIntoSet(dev.zacsweers.metro.AppScope::class, binding = dev.zacsweers.metro.binding<io.github.eslamasabry.oc.engine.delivery.PromptTracing>())
 @dev.zacsweers.metro.Inject
+// One method per step of the prompt timeline that the delivery port names; each only forwards to the timeline.
+@Suppress("TooManyFunctions")
 class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace) :
     io.github.eslamasabry.oc.engine.delivery.PromptTracing {
     private val timeline = io.github.eslamasabry.oc.engine.diagnostics.perf.PromptTimeline(trace)

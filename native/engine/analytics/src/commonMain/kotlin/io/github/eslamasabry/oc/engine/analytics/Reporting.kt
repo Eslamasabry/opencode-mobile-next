@@ -83,10 +83,15 @@ public object ReportRedactor {
         val text = raw.trim()
         if (text.isEmpty() || text.length > MAX_BREADCRUMB) return REDACTED
         val words = text.split(' ')
-        return if (words.all { it.isNotEmpty() && value(it) == it && it.all { c -> c.isLowerCase() || c.isDigit() || c == '_' || c == '-' || c == '.' } }) {
+        return if (words.all { plainWord(it) }) {
             text
         } else {
             REDACTED
         }
     }
+
+    private fun plainWord(word: String): Boolean =
+        word.isNotEmpty() && value(word) == word && word.all(::plainChar)
+
+    private fun plainChar(c: Char): Boolean = c.isLowerCase() || c.isDigit() || c in "_-."
 }

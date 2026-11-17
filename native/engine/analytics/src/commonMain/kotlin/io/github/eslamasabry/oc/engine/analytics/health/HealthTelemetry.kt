@@ -172,6 +172,7 @@ public class JankMeter(
      * [judged] of them judged against their deadline (first draws left out), [late] of those past it; [hz] the refresh
      * rate they were given (0 when unknown).
      */
+    @Suppress("LongParameterList") // one number per counter the platform reports; all but two have defaults
     public fun onFrames(total: Int, slow: Int, frozen: Int = 0, judged: Int = total, late: Int = slow, hz: Double = 0.0) {
         if (!running) return
         val word = if (screen == ProductScreen.Chat) interaction()?.takeIf { it in HealthWords.interactions } else null
@@ -262,6 +263,8 @@ public data class JankReport(
  * jank, memory pressure, the custom keys and the last process end. Every part waits for its own consent and does
  * nothing while that is off.
  */
+// One start-up wiring for every health report, each part waiting on its own consent; the inputs are injected parts.
+@Suppress("TooManyFunctions", "LongParameterList")
 public class HealthTelemetry(
     private val telemetry: Telemetry,
     private val platform: HealthPlatform,

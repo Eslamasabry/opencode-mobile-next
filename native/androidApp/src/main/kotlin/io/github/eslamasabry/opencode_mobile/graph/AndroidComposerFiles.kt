@@ -179,41 +179,23 @@ class AndroidComposerFiles(
             LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_START) camera.hostStarted() }
         activity.lifecycle.addObserver(started)
         val cameraIntake =
-            AttachmentIntake(
-                activity = CameraActivityResults(dispatchers, camera.requests, ::cameraLauncher),
-                permissions =
-                    CameraPermissionGate(activity, dispatchers, permissionLauncher, permissionRequests, permissionRef),
-                reader = ContentReader(activity, dispatchers),
-                codec = AndroidImageCodec(activity.contentResolver, dispatchers),
-                clipboard = AndroidClipboardImages(activity, dispatchers),
-                captures = camera.captures,
-                photos = camera.record,
-                words = ComposerFileWords,
-                dispatchers = dispatchers,
-                clock = clock,
+            cameraIntake(
+                activity,
+                CameraPermissionGate(activity, dispatchers, permissionLauncher, permissionRequests, permissionRef),
             )
         val intake =
-            AttachmentIntake(
-                activity =
-                    PickerActivityResults(
-                        activity,
-                        dispatchers,
-                        launcher,
-                        requests,
-                        requestRef,
-                        photoLauncher,
-                        photoRequests,
-                        photoRef,
-                    ),
-                permissions = UnavailablePermissions,
-                reader = ContentReader(activity, dispatchers),
-                codec = AndroidImageCodec(activity.contentResolver, dispatchers),
-                clipboard = AndroidClipboardImages(activity, dispatchers),
-                captures = UnavailableCaptures,
-                photos = GalleryPhotos,
-                words = ComposerFileWords,
-                dispatchers = dispatchers,
-                clock = clock,
+            pickerIntake(
+                activity,
+                PickerActivityResults(
+                    activity,
+                    dispatchers,
+                    launcher,
+                    requests,
+                    requestRef,
+                    photoLauncher,
+                    photoRequests,
+                    photoRef,
+                ),
             )
         return Host(
             activity,
@@ -230,6 +212,36 @@ class AndroidComposerFiles(
         )
     }
 
+    private fun cameraIntake(activity: ComponentActivity, permissions: CameraPermissionGate) =
+        AttachmentIntake(
+            activity = CameraActivityResults(dispatchers, camera.requests, ::cameraLauncher),
+            permissions = permissions,
+            reader = ContentReader(activity, dispatchers),
+            codec = AndroidImageCodec(activity.contentResolver, dispatchers),
+            clipboard = AndroidClipboardImages(activity, dispatchers),
+            captures = camera.captures,
+            photos = camera.record,
+            words = ComposerFileWords,
+            dispatchers = dispatchers,
+            clock = clock,
+        )
+
+    private fun pickerIntake(activity: ComponentActivity, results: PickerActivityResults) =
+        AttachmentIntake(
+            activity = results,
+            permissions = UnavailablePermissions,
+            reader = ContentReader(activity, dispatchers),
+            codec = AndroidImageCodec(activity.contentResolver, dispatchers),
+            clipboard = AndroidClipboardImages(activity, dispatchers),
+            captures = UnavailableCaptures,
+            photos = GalleryPhotos,
+            words = ComposerFileWords,
+            dispatchers = dispatchers,
+            clock = clock,
+        )
+
+    // The activity-scoped launchers and intakes the composer's file actions use, built once in one place.
+    @Suppress("LongParameterList")
     private class Host(
         val activity: ComponentActivity,
         val intake: AttachmentIntake,

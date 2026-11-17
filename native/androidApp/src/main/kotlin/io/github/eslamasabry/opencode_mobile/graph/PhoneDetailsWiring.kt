@@ -148,6 +148,10 @@ class NativePhoneDetails(
                     }
                 }
         }
+        watchSetup()
+    }
+
+    private fun watchSetup() {
         scope.launch {
             setup.toolsChanged.drop(1).collect {
                 if (visible) refresh()

@@ -50,10 +50,13 @@ class LiveCallsTest {
             }
         }
         try {
-            for (round in 1..ROUNDS) {
-                if (thrown.get() != null) break
-                rememberOneCall()
-                System.gc()
+            repeat(ROUNDS) {
+                if (thrown.get() == null) {
+                    rememberOneCall()
+                    // The collector running while the closer cancels is the whole subject of this test.
+                    @Suppress("ExplicitGarbageCollectionCall")
+                    System.gc()
+                }
             }
         } finally {
             stop.set(true)

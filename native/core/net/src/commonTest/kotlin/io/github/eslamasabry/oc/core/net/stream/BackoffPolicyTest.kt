@@ -89,6 +89,7 @@ class BackoffPolicyTest {
             val slow = policy.delayMs(1, Random(seed), hidden, batterySaver = true)
             assertTrue(slow != null && slow in policy.hiddenRangeMs, "saver retry waited $slow")
         }
-        assertEquals(1_000L, policy.delayMs(1, Random(1), Visibility.Foreground, batterySaver = true), "foreground is unchanged")
+        val foreground = policy.delayMs(1, Random(1), Visibility.Foreground, batterySaver = true)
+        assertEquals(1_000L, foreground, "foreground is unchanged")
     }
 }

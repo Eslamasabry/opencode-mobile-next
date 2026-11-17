@@ -151,23 +151,27 @@ class PhoneLoopbackProbeTest {
                     override fun connectFailed(uri: URI, address: SocketAddress, error: java.io.IOException) {}
                 })
                 try {
-                    val client = quotaCollectorReadinessClient()
-                    try {
-                        client.newCall(Request.Builder()
-                            .url("http://127.0.0.1:${origin.port}/provider-quota")
-                            .header("Authorization", AUTH).build()).execute().use {
-                            assertEquals(200, it.code, "the quota helper's bootstrap health read is direct")
-                        }
-                    } finally {
-                        client.dispatcher.cancelAll()
-                        client.connectionPool.evictAll()
-                        client.dispatcher.executorService.shutdown()
-                    }
+                    val status = bootstrapHealthStatus(origin)
+                    assertEquals(200, status, "the quota helper's bootstrap health read is direct")
                     assertEquals(0, proxy.requests.get(), "no bootstrap credential reaches the system proxy")
                 } finally {
                     ProxySelector.setDefault(previous)
                 }
             }
+        }
+    }
+
+    /** The status of the quota helper's bootstrap health read, made through the readiness client. */
+    private fun bootstrapHealthStatus(origin: Listener): Int {
+        val client = quotaCollectorReadinessClient()
+        try {
+            return client.newCall(Request.Builder()
+                .url("http://127.0.0.1:${origin.port}/provider-quota")
+                .header("Authorization", AUTH).build()).execute().use { it.code }
+        } finally {
+            client.dispatcher.cancelAll()
+            client.connectionPool.evictAll()
+            client.dispatcher.executorService.shutdown()
         }
     }
 

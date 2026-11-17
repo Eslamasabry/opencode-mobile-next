@@ -43,6 +43,9 @@ public data class UmamiBuild(val version: String, val build: String, val tag: St
 
 public data class UmamiDevice(val language: String, val screen: String, val userAgent: String)
 
+/** Where an event comes from: the site it counts under, the build that sent it and the device that sent it. */
+public data class UmamiSource(val website: String, val build: UmamiBuild, val device: UmamiDevice)
+
 public data class UmamiPage(val url: String, val title: String)
 
 /** The existing closed screen categories, each with one address and English title. */
@@ -72,11 +75,10 @@ public fun umamiEvent(
     name: String,
     props: Map<String, String>,
     page: UmamiPage,
-    website: String,
-    build: UmamiBuild,
-    device: UmamiDevice,
+    source: UmamiSource,
     atMs: Long,
 ): UmamiEvent? {
+    val (website, build, device) = source
     if (page !in umamiPages.values || atMs < 0 || atMs / 1000 > 2_147_483_647) return null
     val event = ProductEvent.entries.firstOrNull { it.wire == name } ?: return null
     val clean = cleanProductProps(event, props) ?: return null

@@ -126,6 +126,8 @@ class NativeSharedProjectFolders(
  * (folders a Flutter build granted) still count only on the current port; a remote server's list never counts.
  */
 internal object PhoneSharedRoots {
+    // The six facts about the phone profile that decide which folders count; every caller already holds all six.
+    @Suppress("LongParameterList")
     fun of(
         owner: String?,
         addresses: Map<String, String>,

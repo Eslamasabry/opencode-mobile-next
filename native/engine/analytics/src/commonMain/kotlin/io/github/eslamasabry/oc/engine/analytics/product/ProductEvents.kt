@@ -455,9 +455,11 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
     }
 
 /** Flutter's `_healthSchema`: the B-190 events, every value from [HealthWords] or [HealthRanges]. */
-private fun healthSchema(): Map<String, Map<String, Set<String>>> {
-    val screens = ProductScreen.entries.map { it.wire }.toSet()
-    return mapOf(
+private fun healthSchema(): Map<String, Map<String, Set<String>>> = healthChatSchema() + healthSystemSchema()
+
+/** The B-190 events about a connection and a chat turn. */
+private fun healthChatSchema(): Map<String, Map<String, Set<String>>> =
+    mapOf(
         ProductEvent.ConnAttempt.wire to
             mapOf(
                 "server_kind" to HealthWords.serverKinds,
@@ -505,6 +507,12 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
             ),
         ProductEvent.QueueFlush.wire to
             mapOf("sent" to HealthRanges.counts.toSet(), "failed" to HealthRanges.counts.toSet()),
+    )
+
+/** The B-190 events about the phone's set-up, its services, updates and speed. */
+private fun healthSystemSchema(): Map<String, Map<String, Set<String>>> {
+    val screens = ProductScreen.entries.map { it.wire }.toSet()
+    return mapOf(
         ProductEvent.LinuxSetupStep.wire to
             mapOf(
                 "step" to HealthWords.linuxSteps,
@@ -569,16 +577,17 @@ public fun cleanProductProps(event: ProductEvent, props: Map<String, Any?>): Map
     val out = LinkedHashMap<String, String>()
     for ((key, raw) in props) {
         val values = allowed[key] ?: continue
-        val value =
-            when (raw) {
-                is Boolean -> raw.toString()
-                is ProductValue -> raw.wire
-                is String -> raw
-                is Int -> raw.toString()
-                else -> null
-            } ?: continue
-        if (value !in values || !productValueIsSafe(value)) continue
+        val value = productWord(raw)?.takeIf { it in values && productValueIsSafe(it) } ?: continue
         out[key] = value
     }
     return out
 }
+
+private fun productWord(raw: Any?): String? =
+    when (raw) {
+        is Boolean -> raw.toString()
+        is ProductValue -> raw.wire
+        is String -> raw
+        is Int -> raw.toString()
+        else -> null
+    }

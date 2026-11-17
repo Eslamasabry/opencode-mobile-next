@@ -290,6 +290,26 @@ class AndroidPlansSource(
     private fun openCodeServers() =
         stores.profiles.profiles.value.filter { it.profile.backend == BackendKind.OpenCode2 }
 
+    private fun openCodeSignIns() =
+        OpenCodeSignInSource(
+            servers = {
+                openCodeServers().map {
+                    SignInServer(
+                        it.id.raw,
+                        isOpenCode = true,
+                        requiresPasswordReentry = it.reentry.password,
+                    )
+                }
+            },
+            isReadable = { id -> registry.live.value[ProfileId(id)] != null },
+            providers = { server ->
+                val gateway = registry.live.value[ProfileId(server.id)]?.session?.server
+                gateway?.providers()?.map { response ->
+                    response.providers.map { ConnectedProvider(it.id, it.name) }
+                } ?: Failure.Refused(RefusalReason.StaleScope).failed()
+            },
+        )
+
     /**
      * Built after the preference store is ready (the engine reads its cache in its constructor).
      */
@@ -329,25 +349,7 @@ class AndroidPlansSource(
             )
         reader = computer
         publishReaders()
-        val signIns =
-            OpenCodeSignInSource(
-                servers = {
-                    openCodeServers().map {
-                        SignInServer(
-                            it.id.raw,
-                            isOpenCode = true,
-                            requiresPasswordReentry = it.reentry.password,
-                        )
-                    }
-                },
-                isReadable = { id -> registry.live.value[ProfileId(id)] != null },
-                providers = { server ->
-                    val gateway = registry.live.value[ProfileId(server.id)]?.session?.server
-                    gateway?.providers()?.map { response ->
-                        response.providers.map { ConnectedProvider(it.id, it.name) }
-                    } ?: Failure.Refused(RefusalReason.StaleScope).failed()
-                },
-            )
+        val signIns = openCodeSignIns()
         val widget =
             UsageWidgetFeed(
                 store = stores.prefs,

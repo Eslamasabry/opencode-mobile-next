@@ -160,69 +160,14 @@ class GlassProofActivity : ComponentActivity() {
         val source = rememberKitFrostState()
         var menu by remember { mutableStateOf(false) }
         LaunchedEffect(started) {
-            if (!started || !runs) return@LaunchedEffect
-            if ((scene == "menu" || scene == "join-menu") && hold) {
-                menu = true
-                delay(1_500)
-                done = true
-                return@LaunchedEffect
-            }
-            if (scene == "menu" || scene == "join-menu") {
-                // The owner's path (2026-11-09): a reply's ⋯ menu opening and closing over the chat, eight times
-                // (join-menu: the bar's menu, one body of glass with the bar).
-                repeat(8) {
-                    menu = true
-                    delay(900)
-                    menu = false
-                    delay(700)
-                }
-                done = true
-                return@LaunchedEffect
-            }
-            // Down and back up twice at a steady reading-scroll speed, then four quick flick-speed passes.
-            repeat(2) {
-                list.glide(9_000f, 3_000)
-                list.glide(-9_000f, 3_000)
-            }
-            repeat(4) {
-                list.glide(4_000f, 450)
-                list.glide(-4_000f, 450)
-            }
-            done = true
+            if (started && runs) playScript(scene, list) { menu = it }
         }
         KitScreen(
             page = true,
             overlayChrome = true,
             frost = if (scene != "list") source else null,
-            topBar = {
-                Box(Modifier.fillMaxWidth()) {
-                    KitTopBar(if (done) "Done" else if (started) "Scrolling" else "Ready")
-                    if (scene == "join-menu") {
-                        KitMenu(
-                            expanded = menu,
-                            items = listOf(KitMenuItem("Find", {}), KitMenuItem("Rename conversation", {}), KitMenuItem("Fork conversation", {}), KitMenuItem("Copy transcript", {})),
-                            onDismissRequest = { menu = false },
-                            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp),
-                        ) { KitText("More", KitTextRole.Supporting, Modifier.padding(12.dp)) }
-                    }
-                }
-            },
-            bottom =
-                if (scene != "list") {
-                    {
-                        // join-pill: the message box is one slab of glass the jump pill joins.
-                        if (scene == "join-pill") KitReportBottomSlab(true)
-                        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                            Row { KitChip("Ask first", icon = KitIcons.add); KitChip("build · Model") }
-                            val shape = RoundedCornerShape(28.dp)
-                            val body = if (scene == "join-pill") rememberKitLiquidJoinBody("bottom") else null
-                            val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)
-                            Box(Modifier.fillMaxWidth().height(64.dp).kitLiquidJoinRest(body, shape).then(face ?: Modifier)) {
-                                KitText("Ask OpenCode…", KitTextRole.Supporting, Modifier.align(Alignment.CenterStart).padding(start = 24.dp))
-                            }
-                        }
-                    }
-                } else null,
+            topBar = { ProofTopBar(scene, menu) { menu = false } },
+            bottom = if (scene != "list") ({ ProofBottom(scene) }) else null,
             edges = KitScreenEdges.Bleed,
         ) {
             Box(Modifier.fillMaxSize()) {
@@ -243,27 +188,103 @@ class GlassProofActivity : ComponentActivity() {
                         }
                     }
                     items(200, key = { it }, contentType = { "row" }) { i ->
-                        if (scene != "list") {
-                            KitText(
-                                if (i % 2 == 0) "Question $i: what does the parser do with an empty line in a fenced block?"
-                                else "Answer $i: it keeps the line inside the block and closes the fence only on a line of three backticks.",
-                                KitTextRole.Body,
-                                Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                            )
-                        } else {
-                            KitSurface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
-                                Column {
-                                    KitText("Refactor step $i: tidy the parser module", KitTextRole.Body)
-                                    KitText("app · My computer · 1h ago", KitTextRole.Supporting)
-                                }
-                            }
-                        }
+                        ProofRow(i, scene)
                     }
                 }
                 if (scene == "join-pill") {
                     KitJumpPill("Jump to latest", {}, visible = true, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp), backdrop = source)
                 }
                 if (scene != "chat" && !scene.startsWith("join-")) KitFab("New", KitIcons.add, {}, Modifier.align(Alignment.BottomEnd).padding(16.dp), backdrop = source)
+            }
+        }
+    }
+
+    /** The scripted run for [scene]: the menu opening and closing, or the list scrolled at two speeds. */
+    private suspend fun playScript(scene: String, list: LazyListState, setMenu: (Boolean) -> Unit) {
+        val menuScene = scene == "menu" || scene == "join-menu"
+        if (menuScene && hold) {
+            setMenu(true)
+            delay(1_500)
+            done = true
+            return
+        }
+        if (menuScene) {
+            // The owner's path (2026-11-09): a reply's ⋯ menu opening and closing over the chat, eight times
+            // (join-menu: the bar's menu, one body of glass with the bar).
+            repeat(8) {
+                setMenu(true)
+                delay(900)
+                setMenu(false)
+                delay(700)
+            }
+            done = true
+            return
+        }
+        // Down and back up twice at a steady reading-scroll speed, then four quick flick-speed passes.
+        repeat(2) {
+            list.glide(9_000f, 3_000)
+            list.glide(-9_000f, 3_000)
+        }
+        repeat(4) {
+            list.glide(4_000f, 450)
+            list.glide(-4_000f, 450)
+        }
+        done = true
+    }
+
+    @Composable
+    private fun ProofBottom(scene: String) {
+        // join-pill: the message box is one slab of glass the jump pill joins.
+        if (scene == "join-pill") KitReportBottomSlab(true)
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            Row { KitChip("Ask first", icon = KitIcons.add); KitChip("build · Model") }
+            val shape = RoundedCornerShape(28.dp)
+            val body = if (scene == "join-pill") rememberKitLiquidJoinBody("bottom") else null
+            val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)
+            Box(Modifier.fillMaxWidth().height(64.dp).kitLiquidJoinRest(body, shape).then(face ?: Modifier)) {
+                val inset = Modifier.align(Alignment.CenterStart).padding(start = 24.dp)
+                KitText("Ask OpenCode…", KitTextRole.Supporting, inset)
+            }
+        }
+    }
+
+    @Composable
+    private fun ProofRow(i: Int, scene: String) {
+        if (scene != "list") {
+            val line =
+                if (i % 2 == 0) {
+                    "Question $i: what does the parser do with an empty line in a fenced block?"
+                } else {
+                    "Answer $i: it keeps the line inside the block and " +
+                        "closes the fence only on a line of three backticks."
+                }
+            KitText(
+                line,
+                KitTextRole.Body,
+                Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+        } else {
+            KitSurface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+                Column {
+                    KitText("Refactor step $i: tidy the parser module", KitTextRole.Body)
+                    KitText("app · My computer · 1h ago", KitTextRole.Supporting)
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun ProofTopBar(scene: String, menu: Boolean, onDismissMenu: () -> Unit) {
+        Box(Modifier.fillMaxWidth()) {
+            KitTopBar(if (done) "Done" else if (started) "Scrolling" else "Ready")
+            if (scene == "join-menu") {
+                val items = listOf("Find", "Rename conversation", "Fork conversation", "Copy transcript")
+                KitMenu(
+                    expanded = menu,
+                    items = items.map { KitMenuItem(it, {}) },
+                    onDismissRequest = onDismissMenu,
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp),
+                ) { KitText("More", KitTextRole.Supporting, Modifier.padding(12.dp)) }
             }
         }
     }

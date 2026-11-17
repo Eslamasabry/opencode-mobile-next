@@ -63,7 +63,8 @@ internal object TrustEnforcement {
 /**
  * Plan 04 §4.6, in this order; each refusal is thrown before `chain.proceed`, so nothing is sent:
  * user info → `CredentialsInUrl`; another origin (also any redirect target) → `OriginChanged`; `http` without consent,
- * or to a public address (B-177) → `CleartextNotConfirmed`; `http` with a pin → `PinNeedsHttps`; a pin that already mismatched → `Certificate(Changed)`.
+ * or to a public address (B-177) → `CleartextNotConfirmed`; `http` with a pin → `PinNeedsHttps`; a pin that already
+ * mismatched → `Certificate(Changed)`.
  * A handshake that fails on the pin, or on certificate validity, comes back as `Certificate(...)` too.
  */
 internal class TrustGateInterceptor(

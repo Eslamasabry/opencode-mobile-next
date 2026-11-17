@@ -1021,20 +1021,7 @@ class NativeServerIntegrations(
         override fun add(name: String, url: String, executable: String, arguments: String) {
             if (!state.value.add || !state.value.mayAdd || !valid()) return
             val remote = url.isNotBlank()
-            if (
-                remote == executable.isNotBlank() ||
-                    name.isBlank() ||
-                    name.length > 200 ||
-                    name.any { it.isISOControl() }
-            ) {
-                failed(Failure.Rejected(null))
-                return
-            }
-            if (
-                remote &&
-                    (links.check(url, LinkOrigin.ServerContent) is LinkDecision.Refuse ||
-                        !safeMcpUrl(url))
-            ) {
+            if (!mcpInputAcceptable(name, url, executable, remote)) {
                 failed(Failure.Rejected(null))
                 return
             }
@@ -1059,6 +1046,12 @@ class NativeServerIntegrations(
                 return
             }
             mutation { it.addMcpServer(draft, addScope) }
+        }
+
+        private fun mcpInputAcceptable(name: String, url: String, executable: String, remote: Boolean): Boolean {
+            if (remote == executable.isNotBlank() || name.isBlank() || name.length > 200) return false
+            if (name.any { it.isISOControl() }) return false
+            return !remote || (links.check(url, LinkOrigin.ServerContent) !is LinkDecision.Refuse && safeMcpUrl(url))
         }
 
         override fun dismiss() {
