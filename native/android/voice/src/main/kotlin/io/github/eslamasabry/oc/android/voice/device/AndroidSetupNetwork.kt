@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.os.Build
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetworkSource
 import kotlinx.coroutines.channels.awaitClose
@@ -123,17 +122,33 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
             null
         }
 
-    private fun underlyingOf(cm: ConnectivityManager, caps: NetworkCapabilities): List<UnderlyingNetworkFacts>? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
-        val networks = caps.underlyingNetworks ?: return null
-        return networks.mapNotNull { network ->
-            val c = cm.getNetworkCapabilities(network) ?: return@mapNotNull null
-            UnderlyingNetworkFacts(
-                internet = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
-                validated = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
-                cellular = c.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR),
-                notMetered = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
+    /**
+     * The networks a VPN can be riding on: connected non-VPN networks whose transports the VPN's own record carries
+     * (Android copies its underlying networks' transports onto it). Their own NOT_METERED answers decide; the name of
+     * the transport only picks which networks to read. Empty or unreadable: null (the VPN's own record decides).
+     */
+    @Suppress("DEPRECATION")
+    private fun underlyingOf(cm: ConnectivityManager, vpn: NetworkCapabilities): List<UnderlyingNetworkFacts>? {
+        val kinds =
+            intArrayOf(
+                NetworkCapabilities.TRANSPORT_WIFI,
+                NetworkCapabilities.TRANSPORT_CELLULAR,
+                NetworkCapabilities.TRANSPORT_ETHERNET,
+                NetworkCapabilities.TRANSPORT_BLUETOOTH,
             )
-        }
+        val found =
+            cm.allNetworks.mapNotNull { network ->
+                val c = cm.getNetworkCapabilities(network) ?: return@mapNotNull null
+                if (c.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return@mapNotNull null
+                val own = kinds.filter { c.hasTransport(it) }
+                if (own.isEmpty() || own.any { !vpn.hasTransport(it) }) return@mapNotNull null
+                UnderlyingNetworkFacts(
+                    internet = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
+                    validated = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
+                    cellular = c.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR),
+                    notMetered = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
+                )
+            }
+        return found.ifEmpty { null }
     }
 }
