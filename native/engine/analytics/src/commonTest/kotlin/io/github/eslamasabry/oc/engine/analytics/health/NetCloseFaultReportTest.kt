@@ -27,7 +27,8 @@ class NetCloseFaultReportTest {
     @Test
     fun `B-PROTO-148 a failed close is one non-fatal with its fixed name and the error's kind only`() = runTest {
         val vendor = RecordingVendor()
-        service(vendor, crashes = true).reportNetClientCloseFailed(NoSuchElementException("https://host.example/x?token=1"))
+        val fault = NoSuchElementException("https://host.example/x?token=1") // a message that must never leave
+        service(vendor, crashes = true).reportNetClientCloseFailed(fault)
         assertEquals(
             listOf("net_client_close_failed" to mapOf("failure" to "no_such_element_exception")),
             vendor.failures.toList(),
