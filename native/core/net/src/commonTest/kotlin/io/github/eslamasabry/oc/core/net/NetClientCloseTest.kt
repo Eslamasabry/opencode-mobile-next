@@ -45,9 +45,9 @@ class NetClientCloseTest {
 
     @Test
     fun `B-PROTO-148 closing a client never throws when releasing its engine fails`() = runTest {
-        // Every place that closes a connection (disconnect, switch, remove, a probe's finally) ends in NetClient.close():
-        // a teardown fault there would reach a view model's coroutine, which has no handler, and take the app down
-        // (line run 44079402632 met such a fault in a test's teardown).
+        // Every place that closes a connection (disconnect, switch, remove, a probe's finally) ends in
+        // NetClient.close(): a teardown fault there would reach a view model's coroutine, which has no handler, and
+        // take the app down (line run 44079402632 met such a fault in a test's teardown).
         val net =
             NetClient(
                 HttpClient(MockEngine { respond("ok", HttpStatusCode.OK) }),

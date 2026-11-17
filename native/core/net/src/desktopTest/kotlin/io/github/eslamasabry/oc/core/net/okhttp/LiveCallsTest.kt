@@ -50,10 +50,11 @@ class LiveCallsTest {
             }
         }
         try {
-            for (round in 1..ROUNDS) {
-                if (thrown.get() != null) break
-                rememberOneCall()
-                System.gc()
+            repeat(ROUNDS) {
+                if (thrown.get() == null) {
+                    rememberOneCall()
+                    collectGarbage()
+                }
             }
         } finally {
             stop.set(true)
@@ -61,6 +62,10 @@ class LiveCallsTest {
         }
         assertNull(thrown.get(), "closing threw ${thrown.get()}")
     }
+
+    /** This test is about the collector clearing a weak key mid-close, so it asks for a collection on purpose. */
+    @Suppress("ExplicitGarbageCollectionCall")
+    private fun collectGarbage() = System.gc()
 
     /** One finished call that nothing else holds, so the collector may take it. */
     private fun rememberOneCall() {
