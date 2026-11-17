@@ -229,6 +229,11 @@ public class HttpClientFactory(
     private val engines: EngineFactory,
     /** Attached to every client this factory builds (B-BUILD-026: the diagnostics tracer). */
     private val observers: List<HttpCallObserver> = emptyList(),
+    /**
+     * Told when releasing a closed client's engine failed (the app reports it as a non-fatal behind the crash-report
+     * switch). Gets the error itself; it must never throw.
+     */
+    private val closeFaults: (Throwable) -> Unit = {},
 ) {
     public fun create(spec: TransportSpec): NetClient {
         val engine = engines.create(spec)
@@ -256,10 +261,12 @@ public class HttpClientFactory(
             terminal = { spec, scope, dispatchers ->
                 engines.openTerminal(engine, spec, scope, dispatchers)
             },
-        ) {
-            engine.close()
-            engines.release(engine)
-        }.also { net -> observers.forEach { net.attach(it) } }
+            closeEngine = {
+                engine.close()
+                engines.release(engine)
+            },
+            closeFault = closeFaults,
+        ).also { net -> observers.forEach { net.attach(it) } }
     }
 
     public companion object {
@@ -286,6 +293,8 @@ public class NetClient(
      * running.
      */
     private val closeEngine: () -> Unit = {},
+    /** Told when [closeEngine] failed, after it was logged; see [HttpClientFactory]'s `closeFaults`. */
+    private val closeFault: (Throwable) -> Unit = {},
 ) {
     /** A single upgrade; every caller obtains its own one-use ticket first. */
     public suspend fun connectSocket(
@@ -396,11 +405,13 @@ public class NetClient(
         closed.store(true)
         http.close()
         // Every disconnect, switch, removal and probe ends here, often in a view model's coroutine with no handler:
-        // a fault while releasing the engine is logged (by its shape) and never takes the app down with it.
+        // a fault while releasing the engine is logged (by its shape), handed to the fault sink (a non-fatal behind
+        // the crash-report switch) and never takes the app down with it.
         try {
             closeEngine()
         } catch (@Suppress("TooGenericExceptionCaught") e: RuntimeException) {
             AppLog.tagged("net").e(e) { "releasing a closed client's engine failed" }
+            closeFault(e)
         }
     }
 }

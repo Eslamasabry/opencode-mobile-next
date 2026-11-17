@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.net.HttpClientFactory
 import io.github.eslamasabry.oc.core.net.okhttp.OkHttpEngineFactory
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.analytics.reportNetClientCloseFailed
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
@@ -141,10 +142,15 @@ object PreviewBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun http(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace): HttpClientFactory =
+    fun http(
+        trace: io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace,
+        reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
+    ): HttpClientFactory =
         HttpClientFactory(
             OkHttpEngineFactory(),
             listOf(io.github.eslamasabry.oc.engine.diagnostics.perf.HttpSpanRecorder(trace, "app")),
+            // A connection whose close failed: one non-fatal behind the crash-report switch (net_client_close_failed).
+            closeFaults = { reporting.reportNetClientCloseFailed(it) },
         )
 
     @Provides @SingleIn(AppScope::class) fun random(): Random = SecureRandom().asKotlinRandom()

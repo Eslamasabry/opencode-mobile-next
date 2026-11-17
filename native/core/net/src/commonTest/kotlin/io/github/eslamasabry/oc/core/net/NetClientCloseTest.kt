@@ -57,4 +57,19 @@ class NetClientCloseTest {
         net.close()
         assertFalse(net.http.isActive, "the client is closed all the same")
     }
+
+    @Test
+    fun `B-PROTO-148 a failed close is handed once to the fault sink, as it happened`() = runTest {
+        val fault = NoSuchElementException()
+        val told = mutableListOf<Throwable>()
+        val net =
+            NetClient(
+                HttpClient(MockEngine { respond("ok", HttpStatusCode.OK) }),
+                { TransportError.Other },
+                closeEngine = { throw fault },
+                closeFault = { told += it },
+            )
+        net.close()
+        assertEquals(listOf<Throwable>(fault), told)
+    }
 }
