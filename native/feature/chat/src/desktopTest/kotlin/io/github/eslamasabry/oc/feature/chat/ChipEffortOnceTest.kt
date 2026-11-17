@@ -77,6 +77,8 @@ class ChipEffortOnceTest {
             phrases = emptyList(),
         )
 
+    private val bare = ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false })
+
     private val chrome =
         ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = {
             io.github.eslamasabry.oc.ui.kit.chip.KitChip(
@@ -93,6 +95,7 @@ class ChipEffortOnceTest {
         scale: Float,
         shot: String?,
         state: BasicComposerUi = ui(),
+        chrome: ComposerChrome = this.chrome,
         check: ComposeUiTest.() -> Unit,
     ) =
         runDesktopComposeUiTest(360, 200) {
@@ -120,6 +123,8 @@ class ChipEffortOnceTest {
     fun `B-CHAT-EFFORT-9 the chip names the model once and nothing is cut at 360 dp, text 1 and 1_3, en and ar`() {
         for (scale in listOf(1f, 1.3f)) for (locale in listOf("en", "ar")) {
             val where = "360 dp, text $scale, $locale"
+            // The picture has the approval chip beside the model, as a real conversation does; the chip shrinks there by
+            // the box's own design, so "whole" is asked of the chip with the box's room to itself.
             scene(locale, scale, "chip-$locale-$scale") {
                 val words = chipWords()
                 assertTrue("Gemini 3.8 Flash (High)" in words, "$where: the chip says the model's own name; it says $words")
@@ -128,6 +133,8 @@ class ChipEffortOnceTest {
                     words.filter { it.contains("·") && it.contains("high", ignoreCase = true) },
                     "$where: the effort is not said a second time",
                 )
+            }
+            scene(locale, scale, null, chrome = bare) {
                 assertFalse(isCut("Gemini 3.8 Flash (High)"), "$where: the model's name is whole")
             }
         }

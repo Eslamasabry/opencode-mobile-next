@@ -1371,7 +1371,6 @@ private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
                 ),
             state.models.variant,
             state.models.agent,
-            levelShown = state.models.variant.takeIf { it.isNotEmpty() }?.let { effortWords(it) }.orEmpty(),
         )
     // One rule (audit 1, f2/x1): the chip says the model's name and nothing else, as the list and the home do. A free
     // model is marked by the list's own quiet "Free" tag; a suffix here appeared only once the free list had loaded.
