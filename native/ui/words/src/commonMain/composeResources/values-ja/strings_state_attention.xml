@@ -3,7 +3,7 @@
 <resources>
     <string name="stateAttentionTitle">アクティビティ</string>
     <string name="stateAttentionRefresh">再読み込み</string>
-    <string name="stateAttentionNeedsYou">対応が必要</string>
+    <string name="stateAttentionNeedsYou">確認が必要</string>
     <string name="stateAttentionHistory">不在時の動き</string>
     <string name="stateAttentionIncomplete">一部のサーバーを確認できていません。保存された状態が古い可能性があります。</string>
     <string name="stateAttentionCorrupt">保存されたアクティビティの一部を読み取れませんでした。このスマートフォンに保持されています。</string>
@@ -15,7 +15,7 @@
     <string name="stateAttentionQuestion">質問の回答待ち</string>
     <string name="stateAttentionForm">フォームの入力待ち</string>
     <string name="stateAttentionFailure">会話の確認が必要です</string>
-    <string name="stateAttentionTeam">チームが対応を待っています</string>
+    <string name="stateAttentionTeam">チームで確認が必要です</string>
     <string name="stateAttentionStale">前回の確認時点</string>
     <string name="stateAttentionAcknowledge">表示中のアクティビティを閉じる</string>
     <string name="stateActReconnect">自動で再接続しました</string>

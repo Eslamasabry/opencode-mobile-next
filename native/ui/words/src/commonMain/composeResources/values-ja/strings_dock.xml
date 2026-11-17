@@ -5,13 +5,13 @@
     <string name="dockWorking">作業中</string>
     <string name="dockWorkingTasks">作業中 · %1$s / %2$s</string>
     <string name="dockThinking">思考中</string>
-    <string name="dockNeedsYou">対応が必要</string>
+    <string name="dockNeedsYou">確認が必要</string>
     <string name="dockFinished">完了</string>
     <string name="dockFailed">失敗</string>
-    <string name="dockChildNeedsYou">%1$sが対応を待っています</string>
+    <string name="dockChildNeedsYou">%1$sで確認が必要です</string>
     <string name="dockChildFailed">%1$sが失敗しました</string>
     <plurals name="dockSubagents">
-        <item quantity="other">%1$s 件のサブエージェント</item>
+        <item quantity="other">%1$s件のサブエージェント</item>
     </plurals>
     <string name="dockOnServer">%1$s上</string>
     <string name="dockStop">停止</string>
@@ -22,7 +22,7 @@
     <string name="dockRestore">元に戻す</string>
     <string name="dockNickname">ドック内の名前</string>
     <plurals name="dockHidden">
-        <item quantity="other">%1$s 件非表示</item>
+        <item quantity="other">%1$s件非表示</item>
     </plurals>
     <string name="dockMoveDock">ドックを移動</string>
     <string name="dockShowDock">ドックを表示</string>
@@ -35,19 +35,19 @@
     <string name="lampLabelWith">ほかの会話、%1$s</string>
     <string name="lampSpokenJoin">%1$s、%2$s</string>
     <plurals name="lampSpokenNeeds">
-        <item quantity="other">%1$s 件で対応が必要です</item>
+        <item quantity="other">%1$s件で確認が必要です</item>
     </plurals>
     <plurals name="lampSpokenFailed">
-        <item quantity="other">%1$s 件が失敗しました</item>
+        <item quantity="other">%1$s件が失敗しました</item>
     </plurals>
     <plurals name="lampSpokenWorking">
-        <item quantity="other">%1$s 件が作業中です</item>
+        <item quantity="other">%1$s件が作業中です</item>
     </plurals>
     <string name="dockModeTitle">ほかの会話</string>
     <string name="dockModeRings">リング</string>
     <string name="dockModeEdgeLight">エッジライト</string>
     <string name="dockModeHidden">非表示</string>
-    <string name="dockModeRingsHint">実行中の会話ごとに 1 つのリングを画面の端に表示します。</string>
+    <string name="dockModeRingsHint">実行中の会話ごとに1つのリングを画面の端に表示します。</string>
     <string name="dockModeEdgeLightHint">画面の端にある小さなライトをタップすると、切り替え用の会話一覧が開きます。</string>
     <string name="dockModeHiddenHint">会話の画面の端に何も表示しません。</string>
     <string name="dockModeAliases">ドック リング エッジライト 切り替え 会話 ほかの会話</string>
@@ -56,28 +56,28 @@
     <string name="edgeLightEdit">編集</string>
     <string name="edgeLightDone">完了</string>
     <string name="edgeLightGroupPinned">固定済み</string>
-    <string name="edgeLightGroupNeedsYou">対応が必要</string>
+    <string name="edgeLightGroupNeedsYou">確認が必要</string>
     <string name="edgeLightGroupFailed">失敗</string>
     <string name="edgeLightGroupWorking">作業中</string>
     <string name="edgeLightGroupDone">完了</string>
     <string name="edgeLightGroupRecent">最近</string>
     <string name="edgeLightHiddenShowAgain">非表示 · %1$s · 再表示</string>
     <string name="edgeLightShowAgain">再表示</string>
-    <string name="edgeLightTasksDone">%2$s 件中 %1$s 件完了</string>
+    <string name="edgeLightTasksDone">%2$s件中 %1$s件完了</string>
     <string name="edgeLightFor">%1$s向け</string>
     <string name="edgeLightThinking">思考中</string>
     <string name="edgeLightWorking">作業中</string>
     <string name="edgeLightDoneWord">完了</string>
     <string name="edgeLightIdleWord">待機中</string>
     <string name="edgeLightFailedWord">失敗</string>
-    <string name="edgeLightWaitingMixed">%1$s 件が対応待ち · %2$s 件が作業中</string>
+    <string name="edgeLightWaitingMixed">%1$s件が対応待ち · %2$s件が作業中</string>
     <string name="edgeLightWaitingToFinish">完了するには回答が必要です</string>
-    <string name="edgeLightPausedAtStep">ステップ %1$s / %2$s で一時停止中（回答待ち）</string>
+    <string name="edgeLightPausedAtStep">ステップ %1$s / %2$sで一時停止中（回答待ち）</string>
     <string name="edgeLightPausedUntilAnswer">回答があるまで一時停止中</string>
     <string name="edgeLightSubAgentOf">%1$sのサブエージェント</string>
-    <string name="edgeLightMoreInAll">「すべての会話」にあと %1$s 件あります</string>
-    <string name="edgeLightMoreSubAgents">ほか %1$s 件</string>
-    <string name="edgeLightMoreInside">中にほか %1$s 件</string>
+    <string name="edgeLightMoreInAll">「すべての会話」にあと %1$s件あります</string>
+    <string name="edgeLightMoreSubAgents">ほか%1$s件</string>
+    <string name="edgeLightMoreInside">中にほか%1$s件</string>
     <string name="edgeLightAsksRun">実行の許可を求めています：%1$s</string>
     <string name="edgeLightAsksEdit">編集の許可を求めています：%1$s</string>
     <string name="edgeLightAsksRead">読み取りの許可を求めています：%1$s</string>
@@ -119,20 +119,20 @@
     <string name="edgeLightFace">会話</string>
     <string name="edgeLightFaceClose">会話を閉じる</string>
     <plurals name="edgeLightFaceNeeds">
-        <item quantity="other">%1$s 件で対応が必要です</item>
+        <item quantity="other">%1$s件で確認が必要です</item>
     </plurals>
     <plurals name="edgeLightFaceFailed">
-        <item quantity="other">%1$s 件が失敗しました</item>
+        <item quantity="other">%1$s件が失敗しました</item>
     </plurals>
     <plurals name="edgeLightFaceWorking">
-        <item quantity="other">%1$s 件が作業中です</item>
+        <item quantity="other">%1$s件が作業中です</item>
     </plurals>
     <plurals name="edgeLightSubAgentsFolded">
-        <item quantity="other">%1$s 件のサブエージェント</item>
+        <item quantity="other">%1$s件のサブエージェント</item>
     </plurals>
     <string name="edgeLightChildLabel">%1$s、%2$sのサブエージェント、%3$s</string>
     <string name="edgeLightChildLabelFact">%1$s、%2$sのサブエージェント、%3$s、%4$s</string>
-    <string name="edgeLightFactOf">%2$s 件中 %1$s 件</string>
+    <string name="edgeLightFactOf">%2$s件中 %1$s件</string>
     <string name="edgeLightActionOn">%1$s：%2$s</string>
     <string name="edgeLightNotStarted">未開始</string>
     <string name="edgeLightShowSubAgents">サブエージェントを表示</string>

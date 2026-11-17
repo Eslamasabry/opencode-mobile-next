@@ -15,7 +15,7 @@
     <string name="stateSetupHistoryUnavailable">保存済みの履歴は利用できません。復旧用に保持されています。</string>
     <string name="stateSetupHistoryEmpty">保存されたセットアップ確認履歴はありません</string>
     <string name="stateSetupRegistryConsent">公開ツールレジストリを閲覧</string>
-    <string name="stateSetupRegistryPrivacy">初期状態ではオフです。再読み込みすると公開リクエストを 1 回送信します。検索語句はレジストリに送られますが、サーバーの認証情報は送られません。一覧が何かを実行したりインストールしたりすることはありません。</string>
+    <string name="stateSetupRegistryPrivacy">初期状態ではオフです。再読み込みすると公開リクエストを1回送信します。検索語句はレジストリに送られますが、サーバーの認証情報は送られません。一覧が何かを実行したりインストールしたりすることはありません。</string>
     <string name="stateSetupRegistrySearch">レジストリを検索</string>
     <string name="stateSetupRegistryRefresh">レジストリを再読み込み</string>
     <string name="stateSetupRegistrySaved">保存済みの一覧を表示</string>

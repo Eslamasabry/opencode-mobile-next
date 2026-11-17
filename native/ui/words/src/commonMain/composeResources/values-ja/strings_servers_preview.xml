@@ -27,5 +27,5 @@
     <string name="serversCreateFailed">会話を始められませんでした。サーバーの設定は引き続き保存されています。</string>
     <string name="serversRemoveFailed">このサーバーを削除できませんでした。保存済みの詳細は変更されていません。</string>
     <string name="serversSignInFailed">サーバーがこのサインイン情報を受け入れませんでした。ユーザー名とパスワードを確認してください。</string>
-    <string name="serverHttpsRequired">このアドレスは公開インターネット上にあるためHTTPSが必要です。通常のHTTPではパスワードが暗号化されずに送信されます。アドレスをhttps://で始まる形式に変更するか、Tailscaleまたはご自身のネットワークを使ってサーバーに接続してください。</string>
+    <string name="serverHttpsRequired">このアドレスは公開インターネット上にあるためHTTPSが必要です。通常のHTTPではパスワードが暗号化されずに送信されます。アドレスをhttps://で始まる形式に変更するか、Tailscaleまたはネットワークを使ってサーバーに接続してください。</string>
 </resources>

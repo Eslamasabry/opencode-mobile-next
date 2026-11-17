@@ -2,17 +2,17 @@
 <resources>
     <string name="phoneSetupLinuxWhy">ほかのすべてがこの中で動きます。</string>
     <string name="phoneSetupEssentialsTitle">Git、SSH、証明書</string>
-    <string name="phoneSetupEssentialsShort">Git と SSH</string>
-    <string name="phoneSetupEssentialsWhy">エージェントは Git と SSH を使ってプロジェクトの作業をします。</string>
-    <string name="phoneSetupNodeWhy">OpenCode は Node.js 上で動きます。</string>
+    <string name="phoneSetupEssentialsShort">GitとSSH</string>
+    <string name="phoneSetupEssentialsWhy">エージェントはGitとSSHを使ってプロジェクトの作業をします。</string>
+    <string name="phoneSetupNodeWhy">OpenCodeはNode.js上で動きます。</string>
     <string name="phoneSetupOpenCodeWhy">コーディングエージェント本体です。</string>
-    <string name="phoneSetupStartWhy">セットアップは OpenCode が動いた状態で終わります。</string>
+    <string name="phoneSetupStartWhy">セットアップはOpenCodeが動いた状態で終わります。</string>
     <string name="aiteamComponentTitle">AI Team</string>
-    <string name="aiteamComponentStageDownloading">AI Team をダウンロード中 · %1$s/%2$s</string>
-    <string name="aiteamComponentStagePreparing">AI Team を準備しています</string>
+    <string name="aiteamComponentStageDownloading">AI Teamをダウンロード中 · %1$s/%2$s</string>
+    <string name="aiteamComponentStagePreparing">AI Teamを準備しています</string>
     <string name="voiceComponentTitle">音声入力</string>
     <string name="voiceComponentSummary">オフラインでも、入力のかわりに話せます</string>
-    <string name="freeModelNotice">OpenCode の無料モデルを使用中です。速度は遅めです。ご自身のモデルを使うには、プロバイダーの API キーを追加してください。</string>
+    <string name="freeModelNotice">OpenCodeの無料モデルを使用中です。速度は遅めです。モデルを使うには、プロバイダーのAPIキーを追加してください。</string>
     <string name="setupSwitchPending">OpenCode 2へのアップデートが完了していません。保存済みの会話は保持されています。もう一度お試しください。</string>
     <string name="setupSwitchRetry">%1$sを再試行</string>
     <string name="setupSwitchFailed">OpenCode 2へのアップデートを完了できませんでした。保存済みの会話は保持されています。もう一度お試しください。</string>
@@ -47,7 +47,7 @@
     <string name="termuxStorageCatAgentScratch">エージェントの一時領域</string>
     <string name="termuxStorageNoteAgentScratch">一時フォルダには未完了の作業や他のツールが使うファイルが含まれている場合があります。サイズは参考用に表示されており、ここからは削除できません。</string>
     <string name="termuxStorageCatProjectBuildOutputs">ビルド関連名のフォルダ</string>
-    <string name="termuxStorageNoteProjectBuildOutputs">build や .dart_tool、node_modules、target という 名前 の フォルダ にも、独自 の ファイル が 含まれている 場合 が あります。名前 だけでは 不要 と 判断 できない ため、ここから 削除 すること は できません。</string>
+    <string name="termuxStorageNoteProjectBuildOutputs">buildや.dart_tool、node_modules、targetという名前のフォルダにも、独自のファイルが含まれている場合があります。名前だけでは不要と判断できないため、ここから削除することはできません。</string>
     <string name="termuxStorageCatToolchains">ツールチェーン</string>
     <string name="termuxStorageCatAiTeam">AI Team</string>
     <string name="termuxStorageNoteAiTeam">チームのフォルダ、データベース、ツールには保持すべき作業が含まれている場合があります。チームが停止していてもここからは削除できません。</string>
@@ -302,7 +302,7 @@
     <string name="termuxProcsCpuTime">プロセッサ時間</string>
     <string name="consentBatteryTitle">サーバーを実行し続けますか？</string>
     <string name="consentBatteryBody">アプリを閉じている間、Androidがこのスマートフォンのサーバーを停止する場合があります。バックグラウンド実行を許可すると、Androidから確認画面が表示されます。</string>
-    <string name="consentBatteryAllow">バックグラウンド実行を許可</string>
+    <string name="consentBatteryAllow">バックグラウンドで実行を続けるを許可</string>
     <string name="consentMakerTitle">サーバーを自動で再起動しますか？</string>
     <string name="consentMakerBody">%1$s製のスマートフォンでは自動起動が許可されていないアプリを停止するため、サーバーがオフのままになります。開く画面でこのアプリの自動起動をオンにしてください。</string>
     <string name="consentMakerBodyUnnamed">一部のスマートフォンでは自動起動が許可されていないアプリを停止するため、サーバーがオフのままになります。開く画面でこのアプリの自動起動をオンにしてください。</string>
@@ -489,12 +489,12 @@
     <string name="linuxMgrCleanNone">現在消去できるものはありません</string>
     <string name="linuxMgrMeasuring">計測中…</string>
     <plurals name="linuxMgrPkgCount">
-        <item quantity="other">%1$d個のパッケージをインストール済み</item>
+        <item quantity="other">%1$d件のパッケージをインストール済み</item>
     </plurals>
-    <string name="linuxMgrPkgCount__eq1">1個のパッケージをインストール済み</string>
+    <string name="linuxMgrPkgCount__eq1">1件のパッケージをインストール済み</string>
     <string name="linuxMgrPkgSearch">インストール済みパッケージを検索</string>
     <string name="linuxMgrPkgNoMatch">一致するインストール済みパッケージがありません</string>
-    <string name="linuxMgrPkgShowAll">%1$d個すべてのパッケージを表示</string>
+    <string name="linuxMgrPkgShowAll">%1$d件すべてのパッケージを表示</string>
     <string name="linuxMgrPkgUpdate">システムをアップデート</string>
     <string name="linuxMgrPkgUpdateDetail">パッケージ一覧を更新して利用可能なアップデートをインストールします</string>
     <string name="linuxMgrPkgUpdateTitle">Linuxパッケージをアップデートしますか？</string>

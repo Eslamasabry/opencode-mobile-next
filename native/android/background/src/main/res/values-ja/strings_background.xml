@@ -11,7 +11,7 @@
     <string name="background_pause_resume_short">再開</string>
     <string name="background_pause_resuming">バックグラウンド接続を再開中…</string>
     <string name="background_pause_resume_failed">再開できませんでした。「バックグラウンドで実行を続ける」設定を開いてください。</string>
-    <string name="background_pause_open_keep_running">バックグラウンド実行の設定を開く</string>
+    <string name="background_pause_open_keep_running">「バックグラウンドで実行を続ける」設定を開く</string>
     <string name="background_pause_resumed">バックグラウンド接続を再開しました。</string>
     <string name="background_error_notifications_required">通知へのアクセスが必要です。</string>
     <string name="background_error_could_not_change">Androidでバックグラウンドモードを変更できませんでした。</string>

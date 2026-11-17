@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_label">会話</string>
-    <string name="widget_description">今大切な1件を表示します。対応待ち、実行中、または直近の会話です。</string>
+    <string name="widget_description">今大切な1件（確認が必要な項目、実行中の項目、または直近の会話）を表示します。</string>
     <string name="native_team_working">実行中</string>
     <string name="native_widget_now">たった今</string>
     <plurals name="native_widget_minutes">
@@ -30,7 +30,7 @@
     <string name="usage_widget_provider_codex">Codex</string>
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
-    <string name="usage_widget_column">%1$s  残り %2$s%%</string>
+    <string name="usage_widget_column">%1$s  残り%2$s%%</string>
     <plurals name="usage_widget_short_hours">
         <item quantity="other">%1$s時間</item>
     </plurals>
@@ -42,11 +42,11 @@
     <string name="widget_label_wide">会話</string>
     <string name="widget_label_list">会話一覧</string>
     <string name="widget_label_strip">会話ストリップ</string>
-    <string name="widget_description_wide">対応待ちや実行中の会話と、次の会話を表示します。</string>
+    <string name="widget_description_wide">確認が必要な項目や実行中の項目と、次の会話を表示します。</string>
     <string name="widget_description_list">今大切な1件と、その他の会話を表示します。</string>
     <string name="widget_description_strip">今大切な1件を1行で表示します。</string>
     <string name="usage_widget_title_wide">使用状況（ワイド）</string>
     <string name="usage_widget_description_wide">各プランの上限残量を2列で表示します。</string>
     <string name="widget_label_status">ステータス</string>
-    <string name="widget_description_status">サーバー、このスマートフォンの Linux、実行中のタスク、残り少ないプラン上限を表示します。</string>
+    <string name="widget_description_status">サーバー、このスマートフォンのLinux、実行中のタスク、残り少ないプラン上限を表示します。</string>
 </resources>

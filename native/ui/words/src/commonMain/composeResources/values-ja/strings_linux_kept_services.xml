@@ -31,7 +31,7 @@
     <string name="keptSvcCommand">コマンド</string>
     <string name="keptSvcDirectory">Linux内のフォルダ</string>
     <string name="keptSvcPort">ポート（任意）</string>
-    <string name="keptSvcPortHint">1024〜65535の空きポート。Webページがない場合は空欄のままにしてください。</string>
+    <string name="keptSvcPortHint">1024〜65535の空きポート。ウェブページがない場合は空欄のままにしてください。</string>
     <string name="keptSvcBadName">上の形式で別の名前を指定してください。アプリのサービス名は予約されています。</string>
     <string name="keptSvcBadCommand">1行のコマンドを4096文字以内で入力してください。</string>
     <string name="keptSvcBadDirectory">親フォルダ（..）を含まないLinuxの絶対フォルダパスを指定してください。</string>

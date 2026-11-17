@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="mcpNativeTitle">コネクタカタログ</string>
-    <string name="mcpNativeConsent">公開 MCP レジストリを参照します。これをオンにした後でのみ、検索内容がレジストリへ送信されます。</string>
+    <string name="mcpNativeConsent">公開MCPレジストリを参照します。これをオンにした後でのみ、検索内容がレジストリへ送信されます。</string>
     <string name="mcpNativeTurnOn">オンにする</string>
     <string name="mcpNativeTurnOff">カタログをオフにする</string>
     <string name="mcpNativeRefresh">再読み込み</string>
@@ -15,7 +15,7 @@
     <string name="mcpNativeAdd">コネクタを追加</string>
     <string name="mcpNativeAdded">サーバーにこのコネクタが登録されました。ツールが利用可能かはまだ確認されていません。</string>
     <string name="mcpNativeCheck">接続を確認</string>
-    <string name="mcpNativeAddUncertain">追加を確認できませんでした。もう一度お試しいただく前に接続を確認してください。</string>
+    <string name="mcpNativeAddUncertain">追加を確認できませんでした。もう一度お試しになる前に接続を確認してください。</string>
     <string name="mcpNativeConflict">そのコネクタ名はすでに存在します。別の名前を選んでください。</string>
     <string name="mcpNativeName">名前</string>
     <string name="mcpNativeAddress">アドレス</string>
@@ -27,7 +27,7 @@
     <string name="mcpNativeSourceChanged">接続が変更されました。カタログを開き直してください。</string>
     <string name="mcpNativeToolsReady">次のターンでコネクタツールを使用する準備ができました。</string>
     <string name="mcpNativeSignIn">コネクタにサインイン</string>
-    <string name="mcpNativeCode">リターン URL またはコード</string>
+    <string name="mcpNativeCode">リターンURLまたはコード</string>
     <string name="mcpNativeFinishSignIn">サインインを完了</string>
     <string name="mcpNativeCancelSignIn">サインインをキャンセル</string>
 </resources>

@@ -10,7 +10,7 @@
     <string name="p12SearchRecentRemove">%1$sを削除</string>
     <string name="p12SearchRecentFailed">最近の検索を更新できませんでした。検索は引き続き利用できます。</string>
     <string name="p12SearchInside">最近の会話の本文も検索する</string>
-    <string name="p12SearchInsideHelp">このサーバー上の直近 20 件の会話から最新のメッセージを読み取ります。</string>
+    <string name="p12SearchInsideHelp">このサーバー上の直近20件の会話から最新のメッセージを読み取ります。</string>
     <string name="p12SearchTitles">タイトル</string>
     <string name="p12SearchInsideSection">会話の本文</string>
     <string name="p12SearchInsideReading">最近の会話を読み込み中…</string>

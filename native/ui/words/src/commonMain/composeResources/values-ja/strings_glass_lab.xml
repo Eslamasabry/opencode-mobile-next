@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="glassLabTitle">グラスラボ</string>
-    <string name="glassLabRowLine">ライブプレビュー上でグラスの各数値を調整します（テストビルド）</string>
-    <string name="glassLabHandle">グラス設定</string>
+    <string name="glassLabTitle">ガラスラボ</string>
+    <string name="glassLabRowLine">ライブプレビュー上でガラスの各数値を調整します（テストビルド）</string>
+    <string name="glassLabHandle">ガラス設定</string>
     <string name="glassLabHandleOpen">開く</string>
     <string name="glassLabHandleClosed">閉じる</string>
     <string name="glassLabThemeDark">ダークテーマの数値</string>
@@ -11,13 +11,13 @@
     <string name="glassLabAllLinked">すべて連動</string>
     <string name="glassLabStartFrom">基準値</string>
     <string name="glassLabInApp">アプリ全体で使用</string>
-    <string name="glassLabInAppLine">オフにするまでアプリ内のすべてのグラスパネルにこれらの数値が適用されます</string>
+    <string name="glassLabInAppLine">オフにするまでアプリ内のすべてのガラスパネルにこれらの数値が適用されます</string>
     <string name="glassLabCopy">値をコピー</string>
     <string name="glassLabCopied">コピーしました</string>
-    <string name="glassLabCopiedToast">グラスの数値をコピーしました</string>
+    <string name="glassLabCopiedToast">ガラスの数値をコピーしました</string>
     <string name="glassLabPaste">値を貼り付け</string>
-    <string name="glassLabPasted">グラスの数値を読み込みました</string>
-    <string name="glassLabPasteRefused">クリップボードにグラスの数値がありません</string>
+    <string name="glassLabPasted">ガラスの数値を読み込みました</string>
+    <string name="glassLabPasteRefused">クリップボードにガラスの数値がありません</string>
     <string name="glassLabResetAll">すべてリセット</string>
     <string name="glassLabSceneChat">会話</string>
     <string name="glassLabSceneHome">ホーム一覧</string>
@@ -47,7 +47,7 @@
     <string name="glassLabSampleHome">会話</string>
     <string name="glassLabSampleConnected">接続済み</string>
     <string name="glassLabSampleAll">すべて</string>
-    <string name="glassLabSampleNeedsYou">対応待ち</string>
+    <string name="glassLabSampleNeedsYou">確認が必要</string>
     <string name="glassLabSampleRunning">実行中</string>
     <string name="glassLabSampleNew">新規</string>
 </resources>

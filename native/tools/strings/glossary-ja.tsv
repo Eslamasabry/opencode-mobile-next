@@ -50,7 +50,7 @@ term	\bProjects?\b	プロジェクト
 term	\b[Ff]olders?\b	フォルダ
 term	\b[Ss]chedules?\b	スケジュール
 term	\b(?<!Claude )Agents?\b	エージェント
-term	\b[Cc]omputers?\b(?! or none)	パソコン
+term	\b(?<!-)[Cc]omputers?\b(?! or none)	パソコン
 term	^Home$	ホーム
 term	^Files$	ファイル
 term	^Cancel$	キャンセル
@@ -99,6 +99,12 @@ forbid	メモリー	use メモリ, not メモリー
 forbid	到達	use 接続できません / 届きません, not 到達
 forbid	あなた	leave the subject out, do not use あなた
 forbid	(?<!「)[!！](?!」)	no exclamation marks
+forbid	グラス	use ガラス for Glass style, not グラス
+forbid	(?<![A-Za-z0-9_./-])Web(?!Socket|View|RTC|GL|Assembly|Authn|UI|Search|hook|Hook|[A-Za-z0-9_])	use ウェブ for standalone web, not Web
+forbid	いただく	use plain polite form (お試しになる前に / お試しください), not いただく
+forbid	再度	Never 再度; use もう一度
+term	^Needs you$	確認が必要|要確認
+term	\bKeep running settings\b	バックグラウンドで実行を続ける
 allow	OK
 allow	Wi-Fi
 allow	Bluetooth

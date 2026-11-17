@@ -15,18 +15,18 @@
     <string name="kitMenu">メニュー</string>
     <string name="kitReportProblem">問題を報告</string>
     <string name="kitMarkPaused">一時停止</string>
-    <string name="kitTaskNeedsYou">対応が必要</string>
+    <string name="kitTaskNeedsYou">確認が必要</string>
     <string name="kitTaskStopped">停止しました</string>
     <string name="kitReceiptSending">送信中…</string>
     <string name="kitReceiptSent">送信済み</string>
     <string name="kitReceiptConfirmed">完了</string>
     <string name="kitReceiptNotConfirmed">まだ確認できていません</string>
     <string name="kitReceiptRefused">受け付けられませんでした</string>
-    <string name="kitReceiptAnsweredElsewhere">%1$s で回答済み</string>
+    <string name="kitReceiptAnsweredElsewhere">%1$sで回答済み</string>
     <string name="kitReceiptAnsweredElsewhereUnknown">別の端末で回答済み</string>
     <string name="kitDetailsHide">詳細を隠す</string>
     <string name="kitNeedsYouReasonDecision">判断が必要です</string>
-    <string name="kitNeedsYouReasonBlocked">停止中: 対応が必要</string>
+    <string name="kitNeedsYouReasonBlocked">停止中：確認が必要</string>
     <string name="kitNeedsYouReasonConsent">確認が必要です</string>
     <plurals name="kitNeedsYouBadgeSuffix">
         <item quantity="other">、%1$s件が対応待ち</item>
@@ -38,7 +38,7 @@
     </plurals>
     <string name="kitNeedsYouWaitingSpoken__eq0">待機時間は1分未満</string>
     <string name="kitNeedsYouWaitingSpoken__eq1">1分待機中</string>
-    <string name="kitNeedsYouWhoOnServer">%2$s の %1$s</string>
+    <string name="kitNeedsYouWhoOnServer">%2$sの %1$s</string>
     <string name="kitJumpLatest">最新へ移動</string>
     <plurals name="kitJumpNewLatest">
         <item quantity="other">新着 %1$d件 · 最新へ移動</item>
@@ -116,7 +116,7 @@
     <string name="kitSwatchInUse">使用中</string>
     <string name="kitThemePreviewTitle">サインインの不具合を修正</string>
     <string name="kitThemePreviewWorking">作業中 · 2分</string>
-    <string name="kitThemePreviewNeedsYou">対応が必要</string>
+    <string name="kitThemePreviewNeedsYou">確認が必要</string>
     <string name="kitThemePreviewPrimary">送信</string>
     <string name="kitThemePreviewSecondary">添付</string>
     <string name="kitThemePreviewSegment">オン</string>
@@ -192,9 +192,9 @@
     <string name="kitBreadcrumbOpenRoot">%1$sを開く</string>
     <string name="kitBreadcrumbCurrent">現在のフォルダ：%1$s</string>
     <plurals name="kitBreadcrumbMore">
-        <item quantity="other">ほか%1$d個のフォルダ</item>
+        <item quantity="other">ほか%1$d件のフォルダ</item>
     </plurals>
-    <string name="kitBreadcrumbMore__eq1">ほか1個のフォルダ</string>
+    <string name="kitBreadcrumbMore__eq1">ほか1件のフォルダ</string>
     <string name="kitCodeCopyOutput">出力をコピー</string>
     <string name="kitCodeCopyFailedCode">コードをコピーできませんでした。もう一度お試しください。</string>
     <string name="kitCodeCopyFailedCommand">コマンドをコピーできませんでした。もう一度お試しください。</string>
@@ -214,7 +214,7 @@
     <plurals name="kitLogNewLines">
         <item quantity="other">新しい行 %1$d行</item>
     </plurals>
-    <string name="kitLogNewLines__eq1">新しい行 1行</string>
+    <string name="kitLogNewLines__eq1">新しい行1行</string>
     <plurals name="kitLogDropped">
         <item quantity="other">前の%1$d行は表示されていません</item>
     </plurals>
@@ -223,13 +223,13 @@
     <string name="kitLogWarningLine">警告：%1$s</string>
     <string name="kitLogErrorLine">エラー：%1$s</string>
     <string name="kitChecklistNext">次：%1$s</string>
-    <string name="kitChecklistNeedsYou">対応が必要、%1$s</string>
+    <string name="kitChecklistNeedsYou">確認が必要、%1$s</string>
     <string name="kitChecklistShowSteps">ステップを表示</string>
     <string name="kitChecklistHideSteps">ステップを隠す</string>
     <plurals name="kitDiffFiles">
-        <item quantity="other">%1$d個のファイル</item>
+        <item quantity="other">%1$d件のファイル</item>
     </plurals>
-    <string name="kitDiffFiles__eq1">1個のファイル</string>
+    <string name="kitDiffFiles__eq1">1件のファイル</string>
     <string name="kitDiffChangeOf">変更 %1$s / %2$s</string>
     <string name="kitDiffPreviousChange">前の変更</string>
     <string name="kitDiffNextChange">次の変更</string>
@@ -333,10 +333,10 @@
     <string name="kitCapPermNotificationsTitle">通知</string>
     <string name="kitCapPermNotificationsWhy">このアプリの通知がオフになっています。</string>
     <string name="kitCapPermNotificationsEnable">通知を許可</string>
-    <string name="kitCapPermNotificationsOffer">エージェントが対応を求めたり完了したりしたときに知らせます。通知を許可しますか？</string>
+    <string name="kitCapPermNotificationsOffer">エージェントの確認が必要なときや完了したときに知らせます。通知を許可しますか？</string>
     <string name="kitCapPermBatteryTitle">バックグラウンドで実行</string>
     <string name="kitCapPermBatteryWhy">バックグラウンド中にAndroidによってアプリが停止されることがあります。</string>
-    <string name="kitCapPermBatteryEnable">バックグラウンド実行を許可</string>
+    <string name="kitCapPermBatteryEnable">バックグラウンドで実行を続けるを許可</string>
     <string name="kitCapPermBatteryOffer">アプリを閉じている間もエージェントを実行し続けますか？</string>
     <string name="kitCapPermCameraTitle">カメラ</string>
     <string name="kitCapPermCameraWhy">このアプリのカメラへのアクセスがオフになっています。</string>
@@ -458,7 +458,7 @@
     <string name="kitContextRingTapHint">コンテキストの詳細を表示</string>
     <string name="kitContextRingCompacting">圧縮中</string>
     <string name="kitContextRingCompactingSemantics">コンテキストを圧縮中</string>
-    <string name="kitContextSheetTokens">%1$s / %2$s トークン</string>
+    <string name="kitContextSheetTokens">%1$s / %2$sトークン</string>
     <string name="kitContextSheetModel">モデル</string>
     <string name="kitContextSheetWindow">コンテキストウィンドウ</string>
     <string name="kitContextSheetMeasured">計測時点</string>
@@ -478,7 +478,7 @@
     <string name="kitFactGuessedFromLine">推測 · %1$s · %2$sから</string>
     <string name="kitFactCalculatedLine">計算結果 · %1$s</string>
     <string name="kitFactWaitingLine">%1$s · 確認待ち</string>
-    <string name="kitRequestNeedsYouLabel">対応が必要</string>
+    <string name="kitRequestNeedsYouLabel">確認が必要</string>
     <string name="kitRequestAlwaysAllowLike">このようなリクエストを常に許可</string>
     <string name="kitTaskChipCount">%1$d/%2$d</string>
     <string name="kitTaskChipDone">✓ %1$d/%2$d</string>

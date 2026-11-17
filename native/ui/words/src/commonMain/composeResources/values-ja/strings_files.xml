@@ -15,8 +15,8 @@
     <string name="filesShareStarting">共有を開始中…</string>
     <string name="filesSaveFailed">ファイルを保存できませんでした。もう一度お試しください。</string>
     <string name="filesReasonTooBig">このファイルは大きすぎてここに表示できません。</string>
-    <string name="filesReasonTooBigBody">上限は 2 MB です。保存されているパソコンで開くか、エージェントに一部だけを抜き出すよう依頼してください。</string>
-    <string name="filesReasonTooBigPhoneBody">上限は 2 MB です。このスマートフォン上にあるため、他のアプリで開けます。「別のアプリで開く」を選んでください。</string>
+    <string name="filesReasonTooBigBody">上限は2 MBです。保存されているパソコンで開くか、エージェントに一部だけを抜き出すよう依頼してください。</string>
+    <string name="filesReasonTooBigPhoneBody">上限は2 MBです。このスマートフォン上にあるため、他のアプリで開けます。「別のアプリで開く」を選んでください。</string>
     <string name="filesReasonMissing">そのファイルはもうありません。</string>
     <string name="filesReasonMissingBody">移動または削除された可能性があります。</string>
     <string name="filesReasonDenied">このアプリにはそのファイルを読み取る権限がありません。</string>

@@ -22,7 +22,7 @@
     <string name="e7SharedPairingWorksWhenTheAddressTheServer">ペアリングは、この端末がサーバーアドレスに接続できる場合に機能します。リモートのHTTPアドレスでは、パスワードを送信する前に許可を求めます。HTTPSまたはプライベートなTailscale接続をおすすめします。</string>
     <string name="e7SharedOlderServersWithoutPairing">ペアリング非対応の旧サーバー</string>
     <string name="e7SharedSecurityNotes">セキュリティ上の注意</string>
-    <string name="e7SharedAlwaysSetOPENCODESERVERPASSWORDWhenBinding">localhost 以外 に バインド する 場合 は、必ず OPENCODE_SERVER_PASSWORD を 設定 して ください。</string>
+    <string name="e7SharedAlwaysSetOPENCODESERVERPASSWORDWhenBinding">localhost以外にバインドする場合は、必ずOPENCODE_SERVER_PASSWORDを設定してください。</string>
     <string name="e7SharedPasswordsAreStoredInTheAndroidKeystore">パスワードはこの端末内のAndroid Keystoreにのみ保存されます。</string>
     <string name="e7SharedTheServerCanExecuteCommandsOnIts">サーバーはホスト上でコマンドを実行できるため、SSHアクセスと同様に慎重に扱ってください。</string>
     <string name="e7SharedDetail307">ステップ%1$d/3</string>

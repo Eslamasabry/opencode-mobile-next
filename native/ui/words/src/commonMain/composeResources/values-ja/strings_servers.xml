@@ -8,11 +8,11 @@
     <string name="firstRunOnComputer">パソコンで</string>
     <string name="firstRunJustShowMe">まずは見てみる</string>
     <plurals name="otherServerWorking">
-        <item quantity="other">%1$d 件が作業中</item>
+        <item quantity="other">%1$d件が作業中</item>
     </plurals>
-    <string name="otherServerWorking__eq1">%1$d 件が作業中</string>
+    <string name="otherServerWorking__eq1">%1$d件が作業中</string>
     <string name="phoneSetupStartEntryDetail">ここでコーディングエージェントを動かします。パソコンは不要です。</string>
-    <string name="addServerTypePaseo">Claude Code または Pi</string>
+    <string name="addServerTypePaseo">Claude CodeまたはPi</string>
     <string name="welcomeComputerLine">コードでペアリング、またはアドレスを入力</string>
     <string name="welcomeComputerConnect">パソコンに接続</string>
     <string name="welcomeMoreWays">ほかの設定方法</string>
@@ -70,13 +70,13 @@
     <string name="codexTokenStorageHelp">この端末に安全に保存され、このCodexサーバーにのみ送信されます。</string>
     <string name="launchUiPinnedUntitled">無題の会話</string>
     <string name="capsuleRemove">削除</string>
-    <string name="tailscaleIntro">ご自身のTailscaleネットワークを使って別のパソコン上のOpenCodeに接続します。</string>
+    <string name="tailscaleIntro">Tailscaleネットワークを使って別のパソコン上のOpenCodeに接続します。</string>
     <string name="tailscaleAppStep">1. プライベートネットワークを開く</string>
     <string name="tailscaleChecking">Tailscaleアプリを確認中…</string>
     <string name="tailscaleInstalled">Tailscaleはインストール済みです。</string>
     <string name="tailscaleMissing">Tailscaleがインストールされていません。公式アプリをインストールしてから戻ってもう一度確認してください。</string>
     <string name="tailscaleUnknown">アプリを確認できませんでした。スマートフォンからTailscaleを開くか、もう一度お試しください。</string>
-    <string name="tailscaleUnsupported">この端末ではAndroidアプリを開けません。ご自身でこの端末にTailscaleをセットアップしたあと、下のHTTPSアドレスを確認してください。</string>
+    <string name="tailscaleUnsupported">この端末ではAndroidアプリを開けません。この端末にTailscaleをセットアップしたあと、下のHTTPSアドレスを確認してください。</string>
     <string name="tailscaleVpnHandoff">Tailscaleでサーバーに接続できるネットワークにサインインし、AndroidのVPN確認が出たら承認して接続をオンにしてください。OpenCodeからそのVPN状態を参照・変更することはできません。</string>
     <string name="tailscaleReturned">戻りました。アプリの有無を再確認しました。次の画面の「接続テスト」でサーバーを確認してください。</string>
     <string name="tailscaleOpen">Tailscaleを開く</string>
@@ -88,7 +88,7 @@
     <string name="tailscaleReviewDetail">心当たりのあるアドレスの場合にのみ続行してください。次の画面では明示的にテストまたは保存する前にサーバー認証情報を確認します。アドレス名だけからプライベートかどうかをアプリが確定することはできません。</string>
     <string name="tailscaleContinue">サインインへ進む</string>
     <string name="tailscaleHelp">Tailscaleのセットアップと復旧</string>
-    <string name="tailscaleServeHelp">サーバー パソコン 上 で Tailscale Serve を 使う と、ローカル の OpenCode ポート に プライベート HTTPS を 提供 できます。公開 用 の Funnel ではなく Serve を 使用 して ください。Tailnet の アクセス ルール は 引き続き 適用 されます。HTTPS を 有効 に する と アクセス 自体 は 非公開 の まま ですが、証明書 の 端末名 と Tailnet 名 が 公開 の 証明書 ログ に 記録 されます。サーバー を 変更 する 前 に 公式 ガイド を 確認 して ください。</string>
+    <string name="tailscaleServeHelp">サーバー パソコン 上 でTailscale Serveを 使う と、ローカル のOpenCodeポート に プライベートHTTPSを 提供 できます。公開 用 のFunnelではなくServeを 使用 して ください。Tailnetの アクセス ルール は 引き続き 適用 されます。HTTPSを 有効 に する と アクセス 自体 は 非公開 の まま ですが、証明書 の 端末名 とTailnet名 が 公開 の 証明書 ログ に 記録 されます。サーバー を 変更 する 前 に 公式 ガイド を 確認 して ください。</string>
     <string name="tailscaleServeDocs">公式Serveガイドを読む</string>
     <string name="tailscaleAndroidDocs">公式Androidガイドを読む</string>
     <string name="tailscaleRecovery">サーバーに接続できない場合は、両方の端末のTailscale、アドレスとポート、ネットワークアクセスルールを確認してください。Serveアドレスの場合はサーバー上のServeも確認してください。認証が拒否された場合はパスワードを修正し、「接続テスト」を再試行してください。</string>
@@ -288,9 +288,9 @@
     <string name="capabilityStateNotDevice">この端末にはありません</string>
     <string name="capabilityNeedsAndroid">Androidアプリが必要です</string>
     <plurals name="capabilityAvailableCount">
-        <item quantity="other">%1$d個の機能がここで利用できます</item>
+        <item quantity="other">%1$d件の機能がここで利用できます</item>
     </plurals>
-    <string name="capabilityAvailableCount__eq1">1個の機能がここで利用できます</string>
+    <string name="capabilityAvailableCount__eq1">1件の機能がここで利用できます</string>
     <string name="capabilityAvailableCountDetail">このサーバーと端末で利用できる機能を表示</string>
     <string name="capabilityAddServer">これらを備えたサーバーを追加</string>
     <string name="capabilityAddServerDetail">別のパソコンに接続するかこのスマートフォンにセットアップして切り替えます</string>
@@ -404,7 +404,7 @@
     <string name="liveToolEdit">ファイルを編集中…</string>
     <string name="liveToolRead">ファイルを読み込み中…</string>
     <string name="liveToolSearch">ファイルを検索中…</string>
-    <string name="liveToolWeb">Webを閲覧中…</string>
+    <string name="liveToolWeb">ウェブを閲覧中…</string>
     <string name="liveToolSubagent">サブエージェントを実行中…</string>
     <string name="liveToolPlan">計画を作成中…</string>
     <string name="liveToolCard">カードを表示中…</string>
@@ -439,8 +439,8 @@
     <string name="connectorCardFailureSetupRequired">このコネクタは接続する前に「ツール」でセットアップが必要です。</string>
     <string name="connectorCardFailureNameConflict">この名前のコネクタはすでに存在します。「ツール」で確認してください。</string>
     <string name="connectorCardFailureSourceChanged">この会話の接続が変更されました。コネクタカードを開き直してください。</string>
-    <string name="connectorCardFailureConnectFailed">接続を確認できませんでした。もう一度お試しいただく前に状態を確認してください。</string>
-    <string name="connectorCardFailureAuthenticationFailed">サインインを確認できませんでした。もう一度お試しいただく前に状態を確認してください。</string>
+    <string name="connectorCardFailureConnectFailed">接続を確認できませんでした。もう一度お試しになる前に状態を確認してください。</string>
+    <string name="connectorCardFailureAuthenticationFailed">サインインを確認できませんでした。もう一度お試しになる前に状態を確認してください。</string>
     <string name="connectorCardFailureOauthUnavailable">このコネクタは会話内からサインインできません。</string>
     <string name="connectorCardFailureNotConnected">コネクタはまだ接続されていません。「ツール」でセットアップを確認してください。</string>
     <string name="connectorCardOpenTools">「ツール」でコネクタを開く</string>
@@ -449,8 +449,8 @@
     <string name="serverRowDetailsVersion">バージョン</string>
     <string name="capabilityDevServices">開発サーバー</string>
     <string name="capabilityDevServicesDetail">プロジェクトのサーバーやプレビューを起動および停止</string>
-    <string name="capabilityWebSearch">Web検索</string>
-    <string name="capabilityWebSearchDetail">エージェントがWeb上で情報を調べられるようにする</string>
+    <string name="capabilityWebSearch">ウェブ検索</string>
+    <string name="capabilityWebSearchDetail">エージェントがウェブ上で情報を調べられるようにする</string>
     <string name="capabilityDeleteMessage">メッセージの削除</string>
     <string name="capabilityDeleteMessageDetail">会話からメッセージを削除</string>
     <string name="capabilitySavedPermissions">保存済みの承認</string>

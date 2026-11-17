@@ -53,7 +53,7 @@
     <string name="quotaClaude">Claude</string>
     <string name="usageProviderScope">選択された範囲でサーバーから返されたモデル記録の合計です。プロバイダーの請求額やサブスクリプション利用枠ではありません。</string>
     <plurals name="usageProviderModelCount">
-        <item quantity="other">%1$d個のモデル</item>
+        <item quantity="other">%1$d件のモデル</item>
     </plurals>
     <string name="usageProviderCostUnavailable">コスト小計を利用できません</string>
     <string name="usageProviderCostShare">報告コストの%1$s</string>

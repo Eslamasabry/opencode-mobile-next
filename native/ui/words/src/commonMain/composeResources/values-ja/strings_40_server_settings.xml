@@ -22,7 +22,7 @@
     <string name="serverSettingsSchedules">予約プロンプト</string>
     <string name="serverSettingsProviders">モデルプロバイダー</string>
     <string name="serverSettingsPermissions">権限リクエスト</string>
-    <string name="serverSettingsSteering">実行中の返信を誘導</string>
+    <string name="serverSettingsSteering">実行中の返信を軌道修正</string>
     <string name="serverSettingsSupported">このサーバーで利用可能</string>
     <string name="serverSettingsUnsupported">このサーバーでは利用できません</string>
     <string name="server40DisconnectConfirm">%1$sから切断しますか？</string>

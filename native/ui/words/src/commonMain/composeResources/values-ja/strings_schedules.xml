@@ -19,8 +19,8 @@
     <string name="scheduleNeedsYou">リクエストに回答するため、会話を開いてください。</string>
     <string name="scheduleBusy">この会話はすでに処理中でした。</string>
     <string name="scheduleUnavailable">サーバーに接続できませんでした。サーバーが起動していることと、このスマートフォンから接続できることを確認してください。</string>
-    <string name="scheduleSignInAgain">サーバーのパスワードが再度必要です。次回の実行前にサーバーを開いてサインインしてください。</string>
-    <string name="scheduleAllowHttp">このサーバーは暗号化されていない HTTP を使用しており、まだ許可されていません。次回の実行前にサーバーを開いて HTTP を許可してください。</string>
+    <string name="scheduleSignInAgain">サーバーのパスワードがもう一度必要です。次回の実行前にサーバーを開いてサインインしてください。</string>
+    <string name="scheduleAllowHttp">このサーバーは暗号化されていないHTTPを使用しており、まだ許可されていません。次回の実行前にサーバーを開いてHTTPを許可してください。</string>
     <string name="scheduleAgentFailed">エージェントがエラーで停止しました。状況を確認するには会話を開いてください。</string>
     <string name="scheduleCertificateChanged">サーバーの証明書が変更されました。次回の実行前にサーバーを開いて確認してください。</string>
     <string name="scheduleCertificateInvalid">サーバーの証明書の有効期限が切れているか、まだ有効ではありません。次回の実行前にサーバーを開いて確認してください。</string>

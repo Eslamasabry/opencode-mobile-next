@@ -11,7 +11,7 @@
     <string name="agentToolsModel">この会話のモデル</string>
     <string name="agentToolsOptions">エージェントオプション</string>
     <string name="agentToolsNoOptions">このエージェントには、現在のモデルで使える追加オプションがありません。</string>
-    <string name="agentToolsReadImports">Claude Code の会話を探す</string>
+    <string name="agentToolsReadImports">Claude Codeの会話を探す</string>
     <string name="agentToolsImportTitle">このプロジェクトの会話</string>
     <string name="agentToolsNoImports">このプロジェクトで新しい会話は見つかりませんでした。</string>
     <string name="agentToolsAlreadyImported">取り込み済み：%1$d</string>

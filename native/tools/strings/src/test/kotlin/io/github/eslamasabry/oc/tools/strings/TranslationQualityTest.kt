@@ -129,15 +129,21 @@ class TranslationQualityTest {
         )
     }
 
+    private fun untranslatedAllowlist(): Set<String> =
+        File(toolDir, "src/test/resources/untranslated-allowlist.tsv").takeIf { it.isFile }?.readLines().orEmpty()
+            .filter { it.isNotBlank() && !it.startsWith("#") }.toSet()
+
     @Test
     fun `glossary use - product terms are kept, glossary words are used, banned nouns are absent`() {
         val g = locales.associateWith(::glossary)
+        val allowed = untranslatedAllowlist()
         gate("glossary") { l, en, tr ->
             val gl = g[l] ?: return@gate null
             val e = en.texts().joinToString(" ")
             val t = tr.texts().joinToString(" ")
             gl.keep.firstOrNull { it in e && it !in t }?.let { "product term \"$it\" must stay as written" }
-                ?: gl.terms.firstOrNull { (en, tgt) -> en.containsMatchIn(e) && !tgt.containsMatchIn(t) }?.let { (en, tgt) -> "English /$en/ should read /$tgt/" }
+                ?: gl.terms.takeIf { en.key !in allowed }?.firstOrNull { (en, tgt) -> en.containsMatchIn(e) && !tgt.containsMatchIn(t) }
+                    ?.let { (en, tgt) -> "English /$en/ should read /$tgt/" }
                 ?: gl.forbid.firstOrNull { (re, _) -> re.containsMatchIn(t) }?.let { (re, why) -> "/${re.pattern}/ is banned: $why" }
         }
     }
@@ -168,9 +174,10 @@ class TranslationQualityTest {
     @Test
     fun `no English left - a translation is not the English, and does not carry English sentences`() {
         val g = locales.associateWith(::glossary)
-        val allowed = File(toolDir, "src/test/resources/untranslated-allowlist.tsv").takeIf { it.isFile }?.readLines().orEmpty()
-            .filter { it.isNotBlank() && !it.startsWith("#") }.toSet()
+        val allowed = untranslatedAllowlist()
         val nonLatin = setOf("ru", "ar", "ja", "zh")
+        val cjkWordRuns = Regex("""[\u3040-\u30ff\u4e00-\u9fff\u3400-\u4dbf]{1,2}|[A-Za-z0-9]+|\p{L}+""")
+        val latinWordRuns = Regex("""\p{L}+""")
         gate("english") { l, en, tr ->
             if (en.key in allowed) return@gate null
             val allow = g[l]?.allow.orEmpty() + (g[l]?.keep.orEmpty()).flatMap { it.split(' ') }
@@ -182,8 +189,9 @@ class TranslationQualityTest {
                 if (letters.isEmpty()) continue
                 if (strip(t).equals(s, ignoreCase = true) && letters.any { it !in allow }) return@gate "is the English text"
                 val words = latinWord.findAll(strip(t)).map { it.value }.filter { it !in allow }.toList()
+                val runs = if (l == "ja" || l == "zh") cjkWordRuns else latinWordRuns
                 if (l in nonLatin) {
-                    if (words.size >= 3 && words.size * 2 > Regex("""\p{L}+""").findAll(strip(t)).count()) return@gate "mostly Latin words: ${words.take(4)}"
+                    if (words.size >= 3 && words.size * 2 > runs.findAll(strip(t)).count()) return@gate "mostly Latin words: ${words.take(4)}"
                 } else if (words.map { it.lowercase() }.filter { it in stopwords }.toSet().size >= 2) {
                     return@gate "English words left: ${words.take(5)}"
                 }

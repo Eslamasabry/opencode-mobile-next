@@ -42,5 +42,5 @@
     <string name="secSetupNameField">コネクタ名</string>
     <string name="secHostOfficialInstall">公式OpenCode 2パッケージ</string>
     <string name="secHostPinnedFront">検証済みAI Teamフロントコマンド</string>
-    <string name="secHostPinnedFrontHelp">Gas Cityスーパーバイザーをセットアップしたあと、パソコン上でこのコマンドを実行してください。you@example.comは許可されたご自身のTailscale IDに置き換えてください。ダウンロードは特定のコミットに固定されており、命名および実行前に検証されます。</string>
+    <string name="secHostPinnedFrontHelp">Gas Cityスーパーバイザーをセットアップしたあと、パソコン上でこのコマンドを実行してください。you@example.comは許可されたTailscale IDに置き換えてください。ダウンロードは特定のコミットに固定されており、命名および実行前に検証されます。</string>
 </resources>

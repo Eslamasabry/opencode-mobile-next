@@ -6,6 +6,6 @@
     <string name="migrationStorageDelete">モデルを削除</string>
     <string name="migrationStorageDeleteTitle">アシスタントモデルを削除しますか？</string>
     <string name="migrationStorageDeleteBody">保存済みのモデルと未完了のダウンロードをこのスマートフォンから削除し、%1$sの空き容量を確保します。</string>
-    <string name="migrationStorageAppDetail">ここに保存された会話、スマートフォンの Linux、エージェント、ダウンロードのサイズと空き容量を確認できます</string>
+    <string name="migrationStorageAppDetail">ここに保存された会話、スマートフォンのLinux、エージェント、ダウンロードのサイズと空き容量を確認できます</string>
     <string name="localModelSaveFailed">保存済みモデルを変更できませんでした。もう一度お試しください。</string>
 </resources>

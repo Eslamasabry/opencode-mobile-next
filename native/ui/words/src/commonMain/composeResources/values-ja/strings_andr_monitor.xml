@@ -6,7 +6,7 @@
     <string name="andrMonitorOff">オフ（バックグラウンド確認なし）</string>
     <string name="andrMonitorWaiting">次の確認を待機中です。以前の情報になっている場合があります。</string>
     <string name="andrMonitorChecking">今確認しています。以前の情報になっている場合があります。</string>
-    <string name="andrMonitorCurrent">最新の確認により最新の状態です。</string>
+    <string name="andrMonitorCurrent">最後の確認時点で最新の状態です。</string>
     <string name="andrMonitorUnavailable">確認できませんでした。最新のアクティビティを見るにはこのサーバーを開いてください。</string>
     <string name="andrMonitorWifi">Wi-Fiを待機中。</string>
     <string name="andrMonitorPaused">アプリとバックグラウンド接続が停止しているため一時停止中。</string>

@@ -10,7 +10,7 @@
     <string name="r40RelationsEmptyBody">委任された作業は元の会話に混ざらず、ここに表示されます。</string>
     <string name="r40RelationsChildren">サブエージェントの会話 · %1$s</string>
     <string name="r40RelationsUntitled">無題の会話</string>
-    <string name="r40RelationsNeedsYou">要確認 · 開いて回答</string>
+    <string name="r40RelationsNeedsYou">確認が必要 · 開いて回答</string>
     <string name="r40RelationsWorking">作業中</string>
     <string name="r40RelationsIdle">待機中</string>
     <string name="r40RelationsDone">完了</string>

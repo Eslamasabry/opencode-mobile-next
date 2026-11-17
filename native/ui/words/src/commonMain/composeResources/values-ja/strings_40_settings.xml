@@ -3,7 +3,7 @@
 <resources>
     <string name="settings40_style_default">スタイルのデフォルト</string>
     <string name="settings40_reset_question">外観をリセットしますか？</string>
-    <string name="settings40_reset_body">色、スタイル、形、グラス効果、文字サイズ、モーション、返信の光彩をリセットします。会話、言語、通知の選択はそのまま残ります。</string>
+    <string name="settings40_reset_body">色、スタイル、形、ガラス効果、文字サイズ、モーション、返信の光彩をリセットします。会話、言語、通知の選択はそのまま残ります。</string>
     <string name="settings40_local_work">このスマートフォン上の未送信作業</string>
     <string name="settings40_queue_title">待機中のプロンプト</string>
     <string name="settings40_drafts_title">会話の下書き</string>
@@ -32,7 +32,7 @@
         <item quantity="other">%1$d件の下書きを削除しました。一部の添付ファイルを削除できませんでした。完了するには下書きの削除をもう一度お試しください。</item>
     </plurals>
     <string name="settings40_no_answers">このサーバーでまだ回答が必要な質問はありません。</string>
-    <string name="settings40_answer_failed">この手順は完了しませんでした。保存済みの回答とAndroidの設定が異なる場合があります。「通知」または「実行の継続」を確認してからもう一度お試しください。</string>
+    <string name="settings40_answer_failed">この手順は完了しませんでした。保存済みの回答とAndroidの設定が異なる場合があります。「通知」または「バックグラウンドで実行を続ける」を確認してからもう一度お試しください。</string>
     <string name="settings40_held_action">これらも削除</string>
     <string name="settings40_held_question">確認のため保持されているプロンプトを削除しますか？</string>
     <string name="settings40_held_body">すでにサーバーへ送信済みの可能性があります。この操作ではこのスマートフォンから削除されるだけで、追加で何かが送信されることはありません。</string>

@@ -12,11 +12,11 @@
     <string name="secCrashBusy">共有シートをすでに開いています。</string>
     <string name="secCrashUnavailable">クラッシュ記録を利用できません。もう一度お試しください。</string>
     <string name="secCrashShareUnavailable">共有を利用できません。もう一度お試しください。</string>
-    <string name="secAppExits">Android アプリの終了履歴</string>
+    <string name="secAppExits">Androidアプリの終了履歴</string>
     <string name="secHelperExits">エージェントヘルパーの終了履歴</string>
     <string name="secHistoryRefresh">終了履歴を再読み込み</string>
     <string name="secHistoryEmpty">最近の終了履歴は記録されていません。</string>
     <string name="secHistoryUnavailable">終了履歴を利用できません。</string>
     <string name="secHistoryEntry">%1$s · コード %2$d</string>
-    <string name="secCrashReportHeader">OpenCode モバイル クラッシュレポート\n記録されたエラーの種類と時刻のみ。\nメッセージ、スタックトレース、会話は含まれません。\n\n</string>
+    <string name="secCrashReportHeader">OpenCodeモバイル クラッシュレポート\n記録されたエラーの種類と時刻のみ。\nメッセージ、スタックトレース、会話は含まれません。\n\n</string>
 </resources>

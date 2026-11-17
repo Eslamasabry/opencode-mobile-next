@@ -16,8 +16,8 @@
     <string name="e7LocaleUiRussian">Русский</string>
     <string name="shareSessionViewsTitle">既読状態を同期</string>
     <string name="shareSessionViewsSaveError">この設定を保存できませんでした。この端末では現在既読状態の共有がオフになっています。</string>
-    <string name="webSourcesDisclosure">このサーバーはWeb検索を行えません。公開リンクと、必要なら抜粋を貼り付けてください。このページは開かれず、メッセージを送信するまで何も送信されません。</string>
-    <string name="webSourcesScopeChanged">サーバーが変更されました。「Webソースを追加」を閉じて開き直してください。</string>
+    <string name="webSourcesDisclosure">このサーバーはウェブ検索を行えません。公開リンクと、必要なら抜粋を貼り付けてください。このページは開かれず、メッセージを送信するまで何も送信されません。</string>
+    <string name="webSourcesScopeChanged">サーバーが変更されました。「ウェブソースを追加」を閉じて開き直してください。</string>
     <string name="webSourcesUrl">公開URL</string>
     <string name="webSourcesLabel">タイトル（任意）</string>
     <string name="webSourcesExcerpt">貼り付けた抜粋（任意）</string>
@@ -57,10 +57,10 @@
     <string name="monitorMinutes__eq1">1分</string>
     <string name="webSearchDisclosure">検索ではこのサーバーで選択された検索プロバイダーへクエリが送信されます。編集可能な下書きへ追加する前に結果を確認してください。ここではモデルへ何も送信されません。</string>
     <string name="webSearchManual">またはソースを貼り付け</string>
-    <string name="webSearchUnavailable">Web検索を利用できません。このサーバーで検索プロバイダーを設定してからプロバイダーを再読み込みしてください。下からソースを貼り付けることはできます。</string>
-    <string name="webSearchAuthentication">サーバーがWeb検索を許可しませんでした。このサーバーの認証情報を確認してください。</string>
+    <string name="webSearchUnavailable">ウェブ検索を利用できません。このサーバーで検索プロバイダーを設定してからプロバイダーを再読み込みしてください。下からソースを貼り付けることはできます。</string>
+    <string name="webSearchAuthentication">サーバーがウェブ検索を許可しませんでした。このサーバーの認証情報を確認してください。</string>
     <string name="webSearchInvalidResponse">検索結果がこのサーバーまたは対応形式と一致しませんでした。プロバイダーを再読み込みするかソースを貼り付けてください。</string>
-    <string name="webSearchFailed">Web検索を完了できませんでした。ソースを貼り付けるか、もう一度お試しください。</string>
+    <string name="webSearchFailed">ウェブ検索を完了できませんでした。ソースを貼り付けるか、もう一度お試しください。</string>
     <string name="webSearchRefresh">プロバイダーを再読み込み</string>
     <string name="webSearchProvider">検索プロバイダー</string>
     <string name="webSearchQuery">検索クエリ</string>
@@ -165,7 +165,7 @@
     <string name="e7SettingsInstallVersion">%1$sをインストール</string>
     <string name="e7SettingsInstalledVersion">OpenCode %1$sをインストールしました。使用するにはサーバープロセスを再起動してください。</string>
     <string name="e7SettingsRestartVersion">%1$sを使うにはOpenCodeを再起動</string>
-    <string name="e7SettingsRetryError">%1$s タップして再試行してください。</string>
+    <string name="e7SettingsRetryError">%1$sタップして再試行してください。</string>
     <string name="e7SettingsUpdateVersion">OpenCodeを%1$sにアップデート</string>
     <string name="e7ProjectMonitorUnsupported">このサーバーではバックグラウンド監視を利用できません。現在のリクエストを確認するには会話を開いてください。</string>
     <string name="readerUiSaveFailed">読み上げ設定を保存できませんでした。もう一度お試しください。</string>
@@ -273,7 +273,7 @@
     <string name="appearancePickerThemeApplied">テーマを%1$sに設定しました</string>
     <string name="serverSettingsDisconnectTitle">%1$sから切断</string>
     <string name="defaultShellOnlyOne">%1$s · このサーバーが提供する唯一のシェル</string>
-    <string name="defaultShellSaveFailed">シェルを変更できませんでした。%1$s タップしてもう一度お試しください。</string>
+    <string name="defaultShellSaveFailed">シェルを変更できませんでした。%1$sタップしてもう一度お試しください。</string>
     <string name="keepRunningAllSetTitle">準備完了です</string>
     <string name="keepRunningAllSetBody">Androidはこのアプリをバックグラウンドで実行し続けます。このスマートフォンでほかに許可する項目はありません。</string>
     <string name="keepRunningDailyLimit">Android 15以降では、ここにある項目をすべて許可しても、Androidの仕様上バックグラウンド同期は1日約6時間までとなります。その後はアプリを開くまでバックグラウンドで一時停止します。</string>
@@ -281,7 +281,7 @@
     <string name="webSearchFailedTitle">検索が完了しませんでした</string>
     <string name="webSearchTryAgain">もう一度検索</string>
     <string name="webSearchBusy">検索が終わるまでお待ちください。</string>
-    <string name="webSearchQueryHint">例：flutter golden tests の ような 検索 語</string>
+    <string name="webSearchQueryHint">例：「flutter golden tests」などの検索語を入力</string>
     <string name="webSearchNeedsProvider">先にこのサーバーで検索プロバイダーをセットアップしてください。</string>
     <string name="webSearchEmptyDetail">別の言葉を試すか、下からリンクを貼り付けてください。</string>
     <plurals name="webSearchResults">
@@ -320,7 +320,7 @@
     <string name="settingsBackgroundOffFailed">Androidでバックグラウンドモードをオフにできませんでした。</string>
     <string name="consentStorageFailed">このサーバーでの以前の回答を読み取れなかったため、しばらくの間は確認を省略します。この画面を開き直してもう一度お試しください。</string>
     <string name="consentGroupLabel">回答内容</string>
-    <string name="consentRowBattery">バックグラウンド実行</string>
+    <string name="consentRowBattery">バックグラウンドで実行を続ける</string>
     <string name="consentRowMaker">自動再起動</string>
     <string name="consentRowNeedsYou">確認が必要なときに通知</string>
     <string name="consentRowAlwaysAllow">「常に許可」を提案</string>
@@ -341,7 +341,7 @@
     </plurals>
     <string name="consentValueDeclinedCount__eq1">1件を拒否</string>
     <string name="consentAlwaysAgainTitle">常に許可するか確認しますか？</string>
-    <string name="consentAlwaysAgainBody">同じ確認があと3回続くと、再び「常に許可」にするか提案します。ご自身で選ぶまで何も自動許可されません。</string>
+    <string name="consentAlwaysAgainBody">同じ確認があと3回続くと、再び「常に許可」にするか提案します。自分で選ぶまで何も自動許可されません。</string>
     <string name="consentAlwaysAgainConfirm">もう一度提案する</string>
     <string name="serverSettingsUpdateCommandsDetail">サーバー側のパソコンのターミナルで実行してください。このアプリからアップデートすることはできません。</string>
     <string name="serverSettingsUpdateCommandsCopied">コピーしました。サーバー側のパソコンのターミナルで実行してください。</string>
@@ -405,7 +405,7 @@
     <string name="manageSpaceClearCache">アプリのキャッシュのみを消去</string>
     <string name="manageSpaceClearCacheDetail">%1$s解放されます。プロジェクト、サーバー、設定は残ります。</string>
     <string name="manageSpaceClearCacheKeeps">プロジェクト、サーバー、設定は残ります。</string>
-    <string name="manageSpaceCacheCleared">キャッシュを消去しました。%1$s解放されました。</string>
+    <string name="manageSpaceCacheCleared">キャッシュを消去しました。%1$s分の空き容量ができました。</string>
     <string name="manageSpaceCacheFailed">キャッシュを消去できませんでした。もう一度お試しください。</string>
     <string name="manageSpaceTryAgain">再試行</string>
     <string name="manageSpaceDeleteAll">すべて削除</string>
@@ -414,9 +414,9 @@
     <string name="manageSpaceDeleteBody">OpenCode Mobileが初期状態で再起動します。この操作は元に戻せません。</string>
     <string name="manageSpaceLostServer">このスマートフォン上とその会話</string>
     <plurals name="manageSpaceLostProjects">
-        <item quantity="other">%1$d個のプロジェクト（%2$s）</item>
+        <item quantity="other">%1$d件のプロジェクト（%2$s）</item>
     </plurals>
-    <string name="manageSpaceLostProjects__eq1">1個のプロジェクト（%2$s）</string>
+    <string name="manageSpaceLostProjects__eq1">1件のプロジェクト（%2$s）</string>
     <plurals name="manageSpaceLostSettings">
         <item quantity="other">%1$d件の保存済みサーバーとすべての設定</item>
     </plurals>
@@ -433,12 +433,12 @@
     <string name="manageSpaceSavedServers__eq0">保存済みサーバーなし</string>
     <string name="manageSpaceSavedServers__eq1">1件の保存済みサーバー</string>
     <string name="manageSpaceKeptLabel">残る内容</string>
-    <string name="manageSpaceKeptComputers">ご自身のパソコンとそのサーバー</string>
+    <string name="manageSpaceKeptComputers">パソコンとそのサーバー</string>
     <string name="manageSpaceKeptGit">Gitへプッシュ済みのすべて</string>
     <plurals name="projectExportDetail">
-        <item quantity="other">%1$d個のプロジェクト（%2$s）を1つのzipファイルとして任意の場所に保存</item>
+        <item quantity="other">%1$d件のプロジェクト（%2$s）を1つのzipファイルとして任意の場所に保存</item>
     </plurals>
-    <string name="projectExportDetail__eq1">1個のプロジェクト（%2$s）を1つのzipファイルとして任意の場所に保存</string>
+    <string name="projectExportDetail__eq1">1件のプロジェクト（%2$s）を1つのzipファイルとして任意の場所に保存</string>
     <string name="projectExportNoProjects">「このスマートフォン」にプロジェクトはまだありません</string>
     <string name="projectExportSave">zipファイルとして保存</string>
     <string name="projectExportRunning">プロジェクトをエクスポート中</string>
@@ -451,9 +451,9 @@
     <string name="projectExportDone">プロジェクトをエクスポートしました：%1$s（%2$dファイル）。</string>
     <string name="projectExportDonePrivate">このファイルにはサインイン情報が含まれています。他人に共有しないでください。</string>
     <plurals name="projectExportDoneLeftOut">
-        <item quantity="other">サインイン情報またはキーを含む%1$d個のファイルは除外されました。</item>
+        <item quantity="other">サインイン情報またはキーを含む%1$d件のファイルは除外されました。</item>
     </plurals>
-    <string name="projectExportDoneLeftOut__eq1">サインイン情報またはキーを含む1個のファイルは除外されました。</string>
+    <string name="projectExportDoneLeftOut__eq1">サインイン情報またはキーを含む1件のファイルは除外されました。</string>
     <string name="projectExportStopped">エクスポートを停止しました。何も保存されませんでした。</string>
     <string name="projectExportFailedDestination">選択した場所へ書き込めませんでした。別の場所を選ぶか、もう一度お試しください。</string>
     <string name="projectExportFailedSpace">選択した場所の空き容量が足りません。空き容量を増やすか別の場所を選んでください。</string>
@@ -535,7 +535,7 @@
     </plurals>
     <string name="settingsV3DifferentOn__eq1">1件のサーバーで個別に設定</string>
     <string name="settingsV3DifferentOn__eq2">%1$d件のサーバーで個別に設定</string>
-    <string name="settingsV3UseMyDefaultDetail">%1$sの通知、新しい会話のモデル、既読共有がご自身のデフォルト設定に戻ります。</string>
+    <string name="settingsV3UseMyDefaultDetail">%1$sの通知、新しい会話のモデル、既読共有がデフォルト設定に戻ります。</string>
     <string name="settingsV3ShellAutomatic">自動</string>
     <string name="settingsV3ReadStateByServerNote">サーバーごとに個別に確認されます。そのサーバーでオンにするまで何も共有されません。</string>
     <string name="settingsV3SharingCount">%2$d件中%1$d件で共有</string>
@@ -640,8 +640,8 @@
     <string name="appearanceGlowClassicHint">枠の周囲を回る光</string>
     <string name="appearanceGlowSoftHint">ゆっくり明滅するリング</string>
     <string name="appearanceModeAutoNote">スマートフォンに合わせます（日中はライト、夜間はダーク）。</string>
-    <string name="appearanceSeeAllThemes">全%1$d個のテーマを見る</string>
-    <string name="appearanceSeeAllLooks">全%1$d個の背景を見る</string>
+    <string name="appearanceSeeAllThemes">全%1$d件のテーマを見る</string>
+    <string name="appearanceSeeAllLooks">全%1$d件の背景を見る</string>
     <string name="appearanceAccentMatchNote">「自動合わせ」は%1$s固有のアクセントを使います。</string>
     <string name="appearanceStrengthNeedsLook">背景がオフのため、強さを調整する対象がありません。</string>
     <string name="appearanceChooseLookFirst">先に背景を選んでください</string>
@@ -659,8 +659,8 @@
     <string name="appearanceGuideResetConfirm">「外観」のすべての選択を初期設定に戻しますか？ライト/ダーク、テーマ、アクセント、スタイル、背景、文字サイズ、動き、返信の光彩がすべてリセットされます。</string>
     <string name="appearanceGuideResetDo">リセット</string>
     <string name="appearanceGuideResetKeep">選択を保持</string>
-    <string name="appearanceGuideCountIntro">すべて任意の%1$dつの簡単な質問</string>
-    <string name="appearanceGuideCountSeen">%2$d個中%1$d個を確認済み</string>
+    <string name="appearanceGuideCountIntro">簡単な質問が%1$dつあります。すべて任意です</string>
+    <string name="appearanceGuideCountSeen">%2$d件中%1$d件を確認済み</string>
     <string name="appearanceGuideCountAt">%1$d/%2$d</string>
     <string name="appearanceGuideSavesAsYouGo">すべての変更は自動で保存されます</string>
     <string name="appearanceGuideStartButton">「カラー」から始める</string>
@@ -670,7 +670,7 @@
     <string name="appearanceGuidePlace">%1$s、%2$s（%5$sの質問%3$d/%4$d）</string>
     <string name="appearanceAccentMatchShort">自動合わせ</string>
     <string name="serverPageThisPhonesServer">このスマートフォンのサーバー</string>
-    <string name="frostGlassQuestion">グラス</string>
+    <string name="frostGlassQuestion">ガラス</string>
     <string name="frostGlassOff">オフ</string>
     <string name="frostGlassWeak">弱め</string>
     <string name="frostGlassBalanced">バランス</string>
@@ -750,7 +750,7 @@
     <string name="appUpdateBuildLabel">ビルド</string>
     <string name="appUpdateOpenRelease">GitHubで開く</string>
     <string name="appUpdateNotInstalled">%1$sをインストールできませんでした</string>
-    <string name="browserModeIntro">Webブラウザ上で動作しているOpenCode Mobileです。リモートのOpenCodeサーバーはスマートフォンアプリと同様に利用できますが、端末本体を必要とする機能ここでは提供されません。</string>
+    <string name="browserModeIntro">ウェブブラウザ上で動作しているOpenCode Mobileです。リモートのOpenCodeサーバーはスマートフォンアプリと同様に利用できますが、端末本体を必要とする機能ここでは提供されません。</string>
     <string name="browserModeAvailableHeading">ブラウザで利用可能</string>
     <string name="browserModeAvailableServers">OpenCodeサーバーへの接続、会話、リクエストの承認、ファイルの閲覧、アクティビティの追跡。</string>
     <string name="browserModeAvailableKeyboard">デスクトップブラウザでのキーボードショートカット、右クリックメニュー、ドラッグ＆ドロップでの添付。</string>
@@ -767,9 +767,9 @@
     <string name="browserModeCors">サーバーはこのページのオリジンを許可する必要があります。同じアドレスがスマートフォンアプリでは動作するのにここで即座に接続テストが失敗する場合、サーバーがこのオリジンからのブラウザ要求を拒否しています。</string>
     <string name="backgroundBatterySettingsInstead">Androidが確認ダイアログを表示しなかったため、電池設定画面を開きました。そこでこのアプリを「制限なし」に設定してください。</string>
     <string name="privacyPagesSummary">サーバー、プロバイダー、音声、ファイル、アップデート</string>
-    <string name="manageSpaceKeptAllComputers">ご自身のパソコンとGitへプッシュ済みのすべては残ります</string>
-    <string name="appearanceGlassLook">グラスの質感</string>
-    <string name="appearanceGlassLookPick">グラスの質感を選択</string>
+    <string name="manageSpaceKeptAllComputers">パソコンとGitへプッシュ済みのすべては残ります</string>
+    <string name="appearanceGlassLook">ガラスの質感</string>
+    <string name="appearanceGlassLookPick">ガラスの質感を選択</string>
     <string name="appearanceGlassLookGlossy">光沢</string>
     <string name="appearanceGlassLookGlossyLine">明るい輝き、端で光が屈折</string>
     <string name="appearanceGlassLookClear">クリア</string>
@@ -781,8 +781,8 @@
     <string name="appearanceGlassLookDisclosure">違いが分かりやすいようプレビューには鮮やかな色を使っています。背後のページには実際の背景が表示されます。</string>
     <string name="appearanceGlassLookFrostedLighter">「すりガラス」のカードが軽くなり、背景がより透けて見えるようになりました。</string>
     <string name="appearanceGlassLookNeedsAndroid13">端の屈折効果にはAndroid 13が必要です。このスマートフォンではどの質感でもぼかし表示になります。</string>
-    <string name="appearanceGlassCardHint">もう一度「グラス」をタップすると質感を選べます。</string>
-    <string name="appearanceGlassCardLook">グラス · %1$s</string>
+    <string name="appearanceGlassCardHint">もう一度「ガラス」をタップすると質感を選べます。</string>
+    <string name="appearanceGlassCardLook">ガラス · %1$s</string>
     <string name="appearancePreviewAsk">設定画面を整理して</string>
     <string name="appearancePreviewReply">完了しました。3つのファイルを変更し、すべてのチェックに通っています。</string>
     <string name="appearancePreviewAction">変更を確認</string>

@@ -7,7 +7,7 @@
     <string name="p12LogCopy">すべてコピー</string>
     <string name="p12LogWrap">行を折り返す</string>
     <plurals name="p12LogMatches">
-        <item quantity="other">%1$d / %2$d 件の一致行</item>
+        <item quantity="other">%1$d / %2$d件の一致行</item>
     </plurals>
     <string name="p12LogPrevious">前の一致</string>
     <string name="p12LogNext">次の一致</string>

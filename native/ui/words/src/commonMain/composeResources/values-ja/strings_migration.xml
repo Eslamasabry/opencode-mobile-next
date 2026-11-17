@@ -9,7 +9,7 @@
     <string name="migration_reenter_body">アップデートでこれらの保存済みサインインを読み取れませんでした。その他のデータはすべて引き継がれています。</string>
     <string name="migration_reenter_row_password">%1$s · パスワードを入力</string>
     <string name="migration_reenter_row_token">%1$s · トークンを入力</string>
-    <string name="migration_reenter_row_github">%1$s · GitHub にもう一度サインイン</string>
+    <string name="migration_reenter_row_github">%1$s · GitHubにもう一度サインイン</string>
     <string name="migration_reenter_row_byo">%1$s · もう一度セットアップ</string>
     <string name="migration_reenter_unnamed">保存されたサーバー</string>
     <string name="migration_reenter_later">後でサインインする</string>
@@ -18,7 +18,7 @@
     <string name="migration_reenter_save">保存</string>
     <string name="migration_reenter_save_failed">このスマートフォンに保存できませんでした。もう一度お試しください。</string>
     <string name="migration_reenter_back">一覧に戻る</string>
-    <string name="migration_reenter_github_where">%1$sの GitHub にもう一度サインインするには、そのサーバーの会話のいずれかを開いて「Git」を開いてください。</string>
+    <string name="migration_reenter_github_where">%1$sのGitHubにもう一度サインインするには、そのサーバーの会話のいずれかを開いて「Git」を開いてください。</string>
     <string name="migration_reenter_open_chats">会話を開く</string>
     <string name="migration_reenter_byo_absent">%1$sの再セットアップはこのバージョンにはまだ含まれていません。保存された情報はそのままこのスマートフォンに残っています。</string>
     <string name="migration_failed_title">アップデートでデータの移行を完了できませんでした</string>
@@ -41,7 +41,7 @@
     <string name="migration_deferred_notice">このバージョンにはまだ含まれていません：%1$s。これらに保存されたデータはそのままこのスマートフォンに残っています。</string>
     <string name="migration_deferred_ai_team">AI Team</string>
     <string name="migration_deferred_memory">メモリ</string>
-    <string name="migration_deferred_gemma">端末内 AI モデル</string>
+    <string name="migration_deferred_gemma">端末内AIモデル</string>
     <string name="migration_deferred_separator">、</string>
     <string name="migration_deferred_dismiss">このバージョンに含まれない機能についての通知を閉じる</string>
 </resources>

@@ -2,6 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="stateStorageAppTitle">このスマートフォンのファイルへのアクセスを許可</string>
-    <string name="stateStorageAppBody">このプロジェクトは共有ストレージにあります。OpenCode Mobile の「すべてのファイルへのアクセス」をオンにしてから、ここに戻ってください。</string>
+    <string name="stateStorageAppBody">このプロジェクトは共有ストレージにあります。OpenCode Mobileの「すべてのファイルへのアクセス」をオンにしてから、ここに戻ってください。</string>
     <string name="stateStorageAppAction">ファイルアクセスの設定を開く</string>
 </resources>

@@ -3,7 +3,7 @@
 <resources>
     <string name="homeStartOpenProject">プロジェクトを開く</string>
     <string name="homeStartOpenProjectDetail">新しく作成するか、フォルダを選ぶ</string>
-    <string name="homeStartConnectDetail">ご自身のパソコンでエージェントを動かす</string>
+    <string name="homeStartConnectDetail">パソコンでエージェントを動かす</string>
     <string name="homeStartDemo">エージェントでできることを見る</string>
     <string name="homeStartDemoDetail">設定不要で試せる短い例</string>
     <string name="homeProjectSheetNew">新しいプロジェクト</string>

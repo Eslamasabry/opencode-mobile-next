@@ -21,18 +21,18 @@
     <string name="fbKindEvent">イベント</string>
     <string name="fbKindOther">項目</string>
     <string name="fbMemoryTitle">メモリ</string>
-    <string name="fbMemoryFromFactsBook">%1$d 件待機中</string>
+    <string name="fbMemoryFromFactsBook">%1$d件待機中</string>
     <string name="fbMemoryFromFactsBookNone">対応待ちなし</string>
     <plurals name="fbMemoryReview">
-        <item quantity="other">確認待ちの変更が %1$d 件あります</item>
+        <item quantity="other">確認待ちの変更が %1$d件あります</item>
     </plurals>
-    <string name="fbMemoryReview__eq1">確認待ちの変更が 1 件あります</string>
-    <string name="fbMemoryReview__eq2">確認待ちの変更が %1$d 件あります</string>
+    <string name="fbMemoryReview__eq1">確認待ちの変更が1件あります</string>
+    <string name="fbMemoryReview__eq2">確認待ちの変更が %1$d件あります</string>
     <plurals name="fbMemoryNotSaved">
-        <item quantity="other">未保存のメモが %1$d 件あります</item>
+        <item quantity="other">未保存のメモが %1$d件あります</item>
     </plurals>
-    <string name="fbMemoryNotSaved__eq1">未保存のメモが 1 件あります</string>
-    <string name="fbMemoryNotSaved__eq2">未保存のメモが %1$d 件あります</string>
+    <string name="fbMemoryNotSaved__eq1">未保存のメモが1件あります</string>
+    <string name="fbMemoryNotSaved__eq2">未保存のメモが %1$d件あります</string>
     <string name="fbMemoryNotSavedDetail">このスマートフォンに保管されています</string>
     <string name="fbMemoryReviewDetail">承認が必要です</string>
     <string name="fbMemoryRecent">最近メモリに追加された項目</string>
@@ -49,7 +49,7 @@
     <string name="fbListCards">カード</string>
     <string name="fbListPeople">人物</string>
     <string name="fbListDocuments">書類</string>
-    <string name="fbListLockedNote">ロックされたメモは表示されていません。含めるには指紋または PIN でロックを解除してください。</string>
+    <string name="fbListLockedNote">ロックされたメモは表示されていません。含めるには指紋またはPINでロックを解除してください。</string>
     <string name="fbKindLine">%1$s · %2$s</string>
     <string name="fbAreaMoney">お金エリア</string>
     <string name="fbAreaHealth">健康エリア</string>
@@ -62,11 +62,11 @@
     <string name="fbErrorRequest">リクエスト %1$s</string>
     <string name="fbSearchTitle">検索</string>
     <plurals name="fbSearchMatches">
-        <item quantity="other">「%2$s」に %1$d 件一致</item>
+        <item quantity="other">「%2$s」に %1$d件一致</item>
     </plurals>
     <string name="fbSearchMatches__eq0">「%2$s」に一致する項目はありません</string>
-    <string name="fbSearchMatches__eq1">「%2$s」に 1 件一致</string>
-    <string name="fbSearchMatches__eq2">「%2$s」に %1$d 件一致</string>
+    <string name="fbSearchMatches__eq1">「%2$s」に1件一致</string>
+    <string name="fbSearchMatches__eq2">「%2$s」に %1$d件一致</string>
     <string name="fbSearchWordsOnly">メモ内の語句に一致するものを検索します。意味での検索は行いません。</string>
     <string name="fbSearchEachHit">各結果には取得元と日時が表示されます。情報源の内容が誤っている場合もあります。</string>
     <string name="fbSearchLocked">ロックを解除するまで、ロックされたメモは検索されません。</string>
@@ -80,7 +80,7 @@
     <string name="fbCaptureNote">メモ</string>
     <string name="fbCapturePaste">貼り付け</string>
     <string name="fbCaptureNoteLabel">何を記憶しますか？</string>
-    <string name="fbCaptureNoteHint">来週水曜日の 10 時に歯医者。保険証を持っていく。</string>
+    <string name="fbCaptureNoteHint">来週水曜日の10時に歯医者。保険証を持っていく。</string>
     <string name="fbCapturePasteLabel">別のアプリやアシスタントからテキストを貼り付け</string>
     <string name="fbCaptureSave">保存</string>
     <string name="fbCaptureFootnote">別のアプリから共有された内容もここに届きます。まだ保存できないメモは「未保存」で待機し、消えることはありません。</string>
@@ -110,18 +110,18 @@
     <string name="fbReminderSave">リマインダーを保存</string>
     <string name="fbReminderChange">入力内容を変更</string>
     <string name="fbReminderWhat">リマインダーの内容</string>
-    <string name="fbNeedsYouTitle">対応が必要</string>
-    <string name="fbNeedsYouWaiting">%1$d 件待機中</string>
-    <string name="fbNeedsYouNone">現在対応が必要なものはありません。</string>
+    <string name="fbNeedsYouTitle">確認が必要</string>
+    <string name="fbNeedsYouWaiting">%1$d件待機中</string>
+    <string name="fbNeedsYouNone">現在確認が必要なものはありません。</string>
     <string name="fbNeedsYouNoneBody">質問、確認待ちの変更、未保存のメモがここに表示されます。</string>
     <string name="fbNotSavedTitle">未保存</string>
     <plurals name="fbNotSavedCount">
-        <item quantity="other">このスマートフォンに %1$d 件保管中</item>
+        <item quantity="other">このスマートフォンに %1$d件保管中</item>
     </plurals>
-    <string name="fbNotSavedCount__eq1">このスマートフォンに 1 件保管中</string>
-    <string name="fbNotSavedCount__eq2">このスマートフォンに %1$d 件保管中</string>
+    <string name="fbNotSavedCount__eq1">このスマートフォンに1件保管中</string>
+    <string name="fbNotSavedCount__eq2">このスマートフォンに %1$d件保管中</string>
     <string name="fbNotSavedIntro">破棄するまで、このスマートフォンまたはメモリに保管されます。まだクラウドには保存されていません。</string>
-    <string name="fbNotSavedFooter">破棄するまでここに残ります。30 日経つと、メモリが「再試行」「エクスポート」「破棄」の選択肢を表示します。</string>
+    <string name="fbNotSavedFooter">破棄するまでここに残ります。30日経つと、メモリが「再試行」「エクスポート」「破棄」の選択肢を表示します。</string>
     <string name="fbNotSavedEmptyTitle">すべて保存済みです</string>
     <string name="fbNotSavedEmptyBody">まだ保存できないメモはここで待機します。</string>
     <string name="fbNotSavedTryNow">今すぐ試す</string>
@@ -129,7 +129,7 @@
     <string name="fbNotSavedDiscard">メモを破棄</string>
     <string name="fbNotSavedRetry">再試行</string>
     <string name="fbNotSavedExport">エクスポート</string>
-    <string name="fbNotSavedThirtyDays">この項目は 30 日間保管されています。再試行するか、テキストをエクスポートするか、破棄してください。</string>
+    <string name="fbNotSavedThirtyDays">この項目は30日間保管されています。再試行するか、テキストをエクスポートするか、破棄してください。</string>
     <string name="fbNotSavedDiscardTitle">このメモを破棄しますか？</string>
     <string name="fbNotSavedDiscardBody">一度も保存されていません。破棄するとこのスマートフォンから削除されます。</string>
     <string name="fbNotSavedSaved">保存しました。</string>
@@ -165,10 +165,10 @@
     <string name="fbCaptureQueuedNode">保存できるようになるまで、メモリが保持しています。</string>
     <string name="fbCaptureReminderFailed">リマインダーを作成できませんでした。メモからもう一度お試しください。</string>
     <plurals name="fbCareWaiting">
-        <item quantity="other">承認待ち：%1$d 件</item>
+        <item quantity="other">承認待ち：%1$d件</item>
     </plurals>
-    <string name="fbCareWaiting__eq1">承認待ち：1 件</string>
-    <string name="fbCareWaiting__eq2">承認待ち：%1$d 件</string>
+    <string name="fbCareWaiting__eq1">承認待ち：1件</string>
+    <string name="fbCareWaiting__eq2">承認待ち：%1$d件</string>
     <string name="fbCareApprove">承認</string>
     <string name="fbCareReject">却下</string>
     <string name="fbCareApproved">承認しました。</string>
@@ -184,8 +184,8 @@
     <string name="fbCareClassFactAdd">事実を追加</string>
     <string name="fbCareClassFactUpdate">事実を変更</string>
     <string name="fbCareClassFactSupersede">事実を置き換え</string>
-    <string name="fbCareClassMerge">2 つの項目を統合</string>
-    <string name="fbCareClassLink">2 つの項目をリンク</string>
+    <string name="fbCareClassMerge">2つの項目を統合</string>
+    <string name="fbCareClassLink">2つの項目をリンク</string>
     <string name="fbCareClassArchive">アーカイブ</string>
     <string name="fbCareClassForget">忘却</string>
     <string name="fbCareClassWatch">特定の項目を監視</string>
@@ -204,11 +204,11 @@
     <string name="fbConnectAddress">ノードのアドレス</string>
     <string name="fbConnectAddressHint">127.0.0.1:8787</string>
     <string name="fbConnectCode">ワンタイムペアリングコード</string>
-    <string name="fbConnectCodeHelp">ノードでペアリングコマンドを実行すると表示されます。1 回限り、5 分間有効です。</string>
+    <string name="fbConnectCodeHelp">ノードでペアリングコマンドを実行すると表示されます。1回限り、5分間有効です。</string>
     <string name="fbConnectOwnerTitle">変更の承認（任意）</string>
-    <string name="fbConnectOwnerBody">提案の確認や共有設定の変更には、このスマートフォン固有のキーで署名します。下の公開キーをノードに渡し、返された所有者デバイス ID を入力してください。</string>
+    <string name="fbConnectOwnerBody">提案の確認や共有設定の変更には、このスマートフォン固有のキーで署名します。下の公開キーをノードに渡し、返された所有者デバイスIDを入力してください。</string>
     <string name="fbConnectOwnerKey">このスマートフォンの公開キー</string>
-    <string name="fbConnectOwnerId">所有者デバイス ID</string>
+    <string name="fbConnectOwnerId">所有者デバイスID</string>
     <string name="fbConnectButton">接続</string>
     <string name="fbConnectNeeds">先にアドレスとコードを入力してください。</string>
     <string name="fbConnectFailedTitle">接続できませんでした</string>
@@ -216,14 +216,14 @@
     <string name="fbDisconnectDetail">このスマートフォンのペアリング、トークン、承認キーを削除します</string>
     <string name="fbDisconnectTitle">%1$sを切断しますか？</string>
     <string name="fbDisconnectBody">このスマートフォンからノードのペアリング、トークン、承認キーが削除されます。ノード上のメモはそのまま残り、このスマートフォンで待機中のメモは破棄するまで残ります。</string>
-    <string name="fbErrorAddress">そのアドレスはプライベートネットワーク上のものではありません。このスマートフォン、自宅ネットワーク、または tailnet を使用してください。</string>
+    <string name="fbErrorAddress">そのアドレスはプライベートネットワーク上のものではありません。このスマートフォン、自宅ネットワーク、またはtailnetを使用してください。</string>
     <string name="fbErrorBadResponse">このアプリが読み取れない形式でメモリが応答しました。アプリまたはメモリプログラムをアップデートしてください。</string>
     <string name="fbErrorForbidden">このスマートフォンにはその操作を行う権限がありません。</string>
     <string name="fbErrorNotEnabled">このメモリではその機能はオフになっています。</string>
     <string name="fbErrorOwner">このスマートフォンではまだ変更を承認できません。先に承認機能を設定してください。</string>
     <string name="fbErrorPairCode">そのコードは機能しませんでした。ノードで新しいコードを取得してください。</string>
     <string name="fbErrorSlow">メモリが混み合っています。しばらくしてからもう一度お試しください。</string>
-    <string name="fbErrorStale">確認したあとで内容が変更されました。もう一度確認してから再度お試しください。</string>
+    <string name="fbErrorStale">確認したあとで内容が変更されました。もう一度確認してからもう一度お試しください。</string>
     <string name="fbErrorStarting">メモリを起動しています。しばらくしてからもう一度お試しください。</string>
     <string name="fbErrorUnauthorized">このスマートフォンはメモリにサインインしていません。もう一度セットアップしてください。</string>
     <string name="fbErrorCode">コード %1$s</string>
@@ -233,7 +233,7 @@
     <string name="fbKindHealth">健康</string>
     <string name="fbModuleStorage">ストレージ</string>
     <string name="fbModuleCloud">クラウドバックアップ</string>
-    <string name="fbModuleCare">対応が必要</string>
+    <string name="fbModuleCare">確認が必要</string>
     <string name="fbNotSavedAtNode">メモリが保持中</string>
     <string name="fbNotSavedOnPhone">このスマートフォン上</string>
     <string name="fbNotSavedNodeItem">メモリが保持しているメモ</string>
@@ -265,7 +265,7 @@
     <string name="fbStatusThisPhone">このスマートフォン</string>
     <string name="fbStatusApprove">このスマートフォンから変更を承認</string>
     <string name="fbStatusSince">%1$sに更新</string>
-    <string name="fbThingWaitingNote">「承認待ち」とマークされた事実は「対応が必要」にあります。</string>
+    <string name="fbThingWaitingNote">「承認待ち」とマークされた事実は「確認が必要」にあります。</string>
     <string name="fbWhenDaily">毎日 %1$s</string>
     <string name="fbWhenCustom">カスタムスケジュール</string>
     <string name="fbDeveloperFactsBook">メモリ（プレビュー）</string>
@@ -278,11 +278,11 @@
     <string name="fbErrorAuthCancelled">承認がキャンセルされました。何も変更されていません。</string>
     <string name="fbErrorAuthLocked">誤った試行が多すぎます。しばらく待ってから、もう一度お試しください。</string>
     <string name="fbErrorAuthFailed">本人確認ができませんでした。何も変更されていません。</string>
-    <string name="fbErrorSlowAfter">メモリが混み合っています。%1$d 秒後にもう一度お試しください。</string>
+    <string name="fbErrorSlowAfter">メモリが混み合っています。%1$d秒後にもう一度お試しください。</string>
     <string name="fbAuthReason">メモリ内のこの変更を承認</string>
     <string name="fbWhenWeeklyOn">毎週 %1$s %2$s</string>
     <string name="fbWhenMonthLast">毎月最終日 %1$s</string>
-    <string name="fbWhenMonthlyOn">毎月 %1$d 日 %2$s</string>
+    <string name="fbWhenMonthlyOn">毎月 %1$d日 %2$s</string>
     <string name="fbWhenYearlyOn">毎年 %1$s %2$s</string>
     <string name="fbReminderNeedsTitle">先にリマインダーの内容を入力してください。</string>
     <string name="fbReminderWhatHint">歯医者に電話する</string>
@@ -296,23 +296,23 @@
     <string name="fbExportCopy">エクスポートをコピー</string>
     <string name="fbSettingsTitle">メモリ設定</string>
     <string name="fbSettingsBrief">朝のブリーフ</string>
-    <string name="fbSettingsBriefCap">1 日の項目数</string>
-    <string name="fbSettingsBriefCapDetail">1 日にブリーフが表示する最大件数です。</string>
+    <string name="fbSettingsBriefCap">1日の項目数</string>
+    <string name="fbSettingsBriefCapDetail">1日にブリーフが表示する最大件数です。</string>
     <string name="fbSettingsBriefOff">なし</string>
     <plurals name="fbSettingsBriefItems">
-        <item quantity="other">%1$d 件</item>
+        <item quantity="other">%1$d件</item>
     </plurals>
-    <string name="fbSettingsBriefItems__eq1">1 件</string>
-    <string name="fbSettingsBriefItems__eq2">%1$d 件</string>
+    <string name="fbSettingsBriefItems__eq1">1件</string>
+    <string name="fbSettingsBriefItems__eq2">%1$d件</string>
     <string name="fbSettingsBriefTime">ブリーフの時刻</string>
     <string name="fbSettingsQuietHours">おやすみ時間</string>
     <string name="fbSettingsPrivacy">プライバシー</string>
     <string name="fbSettingsLockTimeout">ロックされたフォルダを開いたままにする時間</string>
     <plurals name="fbSettingsMinutes">
-        <item quantity="other">%1$d 分</item>
+        <item quantity="other">%1$d分</item>
     </plurals>
-    <string name="fbSettingsMinutes__eq1">1 分</string>
-    <string name="fbSettingsMinutes__eq2">%1$d 分</string>
+    <string name="fbSettingsMinutes__eq1">1分</string>
+    <string name="fbSettingsMinutes__eq2">%1$d分</string>
     <string name="fbSettingsAreasDetail">各エリアを読み取れる相手</string>
     <string name="fbSettingsThisNode">このメモリ</string>
     <string name="fbSettingsHomeZone">ホームのタイムゾーン</string>
@@ -327,7 +327,7 @@
     <string name="fbStatusHistoryNotChecked">未確認</string>
     <string name="fbStatusHistoryVerified">ペアリング時に固定したキーで検証済み</string>
     <string name="fbStatusHistoryFailed">検証できませんでした。検証できるまで何も承認しないでください。</string>
-    <string name="fbStatusHistoryForked">競合する 2 つの履歴が見つかりました。承認は一時停止されています。</string>
+    <string name="fbStatusHistoryForked">競合する2つの履歴が見つかりました。承認は一時停止されています。</string>
     <string name="fbStatusNoReplication">複製がオフになっているため、メモはこのメモリにのみ存在し、クラウドのコピーが最新かどうか確認できません。</string>
     <string name="fbStatusNotYet">オンになっていません</string>
     <string name="fbNotYetCloud">クラウド同期とバックアップ</string>
@@ -335,7 +335,7 @@
     <string name="fbNotYetAlarms">このスマートフォンのリマインダーアラーム</string>
     <string name="fbNotAvailableYet">オフ</string>
     <string name="fbReminderClockNote">時刻の変更によりその日に存在しない時刻になった場合は、その直後に存在する最初の時刻に実行されます。</string>
-    <string name="fbCaptureReminderNotMade">リマインダーはまだ作成されていません。メモが保存されたあとで再度追加してください。</string>
+    <string name="fbCaptureReminderNotMade">リマインダーはまだ作成されていません。メモが保存されたあとでもう一度追加してください。</string>
     <string name="fbNotSavedDiscardBodyNode">メモリは保持しているコピーを削除します。一度も保存されていません。</string>
     <string name="fbAreaNameGeneral">一般</string>
     <string name="fbAreaNameHome">ホーム</string>
@@ -352,20 +352,20 @@
     <string name="fbTriggersEmptyBody">ルールは特定の種類のメッセージを監視し、提案のみを行います。承認するまで何も保存・送信されません。</string>
     <string name="fbTriggersNew">新しいルール</string>
     <plurals name="fbTriggersGroupShare">
-        <item quantity="other">共有したテキスト · %1$d 件のルール</item>
+        <item quantity="other">共有したテキスト · %1$d件のルール</item>
     </plurals>
-    <string name="fbTriggersGroupShare__eq1">共有したテキスト · 1 件のルール</string>
-    <string name="fbTriggersGroupShare__eq2">共有したテキスト · %1$d 件のルール</string>
+    <string name="fbTriggersGroupShare__eq1">共有したテキスト · 1件のルール</string>
+    <string name="fbTriggersGroupShare__eq2">共有したテキスト · %1$d件のルール</string>
     <plurals name="fbTriggersGroupChat">
-        <item quantity="other">保存した会話 · %1$d 件のルール</item>
+        <item quantity="other">保存した会話 · %1$d件のルール</item>
     </plurals>
-    <string name="fbTriggersGroupChat__eq1">保存した会話 · 1 件のルール</string>
-    <string name="fbTriggersGroupChat__eq2">保存した会話 · %1$d 件のルール</string>
+    <string name="fbTriggersGroupChat__eq1">保存した会話 · 1件のルール</string>
+    <string name="fbTriggersGroupChat__eq2">保存した会話 · %1$d件のルール</string>
     <plurals name="fbTriggersGroupNote">
-        <item quantity="other">作成したメモ · %1$d 件のルール</item>
+        <item quantity="other">作成したメモ · %1$d件のルール</item>
     </plurals>
-    <string name="fbTriggersGroupNote__eq1">作成したメモ · 1 件のルール</string>
-    <string name="fbTriggersGroupNote__eq2">作成したメモ · %1$d 件のルール</string>
+    <string name="fbTriggersGroupNote__eq1">作成したメモ · 1件のルール</string>
+    <string name="fbTriggersGroupNote__eq2">作成したメモ · %1$d件のルール</string>
     <string name="fbTriggersRecent">最近のメッセージ</string>
     <string name="fbTriggersFootnote">ルールは提案のみを行います。承認するまで何も保存・送信されません。無視された項目は回数のみ数えられ、保存はされません。</string>
     <string name="fbRuleFinds">%1$sを検出 → %2$s</string>
@@ -377,12 +377,12 @@
     <string name="fbOutcomeReminder">リマインダーを提案</string>
     <string name="fbOutcomeFact">事実を提案</string>
     <string name="fbOutcomeConversation">話し合うことを提案</string>
-    <string name="fbRuleWeek">今週：提案 %1$d 件、無視 %2$d 件</string>
+    <string name="fbRuleWeek">今週：提案 %1$d件、無視 %2$d件</string>
     <plurals name="fbRuleWeekOffers">
-        <item quantity="other">今週：提案 %1$d 件、無視 %2$d 件、会話の提案 %3$d 件</item>
+        <item quantity="other">今週：提案 %1$d件、無視 %2$d件、提案 %3$d件</item>
     </plurals>
-    <string name="fbRuleWeekOffers__eq1">今週：提案 %1$d 件、無視 %2$d 件、会話の提案 1 件</string>
-    <string name="fbRuleWeekOffers__eq2">今週：提案 %1$d 件、無視 %2$d 件、会話の提案 %3$d 件</string>
+    <string name="fbRuleWeekOffers__eq1">今週：提案 %1$d件、無視 %2$d件、提案1件</string>
+    <string name="fbRuleWeekOffers__eq2">今週：提案 %1$d件、無視 %2$d件、提案 %3$d件</string>
     <string name="fbRulePaused">一時停止中</string>
     <string name="fbRulePause">「%1$s」を一時停止</string>
     <string name="fbRuleResume">「%1$s」を再開</string>
@@ -398,8 +398,8 @@
     <string name="fbReasonSensitive">プライベートな内容に見え、ロックされたメモが閉じているため、保留にされました。</string>
     <string name="fbReasonSourceCap">本日この取得元からのメッセージが多すぎるため、このメッセージは回数のみ記録されました。</string>
     <string name="fbReasonVaultCap">本日届いたメッセージが多すぎるため、このメッセージは回数のみ記録されました。</string>
-    <string name="fbReasonRuleCap">このルールは 1 日の上限に達したため、このメッセージは回数のみ記録されました。</string>
-    <string name="fbReasonStorm">似たメッセージが一度に多数届いたため、1 件にまとめられました。</string>
+    <string name="fbReasonRuleCap">このルールは1日の上限に達したため、このメッセージは回数のみ記録されました。</string>
+    <string name="fbReasonStorm">似たメッセージが一度に多数届いたため、1件にまとめられました。</string>
     <string name="fbReasonNoRule">この取得元に対して有効なルールがありません。</string>
     <string name="fbRuleNewTitle">新しいルール</string>
     <string name="fbRuleEditTitle">ルールを編集</string>
@@ -415,9 +415,9 @@
     <string name="fbRuleLanguageLabel">メッセージの言語</string>
     <string name="fbRuleLangEn">英語</string>
     <string name="fbRuleLangAr">アラビア語</string>
-    <string name="fbRuleTemplateHelp">メモリは、たとえば「Appointment: Library visit | 2026-10-15T09:00」といった形式で 1 行ずつ内容を読み取ります。</string>
+    <string name="fbRuleTemplateHelp">メモリは、たとえば「Appointment: Library visit | 2026-10-15T09:00」といった形式で1行ずつ内容を読み取ります。</string>
     <string name="fbRuleWordsLabel">必須の語句（任意）</string>
-    <string name="fbRuleWordsHelp">コンマ区切りで最大 4 語まで指定できます。コードではなく通常の文字を入力してください。</string>
+    <string name="fbRuleWordsHelp">コンマ区切りで最大4語まで指定できます。コードではなく通常の文字を入力してください。</string>
     <string name="fbRuleThen">実行する処理</string>
     <string name="fbRuleOutcomeReminder">リマインダーを提案</string>
     <string name="fbRuleOutcomeReminderDetail">先に日付と時刻を確認します。</string>
@@ -428,12 +428,12 @@
     <string name="fbRuleAutoStartOff">会話は提案のみ行われ、自動で開始されることはありません。</string>
     <string name="fbRuleOn">このルールはオンです</string>
     <string name="fbRuleOnDetail">オフにすると一時停止します。すでに提案された項目は削除されません。</string>
-    <string name="fbRuleLimit">1 日の上限</string>
+    <string name="fbRuleLimit">1日の上限</string>
     <plurals name="fbRuleLimitValue">
-        <item quantity="other">1 日 %1$d 件</item>
+        <item quantity="other">1日 %1$d件</item>
     </plurals>
-    <string name="fbRuleLimitValue__eq1">1 日 1 件</string>
-    <string name="fbRuleLimitValue__eq2">1 日 %1$d 件</string>
+    <string name="fbRuleLimitValue__eq1">1日1件</string>
+    <string name="fbRuleLimitValue__eq2">1日 %1$d件</string>
     <string name="fbRuleTest">サンプルで試す</string>
     <string name="fbRuleSampleLabel">サンプルメッセージ</string>
     <string name="fbRuleSampleExample">例文を使う</string>
@@ -450,11 +450,11 @@
     <string name="fbRuleDeleteBody">「%1$s」による提案が停止します。すでに提案された項目は残り、承認するか判断できます。</string>
     <string name="fbRuleNeedsOwner">このスマートフォンではまだルールの変更に署名できないため、ルールは表示のみで変更できません。変更するには承認機能を設定してください。</string>
     <string name="fbRuleStale">このルールはメモリ内で変更されました。再読み込みしましたので、確認してからもう一度保存してください。</string>
-    <string name="fbRuleProblemName">ルール名は 80 文字以内で入力してください。</string>
-    <string name="fbRuleProblemWords">各 40 文字以内の語句を最大 4 つまで入力してください。</string>
-    <string name="fbRuleProblemOutcome">ルールが提案する内容を少なくとも 1 つ選択してください。</string>
+    <string name="fbRuleProblemName">ルール名は80文字以内で入力してください。</string>
+    <string name="fbRuleProblemWords">各40文字以内の語句を最大4つまで入力してください。</string>
+    <string name="fbRuleProblemOutcome">ルールが提案する内容を少なくとも1つ選択してください。</string>
     <string name="fbRuleProblemTemplate">このメモリはその種類のメッセージを読み取れません。</string>
-    <string name="fbRuleProblemLimit">1 日あたり 1 から 20 の間で選択してください。</string>
+    <string name="fbRuleProblemLimit">1日あたり1から20の間で選択してください。</string>
     <string name="fbEventTitle">処理の詳細</string>
     <string name="fbEventFrom">取得元</string>
     <string name="fbEventSender">送信者（自己申告）</string>
@@ -466,10 +466,10 @@
     <string name="fbEventRule">一致したルール</string>
     <string name="fbEventIgnored">その他のメモ</string>
     <plurals name="fbEventCollapsed">
-        <item quantity="other">ほか %1$d 件の似たメッセージがこの 1 件にまとめられました。</item>
+        <item quantity="other">ほか%1$d件の似たメッセージがこの1件にまとめられました。</item>
     </plurals>
-    <string name="fbEventCollapsed__eq1">ほか 1 件の似たメッセージがこの 1 件にまとめられました。</string>
-    <string name="fbEventCollapsed__eq2">ほか %1$d 件の似たメッセージがこの 1 件にまとめられました。</string>
+    <string name="fbEventCollapsed__eq1">ほか1件の似たメッセージがこの1件にまとめられました。</string>
+    <string name="fbEventCollapsed__eq2">ほか%1$d件の似たメッセージがこの1件にまとめられました。</string>
     <string name="fbEventUnverified">未検証の送信者です。メモリはこのテキストの本当の送信者を確認できないため、承認なしにお金に関する事実を変更しません。</string>
     <string name="fbEventProposed">提案内容</string>
     <string name="fbEventFootnote">元のテキストはここに表示されず、指示として実行されることもありません。</string>
@@ -477,10 +477,10 @@
     <string name="fbWhyFired">このメッセージの処理結果</string>
     <string name="fbCareProposalWhen">%1$s、%2$s</string>
     <plurals name="fbNeedsYouOffers">
-        <item quantity="other">トリガーからの提案が %1$d 件あります</item>
+        <item quantity="other">トリガーからの提案が %1$d件あります</item>
     </plurals>
-    <string name="fbNeedsYouOffers__eq1">トリガーからの提案が 1 件あります</string>
-    <string name="fbNeedsYouOffers__eq2">トリガーからの提案が %1$d 件あります</string>
+    <string name="fbNeedsYouOffers__eq1">トリガーからの提案が1件あります</string>
+    <string name="fbNeedsYouOffers__eq2">トリガーからの提案が %1$d件あります</string>
     <string name="fbOfferTitle">エージェントと話し合いますか？</string>
     <string name="fbOfferFromRule">提案 · %1$s</string>
     <string name="fbOfferSource">%1$sから · %2$s</string>
@@ -496,7 +496,7 @@
     <string name="fbNodeRow">このスマートフォンのメモリを使う</string>
     <string name="fbNodeRowDetail">メモリをこのスマートフォン内に保存します。外部には送信されません。</string>
     <string name="fbNodeUnsupportedTitle">ここでは利用できません</string>
-    <string name="fbNodeUnsupportedBody">このスマートフォンのメモリ機能には、Android スマートフォン専用の「このスマートフォン」機能が必要です。</string>
+    <string name="fbNodeUnsupportedBody">このスマートフォンのメモリ機能には、Androidスマートフォン専用の「このスマートフォン」機能が必要です。</string>
     <string name="fbNodeLinuxTitle">先にスマートフォンをセットアップしてください</string>
     <string name="fbNodeLinuxBody">メモリは「このスマートフォン」内で動作します。先にそちらをセットアップしてから戻ってください。</string>
     <string name="fbNodeLinuxAction">このスマートフォンをセットアップ</string>
@@ -536,7 +536,7 @@
     <string name="fbReasonTargetStale">このルールが更新する対象が変更されたため、何も提案されませんでした。</string>
     <string name="fbReasonTargetGone">このルールが更新する対象がなくなったか、更新を受け付けない状態のため、何も提案されませんでした。</string>
     <string name="fbReasonRejectedEvent">メモリはこのメッセージを受け付けませんでした。</string>
-    <string name="fbRuleProblemSender">送信者名は 1 から 80 文字で入力してください。</string>
+    <string name="fbRuleProblemSender">送信者名は1から80文字で入力してください。</string>
     <string name="fbRuleSenderLabel">送信者の申告名（任意）</string>
     <string name="fbRuleSenderHelp">この名前からのメッセージと名乗るものだけを対象にします。誰でも好きな名前を名乗れるため、ルールの対象を絞り込むだけで、実際の送信者を証明するものではありません。</string>
     <string name="fbRuleAreaLabel">エリア</string>
@@ -564,15 +564,15 @@
     <string name="fbNodeNameDefault">このメモリ</string>
     <string name="fbStatusAllWorking">すべて正常に動作しています</string>
     <plurals name="fbStatusNeedsLook">
-        <item quantity="other">確認が必要な項目が %1$d 件あります</item>
+        <item quantity="other">確認が必要な項目が %1$d件あります</item>
     </plurals>
-    <string name="fbStatusNeedsLook__eq1">確認が必要な項目が 1 件あります</string>
+    <string name="fbStatusNeedsLook__eq1">確認が必要な項目が1件あります</string>
     <string name="fbStatusBackedUpAge">バックアップ済み · %1$s前のコピー</string>
     <string name="fbReminderNotSounded">このスマートフォンでは鳴動していません</string>
     <plurals name="fbEventOutcomeProposed">
-        <item quantity="other">%1$d 件の提案があります</item>
+        <item quantity="other">%1$d件の提案があります</item>
     </plurals>
-    <string name="fbEventOutcomeProposed__eq1">1 件の提案があります</string>
+    <string name="fbEventOutcomeProposed__eq1">1件の提案があります</string>
     <string name="fbEventWaitingForOk">確認待ち</string>
     <string name="fbCaptureAddTo">追加先</string>
     <string name="fbCaptureAddToNone">メモリに整理を任せる</string>
@@ -588,8 +588,8 @@
     <string name="fbCaptureRulesOn__eq1">1件のルールが有効</string>
     <string name="fbCaptureSeeRules">ルールを見る</string>
     <string name="fbCaptureFactAdded">%1$sに追加しました。</string>
-    <string name="fbCaptureFactProposed">確認用に送信しました。「対応が必要」で待機しています。</string>
-    <string name="fbCaptureSeeNeedsYou">「対応が必要」を見る</string>
+    <string name="fbCaptureFactProposed">確認用に送信しました。「確認が必要」で待機しています。</string>
+    <string name="fbCaptureSeeNeedsYou">「確認が必要」を見る</string>
     <string name="fbThingAddFact">%1$sに事実を追加</string>
     <string name="fbThingAddFactSave">事実を追加</string>
     <string name="fbThingRemind">%1$sをリマインド</string>
@@ -597,7 +597,7 @@
     <string name="fbThingEditFact">この事実を変更</string>
     <string name="fbThingEditFactSave">変更を送信</string>
     <string name="fbThingFactChanged">変更しました。</string>
-    <string name="fbThingChangeProposed">変更は「対応が必要」で確認待ちです。</string>
+    <string name="fbThingChangeProposed">変更は「確認が必要」で確認待ちです。</string>
     <string name="fbThingOneLine">1行で入力します。保存前に確認待ちになります。</string>
     <string name="fbThingTapHint">事実をタップすると、参照元の確認や変更ができます。</string>
     <string name="fbThingExplainTold">%1$sにメモリへ伝えました。</string>
@@ -606,7 +606,7 @@
     <string name="fbThingExplainGuessed">%2$sにメモリが%1$sから推測しました。まだ誰も確認していません。</string>
     <string name="fbThingExplainGuessedNoSource">%1$sにメモリが推測しました。まだ誰も確認していません。</string>
     <string name="fbThingExplainCalculated">%1$sにメモリが他の事実から算出しました。</string>
-    <string name="fbThingExplainWaiting">「対応が必要」で確認待ちです。</string>
+    <string name="fbThingExplainWaiting">「確認が必要」で確認待ちです。</string>
     <string name="fbSettingsUsePhoneZone">このスマートフォンのタイムゾーンを使う</string>
     <string name="fbSettingsUsePhoneZoneDetail">%1$s。リマインダーは設定した時刻のまま維持されます。</string>
     <string name="fbReasonKeyLockedNotYet">パスワードまたは口座番号が含まれており、メモリはまだこれらを保存できません。このスマートフォンに保持されます。</string>

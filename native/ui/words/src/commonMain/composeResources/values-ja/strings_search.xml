@@ -58,7 +58,7 @@
     <string name="discoverWorktreesAliases">ワークツリー ブランチ 分離 Git ブランチ</string>
     <string name="discoverSearchFilesAliases">ファイルを検索 ファイル名 検索</string>
     <string name="discoverAllConversationsAliases">すべての会話 やり取り 履歴 プロジェクト 検索</string>
-    <string name="discoverTeamAliases">AI Team エージェント 実行 対応が必要 オーケストレーション</string>
+    <string name="discoverTeamAliases">AI Team エージェント 実行 確認が必要 対応が必要 オーケストレーション</string>
     <string name="discoverNotifyServersTitle">保存したサーバーからの通知</string>
     <string name="discoverNotifyWhatAliases">完了した実行 承認 質問 確認 クォータ通知 通知内容</string>
     <string name="discoverNotifyQuietAliases">おやすみ時間 通知オフ 夜間 サイレント ミュート スケジュール</string>
@@ -93,7 +93,7 @@
     <string name="settingsHubProvidersRow">プロバイダーとアカウント</string>
     <string name="settingsHubSearchToolsAliases">ツール MCP 連携 コマンド スキル リファレンス スラッシュ 機能 プラグイン 外部エージェント A2A</string>
     <string name="aiSetupEntryDetail">このサーバーのモデル、ツール、おすすめ設定</string>
-    <string name="discoverChatsAliases">会話 やり取り 仕事 自宅 最近 ピン留め 新しい会話 受信トレイ アクティビティ 対応が必要 承認 権限 質問 フォーム 待機中 実行中 完了</string>
+    <string name="discoverChatsAliases">会話 やり取り 仕事 自宅 最近 ピン留め 新しい会話 受信トレイ アクティビティ 確認が必要 対応が必要 承認 権限 質問 フォーム 待機中 実行中 完了</string>
     <string name="settingsPhraseChipsSupporting">よく使う短いフレーズをメッセージ欄の上に表示します。送信した内容からこのスマートフォン上で学習します。</string>
     <string name="settingsHubSearchReasoningAliases">会話記録 表示 思考 推論</string>
     <string name="tipsHubSubtitle">隠れた操作と短いガイド</string>
