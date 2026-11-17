@@ -289,7 +289,8 @@ class KitFloatingBarTest {
     /**
      * Lets the scene settle on the TEST clock: a few jumps of half a second, one frame each. With the clock on
      * auto-advance every `waitForIdle` drew a frame per 16 ms of every animation still running (the live glass), which
-     * took close to the test's one-minute limit on a busy runner; the jumps draw the same settled picture in a few frames.
+     * took close to the test's one-minute limit on a busy runner; the jumps draw the same settled picture in a few
+     * frames.
      */
     private fun ComposeUiTest.settle() {
         waitForIdle()

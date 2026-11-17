@@ -344,7 +344,8 @@ class ChatWordsGlassTest {
     /**
      * Lets the scene settle on the TEST clock: a few jumps of half a second, one frame each. With the clock on
      * auto-advance every `waitForIdle` and every 16 ms of `advanceTimeBy` drew a whole frame of the joined box and pill
-     * (the join shader runs on the CPU, seconds a frame on a loaded runner), which is why this file needed five minutes.
+     * (the join shader runs on the CPU, seconds a frame on a loaded runner), which is why this file needed five
+     * minutes.
      */
     private fun androidx.compose.ui.test.ComposeUiTest.settle(jumps: Int = SETTLE_JUMPS) {
         waitForIdle()
