@@ -210,8 +210,11 @@ if lane == 'candidate':
         integrity.append('candidate: no executed passing whole :quality:test report')
     if not android.get('gradle_ran') or android.get('tests', 0) <= 0:
         integrity.append('candidate: no Android unit result artifact')
-    if not compile_.get('gradle_ran'):
-        integrity.append('candidate: app compilation not proved')
+    elif env('RESULT_ANDROID_UNIT') in (None, '', 'skipped'):
+        rows.append(('android unit tests', mark('failure' if android.get('failed') else 'success') +
+                     f' ({android.get("tests", 0)} run, {len(android.get("failing", []))} failing)'))
+    if not compile_.get('gradle_ran') or compile_.get('compile_all_tests') is False:
+        integrity.append('candidate: app or all-test compilation not proved')
     rows.append(('candidate coverage', 'all modules, pictures, quality/security, Android, build logic, release tools'))
 
 # Guard tests that could not run because their reference picture was not fetched (ReferenceGuard, test_report.py).
