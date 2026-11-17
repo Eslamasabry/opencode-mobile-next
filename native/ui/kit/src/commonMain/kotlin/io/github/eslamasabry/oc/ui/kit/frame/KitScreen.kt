@@ -327,9 +327,9 @@ public fun KitScreen(
      */
     floatingBar: KitFloatingBar? = null,
     /**
-     * A chat's floating chrome (owner 2026-11-17): the bar becomes one [KitHeaderCapsule], the body runs behind it and
-     * the bottom block with no fade, band or mask, and each floating part keeps its own fill. Read by a page that
-     * records its body ([frost]) outside Glass, whose liquid panes already float.
+     * A chat's floating chrome (owner 2026-11-17): the bar becomes one [KitHeaderCapsule] (under Glass and Frosted the
+     * style's own floating pane is the capsule), the body runs behind it and the bottom block with no fade, band or
+     * mask, and each floating part keeps its own fill. Read by a page that records its body ([frost]).
      */
     floating: Boolean = false,
     body: @Composable () -> Unit,
@@ -399,7 +399,7 @@ public fun KitScreen(
             // B-102: a page that records nothing keeps its ground and the fade above its bottom block; the body's room
             // includes that fade, so at rest the last line sits above it (and the first under the bar's 12 dp one).
             val faded = !edgesFade && !kitChromeIsGlass()
-            val floatChrome = floating && edgesFade && !kitChromeIsGlass()
+            val floatChrome = floating && edgesFade
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
             // over what scrolls behind them; a null face keeps today's ground.
             // Joined glass (KitLiquidJoin.kt): a menu from the bar's controls, or the jump pill on the message box, is one
@@ -543,7 +543,7 @@ public fun KitScreen(
                                         // in below them over TOP_DISSOLVE_DP.
                                         clearAbove =
                                             if (topPart == null) null
-                                            else if (floatChrome) ({ (statusPx + with(density) { HEADER_CAPSULE_MARGIN_DP.dp.toPx() }) })
+                                            else if (floatChrome) ({ (statusPx + with(density) { (if (barFace != null) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() }) })
                                             else ({ (statusPx + topPx).toFloat() }),
                                         topReach = if (floatChrome) 0.dp else TOP_DISSOLVE_DP.dp,
                                         // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
@@ -592,7 +592,10 @@ public fun KitScreen(
                                 CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
                                     if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody), barBody)
                                     else if (frostedFace != null) KitLiquidBarPane(frostedFace)
-                                    if (floatChrome) KitHeaderCapsule { it() } else it()
+                                    if (floatChrome && barFace == null && frostedFace == null) KitHeaderCapsule { it() }
+                                    // Glass and Frosted: the style's own pane is the capsule (it already floats); only the title's one line.
+                                    else if (floatChrome) CompositionLocalProvider(LocalKitHeaderCapsule provides true) { it() }
+                                    else it()
                                 }
                             }
                         }
