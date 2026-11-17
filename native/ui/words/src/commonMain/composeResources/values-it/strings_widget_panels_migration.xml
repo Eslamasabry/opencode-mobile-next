@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelUpdating">Aggiornamento dell'app…</string>
+    <string name="widgetPanelOpenAppForUpdate">Apri l'app per completare l'aggiornamento, poi riprova questo widget.</string>
+    <string name="widgetPanelOpenApp">Apri app</string>
+    <string name="widgetPanelOpenFailed">Impossibile aprire questo widget. Chiudi e riprova.</string>
+</resources>

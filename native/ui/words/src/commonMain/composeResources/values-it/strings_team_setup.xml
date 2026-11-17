@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">Il test di sicurezza è stato interrotto da Android (segnale %1$d) prima di poter terminare.</string>
+    <string name="phoneTeamProofCheckSignal">Il controllo di sicurezza "%1$s" è stato interrotto da Android (segnale %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">Il controllo di sicurezza "%1$s" non è andato a buon fine: questo telefono non lo ha bloccato come richiede la sandbox del team.</string>
+    <string name="phoneTeamProofSandbox">La sandbox del team non è riuscita ad avviarsi su questo telefono.</string>
+    <string name="phoneTeamProofUbuntu">Il passaggio Ubuntu "%1$s" non è andato a buon fine nella sandbox del team.</string>
+    <string name="phoneTeamProofFixture">I file di test privati del controllo di sicurezza sono cambiati o non è stato possibile configurarli.</string>
+    <string name="phoneTeamProofNoAnswer">Il test di sicurezza non ha risposto in tempo.</string>
+    <string name="phoneTeamProofProot">Il controllo di sicurezza proot "%1$s" non è stato superato.</string>
+    <string name="phoneTeamProofOther">Il controllo di sicurezza si è fermato a "%1$s".</string>
+</resources>

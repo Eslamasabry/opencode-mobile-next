@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">Messaggia questa conversazione</string>
+    <string name="widgetActionMessage">Messaggio</string>
+    <string name="widgetActionHint">Guida la risposta in corso. Se questo agente non accetta indicazioni mentre lavora, il tuo messaggio segue la sua risposta.</string>
+    <string name="widgetActionSend">Invia messaggio</string>
+    <string name="widgetActionClose">Chiudi</string>
+    <string name="widgetActionOpen">Apri conversazione</string>
+    <string name="widgetActionAccepted">Messaggio inviato</string>
+    <string name="widgetActionRejected">Questa conversazione non ha potuto accettare il messaggio</string>
+    <string name="widgetActionUncertain">Impossibile confermare il messaggio</string>
+    <string name="widgetActionCheckFirst">Controlla la conversazione prima di inviare di nuovo.</string>
+    <string name="widgetActionOpenHint">Apri la conversazione per vedere la sua risposta più recente.</string>
+    <string name="widgetActionSending">Invio messaggio…</string>
+    <string name="widgetActionEnterMessage">Inserisci prima un messaggio</string>
+    <string name="widgetPanelAllProjects">Tutti i progetti</string>
+    <string name="widgetPanelSave">Salva scelte</string>
+    <string name="widgetPanelRecord">Digitazione vocale</string>
+    <string name="widgetPanelFinishRecording">Termina la digitazione vocale</string>
+    <string name="widgetPanelListening">Ascolto…</string>
+</resources>

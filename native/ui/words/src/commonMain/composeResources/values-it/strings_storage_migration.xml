@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationStorageTitle">Archiviazione</string>
+    <string name="migrationStorageAssistant">Modello dell'assistente su questo telefono</string>
+    <string name="migrationStorageDelete">Elimina modello</string>
+    <string name="migrationStorageDeleteTitle">Eliminare il modello dell'assistente?</string>
+    <string name="migrationStorageDeleteBody">Rimuove da questo telefono il modello salvato e i download incompleti, liberando %1$s.</string>
+    <string name="migrationStorageAppDetail">Conversazioni conservate qui, il Linux del telefono, gli agenti e i download: vedi le dimensioni e lo spazio libero</string>
+    <string name="localModelSaveFailed">Impossibile modificare il modello salvato. Riprova.</string>
+</resources>

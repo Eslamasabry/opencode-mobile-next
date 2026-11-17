@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="usageWidgetIntro">Mostra ciò che resta dei tuoi piani nel widget Utilizzo della schermata Home. Si aggiorna mentre l'app è in esecuzione.</string>
+    <string name="usageEmptyTitle">Ancora nessun abbonamento</string>
+    <string name="usageOnConnection">su %1$s</string>
+    <string name="usageWidgetSettingsShow">Mostra questi piani</string>
+    <string name="usageWidgetSettingsWindows">Mostra 5 ore, settimanale o entrambi</string>
+    <string name="usageWidgetWindowBoth">Entrambi</string>
+    <string name="usageWidgetWindowFiveHour">5 ore</string>
+    <string name="usageWidgetWindowWeekly">Settimanale</string>
+    <string name="usageWidgetSettingsSetup">Mostra le righe da configurare</string>
+    <string name="usageWidgetSettingsSetupHelp">Accedi, aggiungi la chiave e configura le righe</string>
+    <string name="widgetV2ConfigureTitle">Stile del widget</string>
+    <string name="widgetProjectTitle">Mostra le conversazioni di</string>
+    <string name="widgetProjectUnavailable">Impossibile salvare questa scelta. Riprova.</string>
+    <string name="widgetV2AccentWallpaper">Sfondo</string>
+    <string name="widgetV2AccentApp">Tema dell'app</string>
+    <string name="widgetV2AccentGreen">Verde</string>
+    <string name="widgetV2AccentTeal">Verde acqua</string>
+    <string name="widgetV2AccentBlue">Blu</string>
+    <string name="widgetV2AccentAmber">Ambra</string>
+    <string name="widgetV2SaveStyle">Salva stile</string>
+    <string name="widgetV2SteerTitle">Aggiungi a questo turno</string>
+    <string name="widgetV2AfterReplyTitle">Invia dopo questa risposta</string>
+    <string name="widgetV2VoiceTitle">Nuovo messaggio</string>
+    <string name="widgetV2MessageHint">Scrivi un messaggio</string>
+    <string name="widgetV2Send">Invia</string>
+    <string name="widgetV2StaleRequest">La conversazione è cambiata. Il tuo messaggio è ancora qui.</string>
+    <string name="widgetV2Unavailable">La connessione in background non è disponibile. Il tuo messaggio è ancora qui.</string>
+    <string name="widgetV2Unsupported">Questa connessione non può farlo.</string>
+    <string name="widgetV2Uncertain">Impossibile confermare l'invio. Controlla la conversazione prima di inviare di nuovo.</string>
+    <string name="widgetV2InvalidRequest">Scrivi un messaggio prima di inviare.</string>
+    <string name="widgetV2UnknownBehavior">In attesa dei dettagli della conversazione…</string>
+    <string name="widgetV2StyleStale">Questo widget è cambiato. Chiudi e riprova.</string>
+    <string name="widgetV2StyleUnavailable">Impossibile salvare lo stile. Riprova.</string>
+    <string name="widgetV2DictationUnavailable">La dettatura non è disponibile al momento. Puoi digitare.</string>
+    <string name="widgetV2RestartUnavailable">Questa conversazione si può modificare solo dall'interno dell'app.</string>
+</resources>

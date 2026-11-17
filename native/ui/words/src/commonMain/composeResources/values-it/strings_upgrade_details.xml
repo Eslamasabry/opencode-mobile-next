@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipMessageDetailsTitle">Dettagli del messaggio</string>
+    <string name="tipMessageDetails">Tieni premuto un messaggio per Dettagli, o usa il suo pulsante Altro, per vedere il modello e i tempi.</string>
+    <string name="tipBackReturnsTo">Indietro riporta a %1$s, dove l'avevi lasciata.</string>
+</resources>
