@@ -435,7 +435,7 @@ public class CodexGateway(
     override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         sessionStatuses()
 
-    override fun reconnectAfterRunCheck() = Unit
+    override fun reconnectAfterRunCheck(): Unit = Unit
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         onLane {
