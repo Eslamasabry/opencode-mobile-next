@@ -334,7 +334,7 @@ class MicInBoxTest {
     }
 
     @Test
-    fun `B-MEDIA-065 a held mic shows what letting go does and no buttons; the time and the waveform stay`() = runTest {
+    fun `B-MEDIA-065 a held mic shows what letting go does and no buttons, the time and the waveform stay`() = runTest {
         val ts = this
         val rig = Rig(ts)
         runCurrent()
