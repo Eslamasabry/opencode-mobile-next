@@ -294,31 +294,11 @@ class OneTestAtATime(unittest.TestCase):
 
 
 class KnownFailuresCeiling(unittest.TestCase):
-    """known_failures.txt only shrinks: a new or wider line fails here. To delete a line, delete it from the file AND
-    from CEILING (the ceiling then stays lower for good)."""
-    CEILING = {
-        '* :: *.rb.*GateTest',
-        'engine/runtime :: io.github.eslamasabry.oc.engine.runtime.install.VerbatimScriptsTest',
-        'feature/background :: io.github.eslamasabry.oc.feature.background.BackgroundScreenUiTest',
-        'feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ServerSwitcherSheetTest',
-        'feature/devservices :: io.github.eslamasabry.oc.feature.devservices.DevServicesScreenTest',
-        'feature/devservices :: io.github.eslamasabry.oc.feature.devservices.rb.o47.DevServicesPageTest',
-        'feature/files :: io.github.eslamasabry.oc.feature.files.FolderPolishTest',
-        'feature/phone :: io.github.eslamasabry.oc.feature.phone.PhoneScreensTest',
-        'feature/phonesetup :: io.github.eslamasabry.oc.feature.phonesetup.PhoneSetupScreenTest',
-        'feature/servers :: io.github.eslamasabry.oc.feature.servers.PhoneOwnServerMarkTest',
-        'feature/updates :: io.github.eslamasabry.oc.feature.updates.UpdatesScreenUiTest',
-        'feature/usage :: io.github.eslamasabry.oc.feature.usage.LimitsScreenTest',
-        'feature/usage :: io.github.eslamasabry.oc.feature.usage.UsageScreenTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.E20S09StateActionsTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.Kita1FrameInsetsTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.S7PolishKitTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTaskSheetParityTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTextHaloParityTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest',
-    }
+    """The frozen known list (B-CI-330/331). known_failures.txt only shrinks: its names are held by
+    known_failures_ceiling.txt; to delete a line, delete it from the list AND from the ceiling. Every line is ONE test,
+    named exactly, with a reason from a fixed set; a class wildcard is refused."""
+    REASONS = {'flutter-era-rule', 'unsorted-rule', 'visible-fault-next-update', 'reference-not-in-history',
+               'known-noise-before-ci-goldens'}
 
     @staticmethod
     def entries():
@@ -330,19 +310,36 @@ class KnownFailuresCeiling(unittest.TestCase):
                 out.append((head.strip(), reason.strip()))
         return out
 
+    @staticmethod
+    def ceiling():
+        return {l.rstrip('\n') for l in open(os.path.join(HERE, 'known_failures_ceiling.txt'))
+                if l.strip() and not l.startswith('#')}
+
     def test_no_line_was_added_or_widened(self):
-        added = sorted({h for h, _ in self.entries()} - self.CEILING)
+        added = sorted({h for h, _ in self.entries()} - self.ceiling())
         self.assertEqual(added, [], 'known_failures.txt may only shrink: fix the failing test instead of listing it. New or '
-                                    'changed lines: ' + '; '.join(added))
+                                    'changed lines: ' + '; '.join(added[:5]))
 
     def test_the_ceiling_follows_every_deletion(self):
-        gone = sorted(self.CEILING - {h for h, _ in self.entries()})
-        self.assertEqual(gone, [], 'these lines were deleted from known_failures.txt: delete them from CEILING in '
-                                   'test_gate.py too, so the list cannot grow back: ' + '; '.join(gone))
+        gone = sorted(self.ceiling() - {h for h, _ in self.entries()})
+        self.assertEqual(gone, [], 'these lines were deleted from known_failures.txt: delete them from '
+                                   'known_failures_ceiling.txt too, so the list cannot grow back: ' + '; '.join(gone[:5]))
 
-    def test_every_line_has_a_reason_and_none_sits_in_a_gate_module(self):
+    def test_B_CI_330_a_wildcard_line_is_refused_every_line_names_one_test(self):
+        for head, _ in self.entries():
+            self.assertIn(' :: ', head, f'{head}: a line is "<module> :: <class> > <test>"')
+            self.assertIn(' > ', head, f'{head}: a whole class (wildcard) is refused, name the test exactly')
+            self.assertNotIn('*', head.split(' > ')[0], f'{head}: a wildcard is refused')
+
+    def test_B_CI_331_every_line_has_a_reason_from_the_fixed_set(self):
         for head, reason in self.entries():
-            self.assertTrue(reason, f'{head}: a line needs a reason after "|"')
+            word = reason.split(':')[0].split()[0] if reason else ''
+            self.assertIn(word, self.REASONS, f'{head}: the reason must start with one of {sorted(self.REASONS)}')
+            if word == 'visible-fault-next-update':
+                self.assertIn('B-443', reason, f'{head}: a visible fault not fixed in 3.0.1 points at B-443')
+
+    def test_every_line_sits_outside_the_gate_modules(self):
+        for head, _ in self.entries():
             mod = head.split(' :: ')[0]
             self.assertNotIn(mod, ('quality', 'tools/strings', 'ui/words', 'core/security', 'ui/gate'),
                              f'{head}: a gate module is never absorbed, the line does nothing')
@@ -507,7 +504,7 @@ class Workflow(unittest.TestCase):
 class CandidateGate(unittest.TestCase):
     """B-CI-303: one candidate must prove every required check, not just a green aggregate."""
 
-    def gate(self, change=None):
+    def gate(self, change=None, base_failures=(), known=None, lane='candidate'):
         desktop = [':feature:chats:desktopTest', ':quality:test', ':quality:secTest']
         android = [':androidApp:testPreviewDebugUnitTest']
         def report(name, tasks):
@@ -534,9 +531,62 @@ class CandidateGate(unittest.TestCase):
             # The host ci-verdict wrapper does not pass RESULT_ANDROID_UNIT or RESULT_PLAN.
             env = dict(os.environ, RESULT_COMPILE='success', RESULT_TEST='success', PLANNED_SHARDS='0')
             env.pop('RESULT_ANDROID_UNIT', None)
-            p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'summary.py'), tmp, tmp + '/base', 'candidate'],
-                               env=env, capture_output=True, text=True)
+            summary = os.path.join(HERE, 'summary.py')
+            with tempfile.TemporaryDirectory() as aux:
+                base = os.path.join(aux, 'base')
+                os.makedirs(base)
+                if base_failures:  # the newest run on the base branch had these failures
+                    json.dump({'name': 'candidate-0', 'tests': 3, 'failed': len(base_failures), 'modules': {},
+                               'failures': [{'id': i, 'module': i.split(' :: ')[0], 'message': 'boom'} for i in base_failures]},
+                              open(os.path.join(base, 'report-test-0.json'), 'w'))
+                if known is not None:  # a planted known_failures.txt: summary.py reads the list next to itself
+                    ci = os.path.join(aux, 'ci')
+                    os.makedirs(ci)
+                    shutil.copy(summary, ci)
+                    open(os.path.join(ci, 'known_failures.txt'), 'w').write(known)
+                    summary = os.path.join(ci, 'summary.py')
+                p = subprocess.run([sys.executable, '-I', summary, tmp, base, lane], env=env, capture_output=True, text=True)
             return p.returncode, p.stdout
+
+    @staticmethod
+    def failing(*ids):
+        def change(files):
+            r = files['report-candidate-0.json']
+            r['failed'] = len(ids)
+            r['failures'] = [{'id': i, 'module': i.split(' :: ')[0], 'message': 'boom'} for i in ids]
+        return change
+
+    T1 = 'feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > mixed[desktop]'
+    T2 = 'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o11.KitSheetGateTest > sheet[desktop]'
+
+    def test_B_CI_332_a_candidate_absorbs_nothing_from_the_base_reports(self):
+        """The base's own failures never excuse a candidate: only the frozen list counts."""
+        code, text = self.gate(self.failing(self.T1), base_failures=[self.T1], known='')
+        self.assertEqual(code, 1, text)
+        self.assertIn('1 failing test(s) that are not known noise', text)
+        self.assertIn(self.T1, text)
+
+    def test_B_CI_332_the_other_lanes_still_absorb_what_the_base_fails(self):
+        code, text = self.gate(self.failing(self.T1), base_failures=[self.T1], known='', lane='fast')
+        self.assertEqual(code, 0, text)
+
+    def test_B_CI_333_a_class_wildcard_absorbs_nothing_in_a_candidate(self):
+        code, text = self.gate(self.failing(self.T1), known='* :: *.rb.*GateTest | flutter-era-rule\n')
+        self.assertEqual(code, 1, text)
+        self.assertIn(self.T1, text)
+
+    def test_B_CI_333_a_test_named_exactly_is_absorbed_and_the_count_by_reason_is_printed(self):
+        known = f'{self.T1} | flutter-era-rule: start-edge\n{self.T2} | unsorted-rule: gap-step\n'
+        code, text = self.gate(self.failing(self.T1, self.T2), known=known)
+        self.assertEqual(code, 0, text)
+        self.assertIn('known failures by reason: flutter-era-rule 1, unsorted-rule 1', text)
+
+    def test_B_CI_333_one_test_off_the_list_fails_the_candidate_and_is_named(self):
+        known = f'{self.T1} | flutter-era-rule: start-edge\n'
+        code, text = self.gate(self.failing(self.T1, self.T2), known=known)
+        self.assertEqual(code, 1, text)
+        self.assertIn(self.T2, text)
+        self.assertNotIn(f'`{self.T1}`', text)
 
     def test_B_CI_303_complete_candidate_passes(self):
         code, text = self.gate()
