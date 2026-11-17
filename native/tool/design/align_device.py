@@ -387,7 +387,7 @@ SELF_TEST_XML = '''<?xml version="1.0" encoding="UTF-8"?><hierarchy rotation="0"
     <node text="&#xE13A;" class="android.widget.TextView" package="app" bounds="[950,645][1000,695]"/>
    </node>
    <node text="Row two" class="android.view.View" clickable="true" package="app" bounds="[0,740][1050,900]">
-    <node text="&#xE13A;" class="android.widget.TextView" package="app" bounds="[925,795][965,835]"/>
+    <node text="&#xE13A;" class="android.widget.TextView" package="app" bounds="[925,793][970,838]"/>
    </node>
    <node text="Row three" class="android.view.View" clickable="true" package="app" bounds="[0,900][1050,1040]">
     <node text="&#xE13A;" class="android.widget.TextView" package="app" bounds="[950,945][1000,995]"/>
@@ -406,7 +406,7 @@ def self_test():
         ('start-edge', '"Double margin"'),  # 32 dp
         ('gap-step', '"Ten under"'),  # 94 - 84 = 10 dp under "Double margin"
         ('target', '(unnamed)'),  # 24 x 24 dp
-        ('icon-size', 'icon'),  # 16 dp glyph box in row two
+        ('icon-size', 'icon'),  # 18 dp glyph box in row two (16 became a kit size, c32f9e0357)
         ('end-edge', '"Row two"'),  # chevron ends at 386 dp, row one's at 400
         ('row-height', '"Row two"'),  # 64 dp against 56 dp
     }
