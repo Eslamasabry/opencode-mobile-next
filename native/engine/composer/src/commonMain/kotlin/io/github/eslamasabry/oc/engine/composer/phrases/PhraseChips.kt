@@ -113,8 +113,10 @@ public object PhraseRules {
  * The person's own short phrases learned on this phone, per server profile (plan 09 §10.4,
  * B-CHAT-077…084, B-STATE-059). One JSON blob under `oc.phraseChips.<profileId>`:
  * `{"v":1,"hidden":[…],"entries":{key:{"t","n","l","m":{moment:{"n","l"}}}}}` — the Flutter format,
- * read unchanged. A corrupt blob reads as nothing learned. After [close] (profile deletion) no
- * write lands.
+ * read unchanged. A corrupt blob reads as nothing learned for this run, but is never erased: the
+ * next write keeps its text aside under [asideKeyFor] in the same commit, and [unreadable] is told
+ * once (the app reports one fixed-name non-fatal behind the crash switch). After [close] (profile
+ * deletion) no write lands.
  */
 public class PhraseChipStore(
     private val prefs: ComposerPrefs,
@@ -122,12 +124,16 @@ public class PhraseChipStore(
     private val clock: Clock,
     private val redactor: Redactor,
     private val changed: () -> Unit = {},
+    private val unreadable: () -> Unit = {},
 ) {
     public companion object {
         /** The device-wide switch; not profile data, so the profile sweep leaves it. */
         public const val ENABLED_KEY: String = "oc.phraseChips.enabled"
 
         public fun keyFor(profileId: String): String = "oc.phraseChips.$profileId"
+
+        /** Where the text of an unreadable blob is kept (never overwritten); swept with the profile. */
+        public fun asideKeyFor(profileId: String): String = "oc.phraseChipsAside.$profileId"
 
         public fun enabled(prefs: ComposerPrefs): Boolean = prefs.bool(ENABLED_KEY) ?: true
     }
@@ -148,16 +154,30 @@ public class PhraseChipStore(
     private val lane = Mutex()
     private var closed = false
     private val key = keyFor(profileId)
+    private val asideKey = asideKeyFor(profileId)
+
+    /** The unreadable text still to be kept aside by the next write, and the one already reported. */
+    private val pendingAside = AtomicReference<String?>(null)
+    private val reportedRaw = AtomicReference<String?>(null)
 
     private fun read(): Blob {
         val raw = prefs.string(key) ?: return Blob()
         return try {
-            decode(parseJson(raw) as? JsonObject ?: return Blob())
+            decode(parseJson(raw) as? JsonObject ?: return unreadableBlob(raw))
         } catch (e: StoredFormatException) {
-            Blob()
+            unreadableBlob(raw)
         } catch (e: IllegalArgumentException) {
-            Blob()
+            unreadableBlob(raw)
         }
+    }
+
+    private fun unreadableBlob(raw: String): Blob {
+        pendingAside.store(raw)
+        if (reportedRaw.load() != raw) {
+            reportedRaw.store(raw)
+            unreadable()
+        }
+        return Blob()
     }
 
     private fun decode(json: JsonObject): Blob {
@@ -225,8 +245,20 @@ public class PhraseChipStore(
 
     private suspend fun write(blob: Blob): Boolean {
         if (closed) return false
-        val ok = prefs.commit { putString(key, encode(blob)) }
-        if (ok) changed()
+        val aside = pendingAside.load()
+        val kept = prefs.string(asideKey)
+        val ok =
+            prefs.commit {
+                // The unreadable text is kept aside in the same commit, never overwritten with the new blob alone.
+                if (aside != null && kept?.contains(aside) != true) {
+                    putString(asideKey, if (kept == null) aside else "$kept\n$aside")
+                }
+                putString(key, encode(blob))
+            }
+        if (ok) {
+            if (aside != null) pendingAside.store(null)
+            changed()
+        }
         return ok
     }
 
@@ -355,6 +387,7 @@ public class PhraseChipStores(
     private val prefs: ComposerPrefs,
     private val clock: Clock,
     private val redactor: Redactor,
+    private val unreadable: () -> Unit = {},
 ) {
     private val stores = AtomicReference<Map<String, PhraseChipStore>>(emptyMap())
     private val _changes = MutableStateFlow(0)
@@ -368,7 +401,7 @@ public class PhraseChipStores(
                 return it
             }
             val owner =
-                PhraseChipStore(prefs, profileId, clock, redactor) { _changes.update { it + 1 } }
+                PhraseChipStore(prefs, profileId, clock, redactor, { _changes.update { it + 1 } }, unreadable)
             if (stores.compareAndSet(before, before + (profileId to owner))) return owner
         }
     }

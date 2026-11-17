@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.android.platform.AndroidNetworkStatus
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
@@ -102,6 +103,7 @@ import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -344,14 +346,10 @@ class BuiltinSetupFinisher(
             }
         }
         if (request.openCodeChanged && running) {
-            // The old program still serves: stop it so the start below runs the new one.
-            withContext(dispatchers.io) {
-                try {
-                    linux.stopServer()
-                } catch (e: Exception) {
-                    // The start below still reports whether a server answers.
-                }
-            }
+            // The old program still serves: stop it so the start below runs the new one. When it cannot be
+            // stopped it keeps answering, and a start would report success for the OLD version: fail instead.
+            val stopped = replaceRunningServer(dispatchers.io) { linux.stopServer() }
+            if (stopped is Outcome.Failed) return stopped
         }
         if (request.openCodeChanged || !running) {
             val started = runtime.startServer()
@@ -391,6 +389,20 @@ class BuiltinSetupFinisher(
     }
 
     internal companion object {
+        /** Stops the old server before a restart; a stop that throws is a failure, never a quiet success. */
+        suspend fun replaceRunningServer(io: CoroutineDispatcher, stop: () -> Unit): Outcome<Unit> =
+            withContext(io) {
+                try {
+                    stop()
+                    Outcome.Ok(Unit)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    AppLog.tagged("Setup").w { "stopping the old server ${e::class.simpleName}" }
+                    Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                }
+            }
+
         const val OWNER_KEY = "oc.builtinServerOwner"
         const val USERNAME = PhoneServerScripts.USERNAME
         val SERVER_URL: String get() = "http://127.0.0.1:${PhoneServerScripts.PORT}"

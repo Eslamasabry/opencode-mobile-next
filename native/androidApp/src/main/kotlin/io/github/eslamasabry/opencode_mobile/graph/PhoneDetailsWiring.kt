@@ -251,7 +251,8 @@ class NativePhoneDetails(
                 memory,
                 performance?.get("prootMode") as? String,
                 performance?.get("workHeld") as? Boolean,
-                linux.message,
+                // A failed install keeps its technical text apart: Details shows that, never the install message.
+                if (linux.phase == "failed") linux.failureDetails else linux.message,
             )
         }
         if (!visible || revision != viewRevision) return

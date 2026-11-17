@@ -94,4 +94,26 @@ class LinuxStartupTest {
         // The kept-services supervisor starts at every app start, reset or not.
         assertEquals(1, kept.supervisorStarts)
     }
+
+    @Test
+    fun `B-LINUX-093 a reset that cannot be finished still starts the kept-services supervisor`() = runTest {
+        val lifecycle =
+            object : LinuxLifecycle {
+                override suspend fun installed(): Boolean = false
+
+                override suspend fun erase(): Outcome<Unit> = throw IllegalStateException("the erase blew up")
+
+                override suspend fun startSetup(): Outcome<Boolean> = Outcome.Ok(true)
+
+                override suspend fun repair(): Outcome<Unit> = Outcome.Ok(Unit)
+            }
+        val kept = Kept()
+        LinuxStartup(
+            LinuxResetFlow(lifecycle, Marker("erasing 2026-11-03T05:00:00Z"), Clock.System),
+            AppCoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+            kept,
+        ).start()
+        testScheduler.runCurrent()
+        assertEquals(1, kept.supervisorStarts)
+    }
 }

@@ -1,10 +1,13 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupStepSpec
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 
 /** BUILD-RUNTIME-B: the pure parts of SetupWiring (the native job's spec, the phone server's address rule). */
 class SetupWiringTest {
@@ -42,5 +45,22 @@ class SetupWiringTest {
         assertFalse(BuiltinSetupFinisher.managesServerUrl("http://laptop.local:${PhoneServerScripts.PORT}"))
         assertFalse(BuiltinSetupFinisher.managesServerUrl("not a url"))
         assertFalse(BuiltinSetupFinisher.managesServerUrl(null))
+    }
+
+    @Test
+    fun `B-LINUX-206 an old server that cannot be stopped fails the restart instead of reporting the old version as new`() =
+        runTest {
+            val stopped = BuiltinSetupFinisher.replaceRunningServer(UnconfinedTestDispatcher(testScheduler)) {
+                throw IllegalStateException("still serving")
+            }
+            assertTrue(stopped is Outcome.Failed, "a stop that throws must not read as success: $stopped")
+        }
+
+    @Test
+    fun `B-LINUX-206 a stopped old server lets the restart go on`() = runTest {
+        var calls = 0
+        val stopped = BuiltinSetupFinisher.replaceRunningServer(UnconfinedTestDispatcher(testScheduler)) { calls++ }
+        assertTrue(stopped is Outcome.Ok)
+        assertEquals(1, calls)
     }
 }

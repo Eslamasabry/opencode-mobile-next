@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.agents.phonecontext.PhoneAgentContext
+import io.github.eslamasabry.oc.engine.analytics.reportPhoneServerFollowRefused
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
@@ -112,6 +114,7 @@ object LinuxRuntimeWiring {
         policies: AppAutomationPolicies,
         consents: NativePhoneFirstStartConsents,
         gates: LocalServerGates,
+        reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
     ): BuiltinRuntime =
         BuiltinRuntime(
                 app,
@@ -126,7 +129,10 @@ object LinuxRuntimeWiring {
                 consents,
                 gates,
             )
-            .also { leases.start() }
+            .also {
+                it.activityFollow = ActivityFollow { reporting.reportPhoneServerFollowRefused() }
+                leases.start()
+            }
 
     @Provides fun linuxHost(runtime: BuiltinRuntime): LinuxHost = runtime.host
 
@@ -439,6 +445,9 @@ internal constructor(
     private var presenceResetThisVisit = false
     private var idleBudgetHeld = false
     internal var onManualReady: (suspend () -> Unit)? = null
+
+    /** Remembers a refused follow, so the next resume tries once more and a second refusal is reported once. */
+    internal var activityFollow: ActivityFollow = ActivityFollow {}
     val isForeground: Boolean
         get() = foreground
 
@@ -1699,12 +1708,9 @@ internal constructor(
         if (on && !foreground) presenceResetThisVisit = idleBudgetHeld
         foreground = on
         if (!readyMarkerPresent()) return
-        try {
-            linux.setActivityResumed(on)
-        } catch (e: Exception) {
-            // The runtime refused to follow the activity; its own recovery stays off. Nothing to
-            // tell the person.
-        }
+        // The runtime may refuse to follow the activity; its own recovery then stays off for that visit.
+        // Nothing is told to the person: if recovery is needed and missing, the "phone server stopped" state shows.
+        activityFollow.follow(on) { linux.setActivityResumed(it) }
         if (on)
             scope.launch {
                 adoptNativeAddress()
@@ -1852,4 +1858,29 @@ object OfflineSpeechEngine : SherpaRuntime {
 @dev.zacsweers.metro.Inject
 class LocalServerGates {
     @Volatile var gate: (suspend (ProfileId) -> LocalServerWait)? = null
+}
+
+/**
+ * Following the activity (BuiltinLinux.setActivityResumed) can be refused. The next resume asks again (the one bounded
+ * retry); a second refusal in a row is handed once to [refused] (a non-fatal with a fixed name, behind the
+ * crash-report switch), and nothing loops: the following resumes ask as usual and report nothing until one lands.
+ */
+internal class ActivityFollow(private val refused: () -> Unit) {
+    private var refusals = 0
+    private var told = false
+
+    fun follow(on: Boolean, call: (Boolean) -> Unit) {
+        try {
+            call(on)
+            refusals = 0
+            told = false
+        } catch (e: Exception) {
+            AppLog.tagged("Linux").w { "follow activity ${e::class.simpleName}" }
+            refusals++
+            if (refusals >= 2 && !told) {
+                told = true
+                refused()
+            }
+        }
+    }
 }

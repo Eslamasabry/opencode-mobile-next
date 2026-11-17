@@ -76,13 +76,20 @@ class LinuxStartup(
 ) {
     fun start() {
         scope.launch {
+            // Two separate guards: a reset that cannot be finished must not leave the kept services unsupervised.
             try {
                 reset.resumeIfPending()
-                keptServices.ensureSupervisor()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 AppLog.tagged("Linux").w { "reset resume ${e::class.simpleName}" }
+            }
+            try {
+                keptServices.ensureSupervisor()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLog.tagged("Linux").w { "kept services supervisor ${e::class.simpleName}" }
             }
         }
     }
