@@ -188,11 +188,12 @@ if $GO; then
   git ls-remote --exit-code --tags "$REMOTE" "refs/tags/$TAG" >/dev/null 2>&1 && fail "tag $TAG already exists on $REMOTE."
 
   # 1. Take the number and commit the bump (local only until every gate passes).
+  # Keep the marker: the later v* tag push also matches the hosted BYO bundle workflow.
   "$NATIVE/tool/version_code.sh" allocate --kind release --for "native release $NAME+$NEXT ($LINEAGE lineage)" >/dev/null ||
     fail "the allocator refused $NEXT"
   [[ "$(prop versionCode)" == "$NEXT" ]] || cannot "version.properties does not hold $NEXT after allocation"
   git add native/version.properties native/BUILD_NUMBERS.md
-  git commit --quiet -m "build(release): native $NAME+$NEXT" \
+  git commit --quiet -m "build(release): native $NAME+$NEXT [skip ci]" \
     -m "Takes versionCode $NEXT for the $LINEAGE-lineage fix-forward release (scripts/native-release.sh --go)." \
     -m "Release-Tag: $TAG"
   say "  committed   the version bump ($(git rev-parse --short HEAD)), not pushed"
