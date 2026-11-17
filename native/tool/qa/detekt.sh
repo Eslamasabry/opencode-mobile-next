@@ -10,6 +10,10 @@
 #   --base <ref>       the ref the ratchet compares with (default: $OC_BASE, native/main, origin/native/main)
 #   --create-baseline  write native/config/detekt/baseline/<module>.xml from today's findings (the ratchet still runs
 #                      first in t1, so a baseline that grows fails there; use it to shrink one or to adopt detekt)
+#   --new-against <ref> the true ratchet (CI): run detekt with NO baseline on each module here and on the same module at <ref>
+#                      (git archive), and fail only on findings that exist here and not there, compared by SIGNATURE
+#                      (rule + declaration, without the file name or line), so a moved or renamed file keeps its old
+#                      findings old. Prints TOTAL, new and old counts per module. The baselines are not read.
 #   --report-dir <dir> reports (default: native/build/reports/detekt/<module>.{txt,xml})
 #
 # Every run first checks the ratchet: no baseline may gain an entry compared with merge-base(<base>, HEAD), and no
@@ -29,12 +33,13 @@ url="https://github.com/detekt/detekt/releases/download/v${version}/${jar_name}"
 config="$OC_NATIVE/config/detekt/detekt.yml"
 baseline_dir="$OC_NATIVE/config/detekt/baseline"
 
-mods=() all=0 base_arg="" create=0 report_dir="$OC_NATIVE/build/reports/detekt"
+mods=() all=0 base_arg="" create=0 new_against="" report_dir="$OC_NATIVE/build/reports/detekt"
 while (($#)); do
   case "$1" in
     --all) all=1; shift ;;
     --base) base_arg="${2:-}"; shift 2 ;;
     --create-baseline) create=1; shift ;;
+    --new-against) new_against="${2:-}"; shift 2 ;;
     --report-dir) report_dir="${2:-}"; shift 2 ;;
     -h | --help) sed -n '2,20p' "$0"; exit 0 ;;
     -*) oc_usage "detekt.sh [<module>...] [--all] [--base R] [--create-baseline] [--report-dir D]" ;;
@@ -109,6 +114,8 @@ raise() { (($1 > status)) && status=$1; return 0; }
 
 if ((create)); then
   echo "ratchet: not checked while creating baselines (t1 checks it)"
+elif [[ -n "$new_against" ]]; then
+  :
 else
   ratchet; raise $?
 fi
@@ -142,6 +149,69 @@ else
   runner=(java -Xmx1g -jar "$jar")
 fi
 
+# --- the true ratchet: findings new against a ref, by signature -----------------------------------------------------
+if [[ -n "$new_against" ]]; then
+  top="$(oc_repo_root)" || { echo "detekt: could not run (needs git)"; exit 2; }
+  git -C "$top" rev-parse --verify -q "$new_against^{commit}" >/dev/null || { echo "detekt: could not run (unknown ref '$new_against')"; exit 2; }
+  # A branch is judged against where it left the ref (the ref itself may have moved on since).
+  new_against="$(git -C "$top" merge-base "$new_against" HEAD 2>/dev/null || echo "$new_against")"
+  mkdir -p "$report_dir" || exit 2
+  snap="$(mktemp -d "${TMPDIR:-/tmp}/oc-detekt-base.XXXXXX")"; trap 'rm -rf "$snap"' EXIT
+  lock="$(oc_build_lock_file)"
+  scan() { # scan <dir> <base-path> <report.txt>: no baseline; 0 clean, 2 findings, anything else could not run
+    local out rc
+    rm -f "$3"
+    out="$(oc_with_lock "$lock" "${runner[@]}" --input "$1" --excludes '**/build/**,**/.gradle/**' --config "$config" \
+      --build-upon-default-config --max-issues 0 --jvm-target 17 --language-version 2.0 --base-path "$2" \
+      --report "txt:$3" 2>&1)"; rc=$?
+    [[ -f "$3" ]] || : >"$3"
+    ((rc == 0 || rc == 2)) || { echo "detekt: could not run on $1 (exit $rc)"; tail -5 <<<"$out" | sed 's/^/  /'; return 2; }
+    return 0
+  }
+  for m in "${mods[@]}"; do
+    dir="$(module_dir "$m")" key="$(module_key "$m")"
+    if [[ ! -d "$dir" ]]; then echo "detekt $m: no such module folder (skipped: deleted)"; continue; fi
+    rel="${dir#"$top/"}"
+    scan "$dir" "$OC_NATIVE" "$report_dir/$key.txt" || { raise 2; continue; }
+    mkdir -p "$snap/$key/native"
+    if git -C "$top" cat-file -e "$new_against:$rel" 2>/dev/null; then
+      git -C "$top" archive "$new_against" -- "$rel" | tar -x -C "$snap/$key"
+      scan "$snap/$key/$rel" "$snap/$key/native" "$snap/$key.txt" || { raise 2; continue; }
+    else : >"$snap/$key.txt"; fi
+    python3 -I - "$m" "$snap/$key.txt" "$report_dir/$key.txt" "${report_dir#"$OC_NATIVE/"}/$key.txt" <<'PY' || raise 1
+import collections, re, sys
+mod, base_txt, head_txt, shown = sys.argv[1:5]
+def read(path):
+    out = []
+    for line in open(path, encoding='utf-8', errors='replace'):
+        m = re.match(r'([A-Za-z]+) - .*? at (\S+?):\d+:\d+ - Signature=(.*)$', line.rstrip('\n'))
+        if not m:
+            continue
+        rule, file, sig = m.groups()
+        base = file.rsplit('/', 1)[-1]
+        out.append(((rule, sig.replace(base, '*')), line.rstrip('\n')))
+    return out
+old = collections.Counter(k for k, _ in read(base_txt))
+head = read(head_txt)
+seen = collections.Counter()
+new = []
+for k, line in head:
+    seen[k] += 1
+    if seen[k] > old[k]:
+        new.append(line)
+total = len(head)
+if not new:
+    print(f'detekt {mod}: ok (total {total}, new 0, old {total}; signature ratchet vs base)')
+    sys.exit(0)
+print(f'detekt {mod}: NEW FINDINGS (new {len(new)}, total {total}, old {total - len(new)}; report: {shown})')
+for line in new[:20]:
+    print('  ' + re.sub(r' at \S*/native/', ' at ', line)[:300])
+sys.exit(1)
+PY
+  done
+  exit "$status"
+fi
+
 # --- one detekt run per module, each against its own baseline ---------------------------------------------------
 mkdir -p "$report_dir" || exit 2
 lock="$(oc_build_lock_file)"
@@ -170,7 +240,7 @@ for m in "${mods[@]}"; do
        else
          echo "detekt $m: ok"
        fi ;;
-    2) echo "detekt $m: NEW FINDINGS (report: ${report_dir#"$OC_NATIVE/"}/$key.txt)"
+    2) echo "detekt $m: NEW FINDINGS (total $(grep -cE '^[A-Za-z]+ - ' "$report_dir/$key.txt" 2>/dev/null || echo 0); report: ${report_dir#"$OC_NATIVE/"}/$key.txt)"
        grep -E '^[A-Za-z]+ - ' "$report_dir/$key.txt" 2>/dev/null | head -20 | sed 's/^/  /'
        raise 1 ;;
     75) echo "detekt $m: could not run (build slot busy)"; raise 2 ;;
