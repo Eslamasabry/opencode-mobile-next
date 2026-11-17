@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">ツール</string>
+    <string name="protoToolsRefresh">再読み込み</string>
+    <string name="protoToolsPlugins">プラグイン</string>
+    <string name="protoToolsSkills">スキル</string>
+    <string name="protoToolsMcp">MCPサーバー</string>
+    <string name="protoToolsLoadFailed">この一覧を読み込めませんでした。再読み込みをお試しください。</string>
+    <string name="protoToolsUnavailable">この接続ではツールを利用できません。対応しているサーバーに接続してください。</string>
+    <string name="protoToolsEmpty">ここにはまだ何もありません。</string>
+    <string name="protoToolsUnnamedPlugin">名称未設定のプラグイン</string>
+    <string name="protoToolsSkillNeedsChat">会話にスキルを追加するには、会話からツールを開いてください。</string>
+    <string name="protoToolsSkillReview">このスキルを現在の会話に追加します。エージェントが今すぐ続行するかどうかを選択してください。</string>
+    <string name="protoToolsResume">今すぐ会話を続行</string>
+    <string name="protoToolsActivate">スキルを追加</string>
+    <string name="protoToolsDisconnect">%1$sを切断</string>
+    <string name="protoToolsAddMcp">MCPサーバーを追加</string>
+    <string name="protoToolsRuntimeScope">サーバーが再起動するまで、現在のプロジェクトにこのサーバーを追加します。既存の名前が置き換わることはありません。</string>
+    <string name="protoToolsName">サーバー名</string>
+    <string name="protoToolsLocal">ローカルコマンドを実行</string>
+    <string name="protoToolsCommand">コマンドと引数（1行に1つ）</string>
+    <string name="protoToolsUrl">HTTPまたはHTTPSアドレス</string>
+    <string name="protoToolsAdd">サーバーを追加</string>
+    <string name="protoToolsChanged">この接続またはプロジェクトが変更されました。もう一度お試しになる前に再読み込みしてください。</string>
+    <string name="protoToolsInvalidDraft">サーバー名とアドレスまたはコマンドを確認してから、もう一度お試しください。</string>
+    <string name="protoToolsAddFailed">サーバーを追加できませんでした。もう一度お試しになる前に一覧を再読み込みしてください。</string>
+    <string name="protoToolsDisconnectFailed">接続を確認できませんでした。もう一度お試しになる前に一覧を再読み込みしてください。</string>
+    <string name="protoToolsActivateFailed">スキルを追加できませんでした。引き続き利用可能か確認してください。</string>
+    <string name="protoToolsStaged">スキルを追加する前に、保留中のリバートを完了またはキャンセルしてください。</string>
+    <string name="protoToolsUncertain">サーバーがこの操作を受け取った可能性があります。もう一度お試しになる前に会話を確認してください。</string>
+    <string name="protoToolsDone">完了しました。</string>
+    <string name="protoToolsActive">有効</string>
+    <string name="protoToolsFailed">要確認</string>
+    <string name="protoToolsUnknown">状態不明</string>
+    <string name="protoToolsBuiltin">組み込み</string>
+    <string name="protoToolsPackage">パッケージ</string>
+    <string name="protoToolsLocalSource">ローカル</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">ソース不明</string>
+    <string name="protoToolsConnected">接続済み</string>
+    <string name="protoToolsDisabled">オフ</string>
+    <string name="protoToolsSignIn">サインインが必要</string>
+    <string name="protoToolsDisconnected">切断済み</string>
+    <string name="protoToolsConnecting">接続中</string>
+    <string name="protoWorktreeInvalid">制御文字を含めず、1〜120文字のワークツリー名を入力してください。</string>
+    <string name="protoWebInvalid">1〜1000文字で ウェブ 検索語を入力してください。</string>
+    <string name="protoToolsProviders">プロバイダー</string>
+    <string name="protoToolsConnect">%1$sに接続</string>
+</resources>

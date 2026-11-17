@@ -44,25 +44,33 @@ class TranslationCatalog(private val nativeRoot: File) {
             s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace("&amp;", "&")
 
         fun plain(raw: String) = XmlText.cmpUnescape(unescapeXml(raw))
+
+        /** Parses all XML string and plural entries from [dir]. */
+        fun readDir(dir: File): Map<String, Entry> {
+            val out = linkedMapOf<String, Entry>()
+            dir.listFiles().orEmpty().filter { it.extension == "xml" }.sortedBy { it.name }.forEach { f ->
+                for (m in ENTRY.findAll(f.readText())) {
+                    val name = NAME.find(m.groupValues[2])?.groupValues?.get(1) ?: continue
+                    if (m.groupValues[1] == "string") {
+                        val body = m.groupValues[3]
+                        out[name] = Entry(name, mapOf("" to plain(body)), mapOf("" to body), f.name)
+                    } else {
+                        val items = ITEM.findAll(m.groupValues[3]).toList()
+                        val plains = items.associate { it.groupValues[1] to plain(it.groupValues[2]) }
+                        val raws = items.associate { it.groupValues[1] to it.groupValues[2] }
+                        out[name] = Entry(name, plains, raws, f.name)
+                    }
+                }
+            }
+            return out
+        }
     }
 
     /** Resource entries of one locale folder of [root], keyed by name. */
     fun read(root: Root, tag: String): Map<String, Entry> {
         val folder = if (tag == "en") "values" else File(root.dir, "values-$tag").takeIf { it.isDirectory }?.name
             ?: File(root.dir, "values-in").takeIf { tag == "id" && it.isDirectory }?.name ?: return emptyMap()
-        val out = linkedMapOf<String, Entry>()
-        File(root.dir, folder).listFiles().orEmpty().filter { it.extension == "xml" }.sortedBy { it.name }.forEach { f ->
-            for (m in ENTRY.findAll(f.readText())) {
-                val name = NAME.find(m.groupValues[2])?.groupValues?.get(1) ?: continue
-                if (m.groupValues[1] == "string") {
-                    out[name] = Entry(name, mapOf("" to plain(m.groupValues[3])), mapOf("" to m.groupValues[3]), f.name)
-                } else {
-                    val items = ITEM.findAll(m.groupValues[3]).toList()
-                    out[name] = Entry(name, items.associate { it.groupValues[1] to plain(it.groupValues[2]) }, items.associate { it.groupValues[1] to it.groupValues[2] }, f.name)
-                }
-            }
-        }
-        return out
+        return readDir(File(root.dir, folder))
     }
 
     /** Tags of every language folder in any root, without English. */

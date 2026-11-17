@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_widget_action">ウィジェットの操作を送信しています</string>
+    <string name="notify_widget_action_description">対象の会話とリクエストを確認しています。</string>
+</resources>

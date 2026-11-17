@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="other">%2$d件中%1$d件のファイルを追加しました。%3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">1つの下書きに添付できるのは最大5ファイル、合計20 MBまでです。</string>
+    <string name="shareInReasonTooLarge">残りのファイルは大きすぎるため添付できません（1ファイル最大10 MB）。</string>
+    <string name="shareInReasonUnsupported">残りのファイルは添付できない形式です。</string>
+    <string name="shareInReasonUnreadable">残りのファイルを読み取れませんでした。もう一度共有をお試しください。</string>
+    <string name="shareInNoneTooLarge">追加されませんでした。ファイルが大きすぎて添付できません（1ファイル10 MB、合計20 MBまで）。</string>
+    <string name="shareInNoneUnsupported">追加されませんでした。この形式のファイルは添付できません。</string>
+    <string name="shareInNoneUnreadable">追加されませんでした。ファイルを読み取れませんでした。もう一度共有をお試しください。</string>
+    <string name="shareInGotIt">わかりました</string>
+</resources>

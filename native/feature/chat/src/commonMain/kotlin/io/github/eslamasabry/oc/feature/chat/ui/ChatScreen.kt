@@ -133,7 +133,6 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAction
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
@@ -1889,7 +1888,7 @@ internal fun rememberReplyActions(
         stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.agentErrorOpenSettings)
     // B-AGENT-189 (#137): a lapsed sign-in of an agent on this phone says "sign in again" and offers Sign in.
     val signInAgainTemplate = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
-    val signInAgainLabel = stringResource(Res.string.chatSendFailureSignInAction)
+    val signInAgainLabel = stringResource(Res.string.agentsSignInAgain)
     val phoneAgentSignIn = remember(actions) { actions.phoneAgentSignIn() }
     val signInAgainWords: (String) -> String? = remember(signInAgainTemplate) {
         { provider ->

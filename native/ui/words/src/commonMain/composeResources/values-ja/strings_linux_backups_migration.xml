@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">既知のサインインファイルと保存済みのサービス環境設定はこの端末に残ります。カスタムサービスコマンドはバックアップに含まれるため、共有する前に内容を確認してください。</string>
+    <string name="linuxBackupServiceAccountsNative">環境設定が保存されているサービスはオフの状態でバックアップされます。復元後、開始する前にアカウントと環境をもう一度設定してください。</string>
+</resources>

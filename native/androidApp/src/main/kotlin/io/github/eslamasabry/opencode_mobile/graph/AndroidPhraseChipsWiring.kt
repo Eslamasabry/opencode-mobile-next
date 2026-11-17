@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.analytics.reportPhraseChipsUnreadable
 import io.github.eslamasabry.oc.engine.composer.phrases.PhraseChipStores
 import io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
@@ -31,8 +32,10 @@ class AndroidPhraseChips(
     clock: Clock,
     redactor: Redactor,
     profileScope: ProfileScope,
+    reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
 ) : ComposerPhrases {
-    private val phrases = PhraseChipStores(PreviewComposerPrefs(stores), clock, redactor)
+    private val phrases =
+        PhraseChipStores(PreviewComposerPrefs(stores), clock, redactor) { reporting.reportPhraseChipsUnreadable() }
     private val closed = AtomicReference<Set<ProfileId>>(emptySet())
 
     init {
@@ -43,6 +46,15 @@ class AndroidPhraseChips(
                 PrefType.Str,
                 ":engine:composer",
                 "learned phrase suggestions",
+            )
+        )
+        profileScope.register(
+            KeyShape(
+                "oc.phraseChipsAside.",
+                KeyScope.Profile,
+                PrefType.Str,
+                ":engine:composer",
+                "learned phrase suggestions kept aside when unreadable",
             )
         )
         profileScope.register(

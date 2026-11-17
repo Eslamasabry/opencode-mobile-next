@@ -28,10 +28,18 @@ on:
         description: Optional Gradle tasks (e.g. ":ui:kit:desktopTest"); when set, only these run instead of the shards
         type: string
         default: ""
+      apk:
+        description: "Upload the preview APK as an artifact (about 100 MB; default off to save GitHub egress and storage). For someone without a build machine; owner and interim builds come from the build server. master, tags and apk_only always upload."
+        type: boolean
+        default: false
       apk_only:
         description: Build only the preview APK (signed with the preview key), skip compile and test shards
         type: boolean
         default: false
+      references:
+        description: "Custom-tasks runs only: required = run the tests as a lane that fetches its pictures does (OC_REFERENCES=required), so a missing picture fails instead of skipping"
+        type: string
+        default: ""
       android_unit:
         description: "Run the Android library unit tests (native/android/*) and the :androidApp unit tests with the fast and full lanes; they count in the verdict. Untick for a quicker run that skips them"
         type: boolean
@@ -137,6 +145,28 @@ jobs:
         run: |
           set -o pipefail
           bash native/tool/release/test/run_tests.sh 2>&1 | tee "$RUNNER_TEMP/release-tools.log"
+      - name: detekt ratchet self-test (a new finding fails, an old one does not, also in a moved or renamed file)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-BUILD-024 2>&1 | tee "$RUNNER_TEMP/detekt-ratchet.log"
+      - name: CI egress self-tests (verdict from logs when downloads are refused, a too-old base is refused)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-CI-30 2>&1 | tee "$RUNNER_TEMP/ci-egress.log"
+      - name: Refuse a quick-lane base that is far older than where this branch left the line
+        if: ${{ inputs.lane == 'fast' }}
+        working-directory: .
+        env:
+          BASE: ${{ inputs.base || 'native/screens-merge41' }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git fetch --no-tags origin +refs/heads/native/glass-next:refs/remotes/origin/native/glass-next || true
+          if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else
+            ref="origin/$BASE"; git rev-parse --verify -q "$ref^{commit}" >/dev/null || git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+          fi
+          bash native/tool/ci/base_check.sh "$ref" origin/native/glass-next "$BRANCH" || [ $? = 2 ]
       - name: Pick the lane and the modules
         id: p
         env:
@@ -170,15 +200,26 @@ jobs:
             echo; echo '```'; cat "$RUNNER_TEMP/why.txt" 2>/dev/null || true; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Candidate detekt hook (tool/ci/detekt_lane.sh --all)
+        if: ${{ inputs.lane == 'candidate' }}
+        run: |
+          if [ -f tool/ci/detekt_lane.sh ]; then
+            echo "candidate detekt hook: tool/ci/detekt_lane.sh present (detekt job runs --all)"
+          else
+            echo "candidate detekt hook: waiting for tool/ci/detekt_lane.sh <base-ref> --all from native/detekt-line"
+          fi
       - name: Candidate plan and self-test evidence
         if: ${{ always() && inputs.lane == 'candidate' }}
         run: python3 -I tool/ci/candidate_plan.py candidate reports "$RUNNER_TEMP/ci-self.log" "$RUNNER_TEMP/release-self.log" "$RUNNER_TEMP/release-tools.log"
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: ${{ always() && inputs.lane == 'candidate' }}
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ always() && inputs.lane == 'candidate' }}
         with:
           name: report-candidate-plan
           path: native/reports/candidate-plan.json
-          retention-days: 14
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: error
 
   compile:
@@ -215,19 +256,23 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         run: |
           python3 -I - <<'PY'
-          import json, os
+          import json, os, re
           log = open(os.environ['RUNNER_TEMP'] + '/compile.log', errors='replace').read().splitlines() if os.path.exists(os.environ['RUNNER_TEMP'] + '/compile.log') else []
           errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or 'Execution failed for task' in l]
           os.makedirs('reports', exist_ok=True)
           ran = any(l.startswith('> Task :') or l.startswith('BUILD ') for l in log)
-          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure', 'gradle_ran': ran}, open('reports/compile.json', 'w'))
+          all_tests = any(re.search(r'(^|\s)> Task :compileAllTests(\s|$)', l) for l in log)
+          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure', 'gradle_ran': ran, 'compile_all_tests': all_tests}, open('reports/compile.json', 'w'))
           PY
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-compile
           path: native/reports/compile.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   test:
@@ -328,12 +373,15 @@ jobs:
           GRADLE_LOG: ${{ runner.temp }}/gradle.log
           TASKS: ${{ steps.pick.outputs.tasks }}
         run: python3 -I tool/ci/test_report.py "${LANE}-${{ matrix.shard }}" reports >> "$GITHUB_STEP_SUMMARY"
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-test-${{ matrix.shard }}
           path: native/reports/report-*.json
-          retention-days: 14
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: ignore
       - name: Upload test reports
         if: ${{ steps.gradle.outcome == 'failure' }}
@@ -343,7 +391,7 @@ jobs:
           path: |
             native/**/build/reports/tests/
             native/**/build/test-results/
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   record:
@@ -388,14 +436,17 @@ jobs:
         with:
           name: ci-goldens
           path: native/reports/ci-goldens.tgz
-          retention-days: 14
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: error
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-record
           path: native/reports/record.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   apk:
@@ -450,13 +501,15 @@ jobs:
             echo "::error::APK is not signed with the preview key"; exit 1
           fi
       - name: Upload APK
+        # Only on request (apk=true or apk_only), on master and on tags: a quick lane's 100 MB APK was 93% of a day's artifacts.
+        if: ${{ inputs.apk == true || inputs.apk_only == true || github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: native-previewBenchmark-apk
           path: |
             native/androidApp/build/outputs/apk/**/*.apk
             native/benchmark/build/outputs/apk/**/*.apk
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: error
       - name: Upload APK for the phone sync (native/next only)
         # The PC's phone-sync timer (phone-sync.sh on the maintainer PC) polls for this artifact name. Dispatch with
@@ -466,26 +519,31 @@ jobs:
         with:
           name: native-next-apk
           path: native/androidApp/build/outputs/apk/**/*.apk
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: error
       - name: APK report
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
+          UPLOADED: ${{ inputs.apk == true || inputs.apk_only == true || github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           mkdir -p reports
           failed=false; [ "$JOB_STATUS" = failure ] && failed=true
           ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/apk.log" 2>/dev/null && ran=true
+          art=native-previewBenchmark-apk; [ "$UPLOADED" = true ] || art="(built, not uploaded: dispatch with apk=true)"
           apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk 2>/dev/null | head -1 || true)
           if [ -n "$apk" ]; then
-            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s,"failed":%s,"gradle_ran":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" "$ran" > reports/apk.json
+            printf '{"artifact":"%s","file":"%s","mb":%s,"failed":%s,"gradle_ran":%s}' "$art" "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" "$ran" > reports/apk.json
           else echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/apk.json; fi
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-apk
           path: native/reports/apk.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   custom:
@@ -511,9 +569,34 @@ jobs:
           done
       - name: Run the custom tasks
         shell: bash
+        env:
+          CUSTOM_TASKS: ${{ inputs.tasks }}
+          OC_REFERENCES: ${{ inputs.references }}
         run: |
           set -o pipefail
+          case "$CUSTOM_TASKS" in
+            detekt|"detekt "*)
+              # `tasks=detekt :core:net :androidApp` (or `detekt --all`): the detekt lane script on exactly those modules, no Gradle.
+              # deep enough for the merge-base of the branch and the ref (the ratchet judges a branch from its fork)
+              git -C .. fetch --no-tags --depth=1000 origin native/glass-next:refs/remotes/origin/native/glass-next "$GITHUB_REF_NAME" || true
+              bash tool/ci/detekt_lane.sh origin/native/glass-next ${CUSTOM_TASKS#detekt} 2>&1 | tee "$RUNNER_TEMP/custom.log"
+              exit 0 ;;
+          esac
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
+      - name: Pack the goldens this run changed or added (a record run's result)
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          git status --porcelain --untracked-files=all -- 'native/*/src/desktopTest/goldens/*' 'native/*/*/src/desktopTest/goldens/*' | cut -c4- > "$RUNNER_TEMP/changed-goldens.txt" || true
+          mkdir -p native/reports
+          if [ -s "$RUNNER_TEMP/changed-goldens.txt" ]; then tar czf native/reports/goldens-custom.tgz -T "$RUNNER_TEMP/changed-goldens.txt"; cat "$RUNNER_TEMP/changed-goldens.txt" >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-goldens-custom
+          path: native/reports/goldens-custom.tgz
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Custom report
         if: always()
         env:
@@ -523,8 +606,16 @@ jobs:
           failed=false; [ "$JOB_STATUS" = failure ] && failed=true
           ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/custom.log" 2>/dev/null && ran=true
           echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/custom.json
-          TASKS="${{ inputs.tasks }}" GRADLE_LOG="$RUNNER_TEMP/custom.log" GRADLE_OUTCOME="$JOB_STATUS" \
-            python3 -I tool/ci/test_report.py custom reports >> "$GITHUB_STEP_SUMMARY"
+          case "${{ inputs.tasks }}" in
+            # no Gradle: "ran" is whether the lane script left its report, which summary.py reads
+            detekt|"detekt "*) ran=false; [ -s reports/detekt.json ] && ran=true; failed=false; [ "$ran" = false ] && failed=true
+              echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/custom.json ;;
+            *) TASKS="${{ inputs.tasks }}" GRADLE_LOG="$RUNNER_TEMP/custom.log" GRADLE_OUTCOME="$JOB_STATUS" \
+                 python3 -I tool/ci/test_report.py custom reports >> "$GITHUB_STEP_SUMMARY" ;;
+          esac
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -532,6 +623,63 @@ jobs:
           path: |
             native/reports/custom.json
             native/reports/report-custom.json
+            native/reports/detekt.json
+            native/build/reports/detekt/
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
+          if-no-files-found: ignore
+
+  detekt:
+    name: detekt
+    needs: where
+    # No Gradle: the pinned detekt jar on the modules this change touches (and the baseline ratchet), so a branch cannot read
+    # PASS with a new finding. It records; summary.py decides (the job is continue-on-error on work branches like the rest).
+    if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' }}
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.lane == 'candidate' && 45 || 15 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Fetch the base the diff and the ratchet compare with
+        env:
+          BASE: ${{ inputs.base || 'native/screens-merge41' }}
+        run: |
+          printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$' || git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+      - name: detekt on the touched modules
+        working-directory: native
+        env:
+          BASE: ${{ inputs.base || 'native/screens-merge41' }}
+          LANE: ${{ inputs.lane || 'full' }}
+        run: |
+          if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else ref="origin/$BASE"; fi
+          # The candidate lane checks every module; the fast and full lanes the modules this change touches.
+          all=(); [ "$LANE" = candidate ] && all=(--all)
+          bash tool/ci/detekt_lane.sh "$ref" "${all[@]}" | tee "$RUNNER_TEMP/detekt.log"
+          python3 -I - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open('reports/detekt.json'))
+          print('### detekt: ' + (', '.join(f'{m}: {n} new' for m, n in sorted(r['findings'].items())) or '0 new findings')
+                + f' on {", ".join(r["modules"]) or "ratchet only"} (ratchet {r["ratchet"]}, scope {r["scope"]})')
+          PY
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-detekt
+          path: |
+            native/reports/detekt.json
+            native/build/reports/detekt/
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
+          if-no-files-found: ignore
+      # The JUnit files of the custom run, so a test's duration can be read after the run (small: xml only).
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-junit-custom
+          path: native/**/build/test-results/**/*.xml
           retention-days: 7
           if-no-files-found: ignore
 
@@ -588,6 +736,9 @@ jobs:
           print(json.dumps({'failed': sys.argv[2] == 'true', 'gradle_ran': sys.argv[3] == 'true', 'tests': r.get('tests', 0),
                             'failing': [f['id'] for f in r.get('failures', [])][:40], 'real': r.get('real_failures', [])[:20]}))
           PY
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -595,7 +746,7 @@ jobs:
           path: |
             native/reports/android-unit.json
             native/reports/report-android-unit.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
       - name: Android unit and picture evidence
         if: failure()
@@ -606,12 +757,12 @@ jobs:
             native/**/build/reports/tests/
             native/**/build/test-results/
             native/**/build/outputs/roborazzi/
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   summary:
     name: summary
-    needs: [where, plan, compile, test, apk, record, custom, android-unit]
+    needs: [where, plan, compile, test, apk, record, custom, android-unit, detekt]
     if: ${{ always() }}
     # No job-level continue-on-error: this job's exit code is summary.py's verdict on every branch (1 = FAIL, 2 = integrity:
     # Gradle never ran, a shard left no report), so the run page reads red exactly when the summary says FAIL.
@@ -628,6 +779,7 @@ jobs:
       RESULT_RECORD: ${{ needs.record.result }}
       RESULT_CUSTOM: ${{ needs.custom.result }}
       RESULT_ANDROID_UNIT: ${{ needs.android-unit.result }}
+      RESULT_DETEKT: ${{ needs.detekt.result }}
       PLANNED_SHARDS: ${{ join(fromJSON(needs.plan.outputs.shards || '[]'), ',') }}
     defaults:
       run:

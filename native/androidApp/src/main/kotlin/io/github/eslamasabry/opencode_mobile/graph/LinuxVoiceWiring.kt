@@ -439,6 +439,9 @@ internal constructor(
     private var presenceResetThisVisit = false
     private var idleBudgetHeld = false
     internal var onManualReady: (suspend () -> Unit)? = null
+
+    /** Remembers a refused follow, so the next resume tries once more and a second refusal is reported once. */
+    internal var activityFollow: ActivityFollow = ActivityFollow { gates.followRefused?.invoke() }
     val isForeground: Boolean
         get() = foreground
 
@@ -1699,12 +1702,9 @@ internal constructor(
         if (on && !foreground) presenceResetThisVisit = idleBudgetHeld
         foreground = on
         if (!readyMarkerPresent()) return
-        try {
-            linux.setActivityResumed(on)
-        } catch (e: Exception) {
-            // The runtime refused to follow the activity; its own recovery stays off. Nothing to
-            // tell the person.
-        }
+        // The runtime may refuse to follow the activity; its own recovery then stays off for that visit.
+        // Nothing is told to the person: if recovery is needed and missing, the "phone server stopped" state shows.
+        activityFollow.follow(on) { linux.setActivityResumed(it) }
         if (on)
             scope.launch {
                 adoptNativeAddress()
@@ -1852,4 +1852,7 @@ object OfflineSpeechEngine : SherpaRuntime {
 @dev.zacsweers.metro.Inject
 class LocalServerGates {
     @Volatile var gate: (suspend (ProfileId) -> LocalServerWait)? = null
+
+    /** Told when the phone server's recovery was refused twice in a row (set once at app start). */
+    @Volatile var followRefused: (() -> Unit)? = null
 }

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">通知</string>
+    <string name="m40UsageWidget">ホーム画面ウィジェット</string>
+    <string name="m40UsageReadFrom">使用状況を読み取る</string>
+    <string name="m40UsageAdd">サブスクリプションを追加</string>
+    <string name="m40UsageSaveFailed">その変更を保存できませんでした。もう一度お試しください。</string>
+    <string name="m40UsageAlertsWatch">プランを監視</string>
+    <string name="m40UsageAlertsEvery">上限を読み取れるすべてのサブスクリプションを監視します。</string>
+    <string name="m40UsageTellMe">通知する条件</string>
+    <string name="m40UsageReset">使い切ったプランが再び使えるようになったとき</string>
+    <string name="m40UsageDifferent">これらのプランは個別に設定</string>
+    <string name="m40UsageWhen">通知する時間帯</string>
+    <string name="m40UsageQuiet">おやすみ時間</string>
+    <string name="m40UsageQuietShared">ほかの通知と同じおやすみ時間です。</string>
+    <string name="m40UsageQuietStart">開始</string>
+    <string name="m40UsageQuietEnd">終了</string>
+    <string name="m40UsageQuietAllDay">この時刻設定では終日通知がオフになります。</string>
+    <string name="m40UsageWifi">Wi-Fiのみ</string>
+    <string name="m40UsageNothingToWatch">監視できる読み取り可能なプランはまだありません。</string>
+    <string name="m40UsageDownTo">プランの残りが次の値以下になったとき</string>
+    <string name="m40UsageSameAsOthers">ほかと同じ：残り%1$d%</string>
+    <string name="m40UsageWidgetPlans">ウィジェットに表示するプラン</string>
+    <string name="m40UsageWidgetSetup">セットアップが必要なプランを表示</string>
+    <string name="m40UsageWidgetWindows">表示する期間</string>
+    <string name="m40UsageBoth">5時間と今週</string>
+    <string name="m40UsageReaderGone">この保存済み接続は利用できなくなりました。</string>
+    <string name="m40UsageReadPhoneBody">サインイン済みのプラン上限を読み取るため、アプリ内Ubuntuにリーダーをセットアップします。プロバイダーのキーはホストに残ります。</string>
+    <string name="m40UsageReadComputerBody">使用状況の再読み込み時に、このサーバーで短い読み取り専用チェックの実行を許可します。このパソコン上のサインイン済みプラン上限を確認します。ここでオフにできます。</string>
+    <string name="m40UsageWhatRuns">パソコンで実行される内容</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">このチェックはプロバイダーのサインインをローカルで読み取り、プラン上限と不透明なアカウント参照のみを返します。キーやトークンがアプリに戻ることはありません。</string>
+    <string name="m40UsageCopying">リーダーをコピー中</string>
+    <string name="m40UsageCheckingSignIns">サインインを確認中</string>
+    <string name="m40UsageStarting">リーダーを起動中</string>
+    <string name="m40UsageReading">プラン上限を読み取り中</string>
+    <string name="m40UsageChecking">接続を確認中</string>
+    <string name="m40UsageNeedsNode">プラン上限を読み取るには、このパソコンにNode 20以降が必要です。</string>
+    <string name="m40UsageLinuxNotReady">先にアプリ内Ubuntuをセットアップしてからもう一度お試しください。</string>
+    <string name="m40UsageServerTooOld">コマンドターミナルで使用状況を読み取るには、このサーバーをアップデートしてください。</string>
+    <string name="m40UsagePrepareFailed">リーダーを準備できませんでした。もう一度お試しください。</string>
+    <string name="m40UsageStartFailed">リーダーを起動できませんでした。もう一度お試しください。</string>
+    <string name="m40UsageRemoveFailed">リーダーを削除できませんでした。もう一度お試しください。</string>
+    <string name="m40UsageUnreachable">このパソコンに接続できませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="m40UsageNoAnswer">チェックから読み取れる応答が返りませんでした。もう一度お試しください。</string>
+    <string name="m40UsageFoundNone">上限を読み取れるサインイン済みのプランは見つかりませんでした。</string>
+    <string name="m40UsageFound">検出：%1$s</string>
+    <string name="m40UsageReadNow">今すぐ読み取る</string>
+    <string name="m40UsageTurnOn">読み取りをオンにする</string>
+    <string name="m40UsageTurnOff">読み取りをオフにする</string>
+    <string name="m40UsageThreshold">このプランの通知しきい値</string>
+    <string name="m40UsageResetHelp">このプランが再び使えるようになったら通知します。</string>
+    <string name="m40UsageReadOff">%1$sからの読み取りをオフにする</string>
+    <string name="m40UsageChooseSignIn">サインイン先を選択</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">バッテリー節約のため、%1$sにバックグラウンド接続を一時停止しました。</string>
+    <string name="background_pause_restricted">バックグラウンド接続を一時停止しました：バッテリー使用が制限されています。</string>
+    <string name="background_pause_user_stopped">%1$sにアプリが終了したため、バックグラウンド接続が停止しました。</string>
+    <string name="background_pause_app_updated">%1$sにアプリがアップデートされたため、バックグラウンド接続が停止しました。</string>
+    <string name="background_pause_interrupted">不明な理由により、バックグラウンド接続が停止しました。</string>
+    <string name="background_pause_device_restarted">スマートフォンが再起動したため、バックグラウンド接続が停止しました。</string>
+    <string name="background_pause_resume">バックグラウンド接続を再開</string>
+    <string name="background_pause_resume_short">再開</string>
+    <string name="background_pause_resuming">バックグラウンド接続を再開中…</string>
+    <string name="background_pause_resume_failed">再開できませんでした。「バックグラウンドで実行を続ける」設定を開いてください。</string>
+    <string name="background_pause_open_keep_running">「バックグラウンドで実行を続ける」設定を開く</string>
+    <string name="background_pause_resumed">バックグラウンド接続を再開しました。</string>
+    <string name="background_error_notifications_required">通知へのアクセスが必要です。</string>
+    <string name="background_error_could_not_change">Androidでバックグラウンドモードを変更できませんでした。</string>
+    <string name="background_error_android_app_only">バックグラウンドライブモードはAndroidアプリで利用できます。</string>
+</resources>

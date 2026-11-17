@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupRbStatusUnreadable">保存済みのセットアップを読み取れませんでした。「セットアップを続行」をお試しください。</string>
+    <string name="setupRbToolsUncheckable">インストール済みのツールを確認できませんでした。もう一度お試しください。</string>
+</resources>

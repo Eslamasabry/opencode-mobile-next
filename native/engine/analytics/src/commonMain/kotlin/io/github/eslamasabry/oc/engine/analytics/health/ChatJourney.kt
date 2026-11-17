@@ -46,6 +46,8 @@ public data class PromptTraits(val agent: String? = null, val hasAttachment: Boo
  * One turn per session. A prompt sent into a running turn is a steer: it changes the turn's follow-up and starts no
  * new one. An idle left over from the previous turn does not end the new one.
  */
+// One state machine for the whole chat turn (send, stream, stall, end): its steps share the turn table and its lanes.
+@Suppress("TooManyFunctions")
 public class ChatJourney(
     private val now: () -> Long,
     private val flow: HealthFlow = HealthFlow(),
@@ -95,33 +97,45 @@ public class ChatJourney(
     public fun sent(sessionId: String, onPhone: Boolean, traits: PromptTraits = PromptTraits(), connection: String? = null) {
         val dictated = voice
         voice = false
-        val input =
-            when {
-                dictated && traits.hasAttachment -> "voice_attachment"
-                dictated -> "voice"
-                traits.hasAttachment -> "attachment"
-                else -> "text"
-            }
+        val input = inputWord(dictated, traits.hasAttachment)
         if (dictated) flow.feature(ProductFeature.Voice)
         if (traits.hasAttachment) flow.feature(ProductFeature.FileAttach)
         val current = turns.value[sessionId]
         val steer = current != null && current.busy
         pending[sessionId] = Pending(if (onPhone) "phone" else "computer", SendTraits(traits.agent, input), steer)
         if (current != null && steer) {
-            current.followUp = "steer"
-            current.lastActivityMs = now()
-            current.liveness = null
-            current.deadStream = false
+            steered(current)
             return
         }
         val turn = Turn(now(), onPhone, traits, connection)
-        val failed = failedAt.remove(sessionId)
-        if (failed != null && now() - failed <= AFTER_FAIL_WINDOW_MS) turn.followUp = "after_fail"
-        turns.update { map ->
-            val base = if (map.size >= MAX_TRACKED && sessionId !in map) map - map.keys.first() else map
-            base + (sessionId to turn)
-        }
+        if (followsAFailure(sessionId)) turn.followUp = "after_fail"
+        turns.update { map -> map + (sessionId to turn) - evictedFor(map, sessionId) }
     }
+
+    private fun inputWord(dictated: Boolean, attached: Boolean): String =
+        when {
+            dictated && attached -> "voice_attachment"
+            dictated -> "voice"
+            attached -> "attachment"
+            else -> "text"
+        }
+
+    /** A send into a running turn steers it: the turn goes on and counts as a follow-up by steering. */
+    private fun steered(current: Turn) {
+        current.followUp = "steer"
+        current.lastActivityMs = now()
+        current.liveness = null
+        current.deadStream = false
+    }
+
+    private fun followsAFailure(sessionId: String): Boolean {
+        val failed = failedAt.remove(sessionId) ?: return false
+        return now() - failed <= AFTER_FAIL_WINDOW_MS
+    }
+
+    /** The oldest tracked turn leaves when a new session would pass the cap. */
+    private fun evictedFor(map: Map<String, Turn>, sessionId: String): Set<String> =
+        if (map.size >= MAX_TRACKED && sessionId !in map) setOf(map.keys.first()) else emptySet()
 
     /** The send link's own answer; a send it failed starts no turn (a failed steer leaves the running turn alone). */
     public fun accepted(sessionId: String, error: Boolean) {
@@ -262,15 +276,9 @@ public class ChatJourney(
      */
     public fun stream(connection: String?, onPhone: Boolean, connected: Boolean, dropReason: String? = null) {
         val at = now()
-        if (connection != null) {
-            if (!connected && dropReason != null && connection !in drops) {
-                drops[connection] = Drop(if (onPhone) "phone" else "computer", dropReason, at)
-            }
-            if (connected) drops.remove(connection)?.let { flow.connDrop(it.serverKind, it.reason, recovered = true) }
-        }
+        if (connection != null) noteConnection(connection, onPhone, connected, dropReason, at)
         for (t in turns.value.values) {
-            val mine = if (connection != null && t.connection != null) t.connection == connection else t.onPhone == onPhone
-            if (!mine) continue
+            if (!ridesOn(t, connection, onPhone)) continue
             if (!connected && t.droppedAtMs == null) t.droppedAtMs = at
             if (connected && t.droppedAtMs != null) {
                 t.liveness = null
@@ -280,6 +288,23 @@ public class ChatJourney(
             }
         }
     }
+
+    private fun noteConnection(
+        connection: String,
+        onPhone: Boolean,
+        connected: Boolean,
+        dropReason: String?,
+        at: Long,
+    ) {
+        if (!connected && dropReason != null && connection !in drops) {
+            drops[connection] = Drop(if (onPhone) "phone" else "computer", dropReason, at)
+        }
+        if (connected) drops.remove(connection)?.let { flow.connDrop(it.serverKind, it.reason, recovered = true) }
+    }
+
+    /** A turn rides on the connection it went through; without one on record, on the same side (phone or computer). */
+    private fun ridesOn(t: Turn, connection: String?, onPhone: Boolean): Boolean =
+        if (connection != null && t.connection != null) t.connection == connection else t.onPhone == onPhone
 
     /** An approval or question of this session opened (+1) or left (-1). */
     public fun approvalOpen(sessionId: String, delta: Int) {
@@ -308,43 +333,52 @@ public class ChatJourney(
         }
         for ((id, t) in turns.value) {
             val dropped = t.droppedAtMs
-            if (dropped != null && at - dropped >= LOST_AFTER_MS) {
-                turns.update { it - id }
-                failedAt[id] = at
-                summarize(id, t, "connection_lost", null, recoveredOverride = "no")
-                continue
-            }
-            if (!t.busy) {
-                if (at - t.lastActivityMs >= LOST_AFTER_MS) {
+            when {
+                dropped != null && at - dropped >= LOST_AFTER_MS -> {
                     turns.update { it - id }
-                    summarize(id, t, if (t.replied) "done" else "no_output", null)
+                    failedAt[id] = at
+                    summarize(id, t, "connection_lost", null, recoveredOverride = "no")
                 }
-                continue
-            }
-            val quiet = at - t.lastActivityMs
-            val bucket = STALL_STEPS_MS.indexOfLast { quiet >= it }
-            if (bucket > t.stallBucket) {
-                t.stallBucket = bucket
-                val stage =
-                    when {
-                        t.openApprovals > 0 -> "waiting_approval"
-                        t.lastKind == "tool" -> "waiting_tool"
-                        t.lastKind.isEmpty() || t.lastKind == "text" || t.lastKind == "reasoning" -> "streaming"
-                        else -> "other"
-                    }
-                val cause = when {
-                    t.droppedAtMs != null || t.deadStream -> "stream_dead_refetched"
-                    t.openApprovals > 0 -> "unknown"
-                    t.lastKind == "retry" -> "retrying"
-                    t.lastKind == "tool" -> "tool_running"
-                    t.lastKind.isEmpty() || t.lastKind == "text" || t.lastKind == "reasoning" ->
-                        if (t.liveness == true) "thinking_silent" else "stream_silent"
-                    else -> "unknown"
-                }
-                flow.turnStall(stage, quiet, cause)
+                !t.busy -> endIfIdle(id, t, at)
+                else -> reportStall(t, at)
             }
         }
     }
+
+    private fun endIfIdle(id: String, t: Turn, at: Long) {
+        if (at - t.lastActivityMs < LOST_AFTER_MS) return
+        turns.update { it - id }
+        summarize(id, t, if (t.replied) "done" else "no_output", null)
+    }
+
+    private fun reportStall(t: Turn, at: Long) {
+        val quiet = at - t.lastActivityMs
+        val bucket = STALL_STEPS_MS.indexOfLast { quiet >= it }
+        if (bucket <= t.stallBucket) return
+        t.stallBucket = bucket
+        flow.turnStall(stallStage(t), quiet, stallCause(t))
+    }
+
+    private fun isStreamingKind(t: Turn): Boolean =
+        t.lastKind.isEmpty() || t.lastKind == "text" || t.lastKind == "reasoning"
+
+    private fun stallStage(t: Turn): String =
+        when {
+            t.openApprovals > 0 -> "waiting_approval"
+            t.lastKind == "tool" -> "waiting_tool"
+            isStreamingKind(t) -> "streaming"
+            else -> "other"
+        }
+
+    private fun stallCause(t: Turn): String =
+        when {
+            t.droppedAtMs != null || t.deadStream -> "stream_dead_refetched"
+            t.openApprovals > 0 -> "unknown"
+            t.lastKind == "retry" -> "retrying"
+            t.lastKind == "tool" -> "tool_running"
+            isStreamingKind(t) -> if (t.liveness == true) "thinking_silent" else "stream_silent"
+            else -> "unknown"
+        }
 
     private fun summarize(sessionId: String, t: Turn, outcome: String, errorKind: String?, recoveredOverride: String? = null) {
         if (outcome == "error" || outcome == "connection_lost") failedAt[sessionId] = now()

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="remoteTerminalTitle">ターミナル</string>
+    <string name="remoteTerminalWorking">処理中…</string>
+    <string name="remoteTerminalUnavailable">この画面を使うには、ターミナルに対応したサーバーに接続してください。</string>
+    <string name="remoteTerminalFailed">ターミナルへのリクエストに失敗しました。もう一度お試しください。</string>
+    <string name="remoteTerminalInputUncertain">入力の送信中に接続が停止しました。再送信する前にターミナルを確認してください。</string>
+    <string name="remoteTerminalIntro">コマンドはこのサーバー上で実行されます。この画面を離れると表示は切断されます。シェルを停止するには「ターミナルを終了」を使用してください。</string>
+    <string name="remoteTerminalCreate">新しいターミナル</string>
+    <string name="remoteTerminalRefresh">再読み込み</string>
+    <string name="remoteTerminalEmpty">ターミナルはまだありません。</string>
+    <string name="remoteTerminalRunning">実行中</string>
+    <string name="remoteTerminalEnded">終了</string>
+    <string name="remoteTerminalList">すべてのターミナル</string>
+    <string name="remoteTerminalDisconnect">切断</string>
+    <string name="remoteTerminalReconnect">再接続</string>
+    <string name="remoteTerminalEnd">ターミナルを終了</string>
+    <string name="remoteTerminalDisconnected">切断されました。このターミナルの閲覧を続けるには再接続してください。</string>
+    <string name="remoteTerminalInputOff">ターミナルへ入力を送るには再接続してください。</string>
+    <string name="remoteTerminalInterrupt">割り込み（Ctrl-C）</string>
+    <string name="remoteTerminalEndInput">入力終了（Ctrl-D）</string>
+    <string name="remoteTerminalEscape">Esc</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">読みやすいターミナル</string>
+    <string name="remoteTerminalTranscript">ターミナル出力</string>
+    <string name="remoteTerminalNoOutput">ターミナル出力はまだありません。</string>
+    <string name="remoteTerminalInput">ターミナルへ送信</string>
+    <string name="remoteTerminalSend">送信</string>
+    <string name="remoteTerminalEndQuestion">このターミナルを終了しますか？</string>
+    <string name="remoteTerminalEndBody">リモートのシェルと、その中で実行中のすべての処理が停止します。</string>
+    <string name="remoteTerminalKeep">ターミナルを残す</string>
+    <string name="remoteTerminalOffline">ターミナルは切断されています。再接続するには開き直してください。</string>
+    <string name="remoteTerminalSize">ターミナルサイズ</string>
+    <string name="remoteTerminalRows">行数</string>
+    <string name="remoteTerminalColumns">列数</string>
+    <string name="remoteTerminalApplySize">サイズを適用</string>
+    <string name="remoteTerminalSizeRange">行数と列数は1から1000の範囲で指定してください。</string>
+    <string name="remoteTerminalServiceUnavailable">このサーバーはターミナルサービスを提供していません。</string>
+    <string name="remoteTerminalProjectChanged">この会話のプロジェクトが変更されました。戻ってからターミナルを開き直してください。</string>
+    <string name="remoteTerminalSignInRequired">このターミナルを使うにはこのサーバーにもう一度サインインしてください。</string>
+    <string name="remoteTerminalServiceNoAnswer">ターミナルサービスから応答がありませんでした。もう一度お試しください。</string>
+</resources>

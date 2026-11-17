@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryCrashReportsTitle">開発者にクラッシュレポートを送信（Google Firebase）</string>
+    <string name="telemetryCrashReportsBody">アプリがクラッシュしたときや処理が失敗したときに、問題の種類、アプリとAndroidのバージョン、コード位置の短い一覧を送信します。メッセージ、ファイル、アドレス、キーは決して送信されません。</string>
+    <string name="telemetryConsentChoose">共有する内容を選択</string>
+    <string name="telemetryConsentSave">選択を保存</string>
+    <string name="sendReportTitle">問題レポートを送信</string>
+    <string name="sendReportRowDetail">送信される内容を確認してから送信します</string>
+    <string name="sendReportSubtitle">レポートに含まれる内容はこれがすべてです。「送信」をタップするまで何も送信されません。</string>
+    <string name="sendReportSend">送信</string>
+    <string name="sendReportCollecting">レポートを収集中…</string>
+    <string name="sendReportSentTitle">レポートを送信しました</string>
+    <string name="sendReportSentBody">開発者がレポートを見つけられるよう、GitHubでIssueを作成する際にこのレポートコードを記載してください。</string>
+    <string name="sendReportFailed">レポートを送信できませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="sendReportDone">完了</string>
+    <string name="reportCodeLabel">レポートコード</string>
+    <string name="reportCodeCopy">レポートコードをコピー</string>
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">セットアップ履歴とレジストリ</string>
+    <string name="stateSetupNoWrites">ここではセットアップ内容を確認できます。このサーバーには検証済みのアトミック復元エンドポイントがないため、適用と取り消しは利用できません。</string>
+    <string name="stateSetupUnsupported">設定ソースを読み取るには、セットアップの確認に対応したサーバーに接続してください。</string>
+    <string name="stateSetupSaveFailed">変更を保存できませんでした。もう一度お試しください。</string>
+    <string name="stateSetupReadFailed">セットアップ情報を読み取れませんでした。もう一度お試しください。</string>
+    <string name="stateSetupOffline">セットアップ情報を再読み込みするには再接続してください。</string>
+    <string name="stateSetupSources">設定ソース</string>
+    <string name="stateSetupMcp">接続済みツール</string>
+    <string name="stateSetupRecordReview">このセットアップを確認済みとして保存</string>
+    <string name="stateSetupRefresh">セットアップを再読み込み</string>
+    <string name="stateSetupHistory">セットアップ履歴</string>
+    <string name="stateSetupHistoryUnavailable">保存済みの履歴は利用できません。復旧用に保持されています。</string>
+    <string name="stateSetupHistoryEmpty">保存されたセットアップ確認履歴はありません</string>
+    <string name="stateSetupRegistryConsent">公開ツールレジストリを閲覧</string>
+    <string name="stateSetupRegistryPrivacy">初期状態ではオフです。再読み込みすると公開リクエストを1回送信します。検索語句はレジストリに送られますが、サーバーの認証情報は送られません。一覧が何かを実行したりインストールしたりすることはありません。</string>
+    <string name="stateSetupRegistrySearch">レジストリを検索</string>
+    <string name="stateSetupRegistryRefresh">レジストリを再読み込み</string>
+    <string name="stateSetupRegistrySaved">保存済みの一覧を表示</string>
+    <string name="stateSetupRegistryClear">レジストリの同意と保存済み一覧を消去</string>
+    <string name="stateSetupRegistryOffline">オフラインです。保存済みの一覧を表示しています。</string>
+    <string name="stateSetupRegistryFailed">レジストリを読み込めませんでした。保存済みの一覧は保持されています。</string>
+    <string name="stateSetupRegistryEmpty">表示できる一覧がありません。再読み込みするか、別のキーワードで検索してください。</string>
+    <string name="stateSetupMcpConnected">接続済み</string>
+    <string name="stateSetupMcpPending">接続中</string>
+    <string name="stateSetupMcpDisabled">オフ</string>
+    <string name="stateSetupMcpFailed">接続できませんでした</string>
+    <string name="stateSetupMcpSignIn">サインインが必要</string>
+    <string name="stateSetupMcpUnknown">状態不明</string>
+    <string name="stateSetupAuditProposed">変更を提案</string>
+    <string name="stateSetupAuditPending">変更を保留中</string>
+    <string name="stateSetupAuditAccepted">変更を承認</string>
+    <string name="stateSetupAuditVerified">確認を検証済み</string>
+    <string name="stateSetupAuditUncertain">結果が不確定</string>
+    <string name="stateSetupAuditRejected">変更を拒否</string>
+    <string name="stateServerSchedules">スケジュール済みプロンプト</string>
+</resources>

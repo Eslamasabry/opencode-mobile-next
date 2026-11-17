@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12ProjectsTitle">プロジェクト</string>
+    <string name="p12OpenFolder">サーバー上のフォルダを開く</string>
+    <string name="p12NewProjectUnavailable">このサーバーではスマートフォンからフォルダを作成できません。そのパソコン上でフォルダを作成してから、ここで開いてください。</string>
+    <string name="p12PhoneFolder">このスマートフォン上のフォルダ</string>
+    <string name="p12PhoneFolderBody">このスマートフォンの共有ストレージ内のフォルダを選択します。</string>
+    <string name="p12PhoneFolderUnavailable">このバージョンでは、このスマートフォン上のOpenCodeはまだセットアップされていません。</string>
+    <string name="p12ProjectsOnServer">%1$s上のプロジェクト</string>
+    <string name="p12ProjectsOnThisPhone">このスマートフォン上のプロジェクト</string>
+    <string name="p12ProjectsLoadFailed">このサーバーのプロジェクトを読み込めませんでした。</string>
+    <string name="p12NoServerTitle">サーバーが未接続です</string>
+    <string name="p12NoServerBody">プロジェクトと会話を見るにはサーバーに接続してください。</string>
+    <string name="p12PathNotAbsolute">/ から始まるフルパスを入力してください。</string>
+    <string name="p12PathBadParts">パスに「..」や改行を含めることはできません。</string>
+    <string name="p12NewHere">ここで新しい会話を開始</string>
+    <string name="p12NewHereBody">%1$sで作業する会話を開始します。</string>
+    <string name="p12ProjectConversations">このプロジェクトの会話</string>
+    <string name="p12ProjectNoConversations">このプロジェクトにはまだ会話がありません。</string>
+    <string name="p12ElsewhereTitle">ほかのプロジェクト内</string>
+    <string name="p12CreateFailed">会話を開始できませんでした。</string>
+    <string name="p12Select">選択</string>
+    <string name="p12SelectCancel">選択をキャンセル</string>
+    <string name="p12Rename">名前を変更</string>
+    <string name="p12RenameTitle">会話の名前を変更</string>
+    <string name="p12RenameField">タイトル</string>
+    <string name="p12RenameEmpty">タイトルには少なくとも1文字が必要です。</string>
+    <string name="p12RenameFailed">会話の名前を変更できませんでした。</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="other">%1$d件の会話を削除</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="other">%1$d件の会話をアーカイブ</item>
+    </plurals>
+    <string name="p12Deleted">「%1$s」を削除しました</string>
+    <string name="chatsRowArchived">「%1$s」をアーカイブしました</string>
+    <string name="chatsRowActions">会話の操作</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="other">%1$d件の会話を削除しました</item>
+    </plurals>
+    <string name="p12DeleteFailed">会話を削除できなかったため、一覧に戻しました。</string>
+    <string name="p12ArchiveUnavailable">このサーバーでは会話をアーカイブできません。</string>
+    <string name="p12ArchiveFailed">会話をアーカイブできませんでした。</string>
+    <string name="p12ArchivedFilter">アーカイブ済み</string>
+    <string name="p12MoreFor">%1$sの詳細</string>
+    <string name="p12OpenChat">会話を開く</string>
+</resources>

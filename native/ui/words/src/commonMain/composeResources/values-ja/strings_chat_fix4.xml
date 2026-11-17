@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">モデルのプロバイダーアカウントに、このモデル用のクレジットがありません。そのプロバイダーでクレジットを追加するか、別のモデルを選んでください。</string>
+    <string name="chatReplyFailedConnectionLost">モデルのプロバイダーとの接続が切れたため、返信が停止しました。続行を指示するか、送信し直してください。</string>
+</resources>

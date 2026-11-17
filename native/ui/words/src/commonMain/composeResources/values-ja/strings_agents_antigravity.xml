@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">ターミナルで使えるAntigravity</string>
+    <string name="agentPersonaAntigravityAbout">Antigravityエージェントをターミナル中心で使うためのGoogleのツールです。</string>
+    <string name="agentPersonaAntigravityNeeds">Googleアカウント（ブラウザでサインイン）</string>
+    <string name="agentsAntigravitySignInIntro">Antigravityがターミナルにサインイン用リンクを表示します。ブラウザで開いてGoogleでサインインし、ブラウザに表示されたコードをターミナルに貼り付けてください。</string>
+    <string name="agentsGeminiMigrationNote">Gemini CLIでAntigravityの使用を求められた場合は、エージェント画面に戻ってAntigravity（agy）をインストールしてください。これまでのGeminiの会話はそのまま残ります。</string>
+</resources>

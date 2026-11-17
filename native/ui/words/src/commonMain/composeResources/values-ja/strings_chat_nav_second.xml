@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">前の最近使ったモデル</string>
+    <string name="chatCycleNext">次の最近使ったモデル</string>
+    <string name="chatHomeAllow">今回のみ許可</string>
+    <string name="chatHomeReject">拒否</string>
+    <string name="chatHomeAnswerFailed">回答を送信できませんでした。会話を開いて確認してください。</string>
+    <string name="chatHomeRunning">実行中</string>
+    <string name="chatHomeMinutes">%1$s分</string>
+    <string name="chatQueueMoveTitle">待機中のプロンプトを移動</string>
+    <string name="chatQueueMoveEmpty">この会話に未送信の待機中プロンプトはありません。</string>
+    <string name="chatQueueMoveChoosePrompt">プロンプトを選択</string>
+    <string name="chatQueueMoveChooseServer">移動先のサーバーを選択</string>
+    <string name="chatQueueMoveChooseDestination">会話へ移動</string>
+    <string name="chatQueueMoveFailure">プロンプトを移動できませんでした。何も送信されていません。</string>
+    <string name="chatQueueMoveMore">他の会話</string>
+    <string name="chatQueueMoveSelectionNote">プロンプトは待機中のまま移動します。移動先で提供されていないモデルやエージェントは解除されます。</string>
+    <string name="chatPhraseHide">%1$sを非表示</string>
+    <string name="chatHomeSeconds">%1$s秒</string>
+</resources>

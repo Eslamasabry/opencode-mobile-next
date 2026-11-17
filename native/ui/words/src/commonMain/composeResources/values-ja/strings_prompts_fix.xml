@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">このプロンプトには、このバージョンではメッセージに入れられないファイルまたはレビューメモが含まれています。それらはここに保存されたまま残ります。</string>
+    <string name="promptFixWordsOnly">テキストのみを追加</string>
+</resources>

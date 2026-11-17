@@ -43,6 +43,9 @@ public data class UmamiBuild(val version: String, val build: String, val tag: St
 
 public data class UmamiDevice(val language: String, val screen: String, val userAgent: String)
 
+/** Where an event comes from: the site it counts under, the build that sent it and the device that sent it. */
+public data class UmamiSource(val website: String, val build: UmamiBuild, val device: UmamiDevice)
+
 public data class UmamiPage(val url: String, val title: String)
 
 /** The existing closed screen categories, each with one address and English title. */
@@ -72,17 +75,19 @@ public fun umamiEvent(
     name: String,
     props: Map<String, String>,
     page: UmamiPage,
-    website: String,
-    build: UmamiBuild,
-    device: UmamiDevice,
+    source: UmamiSource,
     atMs: Long,
 ): UmamiEvent? {
-    if (page !in umamiPages.values || atMs < 0 || atMs / 1000 > 2_147_483_647) return null
-    val event = ProductEvent.entries.firstOrNull { it.wire == name } ?: return null
-    val clean = cleanProductProps(event, props) ?: return null
-    val visible = if (event == ProductEvent.ScreenView || event == ProductEvent.Jank) {
-        umamiPages[clean["screen"]] ?: return null
-    } else page
+    val (website, build, device) = source
+    val inRange = page in umamiPages.values && atMs >= 0 && atMs / 1000 <= 2_147_483_647
+    val event = ProductEvent.entries.firstOrNull { it.wire == name }
+    val clean = event?.let { cleanProductProps(it, props) }
+    val visible = when {
+        !inRange -> null
+        event == ProductEvent.ScreenView || event == ProductEvent.Jank -> clean?.get("screen")?.let { umamiPages[it] }
+        else -> page
+    }
+    if (event == null || clean == null || visible == null) return null
     return UmamiEvent(payload = UmamiPayload(
         website = website,
         language = device.language.takeIf { it.length <= 35 && it.matches(Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")) } ?: "und",

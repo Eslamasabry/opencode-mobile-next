@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">ポート操作</string>
+    <string name="linuxPortCopiedAddress">アドレスをコピー</string>
+    <string name="linuxPortOwnerStop">%1$sを停止</string>
+    <string name="linuxPortOwnerQuestion">%1$sを停止しますか？</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="other">選択したプログラムとそのヘルパー（%1$d件のプロセス）を停止します。各プロセスは引き続き表示されたIDと一致している必要があります。自動的に再起動はされません。</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">終了：%1$d · 強制終了：%2$d · 実行中：%3$d · ID変更のため保持：%4$d</string>
+</resources>

@@ -48,6 +48,7 @@ would spend the public name. Before a release, set `versionName` to the next nam
 | `verifySwitchReleaseStorageManifest`, `verifySwitchReleaseNativeLibraries` | Gradle, `assembleSwitchRelease` | All-files access would reset; an APK lacks its ABI's Linux or speech libraries |
 | `lintSwitchRelease`, `testSwitchDebugUnitTest` | Gradle | release lint or the app's unit tests (including `ReleaseShapeTest`) fail |
 | `:quality:test -Poc.mergedManifest=required` | Gradle | a name Android binds to differs from Flutter 2.1.4 (component freeze, E00-S13) |
+| `native/tool/ci/detekt_lane.sh <base> [--all]` (the `detekt` job of Native CI) | CI, no Gradle | detekt finds a finding the base ref does not have (compared by signature; old findings do not count). Until 3.0.1 detekt gated nothing: T1 ran it only on a developer machine, never in a CI lane or a release script, and the baselines were stale |
 | `native/tool/release/kept_classes_check.sh` | on the built APKs | R8 renamed or removed a class the freeze names |
 | `native/tool/release/identity_gate.sh --expect-signer <sha>` | on the built APKs | wrong package/version, not exactly one signer, or the signer is not the expected lineage |
 

@@ -88,6 +88,8 @@ internal object PhoneAgentRules {
      * `GateInspection.behindPin` says). Before, every such agent read "Phone check needed" from the first frame after
      * the update and was absent from New conversation until the update or a check ended.
      */
+    // The facts one qualification weighs: the agent, the phone, the gate read, what was found, the pins, the record.
+    @Suppress("LongParameterList")
     fun qualified(
         agent: AgentDescriptor,
         architecture: AgentArchitecture,
@@ -228,6 +230,7 @@ internal object PhoneAgentRules {
     }
 
     /** What a row says, from Flutter's `buildAgentRow` over the facts read. */
+    @Suppress("LongParameterList") // the facts one row reads; most have defaults and every caller names them
     fun status(
         agent: AgentDescriptor,
         architecture: AgentArchitecture,
@@ -268,23 +271,25 @@ internal object PhoneAgentRules {
             ReadinessStatus.NeedsQualification -> PhoneAgentStatus.PhoneCheck
             ReadinessStatus.SignedOut -> PhoneAgentStatus.SignInNeeded
             ReadinessStatus.LimitReached -> PhoneAgentStatus.Limit
-            ReadinessStatus.Unavailable ->
-                when (row.hiddenReason) {
-                    AgentHiddenReason.RuntimeUnknown -> PhoneAgentStatus.Checking
-                    AgentHiddenReason.UnsupportedArchitecture,
-                    AgentHiddenReason.UnverifiedDownload -> PhoneAgentStatus.NotInstalled
-                    // The sign-in check did not answer (Flutter `buildAgentRow`: "Sign-in could not be checked. Try
-                    // signing in again." with Sign in). Before, this read "Not available on this phone yet" with no
-                    // reason and no act.
-                    // An agent whose sign-in no check can read (Qwen Code, Goose, omp) is usable once installed: set
-                    // up at first use, its truth learnt from its own answer (never "Ready", never signed in or out).
-                    AgentHiddenReason.SignedOut ->
-                        if (signInUnchecked(agent)) PhoneAgentStatus.SetUpAtFirstUse
-                        else PhoneAgentStatus.SignInNeeded
-                    else -> PhoneAgentStatus.Unavailable
-                }
+            ReadinessStatus.Unavailable -> unavailableStatus(agent, row.hiddenReason)
         }
     }
+
+    private fun unavailableStatus(agent: AgentDescriptor, reason: AgentHiddenReason?): PhoneAgentStatus =
+        when (reason) {
+            AgentHiddenReason.RuntimeUnknown -> PhoneAgentStatus.Checking
+            AgentHiddenReason.UnsupportedArchitecture,
+            AgentHiddenReason.UnverifiedDownload -> PhoneAgentStatus.NotInstalled
+            // The sign-in check did not answer (Flutter `buildAgentRow`: "Sign-in could not be checked. Try
+            // signing in again." with Sign in). Before, this read "Not available on this phone yet" with no
+            // reason and no act.
+            // An agent whose sign-in no check can read (Qwen Code, Goose, omp) is usable once installed: set
+            // up at first use, its truth learnt from its own answer (never "Ready", never signed in or out).
+            AgentHiddenReason.SignedOut ->
+                if (signInUnchecked(agent)) PhoneAgentStatus.SetUpAtFirstUse
+                else PhoneAgentStatus.SignInNeeded
+            else -> PhoneAgentStatus.Unavailable
+        }
 
     /**
      * An agent that needs a sign-in the app's probe cannot read (Qwen Code, Goose, omp, an installed Gemini CLI): its

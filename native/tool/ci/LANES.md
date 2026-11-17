@@ -5,7 +5,7 @@ Workflow: `.github/workflows/native-ci.yml` (branches `native/screens-merge*`, `
 | lane | what runs | when |
 |---|---|---|
 | `fast` (default for a dispatch) | `plan` picks the modules changed against `base` plus their direct dependents (`tool/ci/fast_tasks.sh`); `compile` the app; desktop tests of those modules in 2-8 shards with `-PskipGoldens=true` (never more shards than tasks), plus one last shard that runs `:quality:test` and `:quality:secTest` together on every dispatch; the preview APK. All jobs in parallel. | every iteration |
-| `candidate` | all modules’ desktop/JVM tests with pictures, a dedicated whole quality/security shard, all Android units plus KMP Android host tests (Roborazzi verification where configured), build-logic tests, CI/release Python self-tests and shell release-tool self-tests; app/test compilation; one report-derived verdict. Android cannot be disabled. Test results must be fresh; compilation caches stay usable. No APK or signing. | the only lane accepted for a release candidate |
+| `candidate` | all modules’ desktop/JVM tests with pictures, a dedicated whole quality/security shard, all Android units plus KMP Android host tests, build-logic tests, detekt hook (`tool/ci/detekt_lane.sh <base-ref> --all`), CI/release Python self-tests and shell release-tool self-tests; app and `compileAllTests` compilation; one report-derived verdict. Android cannot be disabled. Test results must be fresh; compilation caches stay usable. No APK or signing. | the only lane accepted for a release candidate |
 | `full` (push default) | every module's desktop tests in 8 shards, picture tests included, compared with the committed CI-recorded goldens; `compileAllTests`; the APK | broad development checks |
 | `goldens` | `-Poc.recordGoldens=true -PonlyGoldens=true` on every module that wires `oc.goldens.record`; uploads artifact `ci-goldens` (a tgz of the `src/desktopTest/goldens` trees) | after a deliberate look change, or when a runner image changes fonts |
 
@@ -45,6 +45,24 @@ gh workflow run native-ci.yml --ref <branch> -f lane=goldens
 gh workflow run native-ci.yml --ref <branch> -f tasks=":ui:kit:desktopTest"   # as before
 gh workflow run native-ci.yml --ref <branch> -f apk_only=true                 # as before
 ```
+
+## Artifacts, egress and the quick-lane base (2026-11-17)
+GitHub began refusing artifact downloads ("HTTP 503: Egress is over the account limit"). What this repo now does about it:
+- **The APK is uploaded only on request.** A quick lane's 100 MB APK was 93% of a day's artifacts (41 of 228 runs, 4.3 of 4.6 GB).
+  `apk=true` uploads it; `apk_only`, master and tags always do. Who would ask: a contributor without a build machine who
+  needs a phone-installable build of a branch. Owner and interim builds come from the build server, not from here. The job
+  still builds the APK on every lane that had it, so a broken app build still fails the lane.
+- **Work-branch artifacts live 3 days.** master, tags and the candidate lane keep 7 to 14 days (the release's evidence);
+  `ci-verdict` keeps 90. Nothing existing is deleted; it expires by itself.
+- **The verdict survives a refused download.** Every report step also prints its report files into the job log as
+  `OC-VERDICT <file>.json {...}` (tool/ci/verdict_log.sh). `tool/ci/ci_verdict.sh <run id>` (the host `ci-verdict.sh` calls it)
+  reads artifacts by name (`report-*`, never the APK); when GitHub refuses it falls back to those log lines and prints
+  `verdict read from logs`; when neither can be read it prints `verdict unreadable: download refused (egress limit)` and exits
+  4 (0 pass, 1 fail, 2 integrity, 3 not finished, 4 unreadable: never mistakable for pass or fail).
+- **A too-old base is refused.** The plan job (fast lane) computes the module selection from `base` and from
+  merge-base(HEAD, native/glass-next). When `base` selects ALL (more than 30 modules changed) and the merge-base would not, a
+  work branch is REFUSED with the exact `gh workflow run ... -f base=<merge-base>` to rerun; the line and master are warned.
+  The rule: a branch's quick lane uses `base=<its merge-base with the line>`; the line's own uses the last PASS tip.
 
 ## Landing a change: `native/next` (push to phone in minutes)
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="navProjectChangesCount">変更 · %1$d</string>
+    <string name="navProjectDevServer">開発サーバー実行中 · ポート%1$d</string>
+</resources>

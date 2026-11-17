@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">プライベートネットワーク上のマシン</string>
+    <string name="hostSecIntro">SSHのIDを確認したり、このスマートフォンの公開鍵を準備したり、保存済みのホストを復元したりします。</string>
+    <string name="hostSecBundleMissing">確認済みのOpenCode 2ホストバンドルが公開されるまで、新しいホストのインストールは利用できません。これらの準備コマンドは、自分でコピーしてマシン上で実行したときにのみ動作します。</string>
+    <string name="hostSecWorking">処理中…</string>
+    <string name="hostSecRefresh">保存済みマシンを再読み込み</string>
+    <string name="hostSecSaved">保存済みマシン</string>
+    <string name="hostSecAddress">SSHアカウントとTailscaleネットワークアドレス（user@host）</string>
+    <string name="hostSecPort">SSHポート</string>
+    <string name="hostSecInspect">マシンIDを確認</string>
+    <string name="hostSecTrustHelp">マシン上の別の独立した操作画面で「ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256」を実行してこのフィンガープリントを照合してください。完全に一致する場合にのみ続行してください。</string>
+    <string name="hostSecTrust">フィンガープリント一致 — 公開鍵を準備</string>
+    <string name="hostSecPublicHelp">この公開鍵はコピーしても安全です。秘密鍵はAndroid Keystore内に保持されます。インストールと登録には引き続き確認済みのホストバンドルが必要です。</string>
+    <string name="hostSecCopy">コマンドをコピー</string>
+    <string name="hostSecResume">保存済み接続を検証</string>
+    <string name="hostSecVerified">固定されたSSH IDと保存済みのスーパーバイザーIDがプライベートトンネル上で検証されました。</string>
+    <string name="hostSecNotConnected">検証済みのホスト接続は開かれていません。</string>
+    <string name="hostSecRevoke">このスマートフォンのアクセスを取り消して削除</string>
+    <string name="hostSecForget">ローカルのホストデータを削除</string>
+    <string name="hostSecRemoveConfirm">削除</string>
+    <string name="hostSecRevokeHelp">ローカルアクセスを消去する前に、固定されたホスト側で取り消しを確認する必要があります。取り消しに失敗した場合は再試行できるよう保存データが保持されます。マシン上で実行中の処理はそのまま動き続けます。</string>
+    <string name="hostSecForgetHelp">このスマートフォンのローカルトンネル、鍵、保存済みホストデータを削除します。リモートアクセスを取り消したり、マシン上の処理を停止したりはしません。</string>
+    <string name="hostSecTargetFailure">Tailscaleネットワーク上のマシンアドレスと有効なSSHアカウント・ポートを指定してください。パブリック、ローカル、および混在したDNS経路は拒否されます。</string>
+    <string name="hostSecIdentityFailure">マシンIDが変更されたため、何も採用しませんでした。もう一度お試しになる前に、別の方法でマシンを検証してください。</string>
+    <string name="hostSecRevokeFailure">アクセスの取り消しを確認できませんでした。再試行できるよう保存済みのアクセス情報は保持されています。</string>
+    <string name="hostSecStorageFailure">ホストデータを安全に読み取るか変更できませんでした。保存済みマシンをそのままにしてもう一度お試しください。</string>
+    <string name="hostSecFailure">プライベートホスト操作を完了できませんでした。スマートフォンのLinuxセットアップとプライベートネットワークを確認してから再試行してください。</string>
+    <string name="hostSecStepTailnet">両方の端末を同じTailscaleに接続してください。これらの確認は状態とアドレスを表示するだけで、VPNメンバーシップを証明するものではありません。DNSは1回だけ解決され、すべての応答がTailscaleネットワーク範囲内である必要があり、SSHでは検証済みの数値アドレスと固定された鍵を使用します。</string>
+    <string name="hostSecStepAccount">root権限のない別のUbuntu 24.04アカウントを使用してください。先にこれらのツールを確認します。セットアップはシステム、非root UID、アーキテクチャ、Python、ユーザーサービスマネージャーを確認し、sudoでパッケージをインストールすることはありません。</string>
+    <string name="hostSecStepNetwork">復旧用の接続を開いたままにしてください。MACHINE_TAILSCALE_IPを実際の数値アドレスに置き換え、パブリックまたはワイルドカードのListenAddress設定を削除してください。これらの所有者コマンドはSSHデーモン全体を変更します。インストーラーは選択したSSHポート上の実際の待機ソケットのみを読み取り、パブリック、ワイルドカード、通常のLANリスナーを拒否します。ファイアウォールやSSHバインディングを変更することはありません。ほかのすべてのSSHポートは個別に確認してください。</string>
+    <string name="hostSecStepLinger">管理者権限で最初のコマンドを1回実行してください。インストーラーはLingerを読み取りyesを必須とし、その後「systemctl --user」が機能するか確認します。アプリ側でlingerを有効化したりsudoパスワードを求めたりすることは決してありません。</string>
+    <string name="hostSecStepPolicy">管理者用の接続を開いたままにしてください。PHONE_TAILSCALE_IPとMACHINE_TAILSCALE_IPを実際の数値アドレスに置き換えてください。再読み込み前に検証してください。前のSSHディレクティブがこのファイルを上書きする場合があります。インストーラーはローカルTCP転送、無効化されたリバース転送とソケット転送、トンネルデバイスなし、UseDNS no、DisableForwarding no、公開鍵認証、標準のauthorized_keysパスを確認します。設定の解析は実行中のデーモンが読み込んだことを証明するものではないため、再読み込みの結果を自分で確認してください。</string>
+    <string name="hostSecStepIdentity">信頼する前に、マシン上の別の独立した接続でこの出力をアプリと照合してください。アプリはEd25519 SHA256フィンガープリントを計算し、以降のID変更をブロックします。</string>
+    <string name="hostSecRevokeQuestion">このスマートフォンのアクセスを取り消してホストを削除しますか？</string>
+    <string name="hostSecForgetQuestion">ローカルのホストデータを削除しますか？</string>
+</resources>

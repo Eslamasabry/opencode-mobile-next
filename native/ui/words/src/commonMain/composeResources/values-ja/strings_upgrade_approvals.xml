@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">ツール：%1$s</string>
+    <string name="approvalToolTerminal">ターミナルコマンド</string>
+    <string name="approvalToolEdit">ファイルの変更</string>
+    <string name="approvalToolRead">ファイルの読み取り</string>
+    <string name="approvalToolWeb">ウェブリクエスト</string>
+    <string name="approvalToolOutside">このプロジェクト外</string>
+    <string name="approvalToolOther">その他のツール</string>
+    <string name="approvalCopyAsk">実行しようとしている内容をコピー</string>
+    <string name="approvalCopied">コピーしました</string>
+    <string name="approvalAllow">許可</string>
+    <string name="approvalAlwaysAllowExact">%1$sを常に許可</string>
+    <string name="approvalDeny">拒否</string>
+    <string name="approvalReplyLabel">代わりに何をするか指示</string>
+    <string name="approvalReplySend">拒否して送信</string>
+    <string name="approvalReplyJustDeny">拒否のみ</string>
+    <string name="approvalReplyBack">戻る</string>
+    <string name="approvalReplyEmpty">代わりに実行すべき内容を入力するか、「拒否のみ」を選んでください。</string>
+    <string name="approvalAllowedWhat">許可済み：%1$s</string>
+    <string name="approvalAlwaysAllowedWhat">常に許可：%1$s</string>
+    <string name="approvalDenied">拒否しました</string>
+    <string name="approvalDeniedInstead">拒否し、代わりに次の指示を送りました：「%1$s」</string>
+    <string name="approvalChangeOf">%1$sへの変更</string>
+    <string name="approvalNewFileOf">新しいファイル：%1$s</string>
+    <string name="approvalChangeMissing">エージェントは書き込む内容を示しませんでした。</string>
+    <string name="approvalCopyChange">変更をコピー</string>
+    <string name="approvalScopeAnyFileChange">すべてのファイル変更</string>
+    <string name="approvalScopeFileChangesMatching">%1$sに一致するファイル変更</string>
+    <string name="approvalScopeCommandFamily">任意の引数を伴う%1$s</string>
+    <string name="approvalScopeEverything">同様のすべてのリクエスト</string>
+    <string name="approvalScopeMatching">%1$sに一致するリクエスト</string>
+    <string name="approvalAlwaysCoversWords">「常に許可」にすると%1$sも対象になります。</string>
+    <string name="approvalAlwaysPattern">常に許可するパターン</string>
+    <string name="approvalNoteDenyOnly">「拒否」を選んだ場合のみ送信されます。</string>
+</resources>

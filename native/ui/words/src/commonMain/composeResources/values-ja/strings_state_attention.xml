@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">アクティビティ</string>
+    <string name="stateAttentionRefresh">再読み込み</string>
+    <string name="stateAttentionNeedsYou">確認が必要</string>
+    <string name="stateAttentionHistory">不在時の動き</string>
+    <string name="stateAttentionIncomplete">一部のサーバーを確認できていません。保存された状態が古い可能性があります。</string>
+    <string name="stateAttentionCorrupt">保存されたアクティビティの一部を読み取れませんでした。このスマートフォンに保持されています。</string>
+    <string name="stateAttentionSaveFailed">変更を保存できませんでした。再読み込みしてもう一度お試しください。</string>
+    <string name="stateAttentionNoneKnown">応答したサーバーではリクエストは見つかりませんでした。</string>
+    <string name="stateAttentionNone">待機中のリクエストはありません。</string>
+    <string name="stateAttentionNoHistory">表示する自動アクティビティはありません。</string>
+    <string name="stateAttentionPermission">権限のリクエスト</string>
+    <string name="stateAttentionQuestion">質問の回答待ち</string>
+    <string name="stateAttentionForm">フォームの入力待ち</string>
+    <string name="stateAttentionFailure">会話の確認が必要です</string>
+    <string name="stateAttentionTeam">チームで確認が必要です</string>
+    <string name="stateAttentionStale">前回の確認時点</string>
+    <string name="stateAttentionAcknowledge">表示中のアクティビティを閉じる</string>
+    <string name="stateActReconnect">自動で再接続しました</string>
+    <string name="stateActRestart">自動で再起動しました</string>
+    <string name="stateActHeatPause">発熱のため一時停止しました</string>
+    <string name="stateActHeatStop">発熱のため停止しました</string>
+    <string name="stateActHeatResume">温度が下がったため再開しました</string>
+    <string name="stateActUpdate">自動でアップデートしました</string>
+    <string name="stateActPermission">権限を自動で許可しました</string>
+    <string name="stateActQueued">保存したメッセージを送信しました</string>
+    <string name="stateActOther">自動アクティビティ</string>
+    <string name="stateAttentionMonitorTitle">その他のサーバー</string>
+    <string name="stateAttentionMonitorCopy">このスマートフォンで待機中のリクエストを確認する、他の保存済みサーバーを選びます。リクエストへの回答やサーバー側の変更は行いません。</string>
+    <string name="stateAttentionMonitorChoice">待機中のリクエストを確認</string>
+</resources>

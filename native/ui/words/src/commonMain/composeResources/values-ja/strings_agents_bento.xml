@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">インストール中…</string>
+    <string name="agentsHelperNotConnected">スマートフォンのエージェントに接続されていません。</string>
+    <string name="agentsHelperNotStarted">スマートフォンのエージェントに接続されていません：エージェントヘルパーが起動しませんでした。</string>
+    <string name="agentsHelperNoAnswer">スマートフォンのエージェントに接続されていません：エージェントヘルパーから応答がありませんでした。</string>
+    <string name="agentsHelperKeyRefused">スマートフォンのエージェントに接続されていません：エージェントヘルパーがこのアプリのキーを受け付けませんでした。</string>
+    <string name="agentsHelperKeyUnreadable">スマートフォンのエージェントに接続されていません：このスマートフォンでエージェントヘルパーのキーを読み取れませんでした。</string>
+    <string name="agentsHelperNoLinux">スマートフォンのエージェントに接続されていません：このスマートフォンの内蔵Linuxがセットアップされていません。</string>
+    <string name="agentsHelperUpdateRequired">スマートフォンのエージェントに接続されていません：エージェントヘルパーが見つからないか、バージョンが古すぎて実行できません。</string>
+    <string name="agentsHelperUpdateAction">エージェントヘルパーをアップデート</string>
+    <string name="agentsInstallFailedDownload">%1$sをインストールできませんでした：ダウンロードが完了しませんでした。接続を確認して、もう一度お試しください。</string>
+    <string name="agentsInstallFailedChecksum">%1$sをインストールできませんでした：ダウンロードしたファイルが期待されたものと一致しないため破棄しました。もう一度お試しください。</string>
+    <string name="agentsInstallFailedStorage">%1$sをインストールできませんでした：このスマートフォンの空き容量が不足しています。容量を空けてから、もう一度お試しください。</string>
+    <string name="agentsInstallFailedVersion">%1$sをインストールできませんでした：取得したバージョンがアプリが期待するものと異なります。もう一度お試しください。</string>
+    <string name="agentsInstallFailedVersionOther">%1$sをインストールできませんでした：ダウンロードされたバージョンは%2$sですが、このアプリは%3$sに対応しています。再試行しても解決しないため、アプリをアップデートしてください。</string>
+    <string name="agentsInstallFailedWithdrawn">%1$sをインストールできませんでした：このアプリがインストールするバージョン%2$sは現在配信されていません。再試行しても解決しないため、アプリをアップデートしてください。</string>
+    <string name="agentsInstallFailedNotStarted">%1$sをダウンロードしましたが、このスマートフォンで起動しなかったためバージョンを確認できませんでした。もう一度お試しください。改善しない場合は、詳細でスマートフォンからの報告を確認できます。</string>
+    <string name="agentsInstallFailedUnknown">%1$sをインストールできませんでした。もう一度お試しください。詳細でスマートフォンからの報告を確認できます。</string>
+    <string name="agentsInstallInterruptedNow">%1$sのインストールが完了前に中断されました。再開するにはもう一度お試しください。</string>
+    <string name="agentsTabsLabel">エージェントの実行先</string>
+    <string name="agentsTabComputers">パソコン上</string>
+    <string name="agentsPhoneReady">このスマートフォンは準備完了です</string>
+    <string name="agentsPhoneReadyDetails">このスマートフォンは準備完了 · %1$s · Android %2$s</string>
+    <string name="agentsUpdateReading">エージェントのアップデートを確認中</string>
+    <string name="agentsUpdateWaitingBusy">エージェントが待機中になるまでアップデートを保留しています</string>
+    <string name="agentsUpdateWaitingSetup">スマートフォンのセットアップ完了後にアップデートします</string>
+    <string name="agentsUpdateWaitingSwitch">スマートフォンのサーバー移行完了後にアップデートします</string>
+    <string name="agentsUpdateWaitingMetered">Wi-Fi接続時にアップデートします</string>
+    <string name="agentsUpdateUpdating">%1$sをアップデート中</string>
+    <string name="agentsUpdateUpdated">%1$sをアップデートしました</string>
+    <string name="agentsUpdateNeedsSignIn">%1$sでサインインが必要です</string>
+    <string name="agentsUpdateReadFailed">エージェントのアップデートを確認できませんでした。次回アプリを開いたときに再試行します</string>
+    <string name="agentsUpdateRefused">エージェントのアップデートを開始できませんでした。エージェントの「インストール」を使用してください</string>
+    <string name="agentsCheckAgain">再読み込み</string>
+    <string name="agentsAddComputerLine">Paseoが動作しているパソコン上でClaude CodeまたはPiを使います。</string>
+    <string name="agentsComputerLooking">このパソコン上のエージェントを探しています…</string>
+    <string name="agentsComputerReadFailed">このパソコンのエージェントを読み取れませんでした。下に引いてもう一度お試しください。</string>
+    <string name="agentsNewChat">新しい会話</string>
+    <string name="agentsNewChatWith">%1$sとの新しい会話</string>
+    <string name="agentsConversationsStored">別のエージェント用に会話をコピー</string>
+    <string name="agentsConversationsStoredOn">%1$sから会話をコピー</string>
+    <string name="agentsHostAccount">ホストアカウント：%1$s</string>
+    <string name="agentsStateSignInUnchecked">インストール済みですが、このアプリではまだサインイン状態を確認できません</string>
+    <string name="agentsStateSignInNotConfirmed">サインイン未確認</string>
+    <string name="agentsSignInNotConfirmedBody">%1$sがサインイン済みかどうかを確認できませんでした。もう一度確認すると、今すぐ%1$sに問い合わせます。</string>
+    <string name="agentsCheckSignInAgain">%1$sを再確認</string>
+    <string name="agentsSignInUncheckedBody">まだ会話には使用できません。削除できます。</string>
+    <string name="agentsStateSetUpAtFirstUse">インストール済みです。初回使用時にセットアップしてください。</string>
+    <string name="agentsChipSetUp">セットアップ</string>
+    <string name="agentsSetUpAction">%1$sをセットアップ</string>
+    <string name="agentsSetUpTypeAuth">「/auth」と入力して手順に従ってください。</string>
+</resources>
