@@ -67,6 +67,11 @@ term	^Refresh$	再読み込み
 term	^Update$	アップデート
 term	^Send$	送信
 term	^Stop$	停止
+term	^Stopped$	停止
+term	^Running$	実行中
+term	^Idle$	待機中
+term	^Failed$	失敗
+term	\bSubagents?\b	サブエージェント
 term	^Save$	保存
 term	^Copy$	コピー
 term	^Share$	共有
@@ -91,6 +96,7 @@ forbid	ユーザ(?!ー)	use ユーザー, not ユーザ
 forbid	ブラウザー	use ブラウザ, not ブラウザー
 forbid	フォルダー	use フォルダ, not フォルダー
 forbid	メモリー	use メモリ, not メモリー
+forbid	到達	use 接続できません / 届きません, not 到達
 forbid	あなた	leave the subject out, do not use あなた
 forbid	[!！]	no exclamation marks
 allow	OK
