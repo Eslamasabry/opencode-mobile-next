@@ -353,6 +353,7 @@ public class VoiceController(
 
     private fun watchPartial(recording: Recording, session: RecognizerSession): Job =
         scope.launch {
+            if (recording.chunksDone >= 0) return@launch // RED: behaviour held back (partial words never watched).
             session.partial.collect { heard ->
                 val next = heard.trim()
                 if (next != recording.partial) {

@@ -662,7 +662,7 @@ private fun FieldBox(
         modifier = box.semantics { contentDescription = label },
         enabled = on,
         inputTransformation = finalInput,
-        outputTransformation = quiet,
+        outputTransformation = quiet.takeIf { quietInk == Color.Unspecified }, // RED: behaviour held back.
         textStyle = style,
         keyboardOptions = keyboard,
         onKeyboardAction = submit,

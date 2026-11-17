@@ -956,7 +956,7 @@ public class ComposerVoicePresenter(
                     startTicking()
                 }
                 mutable.update { it.copy(phase = MicPhase.Listening, words = joinHeard(s.words, s.partial)) }
-                preview(s.words, s.partial)
+                preview(s.words) // RED: behaviour held back (the forming words never reach the box).
                 when (earlyEnd.also { earlyEnd = null }) {
                     EarlyEnd.Finish -> {
                         if (mutable.value.mode == VoiceMode.Hold) discard()
