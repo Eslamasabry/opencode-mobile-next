@@ -63,7 +63,7 @@ OpenCode Mobile is a younger project and several of its agents are less tested o
 - **Scheduled prompts.** Run a prompt at a time you choose, once or repeating, even with the app closed.
 - **Home-screen widgets.** Conversations and Status widgets show what your agents are doing and let you act on requests.
 - **Make it yours.** Five styles (Solid, Soft, Brutal, Paper and Signal), light and dark.
-- **Private by design.** The app talks only to servers you choose. Voice is transcribed on the phone.
+- **Private by design.** Your conversations and code go only to the servers you choose. Voice is transcribed on the phone.
 
 ## Screens
 
@@ -113,13 +113,13 @@ so each release installs over the previous one and keeps your servers, sign-ins 
 
 ## Privacy
 
-The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
+Your conversations and code go only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
 
 ### What is sent
 
 Nothing goes to the developer unless you turn it on. There are two switches in **Settings > Privacy and data**, both off by default, and turning one off stops it:
 
-- **Usage and app health** goes to Google Analytics for Firebase, exactly these events with fixed words and ranges only: `app_open` (cold or warm), `setup_step_reached`, `setup_step_failed`, `setup_done`, `first_reply`, `connect_computer_chosen`, `update_offered`, `update_installed`, `screen_view` (the kind of page), `feature_used`, `session_length`; and for flows `conn_attempt`, `conn_drop`, `send_result`, `turn_stall`, `queue_flush`, `linux_setup_step`, `agent_start`, `bg_service_end`, `update_result`; and for performance `app_start`, `jank` (slow frames per kind of page) and `memory_pressure`. Timings go to Firebase Performance Monitoring under the same switch: `app_cold_start`, `conn_connect`, `send_first_reply`, `linux_setup_<step>` and `agent_start` with fixed words only, plus Firebase's own app start and slow and frozen frames; web requests are not traced. It also sets device ranges once: memory, free storage, CPU family, WebView version, whether notifications are allowed, and the kind and version of server.
+- **Usage and app health** goes to Google Analytics for Firebase and to an Umami analytics server we run ourselves, hosted with Railway (Umami stores no IP address or identifier of the person; its anonymous visitor hash changes every month and cannot be turned back into your address or your device), exactly these events with fixed words and ranges only: `app_open` (cold or warm), `setup_step_reached`, `setup_step_failed`, `setup_done`, `first_reply`, `connect_computer_chosen`, `update_offered`, `update_installed`, `screen_view` (the kind of page), `feature_used`, `session_length`; and for flows `conn_attempt`, `conn_drop`, `send_result`, `turn_stall`, `queue_flush`, `linux_setup_step`, `agent_start`, `bg_service_end`, `update_result`; and for performance `app_start`, `jank` (slow frames per kind of page) and `memory_pressure`. Timings go to Firebase Performance Monitoring under the same switch: `app_cold_start`, `conn_connect`, `send_first_reply`, `linux_setup_<step>` and `agent_start` with fixed words only, plus Firebase's own app start and slow and frozen frames; web requests are not traced. It also sets device ranges once: memory, free storage, CPU family, WebView version, whether notifications are allowed, and the kind and version of server.
 - **Crash reports** go to Google Firebase Crashlytics: the kind of error and its code locations (never its message), why Android ended the app last time, the last steps you took as short words such as `conn.connect`, and a few keys (app version, build kind, server kind, engine state, number of connections, OpenCode major.minor).
 
 Asked every time, whatever the switches say: **Settings > Help > Send a problem report** shows you the whole report (the app's last 500 log lines, the keys above, recent process ends and device ranges, with keys, URLs, host names, addresses and paths already blanked) and sends it only when you tap **Send**. You get a report code to quote in an issue; it is also in **Settings > About**.

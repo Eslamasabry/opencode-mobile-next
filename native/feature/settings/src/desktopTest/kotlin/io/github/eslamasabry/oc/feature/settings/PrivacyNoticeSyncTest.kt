@@ -308,6 +308,42 @@ class PrivacyNoticeSyncTest {
         assertTrue("كل شهر" in stores.getValue("ar"), "Arabic store text says the hash changes every month")
         assertTrue(Regex("لا تحليلات|no analytics", RegexOption.IGNORE_CASE).find(stores.getValue("ar") + stores.getValue("en-US") + site) == null,
             "no store or site text may deny the analytics that the app can send")
+        // "The app talks only to the servers you choose" is false: usage reports, update checks and downloads go elsewhere.
+        // Only the claim about conversations and code is true.
+        val sentence = "Your conversations and code go only to the servers you choose."
+        val arabic = "لا تذهب محادثاتك وشيفرتك إلا إلى الخوادم التي تختارها."
+        val talksOnly = Regex(
+            "(?i)(app|it)\\s+(talks|connects|communicates)\\s+(only\\s+)?(to|with)\\s+(the\\s+)?servers\\s+you\\s+choose" +
+                "|connects\\s+only\\s+to" + "|talks\\s+only\\s+to" +
+                "|لا يتحدث التطبيق إلا|يتحدث التطبيق مع" +
+                "|solo (habla|se conecta)|ne communique qu|hanya (berkomunikasi|terhubung)|só se (comunica|conecta)|apenas se (comunica|conecta)" +
+                "|общается только|chỉ giao tiếp|chỉ kết nối với|只与|只会与|仅与",
+        )
+        val claimFiles = listOf("README.md", "llms.txt", "marketing/launch-2026-10/POSTS.md", "docs/site/index.html") +
+            File(repo, "fastlane/metadata/android").listFiles { f -> f.isDirectory }!!.map { "fastlane/metadata/android/${it.name}/full_description.txt" } +
+            File(repo, "native/ui/words/src/commonMain/composeResources").listFiles { f -> f.isDirectory }!!.flatMap { d ->
+                d.listFiles { f -> f.name.endsWith("privacy.xml") }!!.map { "native/ui/words/src/commonMain/composeResources/${d.name}/${it.name}" }
+            } + "PRIVACY.md"
+        for (path in claimFiles) {
+            val text = File(repo, path).readText()
+            assertTrue(talksOnly.find(text) == null, "$path must not say the app only talks to the servers you choose")
+        }
+        assertTrue(sentence in File(repo, "README.md").readText() && sentence in stores.getValue("en-US") && sentence in site, "the true sentence is used in README, the English store text and the site")
+        assertTrue(arabic in stores.getValue("ar"), "the Arabic store text uses the true sentence")
+        // Public launch drafts and docs must not deny analytics either (the app can send usage and crash reports once switched on).
+        val denial = Regex(
+            "(?i)\\bno\\s+(ads,?\\s+|ads\\s+or\\s+)?(analytics|tracking|telemetry)|analytics\\s+or\\s+accounts|ads,\\s+analytics|automatic\\s+crash\\s+upload",
+        )
+        val marketing = File(repo, "marketing/launch-2026-10").listFiles { f -> f.name.endsWith(".md") }!!
+            .map { "marketing/launch-2026-10/${it.name}" }
+            // IZZYONDROID.md rows 50 and 70 are the dated findings of an earlier build's audit, kept as history.
+            .filter { !it.endsWith("IZZYONDROID.md") }
+        for (path in marketing + listOf("README.md", "llms.txt", "docs/site/index.html")) {
+            assertTrue(denial.find(File(repo, path).readText()) == null, "$path must not say the app has no analytics or no automatic crash upload")
+        }
+        val izzy = File(repo, "marketing/launch-2026-10/IZZYONDROID.md").readLines()[121]
+        assertTrue(denial.find(izzy) == null, "the IZZYONDROID.md submission blurb must not deny analytics")
+        assertTrue("Umami" in File(repo, "README.md").readText(), "README names the Umami receiver beside Google")
     }
 
     @Test

@@ -138,7 +138,7 @@ Happy's approval UI breaks in public, a lot.
   any other tooling subscription" [HN 46992608](https://news.ycombinator.com/item?id=46992608) (faramarz, 2026-02-12).
 - Billing risk for Claude-via-SDK apps: "Is using claude in paseo against
   their ToS? Either way, readme should notice this." [paseo#1029](https://github.com/getpaseo/paseo/issues/1029) (okan-instrumentl, 2026-06-11, +13).
-- **Status: covered.** MIT, no ads, no analytics, bring your own provider
+- **Status: covered.** MIT, no ads, usage and crash reports off until you turn them on, bring your own provider
   (COMPETITORS.md differentiator 6). Our CHANGELOG keeps Claude subscription
   collection unavailable on purpose (line ~425), which is the right side of
   the paseo#1029 question.
@@ -335,7 +335,7 @@ mostly users from Android 16 phones (Samsung, Xiaomi, OPPO, OnePlus).
 | Inbox / many servers | Chat home with recent sessions | Inbox across servers, While you were away | **Us** |
 | Look | Dark/light, themes | 20 live backgrounds, text size, light and dark | Subjective; see their #279 "theme light poor" |
 | Languages | 8 (en, ja, zh, ru, es, fr, pt-BR, ar) | English and Arabic | **AndCode** |
-| Privacy | Keystore for credentials; local runtime | Keystore; voice stays on phone; no analytics; diagnostics only on send | Even; we state more |
+| Privacy | Keystore for credentials; local runtime | Keystore; voice stays on phone; usage and crash reports off until you turn them on; diagnostics only on send | Even; we state more |
 | Update path | Release APKs | Shorebird patches for Dart-only fixes; Obtainium | **Us** |
 | Codex images | Fixed 2026-10-08 (their #375) | n/a | n/a |
 
@@ -461,7 +461,7 @@ languages.
    tested", not "proven on phones" until the device pass exists.
 3. "Steer an agent while it works" (1.4.0). Nobody else in this set lists it.
 4. "One list of chats across your phone and your computers" (README).
-5. "Free, MIT, no ads, no analytics, your own keys" - true for both; do not
+5. "Free, MIT, no ads, usage and crash reports off until you turn them on, your own keys" - true for both; do not
    present it as unique versus AndCode, only versus Omnara, Cosyra and
    Remote Control (which need a plan or a key-less login).
 6. "Works with Claude Code and OpenCode on the phone itself" - true for both,

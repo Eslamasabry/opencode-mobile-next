@@ -211,7 +211,7 @@ Issue body (the owner posts it; a human, with the disclosure kept):
     - Status: public alpha; on-phone path verified for OpenCode and Claude
       Code, other agents (Codex, Gemini CLI, Qwen Code, Goose, Pi) share the
       path but are not verified on a physical phone
-    - Data: no account, ads or analytics; the user brings a model provider
+    - Data: no account or ads; usage and crash reports are off until you turn them on; the user brings a model provider
 
     Happy to correct anything in the entry. The page is dated 2026-06-05, so
     some details above may be newer than your data.

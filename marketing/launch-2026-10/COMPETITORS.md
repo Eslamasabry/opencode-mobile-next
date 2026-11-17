@@ -82,7 +82,7 @@ that now have 20k stars. Plan accordingly (see CHANNELS.md).
    `docs/qa/agent-handoff-ui-2026-10-14/README.md`.
 5. **Claude Code chat tools.** Files, Changes, terminal, worktrees and Fast
    mode (1.3.0 release notes).
-6. **Free, MIT, no ads, no analytics, bring your own provider; English and
+6. **Free, MIT, no ads, usage and crash reports off until you turn them on, bring your own provider; English and
    Arabic.**
 7. AI Team (planner, workers, checker; merges to dev with receipts). Proven
    only on emulators; the README says so. Do not lead with it.
