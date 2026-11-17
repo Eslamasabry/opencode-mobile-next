@@ -1358,15 +1358,29 @@ private fun ChatRow(
                         val stillWorking =
                             facts.live is LiveNoticeUi.Retry ||
                                 facts.work[row.turnId]?.state == WorkLineState.Running
-                        KitQuietLine(
-                            stringResource(
-                                if (stillWorking) Res.string.liveFailedStillWorking
-                                else Res.string.liveFailedStopped
-                            ),
-                            modifier = Modifier.semantics {
-                                liveRegion = LiveRegionMode.Polite
-                            },
-                        )
+                        // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". When it is the
+                        // cause, that sentence REPLACES "send a message to carry on" (sending cannot work until the
+                        // person signs in), and its one button is the only way on.
+                        val limitForSignIn = reply?.let { LocalLimitSwitchReply.current?.limitSwitch?.get(row.turnId) }
+                        val setUpForSignIn = LocalAgentSetUpReply.current?.needs?.get(row.turnId)
+                        val signInAgainEarly =
+                            if (
+                                setUpForSignIn == null &&
+                                    limitForSignIn == null &&
+                                    AgentErrorText.signInExpired(reason)
+                            )
+                                row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
+                            else null
+                        if (signInAgainEarly == null)
+                            KitQuietLine(
+                                stringResource(
+                                    if (stillWorking) Res.string.liveFailedStillWorking
+                                    else Res.string.liveFailedStopped
+                                ),
+                                modifier = Modifier.semantics {
+                                    liveRegion = LiveRegionMode.Polite
+                                },
+                            )
                         val kind = ReplyFailureKind.of(reason)
                         // The server's typed error class reads first (rest-1); the reason text only
                         // drives the generic words when there is no typed class.
@@ -1382,10 +1396,7 @@ private fun ChatRow(
                         val setUpReply = LocalAgentSetUpReply.current
                         val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again".
-                        val signInAgain =
-                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
-                                row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
-                            else null
+                        val signInAgain = signInAgainEarly
                         if (setUp != null)
                             KitQuietLine(listWords.setUpNeeded(setUp.name), modifier = Modifier.testTag("chat-reply-set-up"))
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
@@ -1402,6 +1413,8 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            // A set-up need or a lapsed sign-in has its one way on; the other fixes stand down.
+                            val otherWays = setUp == null && signInAgain == null
                             if (setUp != null && setUpReply != null)
                                 KitButton(
                                     listWords.setUpAction(setUp.name),
@@ -1421,7 +1434,7 @@ private fun ChatRow(
                                 )
                             }
                             if (
-                                setUp == null &&
+                                otherWays &&
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null
                             ) {
@@ -1433,7 +1446,7 @@ private fun ChatRow(
                             }
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
-                            if (reply != null && setUp == null) {
+                            if (reply != null && otherWays) {
                                 val suggestion =
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
@@ -1542,7 +1555,7 @@ private fun ChatRow(
                             // turn picks up there).
                             val continueLabel = reply?.continueLabel
                             if (
-                                setUp == null &&
+                                otherWays &&
                                     kind == ReplyFailureKind.ConnectionLost &&
                                     !continueLabel.isNullOrBlank()
                             )
