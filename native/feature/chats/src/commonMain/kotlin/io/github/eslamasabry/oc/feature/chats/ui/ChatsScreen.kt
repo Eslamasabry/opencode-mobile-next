@@ -571,7 +571,9 @@ public fun ChatsScreen(
                                             else state.home.stage?.let { stringResource(homeStageWords(it)) },
                                     ) {
                                         recent.forEach { row ->
-                                            key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) }
+                                            key(row.key) {
+                                                ConversationRow(row, rowWords, rowFlags(row, state), mask, actions)
+                                            }
                                         }
                                     }
                                 }
