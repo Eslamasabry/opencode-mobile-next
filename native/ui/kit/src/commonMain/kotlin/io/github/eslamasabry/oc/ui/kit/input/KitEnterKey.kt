@@ -17,13 +17,13 @@ import androidx.compose.ui.input.key.type
  * Ctrl or Meta with Enter sends. Who pressed it is decided by the key event's source, never by the
  * pointer kind: a stylus or mouse on a phone does not turn the on-screen keyboard into a real one.
  */
-internal fun kitEnterSends(fromSoftKeyboard: Boolean, shift: Boolean, ctrlOrMeta: Boolean): Boolean =
+public fun kitEnterSends(fromSoftKeyboard: Boolean, shift: Boolean, ctrlOrMeta: Boolean): Boolean =
     ctrlOrMeta || (!fromSoftKeyboard && !shift)
 
 /** True when the key came from an on-screen (virtual) keyboard, not a physical one. */
-internal expect fun KeyEvent.fromSoftKeyboard(): Boolean
+public expect fun KeyEvent.fromSoftKeyboard(): Boolean
 
-/** A message box's Enter rule ([kitEnterSends]); [onSend] runs for a send, any other Enter is left to the field. */
+/** The one Enter rule of every message box (the live chat box and the full composer both use it). A message box's Enter rule ([kitEnterSends]); [onSend] runs for a send, any other Enter is left to the field. */
 internal fun Modifier.kitComposerEnter(onSend: () -> Unit): Modifier = onPreviewKeyEvent { event ->
     if (event.key != Key.Enter && event.key != Key.NumPadEnter) return@onPreviewKeyEvent false
     val sends =

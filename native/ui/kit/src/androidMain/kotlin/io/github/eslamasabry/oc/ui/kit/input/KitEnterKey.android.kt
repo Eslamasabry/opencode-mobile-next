@@ -5,7 +5,7 @@ import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.nativeKeyEvent
 
-internal actual fun KeyEvent.fromSoftKeyboard(): Boolean = nativeKeyEvent.isFromSoftKeyboard()
+public actual fun KeyEvent.fromSoftKeyboard(): Boolean = nativeKeyEvent.isFromSoftKeyboard()
 
 /** An on-screen keyboard delivers keys from the virtual device and flags them soft or as an editor action. */
 internal fun AndroidKeyEvent.isFromSoftKeyboard(): Boolean =

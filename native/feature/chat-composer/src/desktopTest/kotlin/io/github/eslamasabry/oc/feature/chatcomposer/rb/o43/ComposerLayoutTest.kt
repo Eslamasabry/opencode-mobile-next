@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chatcomposer.rb.o43
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.test.*
 import androidx.compose.ui.input.key.Key
 import kotlin.test.assertEquals
@@ -29,6 +30,28 @@ class ComposerLayoutTest {
         val send = onNodeWithContentDescription("Send").fetchSemanticsNode().boundsInRoot
         assertTrue(send.center.y in field.top..field.bottom)
         onNodeWithTag("composer-open-editor").assertDoesNotExist()
+    }
+    @Test fun `issue 148 Send stays inside a 360 dp box at text 1_3 with a five line message`() = runComposeUiTest {
+        setContent {
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(1f, 1.3f)
+            ) {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {
+                    androidx.compose.foundation.layout.Box(
+                        androidx.compose.ui.Modifier.width(androidx.compose.ui.unit.Dp(360f)).testTag("narrow")
+                    ) {
+                        ComposerScreen(
+                            ComposerUi(button = FieldButton.Send),
+                            RecordingActions(),
+                            TextFieldState("one\ntwo\nthree\nfour\nfive"),
+                        )
+                    }
+                }
+            }
+        }
+        val box = onNodeWithTag("narrow").fetchSemanticsNode().boundsInRoot
+        val send = onNodeWithContentDescription("Send").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        assertTrue(send.left >= box.left && send.right <= box.right && send.width > 0f, "Send is inside the 360 dp box: $send in $box")
     }
     @Test fun multilinePromptOffersTheEditor() = runComposeUiTest {
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ComposerScreen(ComposerUi(button = FieldButton.Send), RecordingActions(), TextFieldState("First line\nSecond line")) } }

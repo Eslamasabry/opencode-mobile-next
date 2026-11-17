@@ -21,6 +21,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import io.github.eslamasabry.oc.ui.kit.input.fromSoftKeyboard
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -98,7 +99,7 @@ import org.jetbrains.compose.resources.stringResource
  * The real kit glow follows the acknowledged Appearance choice around the field; "Stop and send"
  * remains a secondary action and the field is a multiline `KitField`.
  *
- * @param finePointer a mouse or trackpad is the pointer: Enter sends, Shift+Enter is a newline.
+ * @param finePointer layout only; Enter never depends on it (the key's source decides, see [ComposerKeys.enter]).
  * @param keepFocusOnSend a wide window with a hardware keyboard
  *   ([ComposerKeys.keepFocusAfterSend]).
  * @param mic the voice slot (S5); null shows the plain "Talk instead of typing" button.
@@ -166,7 +167,7 @@ fun ComposerScreen(
                                     end =
                                         if (canExpand) LocalKitTokens.current.minTarget.dp else 0.dp
                                 )
-                                .composerKeys(field, finePointer, state.button, actions),
+                                .composerKeys(field, state.button, actions),
                         kind = KitFieldKind.Multiline,
                         placeholder = stringResource(Res.string.upgradeComposerAsk, agentName),
                         enabled =
@@ -342,7 +343,6 @@ private fun FieldButtonSlot(
  */
 private fun Modifier.composerKeys(
     field: TextFieldState,
-    finePointer: Boolean,
     button: FieldButton,
     actions: ComposerActions,
 ): Modifier = onPreviewKeyEvent { event ->
@@ -352,7 +352,7 @@ private fun Modifier.composerKeys(
         Key.NumPadEnter -> {
             val enter =
                 ComposerKeys.enter(
-                    finePointer,
+                    event.fromSoftKeyboard(),
                     event.isShiftPressed,
                     event.isCtrlPressed || event.isMetaPressed,
                 )
