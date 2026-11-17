@@ -30,7 +30,11 @@ class LayoutRowTest {
         }
 
         assertTrue("edge-text" in thrown.message.orEmpty(), "the layout finding is the reported failure: ${thrown.message}")
-        assertTrue(thrown.suppressed.any { "missing Flutter golden" in it.message.orEmpty() }, "the picture step ran too")
+        // Where the lane fetches the references a missing golden is a failure beside the layout finding; elsewhere it is a
+        // counted skip (ReferenceGuard), which never hides the layout failure.
+        if (ReferenceGuard.required()) {
+            assertTrue(thrown.suppressed.any { "missing Flutter golden" in it.message.orEmpty() }, "the picture step ran too")
+        }
         assertTrue(picture.isFile, "the native picture is rendered despite the layout finding")
         val cells = row.readText().trimEnd('\n').split('\t')
         assertEquals(name, cells[0])

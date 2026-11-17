@@ -234,7 +234,7 @@ sha="$(git rev-parse HEAD)"
 case "$1 $2" in
   "run list") echo '[{"databaseId":7,"createdAt":"2026-01-01T00:00:00Z"}]' ;;
   "run download") d="$(sed 's/.*-D //' <<<"$*" | cut -d' ' -f1)"
-    printf '{"sha":"%s","lane":"candidate","exit":0,"android_unit":true,"desktop_tests":true,"compile":true,"custom_tasks":false,"security":true,"candidate_complete":true}' "$sha" >"$d/verdict.json" ;;
+    printf '{"sha":"%s","lane":"candidate","exit":0,"android_unit":true,"desktop_tests":true,"compile":true,"custom_tasks":false,"security":true,"guards_skipped":%s,"candidate_complete":true}' "$sha" "${OC_FAKE_GUARDS_SKIPPED:-0}" >"$d/verdict.json" ;;
   *) exit 3 ;;
 esac
 GH
@@ -262,6 +262,8 @@ check "E01-S05 the dry run shows the +10 version" has "the release takes 3.0.0+1
 check "E01-S05 the GO checklist is printed" has "GO checklist for v3.0.0+10020"
 check "E01-S05 the dry run commits, tags and writes nothing" REL_TRAILER_CHECK
 check "E01-S05 the dry run leaves origin without a tag" bash -c "[[ -z \"\$(git -C '$R' ls-remote --tags origin)\" ]]"
+OC_FAKE_GUARDS_SKIPPED=2 expect "B-CI-310 a candidate with skipped guards is refused" 1 bash "$R/scripts/native-release.sh" --no-build
+check "B-CI-310 the refusal names the skipped guards" has "2 guard test(s) skipped because their references were not fetched"
 
 git -C "$R" checkout -q -b feature
 expect "E01-S05 refuses off master" 1 bash "$R/scripts/native-release.sh" --no-build

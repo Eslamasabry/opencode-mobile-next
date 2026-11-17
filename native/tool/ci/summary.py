@@ -233,7 +233,13 @@ if lane == 'candidate':
         integrity.append('candidate: app compilation not proved')
     rows.append(('candidate coverage', 'all modules, pictures, quality/security, Android, build logic, release tools'))
 
+# Guard tests that could not run because their reference picture was not fetched (ReferenceGuard, test_report.py).
+# Never a pass: always printed on its own line, and a candidate with any is refused.
+guards_skipped = sum(s.get('guards_skipped', 0) for s in shards)
 reasons = []
+if lane == 'candidate' and guards_skipped:
+    reasons.append(f'candidate: {guards_skipped} guard test(s) skipped because their references were not fetched; '
+                   'a candidate must run every guard')
 if security_required and security_bad:
     reasons.append("security suite has failing or skipped assertions")
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
@@ -264,6 +270,7 @@ for r in reasons[:12]:
     print(f'- **FAIL**: {r}')
 if len(reasons) > 12:
     print(f'- ... {len(reasons) - 12} more reasons')
+print(f'\n{guards_skipped} guards skipped (references not fetched)')
 print('\n| step | result |\n|---|---|')
 for k, v in rows:
     print(f'| {k} | {v} |')
