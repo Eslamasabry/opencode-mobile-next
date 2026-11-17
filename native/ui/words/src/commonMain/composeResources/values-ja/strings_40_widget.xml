@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelSaving">保存中…</string>
+    <string name="widgetPanelClose">閉じる</string>
+    <string name="widgetPanelPreview">ウィジェットのプレビュー</string>
+    <string name="widgetPanelSquare">正方形</string>
+    <string name="widgetPanelWide">ワイド</string>
+    <string name="widgetPanelBackground">背景</string>
+    <string name="widgetPanelSolid">不透明</string>
+    <string name="widgetPanelTinted">色付き</string>
+    <string name="widgetPanelTransparent">透明</string>
+    <string name="widgetPanelAccent">アクセント</string>
+    <string name="widgetPanelActionUnavailable">このウィジェットからメッセージを送信するには、有効な接続が必要です。</string>
+    <string name="widgetPanelSending">送信中…</string>
+    <string name="widgetPanelSent">送信済み</string>
+    <string name="widgetPanelBusy">別のウィジェット操作が実行中です。メッセージはそのまま残っています。</string>
+    <string name="widgetPanelDictate">音声入力</string>
+</resources>

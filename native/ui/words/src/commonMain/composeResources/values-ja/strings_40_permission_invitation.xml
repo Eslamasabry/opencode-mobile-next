@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="invitation40Question">3回確認されました。今後は同じ操作を常に許可しますか？</string>
+    <string name="invitation40KeepAsking">毎回確認する</string>
+    <string name="invitation40SaveFailed">この選択を保存できませんでした。リクエストは待機中のままですので、今回分のみ回答できます。</string>
+</resources>

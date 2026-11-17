@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">接続</string>
+    <string name="shortcut_connect_long">接続するサーバーを選ぶ</string>
+    <string name="shortcut_new_task_short">新しい会話</string>
+    <string name="shortcut_new_task_long">現在のサーバーで新しい会話を開始</string>
+</resources>

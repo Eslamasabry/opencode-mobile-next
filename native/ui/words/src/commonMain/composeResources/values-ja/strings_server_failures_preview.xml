@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureCertificate">このサーバーの証明書を検証できませんでした。サーバーを確認してからもう一度お試しください。</string>
+    <string name="serverFailureIncompatible">このサーバーは、このアプリが対応していないバージョンを実行しています。</string>
+    <string name="serverFailureNetwork">このサーバーに接続できませんでした。ネットワークまたはサーバーアドレスを確認してからもう一度お試しください。</string>
+    <string name="serverFailureRejected">サーバーがこのリクエストを拒否しました。サーバーを確認してからもう一度お試しください。</string>
+    <string name="serverFailureSecret">保存されたパスワードを読み取れませんでした。パスワードをもう一度入力してください。</string>
+    <string name="serverFailureServer">サーバーで問題が発生しました。しばらくしてからもう一度お試しください。</string>
+    <string name="serverFailureStorage">このスマートフォンでこの接続情報を読み書きできませんでした。もう一度お試しください。</string>
+    <string name="serverFailureTimeout">サーバーから時間内に応答がありませんでした。もう一度お試しください。</string>
+    <string name="serverFailureUnreadableReply">サーバーから応答がありましたが、このアプリで読み取れませんでした。</string>
+    <string name="serverFailureOther">この接続を完了できませんでした。もう一度お試しください。</string>
+</resources>

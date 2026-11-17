@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">エージェントに回答</string>
+    <string name="stateFormAnswer">回答</string>
+    <string name="stateFormHeld">回答はまもなく送信されます。</string>
+    <string name="stateFormUndo">元に戻す</string>
+    <string name="stateFormInvalid">送信する前に、印の付いた回答を確認してください。</string>
+    <string name="stateFormOther">その他</string>
+    <string name="stateFormOpenLink">リンクを開く</string>
+    <string name="stateFormRestoring">保存した回答を復元中…</string>
+    <string name="stateFormSend">回答を送信</string>
+    <string name="stateFormDecline">このリクエストを辞退</string>
+    <string name="stateFormDeclineTitle">このリクエストを辞退しますか？</string>
+    <string name="stateFormDeclineBody">エージェントは回答なしで続行します。このリクエストは元に戻せません。</string>
+    <string name="stateFormKeepEditing">編集を続ける</string>
+    <string name="stateFormStorageFailed">保存した回答を読み書きできませんでした。このリクエストを閉じて開き直し、もう一度お試しください。</string>
+    <string name="stateFormUncertain">送信が確認できていません。もう一度回答する前に会話を確認してください。</string>
+    <string name="stateFormChanged">このリクエストは変更されました。最新のリクエストを開き直してください。</string>
+    <string name="stateFormNotAccepted">回答が受け付けられませんでした。もう一度試す前にリクエストを確認してください。</string>
+    <string name="stateFormDismiss">閉じる</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_team_decision_title">AI Teamが判断を求めています</string>
+    <string name="notify_team_decision_body">タスクが回答を待っています。AI Teamを開いて返信してください。</string>
+    <string name="notify_team_review_title">AI Teamの作業が確認待ちです</string>
+    <string name="notify_team_review_body">タスクが完了し、確認を待っています。</string>
+    <string name="notify_team_failed_title">AI Teamのタスクが失敗しました</string>
+    <string name="notify_team_failed_body">AI Teamを開いて状況を確認し、もう一度開始してください。</string>
+    <string name="notify_team_completed_title">AI Teamがプロジェクトを完了しました</string>
+    <string name="notify_team_completed_body">プロジェクトのすべてのタスクが完了しました。</string>
+</resources>

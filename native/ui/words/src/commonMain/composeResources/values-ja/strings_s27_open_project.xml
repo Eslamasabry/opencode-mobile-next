@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">プロジェクトはどこにありますか？</string>
+    <string name="openProjectWhereBody">プロジェクトがあるスマートフォンまたはパソコンを選択してください。</string>
+    <string name="openProjectStatusConnected">接続済み</string>
+    <string name="openProjectStatusConnecting">接続中</string>
+    <string name="openProjectStatusNotConnected">未接続</string>
+    <string name="openProjectTypePath">パスを入力</string>
+    <string name="openProjectTypePathBody">フルパスを指定してフォルダを開きます</string>
+    <string name="openProjectNewFolder">新しいフォルダ</string>
+    <string name="openProjectNewFolderBody">%1$sにフォルダを作成して開きます</string>
+    <string name="openProjectCloneBody">%1$sにリポジトリをコピーして開きます</string>
+    <string name="openProjectCloneFailed">リポジトリをコピーできませんでした。アドレスと、サーバーからアクセスできるか確認してください。</string>
+    <string name="openProjectSlowBody">サーバーからの応答に通常より時間がかかっています。</string>
+    <string name="openProjectProjectsEmptyBody">開始するには、リポジトリをクローンするか新しいフォルダを作成してください。</string>
+    <string name="openProjectServerNotConnected">このサーバーは現在接続されていません。接続されてからもう一度お試しください。</string>
+</resources>

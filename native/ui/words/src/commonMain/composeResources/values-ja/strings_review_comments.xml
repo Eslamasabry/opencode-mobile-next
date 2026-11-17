@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewCommentTitleLine">%1$s行目にコメント</string>
+    <string name="reviewCommentTitleLines">%1$s〜%2$s行目にコメント</string>
+    <string name="reviewCommentField">エージェントにどのように変更してほしいですか？</string>
+    <string name="reviewCommentAdd">コメントを追加</string>
+    <string name="reviewCommentLine">%1$s行目</string>
+    <string name="reviewCommentLines">%1$s〜%2$s行目</string>
+    <string name="reviewCommentRemovedLine">削除された%1$s行目</string>
+    <string name="reviewCommentRemovedLines">削除された%1$s〜%2$s行目</string>
+    <string name="reviewCommentDraft">未送信</string>
+    <string name="reviewCommentSending">送信中</string>
+    <string name="reviewCommentWaiting">エージェントの応答待ち</string>
+    <string name="reviewCommentFixed">修正済み</string>
+    <string name="reviewCommentRemove">削除</string>
+    <string name="reviewCommentsLabel">入力したコメント</string>
+    <string name="reviewCommentHint">行番号をタップしてから「コメント」を押すと、その箇所の変更をエージェントに依頼できます。</string>
+    <string name="reviewCommentNotPlaced">どの行か判別できませんでした。もう一度行を選択してください。</string>
+    <string name="reviewCommentsSendFailed">コメントを送信できませんでした。ここに保持されています。</string>
+    <plurals name="reviewSendComments">
+        <item quantity="other">%1$d件のコメントを送信</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="other">%1$d件のコメントがエージェントの対応待ちです。</item>
+    </plurals>
+    <string name="reviewGuided">ガイド付き</string>
+    <string name="reviewGuidedSupporting">重要なものから順に、エージェントが変更内容を案内します</string>
+    <string name="reviewGuideMaking">エージェントに変更内容の案内を作成してもらっています…</string>
+    <string name="reviewGuideFallback">今回はガイドを作成できませんでした。すべてのファイルを表示します。</string>
+    <string name="reviewGuideBusy">エージェントの作業が終わるまでガイドを作成できません。現在はすべてのファイルを表示しています。</string>
+    <string name="reviewGuideAlsoChanged">その他の変更</string>
+</resources>

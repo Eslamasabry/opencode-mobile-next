@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="configInspectionTitle">サーバー設定</string>
+    <string name="configInspectionExplanation">このサーバーが読み込む設定ファイルを重要度の高い順に表示します。キー、パスワード、その他の秘密情報は非表示です。このページで変更は行われません。</string>
+    <string name="configInspectionUnavailable">サーバーの設定を読み込めませんでした。再接続して、もう一度お試しください。</string>
+    <string name="configInspectionRefresh">設定を再読み込み</string>
+    <string name="configFilesLabel">設定ファイル</string>
+    <string name="configFoldersLabel">サーバーが参照するフォルダ</string>
+    <string name="configNoFileTitle">設定ファイルがまだありません</string>
+    <string name="configNoFileBody">このサーバーは内蔵の設定で動作しています。以下のいずれかのフォルダに設定ファイルを置くと設定を変更できます。このページは読み取り専用です。</string>
+</resources>

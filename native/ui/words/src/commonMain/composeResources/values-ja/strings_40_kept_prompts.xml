@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">保管されたプロンプト</string>
+    <string name="keptPromptsBody">サーバーを削除したときに残されたプロンプトです。送信前に会話へ復元して内容を確認できます。</string>
+    <string name="keptPromptsEmpty">保管されたプロンプトはありません</string>
+    <string name="keptPromptsChoose">会話を選ぶ</string>
+    <string name="keptPromptsChooseBody">接続中のサーバーの会話を選んでください。下書きに入力されるだけで、まだ送信されません。</string>
+    <string name="keptPromptsNoTargets">接続中の会話がありません</string>
+    <string name="keptPromptsNoTargetsBody">保存済みのサーバーに接続するか会話を開いてから、もう一度お試しください。</string>
+    <string name="keptPromptsConnect">サーバーに接続</string>
+    <string name="keptPromptsUncertain">このプロンプトはすでに送信されている可能性があります。再送信する前に元の会話を確認してください。</string>
+    <string name="keptPromptsFailed">保管されたプロンプトの読み取りまたは変更ができませんでした。もう一度お試しください。</string>
+    <string name="keptPromptsKeptFrom">削除されたサーバーから保管</string>
+    <string name="keptPromptsRestoreFailed">保存されたプロンプトまたは会話が変更されました。会話内の「保存済みプロンプト」を開き直して、もう一度お試しください。</string>
+    <string name="keptConversation">会話</string>
+</resources>

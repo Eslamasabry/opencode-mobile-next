@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="modelDefaultsPhoneTitle">このスマートフォンでの新しい会話</string>
+    <string name="modelDefaultsNamedTitle">%1$sでの新しい会話</string>
+    <string name="modelDefaultsScope">新しい会話で使われます。各会話ではそれぞれの選択が保持されます。</string>
+    <string name="modelDefaultsServerChoice">サーバーの既定を使う</string>
+    <string name="modelDefaultsRecommended">おすすめの選択</string>
+    <string name="modelDefaultsAll">利用可能なすべてのモデル</string>
+    <string name="modelDefaultsFailed">モデルの選択を読み取れないか、保存できませんでした。</string>
+    <string name="modelDefaultsInUse">使用中</string>
+    <string name="modelDefaultsDefault">サーバーの既定</string>
+    <string name="modelDefaultsRecent">最近の選択</string>
+    <string name="modelDefaultsCheapest">最安</string>
+    <string name="modelDefaultsFree">無料</string>
+    <string name="modelDefaultsPrice">100万トークンあたり 入力 $%1$s · 出力 $%2$s</string>
+    <string name="modelDefaultsSelected">選択済み</string>
+    <string name="modelDefaultsChecking">サーバーのモデルを確認中</string>
+    <string name="modelDefaultsSaving">モデルの選択を保存中</string>
+</resources>

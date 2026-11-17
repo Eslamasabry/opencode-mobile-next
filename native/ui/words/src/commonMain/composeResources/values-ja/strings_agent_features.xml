@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentFeaturesTitle">エージェント設定</string>
+    <string name="agentFeaturesEmpty">このエージェントには追加の設定はありません。</string>
+    <string name="agentFeaturesFailed">エージェント設定を読み込めませんでした</string>
+</resources>

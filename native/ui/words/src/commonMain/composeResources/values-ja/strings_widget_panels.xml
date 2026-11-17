@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="usageWidgetIntro">ホーム画面の「使用状況」ウィジェットにプランの残量を表示します。アプリの実行中に更新されます。</string>
+    <string name="usageEmptyTitle">サブスクリプションはまだありません</string>
+    <string name="usageOnConnection">%1$s上</string>
+    <string name="usageWidgetSettingsShow">表示するプラン</string>
+    <string name="usageWidgetSettingsWindows">5時間・週間・両方の表示設定</string>
+    <string name="usageWidgetWindowBoth">両方</string>
+    <string name="usageWidgetWindowFiveHour">5時間</string>
+    <string name="usageWidgetWindowWeekly">週間</string>
+    <string name="usageWidgetSettingsSetup">セットアップが必要な項目を表示</string>
+    <string name="usageWidgetSettingsSetupHelp">サインイン、キーの追加、セットアップが必要な項目</string>
+    <string name="widgetV2ConfigureTitle">ウィジェットのスタイル</string>
+    <string name="widgetProjectTitle">表示する会話のプロジェクト</string>
+    <string name="widgetProjectUnavailable">この選択を保存できませんでした。もう一度お試しください。</string>
+    <string name="widgetV2AccentWallpaper">壁紙</string>
+    <string name="widgetV2AccentApp">アプリのテーマ</string>
+    <string name="widgetV2AccentGreen">グリーン</string>
+    <string name="widgetV2AccentTeal">ティール</string>
+    <string name="widgetV2AccentBlue">ブルー</string>
+    <string name="widgetV2AccentAmber">アンバー</string>
+    <string name="widgetV2SaveStyle">スタイルを保存</string>
+    <string name="widgetV2SteerTitle">このターンに指示を追加</string>
+    <string name="widgetV2AfterReplyTitle">この応答の後に送信</string>
+    <string name="widgetV2VoiceTitle">新しいメッセージ</string>
+    <string name="widgetV2MessageHint">メッセージを入力</string>
+    <string name="widgetV2Send">送信</string>
+    <string name="widgetV2StaleRequest">会話が更新されました。メッセージはそのまま残っています。</string>
+    <string name="widgetV2Unavailable">バックグラウンド接続を利用できません。メッセージはそのまま残っています。</string>
+    <string name="widgetV2Unsupported">この接続ではその操作を実行できません。</string>
+    <string name="widgetV2Uncertain">送信されたか確認できませんでした。もう一度送信する前に会話を確認してください。</string>
+    <string name="widgetV2InvalidRequest">送信する前にメッセージを入力してください。</string>
+    <string name="widgetV2UnknownBehavior">会話の詳細を待機中…</string>
+    <string name="widgetV2StyleStale">このウィジェットは変更されました。閉じてからもう一度お試しください。</string>
+    <string name="widgetV2StyleUnavailable">スタイルを保存できませんでした。もう一度お試しください。</string>
+    <string name="widgetV2DictationUnavailable">音声入力は現在利用できません。キーボードから入力してください。</string>
+    <string name="widgetV2RestartUnavailable">この会話はアプリ内からのみ変更できます。</string>
+</resources>

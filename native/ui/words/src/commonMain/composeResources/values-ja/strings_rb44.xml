@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb44AboutCheckUpdates">アップデートを確認</string>
+    <string name="rb44AboutUpdateIdle">このアプリの新しいバージョンを確認します</string>
+    <string name="rb44AboutUpdateChecking">確認中…</string>
+    <string name="rb44AboutUpdateCurrent">最新バージョンです</string>
+    <string name="rb44AboutUpdateDownloading">アップデートをダウンロード中…</string>
+    <string name="rb44AboutUpdateFailed">アップデートを確認できませんでした。接続を確認して、もう一度お試しください。</string>
+</resources>

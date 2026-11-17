@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">リンクされた会話</string>
+    <string name="stateHandoffWorking">処理中…</string>
+    <string name="stateHandoffFailed">リンクされた会話を開けませんでした。もう一度お試しください。</string>
+    <string name="stateHandoffTransferFailed">この引き継ぎは確認されませんでした。このシートを閉じて、別の引き継ぎを始める前に会話を確認してください。</string>
+    <string name="stateHandoffReviewNote">続行する前に、マスク済みの会話記録と最初のプロンプトを確認してください。添付ファイルの内容と非公開の推論は除外されています。</string>
+    <string name="stateHandoffRecord">会話記録</string>
+    <string name="stateHandoffPrompt">最初のプロンプト</string>
+    <string name="stateHandoffRetryLink">リンクをもう一度保存</string>
+    <string name="stateHandoffContinue">リンクされた会話を開始</string>
+    <string name="stateHandoffLinked">リンクされた会話</string>
+    <string name="stateHandoffNoLinks">この会話には保存されたリンクがありません。</string>
+    <string name="stateHandoffNew">新しい会話で続ける</string>
+    <string name="stateHandoffNewNote">この接続でモデルを選びます。プロジェクトはそのまま維持され、送信前に引き継ぎ内容を確認できます。</string>
+</resources>

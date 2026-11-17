@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">使用状況の項目が変更されました。現在のアカウントを確認するには「プラン」を再読み込みしてください。</string>
+    <string name="hub40ContinueOn">%1$sで続けますか？</string>
+    <string name="hub40ContinueBody">このショートカットは、プロバイダーへのサインイン用に保存済みの接続を開きます。続行するまで何も送信されません。</string>
+    <string name="hub40Continue">続行</string>
+</resources>

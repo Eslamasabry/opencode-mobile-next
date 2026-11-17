@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">表示</string>
+    <string name="filesSearchNames">ファイル名</string>
+    <string name="filesRowActions">操作</string>
+    <string name="filesChangeDeleted">削除済み</string>
+    <string name="filesChangeAdded">追加済み</string>
+    <string name="filesChangeModified">変更済み</string>
+    <string name="filesWrapCode">行を折り返す</string>
+    <string name="filesUnwrapCode">行を横スクロールする</string>
+    <string name="filesShowPreview">プレビュー</string>
+    <string name="filesMoreActions">その他のファイル操作</string>
+    <string name="filesAttachFailed">このファイルを添付できませんでした。もう一度お試しください。</string>
+    <string name="filesPreferencesFailed">この表示設定を保存できませんでした。もう一度お試しください。</string>
+    <string name="filesLinkRefused">このリンクは安全に開けません。</string>
+    <string name="filesOpenLinkQuestion">%1$sを開きますか？</string>
+    <string name="filesOpenLinkBody">このリンクはアプリ外で開きます。</string>
+    <string name="filesOpenLink">リンクを開く</string>
+    <string name="filesAttachmentReady">ファイルを添付しました。会話に戻ってコメントを追加してください。</string>
+    <string name="filesScopedEmpty">この会話のサーバーが共有しているフォルダです。フォルダへのアクセス権限を確認してから再読み込みしてください。</string>
+    <string name="filesStorageFailed">フォルダへのアクセス権限は変更されませんでした。もう一度お試しください。</string>
+    <string name="filesStorageRestart">フォルダへのアクセス権限を保存しました。このスマートフォンのサーバーを再起動してから再読み込みしてください。</string>
+    <string name="filesOpenPhone">「このスマートフォン」を開く</string>
+    <string name="filesReviewStorage">共有フォルダを確認</string>
+    <string name="filesSelectedStorageBody">このプロジェクトフォルダを許可するか、共有フォルダを確認してください。そこで有効にしない限り、ストレージ全体へのアクセスはオフのままです。</string>
+</resources>

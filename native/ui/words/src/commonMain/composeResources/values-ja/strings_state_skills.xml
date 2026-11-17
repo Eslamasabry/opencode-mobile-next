@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">スキル</string>
+    <string name="stateSkillsUse">この会話で使う</string>
+    <string name="stateSkillsDone">スキルをこの会話に追加しました。</string>
+    <string name="stateSkillsChanged">会話またはフォルダが変更されました。一覧をもう一度開いてください。</string>
+    <string name="stateSkillsBusy">別のスキルを追加中です。完了するまでお待ちください。</string>
+    <string name="stateSkillsStaged">スキルを追加する前に、保留中の取り消しを完了またはキャンセルしてください。</string>
+    <string name="stateSkillsUnsupported">このサーバーでは会話にスキルを追加できません。</string>
+    <string name="stateSkillsUncertain">結果を確認できませんでした。再読み込みしてからもう一度お試しください。</string>
+</resources>

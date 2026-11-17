@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativePendingTitle">送信待ち</string>
+    <string name="nativePendingReview">確認</string>
+    <string name="nativePendingFailed">この送信を更新できませんでした。接続を確認して、もう一度お試しください。</string>
+    <string name="nativePendingOffline">オンライン復帰時に送信します</string>
+    <string name="nativePendingAdmitted">サーバーで待機中</string>
+    <string name="nativePendingJoining">実行中の返信に合流中</string>
+    <string name="nativePendingUnconfirmed">すでに送信済みの可能性があります</string>
+    <string name="nativePendingEdit">戻して編集</string>
+    <string name="nativePendingSteer">この返信に合流</string>
+    <string name="nativePendingCheck">再読み込み</string>
+    <string name="nativePendingDiscard">破棄</string>
+    <string name="nativePendingDiscardTitle">このメッセージを破棄しますか？</string>
+    <string name="nativePendingEmpty">送信待ちのメッセージはありません。</string>
+    <plurals name="nativePendingCount">
+        <item quantity="other">%1$s件のメッセージが送信待ちです。</item>
+    </plurals>
+</resources>

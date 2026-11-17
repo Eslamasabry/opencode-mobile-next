@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="searchB1Web">ウェブ</string>
+    <string name="searchB1InsideMessages">メッセージ内</string>
+    <string name="searchB1AboutOptions">検索オプションについて</string>
+    <string name="searchB1OptionsTitle">検索オプション</string>
+    <string name="searchB1ChooseServer">検索するサーバーを選択</string>
+    <string name="searchB1RecentConversations">最近の会話</string>
+    <string name="searchB1Clear">消去</string>
+    <string name="searchB1Conversations">会話</string>
+    <string name="searchB1Places">設定とページ</string>
+    <string name="searchB1SeeAll">すべて表示（%1$s）</string>
+    <string name="searchB1SeeAllSpoken">%1$s件の会話をすべて表示</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="other">%1$s件の会話</item>
+    </plurals>
+</resources>

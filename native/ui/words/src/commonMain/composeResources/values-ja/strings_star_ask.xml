@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatStarAskTitle">OpenCode Mobile を気に入っていただけましたか？</string>
+    <string name="chatStarAskBody">GitHub でスターを付けると、他の人も見つけやすくなります。</string>
+    <string name="chatStarAskAction">GitHub でスターを付ける</string>
+    <string name="chatStarAskDismiss">今はしない</string>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">他のサーバーを確認</string>
+    <string name="monitorNativeBack">戻る</string>
+    <string name="monitorNativeForegroundOnly">このページを開いている間、保存済みサーバーを確認します。ページを閉じると読み取りは停止します。端末のサーバーを起動したりバックグラウンド通知をオンにしたりはしません。</string>
+    <string name="monitorNativeCheck">今すぐ確認</string>
+    <string name="monitorNativeChecking">確認中…</string>
+    <string name="monitorNativeAllow">確認を許可</string>
+    <string name="monitorNativeConsent">このアプリがこの保存済みサーバーからリクエストと最近の会話の状態を読み取ることを許可します。</string>
+    <string name="monitorNativeUnsupported">この保存済みサーバーはここでは確認できません。</string>
+    <string name="monitorNativeOff">確認はオフです</string>
+    <string name="monitorNativeWaiting">まだ確認されていません</string>
+    <string name="monitorNativeCurrent">確認済み</string>
+    <string name="monitorNativePartial">一部のみ確認しました。さらに会話を読み込むにはもう一度確認してください。</string>
+    <string name="monitorNativeUnknown">最新の状態を確認できませんでした。以前の確認結果が表示されている場合があります。</string>
+    <string name="monitorNativePaused">確認を一時停止中</string>
+    <string name="monitorNativePending">対応待ち：%1$d</string>
+    <string name="monitorNativeRunning">実行中：%1$d</string>
+    <string name="monitorNativeConversation">会話</string>
+    <string name="monitorNativeFailed">最後に確認したターンが失敗しました</string>
+    <string name="monitorNativeEarlierFailure">以前の失敗（最新の状態は不明）</string>
+    <string name="monitorNativeSaveFailed">この設定を保存または読み込めませんでした。もう一度お試しください。</string>
+    <string name="monitorNativeEmpty">確認できる保存済みサーバーがありません。</string>
+    <string name="monitorNativeRequest">対応待ち</string>
+    <string name="monitorNativeEarlierRequest">以前のリクエスト（最新の状態は不明）</string>
+    <string name="monitorNativeReconnect">確認する前に、このサーバーに接続するか「サーバー」でサインイン情報を更新してください。</string>
+</resources>

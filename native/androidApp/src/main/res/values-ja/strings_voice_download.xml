@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voice_download_title">音声セットアップ</string>
+    <string name="voice_download_downloading">音声パックをダウンロード中…</string>
+    <string name="voice_download_verifying">音声入力を準備中…</string>
+    <string name="voice_download_complete">音声入力の準備ができました</string>
+    <string name="voice_download_failed">音声セットアップに失敗しました。アプリを開いてもう一度お試しください。</string>
+</resources>
