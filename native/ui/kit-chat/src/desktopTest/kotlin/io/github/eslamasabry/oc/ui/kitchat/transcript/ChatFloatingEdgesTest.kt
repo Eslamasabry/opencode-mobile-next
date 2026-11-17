@@ -399,6 +399,7 @@ class ChatFloatingEdgesTest {
             val box = bounds("kit-composer-box")
             val d = scene.density
             val r = 24f * d
+            val groundLum = lum(image[2, (H * d).toInt() - 2])
             val pad = 4f * d // the tag sits inside the box's own padding
             // The box's two lower corners: what lies outside the rounded outline is page ground, never a letter.
             for (corner in listOf(true, false)) {
@@ -410,7 +411,7 @@ class ChatFloatingEdgesTest {
                         val cx = if (corner) box.left - pad + r else box.right + pad - r
                         val cy = box.bottom + pad - r
                         val out = Math.hypot((px - cx).toDouble(), (y - cy).toDouble()) > r + 4 * d
-                        if (out && y > cy) assertTrue(lum(image[px, y]) < 0.35f, "a letter shows outside the box's corner at ($px,$y), ${scene.style} dark=${scene.dark}")
+                        if (out && y > cy) assertTrue(kotlin.math.abs(lum(image[px, y]) - groundLum) < 0.25f, "a letter shows outside the box's corner at ($px,$y), ${scene.style} dark=${scene.dark}")
                         x += 1
                     }
                     y += 1
