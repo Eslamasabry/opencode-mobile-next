@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.CoroutineContext
@@ -41,11 +42,11 @@ internal class RunReconciler(
     private val events: GatewayEvents,
     private val visible: StateFlow<Visibility>,
     private val now: () -> Long,
-    scope: CoroutineScope,
-    lane: CoroutineContext,
+    private val scope: CoroutineScope,
+    private val lane: CoroutineContext,
     private val checked: (SessionId, Boolean?) -> Unit = { _, _ -> },
 ) {
-    private data class Run(val at: Long, val tier: Int = -1)
+    private data class Run(val at: Long, val tier: Int = -1, val generation: Int = -1)
     private val runs = MutableStateFlow<Map<SessionId, Run>>(emptyMap())
     private val requests = Channel<Unit>(Channel.CONFLATED)
 
@@ -55,16 +56,24 @@ internal class RunReconciler(
         }
         scope.launch(lane) {
             combine(visible, events.status, events.connects) { v, s, n -> Triple(v, s, n) }
-                .collectLatest { (v, s, _) ->
+                .collectLatest { (v, s, generation) ->
                     if (v != Visibility.Foreground || s != StreamStatus.Connected) return@collectLatest
                     requests.trySend(Unit)
                     requests.receiveAsFlow().collect {
-                        val snapshot = runs.value
+                        val at = now()
+                        val snapshot = runs.value.filterValues { run ->
+                            run.generation != generation || STEPS.indexOfLast { at - run.at >= it } > run.tier
+                        }
                         if (snapshot.isEmpty()) return@collect
-                        // Assertion-red keeps the interfaces but preserves the base's lack of recovery.
-                        if (!ENABLED) return@collect
+                        runs.value = runs.value.mapValues { (id, run) ->
+                            if (id !in snapshot) run else run.copy(
+                                generation = generation,
+                                tier = maxOf(run.tier, STEPS.indexOfLast { at - run.at >= it }),
+                            )
+                        }
                         val result = withTimeoutOrNull(10_000) { recovery.reconcileRuns(snapshot.keys) }
                         if (visible.value != Visibility.Foreground) return@collect
+                        if (result is Outcome.Failed && result.failure == io.github.eslamasabry.oc.core.common.Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope)) return@collect
                         if (result !is Outcome.Ok) {
                             snapshot.keys.forEach { checked(it, null) }
                             recovery.reconnectAfterRunCheck()
@@ -85,11 +94,10 @@ internal class RunReconciler(
                         ?: return@collectLatest
                     if (next == Long.MAX_VALUE) return@collectLatest
                     delay((next - now()).coerceAtLeast(0))
-                    val at = now()
-                    runs.value = runs.value.mapValues { (_, run) ->
-                        run.copy(tier = maxOf(run.tier, STEPS.indexOfLast { at - run.at >= it }))
-                    }
                     requests.trySend(Unit)
+                    // The reader advances the tier before suspending for I/O. Wait for that state change instead of
+                    // rearming an already-due timer while the single reader is occupied.
+                    runs.first { it != snapshot }
                 }
         }
     }
@@ -105,13 +113,19 @@ internal class RunReconciler(
         }
         when (event) {
             is GatewayEvent.RunEnded -> runs.value -= id
-            is GatewayEvent.RunStarted, is GatewayEvent.RunRetrying -> runs.value += id to Run(now(), runs.value[id]?.tier ?: -1)
-            else -> if (id in runs.value) runs.value += id to Run(now(), runs.value.getValue(id).tier)
+            is GatewayEvent.RunStarted, is GatewayEvent.RunRetrying -> runs.value += id to (runs.value[id]?.copy(at = now()) ?: Run(now()))
+            else -> if (id in runs.value) runs.value += id to runs.value.getValue(id).copy(at = now())
+        }
+    }
+
+    fun running(id: SessionId, busy: Boolean) {
+        scope.launch(lane) {
+            if (!busy) runs.value -= id
+            else if (id !in runs.value) runs.value += id to Run(now())
         }
     }
 
     private companion object {
-        const val ENABLED = false
         val STEPS = listOf(60_000L, 300_000L, 900_000L)
     }
 }

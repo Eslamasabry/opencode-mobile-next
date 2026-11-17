@@ -95,7 +95,12 @@ public sealed interface GatewayEvent {
     ) : GatewayEvent
 
     /** Never followed by an idle that would overwrite a failure. */
-    public data class RunEnded(val sessionId: SessionId, val outcome: RunOutcome) : GatewayEvent
+    public data class RunEnded(
+        val sessionId: SessionId,
+        val outcome: RunOutcome,
+        /** Authoritative refetch when an ending was lost. Applied before idle, never replayed as live deltas. */
+        val reconciledHistory: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>? = null,
+    ) : GatewayEvent
 
     // ---- transcript
     public data class MessageUpserted(

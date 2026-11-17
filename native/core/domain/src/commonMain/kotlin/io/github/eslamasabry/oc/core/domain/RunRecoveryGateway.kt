@@ -8,8 +8,8 @@ import kotlinx.collections.immutable.ImmutableMap
 /** Fresh run truth, never a cached status or a resend. The connection coalesces calls on its reconcile lane. */
 public interface RunRecoveryGateway {
     /**
-     * One status read for [sessions]. For an idle run, refetch its newest history before publishing TranscriptStale
-     * and RunEnded. A failed, stale or cancelled read must never end a run. Busy and Retry keep waiting.
+     * One status read for [sessions]. For an idle run, refetch its newest history before publishing RunEnded
+     * with the refetched history. A failed, stale or cancelled read must never end a run. Busy and Retry keep waiting.
      */
     public suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>>
 

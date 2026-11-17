@@ -34,7 +34,10 @@ class Oc2RunRecoveryTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { g.events.all.collect { events += it.event } }
         assertIs<Outcome.Ok<*>>(g.reconcileRuns(setOf(sid)))
         assertEquals(listOf("/api/session/active", "/api/session/session/message"), requests)
-        assertEquals(listOf(GatewayEvent.TranscriptStale(sid), GatewayEvent.RunEnded(sid, io.github.eslamasabry.oc.core.domain.events.RunOutcome.Idle)), events)
+        val ended = assertIs<GatewayEvent.RunEnded>(events.single())
+        assertEquals(sid, ended.sessionId)
+        assertEquals(io.github.eslamasabry.oc.core.domain.events.RunOutcome.Idle, ended.outcome)
+        assertEquals(emptyList(), ended.reconciledHistory)
         g.close()
     }
     @Test fun `B-435 failed OC2 status never refetches or invents idle`() = runTest {

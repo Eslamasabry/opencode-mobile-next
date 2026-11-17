@@ -23,7 +23,7 @@ class CodexRunRecoveryTest {
         runCurrent()
         assertTrue(next.calls("thread/read").isNotEmpty(), "authoritative thread was refetched")
         assertEquals(1, events.filterIsInstance<GatewayEvent.RunEnded>().count { it.sessionId == sid })
-        assertTrue(events.any { it is GatewayEvent.TranscriptStale })
+        assertTrue(events.filterIsInstance<GatewayEvent.RunEnded>().single().reconciledHistory?.isNotEmpty() == true)
         assertTrue(next.calls("turn/start").isEmpty(), "recovery never resends")
         g.close()
     }

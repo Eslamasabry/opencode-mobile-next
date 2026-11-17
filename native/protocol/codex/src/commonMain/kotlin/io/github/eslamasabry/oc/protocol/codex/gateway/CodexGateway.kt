@@ -120,6 +120,7 @@ public class CodexGateway(
     scope: CoroutineScope,
     private val clock: Clock,
     directory: String?,
+    private val reconnectAllowed: StateFlow<Boolean> = MutableStateFlow(true),
 ) :
     ServerGateway,
     MidTurnPromptGateway,
@@ -148,6 +149,7 @@ public class CodexGateway(
     private var recovering: Job? = null
     private var retry: Job? = null
     private var retryAttempt = 0
+    private var runRevision = 0L
 
     private val stream = MutableSharedFlow<GatewayEnvelope>(extraBufferCapacity = 4096)
     private val streamStatus = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
@@ -163,6 +165,7 @@ public class CodexGateway(
     private class Operation(val scope: String, val locationEpoch: Int, val transportEpoch: Int)
 
     init {
+        this.scope.launch { reconnectAllowed.collect { if (it && listening && recoveryDegraded) scheduleReconnect() } }
         transport.addListener(
             object : CodexTransportListener {
                 override fun onEvent(event: CodexRpcEvent) = onRpc(event)
@@ -432,10 +435,23 @@ public class CodexGateway(
         approvals.entries.removeAll { it.value.permission.sessionId == id }
     }
 
-    override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> =
-        sessionStatuses()
+    override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> = onLane {
+        val fresh = mutableMapOf<SessionId, SessionStatus>()
+        for (id in sessions) {
+            val revision = runRevision
+            // thread/read is the liveness check and authoritative history in one bounded RPC. Never cached busy.
+            val thread = readThread(id.raw, withTurns = true)
+            if (revision != runRevision) codexFail(CodexFailureKind.ScopeMismatch)
+            val status = codexSessionStatus(thread)
+            fresh[id] = status
+            if (status != SessionStatus.Busy && status != SessionStatus.Retry) {
+                emit(GatewayEvent.RunEnded(id, RunOutcome.Idle, codexMessages(thread)))
+            }
+        }
+        fresh.toImmutableMap()
+    }
 
-    override fun reconnectAfterRunCheck(): Unit = Unit
+    override fun reconnectAfterRunCheck(): Unit { transport.connectionFailed() }
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         onLane {
@@ -926,6 +942,7 @@ public class CodexGateway(
     }
 
     private fun handleRpc(event: CodexRpcEvent) {
+        runRevision++
         val p = event.params
         if (event.method == "thread/started") {
             val thread = codexObject(p["thread"])
@@ -1119,13 +1136,13 @@ public class CodexGateway(
     }
 
     private fun scheduleReconnect() {
-        if (!listening || closed || retry != null || recovering != null) return
+        if (!listening || closed || !reconnectAllowed.value || retry != null || recovering != null) return
         val delayMs = 1000L shl retryAttempt.coerceIn(0, 4)
         retryAttempt++
         retry = scope.launch {
             delay(delayMs)
             retry = null
-            recover()
+            if (reconnectAllowed.value) recover()
         }
     }
 
