@@ -238,16 +238,24 @@ public class GitPage(
         }
     }
 
-    public suspend fun pull(): Unit = write(GitBusy.Pull) { it.pull() }
+    public suspend fun pull(): Unit = write(GitBusy.Pull) { pull(it) }
 
     public suspend fun push(): Unit = write(GitBusy.Push) { push(it) }
 
+    private suspend fun pull(repo: GitRepository): GitActionResult {
+        val received = repo.pull(gitHubToken(repo))
+        if (received.problem == GitProblem.GitHubTokenRejected) account?.tokenRejected()
+        return received
+    }
+
     private suspend fun push(repo: GitRepository): GitActionResult {
-        val token = if (repo.canUseGitHubToken) account?.validToken() else null
-        val sent = repo.push(token)
+        val sent = repo.push(gitHubToken(repo))
         if (sent.problem == GitProblem.GitHubTokenRejected) account?.tokenRejected()
         return sent
     }
+
+    private suspend fun gitHubToken(repo: GitRepository): String? =
+        if (repo.canUseGitHubToken) account?.validToken() else null
 
     public suspend fun commit(
         paths: List<String>,
@@ -361,8 +369,9 @@ public class GitPage(
             return
         }
         mutableState.update { it.copy(check = GitCheck.Checking) }
-        val fetched = repo.fetch()
+        val fetched = repo.fetch(gitHubToken(repo))
         if (!fetched.ok) {
+            if (fetched.problem == GitProblem.GitHubTokenRejected) account?.tokenRejected()
             mutableState.update { it.copy(check = GitCheck.Failed) }
             return
         }
