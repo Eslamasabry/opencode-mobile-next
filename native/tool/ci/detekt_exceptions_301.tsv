@@ -1,0 +1,27 @@
+# Frozen detekt exceptions for 3.0.1 (coordinator's decision, 2026-11-18). NOT a baseline: tool/qa/detekt.sh reads
+# this file in its signature ratchet (--new-against) and passes only when a module's NEW findings are exactly the ones
+# listed for it; any other new finding fails, and an entry whose finding no longer exists in the module fails until it is
+# removed, so the list only shrinks. Matched on rule + file + function (detekt's [name]), never on line numbers.
+# Columns: rule<TAB>file (under native/)<TAB>function<TAB>why it was not fixed for 3.0.1<TAB>when it is fixed.
+# The 21 findings detekt named on the 3.0.1 line that could not be fixed without moving logic or changing an API.
+LongParameterList	engine/transcript/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/transcript/ledger/TurnWork.kt	turnWork	public entry point; fewer parameters means a new type (API change)	fixed first in the next update
+LongParameterList	engine/transcript/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/transcript/ledger/TurnWork.kt	work	the B-459 waiting-step rule threads one more flag; regrouping moves logic	fixed first in the next update
+CyclomaticComplexMethod	engine/transcript/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/transcript/ledger/TurnWork.kt	work	the step-state table of a turn; splitting it moves logic	fixed first in the next update
+LongParameterList	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatTranscript.kt	ReplyActions	class of the reply footer's actions (one more field for B-458); API	fixed first in the next update
+LongParameterList	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/presentation/TurnFactsPresenter.kt	states	turn facts presenter entry (one more flow for B-459); API	fixed first in the next update
+CyclomaticComplexMethod	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt	retireDeliveredMarkers	message-delivery marker rules (queue-survives); splitting moves delivery logic	fixed first in the next update
+ReturnCount	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt	retireDeliveredMarkers	same function; early returns guard delivery	fixed first in the next update
+LoopWithTooManyJumpStatements	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt	settlePending	message-delivery settle loop; folding its continues moves delivery logic	fixed first in the next update
+LongParameterList	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/inbox/ui/ChatInboxSlot.kt	ChatInboxSlot	public composable (restore and open slots added); API	fixed first in the next update
+LongMethod	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/inbox/ui/ChatInboxSlot.kt	ChatInboxSlot	the queued-messages slot (116 lines); splitting moves UI logic	fixed first in the next update
+CyclomaticComplexMethod	feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/inbox/ui/ChatInboxSlot.kt	ChatInboxSlot	same composable; splitting moves UI logic	fixed first in the next update
+LongParameterList	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/KitText.kt	KitText	the kit's text part (wholeWords added); API	fixed first in the next update
+LongParameterList	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitFab.kt	KitFab	the kit's plus button (lit added for B-452); API	fixed first in the next update
+LongParameterList	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitBorderLight.kt	stops	the border light's colour stops (B-452); regrouping moves drawing logic	fixed first in the next update
+CyclomaticComplexMethod	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitBorderLight.kt	kitBorderLight	the border light modifier (B-452); splitting moves drawing logic	fixed first in the next update
+TooManyFunctions	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitBorderLight.kt	KitBorderLight.kt	the border light file (B-452); splitting the file moves code	fixed first in the next update
+SpreadOperator	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitBorderLight.kt	brush	sweepGradient takes stops as varargs; another overload changes the drawing	fixed first in the next update
+ReturnCount	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitBorderLight.kt	rememberBlurLayer	composable early returns; folding them changes which remembers run	fixed first in the next update
+LongParameterList	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitFootBar.kt	KitFootBar	the kit's foot bar (plus light added); API	fixed first in the next update
+UnusedParameter	ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/platform/KitPlatform.kt	ground	KitSystemBars.of keeps ground until its owed test (KitSystemBarsParityTest) changes with it	fixed first in the next update
+LongParameterList	ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitVoiceRecorder.kt	KitVoiceRecorderRow	the recorder row in the box (mic-in-box); API	fixed first in the next update
