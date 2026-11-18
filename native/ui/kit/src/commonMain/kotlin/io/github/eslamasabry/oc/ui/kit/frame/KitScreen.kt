@@ -512,6 +512,10 @@ public fun KitScreen(
                     .then(
                         when {
                             !framed -> Modifier
+                            // A floating chat page lets the transcript run on behind the gesture area down to the screen's bottom
+                            // edge, ending in the short fade there (no plate, no straight cut at the gesture area's top):
+                            // its bottom block carries the bottom inset instead.
+                            edgesFade && floatChrome -> Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Horizontal))
                             edgesFade -> Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
                             else -> Modifier.windowInsetsPadding(insets)
                         }
@@ -645,6 +649,7 @@ public fun KitScreen(
                                 if (edgesFade) Modifier
                                 else Modifier.kitChromeGround(FrostRole.Composer, frost, reach = insetBottom)
                             )
+                            .then(if (floatChrome) Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Bottom)) else Modifier)
                             .padding(
                                 // A glass slab sits as far in from the sides as the bar's capsule does.
                                 horizontal = if (slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
