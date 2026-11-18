@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="voiceNativeDetect">Deteksi dari ucapan</string>
-    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativeSizeMb">%1$d\u00A0MB</string>
     <string name="voiceNativePhoneEngine">Pengetikan suara meminta Android untuk mengenali ucapan di ponsel itu sendiri (Android 12 dan yang lebih baru), dengan mengutamakan pengenalan offline; ketentuan privasi Android untuk layanan itu berlaku. Ponsel tanpa fitur itu tidak menampilkan mikrofon. Versi ini belum memakai model ucapan di bawah.</string>
     <string name="voiceNativeNaturalNeedsEngine">Memerlukan mesin ucapan offline, yang belum disertakan di versi ini.</string>
     <string name="voiceNativeSettingsAction">Pengaturan suara</string>

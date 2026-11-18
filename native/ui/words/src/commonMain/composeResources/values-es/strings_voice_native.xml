@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="voiceNativeDetect">Detectar por la voz</string>
-    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativeSizeMb">%1$d\u00A0MB</string>
     <string name="voiceNativePhoneEngine">El dictado por voz pide a Android que reconozca la voz en el propio teléfono (Android 12 y posteriores), con preferencia por el reconocimiento sin conexión; se aplican los términos de privacidad propios de Android para ese servicio. Los teléfonos que no lo tienen no muestran el micrófono. Esta versión aún no usa los modelos de voz de abajo.</string>
     <string name="voiceNativeNaturalNeedsEngine">Necesita el motor de voz sin conexión, que esta versión aún no incluye.</string>
     <string name="voiceNativeSettingsAction">Ajustes de voz</string>
