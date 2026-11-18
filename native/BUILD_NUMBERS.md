@@ -129,3 +129,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10103 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10102's content + colour marks and follow-up + typing-sent-not-back + child-needs-you f642cb12cb (source 0bda61114d) |
 | 10104 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10103's content + opencode-hold-told, child-needs-you-2, update-path-unstuck, wait-marks-r2, install-switch-safe (source 26ada28b75) |
 | 10105 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10104's content + opencode-update-moves, gate-k1-fix, gate test files, update-low-space-r2, umami-language-words (source 463a4524c5) |
+| 10106 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10105's content + sol-trial-301, update-backoff, umami-rich-301, sol-round2-301, opencode-retry-wakes (source 7d49f81fa3) |
