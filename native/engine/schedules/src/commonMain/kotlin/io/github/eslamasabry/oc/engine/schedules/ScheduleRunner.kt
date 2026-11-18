@@ -77,6 +77,9 @@ public class ScheduleRunner(
         var webReads = 0
         val answered = mutableSetOf<String>()
 
+        /** Failed reply attempts per ask: a reply can lose a race with the server's own bookkeeping, so it is tried again. */
+        val replyTries = mutableMapOf<String, Int>()
+
         fun result(
             status: RunStatus,
             error: String? = null,
@@ -326,7 +329,13 @@ public class ScheduleRunner(
                 if (ask.id.raw in answered) continue
                 if (!mayAnswer || !ScheduleWebReads.isWebRead(ask.permission)) return true
                 val reply = bounded { gateway.replyPermission(target, ask.id, PermissionReply.Once) }
-                if (reply is Outcome.Failed) return true
+                if (reply is Outcome.Failed) {
+                    // Tried again on the next look (about two seconds later); only a third refusal needs the person.
+                    val tries = (replyTries[ask.id.raw] ?: 0) + 1
+                    replyTries[ask.id.raw] = tries
+                    if (tries >= MAX_REPLY_TRIES) return true
+                    continue
+                }
                 answered += ask.id.raw
                 webReads++
             }
@@ -400,6 +409,7 @@ public class ScheduleRunner(
         /** The stored code of a run the server accepted whose reply was not followed to its end. */
         public const val UNCONFIRMED: String = "unconfirmed"
 
+        private const val MAX_REPLY_TRIES = 3
         private const val NO_REPLY_AFTER_MS = 600_000L
         private const val CLOSE_WAIT_MS = 3_000L
         private const val PHONE_READY_MS = 90_000L

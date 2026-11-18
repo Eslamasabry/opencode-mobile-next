@@ -292,8 +292,10 @@ public class ScheduleEditViewModel(
 
     private fun restoredNews(base: EditorFields, prior: EditorFields, canMake: Boolean, canReadWeb: Boolean): EditorFields {
         val news = newsFields(base, canMake, canReadWeb).copy(topic = prior.topic, webReads = prior.webReads && canReadWeb)
-        // A project the person chose instead of the Assistant folder comes back as chosen.
-        return if (canMake && !prior.assistant) news.copy(assistant = false, project = prior.project) else news
+        // A project the person chose instead of the Assistant folder comes back as chosen; no project chosen at all is
+        // the Assistant folder (the starter's default), never an empty project with the folder gone.
+        return if (canMake && !prior.assistant && prior.project.isNotBlank()) news.copy(assistant = false, project = prior.project)
+        else news
     }
 
     private fun keepDraft() {
@@ -319,6 +321,7 @@ public class ScheduleEditViewModel(
             input.starter != was.starter ||
                 input.topic != was.topic ||
                 input.assistant != was.assistant ||
+                input.webReads != was.webReads ||
                 (input.starter == ScheduleStarter.News && input.project != was.project)
         ) keepDraft()
     }

@@ -306,6 +306,8 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                 enabled = enabled,
             )
         }
+        // With no project picked yet the path field above is the only "Project folder": a second, empty-named row would repeat it.
+        if (draft.assistant || draft.project.text.isNotBlank())
         KitRow(
             title =
                 if (draft.assistant) stringResource(Res.string.scheduleAssistantTitle)
