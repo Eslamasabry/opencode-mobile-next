@@ -119,19 +119,19 @@ public fun KitRequestAnswers(
                 )
             } else {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(RequestAnswersDims.GAP.dp)) {
-                    KitButton(
+                    KitApprovalAnswer(
+                        KitApproval.AllowOnce,
                         words.allowOnce,
                         onAllow,
                         Modifier.weight(1f).heightIn(min = RequestAnswersDims.BUTTON_H.dp),
-                        role = KitButtonRole.Primary,
                         semanticsLabel = words.allowOn(target),
                         haptic = KitHaptic.Commit,
                     )
-                    KitButton(
+                    KitApprovalAnswer(
+                        KitApproval.Deny,
                         words.deny,
                         onDeny,
                         Modifier.weight(1f).heightIn(min = RequestAnswersDims.BUTTON_H.dp),
-                        role = KitButtonRole.Secondary,
                         semanticsLabel = words.denyOn(target),
                         haptic = KitHaptic.Commit,
                     )

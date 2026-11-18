@@ -6,5 +6,6 @@
     <string name="chatsHomeAsksToRun">Asks to run: %1$s</string>
     <string name="chatsHomeAsksToEdit">Asks to edit: %1$s</string>
     <string name="chatsHomeAsksToRead">Asks to read: %1$s</string>
+    <string name="chatsHomeAsksToReadFolder">Asks to read this folder</string>
     <string name="chatsHomeAsksOther">Asks permission: %1$s</string>
 </resources>

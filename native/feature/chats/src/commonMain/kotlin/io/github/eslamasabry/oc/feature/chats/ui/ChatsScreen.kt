@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunningBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunning
 import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
+import io.github.eslamasabry.oc.ui.kit.request.KitApproval
+import io.github.eslamasabry.oc.ui.kit.request.KitApprovalAnswer
 import io.github.eslamasabry.oc.ui.kit.state.KitAnswerScale
 import io.github.eslamasabry.oc.ui.kit.state.KitStatusAnswer
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -118,6 +120,7 @@ import io.github.eslamasabry.oc.ui.words.res.stageStartingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksOther
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToEdit
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRead
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToReadFolder
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRun
 import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
@@ -1061,7 +1064,10 @@ private fun ConversationRow(
             when (HomePreviewRules.askKind(it.kind)) {
                 HomePreviewRules.AskKind.Run -> stringResource(Res.string.chatsHomeAsksToRun, target)
                 HomePreviewRules.AskKind.Edit -> stringResource(Res.string.chatsHomeAsksToEdit, target)
-                HomePreviewRules.AskKind.Read -> stringResource(Res.string.chatsHomeAsksToRead, target)
+                HomePreviewRules.AskKind.Read ->
+                    HomePreviewRules.readTarget(it.command, row.directory, row.project).name
+                        ?.let { name -> stringResource(Res.string.chatsHomeAsksToRead, KitBidi.ltr(mask(name))) }
+                        ?: stringResource(Res.string.chatsHomeAsksToReadFolder)
                 HomePreviewRules.AskKind.Other -> stringResource(Res.string.chatsHomeAsksOther, target)
             }
         }
@@ -1178,18 +1184,18 @@ private fun PermissionAnswers(
             else -> KitEnabled.Enabled
         }
     KitChipWrap {
-        KitButton(
+        KitApprovalAnswer(
+            KitApproval.AllowOnce,
             stringResource(Res.string.kitRequestAllowOnce),
             { actions.answerPermission(row, true) },
-            role = KitButtonRole.Secondary,
             enabled = enabled,
             working = answering,
             expand = false,
         )
-        KitButton(
+        KitApprovalAnswer(
+            KitApproval.Deny,
             stringResource(Res.string.approvalDeny),
             { actions.answerPermission(row, false) },
-            role = KitButtonRole.Tertiary,
             enabled = enabled,
             expand = false,
         )

@@ -54,6 +54,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.request.KitApproval
+import io.github.eslamasabry.oc.ui.kit.request.KitApprovalAnswer
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -391,12 +393,11 @@ private fun AnswerButtons(
                 measurer.measure(label, style, softWrap = false, maxLines = 1).size.width.toDp() + Space.S6.dp * 2 <= half // F: lib/ui/kit/kit_request_card.dart:1092-1105
             }
             val allow: @Composable (Modifier) -> Unit = { modifier ->
-                KitButton(allowOnceLabel, onAllowOnce, modifier.testTag("permission-card-allow"),
-                    role = if (secondary && !signal) KitButtonRole.Secondary else KitButtonRole.Primary,
-                    enabled = availability, haptic = ANSWER_HAPTIC)
+                KitApprovalAnswer(KitApproval.AllowOnce, allowOnceLabel, onAllowOnce, modifier.testTag("permission-card-allow"),
+                    quiet = secondary && !signal, enabled = availability, haptic = ANSWER_HAPTIC)
             }
             val reject: @Composable (Modifier) -> Unit = { modifier ->
-                KitButton(denyLabel, onDeny, modifier.testTag("permission-card-reject"), role = KitButtonRole.Secondary, enabled = availability,
+                KitApprovalAnswer(KitApproval.Deny, denyLabel, onDeny, modifier.testTag("permission-card-reject"), enabled = availability,
                     haptic = if (denyAnswers) ANSWER_HAPTIC else null)
             }
             if (fits(allowOnceLabel) && fits(denyLabel)) Row(
