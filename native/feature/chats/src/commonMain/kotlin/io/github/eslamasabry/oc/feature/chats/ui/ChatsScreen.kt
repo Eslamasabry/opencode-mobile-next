@@ -140,6 +140,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
@@ -571,6 +572,9 @@ public fun ChatsScreen(
                                     labelStatus =
                                         if (lineWords == HomeLineWinner.Download) downloadStatus?.message
                                         else state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    // Every stage Home names is something this phone is starting: its mark stands
+                                    // before the words. The kit draws and animates it; this only switches it on.
+                                    labelWait = KitWaitKind.Starting.takeIf { lineWords == HomeLineWinner.Stage },
                                     labelAction = statusAction,
                                 ) {
                                     recent.forEach { row ->

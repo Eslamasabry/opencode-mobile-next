@@ -58,6 +58,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitProminentRule
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkDefaults
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -393,6 +396,12 @@ public fun KitRowPanel(
      */
     labelStatus: String? = null,
     /**
+     * The kind of wait [labelStatus] names ("Starting Linux…" is [KitWaitKind.Starting]): its waiting mark stands
+     * before the words, in their ink, no taller than their line, and comes and goes with them. Null (words that name
+     * no wait, or no words) shows no mark.
+     */
+    labelWait: KitWaitKind? = null,
+    /**
      * The one act that belongs to [labelStatus] ("Download on mobile data"): shown under the words, level with them, in
      * the accent, in a 48 dp target. Null shows the words alone.
      */
@@ -406,7 +415,8 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, labelAction)) }
+        val status = kitLabelStatus(labelStatus, labelAction, labelWait)
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = status) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -430,10 +440,18 @@ public fun KitRowPanel(
  * after that the last words stay while they fade out.
  */
 @Composable
-private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Composable () -> Unit)? {
+private fun kitLabelStatus(
+    status: String?,
+    action: KitLineAction? = null,
+    wait: KitWaitKind? = null,
+): (@Composable () -> Unit)? {
     val held = remember { mutableStateOf<String?>(null) }
     if (status != null && held.value != status) held.value = status
+    // The mark of the last words, so it fades out with them.
+    val heldWait = remember { mutableStateOf<KitWaitKind?>(null) }
+    if (status != null && heldWait.value != wait) heldWait.value = wait
     val words = held.value ?: return null
+    val mark = heldWait.value
     val visible = remember { MutableTransitionState(false) }
     visible.targetState = status != null
     val reduced = KitMotion.state.reduced
@@ -446,13 +464,7 @@ private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Co
             exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
         ) {
             Column(if (action != null) Modifier.fillMaxWidth() else Modifier) {
-                KitText(
-                    words,
-                    Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
-                    role = TypeRole.Label,
-                    tone = TextTone.Secondary,
-                    maxLines = if (action != null) 2 else 1,
-                )
+                LabelStatusWords(words, mark, maxLines = if (action != null) 2 else 1)
                 // The status's own act, under its words and level with them: a 48 dp target, the accent so it reads as
                 // something to tap (never a bar or a row of its own).
                 if (status != null && action != null)
@@ -468,6 +480,28 @@ private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Co
                     }
             }
         }
+    }
+}
+
+/** The status words with their waiting [mark] before them, in one ink; the mark is no taller than the words' line. */
+@Composable
+private fun LabelStatusWords(words: String, mark: KitWaitKind?, maxLines: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (mark != null) {
+            // The words' own line height at most: the label's line keeps its height when the mark comes.
+            val line = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Label).lineHeight.toDp() }
+            KitWaitMark(mark, tone = TextTone.Secondary, size = minOf(line, KitWaitMarkDefaults.Size))
+            Spacer(Modifier.width(Space.S1.dp))
+        }
+        KitText(
+            words,
+            Modifier.weight(1f, fill = false)
+                .testTag("kit-row-panel-status")
+                .semantics { liveRegion = LiveRegionMode.Polite },
+            role = TypeRole.Label,
+            tone = TextTone.Secondary,
+            maxLines = maxLines,
+        )
     }
 }
 
