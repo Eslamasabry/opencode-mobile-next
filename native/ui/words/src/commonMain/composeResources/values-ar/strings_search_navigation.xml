@@ -48,7 +48,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">فحوصات الخادم في الخلفية</string>
     <string name="nativeSearchAliasesBackgroundChecks">فحوصات الخلفية؛ المراقبة</string>
     <string name="nativeSearchPlaceAppearance">المظهر</string>
-    <string name="nativeSearchAliasesAppearance">السمة؛ الألوان؛ النمط</string>
+    <string name="nativeSearchAliasesAppearance">السمة؛ الألوان؛ النمط؛ علامات الانتظار</string>
     <string name="nativeSearchPlaceLanguage">اللغة</string>
     <string name="nativeSearchAliasesLanguage">العربية؛ الإنجليزية</string>
     <string name="nativeSearchPlaceTips">نصائح</string>

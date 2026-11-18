@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.setup.ui
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
@@ -326,6 +328,9 @@ private fun StepRow(step: SetupStepUi, index: Int, total: Int, failure: SetupFai
             ComponentState.Failed -> failure?.let { failureLine(it) }
             ComponentState.Pending -> null
         }
+    // A download whose share is known: the Downloading mark in the working arc's place, as full as the percent.
+    val download = step.state == ComponentState.Running && step.percent != null
+    KitWaitMarkHere(KitWaitKind.Downloading.takeIf { download }, (step.percent ?: 0).coerceIn(0, PERCENT) / PERCENT_F) {
     KitChecklistStep(
         title = step.title,
         state =
@@ -341,7 +346,11 @@ private fun StepRow(step: SetupStepUi, index: Int, total: Int, failure: SetupFai
         total = total,
         supporting = supporting,
     )
+    }
 }
+
+private const val PERCENT = 100
+private const val PERCENT_F = 100f
 
 @Composable
 private fun failureLine(line: SetupFailureLine): String =

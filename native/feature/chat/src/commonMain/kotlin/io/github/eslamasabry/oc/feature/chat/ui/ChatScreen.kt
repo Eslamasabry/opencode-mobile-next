@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.ui.input.key.KeyEventType
@@ -1672,6 +1674,9 @@ private fun connectionLine(
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
             working = !signIn,
+            // The waits the app names by their kind: the phone's own server coming up, and an agent or its helper
+            // getting ready. The kit draws their marks in the working mark's place; the other waits keep it.
+            wait = waitOf(wait),
         )
     }
     // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
@@ -1682,6 +1687,7 @@ private fun connectionLine(
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
             working = true,
+            wait = KitWaitKind.Warming,
         )
     val restartAgent =
         if (line.canRestartAgent)
@@ -2272,3 +2278,11 @@ private fun rememberMessageErrorWords(): (MessageErrorKind) -> String {
  * one line.
  */
 private const val REQUEST_FULL_ROOM_DP: Int = 170
+
+/** The kind of wait a server wait is, where the app has a mark for it: the server coming up, an agent getting ready. */
+private fun waitOf(wait: ChatServerWait): KitWaitKind? =
+    when (wait) {
+        ChatServerWait.Starting, ChatServerWait.StartingLinux, ChatServerWait.StartingOpenCode -> KitWaitKind.Starting
+        ChatServerWait.StartingHelper, ChatServerWait.StartingAgent -> KitWaitKind.Warming
+        else -> null
+    }

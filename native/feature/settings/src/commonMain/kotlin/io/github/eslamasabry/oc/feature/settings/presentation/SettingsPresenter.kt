@@ -416,6 +416,7 @@ public class SettingsPresenter(
             glassLook = p.glassLook,
             glassLookHold = glassLookHold(p, f),
             glassLab = lab != null,
+            waitMarksColour = p.waitMarksColour,
             questions = appearanceQuestions(f),
         )
     }
@@ -809,6 +810,12 @@ public class SettingsPresenter(
         val p = prefs.value
         if (p.saver || (p.corners ?: ownKnobs(p).corners) == corners) return
         write(PersonalChange.Corner(corners), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onWaitMarks(colour: Boolean) {
+        if (prefs.value.waitMarksColour == colour) return
+        // Applies at once, as the other Colours choices do; a refused write keeps the old mode and says so.
+        write(PersonalChange.WaitMarks(colour), SettingsNote.AppearanceNotSaved)
     }
 
     override fun onGlassLook(look: GlassLookId) {

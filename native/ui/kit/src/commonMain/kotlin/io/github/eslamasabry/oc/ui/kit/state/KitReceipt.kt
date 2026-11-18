@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark
+import io.github.eslamasabry.oc.ui.kit.wait.LocalKitWaitHere
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.ui.draw.drawBehind
@@ -301,9 +303,12 @@ private fun receiptGlyphSize(): Dp {
 @Composable
 private fun ReceiptMark(words: ReceiptWords, size: Dp, reduced: Boolean) {
     val colors = LocalKitColors.current
+    val wait = LocalKitWaitHere.current
     when (words) {
+        // A receipt that names a message on its way: the wait's mark fills the same box (its still when motion is off).
         ReceiptWords.Sending ->
-            if (reduced) KitGlyph(KitIcons.statusDot, colors.accent, FlutterKitTokens.MARK_DOT_SIZE.dp)
+            if (wait != null) KitWaitMark(wait.kind, tone = TextTone.Secondary, size = size)
+            else if (reduced) KitGlyph(KitIcons.statusDot, colors.accent, FlutterKitTokens.MARK_DOT_SIZE.dp)
             else {
                 val ring = kitFocusRingWidth()
                 KitWorkingMark(colors.accent, size - ring - ring, Modifier.padding(ring), strokeWidth = ring)

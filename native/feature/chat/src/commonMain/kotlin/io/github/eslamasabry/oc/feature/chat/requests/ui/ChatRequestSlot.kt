@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.requests.ui
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import androidx.compose.foundation.layout.padding
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
@@ -786,7 +788,8 @@ private fun AnsweredLine(card: RequestCardUi, words: String, receipt: KitReceipt
         modifier = Modifier.testTag("chat-request-answered"),
         inPlace = inPlace,
     ) {
-        KitReceipt(receipt, onRetry = onRetry)
+        // While the answer is on its way the receipt shows the Sending mark.
+        KitWaitMarkHere(KitWaitKind.Sending) { KitReceipt(receipt, onRetry = onRetry) }
     }
 }
 

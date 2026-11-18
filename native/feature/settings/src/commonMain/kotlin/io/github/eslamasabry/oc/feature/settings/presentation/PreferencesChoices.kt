@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.settings.prefs.PreferenceChange
 import io.github.eslamasabry.oc.engine.settings.prefs.Preferences
 import io.github.eslamasabry.oc.engine.settings.prefs.SurfaceStyle as StoredStyle
 import io.github.eslamasabry.oc.engine.settings.prefs.TextSize
+import io.github.eslamasabry.oc.engine.settings.prefs.WaitMarksChoice
 import io.github.eslamasabry.oc.engine.settings.prefs.ThemePack
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -86,6 +87,7 @@ public object PreferenceMapping {
             liveStyle = p.effects.liveStyle,
             liveStrength = strength(p.effects.liveIntensity),
             glassLook = KitLook.entries.first { it.name == p.glassLook.name },
+            waitMarksColour = p.waitMarks == WaitMarksChoice.Colour,
         )
 
     /**
@@ -141,6 +143,8 @@ public object PreferenceMapping {
                 )
             is PersonalChange.Look -> PreferenceChange.Look(StoredLook.entries.first { it.name == change.look.name })
             is PersonalChange.Accent -> PreferenceChange.Accent(change.id)
+            is PersonalChange.WaitMarks ->
+                PreferenceChange.WaitMarks(if (change.colour) WaitMarksChoice.Colour else WaitMarksChoice.Ink)
             is PersonalChange.Reasoning -> PreferenceChange.ReasoningExpanded(change.on)
             is PersonalChange.Timestamps -> PreferenceChange.TimestampsVisible(change.on)
             is PersonalChange.TextSize ->
@@ -182,6 +186,7 @@ public object PreferenceMapping {
             liveStrength = strength(p.effects.liveIntensity).strength,
             // The Glass lab's numbers, only while its "Use in the whole app" switch is on (preview builds).
             glassTuning = p.glassTuning?.let { io.github.eslamasabry.oc.ui.design.effects.GlassTuning.decode(it) }?.takeIf { it.inApp },
+            colourWaitMarks = p.waitMarks == WaitMarksChoice.Colour,
         )
 
     /**

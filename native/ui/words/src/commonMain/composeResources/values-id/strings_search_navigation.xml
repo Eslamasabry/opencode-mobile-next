@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Pemeriksaan latar belakang server</string>
     <string name="nativeSearchAliasesBackgroundChecks">Pemeriksaan latar belakang; polling; pantau</string>
     <string name="nativeSearchPlaceAppearance">Tampilan</string>
-    <string name="nativeSearchAliasesAppearance">Tema; warna; gaya</string>
+    <string name="nativeSearchAliasesAppearance">Tema; warna; gaya; tanda tunggu</string>
     <string name="nativeSearchPlaceLanguage">Bahasa</string>
     <string name="nativeSearchAliasesLanguage">Arab; Inggris; lokal</string>
     <string name="nativeSearchPlaceTips">Tips</string>

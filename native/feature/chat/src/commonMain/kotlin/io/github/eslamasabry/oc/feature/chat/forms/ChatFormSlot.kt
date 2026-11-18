@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.ui.kit.frame.kitFloatingPart
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -95,7 +97,7 @@ public fun ChatFormSlot(
                                 stringResource(Res.string.stateFormUncertain),
                                 role = TypeRole.Secondary,
                             )
-                        else KitReceipt(KitReceiptState.Sending)
+                        else KitWaitMarkHere(KitWaitKind.Sending) { KitReceipt(KitReceiptState.Sending) }
                     }
                 else ->
                     KitFormCard(

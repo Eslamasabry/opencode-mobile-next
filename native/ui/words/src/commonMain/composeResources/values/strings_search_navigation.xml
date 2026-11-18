@@ -48,7 +48,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Server background checks</string>
     <string name="nativeSearchAliasesBackgroundChecks">Background checks; polling; monitor</string>
     <string name="nativeSearchPlaceAppearance">Appearance</string>
-    <string name="nativeSearchAliasesAppearance">Theme; colors; style</string>
+    <string name="nativeSearchAliasesAppearance">Theme; colors; style; waiting marks</string>
     <string name="nativeSearchPlaceLanguage">Language</string>
     <string name="nativeSearchAliasesLanguage">Arabic; English; locale</string>
     <string name="nativeSearchPlaceTips">Tips</string>

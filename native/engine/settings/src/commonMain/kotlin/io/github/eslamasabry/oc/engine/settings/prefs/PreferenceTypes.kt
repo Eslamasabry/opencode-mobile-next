@@ -87,6 +87,14 @@ public enum class GlassLookChoice(override val wire: String) : WireNamed {
 }
 
 /**
+ * How the waiting marks are coloured (`oc.waitMarks`, 2026-11-18): missing or unknown reads [Ink], which is never
+ * stored; device-wide, never swept. [Colour] draws them in the theme's meaning colours.
+ */
+public enum class WaitMarksChoice(override val wire: String) : WireNamed {
+    Ink("ink"), Colour("colour"),
+}
+
+/**
  * The person's Fine-tune choices; null = the style's default. Only Corners and Spacing exist: each style keeps its
  * own depth and edges, and the stored `oc.effectsDepth` / `oc.effectsEdges` are never read (plan 06 §5.2).
  */
@@ -139,6 +147,7 @@ public data class DevicePreferences(
     val glassTuning: String? = null,
     val reasoningExpanded: Boolean = false,
     val timestampsVisible: Boolean = false,
+    val waitMarks: WaitMarksChoice = WaitMarksChoice.Ink,
 ) {
     public val saver: Boolean get() = appearance == AppearanceChoice.Saver
 
@@ -174,6 +183,9 @@ public sealed interface PreferenceChange {
     public data class ReasoningExpanded(val value: Boolean) : PreferenceChange
 
     public data class TimestampsVisible(val value: Boolean) : PreferenceChange
+
+    /** The waiting marks' colouring; Ink removes the key. */
+    public data class WaitMarks(val value: WaitMarksChoice) : PreferenceChange
 
     /** Writes only the fields that differ; a style change resets the knobs (plan 06 §5.2). */
     public data class SetEffects(val value: Effects) : PreferenceChange

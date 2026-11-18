@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
+import io.github.eslamasabry.oc.ui.kit.wait.LocalKitWaitHere
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -99,7 +102,8 @@ private val TICK: Duration = 1.seconds // F: lib/ui/kit/kit_status_line.dart:947
  */
 @Composable
 public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
-    KitStatusLine(
+    // A working line that names one of the app's waits shows that wait's mark in the working mark's place.
+    KitWaitMarkHere(status.wait.takeIf { status.working }, status.waitFraction) { KitStatusLine(
         message = status.message,
         modifier = modifier,
         icon = status.icon,
@@ -112,7 +116,7 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
         next = status.next,
         riskySwitch = status.kind == KitStatusKind.RiskySwitch,
         working = status.working,
-    )
+    ) }
 }
 
 /**
@@ -420,7 +424,14 @@ private fun StatusIcon(icon: ImageVector, tone: StatusTone) {
 @Composable
 private fun StatusWorking(tone: StatusTone) {
     val tokens = LocalKitTokens.current
-    KitWorkingMark(glyphColor(tone, LocalKitColors.current), size = tokens.smallIcon.dp, modifier = Modifier.testTag("kit-status-working"))
+    val wait = LocalKitWaitHere.current
+    val tag = Modifier.testTag("kit-status-working")
+    if (wait != null) {
+        // The wait's own mark in the same box and tone: the words beside it do not move.
+        KitWaitMark(wait.kind, tag, tone = toneFor(tone), size = tokens.smallIcon.dp, fraction = wait.fraction)
+    } else {
+        KitWorkingMark(glyphColor(tone, LocalKitColors.current), size = tokens.smallIcon.dp, modifier = tag)
+    }
 }
 
 /** The line's action as a tertiary button (Dart `KitButton.fromAction(action, role: tertiary)`). */

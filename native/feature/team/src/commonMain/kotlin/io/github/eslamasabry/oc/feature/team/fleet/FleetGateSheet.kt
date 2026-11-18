@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.team.fleet
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -360,7 +362,8 @@ private fun workStateWord(state: WorkState): org.jetbrains.compose.resources.Str
 @Composable
 private fun Receipt(ui: FleetGateUi, actions: FleetGateActions) {
     val kind = ui.receipt ?: return
-    KitReceipt(
+    // The person's answer on its way to the team: the Sending mark while it is sent.
+    KitWaitMarkHere(KitWaitKind.Sending) { KitReceipt(
         state =
             when (kind) {
                 FleetGateReceiptKind.Sending -> KitReceiptState.Sending
@@ -372,7 +375,7 @@ private fun Receipt(ui: FleetGateUi, actions: FleetGateActions) {
         modifier = Modifier.testTag("fleet-gate-receipt-${kind.name.lowercase()}"),
         onRetry = if (kind == FleetGateReceiptKind.NotConfirmed || kind == FleetGateReceiptKind.Refused) actions::tryAgain else null,
         label = stringResource(Res.string.teamUiReceiptAnswered),
-    )
+    ) }
 }
 
 /** The lines that explain the actions below them. */

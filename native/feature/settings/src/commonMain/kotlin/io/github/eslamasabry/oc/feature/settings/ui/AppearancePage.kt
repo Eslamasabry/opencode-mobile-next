@@ -287,6 +287,23 @@ private fun ColumnScope.AppearanceControls(
             )
         }
         KitGroupNote(stringResource(Res.string.appearanceAccentMatchNote, packName(ui.pack)))
+        // One more Colours choice, a knob like Corners and Spacing (no row of its own): how the waiting marks are
+        // coloured. Ink, the words' own ink, is the default.
+        AppearanceKnobLabel(stringResource(Res.string.appearanceWaitMarks))
+        Box(gutter) {
+            KitSegmented(
+                segments =
+                    listOf(
+                        KitSegment(false, stringResource(Res.string.appearanceWaitMarksInk)),
+                        KitSegment(true, stringResource(Res.string.appearanceWaitMarksColour)),
+                    ),
+                selected = ui.waitMarksColour,
+                semanticsLabel = stringResource(Res.string.appearanceWaitMarks),
+                modifier = Modifier.testTag("appearance-wait-marks"),
+                onChange = actions::onWaitMarks,
+            )
+        }
+        KitGroupNote(stringResource(Res.string.appearanceWaitMarksNote))
     }
 
     if (question == null || question == AppearanceQuestion.Style) {

@@ -786,4 +786,8 @@
     <string name="consentWhyNeedsYouWhileOpen">Bạn chỉ nhận thông báo khi ứng dụng đang mở. Nhấn để giữ kết nối nền luôn bật.</string>
     <string name="consentWhyNeedsYouChannelOff">Android đang tắt thông báo câu hỏi của ứng dụng này. Nhấn để bật lại trong cài đặt Android.</string>
     <string name="backgroundStatusTitle">Kết nối nền</string>
+    <string name="appearanceWaitMarks">Dấu hiệu chờ</string>
+    <string name="appearanceWaitMarksInk">Mực</string>
+    <string name="appearanceWaitMarksColour">Màu</string>
+    <string name="appearanceWaitMarksNote">Những hình nhỏ chuyển động bên cạnh dòng chữ như “Đang khởi động OpenCode…”.</string>
 </resources>
