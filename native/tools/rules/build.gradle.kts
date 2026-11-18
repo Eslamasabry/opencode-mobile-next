@@ -1,8 +1,8 @@
 // :tools:rules: the source-pattern guard tests of :quality (and of a few modules) as detekt rules, checked on the
-// compile check path (task ocSourceRules, hooked into every module's Kotlin compile in the root build file), plus one
+// check path (task ocRules; CI's quality shard and the release script call it once; -Poc.rulesOnCompile=true hooks it into every compile), plus one
 // plain check task for the repository-file and data checks (ocDataChecks, same hook). A JVM tool: it ships nothing
 // and no module may depend on it (ModuleRules: tools depend on nothing). The old guard tests stay.
-// Skip both for one run with -Poc.skipRules=true (an editor-less quick loop); the candidate lanes never do.
+// Skip both for one run with -Poc.skipRules=true.
 plugins {
     id("oc.jvm.library")
 }
@@ -54,7 +54,19 @@ tasks.register<JavaExec>("ocSourceRules") {
         "--excludes", "**/build/**",
         "--parallel",
     )
-    doLast { marker.get().asFile.apply { parentFile.mkdirs() }.writeText("ok\n") }
+    val startFile = layout.buildDirectory.file("ocSourceRules.start")
+    doFirst { startFile.get().asFile.apply { parentFile.mkdirs() }.writeText(System.currentTimeMillis().toString()) }
+    doLast {
+        val took = (System.currentTimeMillis() - startFile.get().asFile.readText().trim().toLong()) / 1000.0
+        logger.lifecycle("ocSourceRules: scan took $took s")
+        marker.get().asFile.apply { parentFile.mkdirs() }.writeText("ok\n")
+    }
+}
+
+tasks.register("ocRules") {
+    group = "verification"
+    description = "The OC source rules and the repository-file checks, once. The task CI's quality shard and the release script call."
+    dependsOn("ocSourceRules", "ocDataChecks")
 }
 
 tasks.register<JavaExec>("ocDataChecks") {
@@ -71,6 +83,7 @@ tasks.register<JavaExec>("ocDataChecks") {
             include("MODULE_OWNERS", "settings.gradle.kts", "fixtures/oc2/**", "engine/agents/pins/**")
             include("feature/*/build.gradle.kts", "ui/*/build.gradle.kts", "*/*/build.gradle.kts", "*/build.gradle.kts")
             include("engine/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/agents/catalog/AgentPinsJson.kt")
+            include("feature/**/*.kt", "ui/**/*.kt", "androidApp/**/*.kt") // the gutter and collectAsState counts
             exclude("**/build/**")
         },
     ).withPropertyName("checkedFiles").withPathSensitivity(PathSensitivity.RELATIVE)

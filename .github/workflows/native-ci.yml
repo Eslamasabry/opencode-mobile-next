@@ -317,10 +317,11 @@ jobs:
         id: pick
         run: |
           if [ "$MODE" = list ]; then all="$(printf '%s\n' $LIST)"; else all="$(tool/ci/shard_tasks.sh 0 1)"; fi
+          # The OC source rules (tools/rules) scan the whole tree once, so they ride on the quality shard only (about 85 s).
           if [ "$LANE" = candidate ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then
-            tasks=":quality:test :quality:secTest"
+            tasks=":quality:test :quality:secTest :tools:rules:ocRules"
           elif [ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then
-            tasks=":quality:test :quality:secTest"
+            tasks=":quality:test :quality:secTest :tools:rules:ocRules"
           else
             # Security belongs to the same worker as quality. Full rotates quality; fast/candidate have a dedicated shard.
             if [[ "$LANE" = fast || "$LANE" = candidate ]]; then omit='^:quality:(test|secTest)$'; else omit='^:quality:secTest$'; fi

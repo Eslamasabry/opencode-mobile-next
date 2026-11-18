@@ -8,6 +8,8 @@ import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
 /** One Kotlin file as the rules see it: its path from the native root, its text and where the native root is. */
 internal class Source(val rel: String, val text: String, val root: File?, private val ktFile: KtFile) {
+    val psi: KtFile get() = ktFile
+
     val name: String = rel.substringAfterLast('/')
     private val slashed = "/$rel"
 

@@ -119,4 +119,4 @@
 :feature:factsbook	F	s23-factsbook	parity-p12
 :engine:team	F	ai-team	parity-p12
 :feature:team	F	ai-team	parity-p12
-:tools:rules	S	lint-owner	b1-lint
+:tools:rules	S	tools	b1-lint

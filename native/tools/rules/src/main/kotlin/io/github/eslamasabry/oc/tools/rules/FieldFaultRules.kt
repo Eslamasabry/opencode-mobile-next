@@ -234,3 +234,28 @@ internal class OcKitIconSize(config: Config) :
         }
     }
 }
+
+/**
+ * Replaces RestoreGuardsTest (gap 2). What comes back after Android kills the app: a confirm for a destructive act and
+ * anything holding a secret are never saved with rememberSaveable.
+ */
+internal class OcRestoreGuards(config: Config) :
+    OcRule(config, "OcRestoreGuards", "A destructive confirm and a secret are never held with rememberSaveable.") {
+    private val saved = Regex("""(?:var|val)\s+(\w+)\s+by\s+rememberSaveable""")
+    private val destructive = Regex("(?i)(confirm|delete|remove|forget|disconnect|wipe|erase|reset|stop|asking|revoke)")
+    private val secret = Regex("(?i)(password|passcode|secret|token|apikey|credential)")
+
+    override fun check(src: Source) {
+        if (src.layer !in setOf("ui", "feature", "engine") || !src.has("/commonMain/")) return
+        saved.findAll(src.text).forEach { m ->
+            val name = m.groupValues[1]
+            val line = src.lineOf(m.range.first)
+            if (destructive.containsMatchIn(name)) {
+                flag(src, line, "$name is a destructive confirm saved across a process death. Use remember, so the person has to ask again.")
+            }
+            if (secret.containsMatchIn(name)) {
+                flag(src, line, "$name looks like a secret held with rememberSaveable, which writes it to saved state. Use remember, or keep it in SecretStore.")
+            }
+        }
+    }
+}

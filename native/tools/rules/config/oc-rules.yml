@@ -53,3 +53,25 @@ oc-rules:
     active: true
   OcSecNoWeakRandomForSecrets:
     active: true
+  OcSecSecretTypeAndReveal:
+    active: true
+  OcSecNoSecretInPersistedState:
+    active: true
+  OcSecClipboardBoundary:
+    active: true
+  OcSecPendingIntentImmutable:
+    active: true
+  OcSecNoIntentFromExtras:
+    active: true
+  OcSecUrlsOnKnownHosts:
+    active: true
+  OcMotionSpecFromKit:
+    active: true
+  OcMotionLoopGated:
+    active: true
+  OcMotionSlideMirrors:
+    active: true
+  OcMotionModalNoScale:
+    active: true
+  OcRestoreGuards:
+    active: true

@@ -6,30 +6,40 @@ import io.gitlab.arturbosch.detekt.api.Config
  * K-SEC rules decided by tokens in comment-free source (KSecRulesTest, `SecTextRules`). "Everywhere" is every source
  * set of every product module, tests included; "production" excludes test and qa source sets.
  */
-private val KSEC_IDS =
-    mapOf(
-        "OcSecNoAutoLink" to "K-SEC-1", "OcSecTlsTrustOnlyInTrustGate" to "K-SEC-2", "OcSecNoPinnerOrNetLogging" to "K-SEC-3",
-        "OcSecWebViewOnlyInKitWebPreview" to "K-SEC-9", "OcSecNoWeakRandomForSecrets" to "K-SEC-12",
-    )
-
 internal abstract class OcSecRule(config: Config, id: String, description: String, private val way: String) :
     OcRule(config, id, description) {
-    /** The finding is already on the security owner's list (quality/config/sec/tracked-security.txt): it stays open there. */
+    /** The finding is already on the security owner's lists (tracked-security.txt, ksec-pending.txt): it stays open there. */
     private fun tracked(src: Source, subject: String): Boolean {
-        val ksec = issue.id.let { KSEC_IDS[it] } ?: return false
-        val file = java.io.File(src.root ?: return false, "quality/config/sec/tracked-security.txt")
-        if (!file.isFile) return false
+        val ksec = KSEC_IDS[issue.id] ?: return false
+        val dir = java.io.File(src.root ?: return false, "quality/config/sec")
         val key = "$ksec ${src.rel} $subject"
-        return file.readLines().any { key in it }
+        return listOf("tracked-security.txt", "ksec-pending.txt").any { name ->
+            java.io.File(dir, name).takeIf { it.isFile }?.readLines().orEmpty().any { key in it }
+        }
+    }
+
+    /** Reports [subject] (the text before the first colon is the list key) at [line] unless it is already tracked. */
+    protected fun violation(src: Source, line: Int, subject: String, message: String = "$subject: $way") {
+        if (!tracked(src, subject.substringBefore(':'))) flag(src, line, message)
     }
 
     protected fun hits(src: Source, regex: Regex, what: (MatchResult) -> String = { it.value }) {
-        regex.findAll(src.code).forEach { m ->
-            val text = what(m)
-            if (!tracked(src, text.substringBefore(':'))) flag(src, src.lineOf(m.range.first), "$text: $way")
-        }
+        regex.findAll(src.code).forEach { m -> violation(src, src.lineOf(m.range.first), what(m)) }
     }
+
+    /** A text file under quality/config/sec, lines trimmed, `#` comments dropped. */
+    protected fun secList(src: Source, name: String): List<String> =
+        java.io.File(java.io.File(src.root ?: return emptyList(), "quality/config/sec"), name).takeIf { it.isFile }
+            ?.readLines().orEmpty().map { it.substringBefore('#').trim() }.filter { it.isNotEmpty() }
 }
+
+private val KSEC_IDS =
+    mapOf(
+        "OcSecNoAutoLink" to "K-SEC-1", "OcSecTlsTrustOnlyInTrustGate" to "K-SEC-2", "OcSecNoPinnerOrNetLogging" to "K-SEC-3",
+        "OcSecSecretTypeAndReveal" to "K-SEC-4", "OcSecNoSecretInPersistedState" to "K-SEC-5", "OcSecClipboardBoundary" to "K-SEC-6",
+        "OcSecPendingIntentImmutable" to "K-SEC-7", "OcSecNoIntentFromExtras" to "K-SEC-8",
+        "OcSecWebViewOnlyInKitWebPreview" to "K-SEC-9", "OcSecUrlsOnKnownHosts" to "K-SEC-10", "OcSecNoWeakRandomForSecrets" to "K-SEC-12",
+    )
 
 /** K-SEC-1 (replaces KSecRulesTest K-SEC-1; KSecPlantedTest keeps the planted proofs). */
 internal class OcSecNoAutoLink(config: Config) :

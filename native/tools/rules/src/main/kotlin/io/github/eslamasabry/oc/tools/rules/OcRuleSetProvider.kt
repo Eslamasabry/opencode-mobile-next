@@ -37,6 +37,18 @@ class OcRuleSetProvider : RuleSetProvider {
                 OcSecNoPinnerOrNetLogging(config),
                 OcSecWebViewOnlyInKitWebPreview(config),
                 OcSecNoWeakRandomForSecrets(config),
+                OcSecSecretTypeAndReveal(config),
+                OcSecNoSecretInPersistedState(config),
+                OcSecClipboardBoundary(config),
+                OcSecPendingIntentImmutable(config),
+                OcSecNoIntentFromExtras(config),
+                OcSecUrlsOnKnownHosts(config),
+                // Motion (MotionGatesTest) and restore (RestoreGuardsTest)
+                OcMotionSpecFromKit(config),
+                OcMotionLoopGated(config),
+                OcMotionSlideMirrors(config),
+                OcMotionModalNoScale(config),
+                OcRestoreGuards(config),
             ),
         )
 }

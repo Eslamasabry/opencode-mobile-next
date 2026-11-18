@@ -10,7 +10,11 @@ import kotlin.system.exitProcess
  *  - ModuleOwnersTest: MODULE_OWNERS rows equal the Gradle projects;
  *  - TestSourceRulesTest (first test): no feature or ui build file hides tests or borrows another module's sources;
  *  - Oc2FixtureManifestTest: every OpenCode 2 fixture equals its SHA-256 manifest line and nothing is unlisted;
- *  - AgentPinsParityTest (first test): the generated Kotlin pins equal the pins JSON byte for byte.
+ *  - AgentPinsParityTest (first test): the generated Kotlin pins equal the pins JSON byte for byte;
+ *  - ScreenGutterGateTest (C02): the count of full-bleed screens only falls (a sum over files, so not a per-file rule);
+ *  - KonsistRulesTest K20 and K20b (kit parts paint no surface of their own, the count only falls; a part that paints its
+ *    own face asks the style): per-file counts against a baseline file, so a data check;
+ *  - PixelTickerGateTest (collectAsState half): the count of non-lifecycle collectAsState calls only falls.
  * The tests stay; this is the same fact checked earlier, with a plain message.
  */
 fun main(args: Array<String>) {
@@ -31,6 +35,9 @@ internal fun checks(root: File): List<Pair<String, () -> List<String>>> =
         "test-sources" to { testSources(root) },
         "oc2-fixtures" to { oc2Fixtures(root) },
         "agent-pins" to { agentPins(root) },
+        "screen-gutter" to { screenGutter(root) },
+        "collect-as-state" to { collectAsState(root) },
+        "kit-surfaces" to { kitSurfaces(root) },
     )
 
 internal fun moduleOwners(root: File): List<String> {
@@ -108,4 +115,102 @@ internal fun agentPins(root: File): List<String> {
     val copy = text.substring(start + 3, end)
     return if (copy == json.readText()) emptyList()
     else listOf("AgentPinsJson.kt differs from pins/agent-pins.json. The JSON is the source of truth: paste it into the Kotlin file whole (a pin moves only with an app release).")
+}
+
+private val productionSets = listOf("/src/commonMain/", "/src/androidMain/", "/src/desktopMain/", "/src/main/", "/src/jvmShared/")
+
+/** Production Kotlin files under [layers] with their text, as the guard tests' `BuildRestGates.production` read them. */
+private fun production(root: File, vararg layers: String): List<Pair<String, String>> =
+    layers.flatMap { layer ->
+        File(root, layer).walkTopDown().onEnter { it.name != "build" }
+            .filter { it.isFile && it.extension == "kt" && productionSets.any { s -> s in it.invariantSeparatorsPath } }
+            .map { it.relativeTo(root).invariantSeparatorsPath to it.readText() }
+            .toList()
+    }
+
+private fun codeLines(text: String): List<String> =
+    text.lines().mapNotNull { raw ->
+        val line = raw.substringBefore("//").trim()
+        if (line.isEmpty() || line.startsWith("*") || line.startsWith("/*")) null else line
+    }
+
+private const val BLEED_CEILING = 122
+private val bleed = Regex("""\bedges\s*=\s*KitScreenEdges\.Bleed\b""")
+
+internal fun screenGutter(root: File): List<String> {
+    val files = production(root, "feature", "ui", "androidApp")
+    val count = files.sumOf { (_, text) -> codeLines(text).count { bleed.containsMatchIn(it) } }
+    return if (count <= BLEED_CEILING) emptyList()
+    else listOf("$count screens opt out of the page gutter (ceiling $BLEED_CEILING): let KitScreen keep the gutter (the default) instead of adding KitScreenEdges.Bleed; to find the new one, search for KitScreenEdges.Bleed in the files you changed.")
+}
+
+private const val COLLECT_CEILING = 27
+private val collect = Regex("""\.collectAsState\(""")
+
+internal fun collectAsState(root: File): List<String> {
+    val files = production(root, "ui", "feature", "androidApp")
+    val n = files.sumOf { (_, text) -> codeLines(text).sumOf { collect.findAll(it).count() } }
+    return if (n <= COLLECT_CEILING) emptyList()
+    else listOf("$n .collectAsState( calls (ceiling $COLLECT_CEILING): collect a flow that ticks with collectAsStateWithLifecycle, which stops below STARTED.")
+}
+
+// ---- K20 / K20b, kit surfaces (KitSurfaces.kt in :quality is the reference; the stale-entry halves stay in the test) ----
+
+private const val SURFACE = """(?:\bcolors|\broles|\bc|\.current)\.(?:surface[123]|ground)\b"""
+private const val ARGS = """(?:[^()]|\((?:[^()]|\([^()]*\))*\))*"""
+private val paints =
+    listOf(
+        Regex("""\.background\($ARGS$SURFACE"""),
+        Regex("""\.border\("""),
+        Regex("""\.shadow\(|\bdropShadow\("""),
+        Regex("""\bdraw(?:Round)?Rect\(\s*(?:color\s*=\s*)?$SURFACE"""),
+        Regex(
+            """(?<!fun )(?<!fun Modifier\.)\b(?:kitLiquidFace|kitGlassSheet|kitBackdropVeil|kitFrostPane|kitSurfaceGlass)\(|""" +
+                """\bstate\.spec\.resolve\(""",
+        ),
+    )
+private val asks =
+    Regex("""\b\w*[sS]urfaceLook\(|\bkitStyledFace\(|\bkitLiquid\w*Face\(|\bkitModalGlassFace\(|\bkitGlassSheet\(|\bKitSurface(?:Panel|Inset|Tile)?\(""")
+
+internal fun kitSurfaces(root: File): List<String> {
+    val modules = listOf("ui/kit", "ui/kit-chat", "ui/kit-content")
+    val sets = listOf("/src/commonMain/", "/src/androidMain/", "/src/desktopMain/")
+    val files =
+        modules.flatMap { m -> File(root, m).walkTopDown().onEnter { it.name != "build" }.filter { it.isFile }.toList() }
+            .map { it.relativeTo(root).invariantSeparatorsPath to it }
+            .filter { (path, _) ->
+                val p = "/$path"
+                p.endsWith(".kt") && "/build/" !in p && "/effects/" !in p && "Test" !in p && sets.any { it in p }
+            }
+            .associate { (path, file) -> path to file.readText() }
+    if (files.size < 300) return listOf("K20 read only ${files.size} kit files; the scan scope is wrong.")
+    val allowFile = File(root, "quality/config/kit-surfaces-allow.txt")
+    val allow =
+        allowFile.takeIf { it.isFile }?.readLines().orEmpty().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }
+            .mapNotNull { raw -> raw.split(" | ").map { it.trim() }.takeIf { it.size == 3 && it.none { p -> p.isEmpty() } } }
+            .map { it[0] to Regex(it[1]) }
+    val counted =
+        files.mapValues { (path, text) ->
+            codeLines(text).filter { l -> paints.any { it.containsMatchIn(l) } && allow.none { (p, r) -> p == path && r.containsMatchIn(l) } }
+        }.filterValues { it.isNotEmpty() }
+    val baselineFile = File(root, "quality/config/rule-baseline/K20-kit-surfaces.txt")
+    val baseline =
+        baselineFile.takeIf { it.isFile }?.readLines().orEmpty().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }
+            .associate { line -> line.split('\t').let { it[0].trim() to it[1].trim().toInt() } }
+    val problems = mutableListOf<String>()
+    counted.forEach { (path, lines) ->
+        val allowed = baseline[path] ?: 0
+        if (lines.size > allowed) {
+            problems += "$path paints ${lines.size} surface line(s) by hand (baseline $allowed), for example: ${lines.first().take(90)}. " +
+                "Ask kitSurfaceLook for the face instead; for a mark, a preview or a document ground, add a line with its reason to quality/config/kit-surfaces-allow.txt."
+        }
+    }
+    val ownFile = File(root, "quality/config/kit-own-face-allow.txt")
+    val own =
+        ownFile.takeIf { it.isFile }?.readLines().orEmpty().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }
+            .map { it.split(" | ")[0].trim() }.toSet()
+    counted.keys.filter { path -> codeLines(files.getValue(path)).none { asks.containsMatchIn(it) } && path !in own }.sorted().forEach {
+        problems += "$it paints its own face and never asks the style, so Glass draws its Solid face. Route the outer face through kitStyledFace (or kitSurfaceLook), or list the file with its reason in quality/config/kit-own-face-allow.txt."
+    }
+    return problems
 }
