@@ -137,6 +137,11 @@ class OcApplication : Application(), GraphOwner {
                             .phoneOpenCodeAutoUpdate
                             .start() // keep the phone server on the pinned OpenCode (B-LINUX-079)
                     }
+                    step("umamiLookFacts") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.UmamiLookFactsAccessors)
+                            .umamiLookFacts
+                            .start() // the style and theme words for our own analytics server (words only)
+                    }
                     step("phoneAgentAutoUpdate") {
                         (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneAgentAutoUpdateAccessors)
                             .phoneAgentAutoUpdate

@@ -92,6 +92,11 @@ public enum class UmamiField(
         private const val MAX_VALUE = 40
         private const val COMPACT_BELOW_DP = 600
         private const val MEDIUM_BELOW_DP = 840
+        private const val SMALLER_BELOW = 0.95f
+        private const val DEFAULT_UP_TO = 1.05f
+        private const val LARGER_UP_TO = 1.3f
+        private const val WEEK_DAYS = 7
+        private const val MONTH_DAYS = 30
 
         public fun ofWire(wire: String): UmamiField? = entries.firstOrNull { it.wire == wire }
 
@@ -112,19 +117,19 @@ public enum class UmamiField(
         /** Below 0.95 smaller, up to 1.05 default, up to 1.3 larger, above that largest. */
         public fun textScaleOf(scale: Float): String =
             when {
-                scale < 0.95f -> "smaller"
-                scale <= 1.05f -> "default"
-                scale <= 1.3f -> "larger"
+                scale < SMALLER_BELOW -> "smaller"
+                scale <= DEFAULT_UP_TO -> "default"
+                scale <= LARGER_UP_TO -> "larger"
                 else -> "largest"
             }
 
         public fun installAgeOf(elapsedMs: Long): String {
             val days = elapsedMs.coerceAtLeast(0) / DAY_MS
             return when {
-                days < 1 -> installAgeWords.elementAt(0)
-                days < 7 -> installAgeWords.elementAt(1)
-                days < 30 -> installAgeWords.elementAt(2)
-                else -> installAgeWords.elementAt(3)
+                days < 1 -> installAgeSteps[0]
+                days < WEEK_DAYS -> installAgeSteps[1]
+                days < MONTH_DAYS -> installAgeSteps[2]
+                else -> installAgeSteps.last()
             }
         }
 
@@ -135,8 +140,9 @@ public enum class UmamiField(
 
 private const val DAY_MS: Long = 86_400_000L
 
-private val installAgeWords: Set<String> =
-    linkedSetOf("under_1_day", "1_to_7_days", "7_to_30_days", "over_30_days")
+private val installAgeSteps: List<String> = listOf("under_1_day", "1_to_7_days", "7_to_30_days", "over_30_days")
+
+private val installAgeWords: Set<String> = installAgeSteps.toSet()
 
 /** The agent servers the app can be connected to, by product name. */
 private val agentNames: List<String> = listOf("codex", "opencode", "paseo")

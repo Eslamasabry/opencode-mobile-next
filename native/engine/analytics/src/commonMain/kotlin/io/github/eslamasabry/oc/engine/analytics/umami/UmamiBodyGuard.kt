@@ -13,7 +13,7 @@ import kotlinx.serialization.json.longOrNull
  * The allow-list guard on the REAL request body. It reads the JSON that is about to leave the phone, not the typed
  * event that made it, and lets through only what the lists name:
  * - the event's own keys: `type`, and in `payload` the fixed set below, each with the one form it may take (a listed
- *   page address and title, the fixed host name, a language tag, a build tag, a whole-number time, a listed event name);
+ *   page address and title, the fixed host name, a language word, a build tag, a whole-number time, an event name);
  * - `data`: a key of the event's own words ([productSchema], with a listed, safe value) or an envelope field
  *   ([UmamiField], with a listed word or a matching number).
  * A key or value that is not named is DROPPED from the body (an event whose required parts are not valid is withheld
@@ -31,7 +31,8 @@ public object UmamiBodyGuard {
     )
 
     private val website = Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-    private val language = Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")
+    /** The language word only (`en`, `ar`): never a region, a script or an extension. */
+    private val language = Regex("[a-z]{2,3}")
     private val tag = Regex("(?:test-)?[0-9]{1,10}")
     private val keyName = Regex("[a-z][a-z0-9_]{0,39}")
     private val payloadKeys =
@@ -64,41 +65,58 @@ public object UmamiBodyGuard {
     }
 
     private fun clean(event: JsonObject, dropped: MutableSet<String>): JsonObject? {
-        if (text(event["type"]) != "event") return null
-        val payload = event["payload"] as? JsonObject ?: return null
         event.keys.filter { it != "type" && it != "payload" }.forEach { dropped += "event.${safe(it)}" }
-        val name = text(payload["name"])
-        val wire = name ?: ProductEvent.ScreenView.wire
-        if (name != null && ProductEvent.entries.none { it.wire == name }) return null
+        val payload = event["payload"] as? JsonObject
+        val name = text(payload?.get("name"))
+        val known = name == null || ProductEvent.entries.any { it.wire == name }
+        val cleaned =
+            if (text(event["type"]) == "event" && payload != null && known) {
+                cleanPayload(payload, name ?: ProductEvent.ScreenView.wire, dropped)
+            } else {
+                null
+            }
+        return cleaned?.let { JsonObject(mapOf("type" to JsonPrimitive("event"), "payload" to JsonObject(it))) }
+    }
+
+    /** The payload's listed keys in their valid form, or null when a required part is missing or invalid. */
+    private fun cleanPayload(
+        payload: JsonObject,
+        event: String,
+        dropped: MutableSet<String>,
+    ): Map<String, JsonElement>? {
         val out = LinkedHashMap<String, JsonElement>()
+        var whole = true
         for ((key, value) in payload) {
             when {
                 key !in payloadKeys -> dropped += "payload.${safe(key)}"
-                key == "data" -> out[key] = cleanData(value, wire, dropped) ?: return null
+                key == "data" -> cleanData(value, event, dropped)?.let { out[key] = it } ?: run { whole = false }
                 valid(key, value) -> out[key] = value
-                key in required -> return null
+                key in required -> whole = false
                 else -> dropped += "payload.$key"
             }
         }
-        if (!out.keys.containsAll(required)) return null
-        return JsonObject(mapOf("type" to JsonPrimitive("event"), "payload" to JsonObject(out)))
+        return out.takeIf { whole && it.keys.containsAll(required) }
     }
 
-    private fun valid(key: String, value: JsonElement): Boolean {
-        val word = text(value)
-        return when (key) {
-            "website" -> word != null && website.matches(word)
-            "hostname" -> word == "opencode-mobile.app"
-            "language" -> word != null && word.length <= LANGUAGE_MAX && language.matches(word)
-            "url" -> word in addresses
-            "title" -> word in titles
-            "tag" -> word != null && tag.matches(word)
-            "timestamp" -> (value as? JsonPrimitive)?.let { !it.isString && it.longOrNull != null } == true
-            "name" -> word != null && ProductEvent.entries.any { it.wire == word }
-            "salt" -> word == HASH_PERIOD
-            else -> false
+    /** One check per payload key; each says what a value of that key may be. */
+    private val validWords: Map<String, (String) -> Boolean> =
+        mapOf(
+            "website" to { word -> website.matches(word) },
+            "hostname" to { word -> word == "opencode-mobile.app" },
+            "language" to { word -> language.matches(word) },
+            "url" to { word -> word in addresses },
+            "title" to { word -> word in titles },
+            "tag" to { word -> tag.matches(word) },
+            "name" to { word -> ProductEvent.entries.any { it.wire == word } },
+            "salt" to { word -> word == HASH_PERIOD },
+        )
+
+    private fun valid(key: String, value: JsonElement): Boolean =
+        if (key == "timestamp") {
+            (value as? JsonPrimitive)?.let { !it.isString && it.longOrNull != null } == true
+        } else {
+            text(value)?.let { validWords[key]?.invoke(it) } == true
         }
-    }
 
     private fun cleanData(value: JsonElement, event: String, dropped: MutableSet<String>): JsonObject? {
         val data = value as? JsonObject ?: return null
@@ -123,5 +141,4 @@ public object UmamiBodyGuard {
     /** A key name for the log: only a plain lower-case word is ever repeated. */
     private fun safe(key: String): String = if (keyName.matches(key)) key else "?"
 
-    private const val LANGUAGE_MAX = 35
 }

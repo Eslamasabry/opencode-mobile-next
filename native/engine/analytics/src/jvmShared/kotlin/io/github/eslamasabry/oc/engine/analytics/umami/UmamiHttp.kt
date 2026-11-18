@@ -38,7 +38,8 @@ public class UmamiHttp(
         .build()
 
     override fun prepare(events: List<UmamiEvent>): UmamiCall {
-        // The guard reads the JSON that will really be posted; a key or word it does not know is dropped, by name in the log.
+        // The guard reads the JSON that will really be posted; a key or word it does not know is dropped,
+        // and only its name is logged.
         val guarded = UmamiBodyGuard.check(events)
         if (guarded.dropped.isNotEmpty()) {
             log.w { "usage report: dropped ${guarded.dropped.sorted().joinToString(", ")}" }
@@ -73,7 +74,8 @@ public class UmamiHttp(
                     if (!response.isSuccessful) return@use Outcome.Failed(StatusMapping.failureFor(response.code, credentialsSent = false))
                     val decoded = attempt({ Failure.UnreadableReply() }) { receipt(response.body, batch, kept.size) }
                     if (decoded is Outcome.Failed) decoded
-                    else decoded.getOrNull()?.let { accepted -> Outcome.Ok(accepted.map { kept[it] }.toSet() + withheld) }
+                    else decoded.getOrNull()
+                        ?.let { accepted -> Outcome.Ok(accepted.map { kept[it] }.toSet() + withheld) }
                         ?: Outcome.Failed(Failure.UnreadableReply())
                 }
             }

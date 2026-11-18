@@ -61,14 +61,16 @@ internal object Telemetry {
                 val build = UmamiBuild(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString())
                 val phoneFacts = UmamiPhoneFacts(app, System::currentTimeMillis)
                 val device = {
-                    // Only the Android MAJOR version, the class (phone or tablet) and the fixed words of `UmamiField`: never the
-                    // model, the maker, the resolution, the time zone, an Android id or an install id (a guard test reads this block).
+                    // Only the Android MAJOR version, the class (phone or tablet) and the fixed words of
+                    // `UmamiField`: never the model, the maker, the resolution, the time zone, an Android id or
+                    // an install id (a guard test reads this block).
                     val osMajor = Build.VERSION.RELEASE.substringBefore('.').toIntOrNull() ?: 0
                     val tablet = app.resources.configuration.smallestScreenWidthDp >= 600
                     val modelClass = if (tablet) "Android Tablet" else "Android Phone"
                     val mobile = if (tablet) "" else " Mobile"
                     UmamiDevice(
-                        Locale.getDefault().toLanguageTag(),
+                        // The language word only (en, ar): never the region, script or extensions of the tag.
+                        Locale.getDefault().language.ifEmpty { "und" },
                         "Mozilla/5.0 (Linux; Android $osMajor; $modelClass) AppleWebKit/537.36 (KHTML, like Gecko) " +
                             "Chrome/131.0.0.0$mobile Safari/537.36",
                         osMajor,

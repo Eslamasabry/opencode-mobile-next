@@ -36,7 +36,8 @@ internal class UmamiPhoneFacts(private val app: Context, private val now: () -> 
                 val memory = ActivityManager.MemoryInfo()
                 app.getSystemService(ActivityManager::class.java)?.getMemoryInfo(memory)
                 if (memory.totalMem > 0) {
-                    put(UmamiField.RamRange.wire, HealthRanges.ramOf(memory.totalMem.toDouble() / HealthDeviceContext.GB))
+                    val gb = memory.totalMem.toDouble() / HealthDeviceContext.GB
+                    put(UmamiField.RamRange.wire, HealthRanges.ramOf(gb))
                 }
             }
         }
@@ -53,7 +54,10 @@ internal class UmamiPhoneFacts(private val app: Context, private val now: () -> 
             put(UmamiField.TextScale.wire, UmamiField.textScaleOf(config.fontScale))
             runCatching {
                 val free = StatFs(app.filesDir.path).availableBytes
-                if (free >= 0) put(UmamiField.FreeStorageRange.wire, HealthRanges.storageOf(free.toDouble() / HealthDeviceContext.GB))
+                if (free >= 0) {
+                    val gb = free.toDouble() / HealthDeviceContext.GB
+                    put(UmamiField.FreeStorageRange.wire, HealthRanges.storageOf(gb))
+                }
             }
             runCatching {
                 val saver = app.getSystemService(PowerManager::class.java)?.isPowerSaveMode
