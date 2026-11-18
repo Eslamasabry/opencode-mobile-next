@@ -310,6 +310,14 @@ public fun BasicComposer(
     val editor = remember(state.targetKey) { DraftEditorState() }
     var repeatRevision by remember(state.targetKey) { mutableStateOf<Long?>(null) }
     val editSerialAtComposition = editor.userEditSerial
+    // The engine showed the box's last words: nothing is in flight any more.
+    if (editor.awaitingEngine && state.draft.text == editor.lastReported) editor.awaitingEngine = false
+    // A box that has opened never closes again while it has focus or holds words: the draft going not-ready again
+    // (the profile fenced, a world rebuilt) must not drop the next keystrokes of a person who is typing.
+    val boxLatch = remember(state.targetKey) { booleanArrayOf(false) }
+    val boxReady = editorReady && state.draft.ready
+    if (boxReady) boxLatch[0] = true
+    val boxOpen = boxReady || (boxLatch[0] && (field.text.isNotEmpty() || chrome.typing.focused))
     // Restore/clear only external revisions. Ordinary typing never assigns text or moves IME
     // selection.
     LaunchedEffect(field, state.draft.ready, state.draft.restoreRevision) {
@@ -327,8 +335,17 @@ public fun BasicComposer(
                 editor.lastReported = current
                 actions.draftChanged(current)
             } else {
-                if (current != state.draft.text) field.edit { replace(0, length, state.draft.text) }
-                editor.lastReported = state.draft.text
+                val engineText = state.draft.text
+                if (current != engineText && editorReady && editor.awaitingEngine) {
+                    // The engine is behind: this restore carries older words than the box has (a burst of typing
+                    // right after the box opened, or while a restore was on its way). Keep the newer words and tell
+                    // the engine, never the other way round.
+                    editor.lastReported = current
+                    actions.draftChanged(current)
+                } else {
+                    if (current != engineText) field.edit { replace(0, length, engineText) }
+                    editor.adopted(engineText)
+                }
             }
             editorReady = true
         }
@@ -415,7 +432,7 @@ public fun BasicComposer(
         // clear revision empties the field for good. A send that does not go puts them back.
         val serial = editor.userEditSerial
         field.edit { replace(0, length, "") }
-        editor.lastReported = ""
+        editor.adopted("")
         scope.launch {
             if (actions.send(text)) {
                 // A local admission is not a server acknowledgement. The draft owner publishes its
@@ -426,7 +443,7 @@ public fun BasicComposer(
                 if (liftId != null) lift?.cancel(liftId)
                 if (SendFieldRules.restoreAfterFailedSend(field.text.toString(), serial, editor.userEditSerial)) {
                     field.edit { replace(0, length, text) }
-                    editor.lastReported = text
+                    editor.adopted(text)
                 }
             }
         }
@@ -451,7 +468,7 @@ public fun BasicComposer(
                 followed = null
                 if (field.text.isEmpty()) {
                     field.edit { replace(0, length, state.draft.text) }
-                    editor.lastReported = state.draft.text
+                    editor.adopted(state.draft.text)
                 }
             }
         }
@@ -1223,7 +1240,7 @@ public fun BasicComposer(
                             framed = false,
                             focusRequester = focus,
                             enabled =
-                                if (editorReady && state.draft.ready) KitEnabled.Enabled
+                                if (boxOpen) KitEnabled.Enabled
                                 else
                                     KitEnabled.Disabled(
                                         // Issue 147: it always ends: the draft, or a plain line that it could not be opened.
@@ -1493,8 +1510,31 @@ private class FollowedSend(val text: String, val serial: Long) {
  */
 private class DraftEditorState {
     var restoreRevision: Long? = null
+
+    /**
+     * The words last handed to the draft engine by the box. Setting it means the box reported (or is about to report)
+     * them, so the engine's copy is [awaitingEngine] until it shows them.
+     */
     var lastReported: String? = null
+        set(value) {
+            field = value
+            awaitingEngine = true
+        }
     var userEditSerial: Long = 0
+
+    /**
+     * True from a report until the engine's copy was seen to equal it. While true the engine is BEHIND the box (the
+     * keystrokes in flight), so a restore carrying the engine's text is older than the box's words and must never be
+     * written over them. An external write (first load, reviewed text, clear after a send) finds it false: the engine
+     * had caught up and then changed by itself.
+     */
+    var awaitingEngine: Boolean = false
+
+    /** The box took [text] from the engine (or cleared itself without a report): nothing is in flight. */
+    fun adopted(text: String) {
+        lastReported = text
+        awaitingEngine = false
+    }
 }
 
 /** The type a picture's name says (the intake checks the bytes again); PNG when it says none. */
