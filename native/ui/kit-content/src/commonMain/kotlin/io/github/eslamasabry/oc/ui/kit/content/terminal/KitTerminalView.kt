@@ -212,7 +212,24 @@ public fun KitTerminalView(
     /** False when the host exposes this choice in its visible terminal menu, as Flutter does. */
     showAccessibleSwitch: Boolean = true,
     above: @Composable ColumnScope.() -> Unit = {},
+    /**
+     * False once the program ended for good (a finished sign-in): the readable view shows its text without the "Send
+     * to terminal" field, so nothing invites typing into a program that is gone.
+     */
+    showInput: Boolean = true,
+    /**
+     * False on a page that offers the one address the program printed as its own action (the sign-in's "Open sign-in
+     * page"): no second "Open link" row under the text.
+     */
+    showLinks: Boolean = true,
+    /**
+     * True on a page whose body runs edge to edge ([io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges.Bleed]):
+     * the text, the field, the links and the key bar sit in the page's gutter instead of touching the window edge.
+     */
+    gutter: Boolean = false,
 ) {
+    val side = if (gutter) LocalKitTokens.current.gutter.dp else 0.dp
+    val inset = Modifier.padding(start = side, end = side)
     val signals by LocalKitPlatform.current.signals.collectAsState()
     val on =
         KitTerminalRules.accessibleOn(
@@ -238,21 +255,25 @@ public fun KitTerminalView(
                 onSend = onSend,
                 words = words,
                 inputEnabled = inputEnabled,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.weight(1f).fillMaxWidth().then(inset),
+                showInput = showInput,
             )
         } else {
-            KitTerminalLive(platformView, title, words.terminal, Modifier.weight(1f).fillMaxWidth())
+            KitTerminalLive(platformView, title, words.terminal, Modifier.weight(1f).fillMaxWidth().then(inset))
         }
-        KitTerminalLinks(
-            transcript,
-            columns =
-                (platformView as? io.github.eslamasabry.oc.core.common.terminal.TerminalSurface)
-                    ?.columns
-                    ?.takeIf { it > 0 } ?: 80,
-        )
+        if (showLinks)
+            KitTerminalLinks(
+                transcript,
+                modifier = inset,
+                columns =
+                    (platformView as? io.github.eslamasabry.oc.core.common.terminal.TerminalSurface)
+                        ?.columns
+                        ?.takeIf { it > 0 } ?: 80,
+            )
         if (defaultKeyBar)
             KitTerminalKeyBar(
                 onSend = onSend,
+                modifier = inset,
                 enabled =
                     if (inputEnabled) KitEnabled.Enabled
                     else KitEnabled.Disabled(words.inputUnavailable),
@@ -288,6 +309,8 @@ public fun KitTerminalAccessible(
     words: KitTerminalWords,
     modifier: Modifier = Modifier,
     inputEnabled: Boolean = true,
+    /** False: the text only, no "Send to terminal" field (the program ended for good). */
+    showInput: Boolean = true,
 ) {
     val lines =
         remember(transcript) { TerminalTranscript.lines(TerminalTranscript.forDisplay(transcript)) }
@@ -339,25 +362,27 @@ public fun KitTerminalAccessible(
                 contentDescription = spoken
             }
         )
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            KitField(
-                state = field,
-                label = words.sendToTerminal,
-                modifier = Modifier.weight(1f).testTag(KitTerminalTags.INPUT),
-                kind = KitFieldKind.Mono,
-                imeAction = ImeAction.Send,
-                enabled = enabled,
-                onSubmit = send,
-            )
-            Spacer(Modifier.size(8.dp))
-            KitButton(
-                label = words.send,
-                onClick = send,
-                modifier = Modifier.testTag(KitTerminalTags.SEND),
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-            )
+        if (showInput) {
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                KitField(
+                    state = field,
+                    label = words.sendToTerminal,
+                    modifier = Modifier.weight(1f).testTag(KitTerminalTags.INPUT),
+                    kind = KitFieldKind.Mono,
+                    imeAction = ImeAction.Send,
+                    enabled = enabled,
+                    onSubmit = send,
+                )
+                Spacer(Modifier.size(8.dp))
+                KitButton(
+                    label = words.send,
+                    onClick = send,
+                    modifier = Modifier.testTag(KitTerminalTags.SEND),
+                    role = KitButtonRole.Secondary,
+                    enabled = enabled,
+                )
+            }
         }
     }
 }

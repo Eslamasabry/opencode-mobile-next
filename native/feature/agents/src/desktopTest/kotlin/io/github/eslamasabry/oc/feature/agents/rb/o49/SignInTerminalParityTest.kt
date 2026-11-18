@@ -46,6 +46,8 @@ class SignInTerminalParityTest {
             restarted++
         }
 
+        override fun checkAgain() {}
+
         override fun leave() {
             left++
         }
@@ -164,7 +166,7 @@ class SignInTerminalParityTest {
         }
 
     @Test
-    fun `a running sign-in offers Paste, which hands the clipboard to the terminal`() =
+    fun `a running sign-in offers Paste code, which hands the clipboard to the terminal`() =
         runComposeUiTest {
             val actions = Actions()
             val clipboard =
@@ -193,7 +195,7 @@ class SignInTerminalParityTest {
                     }
                 }
             }
-            onNode(hasText("Paste") and hasClickAction()).performClick()
+            onNode(hasText("Paste code") and hasClickAction()).performClick()
             assertEquals(listOf("4/0AbCd-code"), actions.pasted)
         }
 

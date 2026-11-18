@@ -71,6 +71,8 @@ public class SignInTerminalViewModel(
 
     override fun startAgain(): Unit = presenter.startAgain()
 
+    override fun checkAgain(): Unit = presenter.checkAgain()
+
     override fun leave(): Unit = presenter.leave()
 
     override fun onCleared() {

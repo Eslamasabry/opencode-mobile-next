@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.feature.agents.signin.*
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.LocalTerminal
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -267,19 +268,22 @@ class NativeSignInAgents(
             .ok()
     }
 
-    override suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean =
-        withContext(dispatchers.io) {
-            if (
-                stores.profiles.profile(owner) == null ||
-                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value !=
-                        owner.raw
-            )
-                return@withContext false
+    override val checkTries: Int
+        get() = SignInCheckRules.TRIES
+
+    override suspend fun checkSignedIn(owner: ProfileId, agent: AgentRef, round: Int): SignInCheck {
+        if (round > 0) delay(SignInCheckRules.pauseMillis(round))
+        return withContext(dispatchers.io) {
+            fun owns() =
+                stores.profiles.profile(owner) != null &&
+                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == owner.raw
+            if (!owns()) return@withContext SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
             val descriptor =
-                AgentCatalog.builtIn.byId(AgentId(agent.id)) ?: return@withContext false
+                AgentCatalog.builtIn.byId(AgentId(agent.id))
+                    ?: return@withContext SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
             val script =
                 AgentAuthScripts.script(descriptor, AuthScriptAction.Probe)
-                    ?: return@withContext false
+                    ?: return@withContext SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
             val result =
                 attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
                     BuiltinLinux.get(app)
@@ -290,14 +294,14 @@ class NativeSignInAgents(
                                 "action" to "probe",
                                 "script" to AgentAuthScripts.forProfile(owner, script),
                                 "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
-                            )
+                            ),
+                            afterSignIn = true,
                         )
                 }
-            result is Outcome.Ok &&
-                result.value["state"] == "signedIn" &&
-                stores.profiles.profile(owner) != null &&
-                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == owner.raw
+            if (!owns()) SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
+            else SignInCheckRules.answer((result as? Outcome.Ok)?.value)
         }
+    }
 
     override fun read(transcript: String): SignInFound {
         val output =

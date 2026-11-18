@@ -28,6 +28,20 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
+import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
+import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalLinkHost
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInCheckAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInCheckingAgent
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInCheckingBusy
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInCodeField
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInCouldNotCheck
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInCouldNotCheckBody
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInSendCode
+import io.github.eslamasabry.oc.ui.words.res.kitCopyAll
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -43,7 +57,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentAccountApiKey
-import io.github.eslamasabry.oc.ui.words.res.agentsSignInChecking
 import io.github.eslamasabry.oc.ui.words.res.agentsAntigravitySignInIntro
 import io.github.eslamasabry.oc.ui.words.res.agentsGeminiMigrationNote
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInCopyCode
@@ -64,10 +77,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
-import io.github.eslamasabry.oc.ui.words.res.e7SetupCommandInput
 import io.github.eslamasabry.oc.ui.words.res.e7SetupInputUnavailable
 import io.github.eslamasabry.oc.ui.words.res.e7SetupNoOutput
-import io.github.eslamasabry.oc.ui.words.res.e7SetupSendCommand
 import io.github.eslamasabry.oc.ui.words.res.e7SetupTranscript
 import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
 import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
@@ -120,13 +131,16 @@ public fun SignInTerminalScreen(
                 state.step == SignInStep.Starting ||
                 state.step == SignInStep.Checking,
         loadingLabel =
-            stringResource(
-                if (state.step == SignInStep.Checking) Res.string.agentsSignInChecking
-                else Res.string.localTerminalStarting
-            ),
+            when {
+                state.step != SignInStep.Checking -> stringResource(Res.string.localTerminalStarting)
+                // Waiting is not failing: the stage is named, and a busy conversation is said as such.
+                state.checkBusy -> stringResource(Res.string.agentsSignInCheckingBusy, state.agentName)
+                else -> stringResource(Res.string.agentsSignInCheckingAgent, state.agentName)
+            },
         header = {
             Column {
-                KitText(
+                // The intro tells how to sign in (open the page, paste a code): only while that can be done.
+                if (state.step.signingIn()) KitText(
                     if (state.pastesBrowserCode)
                         stringResource(Res.string.agentsAntigravitySignInIntro)
                     else
@@ -201,6 +215,33 @@ public fun SignInTerminalScreen(
                                     actions::leave,
                                 ),
                         )
+                    SignInStep.CouldNotCheck -> {
+                        Running(state, actions, Modifier.weight(1f))
+                        // Not "isn't signed in": the read gave no answer. One action, on the sign-in it names.
+                        KitInlineState(
+                            title = stringResource(Res.string.agentsSignInCouldNotCheck, state.agentName),
+                            icon = KitIcons.terminal,
+                            body = stringResource(Res.string.agentsSignInCouldNotCheckBody, state.agentName),
+                            modifier =
+                                Modifier.padding(
+                                    horizontal = LocalKitTokens.current.gutter.dp,
+                                    vertical = Space.S2.dp,
+                                ),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.agentsSignInCheckAgain),
+                                    actions::checkAgain,
+                                ),
+                        )
+                        state.checkCode?.let { code ->
+                            KitDetailsFold(
+                                label = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyAll),
+                                notes = listOf(code),
+                                modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                            )
+                        }
+                    }
                     SignInStep.NotYet -> {
                         Running(state, actions, Modifier.weight(1f))
                         KitInlineState(
@@ -303,10 +344,10 @@ public fun SignInTerminalScreen(
 @Composable
 private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
-        if (state.step == SignInStep.Running && state.inputEnabled) {
-            // Paste is always there while the sign-in runs (Flutter's terminal menu "Paste"): a
+        if (state.takesInput) {
+            // "Paste code" is always there while the sign-in runs (Flutter's terminal menu "Paste"): a
             // long press on the grid selects text, so without it a browser's code could not reach
-            // Antigravity at all. It sits next to the page and code actions, never in a menu.
+            // the program at all. It sits next to the page and code actions, never in a menu.
             @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
             val paste =
                 KitAction(
@@ -342,20 +383,54 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
                 tertiary = if (copy != null) listOf(paste) else emptyList(),
             )
         }
-        KitTerminalView(
-            platformView = state.terminal?.native,
-            title = state.title,
-            transcript = state.transcript,
-            accessibleMode = state.accessibleMode,
-            onAccessibleModeChange = actions::setAccessibleMode,
-            onSend = actions::send,
-            words = terminalWords(),
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            inputEnabled = state.inputEnabled,
-            defaultKeyBar = state.inputEnabled,
-        )
+        // One way to the sign-in page (owner, 2026-11-18): an address the program printed is not a second door. A tap
+        // on it in the grid opens the same page "Open sign-in page" opens; the readable text shows it folded, with no
+        // "Open link" row of its own.
+        val door = state.takesInput && state.canOpenPage
+        val sameDoor =
+            remember(door, actions) {
+                if (door)
+                    TerminalLinkHost { _ ->
+                        actions.openSignInPage()
+                        null
+                    }
+                else null
+            }
+        CompositionLocalProvider(LocalTerminalLinkHost provides sameDoor) {
+            KitTerminalView(
+                platformView = state.terminal?.native,
+                title = state.title,
+                transcript = state.transcript,
+                accessibleMode = state.accessibleMode,
+                onAccessibleModeChange = actions::setAccessibleMode,
+                onSend = actions::send,
+                words = terminalWords(),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                inputEnabled = state.inputEnabled,
+                defaultKeyBar = state.takesInput,
+                // Once the program ended there is nothing to type into: no field, no switch that says so twice.
+                showAccessibleSwitch = state.takesInput,
+                showInput = state.takesInput,
+                showLinks = false,
+                gutter = true,
+            )
+        }
+        // The whole address only here; the page offers it as "Open sign-in page".
+        if (state.takesInput)
+            state.pageAddress?.let { address ->
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyAll),
+                    notes = listOf(address),
+                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                )
+            }
     }
 }
+
+/** Steps in which the agent's own sign-in can still be done on this page (its intro's open-and-paste words hold). */
+private fun SignInStep.signingIn(): Boolean =
+    this == SignInStep.Preparing || this == SignInStep.Starting || this == SignInStep.Running
 
 /** Why a start stopped, in plain words (the technical text stays under Details). */
 @Composable
@@ -379,7 +454,8 @@ private fun terminalWords(): KitTerminalWords =
         accessibleMode = stringResource(Res.string.terminalScreenReadableMode),
         transcript = stringResource(Res.string.e7SetupTranscript),
         noOutput = stringResource(Res.string.e7SetupNoOutput),
-        sendToTerminal = stringResource(Res.string.e7SetupCommandInput),
-        send = stringResource(Res.string.e7SetupSendCommand),
+        // The field exists for the code a sign-in asks for: it says so, and its button fits at 360 dp.
+        sendToTerminal = stringResource(Res.string.agentsSignInCodeField),
+        send = stringResource(Res.string.agentsSignInSendCode),
         inputUnavailable = stringResource(Res.string.e7SetupInputUnavailable),
     )

@@ -226,11 +226,17 @@ class NativePhoneSignIn(
                 return SignInCommand(recipe.executable, recipe.signInArgs, home = owner.raw).ok()
             }
 
-            override suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean {
-                if (!owns(owner)) return false
-                val descriptor = catalog.byId(AgentId(agent.id)) ?: return false
+            override val checkTries: Int
+                get() = SignInCheckRules.TRIES
+
+            override suspend fun checkSignedIn(owner: ProfileId, agent: AgentRef, round: Int): SignInCheck {
+                if (round > 0) delay(SignInCheckRules.pauseMillis(round))
+                if (!owns(owner)) return SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
+                val descriptor =
+                    catalog.byId(AgentId(agent.id)) ?: return SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
                 val script =
-                    AgentAuthScripts.script(descriptor, AuthScriptAction.Probe) ?: return false
+                    AgentAuthScripts.script(descriptor, AuthScriptAction.Probe)
+                        ?: return SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
                 val result =
                     withContext(dispatchers.io) {
                         attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
@@ -241,14 +247,16 @@ class NativePhoneSignIn(
                                     "action" to "probe",
                                     "script" to AgentAuthScripts.forProfile(owner, script),
                                     "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
-                                )
+                                ),
+                                afterSignIn = true,
                             )
                         }
                     }
-                val signedIn = owns(owner) && (result as? Outcome.Ok)?.value?.get("state") == "signedIn"
+                if (!owns(owner)) return SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
+                val answer = SignInCheckRules.answer((result as? Outcome.Ok)?.value)
                 // Issue 147: a completed sign-in ends a lapse a run reported (AppPhoneAgents.noteSignedIn).
-                if (signedIn) phones.value.noteSignedIn(owner, descriptor.id)
-                return signedIn
+                if (answer == SignInCheck.SignedIn) phones.value.noteSignedIn(owner, descriptor.id)
+                return answer
             }
 
             // The set-up terminal ended and the person comes back: the registry has seen the agent set up, so it is a
@@ -643,6 +651,8 @@ class NativePhoneSignIn(
         override fun finish(): Unit = presenter.finish()
 
         override fun startAgain(): Unit = presenter.startAgain()
+
+        override fun checkAgain(): Unit = presenter.checkAgain()
 
         override fun leave() {
             left = true

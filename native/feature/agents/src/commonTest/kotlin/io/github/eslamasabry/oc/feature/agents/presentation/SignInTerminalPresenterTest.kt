@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.feature.agents.signin.FakeTerminalHost
 import io.github.eslamasabry.oc.feature.agents.signin.RecordingClipboard
 import io.github.eslamasabry.oc.feature.agents.signin.RecordingLinks
 import io.github.eslamasabry.oc.feature.agents.signin.SignInAdmission
+import io.github.eslamasabry.oc.feature.agents.signin.SignInCheck
 import io.github.eslamasabry.oc.feature.agents.signin.SignInCommand
 import io.github.eslamasabry.oc.feature.agents.signin.SignInStartStep
 import io.github.eslamasabry.oc.feature.agents.signin.TerminalEvent
@@ -108,7 +109,9 @@ class SignInTerminalPresenterTest {
             val ui = screen.state.value
             assertTrue(ui.canOpenPage)
             assertEquals("ABCD-12345", ui.code)
-            assertEquals(terminal.transcript.value, ui.transcript)
+            // The address is the action and Details, not reading text (owner, 2026-11-18).
+            assertEquals("Open https://claude.ai/\u2026\nEnter code ABCD-12345\n", ui.transcript)
+            assertEquals("https://claude.ai/oauth/authorize?code=true", ui.pageAddress)
             screen.openSignInPage()
             screen.copyCode()
             loop.pump()
@@ -167,7 +170,7 @@ class SignInTerminalPresenterTest {
     @Test
     fun `DESKTOP-WEB-CROSS-30 the person's accessible-mode choice is kept, null follows the system`() =
         loop.run {
-            val screen = presenter()
+            val screen = presenter("codex")
             loop.pump()
             assertNull(screen.state.value.accessibleMode)
             screen.setAccessibleMode(true)
@@ -359,7 +362,7 @@ class SignInTerminalPresenterTest {
             assertEquals(SignInStep.Running, ui.step)
             assertTrue(ui.pastesBrowserCode)
             assertEquals(true, ui.accessibleMode)
-            assertNull(presenter("claude").state.value.accessibleMode)
+            assertNull(presenter("codex").state.value.accessibleMode)
         }
 
     @Test
@@ -393,5 +396,110 @@ class SignInTerminalPresenterTest {
             assertNull(screen.state.value.code)
             assertFalse(screen.state.value.canOpenPage)
             assertNull(screen.state.value.terminal)
+        }
+
+    // Owner, 2026-11-18: "Login successful." in the terminal (the browser handed the answer back, no code asked), and
+    // the page said "isn't signed in yet". Every answer that was not a clean "signedIn" read as "not signed in".
+
+    @Test
+    fun `B-AGENT-442 after Login successful with no code asked the page reads Signed in by itself, past a held-back read`() =
+        loop.run {
+            agents.tries = 4
+            // The chat's loaded Claude Code program held the first read back; the next one answers.
+            agents.answers += SignInCheck.CouldNotCheck(SignInCheck.CouldNotCheck.BUSY)
+            agents.signedIn = true
+            val screen = presenter()
+            loop.pump()
+            val terminal = host.terminals.single()
+            terminal.transcript.value = "Paste code here if prompted > Login successful.\n"
+            terminal.eventsFlow.emit(TerminalEvent.Exited(0))
+            loop.pump()
+            assertEquals(listOf(0, 1), agents.rounds)
+            assertEquals(SignInStep.SignedIn, screen.state.value.step)
+            assertEquals(1, host.targets.size)
+        }
+
+    @Test
+    fun `B-AGENT-443 a read that cannot tell is Could not check, never isn't signed in, and Check sign-in again reads again`() =
+        loop.run {
+            agents.tries = 3
+            // The phone's one check slot taken twice, then a time-out: the bound ends there.
+            agents.answers += SignInCheck.CouldNotCheck(SignInCheck.CouldNotCheck.HOST_UNAVAILABLE)
+            agents.answers += SignInCheck.CouldNotCheck(SignInCheck.CouldNotCheck.HOST_UNAVAILABLE)
+            agents.answers += SignInCheck.CouldNotCheck(SignInCheck.CouldNotCheck.TIMED_OUT)
+            val screen = presenter()
+            loop.pump()
+            host.terminals.single().eventsFlow.emit(TerminalEvent.Exited(0))
+            loop.pump()
+            assertEquals(SignInStep.CouldNotCheck, screen.state.value.step)
+            assertEquals("timedOut", screen.state.value.checkCode)
+            assertEquals(3, agents.confirms)
+            // Check sign-in again: the account only, no new sign-in.
+            agents.signedIn = true
+            screen.checkAgain()
+            loop.pump()
+            assertEquals(SignInStep.SignedIn, screen.state.value.step)
+            assertNull(screen.state.value.checkCode)
+            assertEquals(1, host.targets.size)
+        }
+
+    @Test
+    fun `B-AGENT-444 only the agent's own signed-out answer says it isn't signed in, at once`() =
+        loop.run {
+            agents.tries = 4
+            agents.answers += SignInCheck.SignedOut
+            val screen = presenter()
+            loop.pump()
+            host.terminals.single().eventsFlow.emit(TerminalEvent.Exited(0))
+            loop.pump()
+            assertEquals(SignInStep.NotYet, screen.state.value.step)
+            assertEquals(1, agents.confirms)
+            // Check again belongs to Could not check only.
+            screen.checkAgain()
+            loop.pump()
+            assertEquals(1, agents.confirms)
+        }
+
+    @Test
+    fun `B-AGENT-445 a read held back by a busy conversation waits under its own words, then says it could not check`() =
+        loop.run {
+            agents.tries = 3
+            repeat(3) { agents.answers += SignInCheck.CouldNotCheck(SignInCheck.CouldNotCheck.BUSY) }
+            val screen = presenter()
+            val busyWhileWaiting = mutableListOf<Boolean>()
+            agents.onRound = { busyWhileWaiting += screen.state.value.checkBusy }
+            loop.pump()
+            host.terminals.single().eventsFlow.emit(TerminalEvent.Exited(0))
+            loop.pump()
+            // Round 0 has not heard yet; rounds 1 and 2 run while the page says the conversation keeps it busy.
+            assertEquals(listOf(false, true, true), busyWhileWaiting)
+            assertEquals(SignInStep.CouldNotCheck, screen.state.value.step)
+            assertEquals("agentBusy", screen.state.value.checkCode)
+            assertFalse(screen.state.value.checkBusy)
+        }
+
+    @Test
+    fun `B-AGENT-446 a code typed or pasted reaches the program for every agent whose sign-in may ask for one`() =
+        loop.run {
+            // Claude Code ("Paste code here if prompted") opens on the readable view with its field, like Antigravity.
+            val claude = presenter("claude")
+            loop.pump()
+            assertEquals(true, claude.state.value.accessibleMode)
+            assertTrue(claude.state.value.takesInput)
+            val terminal = host.terminals.single()
+            claude.send("abc123#xyz\r")
+            claude.paste(" abc123#xyz \n")
+            loop.pump()
+            assertEquals(listOf("abc123#xyz\r", "abc123#xyz"), terminal.written)
+            // Codex keeps the grid by default, and still takes a pasted code.
+            val codex = presenter("codex")
+            loop.pump()
+            codex.paste("CODE-1234")
+            loop.pump()
+            assertEquals(listOf("CODE-1234"), host.terminals.last().written)
+            // Once the program ended, nothing takes input.
+            terminal.eventsFlow.emit(TerminalEvent.Exited(0))
+            loop.pump()
+            assertFalse(claude.state.value.takesInput)
         }
 }

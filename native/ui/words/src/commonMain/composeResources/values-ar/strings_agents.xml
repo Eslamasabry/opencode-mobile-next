@@ -282,9 +282,9 @@
     <string name="agentsFailBusy">إعداد آخر قيد التشغيل. انتظر حتى ينتهي.</string>
     <string name="agentsSignInTitle">تسجيل الدخول إلى %1$s</string>
     <string name="agentsSignInIntro">يسجّل %1$s الدخول عبر خطواته الخاصة، بحسابك أنت في Claude وفق شروط Anthropic. لا يرى التطبيق بيانات تسجيل دخولك.</string>
-    <string name="agentsSignInTerminalIntro">يفتح %1$s صفحة تسجيل الدخول. سجّل الدخول هناك بحسابك في Claude ثم عُد. إذا طلب %1$s رمزًا، فانسخه من الصفحة واختر لصق.</string>
+    <string name="agentsSignInTerminalIntro">يفتح %1$s صفحة تسجيل الدخول. سجّل الدخول هناك بحسابك في Claude ثم عُد. إذا طلب %1$s رمزًا، فانسخه من الصفحة واختر لصق الرمز.</string>
     <string name="agentsSignInIntroOther">يسجّل %1$s الدخول عبر خطواته الخاصة، بحسابك أنت لدى مزوّده. لا يرى التطبيق بيانات تسجيل دخولك.</string>
-    <string name="agentsSignInTerminalIntroOther">يسجّل %1$s الدخول هنا عبر خطواته الخاصة. إذا فتح صفحة، فسجّل الدخول هناك ثم عُد. إذا طلب رمزًا أو مفتاحًا، فاختر لصق.</string>
+    <string name="agentsSignInTerminalIntroOther">يسجّل %1$s الدخول هنا عبر خطواته الخاصة. إذا فتح صفحة، فسجّل الدخول هناك ثم عُد. إذا طلب رمزًا أو مفتاحًا، فاختر لصق الرمز.</string>
     <string name="agentsSignInAgain">تسجيل الدخول مرة أخرى</string>
     <string name="agentsSignInTerminalNotYet">لم يُسجَّل الدخول إلى %1$s بعد. ابدأ تسجيل الدخول مرة أخرى عندما تكون مستعدًا.</string>
     <string name="agentsSignInStopFailed">تعذّر إيقاف تسجيل الدخول. أبقِ التطبيق مفتوحًا وحاول مرة أخرى.</string>
@@ -331,7 +331,7 @@
     <string name="agentsStateNoDownload">لا يوجد تنزيل موثّق بعد</string>
     <string name="agentsInstallHint">تثبيت</string>
     <string name="agentsActionFailed">لم ينجح ذلك على هذا الهاتف. افتح التفاصيل لمعرفة السبب.</string>
-    <string name="agentsSignInPaste">لصق</string>
+    <string name="agentsSignInPaste">لصق الرمز</string>
     <string name="agentsSignInStartPrepare">تعذّر على التطبيق تجهيز مجلد الوكيل على هذا الهاتف.</string>
     <string name="agentsSignInStartServer">لم يبدأ OpenCode على هذا الهاتف.</string>
     <string name="agentsSignInStartConnect">تعذّر على التطبيق الاتصال بـ OpenCode على هذا الهاتف.</string>
@@ -624,4 +624,11 @@
     <string name="agentsRetiredBody">لم يعد %1$s متاحًا على هذا الهاتف، فلا يمكن إعداده أو استخدامه من جديد. أزِله لتحرير المساحة التي يشغلها. يبقى وكلاؤك ومحادثاتك الأخرى.</string>
     <string name="agentsRemoveChip">إزالة</string>
     <string name="chatUiRunOnThisPhone">التشغيل على هذا الهاتف</string>
+    <string name="agentsSignInCheckingAgent">جارٍ التحقق من تسجيل الدخول إلى %1$s…</string>
+    <string name="agentsSignInCheckingBusy">%1$s مشغول بمحادثة. سيُتحقق من تسجيل الدخول عندما يصبح متاحًا…</string>
+    <string name="agentsSignInCouldNotCheck">تعذّر التحقق من تسجيل الدخول إلى %1$s</string>
+    <string name="agentsSignInCouldNotCheckBody">ربما نجح تسجيل الدخول. تحقّق مرة أخرى لسؤال %1$s الآن.</string>
+    <string name="agentsSignInCheckAgain">التحقق من تسجيل الدخول مرة أخرى</string>
+    <string name="agentsSignInCodeField">رمز تسجيل الدخول</string>
+    <string name="agentsSignInSendCode">إرسال الرمز</string>
 </resources>

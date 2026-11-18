@@ -1552,15 +1552,35 @@ class BuiltinLinux(private val context: Context) {
             },
             authOtherOwners::snapshot,
             ::claudeCliRunning,
+            ::claudeSignInAge,
         )
     }
 
     /**
-     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
-     * end a read's probe instead of waiting for it.
+     * How long ago [profileId]'s stored Claude Code sign-in was written (its file's time only; nothing is read from it),
+     * or null when there is none or it is not a plain file. [PhoneAgentAuthHoldBack] uses it.
      */
-    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> =
-        privateAgentAuth.run(arguments, stop)
+    private fun claudeSignInAge(profileId: String): Long? =
+        try {
+            check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
+            val file =
+                File(
+                    PhoneAgentPaths.resolve(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId/claude"),
+                    PhoneAgentClaudeHome.CREDENTIALS,
+                )
+            val stat = Os.lstat(file.absolutePath)
+            if (!OsConstants.S_ISREG(stat.st_mode)) null
+            else System.currentTimeMillis() - stat.st_mtime * 1000L
+        } catch (_: Exception) {
+            null
+        }
+
+    /**
+     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
+     * end a read's probe instead of waiting for it. [afterSignIn]: the sign-in page's check ([PhoneAgentAuthHoldBack]).
+     */
+    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null, afterSignIn: Boolean = false): Map<String, Any?> =
+        privateAgentAuth.run(arguments, stop, afterSignIn)
 
     val agentSignIn by lazy { PhoneAgentSignIn(this) }
     val agentHost by lazy { PhoneAgentHost(this) }

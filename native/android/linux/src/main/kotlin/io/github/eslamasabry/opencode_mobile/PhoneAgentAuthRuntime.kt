@@ -19,6 +19,8 @@ internal class PhoneAgentAuthRuntime(
      * check starts, and the app keeps the last answer.
      */
     private val claudeBusy: (String) -> Boolean = { false },
+    /** How long ago [profile]'s stored Claude sign-in was written, or null (see [PhoneAgentAuthHoldBack]). */
+    private val claudeSignInAge: (String) -> Long? = { null },
 ) {
     private companion object {
         const val POLL_MILLIS = 20L
@@ -54,13 +56,22 @@ internal class PhoneAgentAuthRuntime(
         },
     )
 
-    fun run(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> {
+    /**
+     * [afterSignIn]: the sign-in page's check right after the agent's own sign-in ended; it may run beside a loaded
+     * Claude Code CLI when that sign-in was just written ([PhoneAgentAuthHoldBack]).
+     */
+    fun run(arguments: Map<*, *>, stop: ProbeStop? = null, afterSignIn: Boolean = false): Map<String, Any?> {
         val request = PhoneAgentAuthRequest.parse(arguments) ?: return PhoneAgentAuthProjection.error("invalidContext")
         // signin-truth-2: said as its own answer ("agentBusy"), so the app keeps the last answer and says why; before,
         // it read as "the phone did not answer" and the agent as "Sign-in not confirmed" for as long as a Claude Code
         // conversation stayed loaded.
-        if (request.agentId == "claude" && claudeBusy(request.profileId))
-            return PhoneAgentAuthProjection.error("agentBusy")
+        val heldBack = PhoneAgentAuthHoldBack.holdsBack(
+            request.agentId,
+            { claudeBusy(request.profileId) },
+            afterSignIn,
+            { claudeSignInAge(request.profileId) },
+        )
+        if (heldBack) return PhoneAgentAuthProjection.error("agentBusy")
         deadline.set(PhoneAgentAuthDeadline(request.timeoutSeconds))
         return try { probe.run(arguments, stop) }
         finally { deadline.remove(); before.remove() }

@@ -244,9 +244,9 @@
     <string name="agentsFailBusy">另一项设置正在进行。请等待其完成。</string>
     <string name="agentsSignInTitle">使用 %1$s 登录</string>
     <string name="agentsSignInIntro">%1$s 通过自带的提示完成登录，使用你自己的 Claude 账号并遵循 Anthropic 的条款。应用不会获取你的登录信息。</string>
-    <string name="agentsSignInTerminalIntro">%1$s 会打开其登录页面。请在那里用你的 Claude 账号登录，然后返回。如果 %1$s 要求输入代码，请在页面上复制，然后选择“粘贴”。</string>
+    <string name="agentsSignInTerminalIntro">%1$s 会打开其登录页面。请在那里用你的 Claude 账号登录，然后返回。如果 %1$s 要求输入代码，请在页面上复制，然后选择“粘贴代码”。</string>
     <string name="agentsSignInIntroOther">%1$s 通过自带的提示完成登录，使用你在其服务商的账号。应用不会获取你的登录信息。</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s 在此通过自带的提示登录。如果它打开页面，请在那里登录后返回。如果要求输入代码或密钥，请选择“粘贴”。</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s 在此通过自带的提示登录。如果它打开页面，请在那里登录后返回。如果要求输入代码或密钥，请选择“粘贴代码”。</string>
     <string name="agentsSignInAgain">重新登录</string>
     <string name="agentsSignInTerminalNotYet">%1$s 尚未登录。准备好后请重新开始登录。</string>
     <string name="agentsSignInStopFailed">无法停止登录。请保持应用打开并重试。</string>
@@ -293,7 +293,7 @@
     <string name="agentsStateNoDownload">尚无已验证的下载</string>
     <string name="agentsInstallHint">安装</string>
     <string name="agentsActionFailed">此手机上操作未成功。打开“详情”查看原因。</string>
-    <string name="agentsSignInPaste">粘贴</string>
+    <string name="agentsSignInPaste">粘贴代码</string>
     <string name="agentCardAsks">%1$s 在询问</string>
     <string name="agentCardReports">%1$s 报告</string>
     <string name="agentCardAsksAnnouncement">%1$s 在询问：%2$s</string>
@@ -582,4 +582,11 @@
     <string name="agentsOwnAgentReadyLater">正在运行的任务结束后即可使用。</string>
     <string name="agentsUpdatingAgent">正在更新 %1$s</string>
     <string name="agentsOwnAgentFailed">无法在这部手机上完成。请重试。</string>
+    <string name="agentsSignInCheckingAgent">正在确认 %1$s 是否已登录…</string>
+    <string name="agentsSignInCheckingBusy">%1$s 正在处理一个对话。空闲后将检查登录状态…</string>
+    <string name="agentsSignInCouldNotCheck">无法确认 %1$s 是否已登录</string>
+    <string name="agentsSignInCouldNotCheckBody">登录可能已经成功。再次检查即可立即询问 %1$s。</string>
+    <string name="agentsSignInCheckAgain">再次检查登录</string>
+    <string name="agentsSignInCodeField">登录代码</string>
+    <string name="agentsSignInSendCode">发送代码</string>
 </resources>
