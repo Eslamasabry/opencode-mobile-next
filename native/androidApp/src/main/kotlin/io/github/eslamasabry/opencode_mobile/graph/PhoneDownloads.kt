@@ -8,10 +8,12 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.voice.device.AndroidSetupNetwork
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallResult
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadMapping
@@ -99,6 +101,7 @@ class PhoneDownloads(
                     when (decision.step) {
                         AgentUpdateStep.WaitingMetered -> if (read) HomeHelperStep.Waiting else HomeHelperStep.None
                         AgentUpdateStep.Updating -> HomeHelperStep.Updating
+                        AgentUpdateStep.Failed -> HomeHelperStep.Failed
                         else -> HomeHelperStep.None
                     }
                 val said =
@@ -152,7 +155,11 @@ class PhoneDownloads(
     private suspend fun run(kind: HomeDownloadKind) {
         when (kind) {
             HomeDownloadKind.OpenCode -> setup.update()
-            HomeDownloadKind.Helper -> agentStatus.decision.value.agent?.let { phones.install(it.raw) }
+            HomeDownloadKind.Helper ->
+                agentStatus.decision.value.agent?.let { agent ->
+                    val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value
+                    if (answer == PhoneAgentInstallResult.Started) agents?.retried(agent)
+                }
         }
     }
 }

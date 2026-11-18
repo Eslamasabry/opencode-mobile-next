@@ -98,7 +98,7 @@ public object HomeDownloadRules {
 }
 
 /** What the agents' automatic update is doing, as far as Home cares. */
-public enum class HomeHelperStep { None, Waiting, Updating }
+public enum class HomeHelperStep { None, Waiting, Updating, Failed }
 
 /** The agents' install job, as far as Home cares. */
 public enum class HomeInstallPhase { None, Installing, Failed }
@@ -134,6 +134,7 @@ public object HomeDownloadMapping {
         when (helper) {
             HomeHelperStep.None -> Unit
             HomeHelperStep.Waiting -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))
+            HomeHelperStep.Failed -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Failed))
             HomeHelperStep.Updating ->
                 add(
                     HomeDownloadFact(

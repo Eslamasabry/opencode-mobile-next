@@ -241,7 +241,8 @@ class AppPhoneAgents(
                 AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
                 AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
                 AgentUpdateStep.Updated -> PhoneAgentUpdateNote.Updated
-                AgentUpdateStep.Refused -> PhoneAgentUpdateNote.Refused
+                AgentUpdateStep.Refused,
+                AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
             }
         updateNote = note to name
         mutable.update { it.copy(updateNote = note, updateAgentName = name) }

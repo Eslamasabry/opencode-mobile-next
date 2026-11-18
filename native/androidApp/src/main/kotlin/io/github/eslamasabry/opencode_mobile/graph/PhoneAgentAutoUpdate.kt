@@ -254,15 +254,41 @@ class PhoneAgentAutoUpdate(
                     updaterRef?.finished(agent)
                     return
                 }
-                // No record of it (yet or any more): the mark stays, so the next run checks it again.
+                // No record of it (yet or any more). A job that still runs is waited for; one that ended Failed
+                // without a record did not finish: the wait is over, never an "Updating" for ever.
                 null -> {
-                    restartOlderHelper()
-                    return
+                    when (setup.progress.value.state) {
+                        SetupState.Running -> Unit
+                        SetupState.Failed -> {
+                            log.i { "update ended without finishing" }
+                            updaterRef?.failed(agent)
+                            return
+                        }
+                        else -> {
+                            restartOlderHelper()
+                            return
+                        }
+                    }
                 }
                 PhoneAgentInstallPhase.Failed,
-                PhoneAgentInstallPhase.Interrupted -> return
+                PhoneAgentInstallPhase.Interrupted -> {
+                    updaterRef?.failed(agent)
+                    return
+                }
             }
         }
+        // Past the bound (a quarter hour): the wait ends as a failure the person can try again.
+        log.i { "update ran past its bound" }
+        updaterRef?.failed(agent)
+    }
+
+    /**
+     * The person's Try again started the install of [agent]: the decision says Updating again and this waits for the
+     * install's end exactly as the automatic try does, so a second failure ends the wait too.
+     */
+    fun retried(agent: AgentId) {
+        updaterRef?.restarted(agent)
+        appScope.launch(dispatchers.io) { safely { finish(agent) } }
     }
 
     /** The agents behind only by their install record (same version), for the update's end. */

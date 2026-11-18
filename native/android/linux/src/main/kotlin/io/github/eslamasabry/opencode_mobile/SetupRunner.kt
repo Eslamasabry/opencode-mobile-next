@@ -375,10 +375,29 @@ class SetupRunner private constructor(private val context: Context) {
     private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? {
         var attempt = 1
         var compatible = false
+        var ownershipTries = 1
         while (true) {
             try {
                 lastExitCode = null
-                val failure = runScript(spec, component, compatible)
+                val failure =
+                    try {
+                        runScript(spec, component, compatible)
+                    } catch (error: Throwable) {
+                        // A process of this app that is still ending can make the ownership proof fail for a moment.
+                        // Look again a few times, a few seconds apart; then the failure ends the step as before
+                        // (never a silent wait).
+                        if (
+                            !NativeRuntimeOwnership.isUnknownFailure(error) ||
+                                cancelled ||
+                                ownershipTries >= OWNERSHIP_TRIES
+                        ) {
+                            throw error
+                        }
+                        ownershipTries++
+                        Log.w(BuiltinLinux.TAG, "setup step ${spec.id}: ownership not proven; looking again")
+                        synchronized(lock) { (lock as Object).wait(OWNERSHIP_PAUSE_MS) }
+                        continue
+                    }
                 if (SetupStepRetry.compatibility(lastExitCode, compatible, cancelled)) {
                     // A program inside Ubuntu segfaulted (issue #117): once more, the careful way.
                     compatible = true
@@ -680,6 +699,9 @@ class SetupRunner private constructor(private val context: Context) {
         private val PASEO_CHECK_STAGES = setOf(
             "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
         )
+        /** An unproven ownership is looked at this many times in all (the first try included), this far apart. */
+        private const val OWNERSHIP_TRIES = 3
+        private const val OWNERSHIP_PAUSE_MS = 3000L
         private const val WRITE_INTERVAL_MS = 250L
         private const val NOTIFY_INTERVAL_MS = 1000L
 
