@@ -107,8 +107,8 @@ class PhoneOpenCodeAutoUpdate(
                 jobs,
                 log = { log.i { it } },
                 nowMs = { SystemClock.elapsedRealtime() },
-                // A retry waiting for its time wakes itself: ONE pending delayed look (a newer ask replaces the older one),
-                // cancelled with the app's scope.
+                // A retry waiting for its time wakes itself: ONE pending delayed look (a newer ask replaces
+                // the older one), cancelled with the app's scope.
                 wake = { delayMs ->
                     synchronized(wakeLock) {
                         wakeJob?.cancel()
