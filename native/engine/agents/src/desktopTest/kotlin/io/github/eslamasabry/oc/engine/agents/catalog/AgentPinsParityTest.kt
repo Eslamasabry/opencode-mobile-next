@@ -378,24 +378,24 @@ class AgentPinsParityTest {
 
     @Test
     fun `B-AGENT-008 OpenCode 2 pins equal the native pin of commit 93fcf4049`() {
-        // Moved after the freeze (2.2.5 -> 2.3.2). Each SHA-256 is the registry tarball's, whose sha512 matches npm's
+        // Moved after the freeze (2.2.5 -> 2.2.6). Each SHA-256 is the registry tarball's, whose sha512 matches npm's
         // published integrity; the same values pin the in-app Ubuntu install (OpenCodePins).
         val agent = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("opencode2"))!!
         val recipe = agent.recipe!!
-        assertEquals("2.3.2", recipe.version)
+        assertEquals("2.2.6", recipe.version)
         assertEquals("opencode", recipe.executable)
         assertEquals(listOf("serve", "--hostname", "127.0.0.1"), recipe.launchArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
-        assertEquals("https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.3.2.tgz", arm.url)
-        assertEquals("91a937129efdae8eb8c0c5018ae533f9f35117f26ffd9a4d1f7a5f9da1e69306", arm.sha256)
+        assertEquals("https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.6.tgz", arm.url)
+        assertEquals("22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898", arm.sha256)
         assertEquals("package/bin/opencode", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.3.2.tgz",
+            "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.6.tgz",
             x64.url,
         )
-        assertEquals("e567dcdb1310dcae4e442077e0d508e10a80c1b996131a04dc9b978cdd26e5cd", x64.sha256)
+        assertEquals("00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce", x64.sha256)
         assertEquals("package/bin/opencode", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }

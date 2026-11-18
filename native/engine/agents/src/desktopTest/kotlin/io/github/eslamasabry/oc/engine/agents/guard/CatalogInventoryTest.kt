@@ -75,16 +75,16 @@ class CatalogInventoryTest {
 
     /**
      * Pins that moved on native after the Flutter freeze, old text to new, applied to that agent's saved entry only:
-     * OpenCode 2 2.2.5 -> 2.3.2 (93fcf4049; the values AgentPinsParityTest checks literally); omp's set-up command; the 2026-11-14 agent upgrades
+     * OpenCode 2 2.2.5 -> 2.2.6 (93fcf4049; the values AgentPinsParityTest checks literally); omp's set-up command; the 2026-11-14 agent upgrades
      * below. Every other field still has to equal the inventory byte for byte.
      */
     private val postFreezeMoves = mapOf(
         "opencode2" to listOf(
-            "2.2.5" to "2.3.2",
+            "2.2.5" to "2.2.6",
             "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053" to
-                "91a937129efdae8eb8c0c5018ae533f9f35117f26ffd9a4d1f7a5f9da1e69306",
+                "22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898",
             "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08" to
-                "e567dcdb1310dcae4e442077e0d508e10a80c1b996131a04dc9b978cdd26e5cd",
+                "00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce",
         ),
         // 2026-11-13: omp is set up in the app's terminal with `omp login` (its bare TUI was the old sign-in command).
         "omp-acp" to listOf(
