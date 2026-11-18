@@ -23,11 +23,11 @@ class AgentMarksTest {
         )
 
     @Test
-    fun `B-116 Antigravity draws its own single-colour mark, never Google's G`() {
+    fun `B-116 Antigravity draws its own mark in its own colours, never Google's G`() {
         assertEquals("antigravity", ProviderMarks.agentSlug("antigravity"))
         assertEquals("antigravity", ProviderMarks.agentSlug("agy"))
         assertTrue("antigravity" in ProviderMarks.slugs)
-        assertEquals(null, ProviderMarks.agentColorFile("antigravity"))
+        assertEquals("antigravity-color", ProviderMarks.agentColorFile("antigravity"))
     }
 
     @Test
