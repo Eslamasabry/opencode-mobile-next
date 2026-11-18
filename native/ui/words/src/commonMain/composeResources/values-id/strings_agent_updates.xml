@@ -43,4 +43,5 @@
     <string name="agentUpdatesLinuxAction">Perbarui di Linux › Paket</string>
     <string name="agentUpdatesFailed">Pembaruan tidak dimulai.</string>
     <string name="agentUpdatesNotRemoved">%1$s tidak dihapus.</string>
+    <string name="agentUpdatesNoSpace">Ruang di ponsel ini tidak cukup untuk pembaruan ini. Pertahankan atau hapus satu agen, atau kosongkan ruang.</string>
 </resources>

@@ -41,7 +41,6 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsAction
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsLine
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesChoiceLabel
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFailed
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepHelperTooNew
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepNotSupported
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesLinuxAction
@@ -63,6 +62,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsRemoveTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.localAgentRowOptional
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import org.jetbrains.compose.resources.stringResource
@@ -80,58 +80,79 @@ internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateAct
     val last = remember { arrayOfNulls<AgentUpdateSheetUi>(1) }
     if (sheet.visible) last[0] = sheet
     val shown = if (sheet.visible) sheet else last[0] ?: sheet
+    // After the answer, a removal that did not happen is told here with its reason, never left silent.
+    val result = shown.refused.isNotEmpty()
     KitSheet(
         visible = sheet.visible,
-        onDismissRequest = actions::agentUpdatesNotNow,
+        onDismissRequest = if (result) actions::closeAgentUpdateResult else actions::agentUpdatesNotNow,
         title = stringResource(Res.string.agentUpdatesTitle),
         closeLabel = stringResource(Res.string.kitSheetClose),
         primary =
-            KitAction(
-                label = agentUpdatesButton(shown),
-                onClick = actions::proceedAgentUpdates,
-                working = shown.working,
-            ),
-        secondary = KitAction(stringResource(Res.string.appUpdateNotNow), actions::agentUpdatesNotNow),
+            if (result) KitAction(stringResource(Res.string.chatsHomeDone), actions::closeAgentUpdateResult)
+            else KitAction(agentUpdatesButton(shown), actions::proceedAgentUpdates, working = shown.working),
+        secondary =
+            if (result) null else KitAction(stringResource(Res.string.appUpdateNotNow), actions::agentUpdatesNotNow),
     ) {
         Column(Modifier.testTag("agent-updates-sheet")) {
-            if (shown.optional.isNotEmpty())
-                KitRowGroup(label = stringResource(Res.string.localAgentRowOptional)) {
-                    shown.optional.forEach { row -> OptionalRow(row, actions) }
-                }
-            if (shown.needed.isNotEmpty())
-                KitRowGroup(
-                    label = stringResource(Res.string.agentUpdatesNeededLabel),
-                    note =
-                        stringResource(
-                            if (shown.neededWhy == AgentNeedRule.Always) Res.string.agentUpdatesNeededAlways
-                            else Res.string.agentUpdatesNeededWhy
-                        ),
-                ) {
-                    shown.needed.forEach { row -> NeededRow(row) }
-                }
-            Totals(shown)
-            shown.short?.let {
-                val needs = PhoneSizes.text(it.neededBytes)
-                val words = stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes))
-                KitNotice(words, tone = StatusTone.Attention)
-            }
-            when (shown.network) {
-                AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
-                AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
-                AgentUpdateNetwork.Unmetered -> Unit
-            }
-            shown.failure?.let { KitErrorNotice(message = stringResource(Res.string.agentUpdatesFailed), failure = it) }
-            KitGroupNote(
-                stringResource(Res.string.agentUpdatesAgentsLine),
-                action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
-            )
-            KitGroupNote(
-                stringResource(Res.string.agentUpdatesLinuxLine),
-                action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), actions::openLinuxPackages),
-            )
+            if (result) ResultBody(shown, actions) else QuestionBody(shown, actions)
         }
     }
     RemovalConfirm(sheet.asking.takeIf { sheet.visible }, actions)
+}
+
+/** The question: the Optional agents with their choices, the Needed parts, the totals and the lines under them. */
+@Composable
+private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
+    if (shown.optional.isNotEmpty())
+        KitRowGroup(label = stringResource(Res.string.localAgentRowOptional)) {
+            shown.optional.forEach { row -> OptionalRow(row, actions) }
+        }
+    if (shown.needed.isNotEmpty())
+        KitRowGroup(
+            label = stringResource(Res.string.agentUpdatesNeededLabel),
+            note =
+                stringResource(
+                    if (shown.neededWhy == AgentNeedRule.Always) Res.string.agentUpdatesNeededAlways
+                    else Res.string.agentUpdatesNeededWhy
+                ),
+        ) {
+            shown.needed.forEach { row -> NeededRow(row) }
+        }
+    Totals(shown)
+    shown.short?.let {
+        val needs = PhoneSizes.text(it.neededBytes)
+        val words = stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes))
+        KitNotice(words, tone = StatusTone.Attention)
+    }
+    when (shown.network) {
+        AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
+        AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
+        AgentUpdateNetwork.Unmetered -> Unit
+    }
+    shown.failure?.let { KitErrorNotice(message = failureWords(it), failure = it) }
+    KitGroupNote(
+        stringResource(Res.string.agentUpdatesAgentsLine),
+        action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
+    )
+    KitGroupNote(
+        stringResource(Res.string.agentUpdatesLinuxLine),
+        action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), actions::openLinuxPackages),
+    )
+}
+
+/** The answer's result: each removal that did not happen, by name, with the Agents page's own reason words. */
+@Composable
+private fun ResultBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
+    shown.refused.forEach { refusal ->
+        KitErrorNotice(
+            message = refusalWords(refusal.why),
+            title = stringResource(Res.string.agentUpdatesNotRemoved, KitBidi.auto(refusal.name)),
+        )
+    }
+    KitGroupNote(
+        stringResource(Res.string.agentUpdatesAgentsLine),
+        action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
+    )
 }
 
 /** One agent: its name, from → to, the choice (the kit stacks it into rows when a word does not fit), what it does. */
@@ -214,32 +235,16 @@ private fun RemovalConfirm(ask: AgentRemovalAskUi?, actions: AgentUpdateActions)
     )
 }
 
-/**
- * The agents' update choice on Home's one line: an agent the person chose to remove that was not removed (with the
- * way to Agents, where it can be removed), else "Agent updates ready" with Review while the offer waits for its answer.
- */
+/** Home's one line for the agents' update choice: "Agent updates ready" with Review until it is answered. */
 @Composable
-internal fun agentUpdateStatus(updates: AgentUpdateHomeUi, actions: AgentUpdateActions): KitStatus? {
-    val name = updates.notRemoved.firstOrNull()
-    return when {
-        name != null ->
-            KitStatus(
-                kind = KitStatusKind.Update,
-                id = "agent-updates:not-removed",
-                message = stringResource(Res.string.agentUpdatesNotRemoved, KitBidi.auto(name)),
-                tone = StatusTone.Attention,
-                action =
-                    KitLineAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
-            )
-        updates.pending && !updates.sheet.visible ->
-            KitStatus(
-                kind = KitStatusKind.Update,
-                id = "agent-updates:review",
-                message = stringResource(Res.string.agentUpdatesReady),
-                // Nothing is wrong: an answer is waiting. A calm mark.
-                tone = StatusTone.Neutral,
-                action = KitLineAction(stringResource(Res.string.nativePendingReview), actions::reviewAgentUpdates),
-            )
-        else -> null
-    }
-}
+internal fun agentUpdateStatus(updates: AgentUpdateHomeUi, actions: AgentUpdateActions): KitStatus? =
+    if (!updates.pending || updates.sheet.visible) null
+    else
+        KitStatus(
+            kind = KitStatusKind.Update,
+            id = "agent-updates:review",
+            message = stringResource(Res.string.agentUpdatesReady),
+            // Nothing is wrong: an answer is waiting. A calm mark.
+            tone = StatusTone.Neutral,
+            action = KitLineAction(stringResource(Res.string.nativePendingReview), actions::reviewAgentUpdates),
+        )

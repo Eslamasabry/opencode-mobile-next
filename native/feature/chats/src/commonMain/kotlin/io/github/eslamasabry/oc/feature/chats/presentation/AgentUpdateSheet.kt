@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateNetwork
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStarted
+import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -55,6 +57,9 @@ public data class AgentRemovalAskUi(
     val keepsAccountsAndConversations: Boolean,
 )
 
+/** An agent the person chose to remove that was not removed, and why (the Agents page's own words say it). */
+public data class AgentRefusalUi(val name: String, val why: RemovalRefusal)
+
 /** The room the chosen updates need and the room the phone has, when the first is larger. */
 public data class AgentUpdateShortSpace(val neededBytes: Long, val freeBytes: Long)
 
@@ -79,6 +84,8 @@ public data class AgentUpdateSheetUi(
     val asking: AgentRemovalAskUi? = null,
     val working: Boolean = false,
     val failure: Failure? = null,
+    /** After the answer: the removals that did not happen, each with its reason; the sheet shows only these then. */
+    val refused: ImmutableList<AgentRefusalUi> = persistentListOf(),
 )
 
 /** Everything Home shows about the agents' update choice. */
@@ -86,8 +93,6 @@ public data class AgentUpdateHomeUi(
     val sheet: AgentUpdateSheetUi = AgentUpdateSheetUi(),
     /** Home's downloads line says "Agent updates ready · Review": an offer waits for its answer. */
     val pending: Boolean = false,
-    /** Agents the person chose to remove that were not removed, by name (first one is told). */
-    val notRemoved: ImmutableList<String> = persistentListOf(),
 )
 
 /** The sheet's pure rules: which choices an agent offers, what is chosen, what shows, and the totals. */
@@ -175,6 +180,24 @@ public object AgentUpdateSheetRules {
         )
     }
 
+    /**
+     * The removals asked for that did not happen, each with the engine's reason; one that is neither removed nor
+     * refused is told as Failed, so a removal never goes silently missing.
+     */
+    public fun refused(
+        offer: AgentUpdateOffer,
+        decision: Map<AgentId, AgentUpdateChoice>,
+        started: AgentUpdateStarted,
+    ): List<AgentRefusalUi> =
+        decision
+            .filterValues { it == AgentUpdateChoice.Remove }
+            .keys
+            .filter { it !in started.removing }
+            .map { id ->
+                val name = offer.items.firstOrNull { it.id == id }?.name ?: id.raw
+                AgentRefusalUi(name, started.refused[id] ?: RemovalRefusal.Failed)
+            }
+
     /** Why Keep is not offered; null when it is. */
     private fun keepBlock(item: AgentUpdateItem): AgentKeepBlock? =
         if (item.keepAllowed) null else item.notKeptReason ?: AgentKeepBlock.NotSupportedAnyMore
@@ -193,7 +216,8 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val failure: Failure? = null,
         /** The offer key answered here: the sheet stays closed for it until Review, whatever the engine says first. */
         val closedKey: String? = null,
-        val notRemoved: List<String> = emptyList(),
+        /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
+        val refused: List<AgentRefusalUi> = emptyList(),
     )
 
     private val local = MutableStateFlow(Local())
@@ -204,13 +228,13 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun current(): AgentUpdateHomeUi = build(offers.value, local.value)
 
     private fun build(offer: AgentUpdateOffer?, now: Local): AgentUpdateHomeUi {
-        val visible = offer != null && offer.sheetDue && offer.appUpdateKey != now.closedKey
+        val due = offer != null && offer.sheetDue && offer.appUpdateKey != now.closedKey
+        val sheet =
+            AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty())
+                .copy(asking = now.toConfirm.firstOrNull(), working = now.working, failure = now.failure)
         return AgentUpdateHomeUi(
-            sheet =
-                AgentUpdateSheetRules.sheet(offer, now.picked, visible)
-                    .copy(asking = now.toConfirm.firstOrNull(), working = now.working, failure = now.failure),
+            sheet = sheet.copy(visible = due || now.refused.isNotEmpty(), refused = now.refused.toImmutableList()),
             pending = AgentUpdateSheetRules.pending(offer),
-            notRemoved = now.notRemoved.toImmutableList(),
         )
     }
 
@@ -257,14 +281,8 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         scope.launch {
             when (val outcome = engine.decide(decision)) {
                 is Outcome.Ok -> {
-                    val asked = decision.filterValues { it == AgentUpdateChoice.Remove }.keys
-                    val refused =
-                        (asked - outcome.value.removing.toSet()).mapNotNull { id ->
-                            offer.items.firstOrNull { it.id == id }?.name
-                        }
-                    local.update {
-                        it.copy(working = false, closedKey = offer.appUpdateKey, notRemoved = it.notRemoved + refused)
-                    }
+                    val refused = AgentUpdateSheetRules.refused(offer, decision, outcome.value)
+                    local.update { it.copy(working = false, closedKey = offer.appUpdateKey, refused = refused) }
                 }
                 is Outcome.Failed ->
                     // Busy is waiting, not failing: the choice is kept and applied when the phone is free.
@@ -292,9 +310,9 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         scope.launch { engine.review() }
     }
 
-    /** The "wasn't removed" line was read (or its way to Agents taken). */
-    public fun dismissNotRemoved() {
-        local.update { it.copy(notRemoved = it.notRemoved.drop(1)) }
+    /** The refused removals were read: the sheet closes. */
+    public fun closeResult() {
+        local.update { it.copy(refused = emptyList()) }
     }
 }
 
@@ -323,6 +341,9 @@ public interface AgentUpdateActions {
 
     /** "Update them in Linux › Packages": the Linux Packages page. */
     public fun openLinuxPackages() {}
+
+    /** Done on the sheet's result (the removals that did not happen): the sheet closes. */
+    public fun closeAgentUpdateResult() {}
 }
 
 /** No sheet: every answer does nothing. */

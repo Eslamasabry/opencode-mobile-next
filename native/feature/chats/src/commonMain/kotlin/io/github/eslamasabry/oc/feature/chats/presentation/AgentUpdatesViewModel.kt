@@ -47,8 +47,7 @@ public class AgentUpdatesViewModel(
     override fun reviewAgentUpdates(): Unit = model.review()
 
     override fun openAgentsFromUpdates() {
-        // Agents is where an agent is removed: a "wasn't removed" line is answered by going there.
-        if (model.current().notRemoved.isNotEmpty()) model.dismissNotRemoved()
+        // Agents is where an agent is removed: a refused removal is answered by going there.
         leaveSheet()
         nav.open(AgentsRoute.Home)
     }
@@ -58,9 +57,15 @@ public class AgentUpdatesViewModel(
         nav.open(LinuxRoute.Packages)
     }
 
-    /** Leaving the sheet for another page is Not now: Home's Review brings it back. */
+    override fun closeAgentUpdateResult(): Unit = model.closeResult()
+
+    /** Leaving the sheet for another page: its result is read, or the question is Not now (Review brings it back). */
     private fun leaveSheet() {
-        if (model.current().sheet.visible) model.notNow()
+        val sheet = model.current().sheet
+        when {
+            sheet.refused.isNotEmpty() -> model.closeResult()
+            sheet.visible -> model.notNow()
+        }
     }
 
     private companion object {

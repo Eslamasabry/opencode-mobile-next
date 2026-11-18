@@ -6,7 +6,17 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.MediaProblem
+import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFailed
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNoSpace
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBusy
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnconfirmed
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnsupported
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAbout
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAtLeast
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonBoth
@@ -78,3 +88,24 @@ internal fun frees(bytes: Long?): String =
 @Composable
 internal fun amount(bytes: Long, known: Boolean): String =
     stringResource(if (known) Res.string.agentUpdatesAbout else Res.string.agentUpdatesAtLeast, PhoneSizes.text(bytes))
+
+/** Why a removal did not happen, in the Agents page's own words (never the script's output). */
+@Composable
+internal fun refusalWords(why: RemovalRefusal): String =
+    stringResource(
+        when (why) {
+            RemovalRefusal.NotRemovable -> Res.string.agentsRemoveUnsupported
+            RemovalRefusal.Busy -> Res.string.agentsRemoveBusy
+            RemovalRefusal.Unsafe -> Res.string.linuxAgentPayloadUnsafe
+            RemovalRefusal.Failed -> Res.string.linuxAgentPayloadUnavailable
+            RemovalRefusal.Unconfirmed -> Res.string.agentsRemoveUnconfirmed
+        }
+    )
+
+/** Why the answer did not start: no room says so in plain words; anything else is the plain line (Details below it). */
+@Composable
+internal fun failureWords(failure: Failure): String =
+    stringResource(
+        if ((failure as? Failure.Media)?.problem == MediaProblem.DownloadNoSpace) Res.string.agentUpdatesNoSpace
+        else Res.string.agentUpdatesFailed
+    )

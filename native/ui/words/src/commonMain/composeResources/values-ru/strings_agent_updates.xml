@@ -52,4 +52,5 @@
     <string name="agentUpdatesLinuxAction">Обновите их в Linux › Пакеты</string>
     <string name="agentUpdatesFailed">Обновления не запустились.</string>
     <string name="agentUpdatesNotRemoved">Не удалось удалить %1$s.</string>
+    <string name="agentUpdatesNoSpace">На этом телефоне не хватает места для этих обновлений. Оставьте или удалите агента либо освободите место.</string>
 </resources>

@@ -43,4 +43,5 @@
     <string name="agentUpdatesLinuxAction">Linux › パッケージでアップデート</string>
     <string name="agentUpdatesFailed">アップデートを開始できませんでした。</string>
     <string name="agentUpdatesNotRemoved">%1$sを削除できませんでした。</string>
+    <string name="agentUpdatesNoSpace">このスマートフォンには、このアップデートに必要な空きがありません。エージェントを維持または削除するか、空きを増やしてください。</string>
 </resources>

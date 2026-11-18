@@ -49,4 +49,5 @@
     <string name="agentUpdatesLinuxAction">Actualízalos en Linux › Paquetes</string>
     <string name="agentUpdatesFailed">Las actualizaciones no empezaron.</string>
     <string name="agentUpdatesNotRemoved">No se quitó %1$s.</string>
+    <string name="agentUpdatesNoSpace">No hay suficiente espacio en este teléfono para estas actualizaciones. Mantén o quita un agente, o libera espacio.</string>
 </resources>

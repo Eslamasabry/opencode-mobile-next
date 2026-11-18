@@ -43,4 +43,5 @@
     <string name="agentUpdatesLinuxAction">Cập nhật chúng trong Linux › Gói</string>
     <string name="agentUpdatesFailed">Các cập nhật chưa bắt đầu.</string>
     <string name="agentUpdatesNotRemoved">Chưa gỡ được %1$s.</string>
+    <string name="agentUpdatesNoSpace">Điện thoại này không đủ dung lượng cho các cập nhật này. Hãy giữ hoặc gỡ một tác nhân, hoặc giải phóng dung lượng.</string>
 </resources>

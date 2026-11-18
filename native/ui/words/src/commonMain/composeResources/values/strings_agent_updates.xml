@@ -54,6 +54,7 @@
     <string name="agentUpdatesLinuxLine">Git and Python come from Ubuntu.</string>
     <string name="agentUpdatesLinuxAction">Update them in Linux › Packages</string>
     <string name="agentUpdatesFailed">The updates didn't start.</string>
+    <string name="agentUpdatesNoSpace">There isn't enough room on this phone for these updates. Keep or remove an agent, or free up space.</string>
     <!-- Home's line after the person chose to remove an agent and it was not removed; %1$s is its name. -->
     <string name="agentUpdatesNotRemoved">%1$s wasn't removed.</string>
 </resources>
