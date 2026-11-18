@@ -357,9 +357,11 @@ internal fun applySystemBars(window: Window, darkContent: Boolean, ground: Int) 
     // shows the platform theme's grey behind the status and navigation bars.
     window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(ground))
     window.statusBarColor = android.graphics.Color.TRANSPARENT
-    // Ignored from API 35 (edge-to-edge): KitScreen paints the ground under the navigation bar
-    // there.
-    window.navigationBarColor = ground
+    // Transparent on every version (B-461 look): below API 35 the system drew this bar OPAQUE in the ground colour over
+    // our content, a flat plate with a straight edge at the top of the navigation area, in gesture mode too. The window
+    // background above wears the ground, and every page draws to the screen's bottom edge (edge-to-edge), so the
+    // ground still shows there.
+    window.navigationBarColor = android.graphics.Color.TRANSPARENT
     // Dart kit_system_bars.dart:24: no divider line between the page and the navigation bar.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
         window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT

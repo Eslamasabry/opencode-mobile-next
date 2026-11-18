@@ -195,8 +195,8 @@ public interface KitPlatform {
 
 /**
  * The phone's own bars for one theme (Dart `KitSystemBars.of`, `lib/ui/kit/kit_system_bars.dart`):
- * a clear status bar over the page, the navigation bar in the page's [navigationBarColor] ground
- * with no divider, and icons light on a dark theme and dark on a light one. [statusBarDark] is the
+ * a clear status bar over the page, a clear navigation bar ([navigationBarColor] is transparent on every Android
+ * version: the page's ground shows through it) with no divider, and icons light on a dark theme and dark on a light one. [statusBarDark] is the
  * bar's own brightness, as iOS names it.
  */
 public data class KitSystemBarsLook(
@@ -210,14 +210,14 @@ public data class KitSystemBarsLook(
 
 /** Dart `KitSystemBars` (kit-v2 §7.1): every page announces the look for its theme. */
 public object KitSystemBars {
-    /** Dart `KitSystemBars.of`: [dark] is `ThemeRoles.isDark`, [ground] is `roles.ground`. */
+    /** Dart `KitSystemBars.of`: [dark] is `ThemeRoles.isDark`, [ground] is `roles.ground` (the window background; the bars themselves are clear). */
     public fun of(dark: Boolean, ground: Color): KitSystemBarsLook {
         val darkIcons = !dark // F: lib/ui/kit/kit_system_bars.dart:17
         return KitSystemBarsLook(
             statusBarColor = Color.Transparent,
             statusBarDarkIcons = darkIcons,
             statusBarDark = dark,
-            navigationBarColor = ground,
+            navigationBarColor = Color.Transparent,
             navigationBarDividerColor = Color.Transparent,
             navigationBarDarkIcons = darkIcons,
         )
