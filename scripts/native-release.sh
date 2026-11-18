@@ -2,6 +2,7 @@
 # Native (Kotlin) fix-forward release (E01-S05). Runbook: docs/native/release.md.
 #
 #   scripts/native-release.sh [--lineage public|owner] [--no-build] [--go]
+#   scripts/native-release.sh --lineage public --tag-only [--go]
 #
 # Without --go (the default) this is a DRY RUN: it checks that a release may start, shows the version it would take,
 # builds and gates the current tree (unless --no-build) and prints the GO checklist. It writes nothing tracked, makes no
@@ -31,6 +32,11 @@
 # the APKs carry <name>. The owner lineage is a test build: its APKs carry <name>-test.<build>, the dry run builds them
 # for the owner's phone, and --go refuses (a test build takes a number with version_code.sh allocate --kind build, and
 # is never tagged, because a tag would spend the public version name).
+# --tag-only (public lineage only; key-free): the same preflight and the same two gates (CI verdict and device smoke for
+# HEAD's commit), then with --go: the bump commit with its Release-Tag trailer, the tag, the push of master and the tag.
+# NO build, NO identity gate and no key file here: the public files are built, signed and checked by the Native release
+# workflow on the tag (native-release.yml), which makes the draft. It needs the release notes docs/releases/<tag>.md.
+# Without --go it is a dry run of exactly that: it prints every command it would run and changes nothing.
 # Environment: OC_RELEASE_REMOTE (default origin); OC_RELEASE_GH_REPO (owner/repo for the CI verdict, default from the
 # remote's URL); OC_SMOKE_RESULT_DIR (default native/build/release-smoke).
 # Exit: 0 done (dry run or release), 1 refused or a gate failed, 2 could not run.
@@ -41,17 +47,18 @@ readonly OWNER_LOCAL="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A624
 readonly PUBLIC_CI="842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
 readonly REMOTE="${OC_RELEASE_REMOTE:-origin}"
 
-usage() { sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,42p' "$0" | sed 's/^# \{0,1\}//'; }
 fail() { echo "native-release: REFUSED: $*" >&2; exit 1; }
 cannot() { echo "native-release: cannot run: $*" >&2; exit 2; }
 say() { printf '%s\n' "$*"; }
 
-GO=false BUILD=true LINEAGE=public
+GO=false BUILD=true LINEAGE=public TAG_ONLY=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h | --help) usage; exit 0 ;;
     --go) GO=true; shift ;;
     --no-build) BUILD=false; shift ;;
+    --tag-only) TAG_ONLY=true; shift ;;
     --lineage)
       [[ $# -ge 2 ]] || cannot "--lineage needs public or owner"
       LINEAGE="$2"; shift 2 ;;
@@ -63,7 +70,11 @@ case "$LINEAGE" in
   owner) EXPECT_SIGNER="$OWNER_LOCAL" ;;
   *) cannot "--lineage must be public or owner" ;;
 esac
-if $GO && ! $BUILD; then fail "--go always builds and gates; drop --no-build"; fi
+if $TAG_ONLY; then
+  # Key-free: the public files come from the Native release workflow on the tag, never from a build here.
+  [[ "$LINEAGE" == public ]] || fail "--tag-only is for the public lineage only (an owner build is a test build and is never tagged)."
+  BUILD=false
+elif $GO && ! $BUILD; then fail "--go always builds and gates; drop --no-build"; fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 NATIVE="$ROOT/native"
@@ -97,7 +108,7 @@ fi
 NEXT="$("$NATIVE/tool/version_code.sh" next --kind release)" || cannot "the versionCode allocator did not answer"
 [[ "$NEXT" =~ ^[0-9]+$ ]] && ((NEXT > CURRENT)) || cannot "the allocator gave '$NEXT', not above $CURRENT"
 
-say "native-release: $($GO && echo "GO" || echo "DRY RUN (nothing is committed, tagged, pushed or published)")"
+say "native-release: $($GO && echo "GO" || echo "DRY RUN (nothing is committed, tagged, pushed or published)")$($TAG_ONLY && echo ", TAG ONLY (no build, no identity gate, no key)")"
 say "  branch      $branch at $(git rev-parse --short HEAD), synchronized with $REMOTE"
 say "  version     $NAME+$CURRENT now; the release takes $NAME+$NEXT"
 if [[ "$LINEAGE" == public ]]; then
@@ -108,7 +119,11 @@ fi
 say "  lineage     $LINEAGE (${EXPECT_SIGNER:0:8}…)"
 
 # The same order as the build (native/build-logic ReleaseKey): OC_KEY_PROPERTIES, native/key.properties, then the old
-# android/key.properties with a notice.
+# android/key.properties with a notice. Not looked at with --tag-only: that mode signs nothing.
+key_ready=false
+if $TAG_ONLY; then
+  say "  signing     not used (--tag-only: the Native release workflow builds and signs the public files on the tag)"
+else
 named_key="${OC_KEY_PROPERTIES:-}"
 if [[ -n "${named_key// /}" ]]; then key_file="$named_key"
 elif [[ -f "$NATIVE/key.properties" ]]; then key_file="$NATIVE/key.properties"
@@ -124,6 +139,7 @@ if [[ -f "$key_file" ]]; then
   done
 fi
 say "  signing     $($key_ready && echo "key file present ($key_file)" || echo "no complete key file: the APKs stay unsigned and the identity gate will refuse them")"
+fi
 
 # ---- the two gates that prove tests ran: CI verdict and device smoke (both modes; read before anything is committed) -----
 HEAD_SHA="$(git rev-parse HEAD)"
@@ -180,12 +196,30 @@ if $GO && $gate_fail; then fail "$GATE_MSG"; fi
 
 TAG="v$NAME+$NEXT"
 NOTES="$ROOT/docs/releases/$TAG.md"
+NOTES_HEAD="# OpenCode Mobile $NAME+$NEXT"
+notes_ok() { [[ -s "$NOTES" && "$(head -n 1 "$NOTES")" == "$NOTES_HEAD" ]]; }
+tag_taken() {
+  git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null && return 0
+  git ls-remote --exit-code --tags "$REMOTE" "refs/tags/$TAG" >/dev/null 2>&1
+}
+if $TAG_ONLY && ! $GO; then
+  # The dry form of --tag-only: the same checks as --go, then the exact commands, and nothing changes.
+  notes_ok || { say "  notes       REFUSED: --go needs $NOTES starting with '$NOTES_HEAD' (commit them first)"; gate_fail=true; }
+  if tag_taken; then say "  tag         REFUSED: $TAG already exists (here or on $REMOTE)"; gate_fail=true; fi
+  say "  would run   native/tool/version_code.sh allocate --kind release --for \"native release $NAME+$NEXT ($LINEAGE lineage)\""
+  say "  would run   git add native/version.properties native/BUILD_NUMBERS.md"
+  say "  would run   git commit -m \"build(release): native $NAME+$NEXT\" -m \"Takes versionCode $NEXT for the $LINEAGE-lineage fix-forward release (scripts/native-release.sh --go).\" -m \"Release-Tag: $TAG\""
+  say "  would run   git tag -a $TAG -m \"OpenCode Mobile $NAME+$NEXT (native, $LINEAGE lineage)\""
+  say "  would run   git push $REMOTE $RELEASE_BRANCH && git push $REMOTE refs/tags/$TAG"
+  say "  then        gh workflow run native-release.yml --ref $RELEASE_BRANCH -f tag=$TAG (the public-key DRAFT; a person publishes it)"
+  $gate_fail && fail "the tag-only dry run found a refusal above; nothing was committed, tagged or pushed."
+  say "Dry run finished (tag only): re-run with --go to take $NAME+$NEXT, commit, tag and push. Nothing was changed."
+  exit 0
+fi
 if $GO; then
-  $key_ready || fail "--go needs the lineage key file (OC_KEY_PROPERTIES, native/key.properties or the old android/key.properties)."
-  [[ -s "$NOTES" && "$(head -n 1 "$NOTES")" == "# OpenCode Mobile $NAME+$NEXT" ]] ||
-    fail "--go needs release notes $NOTES starting with '# OpenCode Mobile $NAME+$NEXT' (commit them first)."
-  git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null && fail "tag $TAG already exists."
-  git ls-remote --exit-code --tags "$REMOTE" "refs/tags/$TAG" >/dev/null 2>&1 && fail "tag $TAG already exists on $REMOTE."
+  $TAG_ONLY || $key_ready || fail "--go needs the lineage key file (OC_KEY_PROPERTIES, native/key.properties or the old android/key.properties)."
+  notes_ok || fail "--go needs release notes $NOTES starting with '$NOTES_HEAD' (commit them first)."
+  tag_taken && fail "tag $TAG already exists (here or on $REMOTE)."
 
   # 1. Take the number and commit the bump (local only until every gate passes).
   # Only the release bump omits the marker: its master push matches no automatic workflow.
@@ -197,6 +231,8 @@ if $GO; then
     -m "Takes versionCode $NEXT for the $LINEAGE-lineage fix-forward release (scripts/native-release.sh --go)." \
     -m "Release-Tag: $TAG"
   say "  committed   the version bump ($(git rev-parse --short HEAD)), not pushed"
+  [[ "$(git log -1 --format=%B | sed -n 's/^Release-Tag: //p')" == "$TAG" ]] ||
+    fail "the bump commit does not carry Release-Tag: $TAG (it is local: inspect it before pushing anything)."
 else
   [[ -s "$NOTES" ]] || say "  notes       missing $NOTES (needed for --go)"
 fi
@@ -243,6 +279,16 @@ if $GO; then
   say "  pushed      $RELEASE_BRANCH and $TAG"
 fi
 
+if $TAG_ONLY; then
+  cat <<EOF
+
+Tag only: $TAG is pushed. Next, every line a person's check, in order:
+  [ ] gh workflow run native-release.yml --ref $RELEASE_BRANCH -f tag=$TAG (it builds, signs and gates the public files; a DRAFT)
+  [ ] the draft: sha256sum -c SHA256SUMS, each APK signer ${PUBLIC_CI:0:8}…, versionCode $NEXT
+  [ ] the in-place update proof over the previous public release, then publish by hand only on the owner's GO
+EOF
+  exit 0
+fi
 cat <<EOF
 
 GO checklist for $TAG ($LINEAGE lineage) — every line is a person's check, in order:
