@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitAgentModelChip
 import io.github.eslamasabry.oc.ui.kit.frame.KitWhereLine
 import io.github.eslamasabry.oc.ui.kit.frame.kitProjectServerLabel
+import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.chip.KitThinkingLevels
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
@@ -913,11 +914,6 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
                     onSelect = { actions.chooseVariant(levels[it]) },
                     modifier = Modifier.fillMaxWidth().testTag("new-thinking-choices"),
                 )
-            }
-        },
-    )
-                    }
-                }
             }
         },
     )
