@@ -19,12 +19,12 @@ class AgentCertificationFileTest {
 
     @Test
     fun `B-AGENT-009 the tested Paseo versions equal the Dart set`() {
-        // The freeze tip's set (lib/ now holds the released 2.1.5 app, without 0.12.0-0.14.0), plus 0.15.4: the phone
+        // The freeze tip's set (lib/ now holds the released 2.1.5 app, without 0.12.0-0.14.0), plus 0.15.4 and 0.16.1: the phone
         // pin that moved after the freeze (93fcf4049, the same addition AgentPinsParityTest records).
         val dart = freezeTipSource("lib/paseo/tested_versions.dart")
         val set = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(dart)!!.groupValues[1]
         assertEquals(
-            Regex("'([^']+)'").findAll(set).map { it.groupValues[1] }.toList() + listOf("0.15.3", "0.15.4"),
+            Regex("'([^']+)'").findAll(set).map { it.groupValues[1] }.toList() + listOf("0.15.3", "0.15.4", "0.16.1"),
             AgentCertification.TestedVersions.PASEO.toList(),
         )
     }

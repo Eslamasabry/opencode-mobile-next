@@ -7,11 +7,11 @@ internal const val AGENT_PINS_JSON: String = """{
   "schema": 1,
   "source": "lib/domain/agent_catalog.dart _builtInCatalog(), lib/builtin/agents/paseo_scripts.dart, lib/paseo/tested_versions.dart (copied verbatim; a pin moves only with an app release)",
   "paseo": {
-    "version": "0.15.4",
-    "packageLockSha256": "b61e82dd777fab352dcc19ad1989ea3d2ad978c69c1ebe87b4481cad83ae9226",
+    "version": "0.16.1",
+    "packageLockSha256": "d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5",
     "cliSha256": "2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94",
     "payloadSha256": "8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09",
-    "codeTreeSha256": "6395eb8b0119db3ece44ca70ada09a6b2f8d896ca5afd56f9879f969e85a14fa"
+    "codeTreeSha256": "766af65e563318895cdb7d4e79fed2629602fef5a98eb8215cb9d9ab3dc22a8a"
   },
   "node": {
     "version": "v24.22.2",
@@ -36,7 +36,8 @@ internal const val AGENT_PINS_JSON: String = """{
     "0.13.2",
     "0.14.0",
     "0.15.3",
-    "0.15.4"
+    "0.15.4",
+    "0.16.1"
   ],
   "agents": [
     {
