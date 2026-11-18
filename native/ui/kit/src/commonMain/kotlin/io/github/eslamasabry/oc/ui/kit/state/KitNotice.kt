@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.kit.frame.kitFloatingPart
 import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
 import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
@@ -201,6 +202,8 @@ private fun NoticeFrame(
         Box(
             Modifier.fillMaxWidth()
                 .semantics { if (liveRegion) this.liveRegion = LiveRegionMode.Polite }
+                // On a floating page the transcript runs on behind the blocks: a notice there has its own surface.
+                .kitFloatingPart(Space.S3.dp)
                 .padding(vertical = Space.S1.dp)
         ) { content() }
     }

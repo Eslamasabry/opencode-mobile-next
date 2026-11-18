@@ -122,3 +122,15 @@ internal fun Modifier.kitFloatingPartSurface(): Modifier {
         .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
         .then(look.modifier)
 }
+
+/**
+ * A part that stands in the top or the bottom block of a floating page, outside the message box (a notice, a tip, a form
+ * line, the voice controls): it wears the capsule's own surface with [inner] room inside, so the transcript that runs on
+ * behind the floating parts never shows through its words. Inside the message box (nested) and on a page that does not
+ * float it adds nothing.
+ */
+@Composable
+public fun Modifier.kitFloatingPart(inner: androidx.compose.ui.unit.Dp = 0.dp): Modifier =
+    if (LocalKitScreenFloating.current && !io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested.current)
+        kitFloatingPartSurface().padding(inner)
+    else this
