@@ -1,8 +1,8 @@
 package io.github.eslamasabry.oc.engine.analytics.umami
 
-import kotlinx.serialization.encodeToString
 import java.io.File
 import java.io.InterruptedIOException
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -26,6 +26,7 @@ public class UmamiHttp(
     private val endpoint: String,
     private val userAgent: () -> String,
 ) : UmamiTransport {
+    private val log = AppLog.tagged("UmamiGuard")
     private val http = OkHttpClient.Builder()
         .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
         .readTimeout(CALL_TIMEOUT_MS, TimeUnit.MILLISECONDS)
@@ -37,8 +38,22 @@ public class UmamiHttp(
         .build()
 
     override fun prepare(events: List<UmamiEvent>): UmamiCall {
-        val batch = events.size != 1
-        val body = if (batch) UmamiCodec.batch(events) else UmamiCodec.json.encodeToString(events.single())
+        // The guard reads the JSON that will really be posted; a key or word it does not know is dropped, by name in the log.
+        val guarded = UmamiBodyGuard.check(events)
+        if (guarded.dropped.isNotEmpty()) {
+            log.w { "usage report: dropped ${guarded.dropped.sorted().joinToString(", ")}" }
+        }
+        val kept = guarded.kept
+        // An event the guard withheld is never sent; it leaves the queue as if delivered so it cannot be retried.
+        val withheld = events.indices.toSet() - kept.toSet()
+        val body = guarded.body
+        if (body == null) {
+            return object : UmamiCall {
+                override fun cancel() = Unit
+                override suspend fun execute(): Outcome<Set<Int>> = Outcome.Ok(withheld)
+            }
+        }
+        val batch = kept.size != 1
         val call = http.newCall(Request.Builder()
             .url(endpoint.trimEnd('/') + if (batch) "/api/batch" else "/api/send")
             .header("User-Agent", userAgent())
@@ -56,9 +71,10 @@ public class UmamiHttp(
                 }
                 return reply.use { response ->
                     if (!response.isSuccessful) return@use Outcome.Failed(StatusMapping.failureFor(response.code, credentialsSent = false))
-                    val decoded = attempt({ Failure.UnreadableReply() }) { receipt(response.body, batch, events.size) }
+                    val decoded = attempt({ Failure.UnreadableReply() }) { receipt(response.body, batch, kept.size) }
                     if (decoded is Outcome.Failed) decoded
-                    else decoded.getOrNull()?.let { Outcome.Ok(it) } ?: Outcome.Failed(Failure.UnreadableReply())
+                    else decoded.getOrNull()?.let { accepted -> Outcome.Ok(accepted.map { kept[it] }.toSet() + withheld) }
+                        ?: Outcome.Failed(Failure.UnreadableReply())
                 }
             }
         }

@@ -36,7 +36,10 @@ import io.github.eslamasabry.oc.engine.analytics.health.HealthExit
 import io.github.eslamasabry.oc.engine.analytics.health.HealthExitMarks
 import io.github.eslamasabry.oc.engine.analytics.health.HealthPlatform
 import io.github.eslamasabry.oc.engine.analytics.health.HealthTelemetry
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFacts
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
 import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.analytics.product.ProductLifecycle
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
@@ -60,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -86,6 +90,7 @@ class AppTelemetryHealth(
     private val registry: Lazy<ConnectionRegistry>,
     private val navigator: Lazy<AppNavigator>,
     private val updates: Lazy<AppUpdates>,
+    private val preferences: Lazy<AppPreferences>,
     appScope: AppCoroutineScope,
 ) {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -145,6 +150,7 @@ class AppTelemetryHealth(
         startJourneys()
         followUpdates()
         followConnections(health)
+        followLook()
         // agent_start and its trace, from the agent host's create call (the protocol module knows no telemetry).
         PaseoGateway.agentStartObserver = { provider, failure, elapsedMs ->
             HealthFlow().agentStart(provider, ok = failure == null, failKind = agentFailKind(failure), elapsedMs = elapsedMs)
@@ -243,10 +249,34 @@ class AppTelemetryHealth(
         scope.launch {
             combine(connections.value.servers, registry.value.live) { servers, live ->
                     val kinds = live.values.map { if (it.profile.managedOnPhone) "phone" else "computer" }.toSet()
-                    Triple(servers.size, kinds, live.isNotEmpty())
+                    // For our own server: fixed product names and kinds only, never an address, a name or an id.
+                    val links =
+                        live.values
+                            .map {
+                                when {
+                                    it.profile.managedOnPhone -> "phone"
+                                    it.profile.backend == BackendKind.Paseo -> "computer"
+                                    else -> "remote"
+                                }
+                            }
+                            .toSet()
+                    val agents =
+                        live.values
+                            .map {
+                                when (it.profile.backend) {
+                                    BackendKind.OpenCode2 -> "opencode"
+                                    BackendKind.Paseo -> "paseo"
+                                    BackendKind.Codex -> "codex"
+                                }
+                            }
+                            .toSet()
+                    Seen(servers.size, kinds, live.isNotEmpty(), links, agents)
                 }
                 .distinctUntilChanged()
-                .collect { (saved, kinds, anyLive) ->
+                .collect { seen ->
+                    val (saved, kinds, anyLive) = seen
+                    UmamiFacts.put(UmamiField.ConnectionKind, UmamiField.joined(seen.links))
+                    UmamiFacts.put(UmamiField.Agents, UmamiField.joined(seen.agents))
                     val phone = "phone" in kinds
                     health.updateConnection(
                         serverKind = if (phone) "phone" else if (anyLive) "computer" else "none",
@@ -261,6 +291,28 @@ class AppTelemetryHealth(
                                 else -> null
                             },
                     )
+                }
+        }
+    }
+
+    private data class Seen(
+        val saved: Int,
+        val kinds: Set<String>,
+        val anyLive: Boolean,
+        val links: Set<String>,
+        val agents: Set<String>,
+    )
+
+    // ---- the look: the style and theme words for our own server ----
+
+    private fun followLook() {
+        scope.launch {
+            preferences.value.appearance
+                .map { it.style.storageName to it.mode.name.lowercase() }
+                .distinctUntilChanged()
+                .collect { (style, mode) ->
+                    UmamiFacts.put(UmamiField.Style, style)
+                    UmamiFacts.put(UmamiField.ThemeMode, mode)
                 }
         }
     }
