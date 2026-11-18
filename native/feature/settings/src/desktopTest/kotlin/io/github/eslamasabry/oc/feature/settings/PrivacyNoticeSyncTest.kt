@@ -438,10 +438,11 @@ class PrivacyNoticeSyncTest {
             for (field in UmamiField.entries) {
                 assertTrue("`${field.wire}`" in umami, "PRIVACY.md names `${field.wire}` for Umami")
                 assertTrue(has(policy, field.wire), "$tag: the bundled policy names ${field.wire}")
-                assertTrue(has(page, field.wire), "$tag: What we collect names ${field.wire} under Only to our own server")
+                assertTrue(has(page, field.wire), "$tag: What we collect must name ${field.wire} (own server)")
             }
         }
-        assertTrue("Only to our own server" in xmlString(File(words, "values/strings_s28_privacy.xml"), "collectOwnLabel"))
+        val label = xmlString(File(words, "values/strings_s28_privacy.xml"), "collectOwnLabel")
+        assertTrue("Only to our own server" in label)
     }
 
     // ---- the tests ----
