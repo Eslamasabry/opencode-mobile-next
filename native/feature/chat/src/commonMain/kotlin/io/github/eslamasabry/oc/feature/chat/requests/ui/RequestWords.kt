@@ -233,6 +233,7 @@ internal fun askToolKind(ask: AskView): String =
             AskVerb.Fetch, AskVerb.WebSearch -> stringResource(Res.string.approvalToolWeb)
             AskVerb.OutsideRead, AskVerb.OutsideWrite, AskVerb.OutsideRun, AskVerb.Outside ->
                 stringResource(Res.string.approvalToolOutside)
+            AskVerb.Task -> stringResource(Res.string.chatRequestTitleTask)
             else -> stringResource(Res.string.approvalToolOther)
         }
 
