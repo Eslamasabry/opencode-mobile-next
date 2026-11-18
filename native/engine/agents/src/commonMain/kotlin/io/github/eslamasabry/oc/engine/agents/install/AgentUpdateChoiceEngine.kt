@@ -24,6 +24,7 @@ public data class AgentUpdateInventory(
 
 public interface AgentChoiceHost {
     public suspend fun inventory(): AgentUpdateInventory
+    public suspend fun hasRoom(id: AgentId): Boolean
     public suspend fun busy(): Boolean
     public suspend fun remove(id: AgentId): Outcome<RemovalResult>
 }
@@ -40,6 +41,7 @@ public class AgentUpdateChoiceEngine(
     private val state = MutableStateFlow<AgentUpdateOffer?>(null)
     override val offer: StateFlow<AgentUpdateOffer?> = state.asStateFlow()
     private var reviewing = false
+    private var sharedAttempt = emptyList<Pair<AgentId, String?>>()
 
     public suspend fun refresh(): Unit = lane.withLock {
         val snapshot = read()
@@ -53,13 +55,7 @@ public class AgentUpdateChoiceEngine(
 
     private suspend fun read(): AgentUpdateOffer? {
         inventory = host.inventory()
-        return publish(inventory)
-    }
-
-    private fun publish(inventory: AgentUpdateInventory): AgentUpdateOffer? {
-        val answered = decisions.answered()
-        val items = decisions.apply(inventory.items)
-        state.value = inventory.offer(appKey, items, reviewing, answered)
+        state.value = decisions.offer(inventory, reviewing)
         return state.value
     }
 
@@ -78,8 +74,9 @@ public class AgentUpdateChoiceEngine(
         val presented = state.value?.items.orEmpty().associateBy { it.id }
         val snapshot = read() ?: return@withLock stale()
         val selected = snapshot.items.filter { it.id in choices }.map { it.copy(choice = choices[it.id]) }
-        if (selected.size != choices.size || selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }) return@withLock stale()
-        if (!fits(snapshot, selected)) return@withLock Failure.Media(MediaProblem.DownloadNoSpace).failed()
+        val staleRow = selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }
+        if (selected.size != choices.size || staleRow) return@withLock stale()
+        if (!host.fits(snapshot, selected)) return@withLock Failure.Media(MediaProblem.DownloadNoSpace).failed()
         val saved = save(selected)
         if (saved is Outcome.Failed) return@withLock saved
         if (selected.any { it.choice != AgentUpdateChoice.Keep } && host.busy()) return@withLock busy()
@@ -95,7 +92,8 @@ public class AgentUpdateChoiceEngine(
     private suspend fun save(items: List<AgentUpdateItem>): Outcome<Unit> = decisions.save(items).also {
         if (it is Outcome.Ok) {
             reviewing = false
-            publish(inventory)
+            sharedAttempt = emptyList()
+            state.value = decisions.offer(inventory, reviewing)
         }
     }
 
@@ -104,7 +102,8 @@ public class AgentUpdateChoiceEngine(
     } == true
 
     public suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean = lane.withLock {
-        if (allowed(id) && !host.busy()) start() else false
+        val needsShared = id == AgentId.OPENCODE && state.value?.items.orEmpty().any { it.neededWhen != null }
+        allowed(id) && !needsShared && !host.busy() && start()
     }
 
     /** A shared-only job can run without touching an agent payload. Agent jobs already bring these parts. */
@@ -114,15 +113,19 @@ public class AgentUpdateChoiceEngine(
         val sharedOnly = current.neededGoesAhead || (updates.any { it.id == AgentId.OPENCODE } &&
             current.items.any { it.neededWhen == AgentNeedRule.WithAnyUpdate })
         val canDownload = current.network == AgentUpdateNetwork.Unmetered || meteredAllowed
-        sharedOnly && updates.none { it.id != AgentId.OPENCODE } && canDownload && !host.busy() && start()
+        val targets = current.items.filter { it.neededWhen != null }.map { it.id to it.fromVersion }
+        val eligible = sharedOnly && updates.none { it.id != AgentId.OPENCODE } && canDownload
+        (eligible && targets != sharedAttempt && !host.busy() && start()).also { if (it) sharedAttempt = targets }
     }
 }
 
 private class ChoiceDecisions(private val appKey: String, private val prefs: AgentPrefs) {
-    fun answered() = prefs.string(ANSWERED) == appKey
+    fun offer(inventory: AgentUpdateInventory, reviewing: Boolean): AgentUpdateOffer? {
+        val answered = prefs.string(ANSWERED) == appKey
+        return inventory.offer(appKey, apply(inventory.items, answered), reviewing, answered)
+    }
 
-    fun apply(rows: List<AgentUpdateItem>): List<AgentUpdateItem> {
-        val answered = answered()
+    private fun apply(rows: List<AgentUpdateItem>, answered: Boolean): List<AgentUpdateItem> {
         return rows.map { item ->
             val choice = AgentUpdateChoice.entries.firstOrNull {
                 (answered || it == AgentUpdateChoice.Keep) && prefs.string(key(item.id)) == "${item.toVersion}:$it"
@@ -160,12 +163,13 @@ private fun valid(item: AgentUpdateItem): Boolean = item.group == AgentUpdateGro
     null -> false
 }
 
-private fun fits(offer: AgentUpdateOffer, selected: List<AgentUpdateItem>): Boolean {
+private suspend fun AgentChoiceHost.fits(offer: AgentUpdateOffer, selected: List<AgentUpdateItem>): Boolean {
     val free = offer.freeBytes ?: return true
     val updates = selected.filter { it.choice == AgentUpdateChoice.Update }
     val needed = offer.items.filter { it.neededWhen == AgentNeedRule.Always ||
         (it.neededWhen == AgentNeedRule.WithAnyUpdate && updates.isNotEmpty()) }
-    return (updates + needed).sumOf { it.downloadBytes ?: 0L } <= free
+    return updates.isEmpty() || ((updates + needed).sumOf { it.downloadBytes ?: 0L } <= free &&
+        updates.all { hasRoom(it.id) })
 }
 
 private fun List<AgentUpdateItem>.ids(choice: AgentUpdateChoice) = filter { it.choice == choice }.map { it.id }

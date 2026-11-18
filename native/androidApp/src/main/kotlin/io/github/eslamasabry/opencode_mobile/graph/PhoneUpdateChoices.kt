@@ -21,13 +21,15 @@ import io.github.eslamasabry.oc.engine.agents.removal.RemovalResult
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
 import io.github.eslamasabry.opencode_mobile.BuildConfig
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
+import io.github.eslamasabry.opencode_mobile.SetupDiskSpace
 import kotlinx.coroutines.withContext
 
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class, binding = binding<AgentUpdateChoices>())
 class PhoneUpdateChoices(
-    app: Application,
+    private val app: Application,
     stores: PreviewStores,
     private val phones: AppPhoneAgents,
     private val dispatchers: AppDispatchers,
@@ -36,6 +38,11 @@ class PhoneUpdateChoices(
     private val disk = PhoneChoiceInventory(app, phones)
     private val host = object : AgentChoiceHost {
         override suspend fun inventory() = disk.read()
+        override suspend fun hasRoom(id: AgentId): Boolean = if (id == AgentId.OPENCODE) {
+            val size = HomeDownloadSizes.OPEN_CODE_MB * BYTES_PER_MB
+            app.filesDir.usableSpace >= SetupDiskSpace.requiredInstallBytes(size)
+        } else phones.installSpace(id.raw)?.let { it.freeBytes >= it.neededBytes } != false
+
         override suspend fun busy() = phones.choiceInstallBusy() ||
             runtime.agentWorkBusy() || !runtime.mayUpdate()
 
@@ -82,3 +89,5 @@ class PhoneUpdateChoices(
         PhoneAgentRemovalIssue.Unavailable -> RemovalRefusal.Failed
     }
 }
+
+private const val BYTES_PER_MB = 1_000_000L
