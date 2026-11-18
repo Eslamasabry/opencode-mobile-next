@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.git
 
+import io.github.eslamasabry.oc.core.common.ok
 import kotlin.io.encoding.Base64
 
 /** One step's answer inside a fake envelope. */
@@ -34,6 +35,16 @@ internal class FakeShell(private val answer: (String) -> GitShellReply) : GitShe
                 GitShellReply.Output(envelopeOf(*replies.filter { "ocg_s ${it.name} " in script }.toTypedArray()))
             }
     }
+}
+
+internal class RecordingGitCredentialDrop : GitCredentialDrop {
+    val placed = mutableListOf<String>()
+    val removed = mutableListOf<GitSecretFile>()
+
+    override suspend fun place(secret: String) =
+        GitSecretFile("/tmp/git-token").also { placed += secret }.ok()
+
+    override suspend fun remove(file: GitSecretFile) = Unit.also { removed += file }.ok()
 }
 
 internal fun runs(script: String, name: String): Boolean = "ocg_s $name " in script
