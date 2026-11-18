@@ -163,10 +163,7 @@ class SetupRunner private constructor(private val context: Context) {
                 lastNotified = System.currentTimeMillis()
                 var workScope: SetupWorkScopes.Scope? = null
                 try {
-                    val prepared = linux.prepareSetupWork()
-                    workScope = prepared
-                    SetupService.start(context, texts.channel, texts.title, lastNotifiedText)
-                    worker = Thread({ linux.withSetupWork(prepared) { runJob(specs) } }, "oc-setup").apply { start() }
+                    worker = startWorker(specs, texts) { workScope = it }
                 } catch (_: Throwable) {
                     workScope?.let { linux.closeSetupWork(it) }
                     state.state = "failed"
@@ -180,6 +177,21 @@ class SetupRunner private constructor(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Prepares the setup work and starts the job's worker. A failure is logged by exception class and fixed token only
+     * (it used to vanish) and thrown on to the caller, which marks the job failed.
+     */
+    private fun startWorker(specs: List<Spec>, texts: Texts, prepared: (SetupWorkScopes.Scope) -> Unit): Thread =
+        runCatching {
+                val scope = linux.prepareSetupWork()
+                prepared(scope)
+                SetupService.start(context, texts.channel, texts.title, lastNotifiedText)
+                val job = { linux.withSetupWork(scope) { runJob(specs) } }
+                Thread(job, "oc-setup").apply { start() }
+            }
+            .onFailure { Log.w(BuiltinLinux.TAG, "setup could not start: ${BuiltinLinux.failureShape(it)}") }
+            .getOrThrow()
 
     fun cancel() {
         val running: Process?

@@ -41,6 +41,8 @@ class PhoneOpenCodeAutoUpdate(
 ) {
     private var started = false
     @Volatile private var updaterRef: OpenCodeAutoUpdater? = null
+    private val wakeLock = Any()
+    private var wakeJob: kotlinx.coroutines.Job? = null
 
     /**
      * The person chose Download now on mobile data (Home's ask): the pending refresh runs on this network, once, and
@@ -105,6 +107,18 @@ class PhoneOpenCodeAutoUpdate(
                 jobs,
                 log = { log.i { it } },
                 nowMs = { SystemClock.elapsedRealtime() },
+                // A retry waiting for its time wakes itself: ONE pending delayed look (a newer ask replaces
+                // the older one), cancelled with the app's scope.
+                wake = { delayMs ->
+                    synchronized(wakeLock) {
+                        wakeJob?.cancel()
+                        wakeJob =
+                            appScope.launch {
+                                kotlinx.coroutines.delay(delayMs)
+                                updaterRef?.changed()
+                            }
+                    }
+                },
             ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
                 val reading = idle.get()
