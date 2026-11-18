@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -30,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetTyping
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -103,17 +105,9 @@ public fun KitExpandRow(
     inset: Boolean = true,
     /** One line (kit_row_parts.dart:879); from 1.3× text two. A preview title ends with "…" where it is cut. */
     titleMaxLines: Int = 1,
-    /**
-     * When the person opens the row, the row and what it opened scroll into view once the opening has finished (a row
-     * low in a sheet or page would otherwise open below the visible end). Off by default.
-     */
-    revealWhenOpened: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    KitExpandRow(
-        title, expanded, modifier, supporting, onExpandedChange, leading, inset, titleMaxLines, 1, false,
-        revealWhenOpened = revealWhenOpened, content = content,
-    )
+    KitExpandRow(title, expanded, modifier, supporting, onExpandedChange, leading, inset, titleMaxLines, 1, false, content)
 }
 
 /** [KitExpandRow] with the supporting line's lines (1 by default, 2 where the fold's line explains itself) and [bare]. */
@@ -129,8 +123,6 @@ public fun KitExpandRow(
     titleMaxLines: Int,
     supportingMaxLines: Int,
     bare: Boolean,
-    /** See the short form's `revealWhenOpened`. */
-    revealWhenOpened: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalKitColors.current
@@ -140,17 +132,12 @@ public fun KitExpandRow(
     val reduced = specs.state.reduced
     val scale = kitTextScale()
     val turn by animateFloatAsState(if (expanded) HALF_TURN else 0f, specs.enter(), label = "expand-chevron")
-    // Look 10100: a row opened low in a sheet left what it opened below the sheet's end. A scroll asked for while the
-    // row still unfolds stops at the body's end of that moment (a few pixels), so the row asks once the unfolding has
-    // finished and the body has its full height. Only when the person opened it (a tap or the accessibility action),
-    // never for a row that is already open when the page appears.
-    val reveal = remember { BringIntoViewRequester() }
-    var revealPending by remember { mutableStateOf(false) }
+    val reveal = rememberExpandReveal()
     val change: (Boolean) -> Unit = { open ->
-        revealPending = open && revealWhenOpened
+        reveal?.pending = open
         onExpandedChange(open)
     }
-    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).then(if (revealWhenOpened) Modifier.bringIntoViewRequester(reveal) else Modifier)) {
+    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).then(reveal?.modifier ?: Modifier)) {
         Row(
             Modifier.fillMaxWidth()
                 .testTag("kit-expand-row-header")
@@ -174,10 +161,21 @@ public fun KitExpandRow(
                 Spacer(Modifier.width(Space.S3.dp))
             }
             Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
-                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitFontScale(), titleMaxLines))
+                KitText(
+                    title,
+                    Modifier.testTag("kit-row-title"),
+                    role = TypeRole.RowTitle,
+                    maxLines = kitRowTitleLines(kitFontScale(), titleMaxLines),
+                )
                 supporting?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
-                    KitText(it, Modifier.testTag("kit-row-supporting"), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines))
+                    KitText(
+                        it,
+                        Modifier.testTag("kit-row-supporting"),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines),
+                    )
                 }
             }
             Spacer(Modifier.width(Space.S2.dp))
@@ -193,17 +191,7 @@ public fun KitExpandRow(
             enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
             exit = if (reduced) ExitTransition.None else shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
         ) {
-            if (revealPending) {
-                val unfolded = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
-                LaunchedEffect(unfolded) {
-                    if (unfolded) {
-                        // One frame: the scrolling body has taken its full height first.
-                        withFrameNanos {}
-                        reveal.bringIntoView()
-                        revealPending = false
-                    }
-                }
-            }
+            RevealWhenUnfolded(reveal)
             if (bare) {
                 Column(Modifier.fillMaxWidth(), content = content)
             } else {
@@ -217,6 +205,41 @@ public fun KitExpandRow(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Look 10100: a row opened low in a sheet left what it opened under the sheet's end. A scroll asked for while the row
+ * still unfolds stops at the body's end of that moment (a few pixels), and nothing asked again. So, inside a scrolling
+ * sheet body, a row the person opened (a tap or the accessibility action; never one already open when the sheet
+ * appears) brings itself and what it opened into view one frame after the unfolding has finished.
+ */
+private class ExpandReveal {
+    val requester = BringIntoViewRequester()
+    var pending by mutableStateOf(false)
+    val modifier: Modifier = Modifier.bringIntoViewRequester(requester)
+}
+
+/** Null outside a scrolling sheet body ([LocalKitSheetTyping] marks one): there a row opens where it stands. */
+@Composable
+private fun rememberExpandReveal(): ExpandReveal? {
+    if (LocalKitSheetTyping.current == null) return null
+    return remember { ExpandReveal() }
+}
+
+@Composable
+private fun AnimatedVisibilityScope.RevealWhenUnfolded(reveal: ExpandReveal?) {
+    if (reveal == null || !reveal.pending) return
+    val unfolded =
+        transition.currentState == EnterExitState.Visible &&
+            transition.targetState == EnterExitState.Visible
+    LaunchedEffect(unfolded) {
+        if (unfolded) {
+            // One frame: the scrolling body has taken its full height first.
+            withFrameNanos {}
+            reveal.requester.bringIntoView()
+            reveal.pending = false
         }
     }
 }

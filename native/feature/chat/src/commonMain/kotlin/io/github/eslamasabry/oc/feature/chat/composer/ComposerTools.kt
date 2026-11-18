@@ -314,10 +314,9 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
             onExpandedChange = { open = it },
             leading = KitIcons.layers,
             modifier = Modifier.testTag("composer-tools-advanced"),
-            // The rows that open with "More tools" come into view once they have unfolded (looks 10098 and 10100: a
-            // scroll asked for two frames into the unfolding stopped a few pixels down and left them under the foot).
-            revealWhenOpened = true,
         ) {
+            // The rows that open with "More tools" come into view once they have unfolded: the kit's expand row does
+            // that inside a sheet (looks 10098 and 10100).
             conversation(close)
         }
     }

@@ -200,7 +200,7 @@ public fun KitTip(
             val gap = with(LocalDensity.current) { Space.S2.dp.roundToPx() }
             val rise = with(LocalDensity.current) { TipRules.riseDp(motion).dp.roundToPx() }
             // Never over the words of the part around the anchor (the message box): above or below all of it.
-            val place = remember(above, gap, beside, clearance) { TipPosition(above, gap, beside) { clearance?.boundsInWindow } }
+            val place = remember(above, gap, beside, clearance) { TipPosition(above, gap, beside, clearance) }
             val bubble: @Composable () -> Unit = {
                 val enter: EnterTransition =
                     if (motion.reduced) EnterTransition.None
@@ -247,7 +247,13 @@ private fun TipInLayer(layer: KitMenuLayerState, place: TipPosition, anchorInWin
                     val origin = layer.origin
                     val anchor = IntRect(at.left.toInt() - origin.x, at.top.toInt() - origin.y, at.right.toInt() - origin.x, at.bottom.toInt() - origin.y)
                     val window = IntSize(constraints.maxWidth, constraints.maxHeight)
-                    val clear = place.clearInWindow()?.let { c -> IntRect(c.left.toInt() - origin.x, c.top.toInt() - origin.y, c.right.toInt() - origin.x, c.bottom.toInt() - origin.y) }
+                    val clear =
+                        place.clearInWindow()?.let { c ->
+                            IntRect(
+                                c.left.toInt() - origin.x, c.top.toInt() - origin.y,
+                                c.right.toInt() - origin.x, c.bottom.toInt() - origin.y,
+                            )
+                        }
                     placeables.forEach { p -> p.place(place.at(anchor, clear, window, IntSize(p.width, p.height))) }
                 }
             }
@@ -300,9 +306,11 @@ private class TipPosition(
     private val above: Boolean,
     private val gap: Int,
     private val beside: Boolean = false,
-    /** The part the tip stands clear of, in window pixels ([KitTipClearance]); null or empty: none. */
-    val clearInWindow: () -> Rect? = { null },
+    /** The part the tip stands clear of ([KitTipClearance], window pixels); null: none. */
+    private val clearance: KitTipClearance? = null,
 ) : PopupPositionProvider {
+    fun clearInWindow(): Rect? = clearance?.boundsInWindow
+
     // The popup's anchor bounds are window pixels, as the clearance is.
     override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset =
         at(anchorBounds, clearInWindow()?.roundToIntRect(), windowSize, popupContentSize)
@@ -326,9 +334,12 @@ private class TipPosition(
                 .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
         val y =
             // Inside a tall anchor only when no part is to be kept clear: then it stands outside that part.
-            (if (around == null && TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat())) anchorBounds.top + gap
-            else if (above) top - gap - popupContentSize.height else bottom + gap)
-                .coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
+            when {
+                around == null && TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat()) ->
+                    anchorBounds.top + gap
+                above -> top - gap - popupContentSize.height
+                else -> bottom + gap
+            }.coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
         return IntOffset(x, y)
     }
 }
