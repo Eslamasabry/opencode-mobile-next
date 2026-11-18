@@ -140,7 +140,21 @@ public sealed interface SpeechModel {
 
     public data class Downloading(val name: String) : SpeechModel
 
-    public data class Ready(val name: String) : SpeechModel
+    /**
+     * The engine that types speech is ready. Its name is words, so the page writes it in the app's language when it is
+     * shown (the hub said "Whisper speech models" in English after the language changed: the name had been written
+     * once, at app start).
+     */
+    public data class Ready(val engine: SpeechEngine) : SpeechModel
+}
+
+/** Which engine types speech on this phone ([SpeechModel.Ready]). */
+public enum class SpeechEngine {
+    /** The app's own Whisper speech models. */
+    Whisper,
+
+    /** Android's own on-device speech recognition. */
+    PhoneRecognizer,
 }
 
 public data class VoiceFacts(

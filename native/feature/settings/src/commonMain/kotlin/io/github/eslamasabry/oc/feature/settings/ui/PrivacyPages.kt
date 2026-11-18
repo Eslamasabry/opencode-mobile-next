@@ -81,7 +81,8 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
                 modifier = Modifier.testTag("privacy-what-we-collect"),
                 leading = KitRowLeading.Glyph(KitIcons.info),
                 supporting = stringResource(Res.string.collectRowSummary),
-                supportingMaxLines = 2,
+                // Whole at 360 dp (look of build 10086: it ended in "…" at text 1.0): it wraps as far as it needs.
+                supportingMaxLines = Int.MAX_VALUE,
                 trailing = KitRowTrailing.Chevron,
                 onClick = { actions.onOpen(SettingsPage.WhatWeCollect) },
             )
