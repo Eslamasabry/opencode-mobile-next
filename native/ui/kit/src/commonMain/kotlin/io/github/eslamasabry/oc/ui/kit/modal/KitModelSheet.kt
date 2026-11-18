@@ -193,30 +193,58 @@ public object KitModelOrder {
     }
 
     /**
-     * One provider's models in their order: starred ones, then the model in use, then the newest first. "Newest" uses
-     * the most truthful thing known: the release date where the agent or provider gives one (OpenCode's catalog), else
-     * a version read from the name (else the id) compared number by number ("Opus 10" before "Opus 5", "gpt-10"
-     * before "gpt-9"), and on a tie the agent's own order ([IndexedValue.index], the order the list came in).
+     * One provider's models in their order. The final rule, in plain words:
+     * 1. Starred models first, then the model in use.
+     * 2. The rest go by FAMILY: the name's text before its first version number, case and separators ignored
+     *    ("Opus 4.1", "opus-4" and "OPUS_5" are the family "opus"; "gpt-10" is "gpt").
+     * 3. Inside a family the higher version comes first, dated or not ("gpt-10" before "gpt-9"; "opus-4.1" before
+     *    "opus-4"; an undated "opus-5" before a dated "opus-4"). Equal versions: the later release date, then the
+     *    agent's own order.
+     * 4. The families themselves go by their newest release date (dated before undated, later first), then by where
+     *    the agent first listed them: with "sonnet" released 2026-03 and "opus" released 2026-01, every sonnet comes
+     *    before every opus. A family with no dated member keeps the agent's own place among the undated.
+     * Sorting whole families as groups, with one key per family and one per model inside it, is what keeps this a
+     * total order: no pair of models can be ranked one way by date and the other way by version. The version is read
+     * from the label, else the id; the date is the catalog's release date where the agent or provider gives one.
      */
     private fun newestFirst(
         list: List<IndexedValue<KitModelOption>>,
         current: String?,
         starred: Set<String>,
     ): List<KitModelOption> {
-        val ranked = list.map { (index, m) -> Ranked(m, index, version(m.label) ?: version(m.modelId)) }
-        return ranked
-            .sortedWith(
-                compareBy<Ranked>({ it.option.key !in starred }, { it.option.key != current })
-                    .thenBy { it.option.releasedAtMs == null }
-                    .thenByDescending { it.option.releasedAtMs ?: 0L }
+        val ranked = list.map { (index, m) -> Ranked(m, index, version(m.label) ?: version(m.modelId), family(m)) }
+        val pinned =
+            ranked
+                .filter { it.option.key in starred || it.option.key == current }
+                .sortedWith(compareBy<Ranked>({ it.option.key !in starred }, { it.index }))
+        val rest = ranked.filter { it.option.key !in starred && it.option.key != current }
+        // One key per family: its newest member's date (null = none dated), then its first place in the agent's list.
+        val newest = rest.groupBy { it.family }.mapValues { (_, members) -> members.mapNotNull { it.option.releasedAtMs }.maxOrNull() }
+        val firstPlace = rest.groupBy { it.family }.mapValues { (_, members) -> members.minOf { it.index } }
+        val ordered =
+            rest.sortedWith(
+                compareBy<Ranked>({ newest[it.family] == null })
+                    .thenByDescending { newest[it.family] ?: 0L }
+                    .thenBy { firstPlace[it.family] }
+                    .thenBy { it.family }
                     .thenBy { it.version == null }
                     .thenComparator { a, b -> compareVersions(b.version.orEmpty(), a.version.orEmpty()) }
+                    .thenBy { it.option.releasedAtMs == null }
+                    .thenByDescending { it.option.releasedAtMs ?: 0L }
                     .thenBy { it.index }
             )
-            .map { it.option }
+        return (pinned + ordered).map { it.option }
     }
 
-    private class Ranked(val option: KitModelOption, val index: Int, val version: List<Long>?)
+    private class Ranked(val option: KitModelOption, val index: Int, val version: List<Long>?, val family: String)
+
+    /** The name's text before its first version, lower-cased with separators dropped; the label's, else the id's. */
+    private fun family(m: KitModelOption): String {
+        fun head(text: String): String? =
+            versionPattern.find(text)?.let { text.substring(0, it.range.first) }
+        val raw = head(m.label) ?: head(m.modelId) ?: m.label
+        return raw.lowercase().filter { it.isLetterOrDigit() }
+    }
 
     /** A run of digits and dots that is not a size ("480B", "1M", "128k") nor part of a longer number. */
     private val versionPattern = Regex("""\d+(?:\.\d+)*(?!\d|\.\d|[bBkKmM](?![a-zA-Z]))""")
