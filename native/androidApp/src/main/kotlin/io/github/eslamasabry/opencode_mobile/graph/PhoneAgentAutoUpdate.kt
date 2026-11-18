@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentSpace
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeShortSpace
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
@@ -217,7 +218,28 @@ class PhoneAgentAutoUpdate(
         // Everything runs off the main thread: the decision reads the helper's status in the phone's Linux. Nothing the
         // updater does may end the app: an error in a look is logged by its type only and the next look goes on.
         appScope.launch(dispatchers.io) {
-            safely { updater.decision.collect { status.set(it); phones.setUpdateNote(it) } }
+            // A hold lasting past its short wait is told on Home (never silent for long); a decision that moves on
+            // clears it at once.
+            var told: HomeHold? = null
+            var wait: kotlinx.coroutines.Job? = null
+            safely {
+                updater.decision.collect {
+                    status.set(it)
+                    phones.setUpdateNote(it)
+                    val hold = holdOf(it.step)
+                    if (hold != told) {
+                        told = hold
+                        wait?.cancel()
+                        downloads.helperHold.value = null
+                        if (hold != null) {
+                            wait = appScope.launch(dispatchers.io) {
+                                delay(HOLD_TOLD_AFTER.seconds)
+                                downloads.helperHold.value = hold
+                            }
+                        }
+                    }
+                }
+            }
         }
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
@@ -431,3 +453,18 @@ private suspend fun rereadRoom(phones: AppPhoneAgents, downloads: PhoneDownloads
     if (downloads.helperShort.value == null || agent == null) return
     downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, phones.installSpace(agent.raw))
 }
+
+/** How long the agents' update may wait before Home says why (the same short wait as OpenCode's holds). */
+private const val HOLD_TOLD_AFTER = 120L
+
+/** The hold Home tells for the agents' update decision [step]; null for a step that is not a long hold. */
+private fun holdOf(step: AgentUpdateStep): HomeHold? =
+    when (step) {
+        AgentUpdateStep.WaitingAgentsBusy -> HomeHold.AgentsIdle
+        AgentUpdateStep.WaitingSetup,
+        AgentUpdateStep.Refused -> HomeHold.AgentsSetup
+        AgentUpdateStep.WaitingSwitch -> HomeHold.AgentsSwitch
+        AgentUpdateStep.ReadFailed -> HomeHold.AgentsRead
+        AgentUpdateStep.Reading -> HomeHold.AgentsChecking
+        else -> null
+    }

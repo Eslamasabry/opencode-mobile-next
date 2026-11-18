@@ -35,7 +35,19 @@ public sealed interface HomeDownloadPhase {
 }
 
 /** Why a ready update waits (the plain words are in the strings, one per reason). */
-public enum class HomeHold { Reply, PhoneNotReady }
+public enum class HomeHold {
+    Reply,
+    PhoneNotReady,
+
+    /** The agents' update waits: until the agents are idle, for a setup job, for a server move, or its read failed. */
+    AgentsIdle,
+    AgentsSetup,
+    AgentsSwitch,
+    AgentsRead,
+
+    /** The agents' versions are being checked (the first look after an app update takes longer than a short wait). */
+    AgentsChecking,
+}
 
 /** One download's state; [megabytes] is the honest "about" size in [HomeDownloadSizes]. */
 public data class HomeDownloadFact(
@@ -44,6 +56,8 @@ public data class HomeDownloadFact(
     val megabytes: Int = HomeDownloadSizes.of(kind),
     /** A failed download that stopped for want of room: what it needs and what the phone has. */
     val short: HomeShortSpace? = null,
+    /** The agent being installed, by its name, while the agents' update runs ("Updating Claude Code"). */
+    val name: String? = null,
 )
 
 /** The room a stopped download needs and the room the phone has, in megabytes, with the agent's own name. */

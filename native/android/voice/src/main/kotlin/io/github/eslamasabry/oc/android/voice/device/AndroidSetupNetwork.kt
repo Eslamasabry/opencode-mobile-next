@@ -91,7 +91,14 @@ public object SetupNetworkRules {
     private fun fromCarriers(facts: NetworkFacts): SetupNetwork {
         val carriers = facts.underlying.orEmpty().filter { it.internet }
         return when {
-            carriers.isEmpty() -> SetupNetwork.Unknown
+            // Android names no network the VPN runs over, yet says the VPN is not metered, has no cellular link and is
+            // not on a metered connection: that is the Wi-Fi-or-wired case, free data (never when it says otherwise).
+            carriers.isEmpty() ->
+                if (!facts.cellular && !facts.activeMetered && facts.notMetered) {
+                    SetupNetwork.Unmetered
+                } else {
+                    SetupNetwork.Unknown
+                }
             !facts.validated && carriers.none { it.validated } -> SetupNetwork.Unknown
             carriers.all { it.notMetered && !it.cellular } -> SetupNetwork.Unmetered
             else -> SetupNetwork.Metered

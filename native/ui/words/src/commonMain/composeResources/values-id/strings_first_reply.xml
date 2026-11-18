@@ -19,4 +19,6 @@
     <string name="chatModelFailSignInAction">Masuk</string>
     <string name="chatStalledOnTool">Masih menunggu %1$s.</string>
     <string name="chatStalledStop">Hentikan</string>
+    <string name="setupStepClock">Langkah ini · %1$s</string>
+    <string name="setupAgentUserStep">Pengguna Linux untuk agen</string>
 </resources>

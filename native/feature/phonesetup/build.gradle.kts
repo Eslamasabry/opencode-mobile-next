@@ -7,6 +7,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:runtime"))
         implementation(project(":engine:linuxsetup"))
+        implementation(project(":engine:agents"))
         implementation(project(":engine:runtime"))
     }
 }

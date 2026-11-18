@@ -19,4 +19,6 @@
     <string name="chatModelFailSignInAction">تسجيل الدخول</string>
     <string name="chatStalledOnTool">لا يزال بانتظار %1$s.</string>
     <string name="chatStalledStop">إيقاف</string>
+    <string name="setupStepClock">هذه الخطوة · %1$s</string>
+    <string name="setupAgentUserStep">مستخدم Linux للوكلاء</string>
 </resources>

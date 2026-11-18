@@ -11199,6 +11199,7 @@ setupActivityConfiguring	94712ba042
 setupActivityDownloading	bec4657d36
 setupActivityUnpacking	f53b696f48
 setupActivityWorking	254b725d16
+setupAgentUserStep	059647938a
 setupAppStageDownloading	1d5e42e8b4
 setupAppStageVerifying	3795ad670b
 setupBatteryBody	f140c5ed87
@@ -11335,6 +11336,7 @@ setupRegistrySaved	da3e10db90
 setupRegistrySearch	223f281f09
 setupRegistryTitle	8de0956afd
 setupRuntimeTwo	125a7fd100
+setupStepClock	1f247f8120
 setupStepTimedOut	7e367a1404
 setupStoppedByRestart	42e3edaf80
 setupSwitchFailed	3391532eea

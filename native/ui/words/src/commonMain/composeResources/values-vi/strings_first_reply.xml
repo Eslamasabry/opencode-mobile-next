@@ -19,4 +19,6 @@
     <string name="chatModelFailSignInAction">Đăng nhập</string>
     <string name="chatStalledOnTool">Vẫn đang chờ %1$s.</string>
     <string name="chatStalledStop">Dừng</string>
+    <string name="setupStepClock">Bước này · %1$s</string>
+    <string name="setupAgentUserStep">Người dùng Linux cho các tác nhân</string>
 </resources>

@@ -9,6 +9,8 @@
     <string name="setupActivityChecking">Checking what is installed</string>
     <string name="setupActivityWorking">Working</string>
     <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupStepClock">This step · %1$s</string>
+    <string name="setupAgentUserStep">Linux user for agents</string>
     <string name="setupHeartbeatQuiet">Still working. Long steps can take several minutes.</string>
     <string name="chatModelFailRateLimit">The model is busy right now. Switch model, or try again in a few minutes.</string>
     <string name="chatModelFailDailyLimit">The free daily limit for this model is used up. Switch model, or try again tomorrow.</string>
