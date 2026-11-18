@@ -11,6 +11,8 @@ import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFieldGroup
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiPages
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiEvent
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
@@ -96,6 +98,9 @@ class PrivacyNoticeSyncTest {
         words += BreadcrumbWords.named.keys.flatMap { it.split('.') }
         words += BreadcrumbWords.named.values.flatten()
         words += "linux_setup" // the prefix of `linux_setup_<step>`
+        // The fields our own server may get (UmamiField): their names and every fixed word they take are names too.
+        words += UmamiField.wires
+        words += UmamiField.entries.flatMap { it.allowedWords.orEmpty() }
         words += setOf("breadcrumbs", "problem_report") // crash-side lines that are not events
         return SendableNames(
             events = productSchema,
@@ -417,6 +422,26 @@ class PrivacyNoticeSyncTest {
         val claimed =
             NeverCollected.entries.any { it.name in setOf("ScreenSize", "DeviceModel", "TimeZone", "Location") }
         assertTrue(!claimed, "the never-list cannot claim what Google Analytics receives on its own")
+    }
+
+    @Test
+    fun `B-SEC-219 every field our own server may get is named in PRIVACY, the policy and the page`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        val words = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val dir = File(words, if (tag == "en") "values" else "values-$tag")
+            val policy = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            val page = UmamiFieldGroup.entries.joinToString(" ") { group ->
+                xmlString(File(dir, "strings_s28_privacy.xml"), "collectOwn" + group.name)
+            }
+            for (field in UmamiField.entries) {
+                assertTrue("`${field.wire}`" in umami, "PRIVACY.md names `${field.wire}` for Umami")
+                assertTrue(has(policy, field.wire), "$tag: the bundled policy names ${field.wire}")
+                assertTrue(has(page, field.wire), "$tag: What we collect names ${field.wire} under Only to our own server")
+            }
+        }
+        assertTrue("Only to our own server" in xmlString(File(words, "values/strings_s28_privacy.xml"), "collectOwnLabel"))
     }
 
     // ---- the tests ----
