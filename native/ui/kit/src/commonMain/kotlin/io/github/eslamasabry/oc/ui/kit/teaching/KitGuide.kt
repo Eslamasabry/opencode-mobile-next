@@ -196,7 +196,6 @@ public fun KitGuide(
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
     val reduced = KitMotion.state.reduced
-    val scale = kitTextScale()
     val rail: @Composable () -> Unit = {
         val railPad = if (group == null) Modifier.padding(top = Space.S2.dp) else Modifier
         if (reduced) {
