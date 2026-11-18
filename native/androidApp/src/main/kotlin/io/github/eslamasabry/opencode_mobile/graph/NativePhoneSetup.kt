@@ -642,10 +642,18 @@ class NativePhoneSetup(
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         updateJob.starting(shown.value.jobId)
+        var joined = false
         try {
-            return command { it.run(setOf(SetupComponentIds.OPENCODE), RUNTIME_PARAMS) }
+            val result =
+                command { engine ->
+                    // Another job already runs (the agents' install, a repair): run() would only watch it, and it is
+                    // not the update. Say busy, so the try is not spent and that job is not shown as the update.
+                    if (engine.progress.value.state == SetupState.Running) joined = true
+                    else engine.run(setOf(SetupComponentIds.OPENCODE), RUNTIME_PARAMS)
+                }
+            return if (joined) Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy)) else result
         } finally {
-            updateJob.started(shown.value.jobId)
+            if (joined) updateJob.abandoned() else updateJob.started(shown.value.jobId)
         }
     }
 

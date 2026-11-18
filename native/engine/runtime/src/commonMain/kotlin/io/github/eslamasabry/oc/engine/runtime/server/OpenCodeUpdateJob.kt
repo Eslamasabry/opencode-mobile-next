@@ -24,6 +24,11 @@ public class OpenCodeUpdateJob {
         state.update { it.copy(starting = false, job = if (shownJob != it.before) shownJob else it.job) }
     }
 
+    /** The ask only found another job running (it would have watched it): that job is not the update. */
+    public fun abandoned() {
+        state.update { it.copy(starting = false) }
+    }
+
     public fun owns(jobId: String?): Boolean =
         state.value.let { jobId != null && (jobId == it.job || (it.starting && jobId != it.before)) }
 }
