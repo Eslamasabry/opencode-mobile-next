@@ -69,7 +69,7 @@ class NativePhoneSetup(
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
-    private val lane = Mutex()
+    private val lane = Mutex().also { SetupLane.engineLane = it }
     private var engine: SetupEngine? = null
     private val shown = MutableStateFlow(SetupProgress.Idle)
     private val changed = MutableStateFlow(0)
@@ -641,6 +641,10 @@ class NativePhoneSetup(
 
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+        // An agents' install already runs (the one installer slot is theirs): this ask would collide with it.
+        if ((native { runner.running } as? Outcome.Ok)?.value != false) {
+            return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+        }
         updateJob.starting(shown.value.jobId)
         var joined = false
         try {

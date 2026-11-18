@@ -66,6 +66,9 @@ class NativeAgentSetupJobs(
     override suspend fun anySetupRunning(): Boolean? =
         (native { runner.running || status()?.optString("state") == "running" } as? Outcome.Ok)
             ?.value
+            // The setup engine is checking or handing over a job (OpenCode's update, Repair): not running yet in the
+            // native record, but it holds the installer slot and shares components with an agents' install.
+            ?.let { it || SetupLane.engineStarting }
 
     override suspend fun freeBytes(): Long? =
         (native { app.filesDir.usableSpace.coerceAtLeast(0L) } as? Outcome.Ok)?.value
