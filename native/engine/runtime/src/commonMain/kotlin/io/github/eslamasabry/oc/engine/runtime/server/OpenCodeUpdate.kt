@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -35,6 +36,18 @@ public object OpenCodeAutoUpdateRule {
         if (switchPending || installProblem) return false
         return true
     }
+}
+
+/**
+ * Why the update is held back while the phone is behind the pin on a network that is free to download over. Said on
+ * Home after [OpenCodeAutoUpdater.TOLD_AFTER], never at once (a short hold ends by itself).
+ */
+public enum class OpenCodeHold {
+    /** A reply (or other work on the server) is running: the update restarts the server, so it waits for it. */
+    Busy,
+
+    /** A setup job runs, a switch is half done or the server has a problem: it waits until the server is ready. */
+    NotReady,
 }
 
 /** What the auto-updater reads about the phone server's OpenCode (This phone's host model). */
@@ -82,9 +95,20 @@ public class OpenCodeAutoUpdater(
     private val jobs: OpenCodeUpdateJobs,
     /** One line per change of what the updater sees: which condition holds it back (no personal data). */
     private val log: ((String) -> Unit)? = null,
+    /** A monotonic clock in milliseconds; the default (no clock) never tells a hold. */
+    private val nowMs: () -> Long = { 0L },
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
+    private var holdSince: Long? = null
+    private val holding = MutableStateFlow<OpenCodeHold?>(null)
+
+    /**
+     * The update has been held back for [TOLD_AFTER] without a break while the phone is behind the pin on an unmetered
+     * network, and why. Null while it is not behind, not held, or held only briefly. A metered network has its own
+     * line ([waitingForUnmetered]); a failed update job shows as failed, so neither is repeated here.
+     */
+    public val held: StateFlow<OpenCodeHold?> = holding.asStateFlow()
 
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
@@ -126,6 +150,37 @@ public class OpenCodeAutoUpdater(
     public companion object {
         /** How long a status read may take before the decision goes on without it. */
         public val READ_LIMIT: kotlin.time.Duration = 15.seconds
+
+        /** A hold shorter than this stays silent (it ends by itself); a longer one is told on Home. */
+        public val TOLD_AFTER: kotlin.time.Duration = 2.minutes
+    }
+
+    /** Why the update is held while behind the pin on a free network; null when it goes or is not held. */
+    private fun holdReason(
+        installed: String?,
+        tried: Boolean,
+        networkMetered: Boolean,
+        go: Boolean,
+        busy: Boolean,
+    ): OpenCodeHold? {
+        val behind = !installed.isNullOrEmpty() && installed != host.pinnedVersion && !tried && !networkMetered
+        return when {
+            !behind || go -> null
+            busy -> OpenCodeHold.Busy
+            jobs.running || host.switchPending || host.installProblem -> OpenCodeHold.NotReady
+            else -> null
+        }
+    }
+
+    /** Starts, keeps or ends the hold; [held] says its reason only once it has lasted [TOLD_AFTER]. */
+    private fun track(why: OpenCodeHold?) {
+        if (why == null) {
+            holdSince = null
+            holding.value = null
+            return
+        }
+        val since = holdSince ?: nowMs().also { holdSince = it }
+        holding.value = if (nowMs() - since >= TOLD_AFTER.inWholeMilliseconds) why else null
     }
 
     private fun note(line: String) {
@@ -156,6 +211,7 @@ public class OpenCodeAutoUpdater(
                 attemptedThisRun = tried,
                 metered = metered,
             )
+        track(holdReason(inst, tried, networkMetered, go, busy))
         if (explain) {
             note(
                 "installed=${installed ?: "unknown"} pinned=${host.pinnedVersion} busy=$busy engineRunning=$running " +

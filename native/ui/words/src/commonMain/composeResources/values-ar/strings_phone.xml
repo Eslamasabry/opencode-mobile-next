@@ -992,4 +992,6 @@
     <string name="phoneDownloadAskBodyHelper">هذا تحديث مساعد الوكلاء على هذا الهاتف. يُحسب من باقة بياناتك. الانتظار حتى Wi-Fi يؤجّله إلى وقت لاحق.</string>
     <string name="phoneDownloadAskNow">نزّل الآن</string>
     <string name="phoneDownloadAskWait">انتظر Wi-Fi</string>
+    <string name="phoneDownloadReadyReply">تحديث OpenCode جاهز · يُثبَّت عندما لا يكون أي ردّ قيد التشغيل</string>
+    <string name="phoneDownloadReadyPhone">تحديث OpenCode جاهز · يُثبَّت عندما يكون خادم الهاتف جاهزًا</string>
 </resources>

@@ -897,6 +897,8 @@
     <string name="thermalGuardSaveFailed">Couldn't save heat protection. Try again.</string>
     <string name="phoneDownloadWaitingOpenCode">OpenCode update waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadWaitingHelper">Agents helper update waiting for Wi-Fi · about %1$d MB</string>
+    <string name="phoneDownloadReadyReply">OpenCode update ready · installs when no reply is running</string>
+    <string name="phoneDownloadReadyPhone">OpenCode update ready · installs when the phone server is ready</string>
     <string name="phoneDownloadOnMobile">Download on mobile data</string>
     <string name="phoneDownloadRunningOpenCode">Updating OpenCode</string>
     <string name="phoneDownloadRunningHelper">Updating the agents helper</string>

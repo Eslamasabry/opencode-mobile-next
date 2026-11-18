@@ -886,4 +886,6 @@
     <string name="phoneDownloadAskBodyHelper">Đây là bản cập nhật trình hỗ trợ tác nhân trên điện thoại này. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
     <string name="phoneDownloadAskNow">Tải ngay</string>
     <string name="phoneDownloadAskWait">Chờ Wi-Fi</string>
+    <string name="phoneDownloadReadyReply">Bản cập nhật OpenCode đã sẵn sàng · sẽ cài khi không có phản hồi nào đang chạy</string>
+    <string name="phoneDownloadReadyPhone">Bản cập nhật OpenCode đã sẵn sàng · sẽ cài khi máy chủ trên điện thoại sẵn sàng</string>
 </resources>
