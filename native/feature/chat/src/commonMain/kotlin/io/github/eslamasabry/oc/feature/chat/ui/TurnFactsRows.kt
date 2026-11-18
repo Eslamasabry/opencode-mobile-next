@@ -206,7 +206,10 @@ internal fun TurnWorkLine(
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
     val cut = remember(rows) { StepListRules.cut(rows) }
-    val open = folds.open[foldKey] == true
+    // A turn with a delegated step whose sub-agent waits on the person opens on entry (the person's own fold wins once
+    // tapped), so the way to the child, "Open its conversation", is one tap from the row.
+    val childNeeds = LocalChildNeedsYou.current
+    val open = folds.open[foldKey] ?: work.steps.any { it.waitsOnChild(childNeeds) }
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
     val summed = StepListRules.sums(work.state)
