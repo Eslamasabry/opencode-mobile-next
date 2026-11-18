@@ -298,7 +298,7 @@
     <string name="safetyStopOrphanBody">لا شيء ينتظرها، لكن ما كانت تنفذه يضيع. تتلقى إيقافًا لطيفًا، ثم إيقافًا قسريًا بعد 5 ثوانٍ.</string>
     <string name="settingsHubGroupNotifications">الإشعارات والخلفية</string>
     <string name="settingsHubGroupUsage">الاستخدام</string>
-    <string name="settingsHubPrivacyRow">الخصوصية والبيانات المحلية</string>
+    <string name="settingsHubPrivacyRow">الخصوصية والبيانات</string>
     <string name="pluginsSectionOnServer">على الخادم</string>
     <string name="notifySectionWhat">ما الذي يُشعرني</string>
     <string name="discoverSearchGoTo">انتقل إلى</string>

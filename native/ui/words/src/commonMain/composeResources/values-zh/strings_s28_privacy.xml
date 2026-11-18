@@ -30,7 +30,7 @@
     <string name="collectMemory">来自 Android 的内存警告</string>
     <string name="collectDevice">你手机的内存和可用存储范围、处理器类型和 WebView 版本、是否允许通知，以及你所用服务器的类型和版本。我们自己的 Umami 服务器只会收到应用版本和构建编号、语言、Android 主版本及设备类别（手机或平板）。手机型号和屏幕尺寸由 Google Analytics 自行从 Android 获取。</string>
     <string name="collectCrashKind">错误的类型及其在应用代码中的位置，绝不包含错误消息</string>
-    <string name="collectExit">意外的进程退出（process_exit）。Android 标记为 user_requested 的停止仅在开启“使用情况和应用健康”时统计，不作为异常发送</string>
+    <string name="collectExit">应用进程上次意外结束时，会发送一份名为 process_exit 的报告及其固定原因（exit_reason）。你自己要求的停止（Android 称为 user_requested）绝不会作为报告发送：只在开启“使用情况和应用健康”时统计</string>
     <string name="collectSteps">你最后 30 步操作，以 chat.send 这样的简短词语表示</string>
     <string name="collectCrashKeys">应用版本、安装方式、服务器类型、手机上的服务器是否运行、打开的连接数、服务器版本，以及报告的类型和代码</string>
     <string name="collectNever">你的提示词和回复、录制的语音音频（由从 huggingface.co 下载的语音模型在设备上转写因而音频绝不会离开手机，或在 Android 12 及更高版本上由 Android 自带的设备端语音识别以离线优先方式转写，并适用 Android 对该服务的隐私条款）、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>

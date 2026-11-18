@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.feature.settings.presentation.SpeechEngine
 import android.Manifest
 import android.app.Activity
 import android.app.Application
@@ -52,9 +53,6 @@ import io.github.eslamasabry.oc.feature.voice.presentation.asDictation
 import io.github.eslamasabry.oc.feature.voice.presentation.asReader
 import io.github.eslamasabry.oc.feature.voice.presentation.asMicSetup
 import io.github.eslamasabry.oc.feature.voice.presentation.asVoiceModels
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.voiceNativePhoneRecognizer
-import io.github.eslamasabry.oc.ui.words.res.voiceNoticesWhisper
 import java.lang.ref.WeakReference
 import java.util.Locale
 import kotlin.time.Clock
@@ -75,7 +73,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import org.jetbrains.compose.resources.getString
 
 /*
  * P12-VOICE app wiring (the one Android-only voice file). It builds `:android:voice`'s stack over the app's stores and
@@ -231,7 +228,7 @@ class AndroidVoiceHub(
  */
 @SingleIn(AppScope::class)
 @Inject
-class AndroidVoiceSettings(application: Application, appScope: AppCoroutineScope) : VoiceSettings {
+class AndroidVoiceSettings(application: Application) : VoiceSettings {
     private val offline = OfflineSpeechEngine.available
     val offered: Boolean =
         application.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE) &&
@@ -242,12 +239,9 @@ class AndroidVoiceSettings(application: Application, appScope: AppCoroutineScope
 
     init {
         if (offered) {
-            appScope.launch {
-                val engine =
-                    if (offline) Res.string.voiceNoticesWhisper
-                    else Res.string.voiceNativePhoneRecognizer
-                mutable.value = VoiceFacts(speechModel = SpeechModel.Ready(getString(engine)))
-            }
+            // The engine, not its name: the page names it in the app's language when it shows it.
+            val engine = if (offline) SpeechEngine.Whisper else SpeechEngine.PhoneRecognizer
+            mutable.value = VoiceFacts(speechModel = SpeechModel.Ready(engine))
         }
     }
 

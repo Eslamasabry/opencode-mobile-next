@@ -59,7 +59,7 @@
     <string name="e7ModelUiDefault">Mặc định</string>
     <string name="e7ModelUiSelectionGone">Lựa chọn này không còn nữa. Làm mới danh sách mô hình và thử lại.</string>
     <string name="e7VoiceUiLocalInput">Nhập bằng giọng nói trên máy</string>
-    <string name="e7VoiceUiPrivacyDownload">Âm thanh không bao giờ rời khỏi điện thoại này.</string>
+    <string name="e7VoiceUiPrivacyDownload">Âm thanh ở lại trên điện thoại này. Lời nói của bạn được chuyển thành văn bản ngay trên điện thoại, và âm thanh không được giữ lại sau đó. Tải mô hình giọng nói cần internet một lần.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android báo không có micrô tích hợp. Nhập bằng giọng nói vẫn có thể dùng với micrô có dây hoặc USB.</string>
     <string name="e7VoiceUiLanguage">Ngôn ngữ chuyển giọng nói thành văn bản</string>
     <string name="e7VoiceUiVerifying">Đang kiểm tra mô hình đã tải</string>
