@@ -83,6 +83,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitToolDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
 import io.github.eslamasabry.oc.ui.words.res.kitToolStopped
+import io.github.eslamasabry.oc.ui.words.res.kitToolUnanswered
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldFailed
 import io.github.eslamasabry.oc.ui.words.res.kitWorkHideEarlierSteps
@@ -685,7 +686,12 @@ private fun OneStep(
             subject =
                 if (f.kind == ToolKind.Shell && f.shell != null) null
                 else stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput) ?: stepSubjectWords(f),
-            detail = declinedWith ?: stepDetailWords(f),
+            // A step the run ended on before the person answered says why it did not run, under its one name.
+            detail =
+                declinedWith
+                    ?: (if ((step.state == StepState.Stopped || step.state == StepState.NotRun) && out.metadata?.containsKey(io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY) == true)
+                        stringResource(Res.string.kitToolUnanswered)
+                    else stepDetailWords(f)),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
             status =
                 if (waitingForYou) KitToolStatus.WaitingForYou
