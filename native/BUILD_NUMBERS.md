@@ -113,3 +113,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10087 | build | 2026-11-18 | look build for next-update branches b2-modelorder + b8-approvalcard, not the line (source 34353bff1a, native/listb-look-1) |
 | 10088 | build | 2026-11-18 | look build for next-update branches rich-analytics + b7-dailynews, not the line (source 179b82237f, native/listb-look-2) |
 | 10089 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: soft ends at the capsule and message box corners (source 1ae291912b) |
+| 10090 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: sign-in page polish + large-text agent grid (source f4fa4e8f4b) |
