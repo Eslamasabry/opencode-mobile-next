@@ -129,17 +129,14 @@ public interface SignInTerminalActions {
 
     public fun setAccessibleMode(on: Boolean)
 
-    /** "Done": stops the sign-in if it still runs, then reads the account. */
+    /**
+     * "Done": stops the sign-in if it still runs, then reads the account. After [SignInStep.CouldNotCheck] it is
+     * "Check sign-in again": it reads the account again, without a new sign-in.
+     */
     public fun finish()
 
     /** "Sign in again" after NotYet or a failure. */
     public fun startAgain()
-
-    /**
-     * "Check sign-in again" after [SignInStep.CouldNotCheck]: reads the account again, without a new sign-in. Does
-     * nothing in any other step.
-     */
-    public fun checkAgain()
 
     /**
      * Back: stops the sign-in (exactly this one), then leaves; stays when it could not be stopped.

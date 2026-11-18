@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalFrame
+import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalFrame
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -228,19 +230,9 @@ public fun SignInTerminalScreen(
                                     vertical = Space.S2.dp,
                                 ),
                             primary =
-                                KitAction(
-                                    stringResource(Res.string.agentsSignInCheckAgain),
-                                    actions::checkAgain,
-                                ),
+                                KitAction(stringResource(Res.string.agentsSignInCheckAgain), actions::finish),
                         )
-                        state.checkCode?.let { code ->
-                            KitDetailsFold(
-                                label = stringResource(Res.string.kitDetails),
-                                copyLabel = stringResource(Res.string.kitCopyAll),
-                                notes = listOf(code),
-                                modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-                            )
-                        }
+                        state.checkCode?.let { DetailsFold(it) }
                     }
                     SignInStep.NotYet -> {
                         Running(state, actions, Modifier.weight(1f))
@@ -344,45 +336,7 @@ public fun SignInTerminalScreen(
 @Composable
 private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
-        if (state.takesInput) {
-            // "Paste code" is always there while the sign-in runs (Flutter's terminal menu "Paste"): a
-            // long press on the grid selects text, so without it a browser's code could not reach
-            // the program at all. It sits next to the page and code actions, never in a menu.
-            @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
-            val paste =
-                KitAction(
-                    stringResource(Res.string.agentsSignInPaste),
-                    { clipboard.getText()?.text?.let(actions::paste) },
-                    icon = KitIcons.paste,
-                )
-            // The code is a credential for the next minute: keep it out of recents and screenshots.
-            if (state.code != null) io.github.eslamasabry.oc.ui.kit.platform.KitSecureEffect()
-            val copy =
-                state.code?.let {
-                    KitAction(
-                        stringResource(Res.string.agentsSignInCopyCode, "\u2066$it\u2069"),
-                        actions::copyCode,
-                    )
-                }
-            io.github.eslamasabry.oc.ui.kit.action.KitActionBlock(
-                modifier =
-                    Modifier.padding(
-                        start = LocalKitTokens.current.gutter.dp,
-                        end = LocalKitTokens.current.gutter.dp,
-                        bottom = Space.S2.dp,
-                    ),
-                primary =
-                    if (state.canOpenPage)
-                        KitAction(
-                            stringResource(Res.string.agentsSignInOpenPage),
-                            actions::openSignInPage,
-                            icon = KitIcons.externalLink,
-                        )
-                    else null,
-                secondary = copy ?: paste,
-                tertiary = if (copy != null) listOf(paste) else emptyList(),
-            )
-        }
+        if (state.takesInput) RunningActions(state, actions)
         // One way to the sign-in page (owner, 2026-11-18): an address the program printed is not a second door. A tap
         // on it in the grid opens the same page "Open sign-in page" opens; the readable text shows it folded, with no
         // "Open link" row of its own.
@@ -396,7 +350,9 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
                     }
                 else null
             }
-        CompositionLocalProvider(LocalTerminalLinkHost provides sameDoor) {
+        // The page's gutter; once the program ended there is nothing to type into: no field, no switch saying so twice.
+        val frame = KitTerminalFrame(gutter = true, input = state.takesInput, links = false)
+        CompositionLocalProvider(LocalTerminalLinkHost provides sameDoor, LocalKitTerminalFrame provides frame) {
             KitTerminalView(
                 platformView = state.terminal?.native,
                 title = state.title,
@@ -408,24 +364,62 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 inputEnabled = state.inputEnabled,
                 defaultKeyBar = state.takesInput,
-                // Once the program ended there is nothing to type into: no field, no switch that says so twice.
                 showAccessibleSwitch = state.takesInput,
-                showInput = state.takesInput,
-                showLinks = false,
-                gutter = true,
             )
         }
         // The whole address only here; the page offers it as "Open sign-in page".
-        if (state.takesInput)
-            state.pageAddress?.let { address ->
-                KitDetailsFold(
-                    label = stringResource(Res.string.kitDetails),
-                    copyLabel = stringResource(Res.string.kitCopyAll),
-                    notes = listOf(address),
-                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-                )
-            }
+        if (state.takesInput) state.pageAddress?.let { DetailsFold(it) }
     }
+}
+
+/** "Open sign-in page", "Copy code" and "Paste code", while the agent's program runs and takes input. */
+@Composable
+private fun RunningActions(state: SignInTerminalUi, actions: SignInTerminalActions) {
+    // "Paste code" is always there while the sign-in runs (Flutter's terminal menu "Paste"): a long press on the grid
+    // selects text, so without it a browser's code could not reach the program at all. It sits next to the page and
+    // code actions, never in a menu.
+    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    val paste =
+        KitAction(
+            stringResource(Res.string.agentsSignInPaste),
+            { clipboard.getText()?.text?.let(actions::paste) },
+            icon = KitIcons.paste,
+        )
+    // The code is a credential for the next minute: keep it out of recents and screenshots.
+    if (state.code != null) io.github.eslamasabry.oc.ui.kit.platform.KitSecureEffect()
+    val copy =
+        state.code?.let {
+            KitAction(stringResource(Res.string.agentsSignInCopyCode, "\u2066$it\u2069"), actions::copyCode)
+        }
+    io.github.eslamasabry.oc.ui.kit.action.KitActionBlock(
+        modifier =
+            Modifier.padding(
+                start = LocalKitTokens.current.gutter.dp,
+                end = LocalKitTokens.current.gutter.dp,
+                bottom = Space.S2.dp,
+            ),
+        primary =
+            if (state.canOpenPage)
+                KitAction(
+                    stringResource(Res.string.agentsSignInOpenPage),
+                    actions::openSignInPage,
+                    icon = KitIcons.externalLink,
+                )
+            else null,
+        secondary = copy ?: paste,
+        tertiary = if (copy != null) listOf(paste) else emptyList(),
+    )
+}
+
+/** Technical text the page keeps out of its reading text: the page's address, a check's reason. */
+@Composable
+private fun DetailsFold(text: String) {
+    KitDetailsFold(
+        label = stringResource(Res.string.kitDetails),
+        copyLabel = stringResource(Res.string.kitCopyAll),
+        notes = listOf(text),
+        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+    )
 }
 
 /** Steps in which the agent's own sign-in can still be done on this page (its intro's open-and-paste words hold). */

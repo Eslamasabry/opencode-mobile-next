@@ -59,31 +59,30 @@ class SignInTerminalConfirmTest {
             opened++
         }
 
-        override fun confirmSignInPage() {}
+        override fun confirmSignInPage() = Unit
 
-        override fun dismissSignInPage() {}
+        override fun dismissSignInPage() = Unit
 
-        override fun copyCode() {}
+        override fun copyCode() = Unit
 
         override fun paste(text: String) {
             pasted += text
         }
 
-        override fun send(line: String) {}
+        override fun send(line: String) = Unit
 
-        override fun setAccessibleMode(on: Boolean) {}
+        override fun setAccessibleMode(on: Boolean) = Unit
 
-        override fun finish() {}
+        /** "Check sign-in again" on Could not check. */
+        override fun finish() {
+            checked++
+        }
 
         override fun startAgain() {
             restarted++
         }
 
-        override fun checkAgain() {
-            checked++
-        }
-
-        override fun leave() {}
+        override fun leave() = Unit
     }
 
     /** The app provides a link host on every screen (MainActivity); the page must not turn it into a second door. */
@@ -128,7 +127,7 @@ class SignInTerminalConfirmTest {
         }
 
     @Test
-    fun `B-AGENT-448 a check that could not tell offers one Check sign-in again, never a new sign-in, reason under Details`() =
+    fun `B-AGENT-448 Could not check offers one Check sign-in again, no new sign-in, the reason under Details`() =
         runComposeUiTest {
             val actions = Actions()
             show(
@@ -166,7 +165,9 @@ class SignInTerminalConfirmTest {
                     accessibleMode = true,
                     canOpenPage = true,
                     pageAddress = address,
-                    transcript = "If the browser didn't open, visit: https://claude.com/…\nPaste code here if prompted >",
+                    transcript =
+                        "If the browser didn't open, visit: https://claude.com/…\n" +
+                            "Paste code here if prompted >",
                 ),
                 actions,
             )
@@ -201,7 +202,8 @@ class SignInTerminalConfirmTest {
                         canOpenPage = true,
                         pageAddress = "https://claude.com/cai/oauth/authorize?code=true&client_id=demo&state=demo",
                         transcript =
-                            "Opening browser to sign in…\nIf the browser didn't open, visit: https://claude.com/…\n" +
+                            "Opening browser to sign in…\n" +
+                                "If the browser didn't open, visit: https://claude.com/…\n" +
                                 "Paste code here if prompted >",
                     ),
                 "checking" to SignInTerminalUi(step = SignInStep.Checking, transcript = ended),

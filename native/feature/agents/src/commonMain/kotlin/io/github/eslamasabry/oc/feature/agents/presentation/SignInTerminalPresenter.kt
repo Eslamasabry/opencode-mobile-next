@@ -233,22 +233,27 @@ public class SignInTerminalPresenter(
     }
 
     /**
-     * Three answers, never two (owner, 2026-11-18): only the agent's own "signed out" is NotYet; a read that could not
-     * tell (busy, timed out, no answer) is tried again within the host's bound ([SignInAgents.checkTries]), saying
-     * while it waits that a conversation keeps the agent busy, and then is CouldNotCheck with one "Check sign-in again".
+     * Three answers, never two (owner, 2026-11-18): only the agent's own "signed out" is NotYet. A read that could
+     * not tell (busy, timed out, no answer) is tried again within the host's bound ([SignInAgents.checkTries]),
+     * saying while it waits that a conversation keeps the agent busy; then it is CouldNotCheck, with one "Check
+     * sign-in again".
      */
     private suspend fun read(): SignInCheck {
-        var answer: SignInCheck = SignInCheck.CouldNotCheck(NO_ANSWER)
         val tries = agents.checkTries.coerceAtLeast(1)
-        for (round in 0 until tries) {
+        var round = 0
+        var answer = agents.checkSignedIn(owner, agent, round)
+        while (round + 1 < tries && worthAnother(answer, round)) {
+            ui.update { it.copy(checkBusy = (answer as? SignInCheck.CouldNotCheck)?.busy == true) }
+            round++
             answer = agents.checkSignedIn(owner, agent, round)
-            val open = answer as? SignInCheck.CouldNotCheck ?: break
-            if (!open.passing) break
-            // A timed-out read already waited its whole budget: one more (warm) try, not the whole ladder.
-            if (open.code == SignInCheck.CouldNotCheck.TIMED_OUT && round >= 1) break
-            if (round < tries - 1) ui.update { it.copy(checkBusy = open.busy) }
         }
         return answer
+    }
+
+    /** A reason that can pass by itself; a time-out already waited its whole budget, so it gets one more try only. */
+    private fun worthAnother(answer: SignInCheck, round: Int): Boolean {
+        val open = answer as? SignInCheck.CouldNotCheck ?: return false
+        return open.passing && !(open.code == SignInCheck.CouldNotCheck.TIMED_OUT && round >= 1)
     }
 
     private fun show(answer: SignInCheck, stopped: Boolean) {
@@ -267,8 +272,9 @@ public class SignInTerminalPresenter(
         }
     }
 
-    override fun checkAgain() {
-        if (ui.value.step != SignInStep.CouldNotCheck || rechecking) return
+    /** "Check sign-in again" after [SignInStep.CouldNotCheck]: the account only, no new sign-in. */
+    private fun checkAgain() {
+        if (rechecking) return
         rechecking = true
         scope.launch {
             try {
@@ -341,6 +347,7 @@ public class SignInTerminalPresenter(
     }
 
     override fun finish() {
+        if (ui.value.step == SignInStep.CouldNotCheck) return checkAgain()
         val owned = session ?: return
         if (checking) return
         checking = true

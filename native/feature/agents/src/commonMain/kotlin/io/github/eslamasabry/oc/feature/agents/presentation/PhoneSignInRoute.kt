@@ -73,8 +73,6 @@ public class UnavailablePhoneSignIn : PhoneSignInFactory {
 
             override fun startAgain() = Unit
 
-            override fun checkAgain() = Unit
-
             override fun leave() = onLeave()
         }
 }
@@ -108,8 +106,6 @@ public class PhoneSignInRouteViewModel(
     override fun finish(): Unit = controller.finish()
 
     override fun startAgain(): Unit = controller.startAgain()
-
-    override fun checkAgain(): Unit = controller.checkAgain()
 
     override fun leave(): Unit = controller.leave()
 

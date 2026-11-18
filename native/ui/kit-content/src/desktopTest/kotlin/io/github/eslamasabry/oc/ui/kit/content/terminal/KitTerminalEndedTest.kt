@@ -48,7 +48,10 @@ class KitTerminalEndedTest {
                     localeTag = "en",
                     stillFrame = true,
                 ) {
-                    CompositionLocalProvider(LocalTerminalLinkHost provides TerminalLinkHost { null }) {
+                    CompositionLocalProvider(
+                        LocalTerminalLinkHost provides TerminalLinkHost { null },
+                        LocalKitTerminalFrame provides KitTerminalFrame(gutter = true, input = false, links = false),
+                    ) {
                         Box(Modifier.width(360.dp).height(500.dp)) {
                             KitTerminalView(
                                 platformView = null,
@@ -61,9 +64,6 @@ class KitTerminalEndedTest {
                                 inputEnabled = false,
                                 defaultKeyBar = false,
                                 showAccessibleSwitch = false,
-                                showInput = false,
-                                showLinks = false,
-                                gutter = true,
                             )
                         }
                     }
@@ -88,18 +88,19 @@ class KitTerminalEndedTest {
                     stillFrame = true,
                 ) {
                     gutter = LocalKitTokens.current.gutter.toFloat()
-                    Box(Modifier.width(360.dp).height(500.dp)) {
-                        KitTerminalView(
-                            platformView = null,
-                            title = "claude",
-                            transcript = "Paste code here if prompted >",
-                            accessibleMode = true,
-                            onAccessibleModeChange = {},
-                            onSend = {},
-                            words = words,
-                            defaultKeyBar = false,
-                            gutter = true,
-                        )
+                    CompositionLocalProvider(LocalKitTerminalFrame provides KitTerminalFrame(gutter = true)) {
+                        Box(Modifier.width(360.dp).height(500.dp)) {
+                            KitTerminalView(
+                                platformView = null,
+                                title = "claude",
+                                transcript = "Paste code here if prompted >",
+                                accessibleMode = true,
+                                onAccessibleModeChange = {},
+                                onSend = {},
+                                words = words,
+                                defaultKeyBar = false,
+                            )
+                        }
                     }
                 }
             }

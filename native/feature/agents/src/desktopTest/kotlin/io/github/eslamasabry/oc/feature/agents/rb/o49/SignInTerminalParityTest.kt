@@ -46,8 +46,6 @@ class SignInTerminalParityTest {
             restarted++
         }
 
-        override fun checkAgain() {}
-
         override fun leave() {
             left++
         }

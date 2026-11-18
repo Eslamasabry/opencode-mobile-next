@@ -13,16 +13,18 @@ internal object SignInCheckRules {
     /** Tries of one check: the first at once, then after [pauseMillis]. */
     const val TRIES: Int = 4
 
-    private val PAUSES = longArrayOf(0L, 2_000L, 4_000L, 8_000L)
+    /** The pause before the second try; each later one doubles it (2, 4, 8 s). */
+    private const val FIRST_PAUSE_MILLIS: Long = 2_000L
 
     /** The pause before try [round] (0 for the first): at most 14 s of waiting in all, besides the reads. */
-    fun pauseMillis(round: Int): Long = PAUSES[round.coerceIn(0, PAUSES.lastIndex)]
+    fun pauseMillis(round: Int): Long =
+        if (round <= 0) 0L else FIRST_PAUSE_MILLIS shl (round.coerceAtMost(TRIES - 1) - 1)
 
     private val CODE = Regex("^[A-Za-z]{1,40}$")
 
     /**
-     * The answer in a private probe's projection (`{"state":…,"error":…}`), or null when the bridge gave none. Only a
-     * fixed error code crosses into Details, never other text.
+     * The answer in a private probe's projection (`{"state":…,"error":…}`), or null when the bridge gave none. Only
+     * a fixed error code crosses into Details, never other text.
      */
     fun answer(projection: Map<String, Any?>?): SignInCheck {
         val error = (projection?.get("error") as? String)?.takeIf { CODE.matches(it) }

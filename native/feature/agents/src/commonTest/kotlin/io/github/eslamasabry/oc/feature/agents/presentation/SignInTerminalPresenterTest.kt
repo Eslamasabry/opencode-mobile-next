@@ -402,7 +402,7 @@ class SignInTerminalPresenterTest {
     // the page said "isn't signed in yet". Every answer that was not a clean "signedIn" read as "not signed in".
 
     @Test
-    fun `B-AGENT-442 after Login successful with no code asked the page reads Signed in by itself, past a held-back read`() =
+    fun `B-AGENT-442 Login successful with no code reads Signed in by itself, past a held-back read`() =
         loop.run {
             agents.tries = 4
             // The chat's loaded Claude Code program held the first read back; the next one answers.
@@ -420,7 +420,7 @@ class SignInTerminalPresenterTest {
         }
 
     @Test
-    fun `B-AGENT-443 a read that cannot tell is Could not check, never isn't signed in, and Check sign-in again reads again`() =
+    fun `B-AGENT-443 a read that cannot tell is Could not check, and Check sign-in again reads again`() =
         loop.run {
             agents.tries = 3
             // The phone's one check slot taken twice, then a time-out: the bound ends there.
@@ -434,9 +434,9 @@ class SignInTerminalPresenterTest {
             assertEquals(SignInStep.CouldNotCheck, screen.state.value.step)
             assertEquals("timedOut", screen.state.value.checkCode)
             assertEquals(3, agents.confirms)
-            // Check sign-in again: the account only, no new sign-in.
+            // Check sign-in again (finish, on Could not check): the account only, no new sign-in.
             agents.signedIn = true
-            screen.checkAgain()
+            screen.finish()
             loop.pump()
             assertEquals(SignInStep.SignedIn, screen.state.value.step)
             assertNull(screen.state.value.checkCode)
@@ -454,14 +454,14 @@ class SignInTerminalPresenterTest {
             loop.pump()
             assertEquals(SignInStep.NotYet, screen.state.value.step)
             assertEquals(1, agents.confirms)
-            // Check again belongs to Could not check only.
-            screen.checkAgain()
+            // Nothing to check again: the answer stands.
+            screen.finish()
             loop.pump()
             assertEquals(1, agents.confirms)
         }
 
     @Test
-    fun `B-AGENT-445 a read held back by a busy conversation waits under its own words, then says it could not check`() =
+    fun `B-AGENT-445 a busy conversation's hold-back waits under its own words, then could not check`() =
         loop.run {
             agents.tries = 3
             repeat(3) { agents.answers += SignInCheck.CouldNotCheck(SignInCheck.CouldNotCheck.BUSY) }

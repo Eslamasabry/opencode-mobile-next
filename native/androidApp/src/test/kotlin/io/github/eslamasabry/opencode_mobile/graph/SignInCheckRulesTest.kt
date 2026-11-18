@@ -8,17 +8,19 @@ import kotlin.test.assertTrue
 /** Owner, 2026-11-18: "Login successful." and the page said "isn't signed in yet". Three answers, never two. */
 class SignInCheckRulesTest {
     @Test
-    fun `B-AGENT-443 only the agent's own answer is signed in or signed out, everything else could not check`() {
-        assertEquals(SignInCheck.SignedIn, SignInCheckRules.answer(mapOf("state" to "signedIn", "accountDisplayName" to "a")))
+    fun `B-AGENT-443 only the agent's own answer is signed in or out, everything else could not check`() {
+        fun error(code: String) = mapOf("state" to "error", "error" to code)
+        val signedIn = mapOf("state" to "signedIn", "accountDisplayName" to "a")
+        assertEquals(SignInCheck.SignedIn, SignInCheckRules.answer(signedIn))
         assertEquals(SignInCheck.SignedOut, SignInCheckRules.answer(mapOf("state" to "signedOut")))
-        assertEquals(SignInCheck.SignedOut, SignInCheckRules.answer(mapOf("state" to "error", "error" to "signInExpired")))
+        assertEquals(SignInCheck.SignedOut, SignInCheckRules.answer(error("signInExpired")))
         for (code in listOf("agentBusy", "timedOut", "hostUnavailable", "invalidResponse", "invalidContext"))
-            assertEquals(SignInCheck.CouldNotCheck(code), SignInCheckRules.answer(mapOf("state" to "error", "error" to code)))
+            assertEquals(SignInCheck.CouldNotCheck(code), SignInCheckRules.answer(error(code)))
         // No answer from the bridge, or text that is not a fixed code: never shown, never "not signed in".
         assertEquals(SignInCheck.CouldNotCheck("noAnswer"), SignInCheckRules.answer(null))
         assertEquals(
             SignInCheck.CouldNotCheck("noAnswer"),
-            SignInCheckRules.answer(mapOf("state" to "error", "error" to "token sk-ant-xyz leaked")),
+            SignInCheckRules.answer(error("token xyz leaked")),
         )
     }
 

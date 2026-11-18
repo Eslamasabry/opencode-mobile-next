@@ -231,31 +231,19 @@ class NativePhoneSignIn(
 
             override suspend fun checkSignedIn(owner: ProfileId, agent: AgentRef, round: Int): SignInCheck {
                 if (round > 0) delay(SignInCheckRules.pauseMillis(round))
-                if (!owns(owner)) return SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
-                val descriptor =
-                    catalog.byId(AgentId(agent.id)) ?: return SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
-                val script =
-                    AgentAuthScripts.script(descriptor, AuthScriptAction.Probe)
-                        ?: return SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
-                val result =
-                    withContext(dispatchers.io) {
-                        attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
-                            linux.agentAuthProbe(
-                                mapOf(
-                                    "profileId" to owner.raw,
-                                    "agentId" to agent.id,
-                                    "action" to "probe",
-                                    "script" to AgentAuthScripts.forProfile(owner, script),
-                                    "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
-                                ),
-                                afterSignIn = true,
-                            )
-                        }
+                val descriptor = catalog.byId(AgentId(agent.id))
+                val script = descriptor?.let { AgentAuthScripts.script(it, AuthScriptAction.Probe) }
+                val read =
+                    when {
+                        !owns(owner) -> SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
+                        script == null -> SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
+                        else -> probeAfterSignIn(owner, agent, script)
                     }
-                if (!owns(owner)) return SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
-                val answer = SignInCheckRules.answer((result as? Outcome.Ok)?.value)
+                // The scope may have changed during the read: then it is no answer about this sign-in.
+                val answer = if (owns(owner)) read else SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
                 // Issue 147: a completed sign-in ends a lapse a run reported (AppPhoneAgents.noteSignedIn).
-                if (answer == SignInCheck.SignedIn) phones.value.noteSignedIn(owner, descriptor.id)
+                if (answer == SignInCheck.SignedIn && descriptor != null)
+                    phones.value.noteSignedIn(owner, descriptor.id)
                 return answer
             }
 
@@ -273,6 +261,26 @@ class NativePhoneSignIn(
                     SignInFound(it.page?.url, it.code)
                 }
         }
+
+    /** The private sign-in read right after this page's sign-in ended ([BuiltinLinux.agentAuthProbe] `afterSignIn`). */
+    private suspend fun probeAfterSignIn(owner: ProfileId, agent: AgentRef, script: String): SignInCheck {
+        val result =
+            withContext(dispatchers.io) {
+                attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                    linux.agentAuthProbe(
+                        mapOf(
+                            "profileId" to owner.raw,
+                            "agentId" to agent.id,
+                            "action" to "probe",
+                            "script" to AgentAuthScripts.forProfile(owner, script),
+                            "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
+                        ),
+                        afterSignIn = true,
+                    )
+                }
+            }
+        return SignInCheckRules.answer((result as? Outcome.Ok)?.value)
+    }
 
     /**
      * Opens the sign-in PTY on the phone's own OpenCode server. Each refusal names the step it
@@ -651,8 +659,6 @@ class NativePhoneSignIn(
         override fun finish(): Unit = presenter.finish()
 
         override fun startAgain(): Unit = presenter.startAgain()
-
-        override fun checkAgain(): Unit = presenter.checkAgain()
 
         override fun leave() {
             left = true
