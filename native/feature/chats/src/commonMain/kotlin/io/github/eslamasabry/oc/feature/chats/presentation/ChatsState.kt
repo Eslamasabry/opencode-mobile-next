@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chats.presentation
 
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
-import io.github.eslamasabry.oc.engine.agents.persona.AgentPersonaId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedFilter
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedRules
@@ -178,7 +177,7 @@ public object ChatsState {
      * language. Never the conversation's title.
      */
     private fun agentName(item: ChatFeedItem): String? =
-        brandName(AgentPersona.of(item.agentId).id) ?: item.agentLabel?.trim()?.takeIf { it.isNotEmpty() }
+        AgentPersona.of(item.agentId).productName ?: item.agentLabel?.trim()?.takeIf { it.isNotEmpty() }
 
     /**
      * E04-S05: the rows that can be archived: every top-level conversation, OpenCode or an agent's (Paseo), whose
@@ -190,19 +189,6 @@ public object ChatsState {
         capable: Set<io.github.eslamasabry.oc.core.common.ids.ProfileId>,
     ): kotlinx.collections.immutable.ImmutableSet<String> =
         items.filter { !it.isSubagent && it.profileId in capable }.mapTo(hashSetOf()) { it.identity }.toImmutableSet()
-
-    /** Product names are proper nouns, not copy: the same in every language. */
-    private fun brandName(id: AgentPersonaId): String? =
-        when (id) {
-            AgentPersonaId.ClaudeCode -> "Claude Code"
-            AgentPersonaId.Codex -> "Codex"
-            AgentPersonaId.Gemini -> "Gemini"
-            AgentPersonaId.Antigravity -> "Antigravity"
-            AgentPersonaId.Kilo -> "Kilo Code"
-            AgentPersonaId.Cline -> "Cline"
-            AgentPersonaId.OpenCode -> "OpenCode"
-            AgentPersonaId.Other -> null
-        }
 
     /**
      * P5: the narrowing the home's "All conversations" row opens that page with, and counts: the chosen project, else

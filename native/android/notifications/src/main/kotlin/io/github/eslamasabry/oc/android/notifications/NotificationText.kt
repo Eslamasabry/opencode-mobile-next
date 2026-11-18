@@ -142,9 +142,14 @@ public enum class AskAction(public val wire: String) {
 
 public data class PermissionAsk(val action: AskAction, val target: String)
 
-/** Must match `alertReasonText` of the Flutter app; each token has one sentence in `notify_reason_*`. */
+/**
+ * Why a chat stopped, as a token; each token has one fixed sentence in `notify_alert_reason_*` (B-SEC-104). The first
+ * six match `alertReasonText` of the Flutter app. [SignInAgain]: the agent's own sign-in ran out; its sentence names
+ * the agent ([CodingAlert.agentName], the app's own product name) and never carries the agent's words (B-ANDR-131).
+ */
 public enum class StopReason(public val wire: String) {
-    Auth("auth"), Context("context"), Length("length"), Filter("filter"), Model("model"), Other("other");
+    Auth("auth"), Context("context"), Length("length"), Filter("filter"), Model("model"), Other("other"),
+    SignInAgain("sign_in_again");
 
     public companion object {
         public fun fromWire(value: String?): StopReason = entries.firstOrNull { it.wire == value } ?: Other

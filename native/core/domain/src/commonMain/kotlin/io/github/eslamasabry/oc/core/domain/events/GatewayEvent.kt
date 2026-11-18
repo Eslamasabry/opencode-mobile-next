@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.core.model.PendingQuestion
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignIn
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.Part
@@ -220,11 +222,16 @@ public sealed interface RunOutcome {
 
     public data class Interrupted(val reason: InterruptReason) : RunOutcome
 
-    /** [kind] null = words come from the wire type alone; server prose only in [details]. */
+    /**
+     * [kind] null = words come from the wire type alone; server prose only in [details]. [agentSignIn]: the run
+     * stopped on the agent's own sign-in, as the one shared rule ([AgentSignInWords]) read the agent's words; the
+     * words themselves never ride here.
+     */
     public data class Failed(
         val kind: MessageErrorKind?,
         val tag: WireTag?,
         val details: Redacted?,
+        val agentSignIn: AgentSignIn? = null,
     ) : RunOutcome
 }
 

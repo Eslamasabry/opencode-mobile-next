@@ -90,4 +90,6 @@
     <string name="notify_answer_in_app">افتح OpenCode للرد</string>
     <string name="notify_reply_watch_title">ما زال العمل على ردك جاريًا</string>
     <string name="notify_status_public_working">OpenCode · يعمل</string>
+    <string name="notify_alert_reason_sign_in_again">يحتاج %1$s إلى تسجيل دخولك مرة أخرى.</string>
+    <string name="notify_alert_reason_sign_in_again_any">يحتاج الوكيل إلى تسجيل دخولك مرة أخرى.</string>
 </resources>

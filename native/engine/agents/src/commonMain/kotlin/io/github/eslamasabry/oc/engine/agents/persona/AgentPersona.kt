@@ -21,6 +21,23 @@ public data class AgentPersona(
 ) {
     val hasMark: Boolean get() = markSlug.isNotEmpty()
 
+    /**
+     * The product's own name ("Claude Code"), a proper noun in every language and the one name every surface uses
+     * (Home's rows, a stopped chat's notification); null for [Other], whose name the app does not know.
+     */
+    val productName: String?
+        get() =
+            when (id) {
+                AgentPersonaId.ClaudeCode -> "Claude Code"
+                AgentPersonaId.Codex -> "Codex"
+                AgentPersonaId.Gemini -> "Gemini"
+                AgentPersonaId.Antigravity -> "Antigravity"
+                AgentPersonaId.Kilo -> "Kilo Code"
+                AgentPersonaId.Cline -> "Cline"
+                AgentPersonaId.OpenCode -> "OpenCode"
+                AgentPersonaId.Other -> null
+            }
+
     public companion object {
         public val ClaudeCode: AgentPersona = AgentPersona(AgentPersonaId.ClaudeCode, "claude", AgentMaker.Anthropic)
         public val Codex: AgentPersona = AgentPersona(AgentPersonaId.Codex, "codex", AgentMaker.OpenAi)

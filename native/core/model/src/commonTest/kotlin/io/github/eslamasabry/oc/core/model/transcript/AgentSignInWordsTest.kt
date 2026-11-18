@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.core.model.transcript
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -74,5 +75,20 @@ class AgentSignInWordsTest {
         val busy = "Failed to refresh OAuth token: another Claude Code process is refreshing it or exited mid-refresh."
         assertFalse(AgentSignInWords.expired(busy))
         assertFalse(AgentSignInWords.gone(busy))
+    }
+
+    @Test
+    fun `B-AGENT-433 the rule's answer as a value keeps expired, never signed in and a refusal apart`() {
+        assertEquals(AgentSignIn.Expired, AgentSignInWords.of(ownerText))
+        assertEquals(
+            AgentSignIn.Expired,
+            AgentSignInWords.of("Failed to authenticate: OAuth session expired and could not be refreshed"),
+        )
+        assertEquals(AgentSignIn.NeverSignedIn, AgentSignInWords.of("Not logged in. Please run /login"))
+        assertEquals(AgentSignIn.Refused, AgentSignInWords.of("401 Unauthorized: invalid api key"))
+        assertEquals(AgentSignIn.Refused, AgentSignInWords.of("run /login"))
+        assertNull(AgentSignInWords.of("Failed to refresh OAuth token: another Claude Code process is refreshing it"))
+        assertNull(AgentSignInWords.of("Unable to validate model: the model is overloaded"))
+        assertNull(AgentSignInWords.of(null))
     }
 }

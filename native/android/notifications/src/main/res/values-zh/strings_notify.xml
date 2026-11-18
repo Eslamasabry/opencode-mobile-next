@@ -69,4 +69,6 @@
     <plurals name="notify_group_finished">
         <item quantity="other">%s 个对话已完成</item>
     </plurals>
+    <string name="notify_alert_reason_sign_in_again">%1$s 需要你重新登录。</string>
+    <string name="notify_alert_reason_sign_in_again_any">智能体需要你重新登录。</string>
 </resources>
