@@ -216,10 +216,12 @@ public object ProviderMarks {
 
     /**
      * Mark slugs that also ship a full-colour file (`marks/<slug>-color.svg`, lobe-icons by LobeHub, MIT). A brand
-     * left out is monochrome by design (OpenCode, Codex/OpenAI) or has no colour version (Kilo Code, Cline, Goose, Pi):
-     * it keeps its single-colour mark, drawn in the text colour.
+     * left out is monochrome by design (OpenCode, Codex/OpenAI, Kilo Code, Cline, Goose, Pi): it keeps its
+     * single-colour mark, drawn in the text colour. Antigravity's colour mark (owner 2026-11-18, "Icons without
+     * color?") is lobe's with its soft blurs redrawn as radial gradients in the same colours, because the phone's SVG
+     * renderer draws no filters (it would show hard patches); the arch and the colours are the brand's own.
      */
-    public val colorSlugs: Set<String> = setOf("claude", "gemini", "google", "qwen", "copilot")
+    public val colorSlugs: Set<String> = setOf("claude", "gemini", "google", "qwen", "copilot", "antigravity")
 
     /** The bundled file name of [slug]'s colour mark, or null when that brand has none. */
     public fun colorFile(slug: String): String? = if (slug in colorSlugs) "$slug-color" else null
