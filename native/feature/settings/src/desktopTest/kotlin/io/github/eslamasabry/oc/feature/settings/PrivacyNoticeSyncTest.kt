@@ -11,6 +11,8 @@ import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFieldGroup
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiPages
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiEvent
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
@@ -96,6 +98,9 @@ class PrivacyNoticeSyncTest {
         words += BreadcrumbWords.named.keys.flatMap { it.split('.') }
         words += BreadcrumbWords.named.values.flatten()
         words += "linux_setup" // the prefix of `linux_setup_<step>`
+        // The fields our own server may get (UmamiField): their names and every fixed word they take are names too.
+        words += UmamiField.wires
+        words += UmamiField.entries.flatMap { it.allowedWords.orEmpty() }
         words += setOf("breadcrumbs", "problem_report") // crash-side lines that are not events
         return SendableNames(
             events = productSchema,
@@ -403,8 +408,8 @@ class PrivacyNoticeSyncTest {
             assertTrue(namesFields, "$name names the major and the class")
             assertTrue("not the screen size" in text, "$name says the screen size is not sent to Umami")
         }
-        val googleOnly = "screen size, Android version" !in device &&
-            "Google Analytics also receives the phone model and screen size" in device
+        val googleOnly = "Google Analytics also receives, on its own, a random install ID, the phone model" in device &&
+            "never the screen size" in device
         assertTrue(googleOnly, "the page puts the screen size on Google's side only")
         for (tag in AppLanguage.entries.mapNotNull { it.tag }.filter { it != "en" }) {
             val dir = File(en.parentFile, "values-$tag")
@@ -417,6 +422,50 @@ class PrivacyNoticeSyncTest {
         val claimed =
             NeverCollected.entries.any { it.name in setOf("ScreenSize", "DeviceModel", "TimeZone", "Location") }
         assertTrue(!claimed, "the never-list cannot claim what Google Analytics receives on its own")
+    }
+
+    @Test
+    fun `B-SEC-219 every field our own server may get is named in PRIVACY, the policy and the page`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        val words = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val dir = File(words, if (tag == "en") "values" else "values-$tag")
+            val policy = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            val page = UmamiFieldGroup.entries.joinToString(" ") { group ->
+                xmlString(File(dir, "strings_s28_privacy.xml"), "collectOwn" + group.name)
+            }
+            for (field in UmamiField.entries) {
+                assertTrue("`${field.wire}`" in umami, "PRIVACY.md names `${field.wire}` for Umami")
+                assertTrue(has(policy, field.wire), "$tag: the bundled policy names ${field.wire}")
+                assertTrue(has(page, field.wire), "$tag: What we collect must name ${field.wire} (own server)")
+            }
+        }
+        val label = xmlString(File(words, "values/strings_s28_privacy.xml"), "collectOwnLabel")
+        assertTrue("Only to our own server" in label)
+    }
+
+    @Test
+    fun `B-SEC-227 our own server gets a random install ID and the phone model, and the notices say so`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        for (fact in listOf("`install_id`", "`phone_model`", "deleted when you switch usage off", "count installs",
+            "not Google's ID")) {
+            assertTrue(fact in umami, "PRIVACY.md Umami part must say $fact")
+        }
+        assertTrue("device or installation ID" !in md, "PRIVACY.md no longer says our server gets no installation ID")
+        val en = File(repo, "native/ui/words/src/commonMain/composeResources/values")
+        val rules = xmlString(File(en, "strings_s28_privacy.xml"), "collectRules")
+        val saysOwnId = "none of those" !in rules && "install ID" in rules
+        assertTrue(saysOwnId, "the page says our server gets its own install ID")
+        val install = xmlString(File(en, "strings_s28_privacy.xml"), "collectOwnInstall")
+        val installOk = "install_id" in install && "switch them off" in install && "not Google" in install
+        assertTrue(installOk, "the install line")
+        val umamiDir = "native/engine/analytics/src/jvmShared/kotlin/io/github/eslamasabry/oc/engine/analytics/umami/"
+        val sender = File(repo, umamiDir + "UmamiSender.kt").readText()
+        assertTrue("installId?.on(false)" in sender, "switching usage off deletes the install id")
+        val id = File(repo, umamiDir + "UmamiInstallId.kt").readText()
+        assertTrue("if (!enabled) return null" in id && "file.delete()" in id, "no id exists while the switch is off")
     }
 
     // ---- the tests ----

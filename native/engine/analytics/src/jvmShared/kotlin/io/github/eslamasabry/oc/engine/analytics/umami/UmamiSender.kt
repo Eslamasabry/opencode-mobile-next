@@ -237,8 +237,11 @@ public class UmamiSender(
                 UmamiBuild(p.data["version"] ?: continue, p.data["build"] ?: continue, p.tag)
             } catch (_: IllegalArgumentException) { continue }
             val ownKeys = setOf("version", "build") + umamiDeviceKeys
+            // The envelope an event was queued with stays with it; only listed keys and words survive the restore.
+            val queuedFacts = UmamiField.clean(p.data.filterKeys { it in umamiDeviceKeys })
+            val queuedWith = device().copy(language = p.language, facts = queuedFacts)
             val mapped = umamiEvent(p.name ?: "screen_view", p.data - ownKeys, knownPage,
-                UmamiSource(website, oldBuild, device().copy(language = p.language)), item.atMs) ?: continue
+                UmamiSource(website, oldBuild, queuedWith), item.atMs) ?: continue
             // Restored ordinals are negative; new producer ordinals are nonnegative. Nothing is sent from this field.
             restored += StoredEvent(-(index.toLong() + 1), item.atMs, mapped)
         }
@@ -276,6 +279,8 @@ public class UsageTelemetryVendor(
     private val primary: TelemetryVendor,
     private val sender: UmamiSender?,
     private val build: UmamiBuild,
+    /** Our own random install id: it exists only while usage is on (see [UmamiInstallId]). */
+    private val installId: UmamiInstallId? = null,
 ) : TelemetryVendor by primary {
     private var buildSet = false
     private var usageOn = false
@@ -287,7 +292,10 @@ public class UsageTelemetryVendor(
         primary.setCollection(usage, crashes)
         usageOn = usage
         if (!usage) { sessionOpened = false; syntheticOpening = false }
+        // Off first: the id and its file are gone before the sender stops, so nothing can make a new one meanwhile.
+        if (!usage) installId?.on(false)
         sender?.setUsage(usage)
+        if (usage && sender != null) installId?.on(true)
         if (usage && !buildSet) {
             primary.setUserProperties(mapOf("app_build" to build.build))
             buildSet = true
