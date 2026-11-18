@@ -123,6 +123,8 @@ internal fun VoiceConversationControls(
             title = stringResource(Res.string.kitVoiceReadAloud),
             checked = state.speakReplies,
             supporting = stringResource(Res.string.voiceConversationNativeSends),
+            // The description wraps whole at larger text, never an ellipsis (look 10094, 130 %).
+            supportingMaxLines = Int.MAX_VALUE,
             onCheckedChange = presenter::speakReplies,
         )
     }
