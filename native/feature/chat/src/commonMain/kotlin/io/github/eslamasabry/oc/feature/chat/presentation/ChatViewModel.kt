@@ -144,6 +144,7 @@ public class ChatViewModel(
                     SharingStarted.WhileSubscribed(STOP_AFTER_MS),
                     world.work,
                     reading.map { it.declined }.distinctUntilChanged(),
+                    reading.map { it.waitingCalls }.distinctUntilChanged(),
                 )
         }
 
