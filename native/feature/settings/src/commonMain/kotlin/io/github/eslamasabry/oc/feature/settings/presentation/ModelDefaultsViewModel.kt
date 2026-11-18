@@ -81,6 +81,8 @@ public data class ModelDefaultsRow(
     val variants: List<String> = emptyList(),
     /** The provider's name as the server gives it; empty = unknown (the kit falls back to the id). */
     val providerName: String = "",
+    /** When the model came out (ms since the epoch) where the catalog says; null = unknown. Orders the model sheet. */
+    val releasedAtMs: Long? = null,
 )
 
 public data class ModelDefaultsUi(
@@ -173,6 +175,7 @@ public class ModelDefaultsViewModel(
                 data.current?.sameModel(model.ref) == true,
                 model.variants.filterNot { it.disabled }.map { it.id },
                 data.providerNames[model.providerId].orEmpty(),
+                model.releasedAtMs,
             )
         val recommended =
             recommendModels(

@@ -275,7 +275,9 @@ public object KitModelPages {
         current: String? = null,
         canFavorite: Boolean = false,
     ): List<KitModelPage> {
-        val providers = KitModelOrder.sections(options, current = current, starred = favorites.mapTo(HashSet()) { it.key })
+        val starred = favorites.mapTo(HashSet()) { it.key }
+        val providers =
+            KitModelOrder.sections(options, current = current, starred = starred)
                 .filter { it.kind == KitModelSectionKind.Provider }
         val picks =
             KitModelOrder.sections(options, favorites, recent, current)

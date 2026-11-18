@@ -165,6 +165,8 @@ public data class NewConversationModel(
      * them ("low", "high", "xhigh"); empty when it offers none.
      */
     val variants: List<String> = emptyList(),
+    /** When the model came out (ms since the epoch) where the catalog says; null = unknown. Orders the model sheet. */
+    val releasedAtMs: Long? = null,
 )
 
 /**

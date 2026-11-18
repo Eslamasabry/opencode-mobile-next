@@ -1042,6 +1042,11 @@ class AndroidNewConversationHost(
                                                 ?.keys
                                                 ?.toList()
                                                 .orEmpty(),
+                                        releasedAtMs =
+                                            catalog
+                                                ?.models
+                                                ?.firstOrNull { it.providerId == p.id && it.id == model }
+                                                ?.releasedAtMs,
                                     )
                                 }
                             },
