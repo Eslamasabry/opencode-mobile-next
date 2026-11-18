@@ -83,7 +83,7 @@ class SetupPlanTest {
         assertTrue(install.trimEnd().endsWith("oc_version \"\$oc_got\""))
         assertFalse(install.contains("npm install -g"))
         val other = assertNotNull(SetupScripts.openCodeNativeInstall("2.2.7"))
-        assertTrue(other.startsWith("echo '${OpenCodeInstallFailure.UNPINNED} (2.2.6, not 2.2.7)'"))
+        assertTrue(other.startsWith("echo '${OpenCodeInstallFailure.UNPINNED} (2.3.2, not 2.2.7)'"))
         assertNull(SetupScripts.openCodeNativeInstall("1.2.3; echo injected"))
         val check = assertNotNull(SetupScripts.openCodeNativeCheck())
         assertTrue(check.contains("[ \"\$(readlink -f \"\$oc_bin\")\" = '/opt/opencode2/bin/opencode2' ]"))

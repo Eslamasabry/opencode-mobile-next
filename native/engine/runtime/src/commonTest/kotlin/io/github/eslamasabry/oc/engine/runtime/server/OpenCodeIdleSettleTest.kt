@@ -17,7 +17,7 @@ class OpenCodeIdleSettleTest {
     private class Host : OpenCodeHostFacts {
         override suspend fun refresh() = Unit
         override val installedVersion: String = "2.1.1"
-        override val pinnedVersion: String = "2.2.6"
+        override val pinnedVersion: String = "2.3.2"
         override val runtime: String = "opencode2"
         override val switchPending: Boolean = false
         override val installProblem: Boolean = false

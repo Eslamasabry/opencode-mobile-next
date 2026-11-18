@@ -11,7 +11,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts
 public enum class OpenCodeRuntime(public val wireName: String, public val pinnedVersion: String) {
     /** Detection only: an old installation must migrate before it can start. */
     OpenCode1("opencode1", ""),
-    OpenCode2("opencode2", "2.2.6"),
+    OpenCode2("opencode2", "2.3.2"),
     ;
 
     public companion object {
