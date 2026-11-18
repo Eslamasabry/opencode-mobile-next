@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">Не удалось сбросить подсказки. Повторите.</string>
     <string name="voiceConversationNativeTourReplay">Показать</string>
     <string name="voiceConversationNativeTourLoadFailed">Не удалось открыть подсказки. Повторите.</string>
+    <string name="voiceConversationDoorDraft">Сначала отправьте или удалите сообщение</string>
 </resources>

@@ -36,9 +36,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the composer lends the voice presenter (the pure twin of kit-chat's `KitVoiceField`). */
 public interface VoiceFieldPort {
@@ -130,6 +132,8 @@ public data class ComposerVoiceUi(
     val replyNote: ConversationReplyNote? = null,
     val tutorialStep: Int? = null,
     val micTip: Boolean = false,
+    /** Words in the box or files on it: a voice conversation cannot start until they are sent or cleared. */
+    val draft: Boolean = false,
     /**
      * The first-mic "Voice typing" sheet (Flutter `showVoiceAutomaticSetupSheet`): the mic found no speech model, so
      * the model picked for this phone is offered for download right here. Null: no sheet.
@@ -265,6 +269,7 @@ public class ComposerVoicePresenter(
                 handle.session.voiceConversation.collect { snapshot ->
                     val previous = observed
                     observed = snapshot
+                    refreshDraft()
                     if (mutable.value.conversation && previous.generation != snapshot.generation) {
                         exitConversation()
                         mutable.update { it.copy(replyNote = ConversationReplyNote.Review) }
@@ -720,12 +725,35 @@ public class ComposerVoicePresenter(
      * The box reported its words: the note beside it stays until new words are typed.
      */
     public fun fieldChanged(text: String) {
+        refreshDraft(text)
         // Flutter `_composerNoteFollowsEdits`: the note stays beside the box until the next words; typing them
         // (anything other than what the box held when the note appeared) dismisses it.
         val typed = noteTyped
         if (typed != null && text != typed && mutable.value.note != null) {
             noteTyped = null
             mutable.update { it.copy(note = null) }
+        }
+    }
+
+    private fun refreshDraft(text: String? = field?.text()) {
+        val draft = text?.isNotEmpty() == true || observed.hasAttachments
+        if (mutable.value.draft != draft) mutable.update { it.copy(draft = draft) }
+    }
+
+    /**
+     * The door inside the recorder row: a tap on the mic is open, so the dictation is thrown away (nothing typed, nothing
+     * sent) and the hands-free voice conversation starts in its place. With words or files on the box it does nothing but
+     * say why ([ComposerVoiceUi.draft] is also drawn on the control).
+     */
+    public fun startConversationFromMic() {
+        if (mutable.value.draft) {
+            mutable.update { it.copy(replyNote = ConversationReplyNote.DraftFirst) }
+            return
+        }
+        cancel()
+        scope.launch {
+            withTimeoutOrNull(MIC_TO_CONVERSATION_WAIT_MS) { state.first { !it.active } }
+            startConversation()
         }
     }
 
@@ -1131,3 +1159,5 @@ public class ComposerVoicePresenter(
             }
     }
 }
+
+private const val MIC_TO_CONVERSATION_WAIT_MS: Long = 2_000L

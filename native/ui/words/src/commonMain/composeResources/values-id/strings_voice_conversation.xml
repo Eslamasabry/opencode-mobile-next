@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">Tips tidak dapat diatur ulang. Coba lagi.</string>
     <string name="voiceConversationNativeTourReplay">Tunjukkan</string>
     <string name="voiceConversationNativeTourLoadFailed">Tips tidak dapat dibuka. Coba lagi.</string>
+    <string name="voiceConversationDoorDraft">Kirim atau hapus pesan Anda dulu</string>
 </resources>

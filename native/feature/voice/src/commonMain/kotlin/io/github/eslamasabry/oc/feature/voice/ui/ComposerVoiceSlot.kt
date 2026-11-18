@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitMicButton
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitRecorderLine
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitRecorderStage
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitRecorderDoor
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceRecorderRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceRecording
 import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
@@ -50,6 +51,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitVoiceStopReading
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceWaitingReply
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceReplyReady
 import io.github.eslamasabry.oc.ui.words.res.voiceConversationPausedDetail
+import io.github.eslamasabry.oc.ui.words.res.voiceConversationDoorDraft
 import io.github.eslamasabry.oc.ui.words.res.voiceConversationTitle
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceUseWords
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceMicDenied
@@ -338,7 +340,17 @@ private fun DictationRecorder(
             MicPhase.Listening -> listeningLine(state, held)
             MicPhase.Idle -> return
         }
-    KitVoiceRecorderRow(line, modifier, level = level, cancel = cancel, accept = accept)
+    // The way into the hands-free voice conversation sits where the voice is: in this same row, taking the time's place
+    // (a tapped dictation only; a held mic ends by the finger). Blocked, it stays and says why (B-461).
+    val door =
+        if (state.conversationAvailable && !held && state.phase == MicPhase.Listening)
+            KitRecorderDoor(
+                label = stringResource(Res.string.voiceConversationTitle),
+                onClick = presenter::startConversationFromMic,
+                blockedReason = if (state.draft) stringResource(Res.string.voiceConversationDoorDraft) else null,
+            )
+        else null
+    KitVoiceRecorderRow(line, modifier, level = level, cancel = cancel, accept = accept, door = door)
 }
 
 /** Listening: the stage (or, for a held mic, what letting go does), the time, and the spoken line with the time. */

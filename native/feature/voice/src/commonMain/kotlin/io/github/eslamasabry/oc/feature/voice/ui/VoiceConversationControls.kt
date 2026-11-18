@@ -46,6 +46,11 @@ internal fun VoiceConversationEntry(
                 onSelected()
                 presenter.startConversation()
             },
+            // With words or files on the box the row stays and says why (B-461); a missing speech model or a refused
+            // microphone is met by the tap: the download offer with its size, and the microphone note.
+            enabled = !state.draft,
+            disabledReason = stringResource(Res.string.voiceConversationDoorDraft),
+            supporting = if (state.draft) stringResource(Res.string.voiceConversationDoorDraft) else null,
             modifier = modifier.testTag("voice-conversation-start"),
         )
     }

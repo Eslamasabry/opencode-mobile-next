@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">Não foi possível redefinir as dicas. Tente novamente.</string>
     <string name="voiceConversationNativeTourReplay">Mostre-me</string>
     <string name="voiceConversationNativeTourLoadFailed">Não foi possível abrir as dicas. Tente novamente.</string>
+    <string name="voiceConversationDoorDraft">Envie ou apague sua mensagem primeiro</string>
 </resources>

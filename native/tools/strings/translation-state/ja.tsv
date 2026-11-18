@@ -13797,7 +13797,7 @@ upgradeAgentReady	22a88a22d2
 upgradeComposerAsk	2e41fe8a34
 upgradeComposerFree	fd0fb279d8
 upgradeComposerHoldDictate	b19803dc65
-upgradeComposerVoiceHold	3d590fed92
+upgradeComposerVoiceHold	84bdd63c33
 upgradeComposerVoiceHoldTitle	8e5c5f259a
 upgradeConnectCommandTitle	c472403950
 upgradeConnectManualBody	7892b71bdf
@@ -14126,6 +14126,7 @@ voiceComponentSummary	025cd7334a
 voiceComponentTitle	7eaa509c36
 voiceConversationCommandsOnly	658c0cab1f
 voiceConversationDescription	3fa71f1aa4
+voiceConversationDoorDraft	ba43ff7d9a
 voiceConversationDraftFirst	6997a1f2b1
 voiceConversationNativeSends	4f959116af
 voiceConversationNativeTourDone	249b0afe1e

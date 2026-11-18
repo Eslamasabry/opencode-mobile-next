@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">ヒントをリセットできませんでした。もう一度お試しください。</string>
     <string name="voiceConversationNativeTourReplay">デモを見る</string>
     <string name="voiceConversationNativeTourLoadFailed">ヒントを開けませんでした。もう一度お試しください。</string>
+    <string name="voiceConversationDoorDraft">先にメッセージを送信するか消去してください</string>
 </resources>
