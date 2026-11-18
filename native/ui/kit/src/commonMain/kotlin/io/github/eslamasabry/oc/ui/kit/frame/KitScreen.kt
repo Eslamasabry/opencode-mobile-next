@@ -438,6 +438,7 @@ public fun KitScreen(
             var topBottom by remember { mutableFloatStateOf(Float.NaN) }
             // The header part's own height (the capsule and its margins), without the status line under it.
             var barOnlyPx by remember { mutableIntStateOf(0) }
+            var barOnlyTop by remember { mutableFloatStateOf(Float.NaN) }
             val capsuleCorner = LocalKitTokens.current.composerRadius
             val fadeBottomPx = with(density) { COMPOSER_FADE_DP.dp.toPx() }
             val floatGapPx = with(density) { FLOAT_GAP_DP.dp.toPx() }
@@ -580,13 +581,32 @@ public fun KitScreen(
                                                 val glass = barFace != null
                                                 val sideDp = if (glass) LIQUID_BAR_INSET_X else HEADER_CAPSULE_SIDE_DP
                                                 val insetY = with(density) { (if (glass) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() }
-                                                val side = with(density) { sideDp.dp.toPx() }
-                                                val top = statusPx + insetY
-                                                val bottom = statusPx + barOnlyPx - insetY
-                                                val radius = with(density) { (if (glass) LIQUID_BAR_RADIUS else capsuleCorner).dp.toPx() }
+                                                // A little inside the pane's rim (2 dp), so nothing above or beside the rim is
+                                                // ever left uncleared: what shows a hair behind the rim is a glass rim's own.
+                                                val snug = with(density) { 2.dp.toPx() }
+                                                val side = with(density) { sideDp.dp.toPx() } + snug
+                                                val base = if (barOnlyTop.isNaN()) statusPx.toFloat() else barOnlyTop
+                                                val top = base + insetY + snug
+                                                val bottom = base + barOnlyPx - insetY - snug
+                                                val radius = with(density) { (if (glass) LIQUID_BAR_RADIUS else capsuleCorner).dp.toPx() } - snug
                                                 val r = minOf(radius, (bottom - top) / 2f).coerceAtLeast(0f)
                                                 if (bottom <= top || barOnlyPx <= 0) null
                                                 else RoundRect(side, top, width - side, bottom, CornerRadius(r, r))
+                                            }),
+                                        keepBottom =
+                                            if (!floatChrome || bottomPart == null) null
+                                            else ({ width: Float, height: Float ->
+                                                val o = bottomState.outline
+                                                if (o.width <= 0f || o.height <= 0f) null
+                                                else {
+                                                    val snug = with(density) { 2.dp.toPx() }
+                                                    val rr = (bottomState.outlineRadius - snug).coerceAtLeast(0f)
+                                                    val l = o.left + snug
+                                                    val t = o.top + snug
+                                                    val rgt = o.right - snug
+                                                    val bt = minOf(o.bottom - snug, height)
+                                                    if (rgt <= l || bt <= t) null else RoundRect(l, t, rgt, bt, CornerRadius(minOf(rr, (bt - t) / 2f), minOf(rr, (bt - t) / 2f)))
+                                                }
                                             }),
                                     )
                             )
@@ -614,6 +634,7 @@ public fun KitScreen(
                             Box(
                                 Modifier.fillMaxWidth()
                                     .onSizeChanged { barOnlyPx = it.height }
+                                    .onGloballyPositioned { barOnlyTop = it.positionInRoot().y }
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, topFrost) else Modifier)
                             ) {
