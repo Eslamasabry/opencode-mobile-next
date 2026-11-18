@@ -41,7 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -66,7 +66,7 @@ public fun KitAgentGrid(
     modifier: Modifier = Modifier,
     enabled: KitEnabled = KitEnabled.Enabled,
 ) {
-    val columns = if (kitTextScale() > 1.3f) 1 else 2
+    val columns = if (kitFontScale() > 1.3f) 1 else 2 // the chosen size: [kitFontScale]
     Column(
         modifier.fillMaxWidth().selectableGroup(),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
