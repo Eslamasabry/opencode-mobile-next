@@ -522,13 +522,15 @@ public fun KitScreen(
                     )
                     .testTag("kit-screen")
             ) {
+              // ONE provider around all three parts (the top block, the body, the bottom block), so a part added later
+              // cannot fall outside it: the pinned status row read the flag as false and kept its hairline (look 10096).
+              CompositionLocalProvider(LocalKitScreenFloating provides floatChrome) {
                 CompositionLocalProvider(
                     LocalChromePadding provides padding,
                     LocalKitScreenScroll provides scroll,
                     LocalKitScreenBottom provides bottomState,
                     LocalKitScreenZones provides (if (edgesFade) zones else null),
                     LocalKitLiquidJoin provides join,
-                    LocalKitScreenFloating provides floatChrome,
                 ) {
                     Box(
                         Modifier.fillMaxSize()
@@ -660,6 +662,7 @@ public fun KitScreen(
                         CompositionLocalProvider(LocalKitLiquidChrome provides (wordsFade?.faded ?: frost), LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) { it() }
                     }
                 }
+              }
             }
         } else {
             // Liquid glass. A chat (it records its transcript) keeps its liquid bar and composer here too, so a status
