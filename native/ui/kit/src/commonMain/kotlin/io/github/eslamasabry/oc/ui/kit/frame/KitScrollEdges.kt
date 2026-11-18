@@ -125,7 +125,7 @@ internal fun Modifier.kitScrollEdges(
                         val t = wholePx(edge)
                         val r = wholePx(edge + (topReachPx?.invoke() ?: topReach.toPx())) - t
                         if (t > 0f) {
-                            val keep = keepWithin?.invoke(w)
+                            val keep = keepWithin?.invoke(w)?.snapped()
                             if (keep == null) drawRect(ink.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = mode)
                             else {
                                 bandPath.reset()
@@ -133,7 +133,7 @@ internal fun Modifier.kitScrollEdges(
                                 bandPath.addRoundRect(keep)
                                 // Whole above the soft end, then a short ramp that ends at the band's foot: the margins and
                                 // the corner gaps outside the outline fade out, never a straight cut across a glyph.
-                                val ramp = minOf(SOFT_END_DP.dp.toPx(), t)
+                                val ramp = wholePx(minOf(SOFT_END_DP.dp.toPx(), t))
                                 clipRect(0f, 0f, w, t - ramp) { drawPath(bandPath, ink.copy(alpha = k), blendMode = mode) }
                                 clipRect(0f, t - ramp, w, t) {
                                     drawPath(
@@ -148,13 +148,13 @@ internal fun Modifier.kitScrollEdges(
                     }
                 }
                 val kb = if (fadeFromBottom != null) bottomStrength().coerceIn(0f, 1f) else 0f
-                val keepB = if (fadeFromBottom != null && kb > 0f) keepBottom?.invoke(w, size.height) else null
+                val keepB = if (fadeFromBottom != null && kb > 0f) keepBottom?.invoke(w, size.height)?.snapped() else null
                 if (keepB != null) {
-                    val y = keepB.top.coerceIn(0f, size.height)
+                    val y = wholePx(keepB.top.coerceIn(0f, size.height))
                     bandPath.reset()
                     bandPath.addRect(Rect(0f, y, w, size.height))
                     bandPath.addRoundRect(keepB)
-                    val ramp = minOf(SOFT_END_DP.dp.toPx(), size.height - y)
+                    val ramp = wholePx(minOf(SOFT_END_DP.dp.toPx(), size.height - y))
                     clipRect(0f, y, w, y + ramp) {
                         drawPath(
                             bandPath,
@@ -177,6 +177,14 @@ internal fun Modifier.kitScrollEdges(
         }
     return if (flat) this.then(draw) else graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.then(draw)
 }
+
+/**
+ * The same outline with its four edges on whole pixels: a masked draw (DstOut, DstIn or ground laid over the content)
+ * through an edge inside a pixel leaves a hairline of half-cleared text on a real device, and the emulator's renderer
+ * has crashed in a full redraw on one.
+ */
+private fun RoundRect.snapped(): RoundRect =
+    RoundRect(wholePx(left), wholePx(top), wholePx(right), wholePx(bottom), topLeftCornerRadius)
 
 /** The soft end, dp, of a band cleared around a floating part: it ends at the part's foot (top) in this short ramp. */
 internal const val SOFT_END_DP: Int = 10
