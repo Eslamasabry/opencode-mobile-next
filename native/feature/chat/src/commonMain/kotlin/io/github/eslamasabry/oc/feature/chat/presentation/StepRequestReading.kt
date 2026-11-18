@@ -26,13 +26,11 @@ public data class StepRequestReading(
             var waiting = false
             for (card in cards) {
                 val answered = (card as? RequestCardUi.Permission)?.let { answeredWords(it.state) }
-                if (answered == null) {
-                    if (RunTailRules.waitsForYou(card.state)) {
-                        waiting = true
-                        (card as? RequestCardUi.Permission)?.captured?.callId?.let { waitingCalls += it }
-                    }
-                    continue
+                if (answered == null && RunTailRules.waitsForYou(card.state)) {
+                    waiting = true
+                    (card as? RequestCardUi.Permission)?.captured?.callId?.let { waitingCalls += it }
                 }
+                if (answered == null) continue
                 val call = (card as RequestCardUi.Permission).captured?.callId
                 if (call != null && (answered is AnswerWords.Rejected || answered is AnswerWords.RejectedWith)) {
                     declined += call

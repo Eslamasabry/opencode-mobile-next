@@ -76,6 +76,13 @@ import org.jetbrains.compose.resources.stringResource
 
 /** The roomy conversation row's rules, apart from the drawing. */
 public object KitRecentRowRules {
+    /** Whether the row has a time or a state word to show at its end. */
+    public fun endShown(time: String?, state: KitRowState?): Boolean = time != null || state?.word != null
+
+    /** At large text a row that is not waiting shows its end under the words, not beside them. */
+    public fun endStacked(large: Boolean, waiting: Boolean, time: String?, state: KitRowState?): Boolean =
+        large && !waiting && endShown(time, state)
+
     /** The agent's mark, drawn bare at the row's start (no tile, no container: owner 2026-11-08). */
     public const val MARK_DP: Int = 28
 
@@ -212,12 +219,12 @@ public fun KitRecentRow(
                     if (line != null || shownProject != null) SecondLine(shownProject, line, previewLines)
                     // At large text the time and the state word go under the words instead of beside them, so a
                     // fixed end column never squeezes the title to a few words (look of build 10093 at 200 %).
-                    if (large && !waiting && (time != null || state?.word != null)) End(time, state, stacked = true)
+                    if (KitRecentRowRules.endStacked(large, waiting, time, state)) End(time, state, stacked = true)
                 }
                 if (waiting) {
                     Spacer(Modifier.width(Space.S3.dp))
                     WaitingEnd()
-                } else if (!large && (time != null || state?.word != null)) {
+                } else if (!large && KitRecentRowRules.endShown(time, state)) {
                     Spacer(Modifier.width(Space.S3.dp))
                     End(time, state, Modifier.widthIn(max = endMax))
                 }
