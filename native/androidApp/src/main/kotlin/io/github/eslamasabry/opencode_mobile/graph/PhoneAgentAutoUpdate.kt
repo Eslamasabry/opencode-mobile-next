@@ -163,7 +163,9 @@ class PhoneAgentAutoUpdate(
                 // Refused because the phone is busy: the try is not spent. Any other refusal (no room, not
                 // installable here) is left to the manual install, which says why.
                 override suspend fun update(agent: AgentId): Boolean {
-                    val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value ?: return true
+                    val answer =
+                        (phones.install(agent.raw) as? Outcome.Ok)?.value
+                            ?: return true.also { endedUnstarted(agent) }
                     return when (answer) {
                         PhoneAgentInstallResult.Started -> {
                             log.i { "update started" }
@@ -176,7 +178,9 @@ class PhoneAgentAutoUpdate(
                             true
                         }
                         is PhoneAgentInstallResult.Refused ->
-                            answer.issue != PhoneAgentInstallIssue.Busy
+                            (answer.issue != PhoneAgentInstallIssue.Busy).also { spent ->
+                                if (spent) endedUnstarted(agent)
+                            }
                     }
                 }
             }
@@ -283,6 +287,17 @@ class PhoneAgentAutoUpdate(
     }
 
     /**
+     * An install that never started (it failed to hand over, or was refused for a reason Try again cannot change) was
+     * counted as started: no watcher follows it, so the wait it announced is ended here, a moment after the decision.
+     */
+    private fun endedUnstarted(agent: AgentId) {
+        appScope.launch(dispatchers.io) {
+            delay(UNSTARTED_GRACE.seconds)
+            updaterRef?.failed(agent)
+        }
+    }
+
+    /**
      * The person's Try again started the install of [agent]: the decision says Updating again and this waits for the
      * install's end exactly as the automatic try does, so a second failure ends the wait too.
      */
@@ -362,6 +377,7 @@ class PhoneAgentAutoUpdate(
         const val BUSY_BOUND_MS = 2L * 60 * 60 * 1000
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
+        const val UNSTARTED_GRACE = 2L
         const val WAIT_STEPS = 180
         const val RELOAD_EVERY = 15L
         const val RELOAD_TRIES = 480
