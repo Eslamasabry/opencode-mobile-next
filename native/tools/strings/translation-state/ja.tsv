@@ -2394,10 +2394,10 @@ collectAgents	d720bc6e84
 collectApprovals	3417b5da91
 collectBackground	42ece457ec
 collectConnect	46cca38725
-collectCrashKeys	7fd4e40f3b
+collectCrashKeys	3c18a8ac59
 collectCrashKind	cffc0cbf8b
 collectCrashesLabel	9ecbc9dad7
-collectDevice	8bf74f2cb4
+collectDevice	cfb11f4cb8
 collectDrop	13bd95a3dd
 collectExit	34768d63e2
 collectJourney	fa461aab2a
@@ -2410,7 +2410,7 @@ collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
 collectRowSummary	55533aebc0
-collectRules	fd4128a65b
+collectRules	8877a6f96f
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
 collectSmooth	ad0735212d
