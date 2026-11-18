@@ -192,6 +192,8 @@ public class AgentAutoUpdater(
     private val retryNotBefore = mutableMapOf<String, Long>()
     private val checking = Mutex()
     private var readTried = false
+    private var busyUntil = 0L
+    private var busyStreak = 0
     private var meteredAllowed = false
 
     /**
@@ -210,6 +212,9 @@ public class AgentAutoUpdater(
     public suspend fun changed() {
         if (!checking.tryLock()) return
         try {
+            // Refused for busy (work running, or another install job holds the one gate): the try is kept, and the
+            // next look is after the backoff, never at once.
+            if (nowMs() < busyUntil) return
             if (host.readDue && !readTried) {
                 // The read starts a process per installed agent: not under a setup job or a half-finished move, and
                 // once per run, so a read that cannot finish never repeats.
@@ -235,9 +240,12 @@ public class AgentAutoUpdater(
                 attempted += "$key/${target.raw}"
                 attempted += "$key/$HELPER"
                 meteredAllowed = false
+                busyStreak = 0
                 publish(AgentUpdateDecision(AgentUpdateStep.Updating, target))
             } else {
-                note("refused before it started; will try again")
+                busyStreak++
+                busyUntil = busyDeadline(nowMs(), busyStreak)
+                note("refused before it started (busy); waiting, the try is kept")
                 publish(AgentUpdateDecision(AgentUpdateStep.Refused, target))
             }
         } finally {
@@ -365,3 +373,15 @@ public class AgentAutoUpdater(
         publish(AgentUpdateDecision(step, target))
     }
 }
+
+private const val BUSY_BACKOFF_MS = 30_000L
+private const val BUSY_BACKOFF_MAX_MS = 120_000L
+private const val BUSY_DOUBLINGS = 3
+
+/** When a busy-refused try looks again: 30 s, doubling, at most 2 min. No clock (0) means no backoff. */
+private fun busyDeadline(now: Long, streak: Int): Long =
+    if (now == 0L) {
+        0L
+    } else {
+        now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
+    }

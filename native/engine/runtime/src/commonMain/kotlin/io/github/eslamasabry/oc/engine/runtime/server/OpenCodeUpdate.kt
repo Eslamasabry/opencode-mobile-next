@@ -137,6 +137,8 @@ public class OpenCodeAutoUpdater(
     public val retrying: StateFlow<Boolean> get() = finishing.asStateFlow()
     private val finishing = MutableStateFlow(false)
     private var retryArmed = false
+    private var busyStreak = 0
+    private var busyWaiting = false
     private var awaiting: String? = null
     private var sawRunning = false
     private var awaitingSince = 0L
@@ -198,6 +200,10 @@ public class OpenCodeAutoUpdater(
                 track(if (workBusy()) OpenCodeHold.Busy else OpenCodeHold.NotReady)
                 return
             }
+            if (busyWaiting) {
+                busyWaiting = false
+                note("the wait for the other job is over; trying again")
+            }
             if (!decide(key, explain = true)) return
             withTimeoutOrNull(READ_LIMIT) { host.refresh() }
             if (!decide(key)) return
@@ -210,9 +216,17 @@ public class OpenCodeAutoUpdater(
                 short.value = false
                 retryArmed = false
                 finishing.value = false
+                busyStreak = 0
                 meteredAllowed = false
                 waiting.value = false
-            } else note("refused before it started; will try again")
+            } else {
+                // Busy (work running, or another install job holds the one gate): the try is kept, and nothing spins:
+                // the next look is after a backoff (30 s, doubling, at most 2 min), not at once.
+                busyStreak++
+                retryNotBefore = busyDeadline(nowMs(), busyStreak)
+                if (!busyWaiting) note("refused before it started (busy); waiting, the try is kept")
+                busyWaiting = true
+            }
         } finally {
             checking.unlock()
         }
@@ -367,3 +381,15 @@ public class OpenCodeUpdateRestart(
 
     private suspend fun status(): RuntimeStatus? = (port.refreshStatus() as? Outcome.Ok)?.value
 }
+
+private const val BUSY_BACKOFF_MS = 30_000L
+private const val BUSY_BACKOFF_MAX_MS = 120_000L
+private const val BUSY_DOUBLINGS = 3
+
+/** When a busy-refused try looks again: 30 s, doubling, at most 2 min. No clock (0) means no backoff. */
+private fun busyDeadline(now: Long, streak: Int): Long =
+    if (now == 0L) {
+        0L
+    } else {
+        now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
+    }
