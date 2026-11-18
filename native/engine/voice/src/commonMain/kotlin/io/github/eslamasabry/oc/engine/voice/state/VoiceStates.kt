@@ -24,8 +24,17 @@ public sealed interface VoiceState {
     /** Microphone opening and model loading; frames already buffer (plan 10 §6.3 "Load overlap"). */
     public data object Starting : VoiceState
 
-    public data class Listening(val since: Instant, val mode: VoiceMode, val chunksDone: Int, val words: String) :
-        VoiceState
+    /**
+     * [words] are confirmed; [partial] are the words being heard now, which may still change (an engine that streams;
+     * "" for one that does not). The composer shows both in the message box, the partial ones quieter.
+     */
+    public data class Listening(
+        val since: Instant,
+        val mode: VoiceMode,
+        val chunksDone: Int,
+        val words: String,
+        val partial: String = "",
+    ) : VoiceState
 
     /** Flutter `transcribing` after stop. */
     public data class Writing(val words: String) : VoiceState

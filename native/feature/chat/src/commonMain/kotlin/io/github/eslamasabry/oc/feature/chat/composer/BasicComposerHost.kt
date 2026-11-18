@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.TextRange
+import androidx.compose.foundation.layout.RowScope
+import io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerRecorder
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitFieldQuietRange
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -159,6 +164,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerAddToTurn
 import io.github.eslamasabry.oc.ui.words.res.kitComposerField
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSend
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceTranscribing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
@@ -474,7 +481,17 @@ public fun BasicComposer(
             send = send,
             canSend = { canSend },
             conversationRef = conversationRef,
-        )
+        ).also {
+            it.replaceAt = { words, cursor ->
+                field.edit {
+                    replace(0, length, words)
+                    selection = TextRange(cursor.coerceIn(0, length))
+                }
+                editor.userEditSerial += 1
+                editor.lastReported = words
+                actions.draftChanged(words)
+            }
+        }
     // Leaving this conversation (a switch, Files, Back) ends any dictation into its box.
     voice?.StopWhenLeft(voiceField)
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
@@ -831,6 +848,7 @@ public fun BasicComposer(
             },
             onDismiss = { projectFilesOpen = false },
         )
+        // The hands-free voice conversation's pill (dictation draws inside the box, below).
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-attachments")) {
@@ -953,7 +971,15 @@ public fun BasicComposer(
         // button never changes under a finger.
         val voiceActive = voice?.isActive(voiceField) == true
         val inlineAtStart = remember(voiceActive) { typed }
-        val inlineMic = if (voiceActive) inlineAtStart else typed
+        // Owner 2026-11-17 ("Wtf is this ugly microphone flow?"): while words are dictated the box itself is the
+        // recorder: ✕, the live waveform and the time, ✓ in one row inside it, the words above. A tapped dictation's
+        // mic gives way to that row and Send keeps its place, meaning "write down and send"; a held mic stays under
+        // the finger where the hold began.
+        val recording = voice?.recording(voiceField)
+        val tapRecording = recording != null && recording.dictating && !recording.held
+        val recorderPart: (@Composable RowScope.() -> Unit)? =
+            if (recording != null && voice != null) ({ voice.Recorder(voiceField, Modifier.weight(1f)) }) else null
+        val inlineMic = if (voiceActive) inlineAtStart && !tapRecording else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
         val stopsFirst = (busy && state.restarts) || SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
@@ -1079,6 +1105,12 @@ public fun BasicComposer(
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
         KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = true) { stacked ->
+            // While dictating, the hands-free voice mode or a reply read aloud, the box itself is the recorder (its
+            // row in the place of the plus and the chips); dictated words still forming are drawn quieter in the field.
+            CompositionLocalProvider(
+                LocalKitComposerRecorder provides recorderPart,
+                LocalKitFieldQuietRange provides recording?.unconfirmed,
+            ) {
             KitComposerBox(
                 running = RunTailRules.boxRunning(RunTailRules.tail(busy, chrome.stopping(), waitingRequest)),
                 stacked = stacked,
@@ -1089,6 +1121,9 @@ public fun BasicComposer(
                 },
                 fieldEnd = { if (stopShown) stopPart() },
                 above = {
+                    // A dictation that ended with something to say (nothing heard, the microphone is off, it failed,
+                    // no speech model) says it here, inside the box, with its way forward.
+                    voice?.Note(voiceField, Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp))
                     phraseRow()
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(
@@ -1239,10 +1274,23 @@ public fun BasicComposer(
                         KitComposerPrimaryAction(
                             // Without voice the empty box shows a disabled Send, never an empty slot
                             // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).
-                            hasMessage = inlineMic || voice == null,
+                            hasMessage = inlineMic || voice == null || tapRecording,
                             mic = { voice?.Mic(voiceField, Modifier) },
                             send = {
-                                if (stopsFirst && typed && sendReady)
+                                if (tapRecording)
+                                    // While a tapped dictation runs, Send writes the words down and sends them, once.
+                                    KitComposerSend(
+                                        label = recording?.sendLabel ?: sendLabel,
+                                        onClick = { recording?.sendNow?.invoke() },
+                                        enabled =
+                                            if (sendReady && !state.sending && recording?.sendNow != null) {
+                                                KitEnabled.Enabled
+                                            } else {
+                                                KitEnabled.Disabled(stringResource(Res.string.kitVoiceTranscribing))
+                                            },
+                                        modifier = Modifier.testTag("chat-send-button"),
+                                    )
+                                else if (stopsFirst && typed && sendReady)
                                     KitStopAndSendPill(
                                         label = stringResource(Res.string.kitComposerStopAndSend),
                                         onClick = stopAndSend,
@@ -1284,6 +1332,7 @@ public fun BasicComposer(
                         )
                 },
             )
+            }
         }
         }
     }

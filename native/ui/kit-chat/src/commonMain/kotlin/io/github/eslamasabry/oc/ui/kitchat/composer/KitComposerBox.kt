@@ -134,6 +134,10 @@ public fun KitComposerBox(
     /** At the end of the words' own row when [stacked] (the slab's Stop while a reply runs): the row under keeps still. */
     fieldEnd: @Composable RowScope.() -> Unit = {},
 ) {
+    // While the person dictates (owner 2026-11-17, "the box itself becomes the recorder"): the recorder row
+    // ([KitVoiceRecorderRow], handed down by [LocalKitComposerRecorder]) takes the place of the plus and the chips
+    // inside this box, with [trailing] (Send) kept at the end in its place. The words stay above it.
+    val recorder = LocalKitComposerRecorder.current
     val tokens = LocalKitTokens.current
     val largeText = LocalDensity.current.fontScale >= 1.5f
     val appearance = LocalKitAppearance.current
@@ -234,6 +238,10 @@ public fun KitComposerBox(
                 // Send's disc sits a target's margin in), so the two read as one column of actions.
                 if (!stacked) trailing() else Row(Modifier.composerActionInset(tokens.minTarget), verticalAlignment = Alignment.CenterVertically) { fieldEnd() }
             }
+            // One row box (no stacking): the recorder takes its own line under the words, inside the box.
+            if (!stacked && recorder != null) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { recorder() }
+            }
             if (stacked) {
               androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
                 // B-438 (chips never cut): the plus and the round control keep their 48 dp; the approval control is the
@@ -258,7 +266,7 @@ public fun KitComposerBox(
                 // directly above it keep a Space.S1 gap (layout rule `tight`, LAYOUT-RULES.md; the guard's
                 // kit_composer_idle_empty found 0.0 dp between the field and Add).
                 Spacer(Modifier.height(Space.S1.dp))
-                if (ownLine)
+                if (ownLine && recorder == null)
                     FlowRow(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -270,16 +278,23 @@ public fun KitComposerBox(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    leading()
-                    if (ownLine) Spacer(Modifier.weight(1f))
-                    else
-                        // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
-                        // (the model) shows its name; the later ones (the approval mode) shorten first.
-                        KitComposerChipLine(
-                            Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
-                        ) {
-                            chips()
+                    // The mic grows into the recorder row from the end where it stood, and back (Full); Calm fades;
+                    // Off is instant. Send ([trailing]) never moves.
+                    KitRecorderSwap(recorder, Modifier.weight(1f)) { rec ->
+                        if (rec != null) rec()
+                        else {
+                            leading()
+                            if (ownLine) Spacer(Modifier.weight(1f))
+                            else
+                                // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
+                                // (the model) shows its name; the later ones (the approval mode) shorten first.
+                                KitComposerChipLine(
+                                    Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
+                                ) {
+                                    chips()
+                                }
                         }
+                    }
                     trailing()
                 }
                 }

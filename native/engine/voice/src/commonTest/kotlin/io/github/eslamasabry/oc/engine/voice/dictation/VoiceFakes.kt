@@ -98,6 +98,9 @@ internal class FakeRecognizer : SpeechRecognizer {
     val sampleCounts = mutableListOf<Int>()
     var result: suspend (index: Int) -> Outcome<String> = { "w${it + 1}".ok() }
 
+    /** What an engine that streams hears (Whisper streams nothing: left silent). */
+    val heard = kotlinx.coroutines.flow.MutableSharedFlow<HeardChange>(extraBufferCapacity = 16)
+
     override suspend fun open(pack: InstalledPack, languageCode: String, threads: Int): Outcome<RecognizerSession> {
         openGate?.await()
         if (openFails) return Failure.Media(MediaProblem.SpeechModelBroken).failed()
@@ -114,6 +117,8 @@ internal class FakeRecognizer : SpeechRecognizer {
             override suspend fun close() {
                 closes++
             }
+
+            override val heard: kotlinx.coroutines.flow.Flow<HeardChange> = this@FakeRecognizer.heard
         }.ok()
     }
 }

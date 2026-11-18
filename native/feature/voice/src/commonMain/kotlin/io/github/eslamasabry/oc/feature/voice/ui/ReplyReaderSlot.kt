@@ -23,11 +23,8 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiNotNow
-import io.github.eslamasabry.oc.ui.words.res.kitVoiceSpeaking
-import io.github.eslamasabry.oc.ui.words.res.kitVoiceStopReading
 import io.github.eslamasabry.oc.ui.words.res.naturalVoiceFallbackNote
 import io.github.eslamasabry.oc.ui.words.res.readAloudConsentDetail
 import io.github.eslamasabry.oc.ui.words.res.readAloudConsentEngine
@@ -61,13 +58,8 @@ public class ReplyReaderSlot : KitReplyReader {
 
 @Composable
 internal fun ReplyReaderView(state: ReplyReaderUi, presenter: ReplyReaderPresenter, modifier: Modifier = Modifier) {
-    if (state.reading != null) {
-        KitVoicePill(
-            title = stringResource(Res.string.kitVoiceSpeaking),
-            modifier = modifier,
-            primary = KitLineAction(stringResource(Res.string.kitVoiceStopReading), presenter::stop, testTag = "read-aloud-stop"),
-        )
-    }
+    // While a reply is read aloud, the message box's own recorder row says so and its ✕ stops reading
+    // (ComposerVoiceSlot.Recorder, one look for one thing): nothing rides above the box.
     val note = state.note
     if (note != null) {
         val dismiss = KitLineAction(stringResource(Res.string.e7VoiceUiNotNow), presenter::dismissNote)

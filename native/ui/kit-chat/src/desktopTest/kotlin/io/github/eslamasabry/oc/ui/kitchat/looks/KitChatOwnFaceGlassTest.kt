@@ -28,8 +28,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kitchat.ChatFakePlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
-import io.github.eslamasabry.oc.ui.kitchat.composer.VOICE_PILL_TAG
 import io.github.eslamasabry.oc.ui.kitchat.form.KitFormCard
 import kotlin.math.abs
 import kotlin.test.Test
@@ -44,7 +42,6 @@ class KitChatOwnFaceGlassTest {
 
     private val parts =
         listOf(
-            Part("voice pill", VOICE_PILL_TAG, { it.surface2 }) { KitVoicePill("Listening", elapsed = "0:07") },
             Part("form card", "own-face", { it.attentionSurface.compositeOver(it.surface1) }) {
                 Box(Modifier.width(360.dp).testTag("own-face")) { KitFormCard("A few questions", null, "Answer", {}) }
             },

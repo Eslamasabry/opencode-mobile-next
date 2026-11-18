@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">Đọc to</string>
     <string name="voiceNativePartial">Đã tải %1$s trên %2$s</string>
     <string name="voiceNativePhoneRecognizer">Nhận dạng giọng nói của điện thoại</string>
+    <string name="kitVoiceDiscard">Bỏ bản ghi</string>
+    <string name="kitVoiceUseWords">Đưa lời vào ô tin nhắn</string>
+    <string name="kitVoiceSendSpoken">Gửi điều bạn vừa nói</string>
+    <string name="kitVoiceListeningFor">Đang nghe, %1$s</string>
 </resources>

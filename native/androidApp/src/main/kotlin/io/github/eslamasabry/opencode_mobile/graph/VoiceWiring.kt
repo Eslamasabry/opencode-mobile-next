@@ -489,7 +489,8 @@ private class PhoneDictation(
 
     private fun publishListening() {
         val mode = request?.mode ?: VoiceMode.Tap
-        state.value = VoiceState.Listening(since, mode, 0, words)
+        // The phone's recognizer streams: the confirmed phrases, then the words still forming (shown quieter).
+        state.value = VoiceState.Listening(since, mode, 0, committed.toString().trim(), partial.trim())
     }
 
     private fun end(next: VoiceState) {

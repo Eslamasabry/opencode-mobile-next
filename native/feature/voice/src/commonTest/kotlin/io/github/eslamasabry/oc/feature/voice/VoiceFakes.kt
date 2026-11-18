@@ -247,6 +247,14 @@ class FakeField(var value: String = "", var sel: IntRange? = null, var sendable:
         sel = null
     }
 
+    /** Where the cursor was put by the last [replace] with a cursor (null: the field's own rule). */
+    var cursor: Int? = null
+
+    override fun replace(text: String, cursor: Int) {
+        replace(text)
+        this.cursor = cursor
+    }
+
     override fun send() {
         sent += value
         value = ""

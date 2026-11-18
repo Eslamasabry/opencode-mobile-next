@@ -43,7 +43,13 @@ public class KitVoiceField(
     public val conversationRef: ConversationRef? = null,
     /** A draft-only surface (for example Ask for change) never auto-sends recorded words. */
     public val dictationOnly: Boolean = false,
-)
+) {
+    /**
+     * Replaces the whole field and puts the cursor at the given offset (after the dictated words, so text typed after
+     * the insertion point keeps its place). Null: [replace], the field's own cursor rule. Set by the host once.
+     */
+    public var replaceAt: ((String, Int) -> Unit)? = null
+}
 
 /** Contributed by `:feature:voice` (empty set = no mic, never a dead one). */
 public interface KitComposerVoice {
@@ -69,10 +75,27 @@ public interface KitComposerVoice {
     @Composable public fun Actions(field: KitVoiceField, modifier: Modifier) {}
 
     /**
-     * Above the field while voice is active: what is heard, the countdown, the notes. Draws nothing
-     * when idle.
+     * Above the field: the hands-free voice mode's extra controls (its tour, "Read aloud" switch, "Read the reply"),
+     * its sheets, and the effects voice needs (words typed during a recording, leaving the app). The listening,
+     * speaking and waiting states are the box's own recorder row ([recording], [Recorder]); notes are [Note].
      */
     @Composable public fun Panel(field: KitVoiceField, modifier: Modifier)
+
+    /**
+     * While words are dictated into [field], the hands-free voice mode runs, or a reply is read aloud (owner
+     * 2026-11-17: the message box itself becomes the recorder; one look for one thing): how the box hosts the recorder
+     * row. Null otherwise; the box is then as always.
+     */
+    @Composable public fun recording(field: KitVoiceField): KitVoiceRecording? = null
+
+    /** The recorder row inside the box while [recording] is not null: ✕, the live waveform and time, ✓. */
+    @Composable public fun Recorder(field: KitVoiceField, modifier: Modifier) {}
+
+    /**
+     * The one note after dictation ends (nothing heard, the microphone is off, it failed, no speech model), inside the
+     * box above the words, with its way forward. Draws nothing when there is none.
+     */
+    @Composable public fun Note(field: KitVoiceField, modifier: Modifier) {}
 
     /**
      * Stops any dictation into [field] when this composer leaves the screen (a switch to another conversation, Files,
@@ -84,6 +107,34 @@ public interface KitComposerVoice {
     @Composable
     public fun Options(field: KitVoiceField, modifier: Modifier, onSelected: () -> Unit) {}
 }
+
+/**
+ * How the message box hosts a dictation (kit-chat `KitComposerVoice.recording`).
+ *
+ * [held]: the finger is on the mic (hold to talk). The mic stays exactly where the hold began, so the touch is never
+ * cut; the recorder row shows only what letting go does.
+ *
+ * [sendNow]: the box's own Send while a tapped dictation runs: stop, write the words into the box and send them once
+ * through the composer's one send. Null while it cannot (the words are already being written down).
+ */
+@androidx.compose.runtime.Immutable
+public class KitVoiceRecording(
+    public val held: Boolean,
+    public val sendNow: (() -> Unit)?,
+    /** What Send says while it means "write down and send" (its spoken label). */
+    public val sendLabel: String,
+    /**
+     * True while words are dictated into the box: Send then means "write down and send" ([sendNow]). False for the
+     * hands-free voice mode and "Read aloud", which show the same row while Send keeps its usual meaning.
+     */
+    public val dictating: Boolean = true,
+    /**
+     * Where in the field's text the dictated words still forming sit (UTF-16 indices): the box draws them in the
+     * quieter text colour until they are confirmed. Null when nothing is unconfirmed (always, with an engine that does
+     * not stream).
+     */
+    public val unconfirmed: IntRange? = null,
+)
 
 /**
  * A reply the person asked to hear (the message menu's "Read aloud"). [id] changes on every ask.

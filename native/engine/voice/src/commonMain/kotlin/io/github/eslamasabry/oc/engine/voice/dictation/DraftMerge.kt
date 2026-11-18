@@ -19,4 +19,16 @@ public object DraftMerge {
         val trailing = if (after.isNotEmpty() && !after.first().isWhitespace()) " " else ""
         return "$before$leading$trimmed$trailing$after"
     }
+
+    /** Where [merge] puts the dictated words in its result (UTF-16 indices), or null when there are none. */
+    public fun inserted(existing: String, selectionStart: Int, selectionEnd: Int, words: String): IntRange? {
+        val trimmed = words.trim()
+        if (trimmed.isEmpty()) return null
+        val valid = selectionStart >= 0 && selectionEnd >= 0
+        val start = if (valid) selectionStart.coerceIn(0, existing.length) else existing.length
+        val before = existing.substring(0, start)
+        val leading = if (before.isNotEmpty() && !before.last().isWhitespace()) 1 else 0
+        val from = start + leading
+        return from until from + trimmed.length
+    }
 }

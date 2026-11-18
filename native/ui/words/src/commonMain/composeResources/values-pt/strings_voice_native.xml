@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">Ler em voz alta</string>
     <string name="voiceNativePartial">Baixado %1$s de %2$s</string>
     <string name="voiceNativePhoneRecognizer">Reconhecimento de fala do celular</string>
+    <string name="kitVoiceDiscard">Descartar gravação</string>
+    <string name="kitVoiceUseWords">Colocar as palavras na caixa de mensagem</string>
+    <string name="kitVoiceSendSpoken">Enviar o que você disse</string>
+    <string name="kitVoiceListeningFor">Ouvindo, %1$s</string>
 </resources>

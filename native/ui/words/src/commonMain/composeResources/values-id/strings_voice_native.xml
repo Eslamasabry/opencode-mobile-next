@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">Bacakan</string>
     <string name="voiceNativePartial">Terunduh %1$s dari %2$s</string>
     <string name="voiceNativePhoneRecognizer">Pengenalan ucapan ponsel</string>
+    <string name="kitVoiceDiscard">Buang rekaman</string>
+    <string name="kitVoiceUseWords">Masukkan kata-kata ke kotak pesan</string>
+    <string name="kitVoiceSendSpoken">Kirim yang Anda ucapkan</string>
+    <string name="kitVoiceListeningFor">Mendengarkan, %1$s</string>
 </resources>

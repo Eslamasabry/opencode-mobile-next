@@ -9,4 +9,8 @@
     <string name="voiceNativeReadAloud">Read aloud</string>
     <string name="voiceNativePartial">Downloaded %1$s of %2$s</string>
     <string name="voiceNativePhoneRecognizer">Phone speech recognition</string>
+    <string name="kitVoiceDiscard">Discard recording</string>
+    <string name="kitVoiceUseWords">Put the words in the message box</string>
+    <string name="kitVoiceSendSpoken">Send what you said</string>
+    <string name="kitVoiceListeningFor">Listening, %1$s</string>
 </resources>

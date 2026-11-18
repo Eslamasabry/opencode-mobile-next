@@ -49,6 +49,11 @@ public interface VoiceFieldPort {
 
     public fun replace(text: String)
 
+    /** Replaces the whole field and puts the cursor at [cursor] (after the dictated words). */
+    public fun replace(text: String, cursor: Int) {
+        replace(text)
+    }
+
     public fun send()
 
     public fun canSend(): Boolean
@@ -130,6 +135,11 @@ public data class ComposerVoiceUi(
      * the model picked for this phone is offered for download right here. Null: no sheet.
      */
     val setup: VoiceSetupStage? = null,
+    /**
+     * Where in the message box the words still forming sit (UTF-16 indices), drawn quieter until the engine confirms
+     * them; null when nothing is unconfirmed (and always with an engine that does not stream).
+     */
+    val unconfirmed: IntRange? = null,
 ) {
     val active: Boolean
         get() = phase != MicPhase.Idle
@@ -686,9 +696,14 @@ public class ComposerVoicePresenter(
      * send them through the composer's own send. A dictation that hears nothing sends nothing.
      */
     public fun doneAndSend() {
-        if (mutable.value.mode == VoiceMode.Conversation) return
-        sendAfterWrite = true
-        done()
+        // The box's Send while listening (owner 2026-11-17): a second press before the words are written down is the
+        // same request, never a second send; a voice conversation sends by itself.
+        val phase = mutable.value.phase
+        val asks = phase == MicPhase.Starting || phase == MicPhase.Listening
+        if (mutable.value.mode != VoiceMode.Conversation && !sendAfterWrite && asks) {
+            sendAfterWrite = true
+            done()
+        }
     }
 
     /** "Cancel": the words said are dropped and the field stays as it was. */
@@ -946,8 +961,8 @@ public class ComposerVoicePresenter(
                     listeningSince = clock.now()
                     startTicking()
                 }
-                mutable.update { it.copy(phase = MicPhase.Listening, words = s.words) }
-                preview(s.words)
+                mutable.update { it.copy(phase = MicPhase.Listening, words = joinHeard(s.words, s.partial)) }
+                preview(s.words, s.partial)
                 when (earlyEnd.also { earlyEnd = null }) {
                     EarlyEnd.Finish -> {
                         if (mutable.value.mode == VoiceMode.Hold) discard()
@@ -1014,13 +1029,29 @@ public class ComposerVoicePresenter(
         if (send) field?.let { f -> if (f.canSend() && f.text().isNotBlank()) f.send() }
     }
 
-    /** Shows the words heard so far in the box, around where the person's cursor was. */
-    private fun preview(words: String) {
+    /**
+     * Shows the words heard so far in the box, around where the person's cursor was (owner 2026-11-17: the text streams
+     * into the box): the confirmed [words], then the [partial] ones still forming, which the box draws quieter
+     * ([ComposerVoiceUi.unconfirmed]). The text typed before stays untouched around them.
+     */
+    private fun preview(words: String, partial: String = "") {
         val base = previewBase ?: return
         val f = field ?: return
-        val next = if (words.isBlank()) base.first else DraftMerge.merge(base.first, base.second, base.third, words)
-        if (next != f.text()) f.replace(next)
+        val heard = joinHeard(words, partial)
+        val next = if (heard.isBlank()) base.first else DraftMerge.merge(base.first, base.second, base.third, heard)
+        // Only the dictated range changes (new, confirmed or replaced words); the cursor stays after it.
+        val dictated = DraftMerge.inserted(base.first, base.second, base.third, heard)
+        if (next != f.text()) {
+            if (dictated != null) f.replace(next, dictated.last + 1) else f.replace(next)
+        }
+        val forming = partial.trim()
+        val unconfirmed =
+            if (forming.isEmpty() || dictated == null) null else (dictated.last + 1 - forming.length)..dictated.last
+        if (mutable.value.unconfirmed != unconfirmed) mutable.update { it.copy(unconfirmed = unconfirmed) }
     }
+
+    private fun joinHeard(words: String, partial: String): String =
+        listOf(words.trim(), partial.trim()).filter { it.isNotEmpty() }.joinToString(" ")
 
     /** Merges [words] into the field around its selection; returns the new field text. */
     private fun merge(words: String): String? {
@@ -1052,6 +1083,7 @@ public class ComposerVoicePresenter(
                 words = "",
                 elapsedSeconds = 0,
                 note = note,
+                unconfirmed = null,
             )
         }
         noteTyped = if (note != null) field?.text() else null
