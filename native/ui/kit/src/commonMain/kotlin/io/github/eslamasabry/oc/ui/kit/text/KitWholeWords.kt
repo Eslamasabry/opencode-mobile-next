@@ -60,3 +60,13 @@ public object KitWholeWordsRules {
             c in '㐀'..'鿿' || // CJK ideographs
             c in '豈'..'﫿'
 }
+
+/**
+ * A short value that reads as one piece ("ls -la", a command to allow): its spaces become no-break spaces when it is at
+ * most [maxChars] long, so a narrow line never breaks it at its space (look of build 10093: "ls / -la"). A longer one
+ * keeps its spaces, so it can still wrap between its words.
+ */
+public fun kitKeepShortTogether(text: String, maxChars: Int = KEEP_TOGETHER_MAX): String =
+    if (text.length <= maxChars) text.replace(' ', '\u00A0') else text
+
+private const val KEEP_TOGETHER_MAX = 24
