@@ -101,7 +101,7 @@ class PhoneDownloads(
                 phones.state,
                 agentStatus.decision,
                 networkRead,
-            ) { (waiting, held, short, fell), progress, agentState, decision, read ->
+            ) { side, progress, agentState, decision, read ->
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =
@@ -113,16 +113,16 @@ class PhoneDownloads(
                     }
                 val said =
                     HomeDownloadMapping.facts(
-                        openCodeWaiting = downloadWaitingSaid(waiting, read),
+                        openCodeWaiting = downloadWaitingSaid(side.waiting, read),
                         openCodeRunning = update && progress.state == SetupState.Running,
                         // The update ended below its pin (read again after the job): the failed row, with Try again.
-                        openCodeFailed = (update && progress.state == SetupState.Failed) || fell,
+                        openCodeFailed = (update && progress.state == SetupState.Failed) || side.openCodeShort,
                         // OpenCode's OWN progress, never another component's (the job lists the shared parts too).
                         openCodePercent =
                             progress.components
                                 .firstOrNull { it.id == SetupComponentIds.OPENCODE }
                                 ?.fraction
-                                ?.let { (it * 100).roundToInt() },
+                                ?.let { (it * PERCENT).roundToInt() },
                         helper = helper,
                         helperInstall =
                             when (install?.phase) {
@@ -136,14 +136,14 @@ class PhoneDownloads(
                         // A helper install that stopped for want of room says how much, beside the failed row.
                         .map { fact ->
                             if (fact.kind == HomeDownloadKind.Helper && fact.phase == HomeDownloadPhase.Failed) {
-                                fact.copy(short = short)
+                                fact.copy(short = side.helperShort)
                             } else {
                                 fact
                             }
                         }
                 HomeDownloadMapping.withHeld(
                     said,
-                    when (held) {
+                    when (side.held) {
                         OpenCodeHold.Busy -> HomeHold.Reply
                         OpenCodeHold.NotReady -> HomeHold.PhoneNotReady
                         null -> null
@@ -193,6 +193,8 @@ internal fun downloadNetworkMetered(network: SetupNetwork): Boolean = network !=
  * mobile data, so the line stays quiet (the update itself still waits; unknown stays "ask").
  */
 internal fun downloadWaitingSaid(waiting: Boolean, networkRead: Boolean): Boolean = waiting && networkRead
+
+private const val PERCENT = 100
 
 /** What the downloads line reads beside the setup job: waiting, held, the helper's room, a short OpenCode update. */
 private data class SideFacts(
