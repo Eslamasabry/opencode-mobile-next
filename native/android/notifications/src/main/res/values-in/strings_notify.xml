@@ -68,4 +68,6 @@
     <string name="notify_answer_in_app">Buka OpenCode untuk menjawab</string>
     <string name="notify_reply_watch_title">Masih mengerjakan balasan Anda</string>
     <string name="notify_status_public_working">OpenCode · bekerja</string>
+    <string name="notify_alert_reason_sign_in_again">%1$s meminta Anda masuk lagi.</string>
+    <string name="notify_alert_reason_sign_in_again_any">Agen meminta Anda masuk lagi.</string>
 </resources>

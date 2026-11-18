@@ -69,4 +69,6 @@
     <plurals name="notify_group_finished">
         <item quantity="other">%s件の会話が完了</item>
     </plurals>
+    <string name="notify_alert_reason_sign_in_again">%1$sにもう一度サインインする必要があります。</string>
+    <string name="notify_alert_reason_sign_in_again_any">エージェントにもう一度サインインする必要があります。</string>
 </resources>

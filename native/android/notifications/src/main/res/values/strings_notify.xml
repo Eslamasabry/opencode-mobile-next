@@ -44,6 +44,10 @@
     <string name="notify_alert_reason_filter">The provider blocked the reply.</string>
     <string name="notify_alert_reason_model">That model is not available. Choose another to continue.</string>
     <string name="notify_alert_reason_other">Something went wrong.</string>
+    <!-- The agent's own sign-in ran out (B-ANDR-131); %1$s is the app's name for the agent, e.g. Claude Code. -->
+    <string name="notify_alert_reason_sign_in_again">%1$s needs you to sign in again.</string>
+    <!-- The same, for an agent whose name the app does not know. -->
+    <string name="notify_alert_reason_sign_in_again_any">The agent needs you to sign in again.</string>
     <string name="notify_allow_once">Allow once</string>
     <string name="notify_reject">Deny</string>
     <string name="notify_open">Open</string>

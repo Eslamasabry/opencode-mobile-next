@@ -81,4 +81,6 @@
         <item quantity="many">%s разговоров завершены</item>
         <item quantity="other">%s разговора завершены</item>
     </plurals>
+    <string name="notify_alert_reason_sign_in_again">%1$s: нужно войти снова.</string>
+    <string name="notify_alert_reason_sign_in_again_any">Агент просит войти снова.</string>
 </resources>
