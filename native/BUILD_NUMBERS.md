@@ -119,3 +119,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10093 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: the build for the owner: chat-edges-flow c467fa1444 + privacy-words 7ecf132333 on top of 10092's approval-stays, font-scale-audit, signin-clears-turn (source 4261c2e440) |
 | 10094 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: voice-conversation-door c38a82213b (B-461) on top of 10093's content (source 09ba5d9698) |
 | 10095 | build | 2026-11-18 | look build for the next-update branch b7-dailynews with web reads, not the line (source 3ccd091814, native/listb-look-3) |
+| 10096 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: chat-edges-fix2 504850c7a9 (bottom edge of the chat page and the pinned row) on top of 10094's content (source 6f42ba9b85) |
