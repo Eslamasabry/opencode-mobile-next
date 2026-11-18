@@ -55,6 +55,7 @@ class NativeAgentSetupJobs(
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val payloads: PhonePayloadGuard,
+    private val gate: InstallGate,
 ) : AgentSetupJobs, ProfileCloser {
     override val owner: String = ":engine:agents"
     private val denied = ConcurrentHashMap.newKeySet<ProfileId>()
@@ -66,9 +67,6 @@ class NativeAgentSetupJobs(
     override suspend fun anySetupRunning(): Boolean? =
         (native { runner.running || status()?.optString("state") == "running" } as? Outcome.Ok)
             ?.value
-            // The setup engine is checking or handing over a job (OpenCode's update, Repair): not running yet in the
-            // native record, but it holds the installer slot and shares components with an agents' install.
-            ?.let { it || SetupLane.engineStarting }
 
     override suspend fun freeBytes(): Long? =
         (native { app.filesDir.usableSpace.coerceAtLeast(0L) } as? Outcome.Ok)?.value
@@ -86,100 +84,106 @@ class NativeAgentSetupJobs(
                 getString(Res.string.phoneSetupNotificationDone),
                 getString(Res.string.phoneSetupNotificationStopped),
             )
-        return native {
-            check(admitted(owner)) { "unavailable" }
-            val descriptor = AgentCatalog.builtIn.byId(agent) ?: error("unavailable")
-            val estimate = guard.downloadBytesFor(descriptor) ?: error("unavailable")
-            val installed =
-                descriptor.recipe?.artifacts?.values?.mapNotNull { it.installedBytes }?.maxOrNull()
-            val required = requiredSetupFreeBytes(estimate, installed)
-            check(app.filesDir.usableSpace >= required) { "storage" }
-            val lock =
-                app.assets.open("agents/paseo-package-lock.json").bufferedReader().use {
-                    it.readText()
-                }
-            val paseo =
-                PaseoPhoneScripts.install(
-                    lock,
-                    object : PaseoLockCodec {
-                        override fun sha256Hex(bytes: ByteArray): String =
-                            MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {
-                                "%02x".format(it)
-                            }
+        // The start phase holds the one install gate (the setup engine's checks hold it too): busy keeps the try.
+        if (!gate.mutex.tryLock()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+        try {
+            return native {
+                check(admitted(owner)) { "unavailable" }
+                val descriptor = AgentCatalog.builtIn.byId(agent) ?: error("unavailable")
+                val estimate = guard.downloadBytesFor(descriptor) ?: error("unavailable")
+                val installed =
+                    descriptor.recipe?.artifacts?.values?.mapNotNull { it.installedBytes }?.maxOrNull()
+                val required = requiredSetupFreeBytes(estimate, installed)
+                check(app.filesDir.usableSpace >= required) { "storage" }
+                val lock =
+                    app.assets.open("agents/paseo-package-lock.json").bufferedReader().use {
+                        it.readText()
+                    }
+                val paseo =
+                    PaseoPhoneScripts.install(
+                        lock,
+                        object : PaseoLockCodec {
+                            override fun sha256Hex(bytes: ByteArray): String =
+                                MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {
+                                    "%02x".format(it)
+                                }
 
-                        override fun gzip(bytes: ByteArray): ByteArray =
-                            ByteArrayOutputStream().use { out ->
-                                GZIPOutputStream(out).use { it.write(bytes) }
-                                out.toByteArray()
+                            override fun gzip(bytes: ByteArray): ByteArray =
+                                ByteArrayOutputStream().use { out ->
+                                    GZIPOutputStream(out).use { it.write(bytes) }
+                                    out.toByteArray()
+                                }
+                        },
+                    )
+                // Flutter ran each component's own check first: a step already in place is not run again (the Node
+                // download and Paseo's `npm ci` are the long ones). A check that cannot run leaves the step to run.
+                val inPlace =
+                    if (!linux.installed) emptySet()
+                    else
+                        PhoneAgentRules.satisfiedSteps(
+                            mapOf(
+                                    "agent-node" to PaseoPhoneScripts.nodeCheck,
+                                    "agent-paseo" to PaseoPhoneScripts.check,
+                                    "agent-${agent.raw}" to AgentPhoneScripts.check(descriptor),
+                                )
+                                .filterKeys { id -> components.any { it.id == id } }
+                        ) { script ->
+                            try {
+                                linux.run(script, 120, agentUser = true, logOutput = false).exitCode
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                null
                             }
-                    },
-                )
-            // Flutter ran each component's own check first: a step already in place is not run again (the Node
-            // download and Paseo's `npm ci` are the long ones). A check that cannot run leaves the step to run.
-            val inPlace =
-                if (!linux.installed) emptySet()
-                else
-                    PhoneAgentRules.satisfiedSteps(
-                        mapOf(
-                                "agent-node" to PaseoPhoneScripts.nodeCheck,
-                                "agent-paseo" to PaseoPhoneScripts.check,
-                                "agent-${agent.raw}" to AgentPhoneScripts.check(descriptor),
-                            )
-                            .filterKeys { id -> components.any { it.id == id } }
-                    ) { script ->
-                        try {
-                            linux.run(script, 120, agentUser = true, logOutput = false).exitCode
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (_: Exception) {
-                            null
                         }
-                    }
-            val specs = components.map { component ->
-                val script =
-                    when (component.id) {
-                        "linux" -> null
-                        "essentials" -> NativePhoneSetup.ESSENTIALS_INSTALL
-                        "python" -> NativePhoneSetup.PYTHON_INSTALL
-                        "agent-user" -> AgentPhoneScripts.bootstrapUser
-                        "agent-node" -> PaseoPhoneScripts.nodeInstall
-                        "agent-paseo" -> paseo
-                        "agent-${agent.raw}" -> AgentPhoneScripts.install(descriptor)
-                        else -> error("unavailable")
-                    }
-                SetupRunner.Spec(
-                    id = component.id,
-                    script = script?.let(SetupPrelude::with),
-                    native = component.id == "linux",
-                    step = false,
-                    weight = 1.0,
-                    skipped = (component.id == "linux" && linux.installed) || component.id in inPlace,
-                    version = null,
-                    stage = null,
-                    labels = emptyMap(),
-                    data = mapOf("requiredFreeBytes" to required.toString()),
-                    agentUser = component.agentUser,
-                )
-            }
-            // Deletion revokes and drains the same admission lock before the profile sweep.
-            val mutation =
-                when (val claim = payloads.beginMutation(owner)) {
-                    is Outcome.Failed -> error("busy")
-                    is Outcome.Ok -> claim.value
-                }
-            try {
-                synchronized(admission) {
-                    check(admitted(owner)) { "unavailable" }
-                    runner.start(
-                        "agent-${UUID.randomUUID()}",
-                        specs,
-                        JSONObject().put("agentOwner", owner.raw).put("agentId", agent.raw),
-                        texts,
+                val specs = components.map { component ->
+                    val script =
+                        when (component.id) {
+                            "linux" -> null
+                            "essentials" -> NativePhoneSetup.ESSENTIALS_INSTALL
+                            "python" -> NativePhoneSetup.PYTHON_INSTALL
+                            "agent-user" -> AgentPhoneScripts.bootstrapUser
+                            "agent-node" -> PaseoPhoneScripts.nodeInstall
+                            "agent-paseo" -> paseo
+                            "agent-${agent.raw}" -> AgentPhoneScripts.install(descriptor)
+                            else -> error("unavailable")
+                        }
+                    SetupRunner.Spec(
+                        id = component.id,
+                        script = script?.let(SetupPrelude::with),
+                        native = component.id == "linux",
+                        step = false,
+                        weight = 1.0,
+                        skipped = (component.id == "linux" && linux.installed) || component.id in inPlace,
+                        version = null,
+                        stage = null,
+                        labels = emptyMap(),
+                        data = mapOf("requiredFreeBytes" to required.toString()),
+                        agentUser = component.agentUser,
                     )
                 }
-            } finally {
-                mutation.release()
+                // Deletion revokes and drains the same admission lock before the profile sweep.
+                val mutation =
+                    when (val claim = payloads.beginMutation(owner)) {
+                        is Outcome.Failed -> error("busy")
+                        is Outcome.Ok -> claim.value
+                    }
+                try {
+                    synchronized(admission) {
+                        check(admitted(owner)) { "unavailable" }
+                        runner.start(
+                            "agent-${UUID.randomUUID()}",
+                            specs,
+                            JSONObject().put("agentOwner", owner.raw).put("agentId", agent.raw),
+                            texts,
+                        )
+                    }
+                } finally {
+                    mutation.release()
+                }
             }
+        } finally {
+            gate.mutex.unlock()
         }
     }
 

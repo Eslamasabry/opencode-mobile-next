@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.engine.agents.install
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.AgentKeys
@@ -177,6 +179,10 @@ public class AgentInstaller(
         when (val started = jobs.start(owner, agentId, components(agentId))) {
             is Outcome.Failed -> {
                 prefs.commit { remove(AgentKeys.agentInstall(owner)) }
+                // The one install gate was held (the setup engine is starting a job): busy, nothing failed.
+                if ((started.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy) {
+                    return@withLock InstallStart.Refused(InstallRefusal.SetupBusy).ok()
+                }
                 state.value =
                     AgentSetupProgress(
                         agentId,

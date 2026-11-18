@@ -373,7 +373,12 @@ class BuiltinSetupFinisher(
                 }
                 else -> restartOnto(linux)
             }
-        return if (outcome is Outcome.Failed) outcome else connections.connect(profile.id)
+        if (outcome is Outcome.Failed) {
+            // The last step's reason, by its fixed name only: what the job's "failed at start" line points at.
+            AppLog.tagged("Setup").w { "finish step failed: ${(outcome.failure as? Failure.Runtime)?.problem}" }
+            return outcome
+        }
+        return connections.connect(profile.id)
     }
 
     /**

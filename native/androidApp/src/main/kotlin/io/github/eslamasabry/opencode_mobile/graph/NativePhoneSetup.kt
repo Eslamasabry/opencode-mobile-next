@@ -66,10 +66,11 @@ class NativePhoneSetup(
     private val voice: NativeVoiceSetup,
     private val reporting: Reporting,
     private val keepAlive: SetupKeepAlive,
+    private val gate: InstallGate,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
-    private val lane = Mutex().also { SetupLane.engineLane = it }
+    private val lane = Mutex()
     private var engine: SetupEngine? = null
     private val shown = MutableStateFlow(SetupProgress.Idle)
     private val changed = MutableStateFlow(0)
@@ -513,6 +514,7 @@ class NativePhoneSetup(
 
     private suspend fun command(
         prepareMigration: Boolean = true,
+        holdGate: Boolean = true,
         action: suspend (SetupEngine) -> Unit,
     ): Outcome<Unit> =
         withContext(serial) {
@@ -545,7 +547,17 @@ class NativePhoneSetup(
                                 is Outcome.Ok -> Unit
                             }
                         val setup = get()
-                        action(setup)
+                        // The start phase (checks, until the job is registered) holds the one install gate; a gate
+                        // held by the agents' installer is busy, the try is kept.
+                        val held = holdGate && gate.mutex.tryLock()
+                        if (holdGate && !held) {
+                            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+                        }
+                        try {
+                            action(setup)
+                        } finally {
+                            if (held) gate.mutex.unlock()
+                        }
                         shown.value = setup.progress.value
                         if (shown.value.state == SetupState.Failed)
                             Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
@@ -640,14 +652,15 @@ class NativePhoneSetup(
     val updateJob = io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJob()
 
     suspend fun update(): Outcome<Unit> {
-        // Work running, or an agents' install already runs (the one installer slot is theirs): say busy.
+        // Work running, an agents' install running, or one starting (the gate): say busy, the try is kept.
         val agentsRunning = (native { runner.running } as? Outcome.Ok)?.value != false
-        if (!runtime.mayUpdate() || agentsRunning) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+        val gated = !agentsRunning && runtime.mayUpdate() && gate.mutex.tryLock()
+        if (!gated) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         updateJob.starting(shown.value.jobId)
         var joined = false
         try {
             val result =
-                command { engine ->
+                command(holdGate = false) { engine ->
                     // Another job already runs (the agents' install, a repair): run() would only watch it, and it is
                     // not the update. Say busy, so the try is not spent and that job is not shown as the update.
                     if (engine.progress.value.state == SetupState.Running) joined = true
@@ -655,6 +668,7 @@ class NativePhoneSetup(
                 }
             return if (joined) Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy)) else result
         } finally {
+            gate.mutex.unlock()
             if (joined) updateJob.abandoned() else updateJob.started(shown.value.jobId)
         }
     }
