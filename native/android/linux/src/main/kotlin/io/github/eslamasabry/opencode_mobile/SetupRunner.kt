@@ -310,6 +310,10 @@ class SetupRunner private constructor(private val context: Context) {
                 }
                 state.error = failure
                 if (state.state == "done") state.current = null
+                // Which part ended it, by component id and state only: no job text, path or argument.
+                if (state.state == "failed") {
+                    Log.w(BuiltinLinux.TAG, "setup job failed at ${state.current}: ${componentStates(state)}")
+                }
             }
         }
         try {
@@ -342,6 +346,9 @@ class SetupRunner private constructor(private val context: Context) {
             log = null
         }
     }
+
+    private fun componentStates(job: SetupJobState): String =
+        job.components.joinToString(" ") { "${it.id}=${it.state}" }
 
     private fun runNative(spec: Spec, component: SetupComponentStatus): String? {
         if (spec.id != "linux") return "Unknown native component ${spec.id}"

@@ -182,6 +182,7 @@ class PhoneAgentAutoUpdate(
                         }
                         is PhoneAgentInstallResult.Refused ->
                             (answer.issue != PhoneAgentInstallIssue.Busy).also { spent ->
+                                log.i { "install of ${agent.raw} refused: ${answer.issue}" }
                                 if (spent) {
                                     val space = answer.issue == PhoneAgentInstallIssue.Space
                                     afterTry(agent, started = false, short = space)
@@ -198,7 +199,7 @@ class PhoneAgentAutoUpdate(
         val settle = OpenCodeIdleSettle(appScope, { SystemClock.elapsedRealtime() }) { settled.tryEmit(Unit) }
         var busySince: Long? = null
         val updater =
-            AgentAutoUpdater(host, jobs, log = { log.i { it } }) {
+            AgentAutoUpdater(host, jobs, log = { log.i { it } }, nowMs = { SystemClock.elapsedRealtime() }) {
                 val now = SystemClock.elapsedRealtime()
                 val busy = settle.busy(!runtime.agentWorkBusy())
                 if (!busy) {
@@ -233,6 +234,8 @@ class PhoneAgentAutoUpdate(
             while (true) {
                 safely { phones.warmForUpdate() }
                 safely { updater.changed() }
+                // The room line is read again at every look: freed space (or a Try again) never leaves a stale amount.
+                safely { rereadRoom(phones, downloads, status.decision.value.agent) }
                 delay(LOOK_EVERY.seconds)
             }
         }
@@ -310,14 +313,12 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) {
             var room: PhoneAgentSpace? = null
             if (short) safely { room = phones.installSpace(agent.raw)?.takeIf { it.short } }
-            downloads.helperShort.value =
-                room?.let {
-                    HomeShortSpace(
-                        phones.nameOf(agent) ?: agent.raw,
-                        ((it.neededBytes + MB - 1) / MB).toInt(),
-                        (it.freeBytes / MB).toInt(),
-                    )
-                }
+            downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, room)
+            // The fixed reason, never text from a job: the room it needed and the room there was.
+            log.i {
+                "install of ${agent.raw} not started" +
+                    (room?.let { ": needs ${it.neededBytes / MB_BYTES} MB, ${it.freeBytes / MB_BYTES} MB free" } ?: "")
+            }
             delay(UNSTARTED_GRACE.seconds)
             updaterRef?.settle(agent, AgentUpdateStep.Failed)
         }
@@ -395,7 +396,6 @@ class PhoneAgentAutoUpdate(
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
         const val UNSTARTED_GRACE = 2L
-        const val MB = 1_000_000L
         const val WAIT_STEPS = 180
         const val RELOAD_EVERY = 15L
         const val RELOAD_TRIES = 480
@@ -416,4 +416,18 @@ internal fun activeNetworkMetered(app: Application): Boolean =
 @ContributesTo(AppScope::class)
 interface PhoneAgentAutoUpdateAccessors {
     val phoneAgentAutoUpdate: PhoneAgentAutoUpdate
+}
+
+/** What the room line says for [room]: null when the phone has enough (the line then goes). */
+private fun homeShort(name: String, room: PhoneAgentSpace?): HomeShortSpace? =
+    room?.takeIf { it.short }?.let {
+        HomeShortSpace(name, ((it.neededBytes + MB_BYTES - 1) / MB_BYTES).toInt(), (it.freeBytes / MB_BYTES).toInt())
+    }
+
+private const val MB_BYTES = 1_000_000L
+
+/** Reads the room for [agent] again while Home shows a room line, so freed space never leaves a stale amount. */
+private suspend fun rereadRoom(phones: AppPhoneAgents, downloads: PhoneDownloads, agent: AgentId?) {
+    if (downloads.helperShort.value == null || agent == null) return
+    downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, phones.installSpace(agent.raw))
 }

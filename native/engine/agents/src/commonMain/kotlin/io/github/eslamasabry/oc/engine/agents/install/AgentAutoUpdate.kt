@@ -182,10 +182,14 @@ public class AgentAutoUpdater(
     private val jobs: AgentUpdateJobs,
     /** One line per change of what the updater sees: which condition holds it back (no personal data). */
     private val log: ((String) -> Unit)? = null,
+    /** A monotonic clock in milliseconds, for the spacing of a retry; the default never spaces one. */
+    private val nowMs: () -> Long = { 0L },
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
     private val attempted = mutableSetOf<String>()
+    private val failures = mutableMapOf<String, Int>()
+    private val retryNotBefore = mutableMapOf<String, Long>()
     private val checking = Mutex()
     private var readTried = false
     private var meteredAllowed = false
@@ -247,11 +251,32 @@ public class AgentAutoUpdater(
     }
 
     /**
-     * The install of [agent] moved to [step] outside the updater's own looks: [AgentUpdateStep.Failed] when it ended
-     * without finishing, ran past its bound or never started (the "Updating" wait ends here, never on its own luck;
-     * kept until the next try), [AgentUpdateStep.Updating] when the person's Try again started it again.
+     * The install of [agent] moved to [step] outside the updater's own looks.
+     * [AgentUpdateStep.Failed]: it ended without finishing, ran past its bound, was refused or never started. A failed
+     * try never marks the agent current: it is given back (the next look sees it behind again) up to [MAX_RETRIES]
+     * more times, spaced, then it is left to the person's Try again.
+     * [AgentUpdateStep.Updating]: the person's Try again started it, so every earlier failure is forgotten and the
+     * other agents that are behind are tried in their turn.
      */
     public fun settle(agent: AgentId, step: AgentUpdateStep) {
+        val key = host.pinKey
+        val mine = "$key/${agent.raw}"
+        val helper = "$key/$HELPER"
+        if (step == AgentUpdateStep.Failed) {
+            val n = (failures[mine] ?: 0) + 1
+            failures[mine] = n
+            if (n <= MAX_RETRIES) {
+                attempted -= mine
+                attempted -= helper
+                retryNotBefore[mine] = nowMs() + RETRY_SPACING_MS
+            }
+        } else if (step == AgentUpdateStep.Updating) {
+            attempted.clear()
+            failures.clear()
+            retryNotBefore.clear()
+            attempted += mine
+            attempted += helper
+        }
         publish(AgentUpdateDecision(step, agent))
     }
 
@@ -268,6 +293,8 @@ public class AgentAutoUpdater(
 
     private companion object {
         const val HELPER = "helper"
+        const val MAX_RETRIES = 2
+        const val RETRY_SPACING_MS = 600_000L
     }
 
     private fun note(line: String) {
@@ -280,7 +307,11 @@ public class AgentAutoUpdater(
     private fun decide(key: String, explain: Boolean = false): AgentId? {
         // One automatic try per agent (and per helper) and pinned set: an agent that was tried is not asked again, and
         // does not keep another agent that is behind from being updated.
-        val behind = host.behind.filterTo(mutableSetOf()) { "$key/${it.raw}" !in attempted }
+        val now = nowMs()
+        val behind =
+            host.behind.filterTo(mutableSetOf()) {
+                "$key/${it.raw}" !in attempted && now >= (retryNotBefore["$key/${it.raw}"] ?: 0L)
+            }
         val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
         // An update the app was stopped in the middle of runs again first (the install skips what is in place).
         val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted }

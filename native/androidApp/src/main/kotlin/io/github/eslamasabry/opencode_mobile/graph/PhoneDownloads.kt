@@ -72,6 +72,9 @@ class PhoneDownloads(
     internal val helperShort = MutableStateFlow<HomeShortSpace?>(null)
     /** OpenCode's automatic update ended below the pin, tried again a few times: Home says it failed. */
     internal val openCodeShort = MutableStateFlow(false)
+
+    /** OpenCode's update ended below the pin and the next try waits for its time and an idle phone. */
+    internal val openCodeRetrying = MutableStateFlow(false)
     internal val openCodeWaiting = MutableStateFlow(false)
     internal val openCodeHeld = MutableStateFlow<OpenCodeHold?>(null)
     @Volatile internal var openCode: PhoneOpenCodeAutoUpdate? = null
@@ -95,9 +98,7 @@ class PhoneDownloads(
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
         combine(
-                combine(openCodeWaiting, openCodeHeld, helperShort, openCodeShort) { waiting, held, short, fell ->
-                    SideFacts(waiting, held, short, fell)
-                },
+                combine(openCodeWaiting, openCodeHeld, helperShort, openCodeShort, openCodeRetrying, ::SideFacts),
                 setup.progress,
                 phones.state,
                 agentStatus.decision,
@@ -117,7 +118,8 @@ class PhoneDownloads(
                         openCodeWaiting = downloadWaitingSaid(side.waiting, read),
                         openCodeRunning = update && progress.state == SetupState.Running,
                         // The update ended below its pin (read again after the job): the failed row, with Try again.
-                        openCodeFailed = (update && progress.state == SetupState.Failed) || side.openCodeShort,
+                        openCodeFailed =
+                            (update && progress.state == SetupState.Failed && !side.retrying) || side.openCodeShort,
                         // OpenCode's OWN progress, never another component's (the job lists the shared parts too).
                         openCodePercent =
                             progress.components
@@ -203,4 +205,5 @@ private data class SideFacts(
     val held: OpenCodeHold?,
     val helperShort: HomeShortSpace?,
     val openCodeShort: Boolean,
+    val retrying: Boolean,
 )
