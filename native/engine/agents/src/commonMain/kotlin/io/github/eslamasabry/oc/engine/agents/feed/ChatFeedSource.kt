@@ -99,12 +99,16 @@ public class OpenCodeChatFeedSource(
 
     override suspend fun refresh(): Outcome<Unit> = refresh.invoke()
 
-    private fun map(listing: OpenCodeListing): FeedSourceState =
-        FeedSourceState(
+    private fun map(listing: OpenCodeListing): FeedSourceState {
+        // A parent whose DIRECT child waits on the person reads "Needs you" too. Worked out at every read, never
+        // stored, so it goes the moment the child's request does (background sub-agents end the parent's turn).
+        val needyParents =
+            listing.sessions.filter { it.id in listing.needsYou }.mapNotNullTo(hashSetOf()) { it.parentId }
+        return FeedSourceState(
             items =
                 listing.sessions
                     .filter { it.time?.archivedMs == null }
-                    .map { row(it, listing) }
+                    .map { row(it, listing, needyParents) }
                     .sortedWith(ChatFeedRules.order)
                     .toImmutableList(),
             loading = listing.loading && listing.sessions.isEmpty(),
@@ -112,6 +116,7 @@ public class OpenCodeChatFeedSource(
             failed = listing.failed,
             acrossProjects = listing.acrossProjects,
         )
+    }
 
     /**
      * Failed only when the last run really failed. When the server reports how the last run ended, that word decides
@@ -126,15 +131,18 @@ public class OpenCodeChatFeedSource(
             null -> session.lastRunFailed
         }
 
-    private fun row(session: Session, listing: OpenCodeListing): ChatFeedItem {
+    private fun statusOf(session: Session, listing: OpenCodeListing, needyParents: Set<SessionId>): ChatStatus {
         val status = listing.statuses[session.id]
-        val chatStatus =
-            when {
-                session.id in listing.needsYou -> ChatStatus.NeedsYou
-                status == SessionStatus.Busy || status == SessionStatus.Retry -> ChatStatus.Running
-                lastRunFailed(session) -> ChatStatus.Failed
-                else -> ChatStatus.Idle
-            }
+        return when {
+            session.id in listing.needsYou || session.id in needyParents -> ChatStatus.NeedsYou
+            status == SessionStatus.Busy || status == SessionStatus.Retry -> ChatStatus.Running
+            lastRunFailed(session) -> ChatStatus.Failed
+            else -> ChatStatus.Idle
+        }
+    }
+
+    private fun row(session: Session, listing: OpenCodeListing, needyParents: Set<SessionId>): ChatFeedItem {
+        val chatStatus = statusOf(session, listing, needyParents)
         val directory = session.directory
         val agent = agentOf(session)
         return ChatFeedItem(
