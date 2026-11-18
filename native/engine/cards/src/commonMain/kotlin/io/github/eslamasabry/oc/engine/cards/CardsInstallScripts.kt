@@ -10,7 +10,7 @@ import kotlin.io.encoding.Base64
  */
 public data class CardsPins(
     val claudeVersion: String = "2.1.327",
-    val nodeVersion: String = "v24.22.2",
+    val nodeVersion: String = "v24.22.3",
     /** Claude Code and the Paseo daemon are tested releases and Node is the qualified pin. */
     val qualified: Boolean = true,
 )

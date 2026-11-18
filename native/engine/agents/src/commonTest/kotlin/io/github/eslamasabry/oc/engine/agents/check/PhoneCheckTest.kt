@@ -172,7 +172,7 @@ class PhoneCheckTest {
         val claude = catalog.byId(AgentId.CLAUDE)!!
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
         val oldFp = io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(
-            listOf("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.2"),
+            listOf("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"),
         )
         rig.prefs.values["oc.agentPhoneGate.owner"] =
             "{\"claude\":{\"fingerprint\":${io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(listOf(oldFp)).removeSurrounding("[", "]")},\"architecture\":\"arm64\",\"activeVersion\":\"2.1.294\"}}"

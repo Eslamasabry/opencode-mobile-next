@@ -25,7 +25,7 @@ class PhoneGateTest {
     fun `B-LINUX-134 the gate fingerprint is Dart jsonEncode of the six pins, byte for byte`() {
         assertEquals(
             "[\"claude\",\"2.1.327\",\"acf0ef2f9da8d5ab08f193f007e19a06cbfb608b96a2f1f758d63a92a386cff8\"," +
-                "\"0.16.1\",\"d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5\",\"v24.22.2\"]",
+                "\"0.16.1\",\"d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5\",\"v24.22.3\"]",
             PhoneGate.fingerprint(claude, AgentArchitecture.Arm64, pins),
         )
         // The x64 artifact differs, so an x64 pass can never stand in for arm64 proof.
@@ -41,10 +41,10 @@ class PhoneGateTest {
         val v = "2.1.327"
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
         assertEquals(CheckRequiredReason.FirstCheck, PhoneGate.changeReason(null, claude, pins))
-        assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))
-        assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))
+        assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"), claude, pins))
+        assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.3"), claude, pins))
         assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.16.1", pins.paseo.packageLockSha256, "v22.0.0"), claude, pins))
-        assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.16.1", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))
+        assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"), claude, pins))
         // Unreadable proof is never qualification.
         assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(JsonObject(mapOf("fingerprint" to JsonPrimitive("broken"))), claude, pins))
     }
@@ -52,12 +52,12 @@ class PhoneGateTest {
     @Test
     fun `B-LINUX-133 an older qualified version is offered only for the same CPU, and a tested Claude`() {
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
-        val older = gate("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.2")
+        val older = gate("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.3")
         assertEquals("2.1.294", PhoneGate.olderQualifiedVersion(older, claude, AgentArchitecture.Arm64, pins))
         assertNull(PhoneGate.olderQualifiedVersion(older, claude, AgentArchitecture.X64, pins))
-        val untested = gate("claude", "2.1.200", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.2")
+        val untested = gate("claude", "2.1.200", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.3")
         assertNull(PhoneGate.olderQualifiedVersion(untested, claude, AgentArchitecture.Arm64, pins))
-        val helperMoved = gate("claude", "2.1.294", sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.2")
+        val helperMoved = gate("claude", "2.1.294", sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.3")
         // Faithful to the Dart order: the agent version is compared first, so a proof whose helper also moved is still
         // offered (recorded as an open problem in the S3-AGENTSE report).
         assertEquals("2.1.294", PhoneGate.olderQualifiedVersion(helperMoved, claude, AgentArchitecture.Arm64, pins))
@@ -74,10 +74,10 @@ class PhoneGateTest {
         assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.X64, pins, "2.1.316"))
         assertFalse(PhoneGate.qualifies(null, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
         // A helper that was never tested does not carry proof.
-        val odd = gate("claude", "2.1.316", sha, "0.1.0", lock, "v24.22.2")
+        val odd = gate("claude", "2.1.316", sha, "0.1.0", lock, "v24.22.3")
         assertFalse(PhoneGate.qualifies(odd, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
         // The current pair qualifies exactly.
-        val now = gate("claude", "2.1.327", sha, "0.16.1", lock, "v24.22.2")
+        val now = gate("claude", "2.1.327", sha, "0.16.1", lock, "v24.22.3")
         assertTrue(PhoneGate.qualifies(now, claude, AgentArchitecture.Arm64, pins, "2.1.327"))
     }
 

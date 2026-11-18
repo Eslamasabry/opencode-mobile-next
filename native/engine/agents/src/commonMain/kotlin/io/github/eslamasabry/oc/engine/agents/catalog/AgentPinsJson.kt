@@ -14,10 +14,10 @@ internal const val AGENT_PINS_JSON: String = """{
     "codeTreeSha256": "766af65e563318895cdb7d4e79fed2629602fef5a98eb8215cb9d9ab3dc22a8a"
   },
   "node": {
-    "version": "v24.22.2",
+    "version": "v24.22.3",
     "sha256": {
-      "arm64": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
-      "x64": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9"
+      "arm64": "261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8",
+      "x64": "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2"
     }
   },
   "claudeCodeTestedVersions": [

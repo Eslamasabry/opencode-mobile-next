@@ -403,11 +403,11 @@ class AgentPinsParityTest {
     @Test
     fun `B-AGENT-008 Paseo, lock, Node and tested Claude versions equal the freeze tip`() {
         val pins = AgentPins.builtIn
-        // The Node pins as the Flutter app's paseo_scripts.dart last had them (v24.22.2); native-owned since 2026-11-13.
+        // The Node pins as the Flutter app's paseo_scripts.dart last had them (v24.22.3); native-owned since 2026-11-13.
         val node = mapOf(
-            "nodeVersion" to "v24.22.2",
-            "nodeArm64Sha256" to "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
-            "nodeX64Sha256" to "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+            "nodeVersion" to "v24.22.3",
+            "nodeArm64Sha256" to "261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8",
+            "nodeX64Sha256" to "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2",
         )
         fun dartConst(name: String) = node.getValue(name)
         // Paseo moved to 0.16.1 (via 0.15.4) after the Flutter freeze (B-193): the pins equal the install script's own checks.
