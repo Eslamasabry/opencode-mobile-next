@@ -129,6 +129,16 @@ public class AgentUpdateChoiceEngine(
         if (allowed(id) && !host.busy()) start() else false
     }
 
+    /** A shared-only job can run without touching an agent payload. Agent jobs already bring these parts. */
+    public suspend fun startShared(meteredAllowed: Boolean, start: suspend () -> Boolean): Boolean = lane.withLock {
+        val current = state.value ?: return@withLock false
+        val updates = current.items.filter { it.choice == AgentUpdateChoice.Update }
+        val sharedOnly = current.neededGoesAhead || (updates.any { it.id == AgentId.OPENCODE } &&
+            current.items.any { it.neededWhen == AgentNeedRule.WithAnyUpdate })
+        val canDownload = current.network == AgentUpdateNetwork.Unmetered || meteredAllowed
+        sharedOnly && updates.none { it.id != AgentId.OPENCODE } && canDownload && !host.busy() && start()
+    }
+
     private fun valid(item: AgentUpdateItem): Boolean = item.group == AgentUpdateGroup.Optional && when (item.choice) {
         AgentUpdateChoice.Remove -> item.removeAllowed
         AgentUpdateChoice.Keep -> item.keepAllowed

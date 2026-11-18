@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallResult
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
@@ -62,6 +63,7 @@ class PhoneAgentAutoUpdate(
     private val status: PhoneAgentUpdateStatus,
     private val appScope: AppCoroutineScope,
     private val downloads: PhoneDownloads,
+    private val choices: PhoneUpdateChoices,
 ) {
     private var started = false
 
@@ -71,35 +73,13 @@ class PhoneAgentAutoUpdate(
      */
     fun allowMeteredOnce() {
         val updater = updaterRef ?: return
+        if (choices.offer.value?.neededGoesAhead == true) {
+            appScope.launch(dispatchers.io) { safely { choices.updateShared(meteredAllowed = true) } }
+        }
         updater.allowMeteredOnce()
         appScope.launch(dispatchers.io) { safely { updater.changed() } }
     }
 
-    /**
-     * What each agent's install of its pinned version recorded (issue 147), read straight from the phone's Linux tree:
-     * two small files per agent, no process and no wait for the setup lane, so it is read at every look and can never
-     * be missed. (The first version ran a script for it, once; on the Galaxy it waited behind the start's version
-     * reads, did not run, and was never asked again, so Codex was never found behind.)
-     */
-    private fun records(): Map<AgentId, AgentInstallRecorded> {
-        val linux = BuiltinLinux.get(app)
-        if (!linux.installed) return emptyMap()
-        return AgentCatalog.builtIn.agents.mapNotNull { agent ->
-            val dir = AgentInstallRecord.installDir(agent) ?: return@mapNotNull null
-            val folder = java.io.File(linux.rootfs, dir.removePrefix("/"))
-            fun text(name: String): String? =
-                java.io.File(folder, name)
-                    .takeIf { it.isFile && !java.nio.file.Files.isSymbolicLink(it.toPath()) && it.length() <= 4096 }
-                    ?.readText()
-            agent.id to AgentInstallRecord.fromFiles(text(".oc-pin"), text("launch"))
-        }.toMap()
-    }
-
-    /** Installed agents whose install of the pinned version is not this app's pin (same version, other artifact). */
-    private fun recordBehind(installed: List<AgentId>): Set<AgentId> {
-        val architecture = PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList()) ?: return emptySet()
-        return AgentInstallRecord.behind(installed, records(), AgentCatalog.builtIn, architecture)
-    }
     @Volatile private var updaterRef: AgentAutoUpdater? = null
     private val log = AppLog.tagged("AgentAutoUpdate")
 
@@ -116,6 +96,8 @@ class PhoneAgentAutoUpdate(
                 }
         val host =
             object : AgentUpdateHost {
+                override fun updateAllowed(agent: AgentId): Boolean = choices.allowed(agent)
+
                 // The decision reads the kept facts of the last reads (no probe) and the install records (files).
                 override suspend fun refresh() = Unit
 
@@ -136,11 +118,11 @@ class PhoneAgentAutoUpdate(
 
                 override val behind: Set<AgentId>
                     get() =
-                        phones.updateFacts()?.let { facts -> facts.behind + recordBehind(facts.installed) }.orEmpty()
+                        phones.updateFacts()?.let { facts -> facts.behind + recordBehind(app, facts.installed) }.orEmpty()
 
                 override val reinstall: Set<AgentId>
                     get() =
-                        phones.updateFacts()?.let { facts -> recordBehind(facts.installed) - facts.behind }.orEmpty()
+                        phones.updateFacts()?.let { facts -> recordBehind(app, facts.installed) - facts.behind }.orEmpty()
 
                 override val helperBehind: Boolean
                     get() =
@@ -166,11 +148,11 @@ class PhoneAgentAutoUpdate(
 
                 // Refused because the phone is busy: the try is not spent. Any other refusal (no room, not
                 // installable here) is left to the manual install, which says why.
-                override suspend fun update(agent: AgentId): Boolean {
+                override suspend fun update(agent: AgentId): Boolean = choices.startIfChosen(agent) {
                     val answer =
                         (phones.install(agent.raw) as? Outcome.Ok)?.value
-                            ?: return true.also { afterTry(agent, started = false, short = false) }
-                    return when (answer) {
+                            ?: return@startIfChosen true.also { afterTry(agent, started = false, short = false) }
+                    when (answer) {
                         PhoneAgentInstallResult.Started -> {
                             log.i { "update started" }
                             // A reinstall of the same version: the helper's loaded copies of it keep running the old
@@ -246,7 +228,7 @@ class PhoneAgentAutoUpdate(
             safely { phones.warmForUpdate() }
             safely { updater.changed() }
             safely {
-                merge(combine(setup.progress, leases.busy) { _, _ -> }, settled).collect {
+                merge(combine(setup.progress, leases.busy) { _, _ -> }, settled, choices.offer.map { Unit }).collect {
                     safely { updater.changed() }
                 }
             }
@@ -254,7 +236,12 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
             while (true) {
-                safely { phones.warmForUpdate() }
+                safely {
+                    if (phones.warmForUpdate()) {
+                        choices.refresh()
+                        choices.updateShared(meteredAllowed = false)
+                    }
+                }
                 safely { updater.changed() }
                 // The room line is read again at every look: freed space (or a Try again) never leaves a stale amount.
                 safely { rereadRoom(phones, downloads, status.decision.value.agent) }
@@ -348,7 +335,7 @@ class PhoneAgentAutoUpdate(
 
     /** The agents behind only by their install record (same version), for the update's end. */
     private fun sameVersion(): Set<AgentId> =
-        phones.updateFacts()?.let { facts -> recordBehind(facts.installed) - facts.behind }.orEmpty()
+        phones.updateFacts()?.let { facts -> recordBehind(app, facts.installed) - facts.behind }.orEmpty()
 
     private val reloadAfter = java.util.concurrent.ConcurrentHashMap.newKeySet<AgentId>()
 
@@ -468,3 +455,29 @@ private fun holdOf(step: AgentUpdateStep): HomeHold? =
         AgentUpdateStep.Reading -> HomeHold.AgentsChecking
         else -> null
     }
+
+/**
+ * What each agent's install of its pinned version recorded (issue 147), read straight from the phone's Linux tree:
+ * two small files per agent, no process and no wait for the setup lane, so it is read at every look and can never
+ * be missed. (The first version ran a script for it, once; on the Galaxy it waited behind the start's version
+ * reads, did not run, and was never asked again, so Codex was never found behind.)
+ */
+private fun records(app: Application): Map<AgentId, AgentInstallRecorded> {
+    val linux = BuiltinLinux.get(app)
+    if (!linux.installed) return emptyMap()
+    return AgentCatalog.builtIn.agents.mapNotNull { agent ->
+        val dir = AgentInstallRecord.installDir(agent) ?: return@mapNotNull null
+        val folder = java.io.File(linux.rootfs, dir.removePrefix("/"))
+        fun text(name: String): String? =
+            java.io.File(folder, name)
+                .takeIf { it.isFile && !java.nio.file.Files.isSymbolicLink(it.toPath()) && it.length() <= 4096 }
+                ?.readText()
+        agent.id to AgentInstallRecord.fromFiles(text(".oc-pin"), text("launch"))
+    }.toMap()
+}
+
+/** Installed agents whose install of the pinned version is not this app's pin (same version, other artifact). */
+internal fun recordBehind(app: Application, installed: List<AgentId>): Set<AgentId> {
+    val architecture = PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList()) ?: return emptySet()
+    return AgentInstallRecord.behind(installed, records(app), AgentCatalog.builtIn, architecture)
+}

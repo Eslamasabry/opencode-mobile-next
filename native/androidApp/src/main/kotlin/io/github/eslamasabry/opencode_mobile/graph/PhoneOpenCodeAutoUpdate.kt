@@ -21,6 +21,8 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import kotlinx.coroutines.flow.combine
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
@@ -38,6 +40,7 @@ class PhoneOpenCodeAutoUpdate(
     private val leases: NativeChatLeases,
     private val appScope: AppCoroutineScope,
     private val downloads: PhoneDownloads,
+    private val choices: PhoneUpdateChoices,
 ) {
     private var started = false
     @Volatile private var updaterRef: OpenCodeAutoUpdater? = null
@@ -61,6 +64,7 @@ class PhoneOpenCodeAutoUpdate(
         log.i { "start() reached" }
         val host =
             object : OpenCodeHostFacts {
+                override val updateAllowed: Boolean get() = choices.allowed(AgentId.OPENCODE)
                 override suspend fun refresh() = this@PhoneOpenCodeAutoUpdate.runtime.refreshServer()
 
                 override val installedVersion: String? get() = this@PhoneOpenCodeAutoUpdate.runtime.serverFacts.value.installedVersion
@@ -81,14 +85,14 @@ class PhoneOpenCodeAutoUpdate(
 
                 // Refused before it started (not known idle, a job running): the try is not spent. A job that
                 // started and failed is left to the manual row; the setup job reports its own failure.
-                override suspend fun updateOpenCode(runtime: String): Boolean {
+                override suspend fun updateOpenCode(runtime: String): Boolean = choices.startIfChosen(AgentId.OPENCODE) {
                     val result = setup.update()
                     val refused =
                         (result as? Outcome.Failed)?.failure.let {
                             it is Failure.Runtime && it.problem == RuntimeProblem.SlotBusy
                         }
                     if (refused) log.i { "update refused before it started (work running or not known idle)" }
-                    return !refused
+                    !refused
                 }
             }
         val settled = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -142,7 +146,7 @@ class PhoneOpenCodeAutoUpdate(
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
-            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled, reads),
+            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled, reads, choices.offer.map { Unit }),
             log = { log.i { it } },
         )
         appScope.launch {

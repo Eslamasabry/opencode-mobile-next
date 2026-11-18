@@ -436,6 +436,29 @@ class AppPhoneAgents(
         )
     }
 
+    /** Only the payload and version probes from this process, never the persisted recall rows. */
+    internal suspend fun choiceVersions(): Map<AgentId, String> = lane.read { stop ->
+        val owner = agentOwner(ownerId())
+        if (owner == null || needsRestart || !linux.installed) return@read emptyMap()
+        val installing = setupJobs.anySetupRunning() != false
+        buildMap {
+            for (agent in phoneCatalog()) {
+                if (stop.isStopped) break
+                val present = PhoneAgentPayloads.present(linux, agent.recipe?.executable ?: continue)
+                val answer = versionOf(owner, agent, present, installing, stop)
+                val version = answer?.get("foundVersion") as? String
+                if (version != null) put(agent.id, version)
+            }
+        }
+    }.orEmpty()
+
+    /** A shared-only job never includes the anchor agent's own payload step. */
+    internal suspend fun startSharedUpdate(anchor: AgentId): Boolean {
+        val owner = ownerId() ?: return false
+        val shared = installation(owner).components(anchor).filterNot { it.id == "agent-${anchor.raw}" }
+        return setupJobs.start(owner, anchor, shared) is Outcome.Ok
+    }
+
     private fun ownerId(): ProfileId? =
         try {
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)

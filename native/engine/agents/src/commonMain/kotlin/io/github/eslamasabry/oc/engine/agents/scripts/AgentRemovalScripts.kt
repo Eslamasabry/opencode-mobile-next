@@ -66,13 +66,21 @@ public object AgentRemovalScripts {
             "OC_AGENT_REMOVAL_RECEIPT\n"
     }
 
-    internal val REMOVE_PY: String = """import json, os, pathlib, re, shutil, stat, sys
-agent, executable, version, receipt_id = sys.argv[1:]
+    /** Read-only estimate using the same paths, hard-link accounting and validation as removal. */
+    public fun measure(agent: AgentDescriptor): String {
+        val executable = executables.getValue(agent.id.raw)
+        val version = requireNotNull(agent.recipe).version
+        require(VERSION.matches(version))
+        return "python3 - '${agent.id.raw}' '$executable' '$version' <<'OC_AGENT_SIZE'\n" +
+            REMOVAL_PATHS + "\nancestors()\nprint(allocated([base, link, lock] + targets()))\nOC_AGENT_SIZE\n"
+    }
+
+    private val REMOVAL_PATHS: String = """import json, os, pathlib, re, shutil, stat, sys
+agent, executable, version = sys.argv[1:4]
 allowed = {'codex': 'codex', 'gemini': 'gemini', 'antigravity': 'agy', 'qwen': 'qwen',
            'kilo': 'kilo', 'cline': 'cline', 'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx'}
 if (allowed.get(agent) != executable or
     not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version) or
-    not re.fullmatch(r'[a-f0-9]{32}', receipt_id) or
     os.getuid() != 1000 or os.environ.get('HOME') != '/home/oc'):
     sys.exit(17)
 root = pathlib.Path('/home/oc')
@@ -81,7 +89,6 @@ base = parent / agent
 bin_dir = root / '.local/bin'
 link = bin_dir / executable
 lock = parent / ('.lock-' + executable)
-receipt = root / '.local/share' / ('oc-agent-removal-' + receipt_id)
 proc = pathlib.Path('/proc')
 class Refused(Exception):
     def __init__(self, code): self.code = code
@@ -175,6 +182,11 @@ def allocated(paths):
         total += entry.st_blocks * 512
     if not 0 <= total <= 9223372036854775807: raise Refused(18)
     return total
+"""
+
+    internal val REMOVE_PY: String = REMOVAL_PATHS + """receipt_id = sys.argv[4]
+if not re.fullmatch(r'[a-f0-9]{32}', receipt_id): sys.exit(17)
+receipt = root / '.local/share' / ('oc-agent-removal-' + receipt_id)
 def write_receipt(size, absent):
     ancestors()
     fd = os.open(receipt, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
