@@ -101,4 +101,5 @@
     <string name="agentErrorServerDiskFullPhone">На этом телефоне закончилась память.</string>
     <string name="agentErrorServerDiskFullHintPhone">Освободите место на этом телефоне и повторите попытку.</string>
     <string name="chatSendPhoneHelperNoAnswer">Агенты на этом телефоне не ответили. Возможно, они ещё запускаются: подождите немного и повторите попытку.</string>
+    <string name="chatSendFailureSignedInPast">%1$s: нужно было войти снова</string>
 </resources>

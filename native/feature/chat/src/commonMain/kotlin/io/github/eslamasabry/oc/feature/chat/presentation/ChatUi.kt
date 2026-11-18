@@ -96,6 +96,11 @@ public data class ChatUi(
      */
     val setUpReplies: ImmutableMap<String, io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed> =
         persistentMapOf(),
+    /**
+     * B-458: the stopped turns (by turn id) whose agent's sign-in ran out, and what each offers now, from the agent's
+     * CURRENT sign-in ([ChatOutside.agentSignIns]). A turn missing here keeps today's words.
+     */
+    val signInTurns: ImmutableMap<String, SignInTurn> = persistentMapOf(),
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -748,4 +753,16 @@ public interface ChatActions {
 
     /** B-169 §4.4: Send on "The stopped reply already ran {N} steps…". */
     public fun confirmSwitch() {}
+}
+
+/** B-458: what a stopped turn whose agent's sign-in ran out offers, from the agent's sign-in as it is now. */
+public enum class SignInTurn {
+    /** The newest such turn of an agent that needs a sign-in right now: "needs you to sign in again", Sign in again. */
+    Offer,
+
+    /** Signed in again since, or an older turn: "needed you to sign in again", no action. */
+    Past,
+
+    /** Signed in again since, and nothing was sent after it: the past words and "Send this message again". */
+    PastSendAgain,
 }

@@ -101,4 +101,5 @@
     <string name="agentErrorServerDiskFullPhone">Este celular ficou sem espaço de armazenamento.</string>
     <string name="agentErrorServerDiskFullHintPhone">Libere um pouco de espaço neste celular e tente de novo.</string>
     <string name="chatSendPhoneHelperNoAnswer">Os agentes deste celular não responderam. Talvez ainda estejam iniciando; dê um momento a eles e tente de novo.</string>
+    <string name="chatSendFailureSignedInPast">%1$s precisava que você fizesse login de novo</string>
 </resources>

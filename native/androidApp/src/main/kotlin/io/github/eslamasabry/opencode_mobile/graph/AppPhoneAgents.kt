@@ -1279,6 +1279,27 @@ class AppPhoneAgents(
         }
     }
 
+    /**
+     * B-458: the sign-in of [phone]'s agents as [state] reads it now, by provider id: true when the agent reads ready
+     * (or at its plan limit, which is signed in), false when it reads Sign in needed. An agent whose sign-in is not
+     * known yet (checking, not installed, stopped) is absent. Empty when [state] is not [phone]'s. A chat's stopped
+     * turns follow this, so a confirmed sign-in ([noteSignedIn]) clears their "Sign in again" everywhere at once.
+     */
+    internal fun signIns(phone: ProfileId, state: PhoneAgentsState): Map<String, Boolean> {
+        if (state.owner != phone) return emptyMap()
+        return state.agents
+            .mapNotNull { row ->
+                val provider = catalog.byId(AgentId(row.id))?.providerId ?: return@mapNotNull null
+                when (row.status) {
+                    PhoneAgentStatus.Ready,
+                    PhoneAgentStatus.Limit -> provider to true
+                    PhoneAgentStatus.SignInNeeded -> provider to false
+                    else -> null
+                }
+            }
+            .toMap()
+    }
+
     /** The agents [phone]'s registry has seen set up ([noteSetUp]); empty when none or not this phone. */
     @Suppress("TooGenericExceptionCaught")
     internal fun setUpAgents(phone: ProfileId): Set<String> =
