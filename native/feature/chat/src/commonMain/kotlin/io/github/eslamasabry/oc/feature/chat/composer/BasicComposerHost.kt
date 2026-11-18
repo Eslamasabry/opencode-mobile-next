@@ -310,6 +310,8 @@ public fun BasicComposer(
     val editor = remember(state.targetKey) { DraftEditorState() }
     var repeatRevision by remember(state.targetKey) { mutableStateOf<Long?>(null) }
     val editSerialAtComposition = editor.userEditSerial
+    // The engine showed the box's last words: nothing is in flight any more.
+    if (editor.awaitingEngine && state.draft.text == editor.lastReported) editor.awaitingEngine = false
     // A box that has opened never closes again while it has focus or holds words: the draft going not-ready again
     // (the profile fenced, a world rebuilt) must not drop the next keystrokes of a person who is typing.
     val boxLatch = remember(state.targetKey) { booleanArrayOf(false) }
@@ -334,15 +336,15 @@ public fun BasicComposer(
                 actions.draftChanged(current)
             } else {
                 val engineText = state.draft.text
-                if (current != engineText && editorReady && editor.wasReported(engineText)) {
-                    // The engine is behind: this restore is an older copy of the box's own words (a burst of typing
+                if (current != engineText && editorReady && editor.awaitingEngine) {
+                    // The engine is behind: this restore carries older words than the box has (a burst of typing
                     // right after the box opened, or while a restore was on its way). Keep the newer words and tell
                     // the engine, never the other way round.
                     editor.lastReported = current
                     actions.draftChanged(current)
                 } else {
                     if (current != engineText) field.edit { replace(0, length, engineText) }
-                    editor.lastReported = engineText
+                    editor.adopted(engineText)
                 }
             }
             editorReady = true
@@ -430,7 +432,7 @@ public fun BasicComposer(
         // clear revision empties the field for good. A send that does not go puts them back.
         val serial = editor.userEditSerial
         field.edit { replace(0, length, "") }
-        editor.lastReported = ""
+        editor.adopted("")
         scope.launch {
             if (actions.send(text)) {
                 // A local admission is not a server acknowledgement. The draft owner publishes its
@@ -441,7 +443,7 @@ public fun BasicComposer(
                 if (liftId != null) lift?.cancel(liftId)
                 if (SendFieldRules.restoreAfterFailedSend(field.text.toString(), serial, editor.userEditSerial)) {
                     field.edit { replace(0, length, text) }
-                    editor.lastReported = text
+                    editor.adopted(text)
                 }
             }
         }
@@ -466,7 +468,7 @@ public fun BasicComposer(
                 followed = null
                 if (field.text.isEmpty()) {
                     field.edit { replace(0, length, state.draft.text) }
-                    editor.lastReported = state.draft.text
+                    editor.adopted(state.draft.text)
                 }
             }
         }
@@ -1509,34 +1511,29 @@ private class FollowedSend(val text: String, val serial: Long) {
 private class DraftEditorState {
     var restoreRevision: Long? = null
 
-    /** The words last handed to the draft engine. Every one is remembered, so an older one coming back is known. */
+    /**
+     * The words last handed to the draft engine by the box. Setting it means the box reported (or is about to report)
+     * them, so the engine's copy is [awaitingEngine] until it shows them.
+     */
     var lastReported: String? = null
         set(value) {
             field = value
-            if (value != null) rememberReported(value)
+            awaitingEngine = true
         }
     var userEditSerial: Long = 0
 
-    private val reported = LinkedHashSet<Long>()
-
-    private fun key(text: String): Long = (text.length.toLong() shl HASH_BITS) xor text.hashCode().toLong()
-
-    private fun rememberReported(text: String) {
-        reported.remove(key(text))
-        reported.add(key(text))
-        if (reported.size > REPORTED_KEPT) reported.remove(reported.first())
-    }
-
     /**
-     * Whether [text] is something this box itself already handed to the engine. The engine's copy lags the box by the
-     * keystrokes still in flight, so a restore carrying such words is an OLDER version of the box's own words and must
-     * never be written back over the newer ones.
+     * True from a report until the engine's copy was seen to equal it. While true the engine is BEHIND the box (the
+     * keystrokes in flight), so a restore carrying the engine's text is older than the box's words and must never be
+     * written over them. An external write (first load, reviewed text, clear after a send) finds it false: the engine
+     * had caught up and then changed by itself.
      */
-    fun wasReported(text: String): Boolean = key(text) in reported
+    var awaitingEngine: Boolean = false
 
-    private companion object {
-        const val REPORTED_KEPT = 512
-        const val HASH_BITS = 32
+    /** The box took [text] from the engine (or cleared itself without a report): nothing is in flight. */
+    fun adopted(text: String) {
+        lastReported = text
+        awaitingEngine = false
     }
 }
 
