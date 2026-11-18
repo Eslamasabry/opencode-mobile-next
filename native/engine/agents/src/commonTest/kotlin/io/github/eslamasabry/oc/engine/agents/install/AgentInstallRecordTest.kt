@@ -30,7 +30,7 @@ class AgentInstallRecordTest {
                 AgentInstallRecord.expectedRecord(codexAgent, arm),
                 AgentInstallRecord.expectedProgram(codexAgent, arm),
             )
-        assertEquals("/home/oc/.local/share/oc-agents/codex/0.169.0/payload/bin/codex", current.program)
+        assertEquals("/home/oc/.local/share/oc-agents/codex/0.170.0/payload/bin/codex", current.program)
         assertTrue(AgentInstallRecord.behind(listOf(codex), mapOf(codex to current), catalog, arm).isEmpty())
         // The right artifact but a launcher that runs something else is behind too.
         val otherProgram = current.copy(program = oldBare.program)
