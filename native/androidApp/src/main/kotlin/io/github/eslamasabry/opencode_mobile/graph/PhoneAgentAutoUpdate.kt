@@ -198,7 +198,7 @@ class PhoneAgentAutoUpdate(
         val settle = OpenCodeIdleSettle(appScope, { SystemClock.elapsedRealtime() }) { settled.tryEmit(Unit) }
         var busySince: Long? = null
         val updater =
-            AgentAutoUpdater(host, jobs, log = { log.i { it } }) {
+            AgentAutoUpdater(host, jobs, log = { log.i { it } }, nowMs = { SystemClock.elapsedRealtime() }) {
                 val now = SystemClock.elapsedRealtime()
                 val busy = settle.busy(!runtime.agentWorkBusy())
                 if (!busy) {
@@ -233,6 +233,14 @@ class PhoneAgentAutoUpdate(
             while (true) {
                 safely { phones.warmForUpdate() }
                 safely { updater.changed() }
+                // The room line is read again at every look: freed space (or a Try again) never leaves a stale amount.
+                safely {
+                    val agent = status.decision.value.agent
+                    if (downloads.helperShort.value != null && agent != null) {
+                        val room = phones.installSpace(agent.raw)
+                        downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, room)
+                    }
+                }
                 delay(LOOK_EVERY.seconds)
             }
         }
@@ -310,14 +318,7 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) {
             var room: PhoneAgentSpace? = null
             if (short) safely { room = phones.installSpace(agent.raw)?.takeIf { it.short } }
-            downloads.helperShort.value =
-                room?.let {
-                    HomeShortSpace(
-                        phones.nameOf(agent) ?: agent.raw,
-                        ((it.neededBytes + MB - 1) / MB).toInt(),
-                        (it.freeBytes / MB).toInt(),
-                    )
-                }
+            downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, room)
             delay(UNSTARTED_GRACE.seconds)
             updaterRef?.settle(agent, AgentUpdateStep.Failed)
         }
@@ -395,7 +396,6 @@ class PhoneAgentAutoUpdate(
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
         const val UNSTARTED_GRACE = 2L
-        const val MB = 1_000_000L
         const val WAIT_STEPS = 180
         const val RELOAD_EVERY = 15L
         const val RELOAD_TRIES = 480
@@ -417,3 +417,11 @@ internal fun activeNetworkMetered(app: Application): Boolean =
 interface PhoneAgentAutoUpdateAccessors {
     val phoneAgentAutoUpdate: PhoneAgentAutoUpdate
 }
+
+/** What the room line says for [room]: null when the phone has enough (the line then goes). */
+private fun homeShort(name: String, room: PhoneAgentSpace?): HomeShortSpace? =
+    room?.takeIf { it.short }?.let {
+        HomeShortSpace(name, ((it.neededBytes + MB_BYTES - 1) / MB_BYTES).toInt(), (it.freeBytes / MB_BYTES).toInt())
+    }
+
+private const val MB_BYTES = 1_000_000L
