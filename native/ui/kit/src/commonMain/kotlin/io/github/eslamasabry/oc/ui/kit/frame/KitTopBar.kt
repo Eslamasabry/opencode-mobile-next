@@ -15,7 +15,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.testTag
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -378,7 +378,7 @@ public fun KitTopBar(
                 ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
                 // Large text: the block outgrows the 48 dp row and its 4 dp step is all that is left above the words (audit
                 // 2: at 1.3x the title's first line sat 15 px under the bar's rim); keep the roomier step there.
-                Column(Modifier.weight(1f).padding(vertical = if (kitTextScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {
+                Column(Modifier.weight(1f).padding(vertical = if (kitFontScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {
                     Box(
                         if (under != null) Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, 0.dp)
                         else Modifier

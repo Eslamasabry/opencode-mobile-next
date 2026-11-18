@@ -58,7 +58,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -222,7 +222,7 @@ public fun KitTaskCard(
                                 Modifier.testTag("kit-task-card-title"),
                                 role = TypeRole.RowTitle,
                                 tone = if (KitTaskCardRules.resting(mark)) TextTone.Secondary else TextTone.Primary,
-                                maxLines = KitTaskCardRules.titleLines(kitTextScale()),
+                                maxLines = KitTaskCardRules.titleLines(kitFontScale()),
                             )
                             if (meta.isNotEmpty()) {
                                 MetaLine(meta, Modifier.padding(top = Space.S1.dp).testTag("kit-task-card-meta"))

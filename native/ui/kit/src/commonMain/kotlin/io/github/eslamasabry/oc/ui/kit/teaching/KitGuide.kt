@@ -74,6 +74,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -219,7 +220,7 @@ public fun KitGuide(
                 body(false)
                 next?.let { NextBar(it) }
             }
-            KitGuideRules.railPinned(scale, maxHeight.value) -> Column(Modifier.fillMaxSize()) {
+            KitGuideRules.railPinned(kitFontScale(), maxHeight.value) -> Column(Modifier.fillMaxSize()) {
                 rail()
                 Box(Modifier.fillMaxWidth().weight(1f)) { body(true) }
                 next?.let { NextBar(it) }
@@ -284,7 +285,7 @@ private fun Rail(items: List<KitGuideItem>, selected: String?, group: KitGuideGr
             GuideChip(item, item.id == selected, { onItem(item.id) }, m)
         }
         if (group == null) {
-            val perRow = KitGuideRules.startPerRow(scale)
+            val perRow = KitGuideRules.startPerRow(kitFontScale())
             items.chunked(perRow).forEachIndexed { r, row ->
                 if (r > 0) Spacer(Modifier.height(Space.S2.dp))
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
@@ -523,7 +524,7 @@ private fun NextBar(next: KitGuideNext) {
         val inset = Modifier.fillMaxWidth()
             .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = Space.S2.dp, bottom = Space.S2.dp + bottom)
             .heightIn(min = tokens.minTarget.dp)
-        if (KitGuideRules.nextStacked(kitTextScale())) {
+        if (KitGuideRules.nextStacked(kitFontScale())) {
             Column(inset) {
                 KitText(next.count, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2) // F: lib/ui/kit/kit_guide.dart:832
                 if (label != null) {

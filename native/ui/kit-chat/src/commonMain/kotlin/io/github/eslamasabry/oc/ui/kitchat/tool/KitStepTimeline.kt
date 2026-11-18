@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -307,6 +308,8 @@ internal class RailMeasures(
     val first: Dp,
     val stepLine: Dp,
     val scale: Float,
+    /** The chosen size ([kitFontScale]) for the wrap rule; [scale] (drawn) sizes the rail. */
+    val chosen: Float = scale,
 ) {
     /** Where the words start. */
     val column: Dp
@@ -314,7 +317,7 @@ internal class RailMeasures(
 
     /** From 1.3x text the words wrap (A11Y-8). */
     val wide: Boolean
-        get() = scale >= 1.3f // F: lib/ui/kit/chat/kit_tool_row.dart:122 _kWrapTextScale
+        get() = chosen >= 1.3f // F: lib/ui/kit/chat/kit_tool_row.dart:122 _kWrapTextScale
 }
 
 @Composable
@@ -326,7 +329,7 @@ internal fun railMeasures(): RailMeasures {
     val glyph = (KitIconSize.Large.dp * minOf(scale, tokens.maxIconScale)).roundToInt().dp
     val first = 20.dp * scale // F: lib/ui/kit/chat/kit_step_timeline.dart:958 rail.line(20)
     val stepLine = maxOf(32.dp, 20.dp * scale + Space.S1.dp * 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:355
-    return RailMeasures(glyph, first, stepLine, scale)
+    return RailMeasures(glyph, first, stepLine, scale, kitFontScale())
 }
 
 /**

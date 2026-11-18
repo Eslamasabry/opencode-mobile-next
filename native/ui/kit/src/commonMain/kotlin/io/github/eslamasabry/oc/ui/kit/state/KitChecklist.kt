@@ -66,7 +66,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -440,7 +440,7 @@ private fun StepRow(step: KitStep, index: Int, total: Int, slow: Boolean, since:
         supportingText,
         if (person) stringResource(Res.string.kitChecklistNeedsYou, step.personAction!!.label) else null,
     ).joinToString(", ")
-    val scale = kitTextScale()
+    val scale = kitFontScale() // the chosen size, not the drawn one: [kitFontScale]
     // Under the words: the mark slot and the row's 12 dp gap.
     val indent = (FlutterKitTokens.MARK_SLOT_SIZE + Space.S3).dp // F: lib/ui/kit/kit_checklist.dart:555
     val words: @Composable (Modifier) -> Unit = { m ->
