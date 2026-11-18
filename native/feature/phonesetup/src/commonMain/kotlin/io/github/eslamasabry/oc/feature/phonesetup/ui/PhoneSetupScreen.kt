@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.linuxRuntimeNodeTitle
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneGroup__agentHelper
+import io.github.eslamasabry.oc.ui.words.res.setupAgentUserStep
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
