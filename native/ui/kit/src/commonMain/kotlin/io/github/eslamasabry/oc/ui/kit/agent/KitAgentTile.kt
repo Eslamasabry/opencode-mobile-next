@@ -44,7 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -97,7 +97,7 @@ public fun KitAgentTile(
 ) {
     val colors = LocalKitColors.current
     val dimmed = tone == KitAgentTileTone.Dimmed
-    val large = kitTextScale() > 1.3f
+    val large = kitFontScale() > 1.3f
     val wide = LocalKitAgentGridSpan.current
     val look =
         kitSurfaceLook(
@@ -123,8 +123,9 @@ public fun KitAgentTile(
                 name,
                 role = if (large) TypeRole.Headline else TypeRole.Title,
                 tone = if (dimmed) TextTone.Secondary else TextTone.Primary,
-                maxLines = 2,
-                // A name never breaks inside a word ("Antigravit / y" at text 1.3 in a 360 dp grid): it shrinks to fit.
+                // A name never breaks inside a word ("Antigravit / y" at text 1.3 in a 360 dp grid): it shrinks to fit,
+                // and a name of several words may take a third line at a word's start rather than end in "...".
+                maxLines = 3,
                 wholeWords = true,
             )
             if (state.isNotEmpty()) {

@@ -44,7 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -147,7 +147,7 @@ public fun KitSwatchGrid(
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().semantics { contentDescription = label }) {
         val accents = swatches.isNotEmpty() && !swatches.first().theme
         val width = maxWidth.value
-        val scale = kitTextScale()
+        val scale = kitFontScale() // the chosen size, not the non-linear body size
         val columns =
             if (accents) swatchAccentColumns(width, tokens.minTarget.toFloat(), Space.S2.toFloat())
             else swatchColumns(width, scale)
@@ -213,7 +213,8 @@ public fun KitSwatchGrid(
 /** Theme tiles per row: [FlutterKitTokens.SWATCH_MIN_WIDTH] wide at least, 2 to 6, one fewer from 1.3x text. */
 internal fun swatchColumns(widthDp: Float, textScale: Float): Int {
     var columns = (widthDp / FlutterKitTokens.SWATCH_MIN_WIDTH).toInt().coerceIn(2, 6) // F: lib/ui/kit/kit_swatch.dart:770
-    if (textScale >= 1.3f) columns = maxOf(columns - 1, 1) // F: lib/ui/kit/kit_swatch.dart:771
+    if (io.github.eslamasabry.oc.ui.design.text.TextScalePolicy.isLargeText(textScale))
+        columns = maxOf(columns - 1, 1) // F: lib/ui/kit/kit_swatch.dart:771
     return columns
 }
 

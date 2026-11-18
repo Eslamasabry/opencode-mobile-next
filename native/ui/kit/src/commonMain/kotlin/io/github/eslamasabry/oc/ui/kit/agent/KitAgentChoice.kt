@@ -57,7 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -116,7 +116,7 @@ public fun KitAgentChoice(
     val colors = LocalKitColors.current
     val selected = state == KitAgentChoiceState.Selected
     val dimmed = state == KitAgentChoiceState.NeedsSetup
-    val large = kitTextScale() > 1.3f // F: lib/ui/kit/kit_agent_choice.dart:76
+    val large = kitFontScale() > 1.3f // F: lib/ui/kit/kit_agent_choice.dart:76 (the chosen size: [kitFontScale])
     val wide = LocalKitAgentGridSpan.current
     val line = if (dimmed) stringResource(Res.string.chatsNewSetUp) else strength
     val look =

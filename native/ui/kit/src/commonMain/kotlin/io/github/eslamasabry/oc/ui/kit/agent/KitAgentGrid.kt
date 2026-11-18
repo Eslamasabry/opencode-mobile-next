@@ -16,7 +16,8 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 
 /** Dart `KitAgentGridSpan`: true for the card that spans the whole row and lays out sideways. */
 internal val LocalKitAgentGridSpan = staticCompositionLocalOf { false }
@@ -48,7 +49,8 @@ internal fun agentGridRows(count: Int, oneColumn: Boolean): List<List<Int>> =
  */
 @Composable
 public fun KitAgentGrid(children: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
-    val scale = kitTextScale()
+    // The person's chosen size, not the non-linear body size ([kitFontScale]).
+    val scale = kitFontScale()
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
     val oneColumn = agentGridOneColumn(scale, maxWidth.value)
     val rows = agentGridRows(children.size, oneColumn)
@@ -86,7 +88,7 @@ internal const val AGENT_TILE_MIN_WIDTH: Int = 200
 internal fun agentTileColumns(widthDp: Float, textScale: Float): Int {
     if (agentGridOneColumn(textScale)) return 1
     val gap = Space.S3.toFloat()
-    if (textScale >= 1.3f && (widthDp - gap) / 2f < AGENT_TILE_MIN_WIDTH) return 1
+    if (TextScalePolicy.isLargeText(textScale) && (widthDp - gap) / 2f < AGENT_TILE_MIN_WIDTH) return 1
     val fit = ((widthDp + gap) / (AGENT_TILE_MIN_WIDTH + gap)).toInt()
     return fit.coerceIn(2, 4)
 }
@@ -107,7 +109,8 @@ internal fun agentTileRows(count: Int, columns: Int): List<List<Int>> = (0 until
  */
 @Composable
 public fun KitAgentTiles(children: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
-    val scale = kitTextScale()
+    // The person's chosen size, not the non-linear body size ([kitFontScale]).
+    val scale = kitFontScale()
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
         val columns = agentTileColumns(maxWidth.value, scale)
         val rows = agentTileRows(children.size, columns)

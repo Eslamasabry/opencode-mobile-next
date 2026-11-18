@@ -30,3 +30,12 @@ internal fun rememberAppTextDensity(textSize: AppTextSize): Density {
 /** The effective scale at body size. Layout decisions compare with `TextScalePolicy.isLargeText` (≥ 1.29). */
 @Composable
 public fun kitTextScale(): Float = with(LocalDensity.current) { 16.sp.toDp().value / 16f }
+
+/**
+ * The person's text size as they chose it: the system font size times the in-app Text size, before the platform's
+ * non-linear curve (Android 14 and later draw 16 sp at a 1.3 setting as about 19.5 dp, so [kitTextScale] reads about
+ * 1.22 there). Layout rules that speak of "1.3x text" compare with this, never with [kitTextScale]: the agents grid
+ * at a 1.3 setting kept two columns on a 346 dp phone because its rule read 1.22 (look of build 10086).
+ */
+@Composable
+public fun kitFontScale(): Float = LocalDensity.current.fontScale
