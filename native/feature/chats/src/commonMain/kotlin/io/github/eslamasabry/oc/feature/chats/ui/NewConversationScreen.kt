@@ -656,6 +656,8 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                             stringResource(
                                 if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
                             ),
+                        // What the access gives is read whole, not cut at 360 dp.
+                        supportingMaxLines = PHONE_STORAGE_LINES,
                         leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
                         trailing = KitRowTrailing.Chevron,
                         onClick = { if (on) actions.browsePhoneStorage() else actions.requestPhoneStorage() },
@@ -1395,3 +1397,6 @@ private fun phoneFolderDoneWords(state: NewConversationUi): String? {
 
 /** The start box's tallest height while a blocking notice shares its scroller; longer words scroll inside it. */
 private const val NOTICE_BOX_MAX_DP = 220
+
+/** Lines the phone-storage row's explanation may take: it says what the access gives, so it is never cut. */
+internal const val PHONE_STORAGE_LINES = 3

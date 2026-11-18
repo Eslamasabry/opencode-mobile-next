@@ -924,6 +924,10 @@ internal fun stepOutputShown(step: TurnStep, showAll: Boolean): String? {
     val last = KIT_COMMAND_OUTPUT_LINES
     val shown =
         when {
+            // The server's own line for a stopped tool ("Tool execution interrupted: shell") is not copy: the box says
+            // "Stopped before it finished" in the kit's words, the raw line stays in the message's Details.
+            step.state == StepState.Stopped &&
+                io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps.isStopError(out.text.trim()) -> ""
             step.state == StepState.Running -> out.liveTail.lines().takeLast(last).joinToString("\n")
             step.state == StepState.Failed && step.facts.kind == ToolKind.Shell && !showAll ->
                 out.text.trimEnd().lines().takeLast(last).joinToString("\n")

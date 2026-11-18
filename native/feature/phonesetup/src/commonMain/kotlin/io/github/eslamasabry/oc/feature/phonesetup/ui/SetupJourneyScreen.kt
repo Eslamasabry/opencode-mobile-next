@@ -894,7 +894,7 @@ private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
         )
         state.progress.state == SetupState.Done && state.canMakeProject -> ReadyProject(state, actions)
         state.progress.state == SetupState.Done ->
-            KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done, fullWidth = true)
+            KitButton(stringResource(Res.string.chatsHomeNewChat), actions::done, fullWidth = true)
     }
 }
 

@@ -2398,10 +2398,10 @@ collectAgents	d720bc6e84
 collectApprovals	3417b5da91
 collectBackground	42ece457ec
 collectConnect	46cca38725
-collectCrashKeys	7fd4e40f3b
+collectCrashKeys	3c18a8ac59
 collectCrashKind	cffc0cbf8b
 collectCrashesLabel	9ecbc9dad7
-collectDevice	8bf74f2cb4
+collectDevice	cfb11f4cb8
 collectDrop	13bd95a3dd
 collectExit	34768d63e2
 collectMemory	39a3b87916
@@ -2413,7 +2413,7 @@ collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
 collectRowSummary	55533aebc0
-collectRules	fd4128a65b
+collectRules	8877a6f96f
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
 collectSmooth	ad0735212d
@@ -8057,7 +8057,7 @@ nativeSearchShortcutSend	2343b816ac
 nativeSearchShortcutTabs	91be216915
 nativeSearchShortcutsBody	8b0dad5f24
 nativeTelemetryConsentBody	ef4f42e264
-nativeTelemetryUsageDetail	c3a2bad501
+nativeTelemetryUsageDetail	9af349c585
 nativeToolsChooseModel	09388d8f7f
 nativeToolsCoding	b35ab0829c
 nativeToolsNoParameters	a09c14afa3
@@ -13292,7 +13292,7 @@ telemetryCrashReportsBody	4013fb6fee
 telemetryCrashReportsTitle	08563cd497
 telemetryCrashesDetail	61f10d5436
 telemetryCrashesTitle	49a006f24d
-telemetryUsageDetail	b176739883
+telemetryUsageDetail	f5f73e5db3
 telemetryUsageTitle	8fa59c516a
 terminal40Actions	64adfb82b1
 terminal40Alt	4414014a16

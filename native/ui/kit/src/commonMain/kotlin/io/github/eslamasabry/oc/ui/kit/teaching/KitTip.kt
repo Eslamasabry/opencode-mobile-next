@@ -38,6 +38,8 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -200,7 +202,7 @@ public fun KitTip(
             val gap = with(LocalDensity.current) { Space.S2.dp.roundToPx() }
             val rise = with(LocalDensity.current) { TipRules.riseDp(motion).dp.roundToPx() }
             // Never over the words of the part around the anchor (the message box): above or below all of it.
-            val place = remember(above, gap, beside, clearance) { TipPosition(above, gap, beside, clearance) }
+            val place = rememberTipPosition(above, gap, beside, clearance)
             val bubble: @Composable () -> Unit = {
                 val enter: EnterTransition =
                     if (motion.reduced) EnterTransition.None
@@ -225,6 +227,13 @@ public fun KitTip(
             else Popup(popupPositionProvider = place, onDismissRequest = { dismiss() }, properties = PopupProperties(focusable = false, dismissOnClickOutside = true)) { bubble() }
         }
     }
+}
+
+/** Where the tip stands; the system gesture area at the window's foot is not its room, so it stands above it. */
+@Composable
+private fun rememberTipPosition(above: Boolean, gap: Int, beside: Boolean, clearance: KitTipClearance?): TipPosition {
+    val footInset = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+    return remember(above, gap, beside, clearance, footInset) { TipPosition(above, gap, beside, clearance, footInset) }
 }
 
 /**
@@ -308,6 +317,8 @@ private class TipPosition(
     private val beside: Boolean = false,
     /** The part the tip stands clear of ([KitTipClearance], window pixels); null: none. */
     private val clearance: KitTipClearance? = null,
+    /** The system navigation or gesture area at the window's foot, px: the tip never reaches into it. */
+    private val footInset: Int = 0,
 ) : PopupPositionProvider {
     fun clearInWindow(): Rect? = clearance?.boundsInWindow
 
@@ -332,14 +343,18 @@ private class TipPosition(
         val x =
             (if (nearStart) anchorBounds.left else anchorBounds.right - popupContentSize.width)
                 .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+        // Below a part kept clear there may be no room (a message box at the foot of the window, the gesture area under
+        // it): clamped into the window the tip would lie back over that part, so it stands above it instead.
+        val usableBottom = windowSize.height - footInset
+        val noRoomBelow = around != null && bottom + gap + popupContentSize.height > usableBottom
         val y =
             // Inside a tall anchor only when no part is to be kept clear: then it stands outside that part.
             when {
                 around == null && TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat()) ->
                     anchorBounds.top + gap
-                above -> top - gap - popupContentSize.height
+                above || noRoomBelow -> top - gap - popupContentSize.height
                 else -> bottom + gap
-            }.coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
+            }.coerceIn(0, (usableBottom - popupContentSize.height).coerceAtLeast(0))
         return IntOffset(x, y)
     }
 }
