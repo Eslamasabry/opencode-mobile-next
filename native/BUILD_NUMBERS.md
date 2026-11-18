@@ -105,3 +105,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10079 | build | 2026-11-17 | interim 3.0.1 line, not the candidate; first build with the crash fix: line tip 2b3cef7cd3 (10077 plus the B-SEC-007 close-crash fix, guard-skips tools, code-style fixes); replaces 10078 (not delivered), owner key |
 | 10080 | build | 2026-11-17 | interim 3.0.1 line, not the candidate: line tip b8395c4c7f (10079 plus Japanese complete, candidate-lane tools, code-style ratchet, line fixes), first build with Japanese complete, owner key |
 | 10081 | build | 2026-11-18 | interim 3.0.1 line, not the candidate (source 7b4096f918) |
+| 10082 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: clipboard crash fix (source eaa11ac005) |
