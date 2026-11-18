@@ -2405,10 +2405,10 @@ collectNever	0b27a37bc6
 collectNeverLabel	67bbd8aef0
 collectOwnBuild	97fa3a5457
 collectOwnLabel	fab8142441
-collectOwnLook	1162d6eee9
+collectOwnLook	bb63e18338
 collectOwnPhone	a86387d83b
 collectOwnTogether	4ed021e085
-collectOwnUse	75a660278e
+collectOwnUse	ef72a81b0b
 collectPages	a61453d46b
 collectPhoneSetup	01b513ae13
 collectQueue	408cf673e3
@@ -7902,7 +7902,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	0a6c5c1ebf
+nativeBundledPrivacy	f2440497f9
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -8059,7 +8059,7 @@ nativeSearchShortcutSend	2343b816ac
 nativeSearchShortcutTabs	91be216915
 nativeSearchShortcutsBody	8b0dad5f24
 nativeTelemetryConsentBody	ef4f42e264
-nativeTelemetryUsageDetail	ee17ad814b
+nativeTelemetryUsageDetail	6762f4645f
 nativeToolsChooseModel	09388d8f7f
 nativeToolsCoding	b35ab0829c
 nativeToolsNoParameters	a09c14afa3
