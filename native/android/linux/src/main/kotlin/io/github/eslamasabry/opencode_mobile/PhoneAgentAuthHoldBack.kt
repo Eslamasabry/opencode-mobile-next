@@ -17,17 +17,20 @@ import java.util.concurrent.TimeUnit
  */
 internal object PhoneAgentAuthHoldBack {
     /** A sign-in written this recently holds a token far from running out (Claude's last for hours). */
-    val FRESH_MILLIS: Long = TimeUnit.MINUTES.toMillis(10)
+    private const val FRESH_MINUTES = 10L
+
+    val FRESH_MILLIS: Long = TimeUnit.MINUTES.toMillis(FRESH_MINUTES)
 
     /**
      * Whether the check for [agentId] is held back. [writtenMillisAgo] is how long ago the profile's stored Claude
      * sign-in was written, or null when there is none (or it could not be read as a plain file).
      */
-    fun holdsBack(agentId: String, cliRunning: () -> Boolean, afterSignIn: Boolean, writtenMillisAgo: () -> Long?): Boolean {
-        if (agentId != "claude") return false
-        if (afterSignIn && fresh(writtenMillisAgo())) return false
-        return cliRunning()
-    }
+    fun holdsBack(
+        agentId: String,
+        cliRunning: () -> Boolean,
+        afterSignIn: Boolean,
+        writtenMillisAgo: () -> Long?,
+    ): Boolean = agentId == "claude" && !(afterSignIn && fresh(writtenMillisAgo())) && cliRunning()
 
     /** Written within [FRESH_MILLIS] and not in the future (a clock that moved back proves nothing). */
     fun fresh(writtenMillisAgo: Long?): Boolean = writtenMillisAgo != null && writtenMillisAgo in 0..FRESH_MILLIS

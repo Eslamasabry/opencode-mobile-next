@@ -71,10 +71,12 @@ internal class PhoneAgentAuthRuntime(
             afterSignIn,
             { claudeSignInAge(request.profileId) },
         )
-        if (heldBack) return PhoneAgentAuthProjection.error("agentBusy")
-        deadline.set(PhoneAgentAuthDeadline(request.timeoutSeconds))
-        return try { probe.run(arguments, stop) }
-        finally { deadline.remove(); before.remove() }
+        return if (heldBack) PhoneAgentAuthProjection.error("agentBusy")
+        else {
+            deadline.set(PhoneAgentAuthDeadline(request.timeoutSeconds))
+            try { probe.run(arguments, stop) }
+            finally { deadline.remove(); before.remove() }
+        }
     }
     fun blockProfile(profileId: String): Boolean {
         deadline.set(PhoneAgentAuthDeadline(CLEANUP_SECONDS))

@@ -1565,12 +1565,15 @@ class BuiltinLinux(private val context: Context) {
             check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
             val file =
                 File(
-                    PhoneAgentPaths.resolve(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId/claude"),
+                    PhoneAgentPaths.resolve(
+                        context.filesDir,
+                        "linux/ubuntu/home/oc/.oc-profiles/$profileId/claude",
+                    ),
                     PhoneAgentClaudeHome.CREDENTIALS,
                 )
             val stat = Os.lstat(file.absolutePath)
             if (!OsConstants.S_ISREG(stat.st_mode)) null
-            else System.currentTimeMillis() - stat.st_mtime * 1000L
+            else System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(stat.st_mtime)
         } catch (_: Exception) {
             null
         }
