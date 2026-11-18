@@ -12,7 +12,10 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.agents.AgentId
-import io.github.eslamasabry.oc.engine.agents.install.*
+import io.github.eslamasabry.oc.engine.agents.install.AgentChoiceHost
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoiceEngine
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoices
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalResult
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
@@ -29,26 +32,19 @@ class PhoneUpdateChoices(
     private val phones: AppPhoneAgents,
     private val dispatchers: AppDispatchers,
     private val runtime: BuiltinRuntime,
-    private val jobs: NativeAgentSetupJobs,
-    private val guard: PhonePayloadGuard,
 ) : AgentUpdateChoices {
     private val disk = PhoneChoiceInventory(app, phones)
     private val host = object : AgentChoiceHost {
         override suspend fun inventory() = disk.read()
-        override suspend fun busy() = guard.installGate.isLocked || jobs.anySetupRunning() != false ||
+        override suspend fun busy() = phones.choiceInstallBusy() ||
             runtime.agentWorkBusy() || !runtime.mayUpdate()
 
         override suspend fun remove(id: AgentId): Outcome<RemovalResult> {
-            if (!guard.installGate.tryLock()) return Outcome.Ok(RemovalResult.Refused(RemovalRefusal.Busy))
-            return try {
-                phones.remove(id.raw).map { result ->
-                    when (result) {
-                        is PhoneAgentRemoval.Removed -> RemovalResult.Removed(result.freedBytes)
-                        is PhoneAgentRemoval.Refused -> RemovalResult.Refused(refusal(result.issue))
-                    }
+            return phones.removeWithInstallGate(id).map { result ->
+                when (result) {
+                    is PhoneAgentRemoval.Removed -> RemovalResult.Removed(result.freedBytes)
+                    is PhoneAgentRemoval.Refused -> RemovalResult.Refused(refusal(result.issue))
                 }
-            } finally {
-                guard.installGate.unlock()
             }
         }
     }

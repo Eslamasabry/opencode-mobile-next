@@ -328,7 +328,8 @@ public class AgentAutoUpdater(
         val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
         // An update the app was stopped in the middle of runs again first (the install skips what is in place).
         val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted && host.updateAllowed(it) }
-        val target = resume ?: AgentAutoUpdateRule.target(host.installed.filter(host::updateAllowed), behind, helperBehind)
+        val eligible = host.installed.filter(host::updateAllowed)
+        val target = resume ?: AgentAutoUpdateRule.target(eligible, behind, helperBehind)
         // Only an install that replaces or restarts the helper waits for the agents to be idle. An agent-only update
         // (the helper already on its pin) replaces that agent's own files and link; another agent's conversation keeps
         // running on its own copy, so it never waits for it.

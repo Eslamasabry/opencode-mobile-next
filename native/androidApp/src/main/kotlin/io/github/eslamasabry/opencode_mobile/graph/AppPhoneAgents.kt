@@ -444,13 +444,30 @@ class AppPhoneAgents(
         buildMap {
             for (agent in phoneCatalog()) {
                 if (stop.isStopped) break
-                val present = PhoneAgentPayloads.present(linux, agent.recipe?.executable ?: continue)
+                val present = PhoneAgentPayloads.present(linux, requireNotNull(agent.recipe).executable)
                 val answer = versionOf(owner, agent, present, installing, stop)
                 val version = answer?.get("foundVersion") as? String
                 if (version != null) put(agent.id, version)
             }
         }
     }.orEmpty()
+
+    internal suspend fun choiceInstallBusy() = payloads.installGate.isLocked || setupJobs.anySetupRunning() != false
+
+    internal suspend fun removeWithInstallGate(id: AgentId): Outcome<PhoneAgentRemoval> {
+        if (!payloads.installGate.tryLock()) return Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Busy))
+        return try {
+            remove(id.raw)
+        } finally {
+            payloads.installGate.unlock()
+        }
+    }
+
+    /** The same bounded, unprivileged version projection used for the catalog, including older layouts. */
+    internal fun choiceVersion(executable: String, pin: String): String? =
+        agentOwner(ownerId())?.let { owner ->
+            linux.agentHost.checks.version(owner.raw, executable, pin)["foundVersion"] as? String
+        }
 
     /** A shared-only job never includes the anchor agent's own payload step. */
     internal suspend fun startSharedUpdate(anchor: AgentId): Boolean {

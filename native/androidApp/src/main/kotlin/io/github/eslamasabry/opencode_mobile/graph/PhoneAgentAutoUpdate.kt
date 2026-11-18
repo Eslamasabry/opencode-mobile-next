@@ -63,8 +63,8 @@ class PhoneAgentAutoUpdate(
     private val status: PhoneAgentUpdateStatus,
     private val appScope: AppCoroutineScope,
     private val downloads: PhoneDownloads,
-    private val choices: PhoneUpdateChoices,
 ) {
+    private val choices get() = status.choices
     private var started = false
 
     /**
@@ -114,22 +114,14 @@ class PhoneAgentAutoUpdate(
                 }
 
                 override val installed: List<AgentId>
-                    get() = phones.updateFacts()?.installed.orEmpty()
-
-                override val behind: Set<AgentId>
-                    get() =
-                        phones.updateFacts()?.let { facts -> facts.behind + recordBehind(app, facts.installed) }.orEmpty()
-
+                    get() = choices.offer.value?.items.orEmpty().map { it.id }
+                        .filter { choices.allowed(it) && it != AgentId.OPENCODE }
+                override val behind: Set<AgentId> get() = installed.toSet()
                 override val reinstall: Set<AgentId>
-                    get() =
-                        phones.updateFacts()?.let { facts -> recordBehind(app, facts.installed) - facts.behind }.orEmpty()
-
+                    get() = choices.offer.value?.items.orEmpty().filter { it.fromVersion == it.toVersion }
+                        .map { it.id }.toSet()
                 override val helperBehind: Boolean
-                    get() =
-                        phones.updateFacts()?.let {
-                            it.helperOnDiskBehind ||
-                                (it.helperRunning && it.helperVersion != null && it.helperVersion != pins.paseo.version)
-                        } == true
+                    get() = choices.offer.value?.items.orEmpty().any { it.neededWhen != null }
 
                 override val pinKey: String = pinned
                 override val switchPending: Boolean get() = runtime.switchPending()
@@ -236,17 +228,19 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
             while (true) {
-                safely {
-                    if (phones.warmForUpdate()) {
-                        choices.refresh()
-                        choices.updateShared(meteredAllowed = false)
-                    }
-                }
+                safely { refreshChoices() }
                 safely { updater.changed() }
                 // The room line is read again at every look: freed space (or a Try again) never leaves a stale amount.
                 safely { rereadRoom(phones, downloads, status.decision.value.agent) }
                 delay(LOOK_EVERY.seconds)
             }
+        }
+    }
+
+    private suspend fun refreshChoices() {
+        if (phones.warmForUpdate()) {
+            choices.refresh()
+            choices.updateShared(meteredAllowed = false)
         }
     }
 
@@ -335,7 +329,7 @@ class PhoneAgentAutoUpdate(
 
     /** The agents behind only by their install record (same version), for the update's end. */
     private fun sameVersion(): Set<AgentId> =
-        phones.updateFacts()?.let { facts -> recordBehind(app, facts.installed) - facts.behind }.orEmpty()
+        phones.updateFacts()?.let { recordBehind(app, it.installed) - it.behind }.orEmpty()
 
     private val reloadAfter = java.util.concurrent.ConcurrentHashMap.newKeySet<AgentId>()
 
@@ -470,7 +464,7 @@ private fun records(app: Application): Map<AgentId, AgentInstallRecorded> {
         val folder = java.io.File(linux.rootfs, dir.removePrefix("/"))
         fun text(name: String): String? =
             java.io.File(folder, name)
-                .takeIf { it.isFile && !java.nio.file.Files.isSymbolicLink(it.toPath()) && it.length() <= 4096 }
+                .takeIf { it.isFile && !java.nio.file.Files.isSymbolicLink(it.toPath()) && it.length() <= RECORD_LIMIT }
                 ?.readText()
         agent.id to AgentInstallRecord.fromFiles(text(".oc-pin"), text("launch"))
     }.toMap()
@@ -481,3 +475,5 @@ internal fun recordBehind(app: Application, installed: List<AgentId>): Set<Agent
     val architecture = PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList()) ?: return emptySet()
     return AgentInstallRecord.behind(installed, records(app), AgentCatalog.builtIn, architecture)
 }
+
+private const val RECORD_LIMIT = 4096L

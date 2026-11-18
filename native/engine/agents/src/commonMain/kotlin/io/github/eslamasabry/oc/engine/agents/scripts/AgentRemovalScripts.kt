@@ -71,7 +71,7 @@ public object AgentRemovalScripts {
         val executable = executables.getValue(agent.id.raw)
         val version = requireNotNull(agent.recipe).version
         require(VERSION.matches(version))
-        return "python3 - '${agent.id.raw}' '$executable' '$version' <<'OC_AGENT_SIZE'\n" +
+        return "/usr/bin/python3 -IS - '${agent.id.raw}' '$executable' '$version' 2>/dev/null <<'OC_AGENT_SIZE'\n" +
             REMOVAL_PATHS + "\nancestors()\nprint(allocated([base, link, lock] + targets()))\nOC_AGENT_SIZE\n"
     }
 
@@ -80,8 +80,7 @@ agent, executable, version = sys.argv[1:4]
 allowed = {'codex': 'codex', 'gemini': 'gemini', 'antigravity': 'agy', 'qwen': 'qwen',
            'kilo': 'kilo', 'cline': 'cline', 'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx'}
 if (allowed.get(agent) != executable or
-    not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version) or
-    os.getuid() != 1000 or os.environ.get('HOME') != '/home/oc'):
+    not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version)):
     sys.exit(17)
 root = pathlib.Path('/home/oc')
 parent = root / '.local/share/oc-agents'
@@ -185,7 +184,8 @@ def allocated(paths):
 """
 
     internal val REMOVE_PY: String = REMOVAL_PATHS + """receipt_id = sys.argv[4]
-if not re.fullmatch(r'[a-f0-9]{32}', receipt_id): sys.exit(17)
+if (not re.fullmatch(r'[a-f0-9]{32}', receipt_id) or
+    os.getuid() != 1000 or os.environ.get('HOME') != '/home/oc'): sys.exit(17)
 receipt = root / '.local/share' / ('oc-agent-removal-' + receipt_id)
 def write_receipt(size, absent):
     ancestors()

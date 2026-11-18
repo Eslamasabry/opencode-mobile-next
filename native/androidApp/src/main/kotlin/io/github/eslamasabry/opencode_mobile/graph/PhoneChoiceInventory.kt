@@ -18,7 +18,8 @@ import io.github.eslamasabry.oc.engine.agents.scripts.AgentRemovalScripts
 import io.github.eslamasabry.oc.engine.runtime.install.ManagedRuntime
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
-import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.runningPhoneName__agentHelper
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import org.jetbrains.compose.resources.getString
@@ -71,37 +72,36 @@ internal class PhoneChoiceInventory(private val app: Application, private val ph
 
     private fun openCode(): AgentUpdateItem? {
         val binary = "/opt/opencode2/bin/opencode2"
-        if (!File(linux.rootfs, binary.removePrefix("/")).isFile) return null
-        val from = readLine("$binary --version")?.removePrefix("v")?.takeIf(VERSION::matches) ?: return null
         val pin = ManagedRuntime.OpenCode2.pinnedVersion
-        return if (from == pin) null else AgentUpdateItem(
+        val installed = File(linux.rootfs, binary.removePrefix("/")).isFile
+        val from = if (installed) phones.choiceVersion("opencode2", pin) else null
+        return if (from == null || from == pin) null else AgentUpdateItem(
             AgentId.OPENCODE, "OpenCode", from, pin, HomeDownloadSizes.OPEN_CODE_MB * MB,
             diskBytes("/opt/opencode2"), AgentUpdateGroup.Optional, true, false, null, null, null,
         )
     }
 
     private suspend fun sharedItems(): List<AgentUpdateItem> = buildList {
-        val helperLink = readLine("readlink /home/oc/.local/bin/paseo")
-        val helper = helperLink?.let { HELPER.matchEntire(it)?.groupValues?.get(1) }
+        val helper = phones.choiceVersion("paseo", pins.paseo.version)
         val always = helper != null && helper != pins.paseo.version && helper !in pins.paseoTestedVersions
         val rule = if (always) AgentNeedRule.Always else AgentNeedRule.WithAnyUpdate
-        if (helper != pins.paseo.version) add(needed(
+        if (helper != pins.paseo.version) add(rule.needed(
             "agent-paseo", getString(Res.string.runningPhoneName__agentHelper), helper, pins.paseo.version,
-            HomeDownloadSizes.HELPER_MB * MB, rule,
+            HomeDownloadSizes.HELPER_MB * MB,
         ))
-        val node = readLine("/home/oc/.local/node/bin/node --version")?.takeIf { VERSION.matches(it.removePrefix("v")) }
-        if (node != pins.node.version) add(needed("agent-node", "Node.js", node, pins.node.version, NODE_BYTES, rule))
+        val node = phones.choiceVersion("node", pins.node.version)?.let { "v$it" }
+        if (node != pins.node.version) add(rule.needed("agent-node", "Node.js", node, pins.node.version, NODE_BYTES))
     }
 
-    private fun needed(id: String, name: String, from: String?, pin: String, bytes: Long, rule: AgentNeedRule) =
+    private fun AgentNeedRule.needed(id: String, name: String, from: String?, pin: String, bytes: Long) =
         AgentUpdateItem(AgentId(id), name, from, pin, bytes, null, AgentUpdateGroup.Needed, false, false,
-            AgentKeepBlock.HelperTooNew, null, rule)
+            AgentKeepBlock.HelperTooNew, null, this)
 
     private fun diskBytes(path: String): Long? =
-        readLine("du -sk '$path'")?.substringBefore('\t')?.toLongOrNull()?.times(KIB)
+        readLine("du -sk '$path' 2>/dev/null")?.substringBefore('\t')?.toLongOrNull()?.times(KIB)
 
     private fun readLine(script: String): String? =
-        linux.run(script, PROBE_SECONDS, agentUser = true, logOutput = false)
+        linux.run(script, PROBE_SECONDS, logOutput = false)
             .takeIf { it.exitCode == 0 }?.output?.trim()?.lineSequence()?.lastOrNull()
 
     private companion object {
@@ -111,7 +111,5 @@ internal class PhoneChoiceInventory(private val app: Application, private val ph
         const val KIB = 1024L
         const val NODE_BYTES = 58_000_000L
         const val PROBE_SECONDS = 30L
-        val VERSION = Regex("""[0-9]+\.[0-9]+\.[0-9]+""")
-        val HELPER = Regex("""/home/oc/\.local/share/oc-paseo/([0-9]+\.[0-9]+\.[0-9]+)-[a-f0-9]+/node_modules/\.bin/paseo""")
     }
 }

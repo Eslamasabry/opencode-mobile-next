@@ -67,7 +67,9 @@ class PhoneOpenCodeAutoUpdate(
                 override val updateAllowed: Boolean get() = choices.allowed(AgentId.OPENCODE)
                 override suspend fun refresh() = this@PhoneOpenCodeAutoUpdate.runtime.refreshServer()
 
-                override val installedVersion: String? get() = this@PhoneOpenCodeAutoUpdate.runtime.serverFacts.value.installedVersion
+                override val installedVersion: String?
+                    get() = choices.offer.value?.items?.find { it.id == AgentId.OPENCODE }?.fromVersion
+                        ?: this@PhoneOpenCodeAutoUpdate.runtime.serverFacts.value.installedVersion
                 override val pinnedVersion: String get() = ManagedRuntime.OpenCode2.pinnedVersion
                 override val runtime: String get() = ManagedRuntime.OpenCode2.wireName
                 override val switchPending: Boolean get() = this@PhoneOpenCodeAutoUpdate.runtime.switchPending()
@@ -85,7 +87,8 @@ class PhoneOpenCodeAutoUpdate(
 
                 // Refused before it started (not known idle, a job running): the try is not spent. A job that
                 // started and failed is left to the manual row; the setup job reports its own failure.
-                override suspend fun updateOpenCode(runtime: String): Boolean = choices.startIfChosen(AgentId.OPENCODE) {
+                override suspend fun updateOpenCode(runtime: String): Boolean =
+                    choices.startIfChosen(AgentId.OPENCODE) {
                     val result = setup.update()
                     val refused =
                         (result as? Outcome.Failed)?.failure.let {
@@ -146,7 +149,8 @@ class PhoneOpenCodeAutoUpdate(
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
-            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled, reads, choices.offer.map { Unit }),
+            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> },
+                settled, reads, choices.offer.map { Unit }),
             log = { log.i { it } },
         )
         appScope.launch {
