@@ -42,7 +42,12 @@ public data class HomeDownloadFact(
     val kind: HomeDownloadKind,
     val phase: HomeDownloadPhase,
     val megabytes: Int = HomeDownloadSizes.of(kind),
+    /** A failed download that stopped for want of room: what it needs and what the phone has. */
+    val short: HomeShortSpace? = null,
 )
+
+/** The room a stopped download needs and the room the phone has, in megabytes, with the agent's own name. */
+public data class HomeShortSpace(val name: String, val neededMb: Int, val freeMb: Int)
 
 /**
  * The sizes the line and the ask say, in one place. They are measured, not read from a release manifest: on the
@@ -124,6 +129,7 @@ public object HomeDownloadMapping {
         helper: HomeHelperStep,
         helperInstall: HomeInstallPhase,
         helperPercent: Int?,
+        helperShort: HomeShortSpace? = null,
     ): List<HomeDownloadFact> = buildList {
         when {
             openCodeRunning ->
@@ -134,7 +140,17 @@ public object HomeDownloadMapping {
         when (helper) {
             HomeHelperStep.None -> Unit
             HomeHelperStep.Waiting -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))
-            HomeHelperStep.Failed -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Failed))
+            HomeHelperStep.Failed ->
+                add(
+                    when (helperInstall) {
+                        HomeInstallPhase.Installing ->
+                            HomeDownloadFact(
+                                HomeDownloadKind.Helper,
+                                HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100)),
+                            )
+                        else -> HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Failed, short = helperShort)
+                    }
+                )
             HomeHelperStep.Updating ->
                 add(
                     HomeDownloadFact(

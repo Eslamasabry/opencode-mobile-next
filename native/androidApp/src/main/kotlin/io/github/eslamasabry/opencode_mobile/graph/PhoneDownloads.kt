@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHelperStep
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeInstallPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeShortSpace
 import io.github.eslamasabry.oc.feature.chats.presentation.NoHomeDownloads
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
@@ -66,6 +67,8 @@ class PhoneDownloads(
     /** The phone is on a network that is free to download over; false for mobile data, unknown and offline. */
     val metered: Boolean get() = downloadNetworkMetered(now)
 
+    /** The agents' install that stopped for want of room: what it needs and what the phone has (null when none). */
+    internal val helperShort = MutableStateFlow<HomeShortSpace?>(null)
     internal val openCodeWaiting = MutableStateFlow(false)
     internal val openCodeHeld = MutableStateFlow<OpenCodeHold?>(null)
     @Volatile internal var openCode: PhoneOpenCodeAutoUpdate? = null
@@ -89,12 +92,12 @@ class PhoneDownloads(
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
         combine(
-                combine(openCodeWaiting, openCodeHeld) { waiting, held -> waiting to held },
+                combine(openCodeWaiting, openCodeHeld, helperShort) { waiting, held, short -> Triple(waiting, held, short) },
                 setup.progress,
                 phones.state,
                 agentStatus.decision,
                 networkRead,
-            ) { (waiting, held), progress, agentState, decision, read ->
+            ) { (waiting, held, short), progress, agentState, decision, read ->
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =
@@ -119,6 +122,7 @@ class PhoneDownloads(
                                 else -> HomeInstallPhase.None
                             },
                         helperPercent = install?.fraction?.let { (it * 100).roundToInt() },
+                        helperShort = short,
                     )
                 HomeDownloadMapping.withHeld(
                     said,
@@ -159,6 +163,8 @@ class PhoneDownloads(
                 agentStatus.decision.value.agent?.let { agent ->
                     val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value
                     if (answer == PhoneAgentInstallResult.Started) agents?.retried(agent)
+                    // Still short of room: the row says how much, again, instead of failing without a word.
+                    else agents?.noteShort(agent)
                 }
         }
     }

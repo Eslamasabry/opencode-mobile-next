@@ -186,6 +186,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsInstallNeedsSpace
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
@@ -1380,12 +1381,26 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 kind = KitStatusKind.Update,
                 id = "phone-download:${download.kind.name}",
                 message =
-                    stringResource(if (openCode) Res.string.phoneDownloadFailedOpenCode else Res.string.phoneDownloadFailedHelper),
+                    download.short?.let { short ->
+                        // The reason in plain words, with the amounts: Try again would fail again until room is freed.
+                        stringResource(
+                            Res.string.agentsInstallNeedsSpace,
+                            short.name,
+                            homeMegabytes(short.neededMb),
+                            homeMegabytes(short.freeMb),
+                        )
+                    }
+                        ?: stringResource(
+                            if (openCode) Res.string.phoneDownloadFailedOpenCode else Res.string.phoneDownloadFailedHelper
+                        ),
                 tone = StatusTone.Attention,
                 action = KitLineAction(stringResource(Res.string.commonRetry), actions::actOnDownload),
             )
     }
 }
+
+/** "764 MB" for a size said in megabytes (a no-break space keeps the unit with its number). */
+private fun homeMegabytes(mb: Int): String = "$mb\u00A0MB"
 
 /** The voice download's mobile-data ask (same KitConfirm structure): the size, Download now, Wait for Wi-Fi. */
 @Composable

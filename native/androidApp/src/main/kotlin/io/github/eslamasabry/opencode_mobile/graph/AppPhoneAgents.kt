@@ -1405,6 +1405,8 @@ class AppPhoneAgents(
      * Linux and takes no lane (the last read's rows say whether the shared parts are in place), so the review can say
      * it at once.
      */
+    internal fun nameOf(agent: AgentId): String? = catalog.byId(agent)?.name
+
     override suspend fun installSpace(id: String): PhoneAgentSpace? {
         val owner = ownerId() ?: return null
         val abi = architecture() ?: return null

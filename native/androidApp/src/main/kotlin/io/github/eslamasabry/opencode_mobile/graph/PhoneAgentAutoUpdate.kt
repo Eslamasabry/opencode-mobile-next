@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeShortSpace
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.install.AgentAutoUpdater
@@ -179,7 +180,10 @@ class PhoneAgentAutoUpdate(
                         }
                         is PhoneAgentInstallResult.Refused ->
                             (answer.issue != PhoneAgentInstallIssue.Busy).also { spent ->
-                                if (spent) endedUnstarted(agent)
+                                if (spent) {
+                                    if (answer.issue == PhoneAgentInstallIssue.Space) noteShort(agent)
+                                    endedUnstarted(agent)
+                                }
                             }
                     }
                 }
@@ -255,6 +259,7 @@ class PhoneAgentAutoUpdate(
                     if (reloadAfter.remove(agent)) reloadHelper() else restartOlderHelper()
                     phones.noteHelperInPlace()
                     phones.markUpdating(null)
+                    downloads.helperShort.value = null
                     updaterRef?.finished(agent)
                     return
                 }
@@ -287,6 +292,21 @@ class PhoneAgentAutoUpdate(
     }
 
     /**
+     * Says how much room [agent]'s install needs and how much the phone has (the same read the Agents page's review
+     * uses), so Home's failed row names the reason. Nothing old was touched: the check runs before the job starts.
+     */
+    internal suspend fun noteShort(agent: AgentId) {
+        val space = phones.installSpace(agent.raw)?.takeIf { it.short } ?: return
+        downloads.helperShort.value =
+            HomeShortSpace(
+                phones.nameOf(agent) ?: agent.raw,
+                ((space.neededBytes + 999_999L) / 1_000_000L).toInt(),
+                (space.freeBytes / 1_000_000L).toInt(),
+            )
+        updaterRef?.failed(agent)
+    }
+
+    /**
      * An install that never started (it failed to hand over, or was refused for a reason Try again cannot change) was
      * counted as started: no watcher follows it, so the wait it announced is ended here, a moment after the decision.
      */
@@ -302,6 +322,7 @@ class PhoneAgentAutoUpdate(
      * install's end exactly as the automatic try does, so a second failure ends the wait too.
      */
     fun retried(agent: AgentId) {
+        downloads.helperShort.value = null
         updaterRef?.restarted(agent)
         appScope.launch(dispatchers.io) { safely { finish(agent) } }
     }
