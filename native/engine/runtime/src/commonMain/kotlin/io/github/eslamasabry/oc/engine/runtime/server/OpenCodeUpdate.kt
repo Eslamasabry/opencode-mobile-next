@@ -132,6 +132,11 @@ public class OpenCodeAutoUpdater(
     /** The update job this updater started has ended and the installed version is still below the pin, for good. */
     public val fellShort: StateFlow<Boolean> get() = short.asStateFlow()
     private val short = MutableStateFlow(false)
+
+    /** A try ended below the pin and the next one is waiting for its time and an idle phone: Home says it is finishing. */
+    public val retrying: StateFlow<Boolean> get() = finishing.asStateFlow()
+    private val finishing = MutableStateFlow(false)
+    private var retryArmed = false
     private var awaiting: String? = null
     private var sawRunning = false
     private var awaitingSince = 0L
@@ -159,15 +164,21 @@ public class OpenCodeAutoUpdater(
         if (!belowPin()) {
             short.value = false
             shortfalls.remove(key)
-        } else if (!jobs.failed) {
+        } else {
+            // Below the pin, the job done or failed: a failure after the switch leaves the new program whole on disk
+            // while the old one still serves, and the next job (whose check finds the new one in place) only restarts
+            // the server. So it is tried again at the next idle look, spaced, a bounded number of times.
             val n = (shortfalls[key] ?: 0) + 1
             shortfalls[key] = n
             note("job ended but installed ${host.installedVersion} is below pin ${host.pinnedVersion} (try $n)")
             if (n < MAX_TRIES) {
                 attempted -= key
                 retryNotBefore = nowMs() + RETRY_SPACING_MS
+                retryArmed = true
+                finishing.value = true
             } else {
                 short.value = true
+                finishing.value = false
             }
         }
     }
@@ -182,7 +193,11 @@ public class OpenCodeAutoUpdater(
                 withTimeoutOrNull(READ_LIMIT) { host.refresh() }
                 if (!belowPin()) short.value = false
             }
-            if (nowMs() < retryNotBefore) return
+            if (nowMs() < retryNotBefore) {
+                // Waiting for the spacing: told like any hold (after a while), never as a failure.
+                track(if (workBusy()) OpenCodeHold.Busy else OpenCodeHold.NotReady)
+                return
+            }
             if (!decide(key, explain = true)) return
             withTimeoutOrNull(READ_LIMIT) { host.refresh() }
             if (!decide(key)) return
@@ -193,6 +208,8 @@ public class OpenCodeAutoUpdater(
                 sawRunning = false
                 awaitingSince = nowMs()
                 short.value = false
+                retryArmed = false
+                finishing.value = false
                 meteredAllowed = false
                 waiting.value = false
             } else note("refused before it started; will try again")
@@ -253,7 +270,8 @@ public class OpenCodeAutoUpdater(
         val busy = workBusy()
         val running = jobs.running
         val switchPending = host.switchPending
-        val problem = host.installProblem || jobs.failed
+        // A try that ended below the pin is tried again although its job failed: the retry is armed.
+        val problem = (host.installProblem || jobs.failed) && !retryArmed
         val tried = key in attempted
         val networkMetered = host.metered
         val metered = networkMetered && !meteredAllowed

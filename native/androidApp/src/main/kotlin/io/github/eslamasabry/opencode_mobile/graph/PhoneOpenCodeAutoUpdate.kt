@@ -118,6 +118,7 @@ class PhoneOpenCodeAutoUpdate(
         // Held a while for a busy or not-ready phone: Home says so in its one download line (never at once).
         appScope.launch { updater.held.collect { downloads.openCodeHeld.value = it } }
         appScope.launch { updater.fellShort.collect { downloads.openCodeShort.value = it } }
+        appScope.launch { updater.retrying.collect { downloads.openCodeRetrying.value = it } }
         val reads =
             openCodeAutoUpdateLooks(host, {
                 val now = runtime.readWorkIdle()

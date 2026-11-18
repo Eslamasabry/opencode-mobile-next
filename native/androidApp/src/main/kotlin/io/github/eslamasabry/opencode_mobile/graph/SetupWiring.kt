@@ -345,19 +345,36 @@ class BuiltinSetupFinisher(
                 false
             }
         }
-        if (request.openCodeChanged && running) {
+        // The new program may already be on disk, whole and proven, while the old one still serves (a job that could
+        // not restart the server for the reply that was running). That case is finished here too, at an idle moment.
+        if (running && !request.openCodeChanged) runtime.refreshServer()
+        val replace = request.openCodeChanged || (running && servesOlderThan(request.version))
+        if (replace && running) {
+            // Never under a running reply: the old one keeps serving, the new one is complete on disk, and the update
+            // finishes at the next idle look (OpenCode's updater reads the running version and tries again).
+            if (!runtime.mayUpdate()) {
+                AppLog.tagged("Setup").i { "the new OpenCode is on disk; the restart waits for an idle moment" }
+                return connections.connect(profile.id)
+            }
             // The old program still serves: stop it so the start below runs the new one. When it cannot be
             // stopped it keeps answering, and a start would report success for the OLD version: fail instead.
             val stopped = replaceRunningServer(dispatchers.io) { linux.stopServer() }
             if (stopped is Outcome.Failed) return stopped
         }
-        if (request.openCodeChanged || !running) {
+        if (replace || !running) {
             val started = runtime.startServer()
             if (started is Outcome.Failed) return started
         } else {
             runtime.refreshServer()
         }
         return connections.connect(profile.id)
+    }
+
+    /** The server that answers runs a version other than [version] (the one the job left on disk). */
+    private fun servesOlderThan(version: String?): Boolean {
+        val live = runtime.serverFacts.value.installedVersion?.trim()?.removePrefix("v")
+        val disk = version?.trim()?.removePrefix("v")
+        return !live.isNullOrEmpty() && !disk.isNullOrEmpty() && live != disk
     }
 
     /** Flutter `ensureBuiltinProfile`: the active (else first) OpenCode 2 profile at the phone's address, or a new one. */
