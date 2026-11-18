@@ -335,7 +335,7 @@ public class VoiceController(
                     return
                 }
                 is Outcome.Ok -> {
-                    recording.words += result.value.trim()
+                    recording.words += dropNonSpeechTags(result.value)
                     recording.partial = "" // confirmed words replace the partial ones
                     recording.chunksDone++
                     publishProgress(recording)
