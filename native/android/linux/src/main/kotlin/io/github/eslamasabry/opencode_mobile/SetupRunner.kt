@@ -261,7 +261,8 @@ class SetupRunner private constructor(private val context: Context) {
                     throw error
                 } catch (e: Throwable) {
                     // Agent process exceptions can include private home paths.
-                    Log.e(BuiltinLinux.TAG, "setup component failed: ${BuiltinLinux.failureShape(e)}")
+                    val shape = BuiltinLinux.failureShape(e)
+                    Log.e(BuiltinLinux.TAG, "setup component ${spec.id} failed: $shape")
                     if (NativeRuntimeOwnership.isUnknownFailure(e)) NativeRuntimeOwnership.UNKNOWN_CODE
                     else "The setup step could not finish. Try again."
                 }

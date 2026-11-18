@@ -3792,7 +3792,7 @@ class BuiltinLinux(private val context: Context) {
         while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(
             PROCESS_POLL_MS
         )
-        check(targets().isEmpty()) { "ownershipUnknown" }
+        if (targets().isNotEmpty()) throw OwnershipProofException("drainTimeout")
         try {
             // A normal app start may create new tracked helpers after the old Stop
             // snapshot. They are peers of this live drain, never cold writer exemptions.
@@ -7028,11 +7028,13 @@ exec gc supervisor run
                         it.className.startsWith("io.github.eslamasabry")
                     }
                 val fixed = current.message?.takeIf { it == "ownershipUnknown" }
+                val token = (current as? OwnershipProofException)?.token
                 val errno = (current as? ErrnoException)?.let { OsConstants.errnoName(it.errno) }
                 parts +=
                     listOfNotNull(
                             current.javaClass.simpleName,
                             fixed,
+                            token,
                             errno,
                             frame?.let { "${it.methodName}:${it.lineNumber}" },
                         )
