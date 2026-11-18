@@ -127,3 +127,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10101 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: new agent versions for the device proof: OpenCode 2.3.2, Claude Code 2.1.327, Codex 0.170.0, Antigravity 1.5.11, Paseo 0.16.1, Node v24.22.3 (pins-301-r2 613e54535a) + release-gates + dock Stop + PR 149 + plus-sheet-fix (source de136b17e8) |
 | 10102 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10101's agent versions + typing-keeps-words f5b8f678e3 (message box keeps fast-typed words) (source 59f8d5da2f) |
 | 10103 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10102's content + colour marks and follow-up + typing-sent-not-back + child-needs-you f642cb12cb (source 0bda61114d) |
+| 10104 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10103's content + opencode-hold-told, child-needs-you-2, update-path-unstuck, wait-marks-r2, install-switch-safe (source 26ada28b75) |
