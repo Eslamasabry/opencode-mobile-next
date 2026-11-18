@@ -105,6 +105,13 @@ class PhoneOpenCodeAutoUpdate(
                 jobs,
                 log = { log.i { it } },
                 nowMs = { SystemClock.elapsedRealtime() },
+                // A retry waiting for its time wakes itself: a delayed look, cancelled with the app's scope.
+                wake = { delayMs ->
+                    appScope.launch {
+                        kotlinx.coroutines.delay(delayMs)
+                        updaterRef?.changed()
+                    }
+                },
             ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
                 val reading = idle.get()

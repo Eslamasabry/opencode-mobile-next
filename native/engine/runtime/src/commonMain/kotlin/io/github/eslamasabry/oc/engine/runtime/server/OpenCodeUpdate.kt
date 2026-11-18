@@ -97,6 +97,11 @@ public class OpenCodeAutoUpdater(
     private val log: ((String) -> Unit)? = null,
     /** A monotonic clock in milliseconds; the default (no clock) never tells a hold. */
     private val nowMs: () -> Long = { 0L },
+    /**
+     * Asks for one more look [delayMs] from now (the binding runs a delayed, cancel-aware [changed]): a retry waiting
+     * for its time does not depend on some other state change to wake it.
+     */
+    private val wake: (delayMs: Long) -> Unit = {},
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
@@ -176,6 +181,7 @@ public class OpenCodeAutoUpdater(
             if (n < MAX_TRIES) {
                 attempted -= key
                 retryNotBefore = nowMs() + RETRY_SPACING_MS
+                wake(RETRY_SPACING_MS)
                 retryArmed = true
                 finishing.value = true
             } else {
@@ -196,8 +202,9 @@ public class OpenCodeAutoUpdater(
                 if (!belowPin()) short.value = false
             }
             if (nowMs() < retryNotBefore) {
-                // Waiting for the spacing: told like any hold (after a while), never as a failure.
-                track(if (workBusy()) OpenCodeHold.Busy else OpenCodeHold.NotReady)
+                // Waiting for its time: nothing is said (neither hold word is true of a phone that is up and idle), and
+                // never a failure; the wake at the deadline, or the next look, goes on from here.
+                track(null)
                 return
             }
             if (busyWaiting) {
@@ -224,6 +231,7 @@ public class OpenCodeAutoUpdater(
                 // the next look is after a backoff (30 s, doubling, at most 2 min), not at once.
                 busyStreak++
                 retryNotBefore = busyDeadline(nowMs(), busyStreak)
+                if (retryNotBefore > 0L) wake(retryNotBefore - nowMs())
                 if (!busyWaiting) note("refused before it started (busy); waiting, the try is kept")
                 busyWaiting = true
             }
@@ -241,7 +249,7 @@ public class OpenCodeAutoUpdater(
 
         /** Tries in all (the first included) before a job that ends below the pin is left to Try again. */
         internal const val MAX_TRIES: Int = 3
-        internal const val RETRY_SPACING_MS: Long = 600_000L
+        internal const val RETRY_SPACING_MS: Long = 90_000L
         internal const val START_GRACE_MS: Long = 60_000L
     }
 
