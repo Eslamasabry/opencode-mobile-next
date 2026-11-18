@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.dock.KitDockPlacement
 import io.github.eslamasabry.oc.ui.kit.dock.KitDockRing
 import io.github.eslamasabry.oc.ui.kit.dock.KitDockRingState
 import io.github.eslamasabry.oc.ui.kit.dock.KitDockSide
+import io.github.eslamasabry.oc.ui.kit.dock.running
 
 /** The request a ring's Allow and Deny are about: its own oldest, or that of the sub-agent that raised the ring. */
 public data class DockAsk(val ref: ConversationRef, val request: DockRequestRef)
@@ -120,6 +121,7 @@ public object DockKitMapper {
                     name = named(e.name),
                     markId = markOf(e.agent, e.serverMark),
                     state = state(e.state),
+                    stoppable = state(e.ownState).running,
                     pulse = e.pulse,
                     children = e.children.map(::child),
                     childOverflow = e.childOverflow,

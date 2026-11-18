@@ -1676,13 +1676,16 @@ public class PaseoGateway(
     override suspend fun stop(session: SessionId, resume: Boolean): Outcome<StopResult> = call {
         if (isReadOnlySession(session)) paseoFail(PaseoFailureKind.Unavailable)
         if (session.raw in drafts) return@call StopResult.NothingRunning
+        // The helper answers a cancel of an idle agent with success, so its answer cannot say whether anything ran:
+        // what the stream last said does (an idle parent whose sub-agent works is the case).
+        val idle = statuses[session.raw] == SessionStatus.Idle
         live[session.raw]?.stopAsked = true
         transport.request(
             "cancel_agent_request",
             jsonOf("agentId" to real(paseoString(session.raw, max = 256))),
             mutation = true,
         )
-        StopResult.Stopped
+        if (idle) StopResult.NothingRunning else StopResult.Stopped
     }
 
     /**

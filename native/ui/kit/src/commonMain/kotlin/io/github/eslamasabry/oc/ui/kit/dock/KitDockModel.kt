@@ -89,7 +89,16 @@ public data class KitDockRing(
     val peek: List<KitDockLine> = emptyList(),
     /** Pinned rings stay at the top in the person's order and do not leave when idle (the model's rule). */
     val pinned: Boolean = false,
-)
+    /**
+     * Whether the conversation's OWN turn runs: the only case Stop is offered for. [state] has its sub-agents rolled
+     * in, so an idle parent with a working child draws Working, but a Stop sent to that parent stops nothing.
+     */
+    val stoppable: Boolean = state.running,
+) {
+    /** The state the swell and the card choose their actions from: running only when the conversation itself runs. */
+    internal val actionState: KitDockRingState
+        get() = if (state.running && !stoppable) KitDockRingState.Idle else state
+}
 
 /** Which screen edge the dock sits on. Start and End follow the layout direction (End is the right in LTR). */
 public enum class KitDockSide { Start, End }

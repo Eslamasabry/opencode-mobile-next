@@ -177,6 +177,8 @@ public class ConnectionDelivery(
                     stoppedMemory?.add(ref) ?: stopped.update { it + ref }
                 }
 
+                override fun stoppedByPerson(ref: ConversationRef): Boolean = ref in stopped.value
+
                 override fun clearStoppedByPerson(ref: ConversationRef) {
                     stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
                     requestedStop.update { it - ref }
