@@ -54,6 +54,8 @@ public class ChatJourney(
     private val firstEver: FirstReplyOnce = FirstReplyOnce.Never,
     /** A turn that showed a reply has just ended without an error: the reply is complete (sent whatever the switches say). */
     private val onReplyDone: () -> Unit = {},
+    /** The server says no session of this app is busy any more (after a turn ended, or between two of its steps). */
+    private val onQuiet: () -> Unit = {},
 ) {
     private class Turn(val startMs: Long, val onPhone: Boolean, val traits: PromptTraits, val connection: String?) {
         val assistant = HashSet<String>()
@@ -227,7 +229,21 @@ public class ChatJourney(
         firstReply(t)
     }
 
+    /** Sessions the server last called busy, with when. Kept for the one-time consent question only; never sent. */
+    private val serverBusy = MutableStateFlow<Map<String, Long>>(emptyMap())
+
+    /**
+     * Some session is busy on the server's word right now. A turn that ended on an idle between two of its steps is
+     * gone from [turns], so [anyBusy] cannot see the next step; this can. An entry older than [BUSY_STALE_MS] is a
+     * missed idle and no longer counts.
+     */
+    public fun anyServerBusy(): Boolean {
+        val at = now()
+        return serverBusy.value.values.any { at - it < BUSY_STALE_MS }
+    }
+
     public fun busy(sessionId: String) {
+        serverBusy.update { it + (sessionId to now()) }
         turns.value[sessionId]?.let {
             it.busy = true
             it.lastActivityMs = now()
@@ -246,6 +262,12 @@ public class ChatJourney(
 
     /** The turn ended on the server's word: idle, or an error ([errorKind] a word of [HealthWords.turnErrorKinds]). */
     public fun ended(sessionId: String, errorKind: String? = null) {
+        serverBusy.update { it - sessionId }
+        endTurn(sessionId, errorKind)
+        if (!anyServerBusy()) onQuiet()
+    }
+
+    private fun endTurn(sessionId: String, errorKind: String?) {
         val t = turns.value[sessionId] ?: return
         if (!t.busy) return
         turns.update { it - sessionId }
@@ -421,6 +443,7 @@ public class ChatJourney(
     private fun serverKind(t: Turn): String = if (t.onPhone) "phone" else "computer"
 
     public companion object {
+        private const val BUSY_STALE_MS = 900_000L
         private const val MAX_TRACKED = 16
         private const val AFTER_FAIL_WINDOW_MS = 120_000L
 

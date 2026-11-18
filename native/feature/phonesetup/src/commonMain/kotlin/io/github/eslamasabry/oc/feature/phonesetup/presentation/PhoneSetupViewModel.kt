@@ -10,7 +10,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupEngine
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
-import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,9 +20,13 @@ import kotlinx.coroutines.flow.StateFlow
 public class RoutedPhoneSetupNavigator(private val nav: AppNavigator) : PhoneSetupNavigator {
     override fun back(): Unit = nav.back()
 
+    /**
+     * After "All set": Home with a new conversation on top, the whole setup (and the welcome pages under it)
+     * cleared, so the next step is the first conversation and Back lands on Home, never on onboarding again.
+     */
     override fun thisPhone() {
-        nav.back()
-        nav.open(PhoneRoute.ThisPhone)
+        nav.land()
+        nav.open(ChatsRoute.New(profile = null))
     }
 
     override fun connectComputer() {

@@ -269,6 +269,7 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             KitRow(
                 title = stringResource(Res.string.chatsNewPhoneStorage),
                 supporting = stringResource(if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff),
+                supportingMaxLines = PHONE_STORAGE_LINES,
                 leading = KitRowLeading.Glyph(KitIcons.folders),
                 trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
                 onClick = if (on) null else actions::requestPhoneStorage,

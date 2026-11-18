@@ -95,6 +95,9 @@ class AppTelemetryHealth(
 
     /** A reply finished arriving (set by the consent question, which waits for it). */
     @Volatile var onReplyFinished: (() -> Unit)? = null
+
+    /** The server says nothing of this app is busy any more: the owed consent question may try again. */
+    @Volatile var onQuiet: (() -> Unit)? = null
     private var health: HealthTelemetry? = null
     private val lifecycle by lazy { ProductLifecycle(telemetry, clock) }
 
@@ -163,7 +166,14 @@ class AppTelemetryHealth(
         val answers = TelemetryAnswers(stores.prefs, stores.lanes.app)
         val elapsed = { SystemClock.elapsedRealtime() }
         val wall = { clock.now().toEpochMilliseconds() }
-        val chat = ChatJourney(elapsed, HealthFlow(), PrefsFirstReply(answers, scope)) { onReplyFinished?.invoke() }
+        val chat =
+            ChatJourney(
+                elapsed,
+                HealthFlow(),
+                PrefsFirstReply(answers, scope),
+                onReplyDone = { onReplyFinished?.invoke() },
+                onQuiet = { onQuiet?.invoke() },
+            )
         val approvals = ApprovalMeter(elapsed, HealthFlow()) { AppJourneys.chatOrNull }
         val setup =
             SetupJourney(

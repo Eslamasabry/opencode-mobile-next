@@ -17,7 +17,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupPreflightResult
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
-import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -351,9 +351,10 @@ public class SetupJourneyViewModel(
         nav.back()
     }
 
+    /** After "All set": Home with a new conversation on top; Back never lands on onboarding again. */
     override fun done() {
-        nav.back()
-        nav.open(PhoneRoute.ThisPhone)
+        nav.land()
+        nav.open(ChatsRoute.New(profile = null))
     }
 
     override fun connectComputer() {

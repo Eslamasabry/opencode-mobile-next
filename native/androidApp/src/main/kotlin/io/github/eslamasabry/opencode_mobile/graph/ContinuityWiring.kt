@@ -73,6 +73,9 @@ import org.jetbrains.compose.resources.stringResource
  * - Privacy's "Offer crash reports" switch.
  */
 
+/** How long the consent question waits after a reply ends, to see that no next step of the same turn begins. */
+private const val SETTLE_MS = 3_000L
+
 /** What the consent question shows. */
 enum class ConsentAsk { Closed, Question, Choose }
 
@@ -113,14 +116,28 @@ class TelemetryContinuity(
         tryAsk()
     }
 
+    /** The server says nothing is busy: a question held back by a turn that went on tries again. */
+    suspend fun quiet() {
+        tryAsk()
+    }
+
     /** The screen is at rest (no keyboard up). The owed question waits for rest. */
     suspend fun rest(atRest: Boolean) {
         this.atRest = atRest
         tryAsk()
     }
 
+    private fun mayAsk(): Boolean =
+        owed && replied && atRest && asking.value == ConsentAsk.Closed &&
+            io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.chatOrNull?.anyServerBusy() != true
+
     private suspend fun tryAsk() {
-        if (!owed || !replied || !atRest || asking.value != ConsentAsk.Closed) return
+        if (!mayAsk()) return
+        // Never over a running turn: a server idle between two steps of one turn is followed by a busy within moments,
+        // so the question waits a little and asks again only if nothing went on. A turn that does go on asks again
+        // when it ends ([quiet]).
+        kotlinx.coroutines.delay(SETTLE_MS)
+        if (!mayAsk()) return
         owed = false
         // "Asked" is saved just before it shows, so Back, a swipe or the app closing count as an answer.
         if (answers.markConsentAsked() is Outcome.Ok) asking.value = ConsentAsk.Question
@@ -209,6 +226,7 @@ class AppTelemetryContinuity(
         if (started) return
         started = true
         health.onReplyFinished = { scope.launch { runtime.replyFinished() } }
+        health.onQuiet = { scope.launch { runtime.quiet() } }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             // Carried over once and applied before the question is decided, so an old answer is never asked again.

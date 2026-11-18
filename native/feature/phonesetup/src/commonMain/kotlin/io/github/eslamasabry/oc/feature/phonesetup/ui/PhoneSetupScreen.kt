@@ -89,7 +89,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartChecking
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartGigabytes
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartHeadline
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartMegabytes
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartOpen
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartPromise
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartPromiseNoSize
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartReadyBody
@@ -285,7 +285,7 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
             )
             // B-109: the screen's one next step is the kit's action block (full width on a phone, at the end from
             // medium up), never a narrow button left at the start edge.
-            KitActionBlock(primary = KitAction(stringResource(Res.string.phoneSetupStartOpen), actions::done))
+            KitActionBlock(primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::done))
         }
         SetupState.Failed,
         SetupState.Interrupted,

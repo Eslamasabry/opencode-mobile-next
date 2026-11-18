@@ -332,12 +332,15 @@ private class TipPosition(
         val x =
             (if (nearStart) anchorBounds.left else anchorBounds.right - popupContentSize.width)
                 .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+        // Below a part kept clear there may be no room (a message box at the foot of the window, the gesture area under
+        // it): clamped into the window the tip would lie back over that part, so it stands above it instead.
+        val noRoomBelow = around != null && bottom + gap + popupContentSize.height > windowSize.height
         val y =
             // Inside a tall anchor only when no part is to be kept clear: then it stands outside that part.
             when {
                 around == null && TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat()) ->
                     anchorBounds.top + gap
-                above -> top - gap - popupContentSize.height
+                above || noRoomBelow -> top - gap - popupContentSize.height
                 else -> bottom + gap
             }.coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
         return IntOffset(x, y)
