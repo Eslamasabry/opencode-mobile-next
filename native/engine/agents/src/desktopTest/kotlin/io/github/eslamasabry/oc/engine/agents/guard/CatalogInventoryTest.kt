@@ -100,7 +100,7 @@ class CatalogInventoryTest {
             number("installedBytes", 280536544, 287484080),
         ),
         // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
-        // 2.1.327, Codex 0.170.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
+        // 2.1.327, Codex 0.170.0, Antigravity 1.5.11, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
         // same agents' pins literally. Gemini CLI and Cline did not move.
         "claude" to listOf(
@@ -129,15 +129,15 @@ class CatalogInventoryTest {
             text("codex-x86_64-unknown-linux-musl", "bin/codex"),
         ),
         "antigravity" to listOf(
-            text("1.5.3", "1.5.9"),
-            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/cli_linux_arm64.tar.gz"),
-            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca"),
-            number("downloadBytes", 69843447, 90318517),
-            number("installedBytes", 235622776, 249582256),
-            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/cli_linux_x64.tar.gz"),
-            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa"),
-            number("downloadBytes", 73694700, 99166075),
-            number("installedBytes", 246837648, 265700040),
+            text("1.5.3", "1.5.11"),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.11-6132547114106880/linux-arm/cli_linux_arm64.tar.gz"),
+            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "de4fea15f83f40685cb30374b58337318d58340efcc8779a2eb1461b620b69f4"),
+            number("downloadBytes", 69843447, 91203180),
+            number("installedBytes", 235622776, 252531376),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.11-6132547114106880/linux-x64/cli_linux_x64.tar.gz"),
+            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "df652c98fdf519a87c017b4e1d92f3fdb66c344de16e5e685c596637bbd28334"),
+            number("downloadBytes", 73694700, 100130747),
+            number("installedBytes", 246837648, 268841672),
         ),
         "qwen" to listOf(
             text("0.26.4", "0.27.3"),
