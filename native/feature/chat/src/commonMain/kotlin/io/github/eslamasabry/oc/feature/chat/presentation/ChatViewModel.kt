@@ -68,6 +68,7 @@ public class ChatViewModel(
 
     public val serverCapabilities = world.capabilities
     public val requests = world.requests
+    public val childNeeds = world.childNeedsYou
 
     /** Issue 147: this conversation's folder in phone storage when its agent cannot reach it now (else null). */
     public val phoneFolder: StateFlow<io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder?> = world.phoneFolder
