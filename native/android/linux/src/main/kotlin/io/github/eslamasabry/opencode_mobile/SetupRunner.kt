@@ -347,7 +347,8 @@ class SetupRunner private constructor(private val context: Context) {
         }
     }
 
-    private fun componentStates(job: SetupJobState): String = job.components.joinToString(" ") { "${it.id}=${it.state}" }
+    private fun componentStates(job: SetupJobState): String =
+        job.components.joinToString(" ") { "${it.id}=${it.state}" }
 
     private fun runNative(spec: Spec, component: SetupComponentStatus): String? {
         if (spec.id != "linux") return "Unknown native component ${spec.id}"

@@ -640,11 +640,9 @@ class NativePhoneSetup(
     val updateJob = io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJob()
 
     suspend fun update(): Outcome<Unit> {
-        if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
-        // An agents' install already runs (the one installer slot is theirs): this ask would collide with it.
-        if ((native { runner.running } as? Outcome.Ok)?.value != false) {
-            return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
-        }
+        // Work running, or an agents' install already runs (the one installer slot is theirs): say busy.
+        val agentsRunning = (native { runner.running } as? Outcome.Ok)?.value != false
+        if (!runtime.mayUpdate() || agentsRunning) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         updateJob.starting(shown.value.jobId)
         var joined = false
         try {
