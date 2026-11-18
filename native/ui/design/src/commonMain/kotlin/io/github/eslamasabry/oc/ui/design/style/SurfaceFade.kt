@@ -55,6 +55,8 @@ public object SurfaceFade {
             sheen = c(a.sheen, b.sheen) ?: Argb(0),
             specular = c(a.specular, b.specular) ?: Argb(0),
             glint = d(a.glint, b.glint),
+            fillEnd = c(a.fillEnd, b.fillEnd),
+            topLight = c(a.topLight, b.topLight) ?: Argb(0),
         )
     }
 

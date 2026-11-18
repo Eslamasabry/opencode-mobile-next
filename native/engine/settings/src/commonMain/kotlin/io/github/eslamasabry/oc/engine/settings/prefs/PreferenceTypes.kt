@@ -66,7 +66,7 @@ public enum class LiveIntensity(override val wire: String) : WireNamed {
  * retired `crystal` and any unknown name read as [Solid].
  */
 public enum class SurfaceStyle(override val wire: String) : WireNamed {
-    Solid("solid"), Glass("glass"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal"),
+    Solid("solid"), Glass("glass"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal"), SolidGlass("solidglass"),
 }
 
 public enum class Corners(override val wire: String) : WireNamed { Round("round"), Soft("soft"), Sharp("sharp") }

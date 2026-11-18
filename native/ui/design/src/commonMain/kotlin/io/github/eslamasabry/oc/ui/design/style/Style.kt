@@ -6,7 +6,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.Density
  * The six visual styles (Dart `KitSurfaceStyle`; B-KIT-037), in picker order: Solid, Glass (restored from GLASS_REF
  * `1bbdc3f9c`), Soft, Brutal, Paper, Signal. Crystal is retired and Clay was dropped.
  */
-public enum class Style(public val storageName: String) { Solid("solid"), Glass("glass"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal") }
+public enum class Style(public val storageName: String) { Solid("solid"), Glass("glass"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal"),
+    /** Appended last on purpose: the picker order of the six older styles must not move (design draft). */
+    SolidGlass("solidglass") }
+
+/** Solid and Solid glass draw the part's own face (the branches that used to ask "is it Solid"). */
+public val Style.drawsOwnFace: Boolean get() = this == Style.Solid || this == Style.SolidGlass
 
 public enum class Corners { Round, Soft, Sharp }
 
@@ -142,6 +147,11 @@ public data class StyleTokens(
      * square boxes beside rounded ones). Brutal and Paper; Solid, Soft, Glass and Signal keep those parts' own looks.
      */
     val dressesOwnLooks: Boolean = false,
+    /**
+     * Whether the style dresses the face a part already draws under Solid: the part's own fill (`KitSurfaceInput.ownFill`)
+     * is what the style finishes (Solid glass), so every fill is Solid's own and only the finish is the style's.
+     */
+    val keepsOwnFills: Boolean = false,
 ) {
     public val fieldHaloShown: Boolean get() = fieldHalo ?: glow.halo
 }

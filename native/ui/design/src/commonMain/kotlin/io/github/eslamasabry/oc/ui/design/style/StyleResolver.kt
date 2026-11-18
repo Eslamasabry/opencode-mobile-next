@@ -8,6 +8,7 @@ public object StyleResolver {
     public fun spec(style: Style): StyleSpec =
         when (style) {
             Style.Solid -> SolidSpec
+            Style.SolidGlass -> SolidGlassSpec
             Style.Glass -> GlassSpec
             Style.Soft -> SoftSpec
             Style.Brutal -> BrutalSpec

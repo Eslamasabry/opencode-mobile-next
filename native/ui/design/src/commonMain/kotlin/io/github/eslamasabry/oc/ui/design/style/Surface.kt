@@ -45,6 +45,8 @@ public data class SurfaceRequest(
     val nested: Boolean = false,
     /** The glass look's numbers (Glass only): its clear panes' blur, sheen, lit corner, specular and glint. */
     val look: GlassLook = GlassLook.Default,
+    /** The part draws its own face and asked the style to dress it (`kitDressedLook`): a style with no own-fill rule fills it by [level]. */
+    val dressed: Boolean = false,
 ) {
     public val levelFill: Argb
         get() = when (level) {
@@ -106,6 +108,10 @@ public data class SurfaceDecoration(
      * rim fades straight from [edgeStart] to [edgeEnd].
      */
     val edgeRest: Argb? = null,
+    /** Solid glass: the face's colour at its bottom edge; the face runs from [fill] at the top to this (a very slight thickness). Null: flat. */
+    val fillEnd: Argb? = null,
+    /** Solid glass: one thin line of light just inside the top edge, fading down the sides. Transparent draws none. */
+    val topLight: Argb = Argb(0),
 ) {
     public companion object {
         /** The most the [sheen] reaches down a face, in dp: a tall pane keeps its gloss at its top, not over its rows. */
