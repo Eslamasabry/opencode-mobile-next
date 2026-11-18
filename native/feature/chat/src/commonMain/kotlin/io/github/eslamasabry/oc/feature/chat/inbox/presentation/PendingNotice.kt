@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.inbox.presentation
 
+import io.github.eslamasabry.oc.core.model.InboxDelivery
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 
@@ -12,6 +13,10 @@ public object PendingNotice {
     public fun unsaid(rows: List<ChatInboxRow>, bubbles: List<PendingSend>): List<ChatInboxRow> {
         val said =
             bubbles.filter { it.state == PendingState.Unconfirmed }.mapTo(HashSet()) { it.text.trim() }
-        return rows.filterNot { it.local && (it.dispatched || it.text.trim() in said) }
+        // A steer the server already holds is sent: it is in the transcript and the server joins it to the running
+        // reply by itself, so it is not "waiting to send" (the line would stand next to the message it counts).
+        return rows.filterNot {
+            (it.local && (it.dispatched || it.text.trim() in said)) || (!it.local && it.delivery == InboxDelivery.Steer)
+        }
     }
 }
