@@ -15,6 +15,8 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentSpace
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeShortSpace
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.install.AgentAutoUpdater
@@ -22,6 +24,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecord
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecorded
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateJobs
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
@@ -163,7 +166,9 @@ class PhoneAgentAutoUpdate(
                 // Refused because the phone is busy: the try is not spent. Any other refusal (no room, not
                 // installable here) is left to the manual install, which says why.
                 override suspend fun update(agent: AgentId): Boolean {
-                    val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value ?: return true
+                    val answer =
+                        (phones.install(agent.raw) as? Outcome.Ok)?.value
+                            ?: return true.also { afterTry(agent, started = false, short = false) }
                     return when (answer) {
                         PhoneAgentInstallResult.Started -> {
                             log.i { "update started" }
@@ -176,7 +181,12 @@ class PhoneAgentAutoUpdate(
                             true
                         }
                         is PhoneAgentInstallResult.Refused ->
-                            answer.issue != PhoneAgentInstallIssue.Busy
+                            (answer.issue != PhoneAgentInstallIssue.Busy).also { spent ->
+                                if (spent) {
+                                    val space = answer.issue == PhoneAgentInstallIssue.Space
+                                    afterTry(agent, started = false, short = space)
+                                }
+                            }
                     }
                 }
             }
@@ -251,17 +261,65 @@ class PhoneAgentAutoUpdate(
                     if (reloadAfter.remove(agent)) reloadHelper() else restartOlderHelper()
                     phones.noteHelperInPlace()
                     phones.markUpdating(null)
+                    downloads.helperShort.value = null
                     updaterRef?.finished(agent)
                     return
                 }
-                // No record of it (yet or any more): the mark stays, so the next run checks it again.
+                // No record of it (yet or any more). A job that still runs is waited for; one that ended Failed
+                // without a record did not finish: the wait is over, never an "Updating" for ever.
                 null -> {
-                    restartOlderHelper()
-                    return
+                    when (setup.progress.value.state) {
+                        SetupState.Running -> Unit
+                        SetupState.Failed -> {
+                            log.i { "update ended without finishing" }
+                            updaterRef?.settle(agent, AgentUpdateStep.Failed)
+                            return
+                        }
+                        else -> {
+                            restartOlderHelper()
+                            return
+                        }
+                    }
                 }
                 PhoneAgentInstallPhase.Failed,
-                PhoneAgentInstallPhase.Interrupted -> return
+                PhoneAgentInstallPhase.Interrupted -> {
+                    updaterRef?.settle(agent, AgentUpdateStep.Failed)
+                    return
+                }
             }
+        }
+        // Past the bound (a quarter hour): the wait ends as a failure the person can try again.
+        log.i { "update ran past its bound" }
+        updaterRef?.settle(agent, AgentUpdateStep.Failed)
+    }
+
+    /**
+     * The end of an install the person's Try again or the automatic try handed over. [started]: it runs, so the
+     * decision says Updating again and a watcher follows it to its end. Otherwise (a failed hand-over, or a refusal
+     * Try again cannot change; [short] when it was for want of room) no watcher exists, so the wait it announced is
+     * ended here as Failed a moment after the decision, and Home's row says how much room is missing (the check runs
+     * before the job starts, so nothing old was touched).
+     */
+    internal fun afterTry(agent: AgentId, started: Boolean, short: Boolean) {
+        if (started) {
+            downloads.helperShort.value = null
+            updaterRef?.settle(agent, AgentUpdateStep.Updating)
+            appScope.launch(dispatchers.io) { safely { finish(agent) } }
+            return
+        }
+        appScope.launch(dispatchers.io) {
+            var room: PhoneAgentSpace? = null
+            if (short) safely { room = phones.installSpace(agent.raw)?.takeIf { it.short } }
+            downloads.helperShort.value =
+                room?.let {
+                    HomeShortSpace(
+                        phones.nameOf(agent) ?: agent.raw,
+                        ((it.neededBytes + MB - 1) / MB).toInt(),
+                        (it.freeBytes / MB).toInt(),
+                    )
+                }
+            delay(UNSTARTED_GRACE.seconds)
+            updaterRef?.settle(agent, AgentUpdateStep.Failed)
         }
     }
 
@@ -336,6 +394,8 @@ class PhoneAgentAutoUpdate(
         const val BUSY_BOUND_MS = 2L * 60 * 60 * 1000
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
+        const val UNSTARTED_GRACE = 2L
+        const val MB = 1_000_000L
         const val WAIT_STEPS = 180
         const val RELOAD_EVERY = 15L
         const val RELOAD_TRIES = 480

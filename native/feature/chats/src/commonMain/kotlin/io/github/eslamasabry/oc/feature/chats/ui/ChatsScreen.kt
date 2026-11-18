@@ -186,6 +186,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsInstallNeedsSpace
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
@@ -1379,13 +1380,32 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
             KitStatus(
                 kind = KitStatusKind.Update,
                 id = "phone-download:${download.kind.name}",
-                message =
-                    stringResource(if (openCode) Res.string.phoneDownloadFailedOpenCode else Res.string.phoneDownloadFailedHelper),
+                message = homeFailedWords(download),
                 tone = StatusTone.Attention,
                 action = KitLineAction(stringResource(Res.string.commonRetry), actions::actOnDownload),
             )
     }
 }
+
+/** Why a download stopped, in plain words: for want of room it says how much; otherwise the plain failure. */
+@Composable
+private fun homeFailedWords(download: HomeDownloadFact): String {
+    val short = download.short
+    return when {
+        short != null ->
+            stringResource(
+                Res.string.agentsInstallNeedsSpace,
+                short.name,
+                homeMegabytes(short.neededMb),
+                homeMegabytes(short.freeMb),
+            )
+        download.kind == HomeDownloadKind.OpenCode -> stringResource(Res.string.phoneDownloadFailedOpenCode)
+        else -> stringResource(Res.string.phoneDownloadFailedHelper)
+    }
+}
+
+/** "764 MB" for a size said in megabytes (a no-break space keeps the unit with its number). */
+private fun homeMegabytes(mb: Int): String = "$mb\u00A0MB"
 
 /** The voice download's mobile-data ask (same KitConfirm structure): the size, Download now, Wait for Wi-Fi. */
 @Composable

@@ -42,7 +42,12 @@ public data class HomeDownloadFact(
     val kind: HomeDownloadKind,
     val phase: HomeDownloadPhase,
     val megabytes: Int = HomeDownloadSizes.of(kind),
+    /** A failed download that stopped for want of room: what it needs and what the phone has. */
+    val short: HomeShortSpace? = null,
 )
+
+/** The room a stopped download needs and the room the phone has, in megabytes, with the agent's own name. */
+public data class HomeShortSpace(val name: String, val neededMb: Int, val freeMb: Int)
 
 /**
  * The sizes the line and the ask say, in one place. They are measured, not read from a release manifest: on the
@@ -98,7 +103,7 @@ public object HomeDownloadRules {
 }
 
 /** What the agents' automatic update is doing, as far as Home cares. */
-public enum class HomeHelperStep { None, Waiting, Updating }
+public enum class HomeHelperStep { None, Waiting, Updating, Failed }
 
 /** The agents' install job, as far as Home cares. */
 public enum class HomeInstallPhase { None, Installing, Failed }
@@ -134,14 +139,20 @@ public object HomeDownloadMapping {
         when (helper) {
             HomeHelperStep.None -> Unit
             HomeHelperStep.Waiting -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))
-            HomeHelperStep.Updating ->
+            HomeHelperStep.Updating,
+            HomeHelperStep.Failed ->
                 add(
                     HomeDownloadFact(
                         HomeDownloadKind.Helper,
                         when (helperInstall) {
                             HomeInstallPhase.Failed -> HomeDownloadPhase.Failed
                             HomeInstallPhase.Installing -> HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100))
-                            HomeInstallPhase.None -> HomeDownloadPhase.Running(null)
+                            HomeInstallPhase.None ->
+                                if (helper == HomeHelperStep.Failed) {
+                                    HomeDownloadPhase.Failed
+                                } else {
+                                    HomeDownloadPhase.Running(null)
+                                }
                         },
                     )
                 )

@@ -241,7 +241,8 @@ class AppPhoneAgents(
                 AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
                 AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
                 AgentUpdateStep.Updated -> PhoneAgentUpdateNote.Updated
-                AgentUpdateStep.Refused -> PhoneAgentUpdateNote.Refused
+                AgentUpdateStep.Refused,
+                AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
             }
         updateNote = note to name
         mutable.update { it.copy(updateNote = note, updateAgentName = name) }
@@ -1404,6 +1405,8 @@ class AppPhoneAgents(
      * Linux and takes no lane (the last read's rows say whether the shared parts are in place), so the review can say
      * it at once.
      */
+    internal fun nameOf(agent: AgentId): String? = catalog.byId(agent)?.name
+
     override suspend fun installSpace(id: String): PhoneAgentSpace? {
         val owner = ownerId() ?: return null
         val abi = architecture() ?: return null

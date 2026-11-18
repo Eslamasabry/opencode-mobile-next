@@ -141,6 +141,12 @@ public enum class AgentUpdateStep {
 
     /** The install was refused (no room, not installable here): the manual Install says why. */
     Refused,
+
+    /**
+     * The install of [AgentUpdateDecision.agent] was started and ended without finishing (or ran past its bound): the
+     * wait for it is over and Home says so with Try again. Kept until the next decision.
+     */
+    Failed,
 }
 
 public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: AgentId? = null) {
@@ -158,6 +164,7 @@ public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: Agen
             AgentUpdateStep.Updating -> "agent update: started ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Updated -> "agent update: finished ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Refused -> "agent update: install refused for ${agent?.raw ?: "an agent"}"
+            AgentUpdateStep.Failed -> "agent update: did not finish for ${agent?.raw ?: "an agent"}"
         }
 }
 
@@ -239,6 +246,15 @@ public class AgentAutoUpdater(
         publish(AgentUpdateDecision(AgentUpdateStep.Updated, agent))
     }
 
+    /**
+     * The install of [agent] moved to [step] outside the updater's own looks: [AgentUpdateStep.Failed] when it ended
+     * without finishing, ran past its bound or never started (the "Updating" wait ends here, never on its own luck;
+     * kept until the next try), [AgentUpdateStep.Updating] when the person's Try again started it again.
+     */
+    public fun settle(agent: AgentId, step: AgentUpdateStep) {
+        publish(AgentUpdateDecision(step, agent))
+    }
+
     private fun hold(step: AgentUpdateStep) {
         note("a read of the installed agents is due; waiting: $step")
         publish(AgentUpdateDecision(step))
@@ -305,6 +321,7 @@ public class AgentAutoUpdater(
                     when {
                         state.value.step == AgentUpdateStep.Updating && running -> return
                         state.value.step == AgentUpdateStep.Updated -> return
+                        state.value.step == AgentUpdateStep.Failed -> return
                         else -> AgentUpdateStep.NothingBehind
                     }
                 running -> AgentUpdateStep.WaitingSetup
