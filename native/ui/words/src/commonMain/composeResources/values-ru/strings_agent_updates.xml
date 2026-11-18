@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentUpdatesTitle">Обновления для ваших агентов</string>
+    <string name="agentUpdatesReady">Готовы обновления агентов</string>
+    <string name="agentUpdatesChoiceUpdate">Обновить</string>
+    <string name="agentUpdatesChoiceKeep">Оставить</string>
+    <string name="agentUpdatesChoiceRemove">Удалить</string>
+    <string name="agentUpdatesChoiceLabel">Что сделать с %1$s</string>
+    <string name="agentUpdatesVersions">Версия %1$s → %2$s</string>
+    <string name="agentUpdatesVersionNew">Новая версия %1$s</string>
+    <string name="agentUpdatesDownloads">Скачается около %1$s</string>
+    <string name="agentUpdatesDownloadsUnknown">Размер загрузки неизвестен</string>
+    <string name="agentUpdatesStays">Останется на %1$s</string>
+    <string name="agentUpdatesStaysUnknown">Останется на текущей версии</string>
+    <string name="agentUpdatesFrees">Освободит около %1$s</string>
+    <string name="agentUpdatesFreesUnknown">Освободит занятое место</string>
+    <string name="agentUpdatesKeepHelperTooNew">Эта версия не работает с новым помощником агента, поэтому её нельзя оставить.</string>
+    <string name="agentUpdatesKeepNotSupported">Эта версия больше не поддерживается, поэтому её нельзя оставить.</string>
+    <string name="agentUpdatesNeededLabel">Нужно для этих обновлений</string>
+    <string name="agentUpdatesNeededWhy">Они нужны агентам, которые вы обновляете.</string>
+    <string name="agentUpdatesNeededAlways">Они нужны агентам, чтобы продолжать работать.</string>
+    <string name="agentUpdatesTotalDownload">Загрузка</string>
+    <string name="agentUpdatesTotalFrees">Освободится</string>
+    <string name="agentUpdatesAbout">Около %1$s</string>
+    <string name="agentUpdatesAtLeast">Не меньше %1$s</string>
+    <string name="agentUpdatesShortSpace">Для этих обновлений нужно около %1$s, а на этом телефоне свободно %2$s. Оставьте или удалите агента либо освободите место.</string>
+    <string name="agentUpdatesMetered">Вы на мобильных данных. Обновления скачаются через них.</string>
+    <string name="agentUpdatesNetworkUnknown">Эта сеть может расходовать мобильные данные. Обновления скачаются через неё.</string>
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="one">Обновить %1$d</item>
+        <item quantity="few">Обновить %1$d</item>
+        <item quantity="many">Обновить %1$d</item>
+        <item quantity="other">Обновить %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="one">Удалить %1$d</item>
+        <item quantity="few">Удалить %1$d</item>
+        <item quantity="many">Удалить %1$d</item>
+        <item quantity="other">Удалить %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="one">Обновить %1$d и удалить %2$d</item>
+        <item quantity="few">Обновить %1$d и удалить %2$d</item>
+        <item quantity="many">Обновить %1$d и удалить %2$d</item>
+        <item quantity="other">Обновить %1$d и удалить %2$d</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">Оставить эти версии</string>
+    <string name="agentUpdatesAgentsLine">Этот агент больше не нужен?</string>
+    <string name="agentUpdatesAgentsAction">Удалите агента в разделе «Агенты»</string>
+    <string name="agentUpdatesLinuxLine">Git и Python берутся из Ubuntu.</string>
+    <string name="agentUpdatesLinuxAction">Обновите их в Linux › Пакеты</string>
+    <string name="agentUpdatesFailed">Обновления не запустились.</string>
+    <string name="agentUpdatesNotRemoved">Не удалось удалить %1$s.</string>
+</resources>
