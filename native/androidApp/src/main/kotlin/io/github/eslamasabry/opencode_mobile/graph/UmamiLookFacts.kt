@@ -12,8 +12,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
- * Keeps the style and theme words for our own analytics server up to date while the app runs: the app's own six
- * styles and four theme settings, as fixed words (never the colours, never a person's choice of anything else). The
+ * Keeps the style word for our own analytics server up to date while the app runs: the app's own six styles, as a fixed word (never the colours, never a person's choice of anything else). The
  * words only wait in memory; nothing leaves the phone unless the usage-reports switch is on.
  */
 @SingleIn(AppScope::class)
@@ -30,12 +29,9 @@ class UmamiLookFacts(
         started = true
         appScope.launch {
             preferences.value.appearance
-                .map { it.style.storageName to it.mode.name.lowercase() }
+                .map { it.style.storageName }
                 .distinctUntilChanged()
-                .collect { (style, mode) ->
-                    UmamiFacts.put(UmamiField.Style, style)
-                    UmamiFacts.put(UmamiField.ThemeMode, mode)
-                }
+                .collect { style -> UmamiFacts.put(UmamiField.Style, style) }
         }
     }
 }

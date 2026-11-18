@@ -3,7 +3,6 @@ package io.github.eslamasabry.opencode_mobile.telemetry
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
-import android.os.PowerManager
 import android.os.StatFs
 import io.github.eslamasabry.oc.engine.analytics.health.HealthDeviceContext
 import io.github.eslamasabry.oc.engine.analytics.health.HealthRanges
@@ -12,9 +11,9 @@ import io.github.eslamasabry.opencode_mobile.BuildConfig
 
 /**
  * What the phone itself tells our own analytics server, as fixed words only: the release channel, the window width
- * class, the text-size step, the processor family, ranges for memory and free storage, battery saver and how long the
- * app has been installed. Never a model, maker, id, exact size, time zone or place. Every word is checked against
- * [UmamiField] again before it can join an event, and the request body guard checks it a third time.
+ * class, the text-size step, the processor family, and ranges for memory and free storage. Never a model, maker, id,
+ * exact size, time zone or place. Every word is checked against [UmamiField] again before it can join an event, and the
+ * request body guard checks it a third time.
  *
  * Read only when an event is about to be queued with usage on (the sender asks for the device then), and kept for a
  * minute so a burst of events reads the phone once.
@@ -58,15 +57,6 @@ internal class UmamiPhoneFacts(private val app: Context, private val now: () -> 
                     val gb = free.toDouble() / HealthDeviceContext.GB
                     put(UmamiField.FreeStorageRange.wire, HealthRanges.storageOf(gb))
                 }
-            }
-            runCatching {
-                val saver = app.getSystemService(PowerManager::class.java)?.isPowerSaveMode
-                if (saver != null) put(UmamiField.BatterySaver.wire, if (saver) "yes" else "no")
-            }
-            runCatching {
-                @Suppress("DEPRECATION")
-                val first = app.packageManager.getPackageInfo(app.packageName, 0).firstInstallTime
-                if (first > 0) put(UmamiField.InstallAge.wire, UmamiField.installAgeOf(at - first))
             }
         }
         cached = fresh

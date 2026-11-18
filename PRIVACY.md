@@ -199,9 +199,8 @@ app and the phone, nothing else: the Android main version number (for example 16
 (`device_class`) and the build number. Besides those: `version` and `build`; `channel` (public or test build);
 `width_class` (compact, medium or expanded); `text_scale` (smaller, default, larger or largest); `abi` (arm64, arm32,
 x86_64 or other); `ram_range` and `free_storage_range` (the same ranges as the Google user properties);
-`style` (solid, glass, soft, brutal, paper or signal); `theme_mode` (system, light, dark or saver); `battery_saver`
-(yes or no); `install_age` (under 1 day, 1 to 7 days, 7 to 30 days, over 30 days); `agents` (which of codex, opencode and
-paseo servers are connected, product names only); and `connection_kind` (phone, computer, remote, or a mix, or none; never
+`style` (solid, glass, soft, brutal, paper or signal); `agents` (which of codex, opencode and paseo servers are
+connected, product names only); and `connection_kind` (phone, computer, remote, or a mix, or none; never
 an address). The same list is what "What we collect" shows under "Only to our own server". Before a request leaves the
 phone, the app checks its real body against this list and drops any key or value not on it (logging only the key's name).
 Taken together, these can tell one phone’s reports from another’s. They never say who you are, and the app sends no name, account or ID with them.

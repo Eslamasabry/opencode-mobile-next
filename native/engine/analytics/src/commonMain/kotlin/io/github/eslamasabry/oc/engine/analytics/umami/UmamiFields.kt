@@ -21,10 +21,10 @@ public enum class UmamiFieldGroup {
     /** The phone's kind and ranges. */
     Phone,
 
-    /** How the app looks and runs: style, theme, battery saver. */
+    /** How the app looks: the style. */
     Look,
 
-    /** How the app is used: how long installed, which agents, which kind of connection. */
+    /** How the app is used: which agents, which kind of connection. */
     Use,
 }
 
@@ -66,14 +66,6 @@ public enum class UmamiField(
     /** The chosen style (`Style.storageName`). */
     Style("style", UmamiFieldGroup.Look, words = setOf("solid", "glass", "soft", "brutal", "paper", "signal")),
 
-    /** The chosen theme mode (the setting, not the colours). */
-    ThemeMode("theme_mode", UmamiFieldGroup.Look, words = setOf("system", "light", "dark", "saver")),
-
-    BatterySaver("battery_saver", UmamiFieldGroup.Look, words = HealthWords.yesNo),
-
-    /** How long ago the app was first installed, in four steps; see [installAgeOf]. */
-    InstallAge("install_age", UmamiFieldGroup.Use, words = installAgeWords),
-
     /** The kinds of agent server connected now: product names only, joined with `+`, or `none`. */
     Agents("agents", UmamiFieldGroup.Use, words = combinations(agentNames) + "none"),
 
@@ -95,8 +87,6 @@ public enum class UmamiField(
         private const val SMALLER_BELOW = 0.95f
         private const val DEFAULT_UP_TO = 1.05f
         private const val LARGER_UP_TO = 1.3f
-        private const val WEEK_DAYS = 7
-        private const val MONTH_DAYS = 30
 
         public fun ofWire(wire: String): UmamiField? = entries.firstOrNull { it.wire == wire }
 
@@ -123,26 +113,11 @@ public enum class UmamiField(
                 else -> "largest"
             }
 
-        public fun installAgeOf(elapsedMs: Long): String {
-            val days = elapsedMs.coerceAtLeast(0) / DAY_MS
-            return when {
-                days < 1 -> installAgeSteps[0]
-                days < WEEK_DAYS -> installAgeSteps[1]
-                days < MONTH_DAYS -> installAgeSteps[2]
-                else -> installAgeSteps.last()
-            }
-        }
-
         /** [names] sorted and joined with `+`, or `none` when empty. */
         public fun joined(names: Set<String>): String = names.sorted().joinToString("+").ifEmpty { "none" }
     }
 }
 
-private const val DAY_MS: Long = 86_400_000L
-
-private val installAgeSteps: List<String> = listOf("under_1_day", "1_to_7_days", "7_to_30_days", "over_30_days")
-
-private val installAgeWords: Set<String> = installAgeSteps.toSet()
 
 /** The agent servers the app can be connected to, by product name. */
 private val agentNames: List<String> = listOf("codex", "opencode", "paseo")
