@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -93,7 +94,8 @@ internal fun IncomingShareHost(owner: IncomingShare, content: @Composable () -> 
                         else null,
                     onUndo = owner::undoDiscard,
                     onTimeout = owner::commitDiscard,
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    // The navigation bar is clear now on every Android version: the bar keeps above it.
+                    modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
                 )
             }
             KitSheet(
