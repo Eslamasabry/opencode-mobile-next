@@ -434,7 +434,9 @@ private fun ColumnScope.AppearanceControls(
         Box(gutter) {
             AppearanceGrid(
                 listOf(null) + looks,
-                3, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
+                // FG: lib/ui/screens/settings/appearance_screen.dart:1055 (3), fewer at large text so a look's name is
+                // whole ("Aurora…", "Glow s…" at 200 % on build 10093): the themes' rule.
+                themeColumns(guided = false, kitFontScale()),
                 (136 + 44 * scale).dp, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
             ) { look ->
                 KitLookOptionCard(
