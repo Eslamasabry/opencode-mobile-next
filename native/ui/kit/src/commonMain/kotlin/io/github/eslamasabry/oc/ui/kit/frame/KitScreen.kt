@@ -607,8 +607,8 @@ public fun KitScreen(
                             KitStatusLineFold(
                                 line,
                                 // A floating page lets the body pass behind its parts, so the status row is a part with its own
-                                // fill: the transcript never shows through its words (text at 200 %).
-                                Modifier.then(if (floatChrome) Modifier.background(LocalKitColors.current.ground) else Modifier)
+                                // surface, the capsule's (Solid face, Glass pane): the transcript never shows through its words.
+                                Modifier.then(if (floatChrome) Modifier.kitFloatingPartSurface() else Modifier)
                                     .kitStatusRoom()
                                     .verticalScroll(rememberScrollState())
                                     .testTag("kit-screen-status"),
