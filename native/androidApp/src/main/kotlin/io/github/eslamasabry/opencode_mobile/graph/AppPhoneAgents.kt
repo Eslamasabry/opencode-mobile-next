@@ -1231,7 +1231,13 @@ class AppPhoneAgents(
         noteSignInLapsed(phone, provider, atMs, PhoneAgentFacts.LapseSource.Start)
     }
 
-    /** A sign-in of [phone]'s [agent] completed (its sign-in page confirmed it): its lapse, if any, ends. */
+    /**
+     * A sign-in of [phone]'s [agent] completed (its sign-in page's own check read "signed in"): its lapse, if any,
+     * ends, and that answer is the agent's newest one at once. B-454: the chat that offered "Sign in again" keeps its
+     * Claude Code program loaded, so the reads of this list that follow are held back ("agentBusy") and keep the last
+     * answer; that answer is now this one, never an older "signed out", and every reader of [state] reads the agent
+     * signed in without another tap.
+     */
     @Suppress("TooGenericExceptionCaught")
     internal suspend fun noteSignedIn(phone: ProfileId, agent: AgentId) {
         if (needsRestart || ownerId() != phone) return
@@ -1243,6 +1249,33 @@ class AppPhoneAgents(
             throw e
         } catch (_: Exception) {
             // Not kept this time: the next completed sign-in says it again.
+        }
+        synchronized(admission) {
+            if (owner in denied) return
+            val key = owner to agent
+            val now = SystemClock.elapsedRealtime()
+            // The page's answer carries no account name: a "signed in" already known keeps its own.
+            if (accounts[key]?.state != AuthState.SignedIn) accounts[key] = AuthProjection(AuthState.SignedIn)
+            answeredAt[key] = now
+            askedAt[key] = now
+            lastNoAnswer.remove(key)
+            // The mirror of noteSignInLapsed: the next read works out the rest of the row from this answer.
+            mutable.update { state ->
+                state.copy(
+                    agents =
+                        state.agents
+                            .map {
+                                if (it.id == agent.raw && it.status == PhoneAgentStatus.SignInNeeded)
+                                    it.copy(
+                                        status = PhoneAgentStatus.Ready,
+                                        signInCheckFailed = false,
+                                        signInEvidence = null,
+                                    )
+                                else it
+                            }
+                            .toImmutableList()
+                )
+            }
         }
     }
 

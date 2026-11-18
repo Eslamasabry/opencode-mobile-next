@@ -208,10 +208,15 @@ internal object PhoneAgentFacts {
         return kept + (agent to fact.copy(lapsedAt = atMs, lapseSource = source))
     }
 
-    /** [kept] after a sign-in of [agent] completed at [atMs]: its lapse is cleared. */
+    /**
+     * [kept] after a sign-in of [agent] completed at [atMs] (its sign-in page's own check read "signed in"): its lapse
+     * is cleared, and that check is the kept answer, so an app start does not bring back an older "signed out".
+     */
     fun signedInAgain(kept: Map<String, Fact>, agent: String, atMs: Long): Map<String, Fact> {
         val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
-        return kept + (agent to fact.copy(lapsedAt = null, lapseSource = null, signInDoneAt = atMs))
+        return kept +
+            (agent to
+                fact.copy(signedIn = true, signedInAt = atMs, lapsedAt = null, lapseSource = null, signInDoneAt = atMs))
     }
 
     /** The agents of [kept] the app has seen set up. */
