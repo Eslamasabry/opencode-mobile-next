@@ -113,6 +113,8 @@ class KitbRulesTest {
                 "KitModelSheet.star",
                 // The border light round a kit button (B-452).
                 "kitBorderLight", "kitBorderLight.fade",
+                // The waiting marks.
+                "KitWaitMark", "KitWaitMark.presence",
             )
         assertEquals(expected, KitMotionManifest.parts.keys)
         assertEquals(KitMotionClass.Travel, KitMotionManifest.parts.getValue("KitSwap.count"))
