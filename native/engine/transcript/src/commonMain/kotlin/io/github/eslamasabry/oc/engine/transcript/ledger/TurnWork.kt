@@ -129,7 +129,9 @@ public fun turnWork(
 /** Whether one of [turn]'s tool calls is still asking the person (an open permission request names it). */
 private fun holdsWaitingCall(turn: LedgerTurn, waitingCalls: Set<String>): Boolean =
     waitingCalls.isNotEmpty() &&
-        turn.messages.any { m -> m.parts.any { p -> p.type == PartType.Tool && p.callId?.let { it in waitingCalls } == true } }
+        turn.messages.any { m ->
+            m.parts.any { p -> p.type == PartType.Tool && p.callId?.let { it in waitingCalls } == true }
+        }
 
 private fun work(
     turn: LedgerTurn,

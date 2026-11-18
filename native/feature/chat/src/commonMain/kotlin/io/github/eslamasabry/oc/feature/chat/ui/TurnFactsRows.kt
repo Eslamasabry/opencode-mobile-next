@@ -689,7 +689,12 @@ private fun OneStep(
             // A step the run ended on before the person answered says why it did not run, under its one name.
             detail =
                 declinedWith
-                    ?: (if ((step.state == StepState.Stopped || step.state == StepState.NotRun) && out.metadata?.containsKey(io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY) == true)
+                    ?: (if (
+                            (step.state == StepState.Stopped || step.state == StepState.NotRun) &&
+                                out.metadata?.containsKey(
+                                    io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY
+                                ) == true
+                        )
                         stringResource(Res.string.kitToolUnanswered)
                     else stepDetailWords(f)),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.

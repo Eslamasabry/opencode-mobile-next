@@ -274,7 +274,13 @@ public fun KitSwitchRow(
             }
             Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
                 // Nothing is dimmed: a disabled row's reason is its supporting line (kit_row_parts.dart:270-271).
-                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitFontScale(), 2)) // F: lib/ui/kit/kit_row_parts.dart:544
+                // F: lib/ui/kit/kit_row_parts.dart:544
+                KitText(
+                    title,
+                    Modifier.testTag("kit-row-title"),
+                    role = TypeRole.RowTitle,
+                    maxLines = kitRowTitleLines(kitFontScale(), 2),
+                )
                 line?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
                     KitText(

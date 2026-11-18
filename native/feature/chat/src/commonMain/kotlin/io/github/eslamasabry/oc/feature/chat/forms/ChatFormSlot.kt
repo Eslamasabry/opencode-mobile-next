@@ -70,7 +70,10 @@ public fun ChatFormSlot(
         Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             when (phase) {
                 is AnswerPhase.Held ->
-                    Row(Modifier.kitFloatingPart(Space.S3.dp), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                    Row(
+                        Modifier.kitFloatingPart(Space.S3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                    ) {
                         KitText(
                             stringResource(Res.string.stateFormHeld),
                             Modifier.weight(1f),
@@ -82,7 +85,10 @@ public fun ChatFormSlot(
                         )
                     }
                 is AnswerPhase.Sending ->
-                    Row(Modifier.kitFloatingPart(Space.S3.dp), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                    Row(
+                        Modifier.kitFloatingPart(Space.S3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                    ) {
                         KitText(title, Modifier.weight(1f), role = TypeRole.Body)
                         if (phase.slow)
                             KitText(

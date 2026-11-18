@@ -146,10 +146,21 @@ public fun KitExpandRow(
                 Spacer(Modifier.width(Space.S3.dp))
             }
             Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
-                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitFontScale(), titleMaxLines))
+                KitText(
+                    title,
+                    Modifier.testTag("kit-row-title"),
+                    role = TypeRole.RowTitle,
+                    maxLines = kitRowTitleLines(kitFontScale(), titleMaxLines),
+                )
                 supporting?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
-                    KitText(it, Modifier.testTag("kit-row-supporting"), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines))
+                    KitText(
+                        it,
+                        Modifier.testTag("kit-row-supporting"),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines),
+                    )
                 }
             }
             Spacer(Modifier.width(Space.S2.dp))

@@ -401,9 +401,9 @@ public fun KitScreen(
             // includes that fade, so at rest the last line sits above it (and the first under the bar's 12 dp one).
             val faded = !edgesFade && !kitChromeIsGlass()
             val floatChrome = floating && edgesFade
-            // Three-button navigation (the bottom tappable-element inset is not zero; it is zero with gestures): the page's
-            // content fades out over the bar's height plus the usual short fade, so the buttons sit over clean ground or the
-            // live background, with no scrim and no edge. Whole pixels. Gesture mode is unchanged.
+            // Three-button navigation (the bottom tappable-element inset is not zero; it is zero with gestures): the
+            // page's content fades out over the bar's height plus the usual short fade, so the buttons sit over clean
+            // ground or the live background, with no scrim and no edge. Whole pixels. Gesture mode is unchanged.
             val tappableBottomPx = WindowInsets.tappableElement.getBottom(density)
             val flowFadePx = with(density) { FLOW_FADE_DP.dp.roundToPx() } + tappableBottomPx
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
@@ -518,10 +518,11 @@ public fun KitScreen(
                     .then(
                         when {
                             !framed -> Modifier
-                            // A floating chat page lets the transcript run on behind the gesture area down to the screen's bottom
-                            // edge, ending in the short fade there (no plate, no straight cut at the gesture area's top):
-                            // its bottom block carries the bottom inset instead.
-                            edgesFade && floatChrome -> Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Horizontal))
+                            // A floating chat page lets the transcript run on behind the gesture area down to the
+                            // screen's bottom edge, ending in the short fade there (no plate, no straight cut at the
+                            // gesture area's top): its bottom block carries the bottom inset instead.
+                            edgesFade && floatChrome ->
+                                Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Horizontal))
                             edgesFade -> Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
                             else -> Modifier.windowInsetsPadding(insets)
                         }
@@ -529,11 +530,14 @@ public fun KitScreen(
                     .testTag("kit-screen")
             ) {
               // ONE provider around all three parts (the top block, the body, the bottom block), so a part added later
-              // cannot fall outside it: the pinned status row read the flag as false and kept its hairline (look 10096).
+              // cannot fall outside it: the pinned status row read the flag as false and kept its hairline (look
+              // 10096).
               val windowHeightPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height
               val bottomRoom: () -> androidx.compose.ui.unit.Dp = {
                   with(density) {
-                      (windowHeightPx - statusPx - topPx - insets.getBottom(density) - (Space.S2 * 2).dp.roundToPx()).coerceAtLeast(0).toDp()
+                      (windowHeightPx - statusPx - topPx - insets.getBottom(density) - (Space.S2 * 2).dp.roundToPx())
+                          .coerceAtLeast(0)
+                          .toDp()
                   }
               }
               CompositionLocalProvider(
@@ -561,11 +565,11 @@ public fun KitScreen(
                                     Modifier.kitScrollEdges(
                                         // Owner 2026-11-14 ("Wtfff"): floating things own their ground. Nothing of the
                                         // body is drawn under the status bar, the bar or its status line; it dissolves
-                                        // in below them over TOP_DISSOLVE_DP.
-                                        // Floating chrome (owner 2026-11-18, "text can flow around the capsule", "hard cuts are
-                                        // bad"): nothing is cleared around the capsule or the box. The body passes behind both and
-                                        // each covers it with its own fill (Glass shows it through). Only the status area is
-                                        // cleared, ending in a short soft fade under it, so text never meets the clock.
+                                        // in below them over TOP_DISSOLVE_DP. Floating chrome (owner 2026-11-18, "text
+                                        // can flow around the capsule", "hard cuts are bad"): nothing is cleared around
+                                        // the capsule or the box. The body passes behind both and each covers it with
+                                        // its own fill (Glass shows it through). Only the status area is cleared,
+                                        // ending in a short soft fade under it, so text never meets the clock.
                                         clearAbove =
                                             if (topPart == null) null
                                             else if (floatChrome) ({ statusPx.toFloat() })
@@ -575,7 +579,9 @@ public fun KitScreen(
                                         // behind the chrome, so the body's dissolve alone ends the content before the
                                         // bar; Glass's the same. It grows with what lies under the chrome (none at
                                         // rest: a page at rest looks as it did; at once under reduced motion).
-                                        topReachPx = if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } }) else topDissolve,
+                                        topReachPx =
+                                            if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } })
+                                            else topDissolve,
                                         // And nothing in or under the bottom block (its chips row, the message box): the
                                         // body fades out over the 16 dp above it. A list that ends itself (above the jump
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
@@ -628,8 +634,9 @@ public fun KitScreen(
                         if (ownsLine)
                             KitStatusLineFold(
                                 line,
-                                // A floating page lets the body pass behind its parts, so the status row is a part with its own
-                                // surface, the capsule's (Solid face, Glass pane): the transcript never shows through its words.
+                                // A floating page lets the body pass behind its parts, so the status row is a part with
+                                // its own surface, the capsule's (Solid face, Glass pane): the transcript never shows
+                                // through its words.
                                 Modifier.then(if (floatChrome) Modifier.kitFloatingPartSurface() else Modifier)
                                     .kitStatusRoom()
                                     .verticalScroll(rememberScrollState())
@@ -1307,7 +1314,10 @@ internal const val HEADER_FADE_DP = 12
  */
 internal const val TOP_DISSOLVE_DP = 24
 
-/** The only fade a floating chrome page keeps, dp: under the status bar and above the gesture area, so text never meets them. */
+/**
+ * The only fade a floating chrome page keeps, dp: under the status bar and above the gesture area, so text never meets
+ * them.
+ */
 internal const val FLOW_FADE_DP = 12
 
 /**

@@ -121,7 +121,8 @@ public fun KitFab(
         exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
     ) {
         val lit = light && visible
-        if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick, lit) else RoundFace(label, icon, onClick, backdrop, lit)
+        if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick, lit)
+        else RoundFace(label, icon, onClick, backdrop, lit)
     }
 }
 

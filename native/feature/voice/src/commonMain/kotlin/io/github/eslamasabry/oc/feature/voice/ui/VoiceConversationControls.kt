@@ -56,8 +56,8 @@ internal fun VoiceConversationEntry(
             supporting =
                 when {
                     state.draft -> stringResource(Res.string.voiceConversationDoorDraft)
-                    // No speech model on the phone: the row stays and offers the download with its size (the tap opens the
-                    // same setup the mic opens).
+                    // No speech model on the phone: the row stays and offers the download with its size (the tap
+                    // opens the same setup the mic opens).
                     state.modelNeededBytes != null ->
                         stringResource(Res.string.e7VoiceUiModelRequired) +
                             stringResource(Res.string.kitWorkSeparator) +

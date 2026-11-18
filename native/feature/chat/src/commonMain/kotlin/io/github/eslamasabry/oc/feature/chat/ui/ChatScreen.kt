@@ -1061,14 +1061,18 @@ public fun ChatScreen(
                                 Modifier,
                             )
                             monitoredForm?.invoke()
-                            // The card above the box takes at most the room MEASURED between the top block's foot and the box (not
-                            // a share of the window); in less than the title, two body lines and the answers need, its body shows one
-                            // line and "Details" has the rest, before anything could draw over the pinned notice (look 10098).
+                            // The card above the box takes at most the room MEASURED between the top block's foot and
+                            // the box (not a share of the window); in less than the title, two body lines and the
+                            // answers need, its body shows one line and "Details" has the rest, before anything could
+                            // draw over the pinned notice (look 10098).
                             val bottomRoom = io.github.eslamasabry.oc.ui.kit.frame.LocalKitBottomRoom.current?.invoke()
                             val composerPx = remember { androidx.compose.runtime.mutableIntStateOf(0) }
                             val cardRoom =
                                 bottomRoom?.let { room ->
-                                    room - with(androidx.compose.ui.platform.LocalDensity.current) { composerPx.intValue.toDp() }
+                                    room -
+                                        with(androidx.compose.ui.platform.LocalDensity.current) {
+                                            composerPx.intValue.toDp()
+                                        }
                                 }
                             val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
                             androidx.compose.runtime.CompositionLocalProvider(
@@ -2263,5 +2267,8 @@ private fun rememberMessageErrorWords(): (MessageErrorKind) -> String {
     }
 }
 
-/** The room, dp at text 1.0, a request card needs for its title, two body lines and its answers; below it the body shows one line. */
+/**
+ * The room, dp at text 1.0, a request card needs for its title, two body lines and its answers; below it the body shows
+ * one line.
+ */
 private const val REQUEST_FULL_ROOM_DP: Int = 170

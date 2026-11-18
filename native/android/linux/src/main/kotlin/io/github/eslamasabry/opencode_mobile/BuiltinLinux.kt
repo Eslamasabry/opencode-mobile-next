@@ -1557,8 +1557,8 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /**
-     * How long ago [profileId]'s stored Claude Code sign-in was written (its file's time only; nothing is read from it),
-     * or null when there is none or it is not a plain file. [PhoneAgentAuthHoldBack] uses it.
+     * How long ago [profileId]'s stored Claude Code sign-in was written (its file's time only; nothing is read from
+     * it), or null when there is none or it is not a plain file. [PhoneAgentAuthHoldBack] uses it.
      */
     private fun claudeSignInAge(profileId: String): Long? =
         try {

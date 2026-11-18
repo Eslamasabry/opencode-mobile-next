@@ -98,9 +98,9 @@ public class KitRequestChange(
 // Issue 147 (F-016): the request stack in the conversation is this tall plus room for the card's caption and gap, so a card
 // at its cap is whole in it: the answers are never cut off by the stack's own edge. (The stack was 0.40 against 0.45.)
 private const val HEIGHT_SHARE = 0.45f
-// At 2x text the card's own words are bigger, but the room is not: 60 % plus the stack's caption, the message box and the
-// notice under the capsule left the card over the capsule's title (device look 10093, text 200 %). The body scrolls inside
-// the card and its answers stay at its foot, so the card can be shorter.
+// At 2x text the card's own words are bigger, but the room is not: 60 % plus the stack's caption, the message box and
+// the notice under the capsule left the card over the capsule's title (device look 10093, text 200 %). The body scrolls
+// inside the card and its answers stay at its foot, so the card can be shorter.
 private const val HEIGHT_SHARE_LARGE_TEXT = 0.40f
 private const val LARGE_TEXT = 2.0f
 

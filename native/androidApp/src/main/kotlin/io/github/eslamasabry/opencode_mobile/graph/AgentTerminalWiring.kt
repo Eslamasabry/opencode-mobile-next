@@ -293,7 +293,7 @@ class NativeSignInAgents(
                                 "agentId" to agent.id,
                                 "action" to "probe",
                                 "script" to AgentAuthScripts.forProfile(owner, script),
-                                "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
+                                "timeoutSeconds" to SignInCheckRules.probeSeconds(agent.id),
                             ),
                             afterSignIn = true,
                         )

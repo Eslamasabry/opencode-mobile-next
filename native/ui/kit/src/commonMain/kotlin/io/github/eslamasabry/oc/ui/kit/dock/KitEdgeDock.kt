@@ -752,7 +752,9 @@ private fun DockFootNode(state: KitEdgeDockState, words: KitDockWords, intents: 
                 IntOffset(((cx - 24f) * density).roundToInt(), ((cy - 24f) * density).roundToInt())
             }
             .size(48.dp)
-            .graphicsLayer { alpha = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value)) },
+            .graphicsLayer {
+                alpha = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value))
+            },
         contentAlignment = Alignment.Center,
     ) {
         KitIconButton(
