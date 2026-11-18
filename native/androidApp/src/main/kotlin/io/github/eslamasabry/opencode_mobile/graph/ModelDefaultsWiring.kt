@@ -83,6 +83,7 @@ class LiveModelDefaultsHost(
                         variants = info?.variants?.map { CatalogVariant(it.id, it.disabled) }.orEmpty(),
                         cost =
                             info?.cost?.let { ModelCost(it.inputPerMillion, it.outputPerMillion) },
+                        releasedAtMs = info?.releasedAtMs,
                     )
                 }
             }

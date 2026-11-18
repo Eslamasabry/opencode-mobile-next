@@ -188,7 +188,7 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
 }
 
 private fun kitOption(row: ModelDefaultsRow): KitModelOption =
-    KitModelOption(row.model.providerId, row.model.modelId, row.name, providerName = row.providerName)
+    KitModelOption(row.model.providerId, row.model.modelId, row.name, providerName = row.providerName, releasedAtMs = row.releasedAtMs)
 
 /** Build and Plan by name; any other mode as the server names it. */
 @Composable

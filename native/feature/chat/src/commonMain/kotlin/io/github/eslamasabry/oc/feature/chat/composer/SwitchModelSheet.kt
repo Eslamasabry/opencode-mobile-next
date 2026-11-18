@@ -42,6 +42,7 @@ internal fun SwitchModelSheet(
                     modelId = row.model.modelId,
                     label = row.model.label,
                     providerName = row.model.providerName,
+                    releasedAtMs = row.model.releasedAtMs,
                     supporting = if (row.free) free else null,
                     disabledReason = if (row.tooLong) tooLong else null,
                 )

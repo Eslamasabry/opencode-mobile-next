@@ -107,6 +107,11 @@ public data class KitModelOption(
     val supporting: String? = null,
     /** Shown but not choosable, saying why ("Too long for this model"); null = choosable. */
     val disabledReason: String? = null,
+    /**
+     * When the model came out (ms since the epoch), where the agent or provider says so (OpenCode's catalog does);
+     * null = unknown, and [KitModelOrder] reads a version from the name instead.
+     */
+    val releasedAtMs: Long? = null,
 ) {
     val key: String
         get() = "$providerId/$modelId"
@@ -129,9 +134,10 @@ public data class KitModelSection(
 )
 
 /**
- * The model list's order (N-51, QA wave 1 B3): favourites, then recent picks, then each provider under its name with the
- * current model's provider first and the current model leading its group. A model shows once. Search matches the
- * name, the id or the provider. Pure, so the order is tested without Compose.
+ * The model list's order (N-51, QA wave 1 B3; B-449): favourites, then recent picks, then each provider under its name
+ * with the current model's provider first. Inside a provider: starred models, then the model in use, then the newest
+ * first ([newestFirst]). A model shows once. Search matches the name, the id or the provider. Pure, so the order is
+ * tested without Compose. Every model sheet (chat, switch, new conversation, model defaults) reads this one order.
  */
 public object KitModelOrder {
     public fun sections(
@@ -143,6 +149,8 @@ public object KitModelOrder {
         query: String = "",
         /** One suggestion's [KitModelOption.key], listed first under its own heading; it shows once. */
         suggested: String? = null,
+        /** Starred keys that stay in their provider's group (the sheet's provider pages), leading it. */
+        starred: Set<String> = emptySet(),
     ): List<KitModelSection> {
         val q = query.trim().lowercase()
         fun matches(m: KitModelOption) =
@@ -164,24 +172,69 @@ public object KitModelOrder {
         if (recents.isNotEmpty()) out += KitModelSection(KitModelSectionKind.Recent, recents)
         val currentProvider = options.firstOrNull { it.key == current }?.providerId
         options
-            .filter { matches(it) && it.key !in listed }
-            .groupBy { it.providerId }
+            .withIndex()
+            .filter { (_, m) -> matches(m) && m.key !in listed }
+            .groupBy { it.value.providerId }
             .values
             .sortedWith(
-                compareBy<List<KitModelOption>>({ it.first().providerId != currentProvider })
-                    .thenBy { it.first().providerName.ifEmpty { it.first().providerId }.lowercase() }
+                compareBy<List<IndexedValue<KitModelOption>>>({ it.first().value.providerId != currentProvider })
+                    .thenBy { it.first().value.providerName.ifEmpty { it.first().value.providerId }.lowercase() }
             )
             .forEach { list ->
-                val sorted = list.sortedWith(compareBy<KitModelOption>({ it.key != current }, { it.label.lowercase() }))
+                val first = list.first().value
                 out +=
                     KitModelSection(
                         KitModelSectionKind.Provider,
-                        sorted,
-                        list.first().providerName.ifEmpty { list.first().providerId },
+                        newestFirst(list, current, starred),
+                        first.providerName.ifEmpty { first.providerId },
                     )
             }
         return out
     }
+
+    /**
+     * One provider's models in their order: starred ones, then the model in use, then the newest first. "Newest" uses
+     * the most truthful thing known: the release date where the agent or provider gives one (OpenCode's catalog), else
+     * a version read from the name (else the id) compared number by number ("Opus 10" before "Opus 5", "gpt-10"
+     * before "gpt-9"), and on a tie the agent's own order ([IndexedValue.index], the order the list came in).
+     */
+    private fun newestFirst(
+        list: List<IndexedValue<KitModelOption>>,
+        current: String?,
+        starred: Set<String>,
+    ): List<KitModelOption> {
+        val ranked = list.map { (index, m) -> Ranked(m, index, version(m.label) ?: version(m.modelId)) }
+        return ranked
+            .sortedWith(
+                compareBy<Ranked>({ it.option.key !in starred }, { it.option.key != current })
+                    .thenBy { it.option.releasedAtMs == null }
+                    .thenByDescending { it.option.releasedAtMs ?: 0L }
+                    .thenBy { it.version == null }
+                    .thenComparator { a, b -> compareVersions(b.version.orEmpty(), a.version.orEmpty()) }
+                    .thenBy { it.index }
+            )
+            .map { it.option }
+    }
+
+    private class Ranked(val option: KitModelOption, val index: Int, val version: List<Long>?)
+
+    /** A run of digits and dots that is not a size ("480B", "1M", "128k") nor part of a longer number. */
+    private val versionPattern = Regex("""\d+(?:\.\d+)*(?!\d|\.\d|[bBkKmM](?![a-zA-Z]))""")
+
+    /** The first version-like number in [text] as its parts ("Opus 4.7 1M" -> [4, 7]); null when it has none. */
+    internal fun version(text: String): List<Long>? =
+        versionPattern.find(text)?.value?.split('.')?.map { part -> part.take(MAX_PART_DIGITS).toLongOrNull() ?: 0L }
+
+    /** Number by number, a missing part read as 0 ("5" equals "5.0"; "4.10" is after "4.7"). */
+    private fun compareVersions(a: List<Long>, b: List<Long>): Int {
+        for (i in 0 until maxOf(a.size, b.size)) {
+            val c = a.getOrElse(i) { 0L }.compareTo(b.getOrElse(i) { 0L })
+            if (c != 0) return c
+        }
+        return 0
+    }
+
+    private const val MAX_PART_DIGITS = 18
 }
 
 /** Lists of this length or more get a search field. */
@@ -222,7 +275,10 @@ public object KitModelPages {
         current: String? = null,
         canFavorite: Boolean = false,
     ): List<KitModelPage> {
-        val providers = KitModelOrder.sections(options, current = current).filter { it.kind == KitModelSectionKind.Provider }
+        val starred = favorites.mapTo(HashSet()) { it.key }
+        val providers =
+            KitModelOrder.sections(options, current = current, starred = starred)
+                .filter { it.kind == KitModelSectionKind.Provider }
         val picks =
             KitModelOrder.sections(options, favorites, recent, current)
                 .filter { it.kind == KitModelSectionKind.Favorites || it.kind == KitModelSectionKind.Recent }

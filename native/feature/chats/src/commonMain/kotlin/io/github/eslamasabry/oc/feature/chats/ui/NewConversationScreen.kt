@@ -945,6 +945,7 @@ internal fun newConversationModelOptions(models: List<NewConversationModel>): Li
             label = model.name,
             providerName = provider,
             supporting = model.runtime?.takeIf { it != provider },
+            releasedAtMs = model.releasedAtMs,
         )
     }
 

@@ -62,6 +62,7 @@ internal object PhoneModelsCache {
                                     put("name", JsonPrimitive(m.name.take(MAX_TEXT)))
                                     m.runtime?.let { put("runtime", JsonPrimitive(it.take(MAX_TEXT))) }
                                     m.providerName?.let { put("providerName", JsonPrimitive(it.take(MAX_TEXT))) }
+                                    m.releasedAtMs?.let { put("releasedAtMs", JsonPrimitive(it)) }
                                     if (m.variants.isNotEmpty())
                                         put(
                                             "variants",
@@ -97,6 +98,7 @@ internal object PhoneModelsCache {
                             m["name"]?.jsonPrimitive?.content ?: ref.modelId,
                             runtime = (m["runtime"] as? JsonPrimitive)?.content,
                             providerName = (m["providerName"] as? JsonPrimitive)?.content,
+                            releasedAtMs = (m["releasedAtMs"] as? JsonPrimitive)?.content?.toLongOrNull(),
                             variants =
                                 (m["variants"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content }.orEmpty(),
                         )

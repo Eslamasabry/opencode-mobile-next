@@ -21,6 +21,8 @@ public class CatalogModel(
     public val enabled: Boolean = true,
     variants: List<CatalogVariant> = emptyList(),
     public val cost: ModelCost? = null,
+    /** When the model came out (ms since the epoch) where the catalog says; null = unknown. Orders the model sheet. */
+    public val releasedAtMs: Long? = null,
 ) {
     public val variants: ImmutableList<CatalogVariant> = variants.toImmutableList()
 
