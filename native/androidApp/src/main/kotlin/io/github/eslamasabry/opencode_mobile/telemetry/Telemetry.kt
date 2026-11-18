@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import io.github.eslamasabry.opencode_mobile.BuildConfig
 import io.github.eslamasabry.oc.engine.analytics.umami.FileUmamiStore
+import io.github.eslamasabry.oc.engine.analytics.DeviceClass
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiHttp
@@ -58,15 +59,18 @@ internal object Telemetry {
             if (DeferredFirebaseTelemetryVendor.Config.present(app)) {
                 val build = UmamiBuild(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString())
                 val device = {
-                    val metrics = app.resources.displayMetrics
-                    // Model CLASS only: never Build.MODEL, Build.FINGERPRINT, Android id or an install id.
+                    // Only the Android MAJOR version and the class (phone or tablet): never the model, the maker,
+                    // the resolution, the time zone, an Android id or an install id (a guard test reads this block).
+                    val osMajor = Build.VERSION.RELEASE.substringBefore('.').toIntOrNull() ?: 0
                     val tablet = app.resources.configuration.smallestScreenWidthDp >= 600
                     val modelClass = if (tablet) "Android Tablet" else "Android Phone"
                     val mobile = if (tablet) "" else " Mobile"
                     UmamiDevice(
                         Locale.getDefault().toLanguageTag(),
-                        "${metrics.widthPixels}x${metrics.heightPixels}",
-                        "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}; $modelClass) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0$mobile Safari/537.36",
+                        "Mozilla/5.0 (Linux; Android $osMajor; $modelClass) AppleWebKit/537.36 (KHTML, like Gecko) " +
+                            "Chrome/131.0.0.0$mobile Safari/537.36",
+                        osMajor,
+                        if (tablet) DeviceClass.Tablet else DeviceClass.Phone,
                     )
                 }
                 val configured = UmamiHttp.configured(BuildConfig.UMAMI_URL, BuildConfig.UMAMI_WEBSITE)

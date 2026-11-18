@@ -174,7 +174,7 @@ number), `notif_allowed` (yes or no), `server_kind` (phone, computer or both),
 first use: the same words as `journey_milestone`).
 
 Google Analytics adds on its own a random app-instance identifier, the phone
-model, Android version, app version, language, the time, and a coarse location
+model, Android version, screen size, app version, language, the time, and a coarse location
 (country and region) it works out from the connection without keeping the IP
 address. It also counts a few events of its own, such as the first open and
 the length of a session. The advertising ID and Android ID (SSAID) are never
@@ -194,9 +194,11 @@ account, conversation, file name, project name, server address or model key is s
 Umami receives the same listed events and permitted properties above. A screen becoming visible
 is a page view with one fixed address per screen category, such as /home or /conversation;
 other actions are named events with that screen address. Each has its own timestamp, the app's
-version name and build number, a fixed app hostname, language and screen resolution. A browser-like
-User-Agent carries the Android version and device class, without a device identifier. The build
-number is also the tag. Google receives the app version automatically and the `app_build` user
+version name and build number, a fixed app hostname and language, and three plain fields about the
+device: the Android main version number (for example 16), the device class (phone or tablet) and
+the build number. A browser-like User-Agent repeats only the Android main version and the device class.
+Nothing else about the device goes to Umami: no screen size or resolution, model, maker, time zone,
+minor version, or device or installation ID. The build number is also the tag. Google receives the app version automatically and the `app_build` user
 property is the build number, set only with usage on and cleared when it is off.
 
 The private queue holds up to 256 events and 256 KiB of encoded event data (300 KiB including
@@ -366,11 +368,23 @@ context. Copy and Clear remain local actions.
 
 ## Microphone and local voice input
 
-Microphone access is requested only when you start voice input. Recorded audio
-is transcribed locally on the device with a downloaded speech model. The app
-does not upload the recording, and voice input never sends a prompt
-automatically. Transcribed text is sent only if you choose to submit it as part
-of a prompt.
+Microphone access is requested only when you start voice input. Voice input has
+two paths:
+
+- **Downloaded speech models:** when a speech model downloaded from
+  `huggingface.co` is used, recorded audio is transcribed on the device by that
+  model and never leaves the phone; the model download carries only the file's
+  address and your IP address, and Hugging Face's own terms apply to it.
+- **Android's on-device speech recognizer (fallback):** when a downloaded
+  speech model is not used, the app asks Android for its on-device speech
+  recognizer (`SpeechRecognizer.createOnDeviceSpeechRecognizer`, Android 12 and
+  later) and sets the offline preference
+  (`RecognizerIntent.EXTRA_PREFER_OFFLINE`), and never uses Android's default
+  speech recognizer; that system recognition service's own privacy terms apply.
+
+The app does not upload the recording, and voice input never sends a prompt on
+its own. Transcribed text is sent only if you choose to submit it as part of a
+prompt.
 
 ## Optional assistant on this phone
 

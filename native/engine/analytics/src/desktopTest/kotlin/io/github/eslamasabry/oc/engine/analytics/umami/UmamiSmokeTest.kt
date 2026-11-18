@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.analytics.umami
 
+import io.github.eslamasabry.oc.engine.analytics.DeviceClass
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Failure
 import java.io.File
@@ -19,7 +20,9 @@ class UmamiSmokeTest {
         val version = properties("native/version.properties")
         val config = properties("native/androidApp/analytics.properties")
         val build = UmamiBuild(version.getProperty("versionName"), version.getProperty("versionCode"), "test-${version.getProperty("versionCode")}")
-        val device = UmamiDevice("en-US", "1080x2340", "Mozilla/5.0 (Linux; Android 16; Android Phone) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
+        val agent = "Mozilla/5.0 (Linux; Android 16; Android Phone) AppleWebKit/537.36 (KHTML, like Gecko) " +
+            "Chrome/131.0.0.0 Mobile Safari/537.36"
+        val device = UmamiDevice("en-US", agent, 16, DeviceClass.Phone)
         val tasks = ArrayDeque<Runnable>()
         var at = System.currentTimeMillis() - 3000
         val store = object : UmamiStore {

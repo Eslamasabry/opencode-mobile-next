@@ -1,7 +1,7 @@
 <resources>
     <string name="voiceNativeDetect">Detect from speech</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
-    <string name="voiceNativePhoneEngine">Voice typing uses your phone's own speech recognition, so the audio stays on this phone. Phones without it don't show the mic. This version doesn't use the speech models below yet.</string>
+    <string name="voiceNativePhoneEngine">Voice typing asks Android to recognise speech on the phone itself (Android 12 and later), with offline recognition preferred; Android's own privacy terms for that service apply. Phones without it don't show the mic. This version doesn't use the speech models below yet.</string>
     <string name="voiceNativeNaturalNeedsEngine">Needs the offline speech engine, which this version does not include yet.</string>
     <string name="voiceNativeSettingsAction">Voice settings</string>
     <string name="voiceNativeStoppedAfterPause">Stopped after a pause. Your words are in the box.</string>
