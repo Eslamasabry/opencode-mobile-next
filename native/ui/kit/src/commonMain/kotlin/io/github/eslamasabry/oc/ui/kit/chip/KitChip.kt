@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.TextStyle
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
@@ -353,8 +354,8 @@ private fun ChipLabel(
     val sized =
         style.copy(
             fontSize = target.sp,
-            lineHeight = (style.lineHeight.value * k).sp,
-            letterSpacing = (style.letterSpacing.value * k).sp,
+            lineHeight = if (style.lineHeight.isSpecified) (style.lineHeight.value * k).sp else style.lineHeight,
+            letterSpacing = if (style.letterSpacing.isSpecified) (style.letterSpacing.value * k).sp else style.letterSpacing,
         )
     CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
         BasicText(text, modifier, style = sized, maxLines = maxLines, softWrap = softWrap, overflow = overflow)
