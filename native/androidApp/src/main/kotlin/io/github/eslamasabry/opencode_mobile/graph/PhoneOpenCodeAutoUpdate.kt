@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJobs
 import io.github.eslamasabry.oc.engine.runtime.server.launchOpenCodeAutoUpdate
 import io.github.eslamasabry.oc.engine.runtime.server.openCodeAutoUpdateLooks
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
+import kotlin.time.Duration.Companion.seconds
 import android.os.SystemClock
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,6 +24,8 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
@@ -113,6 +117,7 @@ class PhoneOpenCodeAutoUpdate(
                 nowMs = { SystemClock.elapsedRealtime() },
                 // A retry waiting for its time wakes itself: ONE pending delayed look (a newer ask replaces
                 // the older one), cancelled with the app's scope.
+                onRead = { UpdaterReads.opencode.incrementAndGet() },
                 wake = { delayMs ->
                     synchronized(wakeLock) {
                         wakeJob?.cancel()
@@ -134,6 +139,19 @@ class PhoneOpenCodeAutoUpdate(
         downloads.openCode = this
         downloads.start()
         appScope.launch { updater.waitingForUnmetered.collect { downloads.openCodeWaiting.value = it } }
+        // One line a minute while the updaters are active: how many reads each made, and the heap, so a look can assert
+        // "under N" and a loop shows at once (never found by a crash again).
+        appScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(READ_REPORT_SECONDS.seconds)
+                val rt = Runtime.getRuntime()
+                log.i {
+                    "updater reads: opencode ${UpdaterReads.opencode.getAndSet(0)}, " +
+                        "agents ${UpdaterReads.agents.getAndSet(0)} in the last minute; " +
+                        "heap ${(rt.totalMemory() - rt.freeMemory()) / MB} MB"
+                }
+            }
+        }
         // Held a while for a busy or not-ready phone: Home says so in its one download line (never at once).
         appScope.launch { updater.held.collect { downloads.openCodeHeld.value = it } }
         appScope.launch { updater.fellShort.collect { downloads.openCodeShort.value = it } }
@@ -148,7 +166,14 @@ class PhoneOpenCodeAutoUpdate(
             updater,
             host,
             merge(
-                combine(runtime.serverFacts, setup.progress, leases.busy, visibility.state) { _, _, _, _ -> },
+                // Only what the decision reads counts as a change: a read the updater itself makes refreshes the
+                // server's facts, and that must never ask for the next look.
+                combine(
+                    decisionFacts(runtime.serverFacts),
+                    setup.progress,
+                    leases.busy,
+                    visibility.state,
+                ) { _, _, _, _ -> },
                 settled,
                 reads,
             ),
@@ -175,3 +200,12 @@ class PhoneOpenCodeAutoUpdate(
 interface PhoneOpenCodeAutoUpdateAccessors {
     val phoneOpenCodeAutoUpdate: PhoneOpenCodeAutoUpdate
 }
+
+/** The server facts the updater's decision reads (version, move pending, install phase, running); nothing else. */
+private fun decisionFacts(facts: kotlinx.coroutines.flow.StateFlow<PhoneServerFacts>) =
+    facts
+        .map { listOf(it.installedVersion, it.needsOpenCode2Move, it.status?.phase, it.status?.serverRunning) }
+        .distinctUntilChanged()
+
+private const val READ_REPORT_SECONDS = 60
+private const val MB = 1_048_576L

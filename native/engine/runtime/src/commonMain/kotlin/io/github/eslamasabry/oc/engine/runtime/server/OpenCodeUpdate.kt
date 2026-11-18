@@ -102,6 +102,8 @@ public class OpenCodeAutoUpdater(
      * for its time does not depend on some other state change to wake it.
      */
     private val wake: (delayMs: Long) -> Unit = {},
+    /** Called once for every read of the server this updater really makes (the per-minute counter). */
+    private val onRead: () -> Unit = {},
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
@@ -161,6 +163,7 @@ public class OpenCodeAutoUpdater(
         val now = nowMs()
         if (now != 0L && lastRefreshAt != 0L && now - lastRefreshAt < REFRESH_SPACING_MS) return
         lastRefreshAt = now
+        onRead()
         withTimeoutOrNull(READ_LIMIT) { host.refresh() }
     }
 
