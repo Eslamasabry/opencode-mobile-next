@@ -190,6 +190,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsInstallNeedsSpace
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdateReadFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdateWaitingSwitch
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdateWaitingSetup
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdateWaitingBusy
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardShowProgress
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdatingAgent
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
@@ -1358,30 +1364,12 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 tone = StatusTone.Neutral,
                 action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
             )
-        is HomeDownloadPhase.Running -> {
-            val what =
-                stringResource(if (openCode) Res.string.phoneDownloadRunningOpenCode else Res.string.phoneDownloadRunningHelper)
-            KitStatus(
-                kind = KitStatusKind.Work,
-                id = "phone-download:${download.kind.name}",
-                // Numbers only: the kit's working mark stands still when the person turned motion off.
-                message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, what, it) } ?: what,
-                tone = StatusTone.Progress,
-                working = true,
-                // A known share: the Downloading mark, its line as thick as the words' percent says.
-                wait = KitWaitKind.Downloading.takeIf { phase.percent != null },
-                waitFraction = (phase.percent ?: 0) / 100f,
-            )
-        }
+        is HomeDownloadPhase.Running -> homeRunningStatus(download, phase, actions)
         is HomeDownloadPhase.Held ->
             KitStatus(
                 kind = KitStatusKind.Update,
                 id = "phone-download:${download.kind.name}",
-                message =
-                    stringResource(
-                        if (phase.why == HomeHold.Reply) Res.string.phoneDownloadReadyReply
-                        else Res.string.phoneDownloadReadyPhone,
-                    ),
+                message = homeHeldWords(phase.why),
                 // Ready, not stuck: a calm mark and nothing to tap; it installs by itself.
                 tone = StatusTone.Neutral,
             )
@@ -1395,6 +1383,49 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
             )
     }
 }
+
+/** The agents' or OpenCode's update that runs on its own, by name, with its share done and one tap to its progress. */
+@Composable
+private fun homeRunningStatus(
+    download: HomeDownloadFact,
+    phase: HomeDownloadPhase.Running,
+    actions: ChatsActions,
+): KitStatus {
+    val what =
+        stringResource(
+            if (download.kind == HomeDownloadKind.OpenCode) {
+                Res.string.phoneDownloadRunningOpenCode
+            } else {
+                Res.string.phoneDownloadRunningHelper
+            },
+        )
+    // The agent being installed, by its own name, when the agents' update says which.
+    val named = download.name?.let { stringResource(Res.string.agentsUpdatingAgent, it) } ?: what
+    return KitStatus(
+        kind = KitStatusKind.Work,
+        id = "phone-download:${download.kind.name}",
+        // Numbers only: the kit's working mark stands still when the person turned motion off.
+        message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, named, it) } ?: named,
+        tone = StatusTone.Progress,
+        working = true,
+        wait = KitWaitKind.Downloading.takeIf { phase.percent != null },
+        waitFraction = (phase.percent ?: 0) / 100f,
+        // An update the app runs on its own is one tap from its progress (the phone's setup page).
+        action = KitLineAction(stringResource(Res.string.phoneServerCardShowProgress), actions::openProgress),
+    )
+}
+
+/** Why a ready update waits, in the existing words (the agents' update's own sentences start with a capital here). */
+@Composable
+private fun homeHeldWords(why: HomeHold): String =
+    when (why) {
+        HomeHold.Reply -> stringResource(Res.string.phoneDownloadReadyReply)
+        HomeHold.PhoneNotReady -> stringResource(Res.string.phoneDownloadReadyPhone)
+        HomeHold.AgentsIdle -> stringResource(Res.string.agentsUpdateWaitingBusy).replaceFirstChar { it.uppercase() }
+        HomeHold.AgentsSetup -> stringResource(Res.string.agentsUpdateWaitingSetup).replaceFirstChar { it.uppercase() }
+        HomeHold.AgentsSwitch -> stringResource(Res.string.agentsUpdateWaitingSwitch).replaceFirstChar { it.uppercase() }
+        HomeHold.AgentsRead -> stringResource(Res.string.agentsUpdateReadFailed).replaceFirstChar { it.uppercase() }
+    }
 
 /** Why a download stopped, in plain words: for want of room it says how much; otherwise the plain failure. */
 @Composable

@@ -191,7 +191,8 @@ public class AgentAutoUpdater(
     private val failures = mutableMapOf<String, Int>()
     private val retryNotBefore = mutableMapOf<String, Long>()
     private val checking = Mutex()
-    private var readTried = false
+    private var readTries = 0
+    private var readRetryAt = 0L
     private var busyUntil = 0L
     private var busyStreak = 0
     private var meteredAllowed = false
@@ -215,17 +216,19 @@ public class AgentAutoUpdater(
             // Refused for busy (work running, or another install job holds the one gate): the try is kept, and the
             // next look is after the backoff, never at once.
             if (nowMs() < busyUntil) return
-            if (host.readDue && !readTried) {
-                // The read starts a process per installed agent: not under a setup job or a half-finished move, and
-                // once per run, so a read that cannot finish never repeats.
+            val readAgain = readTries < MAX_READS && nowMs().let { it > 0L && it >= readRetryAt }
+            if (host.readDue && (readTries == 0 || readAgain)) {
+                // The read starts a process per installed agent: not under a setup job or a half-finished move; one
+                // that cannot finish is tried again a few times, spaced (never silent: Home tells the hold).
                 when {
                     jobs.running -> return hold(AgentUpdateStep.WaitingSetup)
                     host.switchPending -> return hold(AgentUpdateStep.WaitingSwitch)
                 }
-                readTried = true
+                readTries++
                 publish(AgentUpdateDecision(AgentUpdateStep.Reading))
                 host.read()
                 if (host.readDue) {
+                    readRetryAt = nowMs() + READ_RETRY_MS
                     publish(AgentUpdateDecision(AgentUpdateStep.ReadFailed))
                     return
                 }
@@ -374,6 +377,8 @@ public class AgentAutoUpdater(
     }
 }
 
+private const val MAX_READS = 3
+private const val READ_RETRY_MS = 300_000L
 private const val BUSY_BACKOFF_MS = 30_000L
 private const val BUSY_BACKOFF_MAX_MS = 120_000L
 private const val BUSY_DOUBLINGS = 3

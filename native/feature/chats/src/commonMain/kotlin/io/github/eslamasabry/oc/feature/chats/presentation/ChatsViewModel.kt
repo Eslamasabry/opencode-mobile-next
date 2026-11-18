@@ -79,6 +79,8 @@ public class ChatsViewModel(
         }
     }
 
+    override fun openProgress(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute.Setup)
+
     override fun downloadNow() {
         val kind = downloadAskFor.value ?: return
         downloadAskFor.value = null

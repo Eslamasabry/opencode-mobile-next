@@ -45,7 +45,11 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgressTone
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.linuxRuntimeNodeTitle
+import io.github.eslamasabry.oc.ui.words.res.runningPhoneGroup__agentHelper
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -364,7 +368,17 @@ internal fun itemTitle(id: String, fallback: String): String =
         SetupComponentIds.ESSENTIALS -> stringResource(Res.string.phoneSetupEssentialsTitle)
         SetupComponentIds.START -> stringResource(Res.string.phoneSetupStartTitle)
         SetupComponentIds.VOICE -> stringResource(Res.string.voiceComponentTitle)
-        else -> fallback
+        else -> agentComponentTitle(id) ?: fallback
+    }
+
+/** The names the app uses elsewhere for the parts of an agents' install job (never the raw component id). */
+@Composable
+private fun agentComponentTitle(id: String): String? =
+    when {
+        id == "agent-node" -> stringResource(Res.string.linuxRuntimeNodeTitle)
+        id == "agent-paseo" || id == "agent-user" -> stringResource(Res.string.runningPhoneGroup__agentHelper)
+        id.startsWith("agent-") -> AgentCatalog.builtIn.byId(AgentId(id.removePrefix("agent-")))?.name
+        else -> null
     }
 
 /**

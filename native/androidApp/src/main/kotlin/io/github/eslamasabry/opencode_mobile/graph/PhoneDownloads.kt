@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.android.voice.device.AndroidSetupNetwork
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
@@ -73,6 +74,9 @@ class PhoneDownloads(
     /** OpenCode's automatic update ended below the pin, tried again a few times: Home says it failed. */
     internal val openCodeShort = MutableStateFlow(false)
 
+    /** A hold of the agents' update that lasted past its short wait (null: none, or not told yet). */
+    internal val helperHold = MutableStateFlow<HomeHold?>(null)
+
     /** OpenCode's update ended below the pin and the next try waits for its time and an idle phone. */
     internal val openCodeRetrying = MutableStateFlow(false)
     internal val openCodeWaiting = MutableStateFlow(false)
@@ -98,7 +102,15 @@ class PhoneDownloads(
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
         combine(
-                combine(openCodeWaiting, openCodeHeld, helperShort, openCodeShort, openCodeRetrying, ::SideFacts),
+                combine(
+                    openCodeWaiting, openCodeHeld, helperShort, openCodeShort, openCodeRetrying, helperHold,
+                ) { v ->
+                    @Suppress("UNCHECKED_CAST")
+                    SideFacts(
+                        v[0] as Boolean, v[1] as OpenCodeHold?, v[2] as HomeShortSpace?, v[3] as Boolean,
+                        v[4] as Boolean, v[5] as HomeHold?,
+                    )
+                },
                 setup.progress,
                 phones.state,
                 agentStatus.decision,
@@ -111,8 +123,18 @@ class PhoneDownloads(
                         AgentUpdateStep.WaitingMetered -> if (read) HomeHelperStep.Waiting else HomeHelperStep.None
                         AgentUpdateStep.Updating -> HomeHelperStep.Updating
                         AgentUpdateStep.Failed -> HomeHelperStep.Failed
-                        else -> HomeHelperStep.None
+                        // The install job itself says it runs, whatever the updater's decision reads at this look (it
+                        // reads Waiting/Refused for the NEXT agent while the first one downloads).
+                        else ->
+                            if (install?.phase == PhoneAgentInstallPhase.Installing) {
+                                HomeHelperStep.Updating
+                            } else {
+                                HomeHelperStep.None
+                            }
                     }
+                val agentName =
+                    (install?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }?.id ?: decision.agent?.raw)
+                        ?.let { phones.nameOf(AgentId(it)) }
                 val said =
                     HomeDownloadMapping.facts(
                         openCodeWaiting = downloadWaitingSaid(side.waiting, read),
@@ -138,10 +160,20 @@ class PhoneDownloads(
                     )
                         // A helper install that stopped for want of room says how much, beside the failed row.
                         .map { fact ->
-                            if (fact.kind == HomeDownloadKind.Helper && fact.phase == HomeDownloadPhase.Failed) {
-                                fact.copy(short = side.helperShort)
+                            when {
+                                fact.kind != HomeDownloadKind.Helper -> fact
+                                fact.phase == HomeDownloadPhase.Failed -> fact.copy(short = side.helperShort)
+                                fact.phase is HomeDownloadPhase.Running -> fact.copy(name = agentName)
+                                else -> fact
+                            }
+                        }
+                        // A hold of the agents' update that lasted past its short wait is said, with its true reason.
+                        .let { facts ->
+                            val hold = side.helperHold
+                            if (hold != null && facts.none { it.kind == HomeDownloadKind.Helper }) {
+                                facts + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Held(hold))
                             } else {
-                                fact
+                                facts
                             }
                         }
                 HomeDownloadMapping.withHeld(
@@ -206,4 +238,5 @@ private data class SideFacts(
     val helperShort: HomeShortSpace?,
     val openCodeShort: Boolean,
     val retrying: Boolean,
+    val helperHold: HomeHold?,
 )

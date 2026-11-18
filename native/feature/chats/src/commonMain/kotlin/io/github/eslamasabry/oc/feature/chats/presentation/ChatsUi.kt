@@ -471,6 +471,9 @@ public interface ChatsActions {
     /** The line's action: opens the mobile-data ask for the waiting download, or starts a failed one again. */
     public fun actOnDownload() {}
 
+    /** Opens the page that shows the update that runs on its own (the phone's setup job and its progress). */
+    public fun openProgress() {}
+
     /** The ask's Download now: that one download runs on this network, once. */
     public fun downloadNow() {}
 

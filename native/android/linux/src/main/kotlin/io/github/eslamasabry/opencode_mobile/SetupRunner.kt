@@ -570,7 +570,11 @@ class SetupRunner private constructor(private val context: Context) {
     private fun installerEvent(spec: Spec, parsed: SetupProtocol.Event?): SetupProtocol.Event? =
         if (!spec.agentUser) parsed else when (parsed) {
             is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(
-                if (spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES)
+                // The scripts' own fixed stage words (a download, an unpacking) pass; anything else is scrubbed (an
+                // agent's output can carry a private path).
+                if ((spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES) ||
+                    FIXED_STAGE.matches(parsed.label)
+                )
                     parsed.label else spec.stage ?: "Installing agent",
             )
             is SetupProtocol.Event.Version -> if (parsed.text == spec.version) parsed else null
@@ -720,6 +724,8 @@ class SetupRunner private constructor(private val context: Context) {
             "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
         )
         /** An unproven ownership is looked at this many times in all (the first try included), this far apart. */
+        private val FIXED_STAGE =
+            Regex("^(Downloading|Unpacking|Preparing|Checking|Updating|Repairing)[A-Za-z0-9 .+_-]{0,60}$")
         private const val OWNERSHIP_TRIES = 3
         private const val OWNERSHIP_PAUSE_MS = 3000L
         private const val WRITE_INTERVAL_MS = 250L
