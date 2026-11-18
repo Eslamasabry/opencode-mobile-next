@@ -10274,6 +10274,10 @@ scheduleAgentFailed	9a93f28267
 scheduleAllowHttp	0365f3947b
 scheduleAsk	5630cd354a
 scheduleAskHint	851772817d
+scheduleAssistantCannot	6dbf32c82e
+scheduleAssistantFailed	43fb0ff1be
+scheduleAssistantNote	005d410542
+scheduleAssistantTitle	7df4ccf09d
 scheduleBusy	cc230d7441
 scheduleCertificateChanged	898b44f5bc
 scheduleCertificateInvalid	7b0400a8eb

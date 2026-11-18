@@ -91,4 +91,8 @@
     <string name="scheduleStarterNewsTopic">Тема</string>
     <string name="scheduleStarterNewsHint">Например: цены на недвижимость в Дубае</string>
     <string name="scheduleNewsPrompt">Найди самые важные новости дня по теме «%1$s» в надёжных источниках. Начни ответ с одного простого предложения не длиннее 90 символов, которое всё подытоживает, затем дай до пяти коротких пунктов, каждый с источником. Если ничего важного не произошло, скажи об этом в этом первом предложении.</string>
+    <string name="scheduleAssistantTitle">Assistant</string>
+    <string name="scheduleAssistantNote">Пустая папка для новостей и поиска. Нажмите, чтобы выбрать другой проект.</string>
+    <string name="scheduleAssistantCannot">Этот сервер не может создать папку Assistant. Выберите проект для новостей дня.</string>
+    <string name="scheduleAssistantFailed">Не удалось создать папку Assistant. Выберите проект вместо неё.</string>
 </resources>

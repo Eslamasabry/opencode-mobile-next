@@ -135,6 +135,10 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
 private class EditorDraft(start: EditorFields) {
     val topic = TextFieldState(start.topic)
     var starter by mutableStateOf(start.starter)
+    var assistant by mutableStateOf(start.assistant)
+
+    /** The person left the Assistant folder to pick a project: the path field shows and stays while they type. */
+    var choosingProject by mutableStateOf(false)
     val prompt = TextFieldState(start.prompt)
     val project = TextFieldState(start.project)
     val time = TextFieldState(start.time)
@@ -149,6 +153,7 @@ private class EditorDraft(start: EditorFields) {
         EditorFields(
             starter = starter,
             topic = topic.text.toString(),
+            assistant = assistant,
             prompt = prompt.text.toString(),
             project = project.text.toString(),
             kind = kind,
@@ -259,6 +264,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                 EditIssue.DateInvalid -> words.issueDate
                 EditIssue.TimeInvalid -> words.issueTime
                 EditIssue.HoursInvalid -> words.issueHours
+                EditIssue.AssistantFolderFailed -> stringResource(Res.string.scheduleAssistantFailed)
                 else -> null
             }
         (issue ?: state.error?.let(words::error))?.let {
@@ -267,7 +273,12 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         }
         Spacer(Modifier.height(Space.S3.dp))
         // The source seed fixes the project. Retain input only when the native entry supplied none.
-        if (state.fields.project.isBlank()) {
+        if (draft.starter == ScheduleStarter.News && !draft.assistant && !state.canMakeFolder && !state.updating) {
+            // This server cannot make the folder: say so, and ask for a project (never a quiet pick of the newest one).
+            KitText(stringResource(Res.string.scheduleAssistantCannot), role = TypeRole.Secondary)
+            Spacer(Modifier.height(Space.S2.dp))
+        }
+        if (!draft.assistant && (state.fields.project.isBlank() || draft.choosingProject)) {
             KitField(
                 draft.project,
                 words.project,
@@ -278,18 +289,32 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         }
         KitRow(
             title =
-                draft.project.text.toString().trimEnd('/').substringAfterLast('/').ifEmpty {
-                    words.project
-                },
+                if (draft.assistant) stringResource(Res.string.scheduleAssistantTitle)
+                else
+                    draft.project.text.toString().trimEnd('/').substringAfterLast('/').ifEmpty {
+                        words.project
+                    },
             leading = KitRowLeading.Glyph(KitIcons.folderOpen),
             supporting =
-                stringResource(
-                    if (draft.thisConversation) Res.string.scheduleInThisConversation
-                    else Res.string.scheduleNewConversation
-                ),
+                if (draft.assistant) stringResource(Res.string.scheduleAssistantNote)
+                else
+                    stringResource(
+                        if (draft.thisConversation) Res.string.scheduleInThisConversation
+                        else Res.string.scheduleNewConversation
+                    ),
+            supportingMaxLines = if (draft.assistant) 3 else 1,
             trailing =
-                if (state.canChooseConversation) KitRowTrailing.Chevron else KitRowTrailing.None,
-            onClick = if (state.canChooseConversation) ({ targetOpen = true }) else null,
+                if (draft.assistant || state.canChooseConversation) KitRowTrailing.Chevron
+                else KitRowTrailing.None,
+            onClick =
+                if (draft.assistant) {
+                    {
+                        // The person picks a project themselves: the path field takes over.
+                        draft.assistant = false
+                        draft.choosingProject = true
+                        draft.project.edit { replace(0, length, "") }
+                    }
+                } else if (state.canChooseConversation) ({ targetOpen = true }) else null,
             enabled = enabled.isEnabled,
             disabledReason = enabled.reason,
         )

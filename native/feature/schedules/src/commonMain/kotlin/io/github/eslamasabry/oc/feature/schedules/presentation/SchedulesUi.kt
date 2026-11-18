@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.schedules.presentation
 
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.schedules.MissedRunPolicy
@@ -25,6 +28,8 @@ public data class ScheduleTarget(
      * conversation.
      */
     val recentProject: String?,
+    /** ServerCapabilities.projectFolderCreation of the live connection: the server can make the Assistant folder. */
+    val canMakeFolder: Boolean = false,
 )
 
 public data class ModelChoice(val providerId: String, val modelId: String, val label: String)
@@ -46,6 +51,13 @@ public interface ScheduleServers {
     public suspend fun target(profileId: ProfileId): ScheduleTarget
 
     public suspend fun models(profileId: ProfileId): List<ModelChoice>
+
+    /**
+     * B-440: makes (or finds) the empty "Assistant" folder for Daily news on this server and answers its path. Never the
+     * server's home folder. Only called when [ScheduleTarget.canMakeFolder].
+     */
+    public suspend fun assistantFolder(profileId: ProfileId): Outcome<String> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("projectFolderCreation")))
 
     public suspend fun conversation(ref: ConversationRef): ConversationSeed?
 
@@ -165,6 +177,9 @@ public enum class EditIssue {
     DateInvalid,
     HoursInvalid,
     FutureRequired,
+
+    /** B-440: the Assistant folder could not be made; the person is asked to pick a project. */
+    AssistantFolderFailed,
 }
 
 /** B-440: what a NEW schedule starts from; a starter only fills the fields, the person can still edit them. */
@@ -178,6 +193,8 @@ public data class EditorFields(
     val starter: ScheduleStarter = ScheduleStarter.Blank,
     /** The topic typed for a starter that has one (Daily news); it lives only in the prompt it fills. */
     val topic: String = "",
+    /** B-440: the project is the Assistant folder, made on the first save (the project path stays empty until then). */
+    val assistant: Boolean = false,
     val prompt: String = "",
     val project: String = "",
     val kind: RecurrenceKind = RecurrenceKind.Once,
@@ -199,6 +216,8 @@ public data class ScheduleEditUi(
     val conversationTitle: String? = null,
     val continuesConversation: Boolean = false,
     val canChooseConversation: Boolean = false,
+    /** B-440: the live server can make the Assistant folder (false until the live read, and on servers that cannot). */
+    val canMakeFolder: Boolean = false,
     val issue: EditIssue? = null,
     val error: ScheduleCode? = null,
     val saving: Boolean = false,

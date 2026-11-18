@@ -90,4 +90,8 @@
     <string name="scheduleStarterNewsTopic">Tema</string>
     <string name="scheduleStarterNewsHint">Por ejemplo: precios inmobiliarios en Dubái</string>
     <string name="scheduleNewsPrompt">Busca las noticias más importantes de hoy sobre %1$s en fuentes fiables. Empieza tu respuesta con una frase sencilla de como máximo 90 caracteres que lo resuma y después da hasta cinco puntos breves, cada uno con su fuente. Si no ocurrió nada importante, dilo en esa primera frase.</string>
+    <string name="scheduleAssistantTitle">Assistant</string>
+    <string name="scheduleAssistantNote">Una carpeta vacía para noticias y consultas. Toca para elegir otro proyecto.</string>
+    <string name="scheduleAssistantCannot">Este servidor no puede crear una carpeta Assistant. Elige un proyecto para las noticias diarias.</string>
+    <string name="scheduleAssistantFailed">No se pudo crear la carpeta Assistant. Elige un proyecto en su lugar.</string>
 </resources>

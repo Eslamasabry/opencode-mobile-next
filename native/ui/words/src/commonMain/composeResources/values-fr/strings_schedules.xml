@@ -89,4 +89,8 @@
     <string name="scheduleStarterNewsTopic">Sujet</string>
     <string name="scheduleStarterNewsHint">Par exemple : prix de l'immobilier à Dubaï</string>
     <string name="scheduleNewsPrompt">Trouve les actualités les plus importantes du jour sur %1$s auprès de sources fiables. Commence ta réponse par une phrase simple de 90 caractères au plus qui résume l'essentiel, puis donne jusqu'à cinq points courts, chacun avec sa source. S'il ne s'est rien passé d'important, dis-le dans cette première phrase.</string>
+    <string name="scheduleAssistantTitle">Assistant</string>
+    <string name="scheduleAssistantNote">Un dossier vide pour les actualités et les recherches. Touchez pour choisir un autre projet.</string>
+    <string name="scheduleAssistantCannot">Ce serveur ne peut pas créer de dossier Assistant. Choisissez un projet pour les actualités du jour.</string>
+    <string name="scheduleAssistantFailed">Impossible de créer le dossier Assistant. Choisissez plutôt un projet.</string>
 </resources>
