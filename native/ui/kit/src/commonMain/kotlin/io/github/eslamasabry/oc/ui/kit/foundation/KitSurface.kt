@@ -38,6 +38,8 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
@@ -171,7 +173,7 @@ public val LocalKitNested: androidx.compose.runtime.ProvidableCompositionLocal<B
 private fun Argb.faded(a: Float): Argb = withAlpha(alpha / 255f * a)
 
 private fun SurfaceDecoration.faded(a: Float): SurfaceDecoration =
-    if (a >= 1f) this else copy(fill = fill?.faded(a), fillStart = fillStart?.faded(a))
+    if (a >= 1f) this else copy(fill = fill?.faded(a), fillStart = fillStart?.faded(a), fillEnd = fillEnd?.faded(a))
 
 private fun Color.toArgb(): Argb = Argb(
     ((alpha * 255f + .5f).toInt() shl 24) or ((red * 255f + .5f).toInt() shl 16) or ((green * 255f + .5f).toInt() shl 8) or (blue * 255f + .5f).toInt(),
@@ -233,7 +235,8 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             level = input.level,
             radii = radii,
             circle = input.shape == KitShapeId.Circle && input.cornerShapes == null,
-            color = input.color?.toArgb(),
+            // Solid glass finishes the part's own face: its own fill is the request's colour (no fill, no finish).
+            color = input.color?.toArgb() ?: input.ownFill?.takeIf { style.spec.tokens.keepsOwnFills }?.toArgb(),
             selected = input.selected,
             pressed = input.pressed,
             disabled = input.disabled,
@@ -241,6 +244,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             action = input.action,
             nested = input.nested || LocalKitNested.current,
             look = if (style.style == Style.Glass) io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec else io.github.eslamasabry.oc.ui.design.style.GlassLook.Default,
+            dressed = input.ownLook,
         )
     val isGlass = style.style == Style.Glass
     val backdrop = LocalKitGlassBackdrop.current
@@ -346,6 +350,7 @@ public fun kitDressedDecoration(role: SurfaceRole, shape: KitShapeId, level: Sur
             radii = Radii.all(if (shape == KitShapeId.Square) 0f else r),
             circle = shape == KitShapeId.Circle,
             color = color?.toArgb(),
+            dressed = true,
         )
     return remember(request, style) { style.spec.resolve(request) }
 }
@@ -472,32 +477,44 @@ public fun Modifier.kitDecorated(d: SurfaceDecoration, rtl: Boolean = false): Mo
             ),
         )
     }
-    return m.drawBehind {
+    // The outline and the gradient brushes are built once per size (not on every draw pass).
+    return m.drawWithCache {
         val outline = shape.createOutline(size, layoutDirection, this)
-        val ltr = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
-        hard.forEach { s -> drawShadow(s, shape, ltr) }
-        d.hardShadow?.let { block ->
-            if (d.hardOffsetDp > 0f) {
-                val o = d.hardOffsetDp.dp.toPx()
-                translate(o * ltr, o) { drawOutline(shape.createOutline(size, layoutDirection, this), block.toColor()) }
+        val fillBrush = d.fillEnd?.takeIf { d.fill != null && it != d.fill }?.let { Brush.verticalGradient(listOf(d.fill!!.toColor(), it.toColor()), startY = 0f, endY = size.height) }
+        val topLine =
+            if (d.topLight.v ushr 24 == 0) null
+            else {
+                val fade = minOf(size.height * .30f, 14.dp.toPx())
+                Triple(androidx.compose.ui.graphics.Path().apply { addOutline(outline) }, Brush.verticalGradient(listOf(d.topLight.toColor(), Color.Transparent), startY = 0f, endY = fade), 1.dp.toPx() * 2f)
             }
-        }
-        d.fill?.let { drawOutline(outline, it.toColor()) }
-        d.paired?.let { p ->
-            if (p.inset > 0f) {
-                // Pressed in: the dark edge lies along the top start, the light along the bottom end.
-                val w = (p.distanceDp.coerceAtLeast(1.5f)).dp.toPx()
-                drawOutline(outline, Brush.linearGradient(listOf(p.dark.toColor(), Color.Transparent, p.light.toColor())), style = Stroke(w))
+        onDrawBehind {
+            val ltr = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
+            hard.forEach { s -> drawShadow(s, shape, ltr) }
+            d.hardShadow?.let { block ->
+                if (d.hardOffsetDp > 0f) {
+                    val o = d.hardOffsetDp.dp.toPx()
+                    translate(o * ltr, o) { drawOutline(shape.createOutline(size, layoutDirection, this), block.toColor()) }
+                }
             }
-        }
-        if (d.edgeWidthDp > 0f) {
-            val start = d.edgeStart ?: d.edgeEnd
-            val end = d.edgeEnd ?: d.edgeStart
-            if (start != null && end != null) {
-                val w = d.edgeWidthDp.dp.toPx()
-                val rest = d.edgeRest
-                if (start == end && rest == null) drawOutline(outline, start.toColor(), style = Stroke(w))
-                else drawOutline(outline, Brush.linearGradient(listOfNotNull(start.toColor(), rest?.toColor(), end.toColor())), style = Stroke(w))
+            d.fill?.let { top -> if (fillBrush != null) drawOutline(outline, fillBrush) else drawOutline(outline, top.toColor()) }
+            // One thin line of light just inside the top edge, fading down the sides (Solid glass): a stroke clipped inside.
+            topLine?.let { (path, brush, width) -> clipPath(path) { drawOutline(outline, brush, style = Stroke(width)) } }
+            d.paired?.let { p ->
+                if (p.inset > 0f) {
+                    // Pressed in: the dark edge lies along the top start, the light along the bottom end.
+                    val w = (p.distanceDp.coerceAtLeast(1.5f)).dp.toPx()
+                    drawOutline(outline, Brush.linearGradient(listOf(p.dark.toColor(), Color.Transparent, p.light.toColor())), style = Stroke(w))
+                }
+            }
+            if (d.edgeWidthDp > 0f) {
+                val start = d.edgeStart ?: d.edgeEnd
+                val end = d.edgeEnd ?: d.edgeStart
+                if (start != null && end != null) {
+                    val w = d.edgeWidthDp.dp.toPx()
+                    val rest = d.edgeRest
+                    if (start == end && rest == null) drawOutline(outline, start.toColor(), style = Stroke(w))
+                    else drawOutline(outline, Brush.linearGradient(listOfNotNull(start.toColor(), rest?.toColor(), end.toColor())), style = Stroke(w))
+                }
             }
         }
     }
@@ -538,7 +555,7 @@ public fun kitShadowReach(role: SurfaceRole = SurfaceRole.Control): Dp {
     val roles = LocalKitRoles.current
     val reach = remember(style, roles, role) {
         val decoration =
-            style.spec.resolve(SurfaceRequest(roles = roles, role = role, knobs = style.knobs, radii = Radii.all(8f)))
+            style.spec.resolve(SurfaceRequest(roles = roles, role = role, knobs = style.knobs, radii = Radii.all(8f), color = if (style.spec.tokens.keepsOwnFills) roles.surface1 else null))
         if (decoration == null) {
             0f
         } else {

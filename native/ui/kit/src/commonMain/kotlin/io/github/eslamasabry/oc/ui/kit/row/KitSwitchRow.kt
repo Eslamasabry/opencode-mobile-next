@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -415,7 +416,7 @@ internal fun KitSwitchBox(checked: Boolean, active: Boolean, quiet: Boolean = fa
 internal fun KitSwitchTrack(checked: Boolean, active: Boolean, quiet: Boolean = false) {
     val roles = LocalKitColors.current
     val specs = KitMotion.specs
-    val own = LocalKitStyle.current.style == Style.Solid // Solid answers the switch with its own look (kit_row_parts.dart:591-594)
+    val own = LocalKitStyle.current.style.drawsOwnFace // Solid answers the switch with its own look (kit_row_parts.dart:591-594)
     val c = kitSwitchColors(roles, checked, active, quiet)
     val track by animateColorAsState(c.track, specs.quick(), label = "switch-track")
     val thumbColor by animateColorAsState(c.thumb, specs.quick(), label = "switch-thumb-fill")

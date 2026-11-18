@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -227,7 +228,7 @@ private fun <T> ChoiceTile(
         }
         return
     }
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val edge = when {
         selected -> colors.accent
         light -> colors.hairline

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.ui.draw.clipToBounds
@@ -145,7 +146,7 @@ private fun optionFrame(selected: Boolean): Modifier {
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface2, ownFill = face, selected = selected)
         )
     val look = if (asked.paints) asked else raised
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val edge = kitHairline()
     val ring =
         when {
@@ -594,7 +595,7 @@ public fun KitAccentRow(
         return
     }
     val matchLook = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Control, KitShapeId.Button, ownFill = colors.surface1, selected = matchOn))
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val matchWidth = if (matchOn) kitFocusRingWidth() else kitHairline()
     val matchEdge =
         when {
@@ -836,7 +837,7 @@ private fun StyleSample(style: Style) {
                                     (Space.S1 * 3.5f).dp // F: lib/ui/kit/kit_option_card.dart:653
                                 ) // F: lib/ui/kit/kit_option_card.dart:653
                                 .then(control.modifier)
-                                .then(if (style == Style.Solid) Modifier.exactEdge(kitHairline(), colors.hairline, pill) else Modifier)
+                                .then(if (style.drawsOwnFace) Modifier.exactEdge(kitHairline(), colors.hairline, pill) else Modifier)
                         )
                         Spacer(Modifier.width(Space.S1.dp))
                         Box(

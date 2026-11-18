@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -245,8 +246,7 @@ public fun <T> KitStepSlider(
                                 if (
                                     focused ||
                                         !thumbLook.paints ||
-                                        LocalKitStyle.current.style ==
-                                            io.github.eslamasabry.oc.ui.design.style.Style.Solid
+                                        LocalKitStyle.current.style.drawsOwnFace
                                 )
                                     Modifier.border(
                                         ring,

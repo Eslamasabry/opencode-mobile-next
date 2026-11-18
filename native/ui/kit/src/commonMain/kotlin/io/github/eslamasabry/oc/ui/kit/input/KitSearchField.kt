@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -217,7 +218,7 @@ public fun KitSearchField(
     val shape = shapeId.shape()
     val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Field, shape = shapeId, ownFill = colors.surface1, selected = focused))
     val edge = if (focused) colors.accent else if (prominent) colors.surface1 else colors.hairline
-    val plain = LocalKitStyle.current.style == Style.Solid
+    val plain = LocalKitStyle.current.style.drawsOwnFace
     val hairline = (1f / LocalDensity.current.density).dp
     val lineHeight = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Body).lineHeight.toDp() }
     val lineBox = maxOf(tokens.minTarget.dp, lineHeight)

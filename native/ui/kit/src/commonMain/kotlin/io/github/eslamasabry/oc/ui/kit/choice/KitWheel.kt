@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
@@ -97,7 +98,7 @@ public fun KitWheel(
             )
         )
     val band =
-        if (LocalKitStyle.current.style == Style.Solid)
+        if (LocalKitStyle.current.style.drawsOwnFace)
             look.modifier.border(kitFocusRingWidth(), LocalKitColors.current.accent, look.shape)
         else look.modifier
     CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {

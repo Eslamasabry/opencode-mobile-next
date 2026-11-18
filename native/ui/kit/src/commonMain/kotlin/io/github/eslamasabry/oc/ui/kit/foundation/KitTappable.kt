@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -130,9 +131,11 @@ internal fun Modifier.kitTappable(
         check(enabled || disabledReason != null) { "KitTappable: a disabled tappable must say why (B-KIT-051)" }
     }
     val inkColor = colors.tone(ink)
+    val roles = io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current
+    val solidGlass = LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.SolidGlass
     val indication =
-        remember(platform, inkColor, reduced) {
-            if (reduced) KitFillIndication(inkColor) else platform.pressIndication(inkColor)
+        remember(platform, inkColor, reduced, solidGlass, roles) {
+            if (solidGlass) KitPressedInIndication(inkColor, Color(roles.elevationShadow.v), Color((if (roles.dark) roles.text1 else roles.surface2).v), roles.dark) else if (reduced) KitFillIndication(inkColor) else platform.pressIndication(inkColor)
         }
     val interactions = interactionSource ?: remember { MutableInteractionSource() }
     // A part that marks focus itself (the bar's exit ring) keeps the press fill but not a resting focus fill.

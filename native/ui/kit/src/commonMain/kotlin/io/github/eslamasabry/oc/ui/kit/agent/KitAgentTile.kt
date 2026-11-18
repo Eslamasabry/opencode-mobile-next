@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.agent
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -103,7 +104,7 @@ public fun KitAgentTile(
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, level = SurfaceLevel.Surface2, ownFill = colors.surface1)
         )
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val hairline = kitHairline()
     val edge = if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, look.shape) else Modifier
     val inset = Space.S4.dp + if (solid) hairline else 0.dp

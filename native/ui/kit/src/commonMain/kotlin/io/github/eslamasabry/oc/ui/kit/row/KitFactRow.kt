@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
@@ -113,7 +114,7 @@ public fun KitFactRow(
     val colors = LocalKitColors.current
     val styleState = LocalKitStyle.current
     // KitSurfaceLook.isPlain: Solid at its own defaults; any other look draws its own edge, so the plain hairline goes.
-    val plain = styleState.style == Style.Solid && styleState.knobs == styleState.spec.tokens.defaults
+    val plain = styleState.style.drawsOwnFace && styleState.knobs == styleState.spec.tokens.defaults
     val surface =
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, ownFill = colors.surface1)

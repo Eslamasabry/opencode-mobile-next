@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
 import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.foundation.layout.Box
@@ -260,7 +261,7 @@ private fun KitTooltip(anchor: IntRect, label: String, reason: String?, shortcut
 @Composable
 private fun kitRoundFace(enabled: Boolean): Modifier {
     val colors = LocalKitColors.current
-    val solid = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+    val solid = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style.drawsOwnFace
     val look =
         io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
             io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(

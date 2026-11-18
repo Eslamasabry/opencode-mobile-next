@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -131,7 +132,7 @@ public fun KitChoiceCard(
 ) {
     val colors = LocalKitColors.current
     val specs = KitMotion.specs
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val on = enabled.isEnabled
     val large = LocalDensity.current.fontScale > 1.3f // F: lib/ui/kit/kit_choice_cards.dart:115
     val line = ChoiceCardRules.line(listOfNotNull(tag, supporting).joinToString(" · ").ifEmpty { null }, enabled)

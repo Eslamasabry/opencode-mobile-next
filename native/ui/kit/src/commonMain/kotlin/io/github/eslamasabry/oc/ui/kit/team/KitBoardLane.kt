@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.team
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.horizontalScroll
@@ -332,7 +333,7 @@ private fun LoadingLane(column: KitBoardColumn, width: Float, wide: Boolean) {
 private fun LaneBed(modifier: Modifier, content: @Composable () -> Unit) {
     val colors = LocalKitColors.current
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Track, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.ground))
-    val edge = if (LocalKitStyle.current.style == Style.Solid) Modifier.teamEdge(kitHairline(), colors.hairline, look.shape) else Modifier
+    val edge = if (LocalKitStyle.current.style.drawsOwnFace) Modifier.teamEdge(kitHairline(), colors.hairline, look.shape) else Modifier
     Box(modifier.kitMaxWidth(CapRole.Lane).fillMaxSize().then(look.modifier).then(edge).clip(look.shape)) { content() }
 }
 

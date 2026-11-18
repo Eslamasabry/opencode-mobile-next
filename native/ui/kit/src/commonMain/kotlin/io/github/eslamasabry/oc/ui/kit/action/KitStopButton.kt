@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -56,7 +57,7 @@ public object KitStopDims {
 @Composable
 public fun KitStopButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
     val colors = LocalKitColors.current
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val circle = (if (compact) KitStopDims.CIRCLE_STEP else KitStopDims.CIRCLE_ROW).dp
     val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Circle, level = SurfaceLevel.Surface1))
     Box(

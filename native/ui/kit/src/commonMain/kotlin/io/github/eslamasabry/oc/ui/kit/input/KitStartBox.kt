@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
@@ -109,7 +110,7 @@ public fun KitStartBox(
     val colors = LocalKitColors.current
     val accent = colors.accent
     val style = LocalKitStyle.current
-    val solid = style.style == Style.Solid
+    val solid = style.style.drawsOwnFace
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Field, KitShapeId.Card, ownFill = colors.surface1, selected = focused))
     val pace = KitMotion.specs.pace<androidx.compose.ui.graphics.Color>(KitPace.Quick)
     val edgeColor by animateColorAsState(if (focused) accent else colors.hairline, pace, label = "kit.startBox.edge")

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -564,7 +565,7 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
             .then(keepOutOfCover(motion, track.shape))
             .then(track.modifier)
             .then(
-                if (style == Style.Solid) {
+                if (style.drawsOwnFace) {
                     Modifier.kitHairlineBorder(hairline, colors.hairline, track.shape)
                 } else {
                     Modifier

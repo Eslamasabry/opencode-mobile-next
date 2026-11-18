@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.agent
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -123,7 +124,7 @@ public fun KitAgentChoice(
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, level = SurfaceLevel.Surface2, ownFill = colors.surface1, selected = selected)
         )
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val hairline = kitHairline()
     val edge = if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, look.shape) else Modifier
     // Dart `EdgeInsets.all(space5).add(decoration.padding)`: a drawn border takes its room inside the card.

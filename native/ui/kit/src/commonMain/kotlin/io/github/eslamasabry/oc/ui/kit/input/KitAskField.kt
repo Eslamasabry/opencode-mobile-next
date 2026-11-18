@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import io.github.eslamasabry.oc.ui.kit.effects.kitWordsPlate
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -159,7 +160,7 @@ public fun KitAskField(
     // Large text keeps the field to two lines, so what it is about stays in view above it.
     val large = LocalDensity.current.fontScale >= 1.3f // F: lib/ui/kit/kit_ask_field.dart:187
     val accent = colors.accent
-    val solid = styleState.style == Style.Solid
+    val solid = styleState.style.drawsOwnFace
     // A style that asks for the field halo itself (Soft) keeps it plainly lit at rest (kit_ask_field.dart:205-208).
     val styleHalo = styleState.spec.tokens.fieldHalo == true
     val wide = if (styleHalo && !solid) 0.5f else 0.32f // F: lib/ui/kit/kit_ask_field.dart:201,207

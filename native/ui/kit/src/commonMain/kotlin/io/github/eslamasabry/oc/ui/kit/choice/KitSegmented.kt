@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -229,7 +230,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val hairline = kitHairline()
     val inset = SegmentedGeometry.INSET.dp // owner 2026-11-09: the thumb sits inset in the track
     val density = LocalDensity.current

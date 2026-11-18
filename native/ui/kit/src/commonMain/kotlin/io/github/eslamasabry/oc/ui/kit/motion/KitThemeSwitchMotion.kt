@@ -76,7 +76,7 @@ public object ThemeSwitchRules {
 
     public fun rimFor(style: Style): ThemeRimKind =
         when (style) {
-            Style.Solid, Style.Signal, Style.Glass -> ThemeRimKind.Glow
+            Style.Solid, Style.SolidGlass, Style.Signal, Style.Glass -> ThemeRimKind.Glow
             Style.Soft -> ThemeRimKind.InnerGlow
             Style.Brutal -> ThemeRimKind.HardSweep
             Style.Paper -> ThemeRimKind.InkSweep

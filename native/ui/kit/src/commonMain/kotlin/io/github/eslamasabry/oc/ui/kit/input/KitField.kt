@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.input
 
 import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardScope
 import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -768,7 +769,7 @@ private fun rememberFieldLook(ownFill: Color, selected: Boolean): FieldLook {
                 selected = selected,
             )
         )
-    return FieldLook(look, style.style == Style.Solid)
+    return FieldLook(look, style.style.drawsOwnFace)
 }
 
 /**

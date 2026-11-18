@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import io.github.eslamasabry.oc.ui.kit.foundation.kitRestsWhole
 import kotlinx.coroutines.delay
@@ -397,7 +398,7 @@ internal fun TabStrip(
             if (goal == null) tight = true else if (goal != scroll.value) scroll.animateScrollTo(goal)
         }
     }
-    val solid = style.style == Style.Solid
+    val solid = style.style.drawsOwnFace
     // Solid's pill is ink with the ground's colour for its words, the strongest pair the theme has; every other style
     // paints its own chosen control (glass, a pressed-in well, a hard block, an ink box) and says which ink reads on it.
     val look =

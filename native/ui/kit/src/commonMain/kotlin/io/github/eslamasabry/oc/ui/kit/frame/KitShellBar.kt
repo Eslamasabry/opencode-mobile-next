@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -85,7 +86,7 @@ public fun KitConnectionPill(
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val solid = LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val look =
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Control, KitShapeId.Pill, SurfaceLevel.Surface2, ownFill = colors.surface2),

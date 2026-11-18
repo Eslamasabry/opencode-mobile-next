@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -121,7 +122,7 @@ public fun KitNavRail(
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Panel, SurfaceLevel.Surface2, ownFill = colors.surface2, radius = radius),
         )
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     // The label clamp: measured once over every label (Dart `_labelMetrics`).
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current

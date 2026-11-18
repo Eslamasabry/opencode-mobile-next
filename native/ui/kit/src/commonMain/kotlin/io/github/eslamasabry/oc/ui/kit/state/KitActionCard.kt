@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -47,7 +48,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 public fun KitActionCard(picture: ImageVector, line: String, action: KitAction, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, level = SurfaceLevel.Surface2, ownFill = colors.surface1))
-    val solid = LocalKitStyle.current.style == Style.Solid
+    val solid = LocalKitStyle.current.style.drawsOwnFace
     val edge = if (solid) Modifier.kitHairlineBorder(kitHairline(), colors.hairline, look.shape) else Modifier
     Column(
         modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().then(look.modifier).then(edge).padding(Space.S5.dp),

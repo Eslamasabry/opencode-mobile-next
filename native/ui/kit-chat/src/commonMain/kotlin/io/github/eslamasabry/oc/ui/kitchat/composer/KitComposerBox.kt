@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
@@ -172,7 +173,7 @@ public fun KitComposerBox(
                     faceAlpha = composerFaceAlpha(veil, style.style),
                 )
             )
-        val solid = style.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+        val solid = style.style.drawsOwnFace
         val shadow =
             if (!solid) Modifier
             else

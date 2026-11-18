@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -67,7 +68,7 @@ public fun KitInboxEmptyAnswer(
                     if (shownUncertain) Box(
                         Modifier.size(dot).border(kitFocusRingWidth(), colors.text3, CircleShape).testTag("inbox-answer-off")
                     ) else {
-                        if (style.style != Style.Solid) Box(
+                        if (!style.style.drawsOwnFace) Box(
                             Modifier.size(dot + 2.dp + 2.dp) // F: lib/ui/kit/kit_status_answer.dart:428
                                 .blur(18.dp / 2, BlurredEdgeTreatment.Unbounded) // F: lib/ui/kit/kit_status_answer.dart:427-428
                                 .background(colors.success.copy(alpha = if (colors.dark) .45f else .30f), CircleShape) // F: lib/ui/kit/kit_status_answer.dart:426

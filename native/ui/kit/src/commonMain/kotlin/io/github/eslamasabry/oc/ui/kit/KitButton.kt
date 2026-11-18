@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.design.style.drawsOwnFace
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -159,7 +160,7 @@ public fun KitButton(
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
     val on = enabled.isEnabled
-    val heroWaits = hero && LocalKitStyle.current.style != Style.Solid
+    val heroWaits = hero && !LocalKitStyle.current.style.drawsOwnFace
     val heroFill = colors.accent.copy(alpha = .14f).compositeOver(colors.surface1) // F: lib/ui/kit/kit_buttons.dart:26
     val heroWords = if (!heroWaits) colors.text3 else remember(colors) {
         val under = colors.ground.copy(alpha = 1f)
@@ -236,7 +237,7 @@ public fun KitButton(
     val pressed by interactions.collectIsPressedAsState()
     val reduced = KitMotion.state.reduced
     val press by animateFloatAsState(if (pressed && on && !reduced) 1f else 0f, specs.spatial(), label = "kit-button-press")
-    val flatFace = LocalKitStyle.current.style == Style.Solid
+    val flatFace = LocalKitStyle.current.style.drawsOwnFace
     val rest = if (hero) minHeight / 2 else (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP // NV: a stadium's radius is half its height
     Row(
         modifier =
