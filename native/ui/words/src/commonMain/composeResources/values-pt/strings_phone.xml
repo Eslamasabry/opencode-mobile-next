@@ -929,4 +929,6 @@
     <string name="phoneDownloadAskBodyHelper">Esta é a atualização do auxiliar de agentes deste telefone. Ela conta no seu plano de dados. Aguardar o Wi-Fi a deixa para depois.</string>
     <string name="phoneDownloadAskNow">Baixar agora</string>
     <string name="phoneDownloadAskWait">Aguardar o Wi-Fi</string>
+    <string name="phoneDownloadReadyReply">Atualização do OpenCode pronta · instala quando nenhuma resposta estiver em andamento</string>
+    <string name="phoneDownloadReadyPhone">Atualização do OpenCode pronta · instala quando o servidor do celular estiver pronto</string>
 </resources>

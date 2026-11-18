@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadMapping
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
+import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHelperStep
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeInstallPhase
@@ -63,6 +65,7 @@ class PhoneDownloads(
     val metered: Boolean get() = downloadNetworkMetered(now)
 
     internal val openCodeWaiting = MutableStateFlow(false)
+    internal val openCodeHeld = MutableStateFlow<OpenCodeHold?>(null)
     @Volatile internal var openCode: PhoneOpenCodeAutoUpdate? = null
     @Volatile internal var agents: PhoneAgentAutoUpdate? = null
 
@@ -83,8 +86,13 @@ class PhoneDownloads(
     }
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
-        combine(openCodeWaiting, setup.progress, phones.state, agentStatus.decision, networkRead) {
-                waiting, progress, agentState, decision, read ->
+        combine(
+                combine(openCodeWaiting, openCodeHeld) { waiting, held -> waiting to held },
+                setup.progress,
+                phones.state,
+                agentStatus.decision,
+                networkRead,
+            ) { (waiting, held), progress, agentState, decision, read ->
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =
@@ -93,20 +101,29 @@ class PhoneDownloads(
                         AgentUpdateStep.Updating -> HomeHelperStep.Updating
                         else -> HomeHelperStep.None
                     }
-                HomeDownloadMapping.facts(
-                    openCodeWaiting = downloadWaitingSaid(waiting, read),
-                    openCodeRunning = update && progress.state == SetupState.Running,
-                    openCodeFailed = update && progress.state == SetupState.Failed,
-                    openCodePercent = (progress.overall * 100).roundToInt(),
-                    helper = helper,
-                    helperInstall =
-                        when (install?.phase) {
-                            PhoneAgentInstallPhase.Installing -> HomeInstallPhase.Installing
-                            PhoneAgentInstallPhase.Failed,
-                            PhoneAgentInstallPhase.Interrupted -> HomeInstallPhase.Failed
-                            else -> HomeInstallPhase.None
-                        },
-                    helperPercent = install?.fraction?.let { (it * 100).roundToInt() },
+                val said =
+                    HomeDownloadMapping.facts(
+                        openCodeWaiting = downloadWaitingSaid(waiting, read),
+                        openCodeRunning = update && progress.state == SetupState.Running,
+                        openCodeFailed = update && progress.state == SetupState.Failed,
+                        openCodePercent = (progress.overall * 100).roundToInt(),
+                        helper = helper,
+                        helperInstall =
+                            when (install?.phase) {
+                                PhoneAgentInstallPhase.Installing -> HomeInstallPhase.Installing
+                                PhoneAgentInstallPhase.Failed,
+                                PhoneAgentInstallPhase.Interrupted -> HomeInstallPhase.Failed
+                                else -> HomeInstallPhase.None
+                            },
+                        helperPercent = install?.fraction?.let { (it * 100).roundToInt() },
+                    )
+                HomeDownloadMapping.withHeld(
+                    said,
+                    when (held) {
+                        OpenCodeHold.Busy -> HomeHold.Reply
+                        OpenCodeHold.NotReady -> HomeHold.PhoneNotReady
+                        null -> null
+                    },
                 )
             }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())

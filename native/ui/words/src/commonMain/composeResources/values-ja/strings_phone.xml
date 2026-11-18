@@ -885,4 +885,6 @@
     <string name="phoneDownloadAskBodyHelper">このスマートフォン用のエージェントヘルパーのアップデートです。データ通信量を消費します。Wi-Fi待ちにすると後でダウンロードされます。</string>
     <string name="phoneDownloadAskNow">今すぐダウンロード</string>
     <string name="phoneDownloadAskWait">Wi-Fiを待つ</string>
+    <string name="phoneDownloadReadyReply">OpenCodeのアップデートの準備ができました · 返信の実行中でなくなったらインストールします</string>
+    <string name="phoneDownloadReadyPhone">OpenCodeのアップデートの準備ができました · スマートフォンのサーバーの準備が整ったらインストールします</string>
 </resources>

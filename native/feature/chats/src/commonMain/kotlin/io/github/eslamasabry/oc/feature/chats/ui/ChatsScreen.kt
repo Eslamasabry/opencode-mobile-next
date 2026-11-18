@@ -138,6 +138,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
@@ -146,6 +147,8 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadOnMobile
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadReadyPhone
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadReadyReply
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningPercent
@@ -1360,6 +1363,18 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 working = true,
             )
         }
+        is HomeDownloadPhase.Held ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                id = "phone-download:${download.kind.name}",
+                message =
+                    stringResource(
+                        if (phase.why == HomeHold.Reply) Res.string.phoneDownloadReadyReply
+                        else Res.string.phoneDownloadReadyPhone,
+                    ),
+                // Ready, not stuck: a calm mark and nothing to tap; it installs by itself.
+                tone = StatusTone.Neutral,
+            )
         HomeDownloadPhase.Failed ->
             KitStatus(
                 kind = KitStatusKind.Update,

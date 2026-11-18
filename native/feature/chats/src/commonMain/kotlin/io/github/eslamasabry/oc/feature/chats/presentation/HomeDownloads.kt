@@ -26,7 +26,16 @@ public sealed interface HomeDownloadPhase {
 
     /** It ended without finishing. The words are plain; technical text stays out of the line. */
     public data object Failed : HomeDownloadPhase
+
+    /**
+     * The update is ready but has waited a while for the phone to be free ([why]); it installs by itself then. Said
+     * only after a short bounded wait, so a hold is never silent for long. Nothing to tap: it needs no choice.
+     */
+    public data class Held(val why: HomeHold) : HomeDownloadPhase
 }
+
+/** Why a ready update waits (the plain words are in the strings, one per reason). */
+public enum class HomeHold { Reply, PhoneNotReady }
 
 /** One download's state; [megabytes] is the honest "about" size in [HomeDownloadSizes]. */
 public data class HomeDownloadFact(
@@ -77,11 +86,14 @@ public object HomeDownloadRules {
             else -> HomeLineWinner.None
         }
 
+    private const val HELD_RANK = 3
+
     private fun rank(phase: HomeDownloadPhase): Int =
         when (phase) {
             is HomeDownloadPhase.Running -> 0
             HomeDownloadPhase.Failed -> 1
             HomeDownloadPhase.Waiting -> 2
+            is HomeDownloadPhase.Held -> HELD_RANK
         }
 }
 
@@ -93,6 +105,17 @@ public enum class HomeInstallPhase { None, Installing, Failed }
 
 /** Turns the two updates' readings into the facts Home shows (pure: the app only supplies the readings). */
 public object HomeDownloadMapping {
+    /**
+     * The OpenCode update that is ready but held back ([why]) says so after the facts, only when OpenCode has no
+     * line of its own (running, failed or waiting for Wi-Fi): one line per download, never stacked.
+     */
+    public fun withHeld(facts: List<HomeDownloadFact>, why: HomeHold?): List<HomeDownloadFact> =
+        if (why == null || facts.any { it.kind == HomeDownloadKind.OpenCode }) {
+            facts
+        } else {
+            facts + HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Held(why))
+        }
+
     public fun facts(
         openCodeWaiting: Boolean,
         openCodeRunning: Boolean,

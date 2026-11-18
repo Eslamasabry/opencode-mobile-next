@@ -886,4 +886,6 @@
     <string name="phoneDownloadAskBodyHelper">Ini pembaruan pembantu agen di ponsel ini. Dihitung dalam paket data Anda. Menunggu Wi-Fi menyimpannya untuk nanti.</string>
     <string name="phoneDownloadAskNow">Unduh sekarang</string>
     <string name="phoneDownloadAskWait">Tunggu Wi-Fi</string>
+    <string name="phoneDownloadReadyReply">Pembaruan OpenCode siap · dipasang saat tidak ada balasan yang berjalan</string>
+    <string name="phoneDownloadReadyPhone">Pembaruan OpenCode siap · dipasang saat server ponsel siap</string>
 </resources>

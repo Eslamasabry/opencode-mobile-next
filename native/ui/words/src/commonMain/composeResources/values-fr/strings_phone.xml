@@ -928,4 +928,6 @@
     <string name="phoneDownloadAskBodyHelper">C’est la mise à jour de l’assistant des agents de ce téléphone. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
     <string name="phoneDownloadAskNow">Télécharger maintenant</string>
     <string name="phoneDownloadAskWait">Attendre le Wi-Fi</string>
+    <string name="phoneDownloadReadyReply">Mise à jour d’OpenCode prête · s’installe quand aucune réponse n’est en cours</string>
+    <string name="phoneDownloadReadyPhone">Mise à jour d’OpenCode prête · s’installe quand le serveur du téléphone est prêt</string>
 </resources>
