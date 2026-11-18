@@ -31,6 +31,17 @@ import kotlinx.coroutines.launch
 public object EditorRules {
     private val timePattern = Regex("^(\\d{1,2})[:.](\\d{2})$")
 
+    /** The Daily news starter's time of day. */
+    public const val NEWS_TIME: String = "20:00"
+
+    private const val TOPIC_SLOT = "%1\$s"
+
+    /** B-440: the Daily news prompt for [topic] from the words' [template]; empty while the topic is blank. */
+    public fun newsPrompt(topic: String, template: String): String {
+        val clean = topic.trim().replace(Regex("\\s+"), " ")
+        return if (clean.isEmpty()) "" else template.replace(TOPIC_SLOT, clean)
+    }
+
     public fun time(text: String): Pair<Int, Int>? {
         val m = timePattern.matchEntire(text.trim()) ?: return null
         val hour = m.groupValues[1].toInt()
@@ -247,6 +258,35 @@ public class ScheduleEditViewModel(
         // fields.
         mutable.update { it.copy(fields = input) }
         if (input.prompt != before) typedPrompt.value = input.prompt
+    }
+
+    override fun chooseStarter(starter: ScheduleStarter, template: String) {
+        val now = mutable.value
+        if (now.phase != EditPhase.Ready || now.editing || starter == now.fields.starter) return
+        val was = now.fields
+        val next =
+            when (starter) {
+                ScheduleStarter.News ->
+                    was.copy(
+                        starter = starter,
+                        kind = RecurrenceKind.Daily,
+                        time = EditorRules.NEWS_TIME,
+                        // A daily brief is read fresh each day: its own conversation, not one already open.
+                        thisConversation = false,
+                        // A prompt the person already wrote stays; only an empty one is filled.
+                        prompt = was.prompt.ifBlank { EditorRules.newsPrompt(was.topic, template) },
+                    )
+                ScheduleStarter.Blank ->
+                    was.copy(
+                        starter = starter,
+                        prompt =
+                            if (was.prompt == EditorRules.newsPrompt(was.topic, template)) "" else was.prompt,
+                    )
+            }
+        typedByPerson = true
+        // A new seed rebuilds the open form on these fields.
+        mutable.update { it.copy(fields = next, seed = it.seed + 1) }
+        if (next.prompt != was.prompt) typedPrompt.value = next.prompt
     }
 
     override fun save(input: EditorFields) {

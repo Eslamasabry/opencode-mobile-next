@@ -90,4 +90,10 @@
     <string name="scheduleEmptyBody">اختر وقتًا، وسيرسل هذا الهاتف الطلب نيابةً عنك.</string>
     <string name="scheduleRunNow">شغّله الآن</string>
     <string name="scheduleRunNowNote">يبدأ تشغيلًا واحدًا فورًا. يبقى موعد التشغيل التالي كما هو.</string>
+    <string name="scheduleStarterLabel">ابدأ من</string>
+    <string name="scheduleStarterBlank">فارغ</string>
+    <string name="scheduleStarterNews">أخبار يومية</string>
+    <string name="scheduleStarterNewsTopic">الموضوع</string>
+    <string name="scheduleStarterNewsHint">مثال: أسعار العقارات في دبي</string>
+    <string name="scheduleNewsPrompt">ابحث عن أهم أخبار اليوم حول %1$s من مصادر موثوقة. ابدأ ردّك بجملة واحدة بسيطة لا تزيد على 90 حرفًا تلخّص الخبر، ثم اذكر حتى خمسة بنود قصيرة، لكل منها مصدره. إذا لم يحدث شيء مهم فقل ذلك في تلك الجملة الأولى.</string>
 </resources>

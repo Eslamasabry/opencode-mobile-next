@@ -80,4 +80,10 @@
     <string name="scheduleEmptyBody">选择一个时间，这部手机会替你发送这条提示词。</string>
     <string name="scheduleRunNow">立即运行</string>
     <string name="scheduleRunNowNote">立即开始一次运行。下一次定时时间保持不变。</string>
+    <string name="scheduleStarterLabel">从此开始</string>
+    <string name="scheduleStarterBlank">空白</string>
+    <string name="scheduleStarterNews">每日新闻</string>
+    <string name="scheduleStarterNewsTopic">主题</string>
+    <string name="scheduleStarterNewsHint">例如：迪拜房价</string>
+    <string name="scheduleNewsPrompt">从可靠来源查找今天关于%1$s的最重要新闻。回复以一句不超过 90 个字符的简明句子开头概括要点，然后列出最多五条简短的要点，每条注明来源。如果没有重要的事发生，请在第一句话中说明。</string>
 </resources>

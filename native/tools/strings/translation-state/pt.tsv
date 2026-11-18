@@ -10413,6 +10413,7 @@ scheduleNeedPrompt	a1129b8ade
 scheduleNeedsYou	d38c3b4ba0
 scheduleNew	0ab6e17f56
 scheduleNewConversation	7add045fae
+scheduleNewsPrompt	16c5d50bbb
 scheduleNotSent	eba3890ab9
 scheduleNotifyOff	6e5ad3e64a
 scheduleOnce	dcea703898
@@ -10434,6 +10435,11 @@ scheduleSendingNow	1ceedf4c29
 scheduleSent	d8be76ae48
 scheduleSignInAgain	8ec3601284
 scheduleSkippedWhen	0130dbf847
+scheduleStarterBlank	b74308c091
+scheduleStarterLabel	5a6484945e
+scheduleStarterNews	2025e6bcc8
+scheduleStarterNewsHint	74b5b11c9b
+scheduleStarterNewsTopic	a58025e9c1
 scheduleTarget	7a25ab934f
 scheduleTargetChanged	3e51671195
 scheduleThisConversation	2d30f1cdbe

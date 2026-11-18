@@ -167,8 +167,17 @@ public enum class EditIssue {
     FutureRequired,
 }
 
+/** B-440: what a NEW schedule starts from; a starter only fills the fields, the person can still edit them. */
+public enum class ScheduleStarter {
+    Blank,
+    News,
+}
+
 /** The editor's starting values; [seed] changes when they are (re)loaded. */
 public data class EditorFields(
+    val starter: ScheduleStarter = ScheduleStarter.Blank,
+    /** The topic typed for a starter that has one (Daily news); it lives only in the prompt it fills. */
+    val topic: String = "",
     val prompt: String = "",
     val project: String = "",
     val kind: RecurrenceKind = RecurrenceKind.Once,
@@ -210,6 +219,12 @@ public interface ScheduleEditActions {
      * (B-STATE-024).
      */
     public fun edited(input: EditorFields) {}
+
+    /**
+     * B-440: the person picked a starter on a new schedule. Daily news sets Daily at 20:00 and fills the prompt from
+     * [template] (the words' text; presentation holds no copy). Blank takes back a prompt the starter had filled.
+     */
+    public fun chooseStarter(starter: ScheduleStarter, template: String) {}
 
     /** Opens the conversation the last run used (Flutter schedule_sheet `ScheduleSheetExit.openRun`). */
     public fun openConversation(sessionId: String) {}

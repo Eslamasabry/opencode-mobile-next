@@ -79,4 +79,10 @@
     <string name="scheduleEmptyBody">Pilih waktu, dan ponsel ini akan mengirim perintahnya untuk Anda.</string>
     <string name="scheduleRunNow">Jalankan sekarang</string>
     <string name="scheduleRunNowNote">Memulai satu proses sekarang juga. Jadwal berikutnya tidak berubah.</string>
+    <string name="scheduleStarterLabel">Mulai dari</string>
+    <string name="scheduleStarterBlank">Kosong</string>
+    <string name="scheduleStarterNews">Berita harian</string>
+    <string name="scheduleStarterNewsTopic">Topik</string>
+    <string name="scheduleStarterNewsHint">Contoh: harga properti di Dubai</string>
+    <string name="scheduleNewsPrompt">Cari berita terpenting hari ini tentang %1$s dari sumber tepercaya. Awali balasanmu dengan satu kalimat sederhana maksimal 90 karakter yang merangkumnya, lalu berikan hingga lima butir singkat, masing-masing dengan sumbernya. Jika tidak ada yang penting, katakan itu di kalimat pertama.</string>
 </resources>

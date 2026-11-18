@@ -82,4 +82,10 @@
     <string name="scheduleEmptyBody">Pick a time, and this phone sends the prompt for you.</string>
     <string name="scheduleRunNow">Run now</string>
     <string name="scheduleRunNowNote">Starts one run right away. The next scheduled time stays the same.</string>
+    <string name="scheduleStarterLabel">Start from</string>
+    <string name="scheduleStarterBlank">Blank</string>
+    <string name="scheduleStarterNews">Daily news</string>
+    <string name="scheduleStarterNewsTopic">Topic</string>
+    <string name="scheduleStarterNewsHint">For example: Dubai property prices</string>
+    <string name="scheduleNewsPrompt">Find today\'s most important news about %1$s from reliable sources. Begin your reply with one plain sentence of at most 90 characters that sums it up, then give up to five short items, each with its source. If nothing important happened, say so in that first sentence.</string>
 </resources>

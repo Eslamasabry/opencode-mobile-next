@@ -83,4 +83,10 @@
     <string name="scheduleEmptyBody">Escolha um horário e este celular envia a mensagem por você.</string>
     <string name="scheduleRunNow">Executar agora</string>
     <string name="scheduleRunNowNote">Inicia uma execução imediatamente. O próximo horário agendado continua o mesmo.</string>
+    <string name="scheduleStarterLabel">Começar de</string>
+    <string name="scheduleStarterBlank">Em branco</string>
+    <string name="scheduleStarterNews">Notícias diárias</string>
+    <string name="scheduleStarterNewsTopic">Assunto</string>
+    <string name="scheduleStarterNewsHint">Por exemplo: preços de imóveis em Dubai</string>
+    <string name="scheduleNewsPrompt">Encontre as notícias mais importantes de hoje sobre %1$s em fontes confiáveis. Comece sua resposta com uma frase simples de no máximo 90 caracteres que resuma tudo, depois dê até cinco itens curtos, cada um com sua fonte. Se nada importante aconteceu, diga isso nessa primeira frase.</string>
 </resources>

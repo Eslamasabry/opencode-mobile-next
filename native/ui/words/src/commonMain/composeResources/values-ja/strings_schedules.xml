@@ -79,4 +79,10 @@
     <string name="scheduleEmptyBody">時刻を選択すると、このスマートフォンが代わりにプロンプトを送信します。</string>
     <string name="scheduleRunNow">今すぐ実行</string>
     <string name="scheduleRunNowNote">1回分の実行をすぐに開始します。次回の予定時刻は変わりません。</string>
+    <string name="scheduleStarterLabel">開始方法</string>
+    <string name="scheduleStarterBlank">空白</string>
+    <string name="scheduleStarterNews">毎日のニュース</string>
+    <string name="scheduleStarterNewsTopic">トピック</string>
+    <string name="scheduleStarterNewsHint">例：ドバイの不動産価格</string>
+    <string name="scheduleNewsPrompt">信頼できる情報源から、%1$sに関する今日の最も重要なニュースを探してください。返信は、要点をまとめた90文字以内のわかりやすい一文で始め、続けて出典付きの短い項目を最大5件挙げてください。重要な出来事がなければ、その最初の一文でそう伝えてください。</string>
 </resources>
