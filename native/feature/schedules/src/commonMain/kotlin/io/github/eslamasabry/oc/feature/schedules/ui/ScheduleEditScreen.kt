@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.feature.schedules.presentation.EditorFields
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleEditActions
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleEditUi
+import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleStarter
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -56,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -132,6 +135,16 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
  * save.
  */
 private class EditorDraft(start: EditorFields) {
+    val topic = TextFieldState(start.topic)
+    var starter by mutableStateOf(start.starter)
+    var assistant by mutableStateOf(start.assistant)
+    var webReads by mutableStateOf(start.webReads)
+
+    /** The project left the Assistant folder and the switch went off for that: the row says why until it is turned on again. */
+    var webReadsMoved by mutableStateOf(false)
+
+    /** The person left the Assistant folder to pick a project: the path field shows and stays while they type. */
+    var choosingProject by mutableStateOf(false)
     val prompt = TextFieldState(start.prompt)
     val project = TextFieldState(start.project)
     val time = TextFieldState(start.time)
@@ -144,6 +157,10 @@ private class EditorDraft(start: EditorFields) {
 
     fun fields(): EditorFields =
         EditorFields(
+            starter = starter,
+            topic = topic.text.toString(),
+            assistant = assistant,
+            webReads = webReads,
             prompt = prompt.text.toString(),
             project = project.text.toString(),
             kind = kind,
@@ -161,13 +178,79 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
     val enabled = if (state.saving) KitEnabled.Disabled(words.saving) else KitEnabled.Enabled
     var targetOpen by remember { mutableStateOf(false) }
     val promptFocus = remember { FocusRequester() }
-    LaunchedEffect(state.seed) { if (!state.editing) promptFocus.requestFocus() }
+    val topicFocus = remember { FocusRequester() }
+    val newsTemplate = stringResource(Res.string.scheduleNewsPrompt)
+    LaunchedEffect(state.seed) {
+        if (state.editing) return@LaunchedEffect
+        if (draft.starter == ScheduleStarter.News && draft.topic.text.isEmpty()) topicFocus.requestFocus()
+        else promptFocus.requestFocus()
+    }
+    // B-440: leaving the Assistant folder turns the web-read switch off, with its reason; the person may turn it on again.
+    LaunchedEffect(draft) {
+        var was = EditorRules.inAssistant(draft.fields())
+        snapshotFlow { EditorRules.inAssistant(draft.fields()) }
+            .collect { now ->
+                if (was && !now && draft.webReads) {
+                    draft.webReads = false
+                    draft.webReadsMoved = true
+                }
+                was = now
+            }
+    }
+    // B-440: typing the topic rewrites the prompt it filled, until the person edits that prompt themselves.
+    LaunchedEffect(draft, newsTemplate) {
+        var before = draft.topic.text.toString()
+        snapshotFlow { draft.topic.text.toString() }
+            .drop(1)
+            .collect { topic ->
+                if (draft.starter == ScheduleStarter.News) {
+                    val filled = EditorRules.newsPrompt(before, newsTemplate)
+                    val now = draft.prompt.text.toString()
+                    if (now.isBlank() || now == filled) {
+                        val next = EditorRules.newsPrompt(topic, newsTemplate)
+                        draft.prompt.edit { replace(0, length, next) }
+                    }
+                }
+                before = topic
+            }
+    }
     Column(
         Modifier.fillMaxSize()
             .kitImePadding()
             .verticalScroll(kitPageScrollState())
             .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp)
     ) {
+        // B-440: only a NEW schedule offers a starter; a saved one is edited as it is.
+        if (!state.editing) {
+            KitText(stringResource(Res.string.scheduleStarterLabel), role = TypeRole.Secondary)
+            Spacer(Modifier.height(Space.S2.dp))
+            KitSegmented(
+                listOf(
+                    KitSegment(ScheduleStarter.Blank, stringResource(Res.string.scheduleStarterBlank)),
+                    KitSegment(ScheduleStarter.News, stringResource(Res.string.scheduleStarterNews)),
+                ),
+                selected = draft.starter,
+                semanticsLabel = stringResource(Res.string.scheduleStarterLabel),
+                enabled = enabled,
+                onChange = { actions.chooseStarter(it, newsTemplate) },
+            )
+            Spacer(Modifier.height(Space.S3.dp))
+            if (draft.starter == ScheduleStarter.News) {
+                KitField(
+                    draft.topic,
+                    stringResource(Res.string.scheduleStarterNewsTopic),
+                    placeholder = stringResource(Res.string.scheduleStarterNewsHint),
+                    kind = KitFieldKind.Text,
+                    focusRequester = topicFocus,
+                    error =
+                        if (state.issue == EditIssue.PromptRequired && draft.topic.text.isBlank()) words.issuePrompt
+                        else null,
+                    maxLength = 200,
+                    enabled = enabled,
+                )
+                Spacer(Modifier.height(Space.S4.dp))
+            }
+        }
         KitField(
             draft.prompt,
             stringResource(Res.string.scheduleAsk),
@@ -200,6 +283,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                 EditIssue.DateInvalid -> words.issueDate
                 EditIssue.TimeInvalid -> words.issueTime
                 EditIssue.HoursInvalid -> words.issueHours
+                EditIssue.AssistantFolderFailed -> stringResource(Res.string.scheduleAssistantFailed)
                 else -> null
             }
         (issue ?: state.error?.let(words::error))?.let {
@@ -208,7 +292,12 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         }
         Spacer(Modifier.height(Space.S3.dp))
         // The source seed fixes the project. Retain input only when the native entry supplied none.
-        if (state.fields.project.isBlank()) {
+        if (draft.starter == ScheduleStarter.News && !draft.assistant && !state.canMakeFolder && !state.updating) {
+            // This server cannot make the folder: say so, and ask for a project (never a quiet pick of the newest one).
+            KitText(stringResource(Res.string.scheduleAssistantCannot), role = TypeRole.Secondary)
+            Spacer(Modifier.height(Space.S2.dp))
+        }
+        if (!draft.assistant && (state.fields.project.isBlank() || draft.choosingProject)) {
             KitField(
                 draft.project,
                 words.project,
@@ -219,26 +308,63 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         }
         KitRow(
             title =
-                draft.project.text.toString().trimEnd('/').substringAfterLast('/').ifEmpty {
-                    words.project
-                },
+                if (draft.assistant) stringResource(Res.string.scheduleAssistantTitle)
+                else
+                    draft.project.text.toString().trimEnd('/').substringAfterLast('/').ifEmpty {
+                        words.project
+                    },
             leading = KitRowLeading.Glyph(KitIcons.folderOpen),
             supporting =
-                stringResource(
-                    if (draft.thisConversation) Res.string.scheduleInThisConversation
-                    else Res.string.scheduleNewConversation
-                ),
+                if (draft.assistant) stringResource(Res.string.scheduleAssistantNote)
+                else
+                    stringResource(
+                        if (draft.thisConversation) Res.string.scheduleInThisConversation
+                        else Res.string.scheduleNewConversation
+                    ),
+            supportingMaxLines = if (draft.assistant) 3 else 1,
             trailing =
-                if (state.canChooseConversation) KitRowTrailing.Chevron else KitRowTrailing.None,
-            onClick = if (state.canChooseConversation) ({ targetOpen = true }) else null,
+                if (draft.assistant || state.canChooseConversation) KitRowTrailing.Chevron
+                else KitRowTrailing.None,
+            onClick =
+                if (draft.assistant) {
+                    {
+                        // The person picks a project themselves: the path field takes over.
+                        draft.assistant = false
+                        draft.choosingProject = true
+                        draft.project.edit { replace(0, length, "") }
+                    }
+                } else if (state.canChooseConversation) ({ targetOpen = true }) else null,
             enabled = enabled.isEnabled,
             disabledReason = enabled.reason,
         )
+        // B-440: a run of this schedule may read the web without asking (searches and page reads only, once each).
+        if (!state.updating || state.canReadWeb) {
+            Spacer(Modifier.height(Space.S3.dp))
+            val noServer = stringResource(Res.string.scheduleWebReadsNoServer)
+            KitRowGroup {
+            KitSwitchRow(
+                stringResource(Res.string.scheduleWebReadsLabel),
+                draft.webReads && state.canReadWeb,
+                supporting =
+                    when {
+                        !state.canReadWeb -> null
+                        draft.webReadsMoved && !draft.webReads -> stringResource(Res.string.scheduleWebReadsMoved)
+                        else -> stringResource(Res.string.scheduleWebReadsNote)
+                    },
+                enabled = if (state.canReadWeb) enabled else KitEnabled.Disabled(noServer),
+                supportingMaxLines = 4,
+                onCheckedChange = {
+                    draft.webReads = it
+                    if (it) draft.webReadsMoved = false
+                },
+            )
+            }
+        }
         // B-NAV-055 (Flutter schedule_sheet.dart `schedule-last-run`): what the last run did, and
         // for a failure what happened and what to do next.
         state.lastRun?.let { run ->
             KitRow(
-                title = lastLine(run, state.nowMs, words),
+                title = lastRunText(run, state.nowMs, words, rememberClockOf(state.nowMs)),
                 leading = KitRowLeading.Glyph(KitIcons.clock),
                 supporting =
                     run.errorCode?.let(words::why)
@@ -400,8 +526,8 @@ private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: Schedu
     val time =
         io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules.time(fields.time)
             ?: return words.save
-    val clock =
-        "${time.first.toString().padStart(2, '0')}:${time.second.toString().padStart(2, '0')}"
+    // The wheel's own clock words (the phone's 12 or 24 hour style), so the button, the row and the wheel agree.
+    val clock = rememberClockOf(nowMs)(time.first, time.second)
     val whenText =
         if (fields.kind == RecurrenceKind.Once) {
             io.github.eslamasabry.oc.engine.schedules.ScheduleTime.at(

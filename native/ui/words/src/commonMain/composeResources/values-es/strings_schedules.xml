@@ -84,4 +84,23 @@
     <string name="scheduleEmptyBody">Elige una hora y este teléfono envía el mensaje por ti.</string>
     <string name="scheduleRunNow">Ejecutar ahora</string>
     <string name="scheduleRunNowNote">Inicia una ejecución de inmediato. La próxima hora programada no cambia.</string>
+    <string name="scheduleStarterLabel">Empezar con</string>
+    <string name="scheduleStarterBlank">En blanco</string>
+    <string name="scheduleStarterNews">Noticias diarias</string>
+    <string name="scheduleStarterNewsTopic">Tema</string>
+    <string name="scheduleStarterNewsHint">Por ejemplo: precios inmobiliarios en Dubái</string>
+    <string name="scheduleNewsPrompt">Busca las noticias más importantes de hoy sobre %1$s en fuentes fiables. Empieza tu respuesta con una frase sencilla de como máximo 90 caracteres que lo resuma y después da hasta cinco puntos breves, cada uno con su fuente. Si no ocurrió nada importante, dilo en esa primera frase.</string>
+    <string name="scheduleAssistantTitle">Assistant</string>
+    <string name="scheduleAssistantNote">Una carpeta vacía para noticias y consultas. Toca para elegir otro proyecto.</string>
+    <string name="scheduleAssistantCannot">Este servidor no puede crear una carpeta Assistant. Elige un proyecto para las noticias diarias.</string>
+    <string name="scheduleAssistantFailed">No se pudo crear la carpeta Assistant. Elige un proyecto en su lugar.</string>
+    <string name="scheduleWebReadsLabel">Dejar que esta ejecución lea la web sin preguntar</string>
+    <string name="scheduleWebReadsNote">Solo se responden las búsquedas en la web y las lecturas de páginas, una vez cada una. Todo lo demás sigue esperándote.</string>
+    <string name="scheduleWebReadsMoved">Desactivado porque este proyecto no es la carpeta Assistant. Actívalo solo si las ejecuciones aquí deben leer la web sin preguntar.</string>
+    <string name="scheduleWebReadsNoServer">Este servidor no distingue las lecturas de la web de otras peticiones, así que una ejecución programada sigue esperándote.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="one">Leyó la web una vez sin preguntar</item>
+        <item quantity="many">Leyó la web %1$s veces sin preguntar</item>
+        <item quantity="other">Leyó la web %1$s veces sin preguntar</item>
+    </plurals>
 </resources>

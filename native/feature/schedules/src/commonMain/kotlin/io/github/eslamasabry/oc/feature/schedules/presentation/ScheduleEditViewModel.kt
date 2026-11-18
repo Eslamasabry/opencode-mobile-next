@@ -31,6 +31,24 @@ import kotlinx.coroutines.launch
 public object EditorRules {
     private val timePattern = Regex("^(\\d{1,2})[:.](\\d{2})$")
 
+    /** The server folder Daily news starts in; a schedule whose project is a folder of this name is "in the Assistant folder". */
+    public const val ASSISTANT_NAME: String = "Assistant"
+
+    /** B-440: the project is the Assistant folder (chosen, to be made at save, or already a folder of that name). */
+    public fun inAssistant(fields: EditorFields): Boolean =
+        fields.assistant || fields.project.trimEnd('/').substringAfterLast('/') == ASSISTANT_NAME
+
+    /** The Daily news starter's time of day. */
+    public const val NEWS_TIME: String = "20:00"
+
+    private const val TOPIC_SLOT = "%1\$s"
+
+    /** B-440: the Daily news prompt for [topic] from the words' [template]; empty while the topic is blank. */
+    public fun newsPrompt(topic: String, template: String): String {
+        val clean = topic.trim().replace(Regex("\\s+"), " ")
+        return if (clean.isEmpty()) "" else template.replace(TOPIC_SLOT, clean)
+    }
+
     public fun time(text: String): Pair<Int, Int>? {
         val m = timePattern.matchEntire(text.trim()) ?: return null
         val hour = m.groupValues[1].toInt()
@@ -94,6 +112,7 @@ public object EditorRules {
             hours = if (rec.kind == RecurrenceKind.Interval) rec.hours.toString() else "3",
             missed = schedule.missedPolicy,
             thisConversation = schedule.sessionId != null,
+            webReads = schedule.webReads,
             model =
                 schedule.modelProviderId?.let { provider ->
                     models.firstOrNull {
@@ -139,10 +158,16 @@ public class ScheduleEditViewModel(
     private var agent: String? = null
     private var workspace: String? = null
 
+    /** B-440: the project a new schedule was offered before Daily news set it aside; Blank gives it back. */
+    private var recentProject: String = ""
+
     /**
      * The typed prompt to keep as a draft; written one at a time, the newest winning (B-STATE-024).
      */
     private val typedPrompt = MutableStateFlow<String?>(null)
+
+    /** B-440: the starter, topic and project choice of a new schedule, kept for a restart (newest wins). */
+    private val keptDraft = MutableStateFlow<KeptScheduleEditor?>(null)
 
     init {
         viewModelScope.launch {
@@ -155,6 +180,11 @@ public class ScheduleEditViewModel(
             }
         }
         viewModelScope.launch { seed() }
+        viewModelScope.launch {
+            keptDraft.filterNotNull().collectLatest {
+                if (keptItem == KeptScheduleEditor.NEW) keptPort?.keep(route.profileId, KeptScheduleEditor.NEW, it)
+            }
+        }
         viewModelScope.launch {
             typedPrompt.filterNotNull().collectLatest {
                 engine.setPromptDraft(profile, route.scheduleId, it)
@@ -198,11 +228,21 @@ public class ScheduleEditViewModel(
                     } else {
                         null
                     }
-                EditorFields(
-                    project = from?.directory ?: route.projectDir ?: target.recentProject.orEmpty(),
-                    date = ScheduleTime.nextMorning(clock.now().toEpochMilliseconds()),
-                    model = model,
-                )
+                val base =
+                    EditorFields(
+                        project = from?.directory ?: route.projectDir ?: target.recentProject.orEmpty(),
+                        date = ScheduleTime.nextMorning(clock.now().toEpochMilliseconds()),
+                        model = model,
+                    )
+                recentProject = base.project
+                // After a restart the starter and the topic come back (B-440), read from the kept copy.
+                val prior =
+                    if (route.from == null && keptItem != null)
+                        (keptFirst ?: keptPort?.read(route.profileId, keptItem))?.fields()
+                    else null
+                if (prior?.starter == ScheduleStarter.News)
+                    restoredNews(base, prior, target.canMakeFolder, target.canReadWeb)
+                else base
             }
         val title =
             if (sessionId != null) route.from?.let { servers.conversation(it)?.title } else null
@@ -223,6 +263,8 @@ public class ScheduleEditViewModel(
                 models = models.toImmutableList(),
                 continuesConversation = sessionId != null,
                 canChooseConversation = sessionId != null,
+                canMakeFolder = target.canMakeFolder,
+                canReadWeb = target.canReadWeb,
                 conversationTitle = title,
                 lastRun = lastRun?.toLastRunUi(),
             )
@@ -231,6 +273,31 @@ public class ScheduleEditViewModel(
         if (keptPort != null && keptItem != null && now.phase == EditPhase.Ready) {
             keptPort.keep(route.profileId, keptItem, KeptScheduleEditor.of(now))
         }
+    }
+
+    /** B-440: Daily news fields: Daily at 20:00, its own conversation, the Assistant folder (or no project to pick from). */
+    private fun newsFields(was: EditorFields, canMake: Boolean, canReadWeb: Boolean): EditorFields =
+        was.copy(
+            // On for Daily news where the Assistant folder is the project and the server types web reads; changeable.
+            webReads = canReadWeb && canMake,
+            starter = ScheduleStarter.News,
+            kind = RecurrenceKind.Daily,
+            time = EditorRules.NEWS_TIME,
+            // A daily brief is read fresh each day: its own conversation, not one already open.
+            thisConversation = false,
+            assistant = canMake,
+            // No quiet fallback into the newest code project: where the server cannot make the folder, the person picks.
+            project = if (canMake) was.project else "",
+        )
+
+    private fun restoredNews(base: EditorFields, prior: EditorFields, canMake: Boolean, canReadWeb: Boolean): EditorFields {
+        val news = newsFields(base, canMake, canReadWeb).copy(topic = prior.topic, webReads = prior.webReads && canReadWeb)
+        // A project the person chose instead of the Assistant folder comes back as chosen.
+        return if (canMake && !prior.assistant) news.copy(assistant = false, project = prior.project) else news
+    }
+
+    private fun keepDraft() {
+        if (keptItem == KeptScheduleEditor.NEW) keptDraft.value = KeptScheduleEditor.of(mutable.value)
     }
 
     override fun back(): Unit = nav.back()
@@ -245,23 +312,83 @@ public class ScheduleEditViewModel(
         val before = mutable.value.fields.prompt
         // The seed stays: the open form is not rebuilt, but a recreated one starts from these
         // fields.
+        val was = mutable.value.fields
         mutable.update { it.copy(fields = input) }
         if (input.prompt != before) typedPrompt.value = input.prompt
+        if (
+            input.starter != was.starter ||
+                input.topic != was.topic ||
+                input.assistant != was.assistant ||
+                (input.starter == ScheduleStarter.News && input.project != was.project)
+        ) keepDraft()
+    }
+
+    override fun chooseStarter(starter: ScheduleStarter, template: String) {
+        val now = mutable.value
+        if (now.phase != EditPhase.Ready || now.editing || starter == now.fields.starter) return
+        val was = now.fields
+        val next =
+            when (starter) {
+                ScheduleStarter.News -> {
+                    if (was.project.isNotBlank()) recentProject = was.project
+                    newsFields(was, now.canMakeFolder, now.canReadWeb)
+                        // A prompt the person already wrote stays; only an empty one is filled.
+                        .copy(prompt = was.prompt.ifBlank { EditorRules.newsPrompt(was.topic, template) })
+                }
+                ScheduleStarter.Blank ->
+                    was.copy(
+                        starter = starter,
+                        assistant = false,
+                        webReads = false,
+                        project = was.project.ifBlank { recentProject },
+                        prompt =
+                            if (was.prompt == EditorRules.newsPrompt(was.topic, template)) "" else was.prompt,
+                    )
+            }
+        typedByPerson = true
+        // A new seed rebuilds the open form on these fields.
+        mutable.update { it.copy(fields = next, seed = it.seed + 1) }
+        if (next.prompt != was.prompt) typedPrompt.value = next.prompt
+        keepDraft()
     }
 
     override fun save(input: EditorFields) {
         if (mutable.value.saving || mutable.value.phase != EditPhase.Ready) return
-        val (recurrence, issue) = EditorRules.recurrence(input, clock.now().toEpochMilliseconds())
+        // The Assistant folder does not exist until this save makes it; the rest of the form is checked as it is.
+        val checked = if (input.assistant) input.copy(project = EditorRules.ASSISTANT_NAME) else input
+        val (recurrence, issue) = EditorRules.recurrence(checked, clock.now().toEpochMilliseconds())
         if (recurrence == null) {
             mutable.update { it.copy(issue = issue, error = null) }
             return
         }
         mutable.update { it.copy(saving = true, issue = null, error = null) }
         viewModelScope.launch {
+            val project =
+                if (input.assistant) {
+                    when (val made = servers.assistantFolder(route.profileId)) {
+                        is Outcome.Ok -> made.value
+                        is Outcome.Failed -> {
+                            // Plain words and a way forward: the person picks a project; what they typed stays.
+                            typedByPerson = true
+                            mutable.update {
+                                it.copy(
+                                    saving = false,
+                                    issue = EditIssue.AssistantFolderFailed,
+                                    fields = input.copy(assistant = false, project = ""),
+                                    seed = it.seed + 1,
+                                )
+                            }
+                            keepDraft()
+                            return@launch
+                        }
+                    }
+                } else {
+                    input.project
+                }
             val draft =
                 ScheduleDraft(
                     prompt = input.prompt,
-                    projectPath = input.project,
+                    projectPath = project,
                     recurrence = recurrence,
                     workspace = workspace,
                     sessionId = sessionId.takeIf { input.thisConversation },
@@ -269,12 +396,20 @@ public class ScheduleEditViewModel(
                     modelProviderId = input.model?.providerId,
                     modelId = input.model?.modelId,
                     missedPolicy = input.missed,
+                    webReads = input.webReads && mutable.value.canReadWeb,
                 )
             when (engine.save(profile, draft, editing)) {
                 is Outcome.Ok -> {
                     mutable.update { it.copy(saving = false) }
                     typedPrompt.value = ""
                     engine.setPromptDraft(profile, route.scheduleId, "")
+                    // The next new schedule starts from Blank again.
+                    if (keptItem == KeptScheduleEditor.NEW)
+                        keptPort?.keep(
+                            route.profileId,
+                            KeptScheduleEditor.NEW,
+                            KeptScheduleEditor.of(mutable.value.copy(fields = EditorFields(project = recentProject))),
+                        )
                     nav.back()
                 }
                 is Outcome.Failed ->

@@ -34,6 +34,10 @@ import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.FolderProblem
+import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.engine.agents.feed.FeedFolders
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -484,7 +488,13 @@ class AppScheduleServers(
                         ?.items
                         ?.firstOrNull()
                         ?.directory
-                ScheduleTarget(name, server.capabilities.value.scheduledPrompts, recent)
+                ScheduleTarget(
+                    name,
+                    server.capabilities.value.scheduledPrompts,
+                    recent,
+                    canMakeFolder = server.capabilities.value.projectFolderCreation,
+                    canReadWeb = server.capabilities.value.webReadPermissions,
+                )
             }
         }
     }
@@ -497,6 +507,41 @@ class AppScheduleServers(
                 provider.modelIds.map { ModelChoice(provider.id, it, "${provider.name} · $it") }
             }
             .take(MAX_MODELS)
+    }
+
+    /**
+     * B-440: the empty "Assistant" folder beside the server's newest project (its workspace folder), made by the
+     * server's own folder call (the same one New project uses). Never the home folder, never the root.
+     */
+    override suspend fun assistantFolder(profileId: ProfileId): Outcome<String> {
+        val server =
+            (profiles.gateway(profileId) as? Outcome.Ok)?.value
+                ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+        val unavailable = Failure.Unavailable(FeatureId("projectFolderCreation")).failed()
+        if (!server.capabilities.value.projectFolderCreation) return unavailable
+        val ops = server.facet<ServerOperationsGateway>() ?: return unavailable
+        val projects =
+            when (val listed = ops.listProjects()) {
+                is Outcome.Failed -> return listed
+                is Outcome.Ok -> listed.value
+            }
+        // Real folders deep enough to have a parent (not "/x"); Git projects lead, as New project does.
+        val placed =
+            projects.filter { it.directory.startsWith("/") && it.directory.trimEnd('/').count { c -> c == '/' } >= 2 }
+        val parent =
+            (placed.filter { it.isGit == true }.ifEmpty { placed })
+                .maxByOrNull { it.updatedAtMs }
+                ?.directory
+                ?.trimEnd('/')
+                ?.substringBeforeLast('/')
+                ?.takeIf { it.isNotEmpty() }
+                ?: return Failure.Folder(FolderProblem.Missing).failed()
+        return when (val made = ops.makeProjectFolder(parent, ASSISTANT_FOLDER)) {
+            is Outcome.Failed -> made
+            // Whatever came back, the home folder and the root are never a project (owner rule).
+            is Outcome.Ok ->
+                if (FeedFolders.isProtectedHome(made.value)) Failure.Folder(FolderProblem.Denied).failed() else made
+        }
     }
 
     override suspend fun conversation(ref: ConversationRef): ConversationSeed? {
@@ -514,6 +559,7 @@ class AppScheduleServers(
 
     private companion object {
         const val MAX_MODELS = 40
+        const val ASSISTANT_FOLDER = "Assistant"
     }
 }
 

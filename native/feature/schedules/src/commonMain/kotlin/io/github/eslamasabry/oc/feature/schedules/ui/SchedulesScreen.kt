@@ -234,19 +234,20 @@ private fun ScheduleRow(
     val request = remember(row.id) { BringIntoViewRequester() }
     LaunchedEffect(state.highlight) { if (state.highlight == row.id) request.bringIntoView() }
     val rowModifier = Modifier.testTag("schedule-${row.id}").bringIntoViewRequester(request)
+    val clockOf = rememberClockOf(state.nowMs)
     val rule =
         if (row.recurrence.kind == RecurrenceKind.Once && onceAt != null)
-            moment(onceAt, state.nowMs, words)
-        else repeatWords(row.recurrence, state.nowMs, words)
+            moment(onceAt, state.nowMs, words, clockOf = clockOf)
+        else repeatWords(row.recurrence, state.nowMs, words, clockOf)
     val line =
         when {
             ended ->
-                last?.let { lastLine(it, state.nowMs, words) }
+                last?.let { lastRunText(it, state.nowMs, words, clockOf) }
                     ?: stringResource(Res.string.scheduleFinished)
             last?.status == RunStatus.Running -> stringResource(Res.string.scheduleSendingNow)
             !row.enabled -> "${words.paused} · $rule"
             else ->
-                listOfNotNull(rule, last?.let { lastLine(it, state.nowMs, words) })
+                listOfNotNull(rule, last?.let { lastRunText(it, state.nowMs, words, clockOf) })
                     .joinToString(" · ")
         }
     if (ended) {

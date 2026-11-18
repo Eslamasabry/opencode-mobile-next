@@ -85,4 +85,24 @@
     <string name="scheduleEmptyBody">Выберите время, и этот телефон отправит запрос за вас.</string>
     <string name="scheduleRunNow">Запустить сейчас</string>
     <string name="scheduleRunNowNote">Сразу запускает один раз. Следующее запланированное время не меняется.</string>
+    <string name="scheduleStarterLabel">Начать с</string>
+    <string name="scheduleStarterBlank">Пусто</string>
+    <string name="scheduleStarterNews">Новости дня</string>
+    <string name="scheduleStarterNewsTopic">Тема</string>
+    <string name="scheduleStarterNewsHint">Например: цены на недвижимость в Дубае</string>
+    <string name="scheduleNewsPrompt">Найди самые важные новости дня по теме «%1$s» в надёжных источниках. Начни ответ с одного простого предложения не длиннее 90 символов, которое всё подытоживает, затем дай до пяти коротких пунктов, каждый с источником. Если ничего важного не произошло, скажи об этом в этом первом предложении.</string>
+    <string name="scheduleAssistantTitle">Assistant</string>
+    <string name="scheduleAssistantNote">Пустая папка для новостей и поиска. Нажмите, чтобы выбрать другой проект.</string>
+    <string name="scheduleAssistantCannot">Этот сервер не может создать папку Assistant. Выберите проект для новостей дня.</string>
+    <string name="scheduleAssistantFailed">Не удалось создать папку Assistant. Выберите проект вместо неё.</string>
+    <string name="scheduleWebReadsLabel">Разрешить этому запуску читать интернет без вопросов</string>
+    <string name="scheduleWebReadsNote">Отвечаем только на поиск в интернете и чтение страниц, по одному разу. Всё остальное по-прежнему ждёт вас.</string>
+    <string name="scheduleWebReadsMoved">Выключено, потому что этот проект не папка Assistant. Включайте, только если запуски здесь должны читать интернет без вопросов.</string>
+    <string name="scheduleWebReadsNoServer">Этот сервер не отличает чтение интернета от других запросов, поэтому запланированный запуск по-прежнему ждёт вас.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="one">Прочитал интернет один раз без вопросов</item>
+        <item quantity="few">Прочитал интернет %1$s раза без вопросов</item>
+        <item quantity="many">Прочитал интернет %1$s раз без вопросов</item>
+        <item quantity="other">Прочитал интернет %1$s раза без вопросов</item>
+    </plurals>
 </resources>

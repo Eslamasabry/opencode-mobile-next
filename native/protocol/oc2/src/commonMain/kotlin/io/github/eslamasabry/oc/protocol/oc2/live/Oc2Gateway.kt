@@ -2650,6 +2650,7 @@ internal class Oc2Gateway(
                 remoteShell = false,
                 claudeAgent = false,
                 projectFolderCreation = true,
+                webReadPermissions = true,
             )
     }
 }

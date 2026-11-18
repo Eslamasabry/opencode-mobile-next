@@ -22,6 +22,11 @@ public interface ScheduleEditorLastKnown {
 /** The editor's display facts for one schedule (or for a new one): fields, model choices, last run. */
 @Serializable
 public data class KeptScheduleEditor(
+    /** B-440: the starter, its topic and whether the Assistant folder is the project; kept so a restart restores them. */
+    val starter: String = ScheduleStarter.Blank.name,
+    val topic: String = "",
+    val assistant: Boolean = false,
+    val webReads: Boolean = false,
     val prompt: String = "",
     val project: String = "",
     val kind: String = RecurrenceKind.Once.wire,
@@ -47,6 +52,10 @@ public data class KeptScheduleEditor(
 
     internal fun fields(): EditorFields =
         EditorFields(
+            starter = ScheduleStarter.entries.firstOrNull { it.name == starter } ?: ScheduleStarter.Blank,
+            topic = topic,
+            assistant = assistant,
+            webReads = webReads,
             prompt = prompt,
             project = project,
             kind = RecurrenceKind.of(kind) ?: RecurrenceKind.Once,
@@ -80,6 +89,7 @@ public data class KeptScheduleEditor(
     public companion object {
         public const val NEW: String = "@new"
         private const val MAX_PROMPT: Int = 4_000
+        private const val MAX_TOPIC: Int = 200
         private const val MAX_MODELS: Int = 60
 
         private fun ModelChoice.kept() = Model(providerId, modelId, label)
@@ -87,6 +97,10 @@ public data class KeptScheduleEditor(
         internal fun of(ui: ScheduleEditUi): KeptScheduleEditor {
             val f = ui.fields
             return KeptScheduleEditor(
+                starter = f.starter.name,
+                topic = f.topic.take(MAX_TOPIC),
+                assistant = f.assistant,
+                webReads = f.webReads,
                 prompt = f.prompt.take(MAX_PROMPT),
                 project = f.project,
                 kind = f.kind.wire,

@@ -87,6 +87,11 @@ public data class ScheduledPrompt(
     val enabled: Boolean = true,
     val nextRunAtMs: Long? = null,
     val revision: Int = 1,
+    /**
+     * B-440: a run of this schedule answers the server's typed web-read asks ([ScheduleWebReads]) once each, without
+     * asking. Off for every schedule stored before it existed.
+     */
+    val webReads: Boolean = false,
 ) {
     public val valid: Boolean
         get() =
@@ -118,6 +123,8 @@ public data class ScheduledRun(
     val errorCode: String? = null,
     val title: String? = null,
     val summary: String? = null,
+    /** B-440: how many web reads this run answered without asking (0 for every run stored before it existed). */
+    val webReadsAllowed: Int = 0,
 ) {
     public val valid: Boolean
         get() =
@@ -130,6 +137,17 @@ public data class ScheduledRun(
     public companion object {
         public val ERROR_CODE: Regex = Regex("^[a-z][a-z0-9_]{0,79}$")
     }
+}
+
+/**
+ * B-440: which permission kinds are web reads. The match is on the server's typed permission id ONLY (exact, no case
+ * folding), never on a title or any text the agent wrote. Every other kind still stops a run.
+ */
+public object ScheduleWebReads {
+    public const val FETCH: String = "webfetch"
+    public const val SEARCH: String = "websearch"
+
+    public fun isWebRead(permission: String): Boolean = permission == FETCH || permission == SEARCH
 }
 
 public data class ScheduleDigest(

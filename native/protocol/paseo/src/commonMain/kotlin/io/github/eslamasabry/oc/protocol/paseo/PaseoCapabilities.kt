@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 public object PaseoCapabilities {
     public val Base: ServerCapabilities = ServerCapabilities(
         scheduledPrompts = true,
+        // B-440: web reads are typed asks here (`webfetch`, `websearch`; PaseoPermissionMapper).
+        webReadPermissions = true,
         hostAgentProviders = true,
         // AGENT-2: agent options, tools, import and host update (gateway/PaseoAgentTools.kt).
         agentFeatures = true,

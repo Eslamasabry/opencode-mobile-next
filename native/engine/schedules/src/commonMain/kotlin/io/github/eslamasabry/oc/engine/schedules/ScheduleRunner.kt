@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
+import io.github.eslamasabry.oc.core.model.PermissionReply
 import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.SessionSelection
@@ -72,6 +73,10 @@ public class ScheduleRunner(
         var dispatched = false
         var accepted = false
 
+        /** B-440: web reads this run answered, and which asks (by id) it already answered, so none counts twice. */
+        var webReads = 0
+        val answered = mutableSetOf<String>()
+
         fun result(
             status: RunStatus,
             error: String? = null,
@@ -90,6 +95,7 @@ public class ScheduleRunner(
                 errorCode = error,
                 title = title,
                 summary = summary,
+                webReadsAllowed = webReads,
             )
 
         fun remaining(): Long =
@@ -306,6 +312,27 @@ public class ScheduleRunner(
             }
         }
 
+        /**
+         * True when a person must answer. B-440: with the schedule's `webReads` on and a server that types web reads
+         * ([ServerCapabilities.webReadPermissions]), an ask whose TYPED kind is exactly a web read
+         * ([ScheduleWebReads]) is answered "once" here and counted; any other permission (and any ask this cannot
+         * answer) still needs the person. Questions and forms are never answered (checked by the caller).
+         */
+        suspend fun needsYou(gateway: ServerGateway, target: SessionId): Boolean {
+            val asks = read { gateway.pendingPermissions() }.filter { it.sessionId == target }
+            if (asks.isEmpty()) return false
+            val mayAnswer = schedule.webReads && gateway.capabilities.value.webReadPermissions
+            for (ask in asks) {
+                if (ask.id.raw in answered) continue
+                if (!mayAnswer || !ScheduleWebReads.isWebRead(ask.permission)) return true
+                val reply = bounded { gateway.replyPermission(target, ask.id, PermissionReply.Once) }
+                if (reply is Outcome.Failed) return true
+                answered += ask.id.raw
+                webReads++
+            }
+            return false
+        }
+
         private suspend fun follow(
             gateway: ServerGateway,
             target: SessionId,
@@ -321,9 +348,7 @@ public class ScheduleRunner(
                 if (session.lastRunFailed || replies.any { it.info.errorText != null }) {
                     return result(RunStatus.Failed, "agent_failed")
                 }
-                if (read { gateway.pendingPermissions() }.any { it.sessionId == target }) {
-                    return result(RunStatus.Failed, "needs_you")
-                }
+                if (needsYou(gateway, target)) return result(RunStatus.Failed, "needs_you")
                 if (
                     gateway.capabilities.value.forms &&
                         read { gateway.sessionForms(target) }.isNotEmpty()

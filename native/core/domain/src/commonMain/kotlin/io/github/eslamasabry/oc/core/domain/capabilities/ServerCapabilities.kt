@@ -108,6 +108,12 @@ public data class ServerCapabilities(
     val claudeAgent: Boolean = false,
     /** N-41: the server makes a new project folder (with Git) on its own machine ([ServerOperationsGateway.makeProjectFolder]). */
     val projectFolderCreation: Boolean = false,
+    /**
+     * B-440: the server types a web read as its own permission kind (`webfetch`, `websearch` in
+     * [io.github.eslamasabry.oc.core.model.PermissionRequest.permission]), so a scheduled run may answer exactly those
+     * once. OpenCode 2 and the agents' helper (Paseo) do; Codex has only patch, network and shell.
+     */
+    val webReadPermissions: Boolean = false,
     val agentFeatures: Boolean = false,
     val worktreeInspection: Boolean = false,
     /**
