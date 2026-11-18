@@ -1380,26 +1380,27 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
             KitStatus(
                 kind = KitStatusKind.Update,
                 id = "phone-download:${download.kind.name}",
-                message =
-                    download.short?.let { short ->
-                        // The reason in plain words, with the amounts: Try again would fail again until room is freed.
-                        stringResource(
-                            Res.string.agentsInstallNeedsSpace,
-                            short.name,
-                            homeMegabytes(short.neededMb),
-                            homeMegabytes(short.freeMb),
-                        )
-                    }
-                        ?: stringResource(
-                            if (openCode) {
-                                Res.string.phoneDownloadFailedOpenCode
-                            } else {
-                                Res.string.phoneDownloadFailedHelper
-                            },
-                        ),
+                message = homeFailedWords(download),
                 tone = StatusTone.Attention,
                 action = KitLineAction(stringResource(Res.string.commonRetry), actions::actOnDownload),
             )
+    }
+}
+
+/** Why a download stopped, in plain words: for want of room it says how much; otherwise the plain failure. */
+@Composable
+private fun homeFailedWords(download: HomeDownloadFact): String {
+    val short = download.short
+    return when {
+        short != null ->
+            stringResource(
+                Res.string.agentsInstallNeedsSpace,
+                short.name,
+                homeMegabytes(short.neededMb),
+                homeMegabytes(short.freeMb),
+            )
+        download.kind == HomeDownloadKind.OpenCode -> stringResource(Res.string.phoneDownloadFailedOpenCode)
+        else -> stringResource(Res.string.phoneDownloadFailedHelper)
     }
 }
 

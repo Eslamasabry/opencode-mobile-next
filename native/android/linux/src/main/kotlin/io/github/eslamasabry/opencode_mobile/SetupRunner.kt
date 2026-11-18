@@ -378,7 +378,7 @@ class SetupRunner private constructor(private val context: Context) {
         while (true) {
             try {
                 return runScript(spec, component, compatible)
-            } catch (e: Throwable) {
+            } catch (e: IllegalStateException) {
                 if (!NativeRuntimeOwnership.isUnknownFailure(e) || cancelled || tries >= OWNERSHIP_TRIES) throw e
             }
             tries++

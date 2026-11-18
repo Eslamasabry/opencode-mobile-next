@@ -148,7 +148,11 @@ public object HomeDownloadMapping {
                             HomeInstallPhase.Failed -> HomeDownloadPhase.Failed
                             HomeInstallPhase.Installing -> HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100))
                             HomeInstallPhase.None ->
-                                if (helper == HomeHelperStep.Failed) HomeDownloadPhase.Failed else HomeDownloadPhase.Running(null)
+                                if (helper == HomeHelperStep.Failed) {
+                                    HomeDownloadPhase.Failed
+                                } else {
+                                    HomeDownloadPhase.Running(null)
+                                }
                         },
                     )
                 )
