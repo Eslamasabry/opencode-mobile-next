@@ -32,8 +32,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 /**
  * Draws [look]'s shader as one rect over the whole node, in its own layer, at the look's own resolution
  * ([LiveResolution.of]): the line and dot looks at every screen pixel, the smooth fields at half per side, filtered up
- * into a full-size layer whose finish ([LiveShaderLib.FINISH]) decodes them and dithers at full resolution. [time] is read
- * only inside the draw block, so a clock step re-records this layer alone: nothing recomposes, nothing above redraws.
+ * into a full-size layer whose finish ([LiveShaderLib.FINISH]) decodes them and dithers at full resolution. [time] is
+ * read only inside the draw block, so a clock step re-records this layer alone: nothing recomposes, nothing above
+ * redraws.
  * Where the platform has no runtime shaders, it draws [LiveStill] instead.
  */
 @Composable

@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
+import io.github.eslamasabry.oc.ui.kit.chip.KitThinkingLevels
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelOption
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
@@ -168,20 +168,25 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
         offersServerDefault = true,
         // The server's list is being read (also behind the kept list): the kit's loading row or working mark.
         loading = state.loading,
-        below = {
+        // The thinking level stands first under the title, as in the chat's sheet (the same kit part).
+        header = {
             val row = state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) } }
             if (row != null && row.variants.isNotEmpty()) {
-                KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                KitFilterChips(Modifier.fillMaxWidth().testTag("model-defaults-thinking")) {
-                    (listOf("") + row.variants).forEach { level ->
-                        KitChip(
-                            label = if (level.isEmpty()) stringResource(Res.string.composerFullThinkingDefault) else effortWords(level),
-                            kind = KitChipKind.Action,
-                            selected = level == state.variant,
-                            onClick = { actions.chooseVariant(level) },
-                        )
-                    }
-                }
+                val levels = listOf("") + row.variants
+                KitThinkingLevels(
+                    title = stringResource(Res.string.composerFullThinking),
+                    labels =
+                        levels.map {
+                            if (it.isEmpty()) {
+                                stringResource(Res.string.composerFullThinkingDefault)
+                            } else {
+                                effortWords(it)
+                            }
+                        },
+                    selected = levels.indexOf(state.variant),
+                    onSelect = { actions.chooseVariant(levels[it]) },
+                    modifier = Modifier.fillMaxWidth().testTag("model-defaults-thinking"),
+                )
             }
         },
     )

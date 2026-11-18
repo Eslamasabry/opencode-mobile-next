@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.chip.KitThinkingLevels
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -151,19 +152,20 @@ internal fun ModelSheet(
             val selected = models.selected
             val levels = ModelPicker.thinkingLevels(models)
             if (models.choices.isNotEmpty() && selected != null && levels.isNotEmpty()) {
-                KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                KitChipWrap(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
-                    levels.forEach { level ->
-                        KitChip(
-                            label =
-                                if (level.isEmpty()) stringResource(Res.string.composerFullThinkingDefault)
-                                else effortWords(level),
-                            kind = KitChipKind.Action,
-                            selected = level == models.variant,
-                            onClick = { scope.launch { actions.selectModel(selected, level) } },
-                        )
-                    }
-                }
+                KitThinkingLevels(
+                    title = stringResource(Res.string.composerFullThinking),
+                    labels =
+                        levels.map {
+                            if (it.isEmpty()) {
+                                stringResource(Res.string.composerFullThinkingDefault)
+                            } else {
+                                effortWords(it)
+                            }
+                        },
+                    selected = levels.indexOf(models.variant),
+                    onSelect = { scope.launch { actions.selectModel(selected, levels[it]) } },
+                    modifier = Modifier.fillMaxWidth().testTag("chat-thinking-choices"),
+                )
             }
         },
         below = {

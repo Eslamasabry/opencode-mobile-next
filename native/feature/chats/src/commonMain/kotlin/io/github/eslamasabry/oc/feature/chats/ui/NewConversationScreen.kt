@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitAgentModelChip
 import io.github.eslamasabry.oc.ui.kit.frame.KitWhereLine
 import io.github.eslamasabry.oc.ui.kit.frame.kitProjectServerLabel
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
+import io.github.eslamasabry.oc.ui.kit.chip.KitThinkingLevels
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
@@ -895,23 +896,24 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
             if (options.isEmpty() && !state.modelsLoading)
                 KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
         },
-        below = {
-            // The chosen model's thinking efforts, as the chat's model sheet offers them (Default first).
-            val levels = state.shownVariants
-            if (options.isNotEmpty() && levels.isNotEmpty()) {
-                KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                KitFilterChips(Modifier.fillMaxWidth().testTag("new-thinking-choices")) {
-                    (listOf<String?>(null) + levels).forEach { level ->
-                        KitChip(
-                            label =
-                                if (level == null) stringResource(Res.string.composerFullThinkingDefault)
-                                else effortWords(level),
-                            kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
-                            selected = level == state.variant,
-                            onClick = { actions.chooseVariant(level) },
-                        )
-                    }
-                }
+        // The chosen model's thinking efforts stand first under the title, as in the chat's sheet (the same kit part).
+        header = {
+            val levels = listOf<String?>(null) + state.shownVariants
+            if (options.isNotEmpty() && state.shownVariants.isNotEmpty()) {
+                KitThinkingLevels(
+                    title = stringResource(Res.string.composerFullThinking),
+                    labels =
+                        levels.map {
+                            if (it == null) {
+                                stringResource(Res.string.composerFullThinkingDefault)
+                            } else {
+                                effortWords(it)
+                            }
+                        },
+                    selected = levels.indexOf(state.variant),
+                    onSelect = { actions.chooseVariant(levels[it]) },
+                    modifier = Modifier.fillMaxWidth().testTag("new-thinking-choices"),
+                )
             }
         },
     )

@@ -360,6 +360,9 @@ public fun KitModelSheet(
         height = KitSheetHeight.Full,
         morphFrom = morphFrom,
         bodyFills = true,
+        // A list kept while it is read again: the sheet's own loading line under its title (the list itself says
+        // "Loading models…" when there is none yet), never a ring on the search field's corner.
+        loading = loading && options.isNotEmpty(),
     ) {
         ModelSheetBody(
             options, loading, current, { release.run(); onChoose(it) }, favorites, recent, onToggleFavorite, offersServerDefault, serverDefault, resetKey, suggested,
@@ -417,7 +420,6 @@ private fun ColumnScope.ModelSheetBody(
         }
         return
     }
-    if (loading) UpdatingMark(rail)
     // The caller's framing choice stands first, directly under the title and above the search field; the list scrolls
     // under it. It takes no room when it has nothing to say (a model without levels).
     KitStackScope {
@@ -525,29 +527,6 @@ private fun LoadingRow() {
     ) {
         KitWorkingMark(colors.accent, size = 16.dp)
         KitText(stringResource(Res.string.chat_model_loading), role = TypeRole.Secondary, tone = TextTone.Secondary)
-    }
-}
-
-/**
- * A last known list is being refreshed: a small working mark over the sheet's top-right corner. The title row belongs to
- * [KitSheet] (another file), so the mark sits at the top of this body instead, in a box of no height: it takes no room
- * and nothing below it moves when it goes.
- */
-@Composable
-private fun UpdatingMark(rail: Dp) {
-    val colors = LocalKitColors.current
-    val words = stringResource(Res.string.chat_model_updating)
-    Box(Modifier.fillMaxWidth().height(0.dp).zIndex(1f)) {
-        Box(
-            Modifier.align(Alignment.TopEnd).wrapContentHeight(Alignment.Top, unbounded = true).padding(end = rail)
-                .testTag("chat-model-updating")
-                .semantics {
-                    contentDescription = words
-                    liveRegion = LiveRegionMode.Polite
-                },
-        ) {
-            KitWorkingMark(colors.accent, size = 14.dp)
-        }
     }
 }
 
