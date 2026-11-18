@@ -342,7 +342,7 @@ public fun BasicComposer(
                     // the engine, never the other way round.
                     editor.lastReported = current
                     actions.draftChanged(current)
-                } else {
+                } else if (!editor.isJustSent(engineText)) {
                     if (current != engineText) field.edit { replace(0, length, engineText) }
                     editor.adopted(engineText)
                 }
@@ -433,6 +433,8 @@ public fun BasicComposer(
         val serial = editor.userEditSerial
         field.edit { replace(0, length, "") }
         editor.adopted("")
+        editor.sentWords = text
+        editor.sentSerial = editor.userEditSerial
         scope.launch {
             if (actions.send(text)) {
                 // A local admission is not a server acknowledgement. The draft owner publishes its
@@ -1529,6 +1531,13 @@ private class DraftEditorState {
      * had caught up and then changed by itself.
      */
     var awaitingEngine: Boolean = false
+
+    /** The words of the send just made and the edit serial then: a restore carrying them is not written back. */
+    var sentWords: String? = null
+    var sentSerial: Long = 0
+
+    /** Whether [engineText] is the words just sent with no edit since: the engine still holds them until it clears. */
+    fun isJustSent(engineText: String): Boolean = sentWords == engineText && userEditSerial == sentSerial
 
     /** The box took [text] from the engine (or cleared itself without a report): nothing is in flight. */
     fun adopted(text: String) {
