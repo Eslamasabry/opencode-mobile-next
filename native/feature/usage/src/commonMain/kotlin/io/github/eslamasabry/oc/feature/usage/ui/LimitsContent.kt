@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.usage.ui
 
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -204,19 +206,26 @@ private fun Headline(window: LimitWindowUi) {
     }
 }
 
-/** Several limits of one length: two columns of label · % · reset, each with its own small bar and mark. */
+/**
+ * Several limits of one length: two columns of label · % · reset, each with its own small bar and mark; one column
+ * from large text ([limitColumns]), so a label is never cut or broken inside a word in half a phone's width.
+ */
 @Composable
 private fun CompactGroup(group: LimitGroupUi) {
+    val columns = limitColumns(kitFontScale())
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         KitText(windowName(group.kind, ""), role = TypeRole.Label, tone = TextTone.Secondary)
-        for (pair in group.windows.chunked(2)) {
+        for (pair in group.windows.chunked(columns)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                 for (window in pair) Cell(window, Modifier.weight(1f))
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
+                repeat(columns - pair.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }
 }
+
+/** Compact limits per row: two, one from large text (the size the person chose, [kitFontScale]). */
+internal fun limitColumns(chosenScale: Float): Int = if (TextScalePolicy.isLargeText(chosenScale)) 1 else 2
 
 @Composable
 private fun Cell(window: LimitWindowUi, modifier: Modifier) {

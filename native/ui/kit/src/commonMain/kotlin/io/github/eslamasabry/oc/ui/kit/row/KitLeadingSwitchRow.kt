@@ -14,7 +14,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.choice.kitSelectTap
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
@@ -32,7 +32,7 @@ public fun KitLeadingSwitchRow(
     enabled: KitEnabled = KitEnabled.Enabled,
 ) {
     val tokens = LocalKitTokens.current
-    val scale = kitTextScale()
+    val scale = kitFontScale() // the chosen size, not the drawn one: [kitFontScale]
     Row(
         modifier
             .kitMaxWidth(CapRole.List)

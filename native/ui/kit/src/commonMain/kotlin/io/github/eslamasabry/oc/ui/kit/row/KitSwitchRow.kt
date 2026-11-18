@@ -70,7 +70,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -274,7 +274,7 @@ public fun KitSwitchRow(
             }
             Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
                 // Nothing is dimmed: a disabled row's reason is its supporting line (kit_row_parts.dart:270-271).
-                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitTextScale(), 2)) // F: lib/ui/kit/kit_row_parts.dart:544
+                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitFontScale(), 2)) // F: lib/ui/kit/kit_row_parts.dart:544
                 line?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
                     KitText(
@@ -282,7 +282,7 @@ public fun KitSwitchRow(
                         Modifier.testTag("kit-row-supporting"),
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
-                        maxLines = kitRowSupportingLines(kitTextScale(), supportingMaxLines),
+                        maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines),
                     )
                 }
                 below?.let {

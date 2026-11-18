@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -145,10 +146,10 @@ public fun KitExpandRow(
                 Spacer(Modifier.width(Space.S3.dp))
             }
             Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
-                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(scale, titleMaxLines))
+                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitFontScale(), titleMaxLines))
                 supporting?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
-                    KitText(it, Modifier.testTag("kit-row-supporting"), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(scale, supportingMaxLines))
+                    KitText(it, Modifier.testTag("kit-row-supporting"), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines))
                 }
             }
             Spacer(Modifier.width(Space.S2.dp))

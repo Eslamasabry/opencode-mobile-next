@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -40,7 +41,7 @@ public fun KitOpenSwitchRow(
     supportingMaxLines: Int = 1,
 ) {
     val tokens = LocalKitTokens.current
-    val scale = kitTextScale()
+    val scale = kitFontScale() // the chosen size, not the drawn one: [kitFontScale]
     Row(
         modifier
             .kitMaxWidth(CapRole.List)
