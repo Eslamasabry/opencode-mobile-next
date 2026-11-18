@@ -66,7 +66,6 @@ class NativePhoneSetup(
     private val voice: NativeVoiceSetup,
     private val reporting: Reporting,
     private val keepAlive: SetupKeepAlive,
-    private val gate: InstallGate,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -549,14 +548,8 @@ class NativePhoneSetup(
                         val setup = get()
                         // The start phase (checks, until the job is registered) holds the one install gate; a gate
                         // held by the agents' installer is busy, the try is kept.
-                        val held = holdGate && gate.mutex.tryLock()
-                        if (holdGate && !held) {
+                        if (!underGate(payloadGuard.installGate, holdGate) { action(setup) }) {
                             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
-                        }
-                        try {
-                            action(setup)
-                        } finally {
-                            if (held) gate.mutex.unlock()
                         }
                         shown.value = setup.progress.value
                         if (shown.value.state == SetupState.Failed)
@@ -654,7 +647,7 @@ class NativePhoneSetup(
     suspend fun update(): Outcome<Unit> {
         // Work running, an agents' install running, or one starting (the gate): say busy, the try is kept.
         val agentsRunning = (native { runner.running } as? Outcome.Ok)?.value != false
-        val gated = !agentsRunning && runtime.mayUpdate() && gate.mutex.tryLock()
+        val gated = !agentsRunning && runtime.mayUpdate() && payloadGuard.installGate.tryLock()
         if (!gated) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         updateJob.starting(shown.value.jobId)
         var joined = false
@@ -668,7 +661,7 @@ class NativePhoneSetup(
                 }
             return if (joined) Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy)) else result
         } finally {
-            gate.mutex.unlock()
+            payloadGuard.installGate.unlock()
             if (joined) updateJob.abandoned() else updateJob.started(shown.value.jobId)
         }
     }
@@ -734,4 +727,16 @@ rm -f "$node_file"
 oc_version "$(node --version | sed 's/^v//')"
 """
     }
+}
+
+/** Runs [action] (a job's start phase) holding [gate] when [hold]; false, nothing run, when the gate is busy. */
+private suspend fun underGate(gate: Mutex, hold: Boolean, action: suspend () -> Unit): Boolean {
+    val held = hold && gate.tryLock()
+    if (hold && !held) return false
+    try {
+        action()
+    } finally {
+        if (held) gate.unlock()
+    }
+    return true
 }

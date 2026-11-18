@@ -55,7 +55,6 @@ class NativeAgentSetupJobs(
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val payloads: PhonePayloadGuard,
-    private val gate: InstallGate,
 ) : AgentSetupJobs, ProfileCloser {
     override val owner: String = ":engine:agents"
     private val denied = ConcurrentHashMap.newKeySet<ProfileId>()
@@ -85,7 +84,7 @@ class NativeAgentSetupJobs(
                 getString(Res.string.phoneSetupNotificationStopped),
             )
         // The start phase holds the one install gate (the setup engine's checks hold it too): busy keeps the try.
-        if (!gate.mutex.tryLock()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+        if (!payloads.installGate.tryLock()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         try {
             return native {
                 check(admitted(owner)) { "unavailable" }
@@ -183,7 +182,7 @@ class NativeAgentSetupJobs(
                 }
             }
         } finally {
-            gate.mutex.unlock()
+            payloads.installGate.unlock()
         }
     }
 

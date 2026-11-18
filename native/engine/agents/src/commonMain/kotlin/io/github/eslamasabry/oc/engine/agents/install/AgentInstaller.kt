@@ -177,29 +177,26 @@ public class AgentInstaller(
             is Outcome.Ok -> Unit
         }
         when (val started = jobs.start(owner, agentId, components(agentId))) {
-            is Outcome.Failed -> {
-                prefs.commit { remove(AgentKeys.agentInstall(owner)) }
-                // The one install gate was held (the setup engine is starting a job): busy, nothing failed.
-                if ((started.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy) {
-                    return@withLock InstallStart.Refused(InstallRefusal.SetupBusy).ok()
-                }
-                state.value =
-                    AgentSetupProgress(
-                        agentId,
-                        AgentSetupPhase.Failed,
-                        null,
-                        null,
-                        null,
-                        null,
-                        AgentSetupFailure.Unknown,
-                    )
-                return@withLock started
-            }
+            is Outcome.Failed -> return@withLock startFailed(owner, agentId, started)
             is Outcome.Ok -> Unit
         }
         state.value =
             AgentSetupProgress(agentId, AgentSetupPhase.Installing, null, null, null, null, null)
         InstallStart.Started.ok()
+    }
+
+    /**
+     * The job did not start. The one install gate being held (the setup engine is starting a job) is busy, nothing
+     * failed; anything else is a failed install.
+     */
+    private suspend fun startFailed(owner: OwnerId, agentId: AgentId, started: Outcome.Failed): Outcome<InstallStart> {
+        prefs.commit { remove(AgentKeys.agentInstall(owner)) }
+        if ((started.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy) {
+            return InstallStart.Refused(InstallRefusal.SetupBusy).ok()
+        }
+        state.value =
+            AgentSetupProgress(agentId, AgentSetupPhase.Failed, null, null, null, null, AgentSetupFailure.Unknown)
+        return started
     }
 
     /**
