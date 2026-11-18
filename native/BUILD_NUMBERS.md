@@ -120,3 +120,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10094 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: voice-conversation-door c38a82213b (B-461) on top of 10093's content (source 09ba5d9698) |
 | 10095 | build | 2026-11-18 | look build for the next-update branch b7-dailynews with web reads, not the line (source 3ccd091814, native/listb-look-3) |
 | 10096 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: chat-edges-fix2 504850c7a9 (bottom edge of the chat page and the pinned row) on top of 10094's content (source 6f42ba9b85) |
+| 10097 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: chat-edges-fix2 up to 4562c7a6d9 (request card max 40% at 2x, no-break sizes, voice text wraps) + font-scale-2 caa998b430, on top of 10096 (source 2259fec99c) |
