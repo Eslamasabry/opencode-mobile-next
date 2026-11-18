@@ -272,6 +272,8 @@ public class ComposerVoicePresenter(
                 handle.session.voiceConversation.collect { snapshot ->
                     val previous = observed
                     observed = snapshot
+                    // A tip offered at an idle moment never goes on over a turn that has begun or a request that waits.
+                    if ((snapshot.busy || snapshot.requestWaiting) && mutable.value.micTip) dismissMicTip()
                     refreshDraft()
                     if (mutable.value.conversation && previous.generation != snapshot.generation) {
                         exitConversation()
