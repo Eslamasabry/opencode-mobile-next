@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -44,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -198,13 +201,22 @@ public fun KitComposerBox(
         // (Android 13+, where not held); null keeps the style's own face.
         val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape, join = joinBody)
         val slab = kitComposerSlab()
+        // A tip anchored inside the box (hold Send, Stop after this step) stands above or below the whole box, never
+        // over the words in it (look 10100: "Hold Send…" covered a shared link).
+        val tipClear = remember { io.github.eslamasabry.oc.ui.kit.teaching.KitTipClearance() }
         // Nothing inside the box is glass of its own: its chips and Stop are parts of this one pane.
         // Every part inside is nested in the box's outline (Brutal: edged, never a second shadow).
-        CompositionLocalProvider(LocalKitLiquidChrome provides null, LocalKitComposerSlab provides slab, io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true) {
+        CompositionLocalProvider(
+            LocalKitLiquidChrome provides null,
+            LocalKitComposerSlab provides slab,
+            io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true,
+            io.github.eslamasabry.oc.ui.kit.teaching.LocalKitTipClearance provides tipClear,
+        ) {
         // The slab answers a finger on its controls: a soft light under it, a brighter edge.
         val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquid != null)
         Column(
             Modifier.fillMaxWidth()
+                .onGloballyPositioned { tipClear.boundsInWindow = it.boundsInWindow() }
                 // Words on glass: while the box is liquid, the transcript its glass sees fades out under it (whole at its
                 // top edge, gone by the inner end of the lens rim), so nothing bright passes behind the words.
                 .then(if (liquid != null) Modifier.kitScreenWordsPane(LiquidRole.Composer) else Modifier)
