@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.nav.KitTabStrip
 import io.github.eslamasabry.oc.ui.kit.nav.KitTab
 import io.github.eslamasabry.oc.ui.kit.guide.KitAppearancePreview
@@ -220,7 +222,8 @@ private fun ColumnScope.AppearanceControls(
             top,
         )
         val guided = !onePage
-        val columns = if (guided) 2 else 3 // F: lib/ui/screens/settings/appearance_screen.dart:904
+        // F: lib/ui/screens/settings/appearance_screen.dart:904 (2 guided, 3 on one page), fewer at large text.
+        val columns = themeColumns(guided, kitFontScale())
         val base = if (guided) 84 else 96 // the picture of a theme needs the room (Flutter 64: appearance_screen.dart:905)
         val scaleHeight =
             30 * // F: lib/ui/screens/settings/appearance_screen.dart:905
@@ -621,6 +624,21 @@ private fun AppearanceQuestionHeading(title: String, top: Dp = Space.S6.dp) {
 /** Flutter's `_lookPicks`, in its order (GLASS_REF lib/ui/screens/settings/appearance_screen.dart:58-66). */
 // The first row is the looks that are finished best, the owner's glow among them (2026-11-10); the rest are one tap away.
 private val LOOK_PICKS = listOf("aurora", "glowSpill", "mesh", "silk", "topo", "lightRays", "dotRipple")
+
+/**
+ * Theme tiles per row: two in the guided steps, three on one page; at large text (the size the person chose,
+ * [kitFontScale]) at most two, and one from 2x, so a theme's name is never cut or broken inside a word at 360 dp.
+ */
+internal fun themeColumns(guided: Boolean, chosenScale: Float): Int {
+    val base = if (guided) 2 else 3
+    return when {
+        chosenScale >= HUGE_TEXT -> 1
+        TextScalePolicy.isLargeText(chosenScale) -> minOf(base, 2)
+        else -> base
+    }
+}
+
+private const val HUGE_TEXT = 2.0f
 
 @Composable
 private fun <T> AppearanceGrid(
