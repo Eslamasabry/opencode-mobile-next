@@ -88,11 +88,12 @@ public enum class CollectItem {
     CrashKeys,
     Report,
 
-    /** What our own server gets, one line per [UmamiFieldGroup]: the build, the phone, the look, the use. */
+    /** What our own server gets, one line per [UmamiFieldGroup]: build, phone, look, use and the install id. */
     OwnBuild,
     OwnPhone,
     OwnLook,
     OwnUse,
+    OwnInstall,
 }
 
 /** The fields of our own server's envelope that a line names; null for every other line. */
@@ -103,6 +104,7 @@ public val CollectItem.ownGroup: UmamiFieldGroup?
             CollectItem.OwnPhone -> UmamiFieldGroup.Phone
             CollectItem.OwnLook -> UmamiFieldGroup.Look
             CollectItem.OwnUse -> UmamiFieldGroup.Use
+            CollectItem.OwnInstall -> UmamiFieldGroup.Install
             else -> null
         }
 
@@ -151,7 +153,13 @@ public object HealthContract {
                 listOf(CollectItem.CrashKind, CollectItem.Exit, CollectItem.Steps, CollectItem.CrashKeys),
             CollectGroup.Report to listOf(CollectItem.Report),
             CollectGroup.OwnServer to
-                listOf(CollectItem.OwnBuild, CollectItem.OwnPhone, CollectItem.OwnLook, CollectItem.OwnUse),
+                listOf(
+                    CollectItem.OwnBuild,
+                    CollectItem.OwnPhone,
+                    CollectItem.OwnLook,
+                    CollectItem.OwnUse,
+                    CollectItem.OwnInstall,
+                ),
         )
 
     public val contractEvents: Map<CollectItem, List<String>> =
@@ -219,5 +227,6 @@ public object HealthContract {
             UmamiFieldGroup.Phone -> CollectItem.OwnPhone
             UmamiFieldGroup.Look -> CollectItem.OwnLook
             UmamiFieldGroup.Use -> CollectItem.OwnUse
+            UmamiFieldGroup.Install -> CollectItem.OwnInstall
         }
 }

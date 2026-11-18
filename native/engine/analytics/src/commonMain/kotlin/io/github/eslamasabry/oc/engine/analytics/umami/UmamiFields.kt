@@ -11,8 +11,10 @@ import io.github.eslamasabry.oc.engine.analytics.health.HealthWords
  * - the "What we collect" page and the bundled policy (`:feature:settings` names every field of each [UmamiFieldGroup],
  *   and `PrivacyNoticeSyncTest` reads this list against the notices).
  *
- * Every value is one fixed word, a range word or a number matched by a pattern. Nothing here can name a person or
- * single out a phone: no model, maker, id, exact size, time zone, place, address, name, path or text.
+ * Every value is one fixed word, a range word, a bounded model name, a random install UUID or a number matched by a
+ * pattern. Nothing here can name a person: no maker, Android, advertising or Google id, exact size, time zone, place,
+ * address, name, path or text. Two fields can single out ONE phone and are said so on the page: the phone model and the
+ * install id (a random UUID that exists only while usage reports are on).
  */
 public enum class UmamiFieldGroup {
     /** The app build: [UmamiField.Version], [UmamiField.BuildNumber], [UmamiField.Channel]. */
@@ -26,6 +28,9 @@ public enum class UmamiFieldGroup {
 
     /** How the app is used: how long installed, which agents, which kind of connection. */
     Use,
+
+    /** The random install id the app makes for our own server: [UmamiField.InstallId]. */
+    Install,
 }
 
 public enum class UmamiField(
@@ -57,6 +62,9 @@ public enum class UmamiField(
     /** The processor family. */
     Abi("abi", UmamiFieldGroup.Phone, words = HealthWords.abis + "other"),
 
+    /** The phone's model name (`Pixel 8`, `SM-S901B`): letters, digits, space and `. _ + -`, at most 40 characters. */
+    PhoneModel("phone_model", UmamiFieldGroup.Phone, pattern = Regex("[A-Za-z0-9][A-Za-z0-9 ._+\\-]{0,39}")),
+
     /** Total memory in GB, as a range ([HealthRanges.ram]). */
     RamRange("ram_range", UmamiFieldGroup.Phone, words = HealthRanges.ram.toSet()),
 
@@ -79,6 +87,16 @@ public enum class UmamiField(
 
     /** The kinds of connection open now: this phone, a paired computer, a remote server; joined with `+`, or `none`. */
     ConnectionKind("connection_kind", UmamiFieldGroup.Use, words = combinations(connectionNames) + "none"),
+
+    /**
+     * A random UUID the app makes on the phone for our own server only (version 4, lower case). Not derived from the
+     * device, the account, the Android id, Google's app-instance id or anything else; see `UmamiInstallId`.
+     */
+    InstallId(
+        "install_id",
+        UmamiFieldGroup.Install,
+        pattern = Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"),
+    ),
     ;
 
     /** Whether [value] is one of this field's fixed words or matches its pattern. */
@@ -90,6 +108,7 @@ public enum class UmamiField(
 
     public companion object {
         private const val MAX_VALUE = 40
+        private const val ASCII_LIMIT = 128
         private const val COMPACT_BELOW_DP = 600
         private const val MEDIUM_BELOW_DP = 840
         private const val SMALLER_BELOW = 0.95f
@@ -99,6 +118,15 @@ public enum class UmamiField(
         private const val MONTH_DAYS = 30
 
         public fun ofWire(wire: String): UmamiField? = entries.firstOrNull { it.wire == wire }
+
+        /** The model name as the field allows it, or null when nothing usable is left (never a guess). */
+        public fun phoneModelOf(raw: String?): String? =
+            raw?.filter { it.isLetterOrDigit() && it.code < ASCII_LIMIT || it in " ._+-" }
+                ?.trim()
+                ?.replace(Regex(" {2,}"), " ")
+                ?.take(MAX_VALUE)
+                ?.trim()
+                ?.takeIf { PhoneModel.accepts(it) }
 
         /** Keys that ride in an event's `data` besides the event's own words. */
         public val wires: Set<String> get() = entries.map { it.wire }.toSet()

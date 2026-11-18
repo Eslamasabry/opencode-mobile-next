@@ -12,9 +12,10 @@ import io.github.eslamasabry.opencode_mobile.BuildConfig
 
 /**
  * What the phone itself tells our own analytics server, as fixed words only: the release channel, the window width
- * class, the text-size step, the processor family, ranges for memory and free storage, battery saver and how long the
- * app has been installed. Never a model, maker, id, exact size, time zone or place. Every word is checked against
- * [UmamiField] again before it can join an event, and the request body guard checks it a third time.
+ * class, the text-size step, the processor family, ranges for memory and free storage, battery saver, how long the
+ * app has been installed, and the model name. Never the maker, an id, an exact size, a time zone or a place. Every
+ * word is checked against [UmamiField] again before it can join an event, and the request body guard checks it a
+ * third time.
  *
  * Read only when an event is about to be queued with usage on (the sender asks for the device then), and kept for a
  * minute so a burst of events reads the phone once.
@@ -26,6 +27,8 @@ internal class UmamiPhoneFacts(private val app: Context, private val now: () -> 
     private val staticFacts: Map<String, String> by lazy {
         buildMap {
             put(UmamiField.Channel.wire, if ("-test." in BuildConfig.VERSION_NAME) "test" else "public")
+            // The model name only (never the maker, the serial or any id), cut to the characters the field allows.
+            UmamiField.phoneModelOf(Build.MODEL)?.let { put(UmamiField.PhoneModel.wire, it) }
             when (Build.SUPPORTED_ABIS.firstOrNull()) {
                 "arm64-v8a" -> put(UmamiField.Abi.wire, "arm64")
                 "armeabi-v7a", "armeabi" -> put(UmamiField.Abi.wire, "arm32")

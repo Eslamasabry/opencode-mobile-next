@@ -279,6 +279,8 @@ public class UsageTelemetryVendor(
     private val primary: TelemetryVendor,
     private val sender: UmamiSender?,
     private val build: UmamiBuild,
+    /** Our own random install id: it exists only while usage is on (see [UmamiInstallId]). */
+    private val installId: UmamiInstallId? = null,
 ) : TelemetryVendor by primary {
     private var buildSet = false
     private var usageOn = false
@@ -290,7 +292,10 @@ public class UsageTelemetryVendor(
         primary.setCollection(usage, crashes)
         usageOn = usage
         if (!usage) { sessionOpened = false; syntheticOpening = false }
+        // Off first: the id and its file are gone before the sender stops, so nothing can make a new one meanwhile.
+        if (!usage) installId?.on(false)
         sender?.setUsage(usage)
+        if (usage && sender != null) installId?.on(true)
         if (usage && !buildSet) {
             primary.setUserProperties(mapOf("app_build" to build.build))
             buildSet = true

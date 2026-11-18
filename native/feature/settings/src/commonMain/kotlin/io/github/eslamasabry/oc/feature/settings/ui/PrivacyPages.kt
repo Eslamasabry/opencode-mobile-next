@@ -191,4 +191,5 @@ internal fun collectWords(item: CollectItem): StringResource =
         CollectItem.OwnPhone -> Res.string.collectOwnPhone
         CollectItem.OwnLook -> Res.string.collectOwnLook
         CollectItem.OwnUse -> Res.string.collectOwnUse
+        CollectItem.OwnInstall -> Res.string.collectOwnInstall
     }

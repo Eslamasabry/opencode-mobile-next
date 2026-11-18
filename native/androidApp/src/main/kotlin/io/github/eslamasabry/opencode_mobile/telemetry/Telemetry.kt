@@ -8,7 +8,9 @@ import io.github.eslamasabry.oc.engine.analytics.DeviceClass
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFacts
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiHttp
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiInstallId
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiSender
 import io.github.eslamasabry.oc.engine.analytics.umami.UsageTelemetryVendor
 import java.io.File
@@ -60,10 +62,12 @@ internal object Telemetry {
             if (DeferredFirebaseTelemetryVendor.Config.present(app)) {
                 val build = UmamiBuild(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString())
                 val phoneFacts = UmamiPhoneFacts(app, System::currentTimeMillis)
+                // Our own random install id: it exists only while usage reports are on (the sender tells it).
+                val installId = UmamiInstallId(File(app.filesDir, "native/usage/install-id"))
                 val device = {
                     // Only the Android MAJOR version, the class (phone or tablet) and the fixed words of
-                    // `UmamiField`: never the model, the maker, the resolution, the time zone, an Android id or
-                    // an install id (a guard test reads this block).
+                    // `UmamiField` (the model name and our own random install id included): never the maker, the
+                    // resolution, the time zone, an Android id or Google's id (a guard test reads this block).
                     val osMajor = Build.VERSION.RELEASE.substringBefore('.').toIntOrNull() ?: 0
                     val tablet = app.resources.configuration.smallestScreenWidthDp >= 600
                     val modelClass = if (tablet) "Android Tablet" else "Android Phone"
@@ -76,7 +80,7 @@ internal object Telemetry {
                         if (tablet) DeviceClass.Tablet else DeviceClass.Phone,
                         // Fixed words and ranges only (the phone's own facts, then the app's live ones: style, theme,
                         // kinds of connection and agent); each is checked against the one field list before it is sent.
-                        facts = phoneFacts.read() + UmamiFacts.snapshot(),
+                        facts = phoneFacts.read() + UmamiFacts.snapshot() + installFacts(installId.current()),
                     )
                 }
                 val configured = UmamiHttp.configured(BuildConfig.UMAMI_URL, BuildConfig.UMAMI_WEBSITE)
@@ -88,7 +92,7 @@ internal object Telemetry {
                         store = FileUmamiStore(File(app.filesDir, "native/usage/outbox.json")),
                         transport = if (configured) UmamiHttp(BuildConfig.UMAMI_URL) { device().userAgent } else null,
                     )
-                UsageTelemetryVendor(DeferredFirebaseTelemetryVendor(app), sender, build)
+                UsageTelemetryVendor(DeferredFirebaseTelemetryVendor(app), sender, build, installId)
             } else null
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val early = TelemetryConsent(prefs.getBoolean(EARLY_USAGE, false), prefs.getBoolean(EARLY_CRASHES, false))
@@ -123,3 +127,7 @@ internal object TelemetryRingSink : io.github.eslamasabry.oc.core.common.LogSink
         ring.add("$level ${entry.tag}: ${entry.message}" + (entry.error?.let { " (${it.type})" } ?: ""))
     }
 }
+
+/** The install id as an envelope fact, or nothing while usage reports are off. */
+private fun installFacts(id: String?): Map<String, String> =
+    id?.let { mapOf(UmamiField.InstallId.wire to it) }.orEmpty()
