@@ -13,7 +13,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Density
  * stored as `oc.effectsSurfaceStyle` by `:engine:settings`. Solid stays the default; Glass is only ever the person's
  * own choice.
  */
-public enum class SurfaceStyle { Solid, Glass, Soft, Brutal, Paper, Signal }
+public enum class SurfaceStyle { Solid, Glass, Soft, Brutal, Paper, Signal, SolidGlass }
 
 /** Background › How strong? (`oc.effectsLiveIntensity`; Dart `KitLiveIntensity`): Subtle .7, Normal 1, Bold 1.6. */
 public enum class LiveStrength(public val strength: Float) {

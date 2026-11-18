@@ -168,6 +168,7 @@ import io.github.eslamasabry.oc.ui.words.res.settingsV3Shell
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.settingsV3VoiceTyping
 import io.github.eslamasabry.oc.ui.words.res.signalStyleName
+import io.github.eslamasabry.oc.ui.words.res.solidGlassStyleName
 import io.github.eslamasabry.oc.ui.words.res.teamUiHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.teamUiPluginsTitle
 import io.github.eslamasabry.oc.ui.words.res.textSizeDefault
@@ -395,6 +396,7 @@ internal fun styleWords(style: SurfaceStyle): String =
     stringResource(
         when (style) {
             SurfaceStyle.Solid -> Res.string.appearanceSurfaceSolid
+            SurfaceStyle.SolidGlass -> Res.string.solidGlassStyleName
             SurfaceStyle.Glass -> Res.string.rb34AppearanceSurfaceGlass
             SurfaceStyle.Soft -> Res.string.appearanceSurfaceSoft
             SurfaceStyle.Brutal -> Res.string.appearanceSurfaceBrutal

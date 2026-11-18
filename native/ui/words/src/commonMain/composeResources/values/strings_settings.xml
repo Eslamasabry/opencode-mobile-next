@@ -604,6 +604,7 @@
     <string name="appearanceSurfaceBrutal">Brutal</string>
     <string name="appearanceSurfacePaper">Paper</string>
     <string name="signalStyleName">Signal</string>
+    <string name="solidGlassStyleName">Solid glass</string>
     <string name="appearanceFineTuneCorners">Corners</string>
     <string name="appearanceFineTuneCornersRound">Round</string>
     <string name="appearanceFineTuneCornersSoft">Soft</string>
