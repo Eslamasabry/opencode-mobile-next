@@ -61,6 +61,8 @@ public fun KitChatMoreMenu(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     title: String? = null,
+    /** The menu grows out of the header capsule the button sits on, in every style ([KitMenu]'s `grows`). */
+    grows: Boolean = false,
 ) {
     KitMenu(
         expanded = expanded,
@@ -68,6 +70,7 @@ public fun KitChatMoreMenu(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         title = title,
+        grows = grows,
     ) {
         KitIconButton(KitMoreGlyph, label, onOpen, Modifier.testTag("chat-session-menu"))
     }

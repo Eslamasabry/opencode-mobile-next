@@ -90,6 +90,11 @@ public data class KitSurfaceLook(
     val paints: Boolean = false,
     /** The style settled on a decoration of its own for this surface (not the part's own fill). */
     val dressed: Boolean = false,
+    /**
+     * The decoration the style settled on, as data (null: the part's own fill, as Solid). A part that draws its face on
+     * another outline than its own box (the header capsule while a menu grows out of it, KitMenuGrows.kt) paints this.
+     */
+    val decoration: SurfaceDecoration? = null,
 )
 
 /**
@@ -294,13 +299,13 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
         }
         val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
         val face = if (glass) frost.kitGlassFace(decoration) else Modifier.kitDecorated(decoration, rtl)
-        return KitSurfaceLook(face.then(sink), words, faceShape, decoration.paints(), dressed = true)
+        return KitSurfaceLook(face.then(sink), words, faceShape, decoration.paints(), dressed = true, decoration = decoration)
     }
     // Mid-fade: the in-between look, painted the Glass way when either end is Glass.
     val (mid, glassy) = shown
     val sink = if (mid.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = mid.faceShiftDp * density } else Modifier
     val face = if (glassy) frost.kitGlassFace(mid) else Modifier.kitDecorated(mid, rtl)
-    return KitSurfaceLook(face.then(sink), words, faceShape, mid.paints() || (decoration ?: plain).paints(), dressed = decoration != null)
+    return KitSurfaceLook(face.then(sink), words, faceShape, mid.paints() || (decoration ?: plain).paints(), dressed = decoration != null, decoration = decoration)
 }
 
 /**
@@ -449,30 +454,8 @@ internal fun SurfaceDecoration.shape(): Shape =
  */
 public fun Modifier.kitDecorated(d: SurfaceDecoration, rtl: Boolean = false): Modifier {
     val shape = d.shape()
-    val sign = if (rtl) -1f else 1f
-    val all = buildList {
-        addAll(d.shadows)
-        d.paired?.let { p ->
-            if (p.inset <= 0f && (p.distanceDp > 0f || p.blurDp > 0f)) {
-                add(Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light))
-                add(Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark))
-            }
-        }
-    }.filter { it.color.v ushr 24 != 0 }
-    val (soft, hard) = all.partition { it.blurDp > 0f }
-    var m = this
-    soft.forEach { s ->
-        m = m.dropShadow(
-            shape,
-            ComposeShadow(
-                radius = s.blurDp.dp,
-                color = s.color.toColor(),
-                spread = s.spreadDp.dp,
-                offset = DpOffset((s.dxDp * sign).dp, s.dyDp.dp),
-            ),
-        )
-    }
-    return m.drawBehind {
+    val hard = d.allShadows().filter { it.blurDp <= 0f }
+    return this.kitDecoratedSoftShadows(d, rtl).drawBehind {
         val outline = shape.createOutline(size, layoutDirection, this)
         val ltr = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
         hard.forEach { s -> drawShadow(s, shape, ltr) }
@@ -501,6 +484,40 @@ public fun Modifier.kitDecorated(d: SurfaceDecoration, rtl: Boolean = false): Mo
             }
         }
     }
+}
+
+/** Every shadow [this] casts: its own, and its paired outer ones (Soft) as two shadows. Transparent ones left out. */
+internal fun SurfaceDecoration.allShadows(): List<Shadow> =
+    buildList {
+        addAll(shadows)
+        paired?.let { p ->
+            if (p.inset <= 0f && (p.distanceDp > 0f || p.blurDp > 0f)) {
+                add(Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light))
+                add(Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark))
+            }
+        }
+    }.filter { it.color.v ushr 24 != 0 }
+
+/**
+ * Only the blurred shadows of [d], on its own shape ([kitDecorated] = these + the face). A part whose face is drawn on
+ * another outline for a while (the header capsule a menu grows out of) keeps these, so its soft shadow never changes.
+ */
+internal fun Modifier.kitDecoratedSoftShadows(d: SurfaceDecoration, rtl: Boolean = false): Modifier {
+    val shape = d.shape()
+    val sign = if (rtl) -1f else 1f
+    var m = this
+    d.allShadows().filter { it.blurDp > 0f }.forEach { s ->
+        m = m.dropShadow(
+            shape,
+            ComposeShadow(
+                radius = s.blurDp.dp,
+                color = s.color.toColor(),
+                spread = s.spreadDp.dp,
+                offset = DpOffset((s.dxDp * sign).dp, s.dyDp.dp),
+            ),
+        )
+    }
+    return m
 }
 
 internal fun DrawScope.drawSurfaceShadow(s: Shadow, shape: Shape, rtl: Float) {

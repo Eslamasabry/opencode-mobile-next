@@ -12,6 +12,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDecoratedSoftShadows
+import io.github.eslamasabry.oc.ui.kit.modal.kitGrowBodyRest
+import io.github.eslamasabry.oc.ui.kit.modal.kitGrowBodyFace
+import androidx.compose.ui.graphics.toArgb
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -62,6 +66,29 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
             )
         )
     val solid = style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+    // B-446: the chat's ⋯ menu grows out of the capsule in every style (KitMenuGrows.kt). While it does, the capsule
+    // paints its half of the one outline (capsule, neck, menu) in its own material; at rest its own look, as before.
+    // Glass draws its own joined body (KitLiquidJoin.kt), so a Glass capsule (frost held) is not a body here.
+    val growHost = io.github.eslamasabry.oc.ui.kit.modal.LocalKitGrowHost.current
+    val growBody =
+        io.github.eslamasabry.oc.ui.kit.modal.rememberKitGrowBody("bar", on = style != io.github.eslamasabry.oc.ui.design.style.Style.Glass)
+    val growing = growHost != null && growBody != null && growHost.dropOf(growBody) != null
+    if (growBody != null) {
+        val hairline = io.github.eslamasabry.oc.ui.kit.foundation.kitHairline()
+        val fill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors)
+        val face =
+            look.decoration?.takeIf { !solid }?.let { io.github.eslamasabry.oc.ui.kit.modal.KitGrowFace(it, insideEdge = false) }
+                ?: io.github.eslamasabry.oc.ui.kit.modal.KitGrowFace(
+                    io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration(
+                        fill = io.github.eslamasabry.oc.ui.design.color.Argb(fill.toArgb()),
+                        edgeStart = if (solid) io.github.eslamasabry.oc.ui.design.color.Argb(colors.hairline.toArgb()) else null,
+                        edgeWidthDp = if (solid) hairline.value else 0f,
+                    ),
+                    insideEdge = true,
+                )
+        androidx.compose.runtime.SideEffect { growBody.face = face }
+    }
+    val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
     val shadow =
         if (!solid) Modifier
         else
@@ -86,9 +113,18 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
         modifier
             .fillMaxWidth()
             .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
+            .then(Modifier.kitGrowBodyRest(growBody, look.shape))
             .then(shadow)
-            .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
-            .then(look.modifier)
+            .then(
+                if (growing && growHost != null && growBody != null) {
+                    // The style's blurred shadows stay on the capsule's own box; its fill and edge follow the one outline.
+                    (look.decoration?.takeIf { !solid }?.let { Modifier.kitDecoratedSoftShadows(it, rtl) } ?: Modifier)
+                        .then(Modifier.kitGrowBodyFace(growHost, growBody, look.shape))
+                } else {
+                    Modifier.then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
+                        .then(look.modifier)
+                }
+            )
             .testTag("kit-header-capsule")
     ) {
         CompositionLocalProvider(LocalKitHeaderCapsule provides true, content = content)

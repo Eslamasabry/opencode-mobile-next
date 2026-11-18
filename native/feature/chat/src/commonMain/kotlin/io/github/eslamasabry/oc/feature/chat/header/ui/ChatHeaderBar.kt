@@ -434,6 +434,8 @@ public fun ChatHeaderTopBar(
                     menuPage = HeaderMenuPage.Main
                     actions.closeMenu()
                 },
+                // B-446: the menu grows out of the header capsule, in every style.
+                grows = true,
             )
         },
     )

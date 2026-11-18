@@ -1027,6 +1027,8 @@ public fun ChatScreen(
                                                 },
                                             onOpen = { barMenuOpen = true },
                                             onDismissRequest = { barMenuOpen = false },
+                                            // B-446: the menu grows out of the header capsule, in every style.
+                                            grows = true,
                                         )
                                     },
                                 )

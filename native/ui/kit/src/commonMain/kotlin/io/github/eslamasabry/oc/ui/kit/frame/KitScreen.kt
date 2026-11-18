@@ -407,6 +407,10 @@ public fun KitScreen(
             val joinState = remember { KitLiquidJoin() }
             val join = joinState.takeIf { edgesFade && kitChromeIsGlass() && !KitMotion.state.reduced }
             val barBody = rememberKitLiquidJoinBody(join, "bar")
+            // B-446: on a floating page, a menu from the capsule's controls grows out of the capsule in every style
+            // (KitMenuGrows.kt); the menu asks for it, and Glass's joined glass above takes over where it is drawn.
+            val growState = remember { io.github.eslamasabry.oc.ui.kit.modal.KitGrowHost() }
+            val growHost = growState.takeIf { floatChrome }
             // Owner 2026-11-14 ("Wtfff": transcript text bent inside the bar's lower edge): the bar's glass, the words on it
             // and the status edge see the body exactly as the page shows it, cleared above the bar (and a control under
             // it) and fading in over the same 12 dp, in both Glass looks.
@@ -524,7 +528,7 @@ public fun KitScreen(
             ) {
               // ONE provider around all three parts (the top block, the body, the bottom block), so a part added later
               // cannot fall outside it: the pinned status row read the flag as false and kept its hairline (look 10096).
-              CompositionLocalProvider(LocalKitScreenFloating provides floatChrome) {
+              CompositionLocalProvider(LocalKitScreenFloating provides floatChrome, io.github.eslamasabry.oc.ui.kit.modal.LocalKitGrowHost provides growHost) {
                 CompositionLocalProvider(
                     LocalChromePadding provides padding,
                     LocalKitScreenScroll provides scroll,
