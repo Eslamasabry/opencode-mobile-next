@@ -202,7 +202,8 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
  * How far words on this page move their secondary and tertiary inks toward the primary one (glass-in-the-kit 1b'):
  * [io.github.eslamasabry.oc.ui.design.style.GlassSpec.pageInkLift], provided by [KitLiveBackground]; 0 elsewhere.
  */
-public val LocalKitPageInkLift: androidx.compose.runtime.ProvidableCompositionLocal<Float> = androidx.compose.runtime.staticCompositionLocalOf { 0f }
+public val LocalKitPageInkLift: androidx.compose.runtime.ProvidableCompositionLocal<Float> =
+    androidx.compose.runtime.staticCompositionLocalOf { 0f }
 
 /**
  * The opaque flat ground a [KitLiveBackground] draws under its content when it draws nothing else (no live look, no

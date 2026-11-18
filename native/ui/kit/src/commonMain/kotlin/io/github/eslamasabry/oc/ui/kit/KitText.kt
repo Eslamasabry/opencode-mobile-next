@@ -92,7 +92,7 @@ public fun KitText(
             style = style,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
-            autoSize = if (wholeWords) kitWholeWords(style.fontSize) else null,
+            autoSize = wholeWordsSize(wholeWords, style.fontSize),
         )
         return
     }
@@ -116,10 +116,13 @@ public fun KitText(
             style = sized,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
-            autoSize = if (wholeWords) kitWholeWords(sized.fontSize) else null,
+            autoSize = wholeWordsSize(wholeWords, sized.fontSize),
         )
     }
 }
+
+/** [KitText]'s `wholeWords`: the shrink-to-whole-words size rule when asked for, else none. */
+private fun wholeWordsSize(on: Boolean, size: androidx.compose.ui.unit.TextUnit) = if (on) kitWholeWords(size) else null
 
 private val TITLE_ROLES = setOf(TypeRole.LargeTitle, TypeRole.Title, TypeRole.Headline, TypeRole.RowTitle)
 

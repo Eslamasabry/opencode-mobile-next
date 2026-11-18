@@ -347,11 +347,15 @@ public class SignInTerminalPresenter(
     }
 
     override fun finish() {
-        if (ui.value.step == SignInStep.CouldNotCheck) return checkAgain()
-        val owned = session ?: return
-        if (checking) return
-        checking = true
-        scope.launch { check(owned, stopFirst = true) }
+        if (ui.value.step == SignInStep.CouldNotCheck) {
+            checkAgain()
+        } else {
+            val owned = session
+            if (owned != null && !checking) {
+                checking = true
+                scope.launch { check(owned, stopFirst = true) }
+            }
+        }
     }
 
     override fun startAgain() {

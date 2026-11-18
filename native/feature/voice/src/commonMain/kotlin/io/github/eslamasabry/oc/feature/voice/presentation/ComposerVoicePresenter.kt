@@ -613,9 +613,12 @@ public class ComposerVoicePresenter(
                         p.models.state.collect { packs ->
                             val ids = p.models.speechPacks.map { it.id }
                             val installed = ids.any { packs.packs[it] == PackStatus.Installed }
-                            val spec = p.models.speechPacks.firstOrNull { it.id == packs.selected } ?: p.models.speechPacks.firstOrNull()
+                            val spec =
+                                p.models.speechPacks.firstOrNull { it.id == packs.selected }
+                                    ?: p.models.speechPacks.firstOrNull()
                             val needed = if (installed) null else spec?.totalBytes
-                            if (mutable.value.modelNeededBytes != needed) mutable.update { it.copy(modelNeededBytes = needed) }
+                            if (mutable.value.modelNeededBytes != needed)
+                                mutable.update { it.copy(modelNeededBytes = needed) }
                         }
                     }
                 scope.launch {
@@ -755,9 +758,9 @@ public class ComposerVoicePresenter(
     }
 
     /**
-     * The door inside the recorder row: a tap on the mic is open, so the dictation is thrown away (nothing typed, nothing
-     * sent) and the hands-free voice conversation starts in its place. With words or files on the box it does nothing but
-     * say why ([ComposerVoiceUi.draft] is also drawn on the control).
+     * The door inside the recorder row: a tap on the mic is open, so the dictation is thrown away (nothing typed,
+     * nothing sent) and the hands-free voice conversation starts in its place. With words or files on the box it does
+     * nothing but say why ([ComposerVoiceUi.draft] is also drawn on the control).
      */
     public fun startConversationFromMic() {
         if (mutable.value.draft) {

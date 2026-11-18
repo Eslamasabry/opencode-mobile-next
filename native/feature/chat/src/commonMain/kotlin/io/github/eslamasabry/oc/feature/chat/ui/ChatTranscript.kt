@@ -548,10 +548,11 @@ internal fun ChatTranscriptList(
     // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
     val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }
     val latestWaitingIndex by rememberUpdatedState(waitingIndex)
-    // Keyed on the newest row that is not the person's own message: while a reply runs the newest key is the live line's
-    // and does not change. A message the person sends or queues while a decision waits is their own newest action: the
-    // list goes to the end for it, as it does for any send (onSent), and this pull must not take the page back up to
-    // the card and leave "Jump to latest" over their queued bubble (B-459). The card stays in view above the bubble.
+    // Keyed on the newest row that is not the person's own message: while a reply runs the newest key is the live
+    // line's and does not change. A message the person sends or queues while a decision waits is their own newest
+    // action: the list goes to the end for it, as it does for any send (onSent), and this pull must not take the page
+    // back up to the card and leave "Jump to latest" over their queued bubble (B-459). The card stays in view above the
+    // bubble.
     val firstRowKey = unique.firstOrNull { it !is PromptRow }?.key
     LaunchedEffect(waitingKey, live != null, firstRowKey, waitingJump) {
         if (latestWaitingIndex == null) return@LaunchedEffect
@@ -1453,10 +1454,8 @@ private fun ChatRow(
                                 )
                             val signInAgainLabel = reply?.signInAgainLabel
                             val signInAgainAgent = row.providerId
-                            if (
-                                signInAgain != null && !signInPast && signInAgainLabel != null &&
-                                    signInAgainAgent != null
-                            ) {
+                            val offersSignIn = signInAgain != null && !signInPast
+                            if (offersSignIn && signInAgainLabel != null && signInAgainAgent != null) {
                                 val agentId = signInAgainAgent
                                 KitButton(
                                     signInAgainLabel,

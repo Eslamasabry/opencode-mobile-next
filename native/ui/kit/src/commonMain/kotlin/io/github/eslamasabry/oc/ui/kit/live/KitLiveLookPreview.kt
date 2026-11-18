@@ -43,8 +43,8 @@ import io.github.eslamasabry.oc.ui.words.res.effectsLookPreviewOffLabel
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * A short, wide live sample of the person's chosen look behind two mock chat lines, at the top of Settings › Appearance ›
- * Effects (Dart `KitLiveLookPreview`, `lib/ui/kit/kit_live_look_preview.dart`). It follows the Live background switch
+ * A short, wide live sample of the person's chosen look behind two mock chat lines, at the top of Settings › Appearance
+ * › Effects (Dart `KitLiveLookPreview`, `lib/ui/kit/kit_live_look_preview.dart`). It follows the Live background switch
  * ([enabled] false: the flat ground and a quiet "Off"), cross-fades when that or the look changes ([lookId]), and opens
  * the look picker when tapped. The look itself is drawn by [KitLiveBackground], which holds a still frame under Calm,
  * Off, reduced motion and screenshots.

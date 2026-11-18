@@ -414,7 +414,8 @@ class PrivacyNoticeSyncTest {
             val line = xmlString(File(dir, "strings_s28_privacy.xml"), "collectDevice")
             assertTrue("Umami" in line && "Google Analytics" in line, "$tag page puts the screen size on Google's side")
         }
-        val claimed = NeverCollected.entries.any { it.name in setOf("ScreenSize", "DeviceModel", "TimeZone", "Location") }
+        val claimed =
+            NeverCollected.entries.any { it.name in setOf("ScreenSize", "DeviceModel", "TimeZone", "Location") }
         assertTrue(!claimed, "the never-list cannot claim what Google Analytics receives on its own")
     }
 

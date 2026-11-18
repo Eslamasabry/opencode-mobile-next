@@ -10,6 +10,13 @@ import io.github.eslamasabry.oc.feature.agents.signin.SignInCheck
  * within [TRIES] with growing pauses, and then said as such.
  */
 internal object SignInCheckRules {
+    /** The read's own budget: Claude Code starts slowly on a phone (its probe waits up to 60 s inside the script). */
+    private const val CLAUDE_PROBE_SECONDS: Int = 65
+    private const val PROBE_SECONDS: Int = 10
+
+    /** How long the private read of [agentId]'s sign-in may take, in seconds. */
+    fun probeSeconds(agentId: String): Int = if (agentId == "claude") CLAUDE_PROBE_SECONDS else PROBE_SECONDS
+
     /** Tries of one check: the first at once, then after [pauseMillis]. */
     const val TRIES: Int = 4
 

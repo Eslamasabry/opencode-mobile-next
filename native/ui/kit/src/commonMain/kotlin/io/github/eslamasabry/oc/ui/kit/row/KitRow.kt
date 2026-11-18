@@ -343,7 +343,9 @@ private fun RowBody(
                             Modifier.weight(1f).kitGrowTitle(growKey).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
                             tone = if (!enabled || unavailable) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
-                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(chosen, titleMaxLines),
+                            maxLines =
+                                if (titleIsFileName && large) Int.MAX_VALUE
+                                else kitRowTitleLines(chosen, titleMaxLines),
                             highlight = highlight,
                             // Flutter lays a row title out in the ambient direction, so an Arabic title in an English
                             // list starts on the reading edge (kit_sheet_default: "العربية"); never at the row's end.
@@ -406,7 +408,9 @@ private fun RowBody(
                                 Modifier.testTag("kit-row-supporting").kitMayTruncate("row-supporting"),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
-                                maxLines = if (!enabled || unavailable) Int.MAX_VALUE else kitRowSupportingLines(chosen, supportingMaxLines),
+                                maxLines =
+                                    if (!enabled || unavailable) Int.MAX_VALUE
+                                    else kitRowSupportingLines(chosen, supportingMaxLines),
                                 highlight = highlight.takeIf { enabled && !unavailable },
                             )
                         }

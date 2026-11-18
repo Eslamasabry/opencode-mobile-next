@@ -80,7 +80,15 @@ public fun KitInboxRequestRow(
                 Spacer(Modifier.height(Space.S1.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                     KitText(title, Modifier.weight(1f), role = TypeRole.Headline)
-                    if (!deciding && kitFontScale() < 1.3f) KitButton(openActionLabel, onOpen, role = KitButtonRole.Secondary, enabled = openEnabled, semanticsLabel = openLabel) // F: lib/ui/kit/kit_request_row.dart:112
+                    // F: lib/ui/kit/kit_request_row.dart:112
+                    if (!deciding && kitFontScale() < 1.3f)
+                        KitButton(
+                            openActionLabel,
+                            onOpen,
+                            role = KitButtonRole.Secondary,
+                            enabled = openEnabled,
+                            semanticsLabel = openLabel,
+                        )
                 }
             }
         }

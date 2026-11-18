@@ -16,6 +16,11 @@
 #                      findings old. Prints TOTAL, new and old counts per module. The baselines are not read.
 #   --report-dir <dir> reports (default: native/build/reports/detekt/<module>.{txt,xml})
 #
+# Frozen exceptions (--new-against only; 3.0.1, coordinator 2026-11-18): native/tool/ci/detekt_exceptions_301.tsv (or the
+# file OC_DETEKT_EXCEPTIONS names) lists findings by rule + file + function (detekt's [name]). A module passes only when
+# its new findings are exactly those listed for it; any other new finding fails, and a listed finding that no longer
+# exists in the module fails until its line is removed (the list only shrinks). The count is printed with every run.
+#
 # Every run first checks the ratchet: no baseline may gain an entry compared with merge-base(<base>, HEAD), and no
 # baseline may appear for a module that had none. Before the base carries native/config/detekt/baseline/ at all
 # (the adoption commit) the ratchet reports "bootstrap" and passes. With no module and no --all only the ratchet runs.
@@ -156,6 +161,12 @@ if [[ -n "$new_against" ]]; then
   # A branch is judged against where it left the ref (the ref itself may have moved on since).
   new_against="$(git -C "$top" merge-base "$new_against" HEAD 2>/dev/null || echo "$new_against")"
   mkdir -p "$report_dir" || exit 2
+  exceptions="${OC_DETEKT_EXCEPTIONS:-$OC_NATIVE/tool/ci/detekt_exceptions_301.tsv}"
+  if [[ -f "$exceptions" ]]; then
+    echo "detekt: $(grep -cvE '^(#|[[:space:]]*$)' "$exceptions") frozen exceptions listed in ${exceptions#"$OC_NATIVE/"}"
+  else
+    exceptions=/dev/null; echo "detekt: no frozen exceptions file"
+  fi
   snap="$(mktemp -d "${TMPDIR:-/tmp}/oc-detekt-base.XXXXXX")"; trap 'rm -rf "$snap"' EXIT
   lock="$(oc_build_lock_file)"
   scan() { # scan <dir> <base-path> <report.txt>: no baseline; 0 clean, 2 findings, anything else could not run
@@ -178,9 +189,10 @@ if [[ -n "$new_against" ]]; then
       git -C "$top" archive "$new_against" -- "$rel" | tar -x -C "$snap/$key"
       scan "$snap/$key/$rel" "$snap/$key/native" "$snap/$key.txt" || { raise 2; continue; }
     else : >"$snap/$key.txt"; fi
-    python3 -I - "$m" "$snap/$key.txt" "$report_dir/$key.txt" "${report_dir#"$OC_NATIVE/"}/$key.txt" <<'PY' || raise 1
+    python3 -I - "$m" "$snap/$key.txt" "$report_dir/$key.txt" "${report_dir#"$OC_NATIVE/"}/$key.txt" \
+      "$exceptions" "${dir#"$OC_NATIVE/"}/" <<'PY' || raise 1
 import collections, re, sys
-mod, base_txt, head_txt, shown = sys.argv[1:5]
+mod, base_txt, head_txt, shown, exc_path, prefix = sys.argv[1:7]
 def read(path):
     out = []
     for line in open(path, encoding='utf-8', errors='replace'):
@@ -200,12 +212,40 @@ for k, line in head:
     if seen[k] > old[k]:
         new.append(line)
 total = len(head)
-if not new:
-    print(f'detekt {mod}: ok (total {total}, new 0, old {total}; signature ratchet vs base)')
+# The frozen exceptions of this module: rule + file (under native/) + function, never a line number.
+def where(line):
+    m = re.match(r'([A-Za-z]+) - .*?\[([^\]]+)\] at (\S+?):\d+:\d+ - Signature=', line)
+    if not m:
+        return None
+    rule, name, path = m.groups()
+    return (rule, path.split('/native/', 1)[-1], name)
+listed = collections.Counter()
+for row in open(exc_path, encoding='utf-8'):
+    cols = row.rstrip('\n').split('\t')
+    if row.startswith('#') or len(cols) < 3 or not cols[1].startswith(prefix):
+        continue
+    listed[(cols[0], cols[1], cols[2])] += 1
+present = collections.Counter(where(l) for _, l in head)
+stale = [k for k in listed if present[k] < listed[k]]
+budget = collections.Counter(listed)
+unlisted = []
+for line in new:
+    k = where(line)
+    if k is not None and budget[k] > 0:
+        budget[k] -= 1
+    else:
+        unlisted.append(line)
+excepted = len(new) - len(unlisted)
+note = f'; {excepted} of {sum(listed.values())} frozen exceptions' if listed else ''
+if not unlisted and not stale:
+    print(f'detekt {mod}: ok (total {total}, new 0, old {total - len(new)}; signature ratchet vs base{note})')
     sys.exit(0)
-print(f'detekt {mod}: NEW FINDINGS (new {len(new)}, total {total}, old {total - len(new)}; report: {shown})')
-for line in new[:20]:
+bad = len(unlisted) + len(stale)
+print(f'detekt {mod}: NEW FINDINGS (new {bad}, total {total}, old {total - len(new)}; report: {shown}{note})')
+for line in unlisted[:20]:
     print('  ' + re.sub(r' at \S*/native/', ' at ', line)[:300])
+for rule, path, name in stale:
+    print(f'  StaleException - [{name}] {rule} at {path}: listed in the frozen exceptions but no longer found; remove it')
 sys.exit(1)
 PY
   done

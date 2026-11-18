@@ -547,9 +547,10 @@ public class ChatPresenter(
     private var lastSignInTurns: kotlinx.collections.immutable.ImmutableMap<String, SignInTurn> = persistentMapOf()
 
     private fun signInChanges(): Flow<Map<String, Boolean>> {
-        val port = outside ?: return flowOf(emptyMap())
-        val owner = signInOwner() ?: return flowOf(emptyMap())
-        return port.agentSignIns(owner).onStart { emit(emptyMap()) }
+        val port = outside
+        val owner = signInOwner()
+        return if (port == null || owner == null) flowOf(emptyMap())
+        else port.agentSignIns(owner).onStart { emit(emptyMap()) }
     }
 
     /**
@@ -564,7 +565,13 @@ public class ChatPresenter(
         rows: ImmutableList<TranscriptRow>,
         waiting: Boolean,
     ): kotlinx.collections.immutable.ImmutableMap<String, SignInTurn> {
-        if (signInOwner() == null) return persistentMapOf<String, SignInTurn>().also { lastSignInTurns = it }
+        val turns: Map<String, SignInTurn> = if (signInOwner() == null) emptyMap() else signInTurnMap(rows, waiting)
+        if (turns != lastSignInTurns) lastSignInTurns = turns.toPersistentMap()
+        return lastSignInTurns
+    }
+
+    /** [signInTurns]' reading of the transcript, newest first. */
+    private fun signInTurnMap(rows: ImmutableList<TranscriptRow>, waiting: Boolean): Map<String, SignInTurn> {
         val runtime = world.runtimeId()
         val newestPrompt = rows.firstOrNull { it is PromptRow }?.turnId
         val offered = HashSet<String>()
@@ -573,17 +580,20 @@ public class ChatPresenter(
             val footer = failed.footer
             if (footer.reason?.let(AgentErrorText::signInExpired) != true) continue
             val provider = runtime ?: footer.providerId ?: continue
-            turns[footer.turnId] =
-                when {
-                    signInsNow[provider] == true ->
-                        if (footer.turnId == newestPrompt && !waiting) SignInTurn.PastSendAgain else SignInTurn.Past
-                    offered.add(provider) -> SignInTurn.Offer
-                    else -> SignInTurn.Past
-                }
+            turns[footer.turnId] = signInTurnOf(provider, last = footer.turnId == newestPrompt && !waiting, offered)
         }
-        if (turns == lastSignInTurns) return lastSignInTurns
-        return turns.toPersistentMap().also { lastSignInTurns = it }
+        return turns
     }
+
+    /**
+     * One stopped sign-in turn of [provider]: [last] = nothing was sent after it; [offered] = agents already offered.
+     */
+    private fun signInTurnOf(provider: String, last: Boolean, offered: MutableSet<String>): SignInTurn =
+        when {
+            signInsNow[provider] == true -> if (last) SignInTurn.PastSendAgain else SignInTurn.Past
+            offered.add(provider) -> SignInTurn.Offer
+            else -> SignInTurn.Past
+        }
 
     private var lastPending: ImmutableList<PendingSend> = persistentListOf()
 
@@ -1776,16 +1786,14 @@ public class ChatPresenter(
         if (!world.capabilities.value.fileBrowsing) return
         val transcript = world.transcript.value
         for (path in paths) {
-            if (path in local.value.confirmedPaths) continue
             val seen = pathChecks[path]
             // A miss is checked again only after the conversation moved on and is idle (Flutter:
             // agents name a file
             // moments before they create it), never once per streamed word.
-            if (
-                seen != null &&
-                    (seen == CHECKING || seen == transcript.revision || transcript.run.busy)
-            )
-                continue
+            val skip =
+                path in local.value.confirmedPaths ||
+                    (seen != null && (seen == CHECKING || seen == transcript.revision || transcript.run.busy))
+            if (skip) continue
             if (pathChecks.size >= MAX_PATH_CHECKS) pathChecks.remove(pathChecks.keys.first())
             pathChecks[path] = CHECKING
             launcher.launch {

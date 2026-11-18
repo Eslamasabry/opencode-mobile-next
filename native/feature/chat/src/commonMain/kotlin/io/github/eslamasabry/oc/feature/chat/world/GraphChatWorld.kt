@@ -2537,12 +2537,12 @@ internal class GraphChatWorld(
     }
 
     /**
-     * A restored marker whose words the server already holds as a user message of this conversation, written at or after
-     * the moment the marker was (its dispatch time): the send did arrive. The receipt journal cannot say so when the
-     * process died with the request in flight (an online send is journalled only after the fact), so without this the
-     * person would see their delivered message and a "not confirmed yet" row for the same words, and a Send again would
-     * send them twice. The marker goes and nothing is sent. A different clock on the server, or words not yet in the
-     * transcript, leave the marker for the person's Review and Check again, as before.
+     * A restored marker whose words the server already holds as a user message of this conversation, written at or
+     * after the moment the marker was (its dispatch time): the send did arrive. The receipt journal cannot say so when
+     * the process died with the request in flight (an online send is journalled only after the fact), so without this
+     * the person would see their delivered message and a "not confirmed yet" row for the same words, and a Send again
+     * would send them twice. The marker goes and nothing is sent. A different clock on the server, or words not yet in
+     * the transcript, leave the marker for the person's Review and Check again, as before.
      */
     private fun retireDeliveredMarkers(
         messages: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>,

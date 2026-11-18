@@ -482,7 +482,7 @@ mkdir -p native/core/common/pkg
 echo 'val a = 1 // DETEKT_FIND OldMagic' >native/core/common/Old.kt
 echo 'val b = 1 // DETEKT_FIND OldLong' >native/ui/kit/OldKit.kt
 git add -A && git commit -q -m "chore(tool): old findings [skip ci]" -m "Base." && git branch -f native/main HEAD
-na=(env OC_DETEKT_CMD="$FAKE_DETEKT" OC_BUILD_LOCK_FILE="$TMP_ROOT/na.lock")
+na=(env OC_DETEKT_CMD="$FAKE_DETEKT" OC_BUILD_LOCK_FILE="$TMP_ROOT/na.lock" OC_DETEKT_EXCEPTIONS=/dev/null)
 expect "B-BUILD-024 detekt ratchet: old findings are not new" 0 "${na[@]}" native/tool/qa/detekt.sh :core:common :ui:kit --new-against native/main
 expect_out "B-BUILD-024 detekt ratchet: prints the total, new and old counts" 'detekt :core:common: ok \(total 1, new 0, old 1'
 echo 'val c = 1 // DETEKT_FIND FreshOne' >native/ui/kit/Fresh.kt

@@ -165,7 +165,10 @@ public fun KitRequestFrame(
         ) {
         CompositionLocalProvider(LocalKitNested provides (dressed != null)) {
             val compact = LocalKitRequestCompact.current
-            val oneLine = with(androidx.compose.ui.platform.LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Body).lineHeight.toDp() }
+            val oneLine =
+                with(androidx.compose.ui.platform.LocalDensity.current) {
+                    LocalKitTypography.current.style(TypeRole.Body).lineHeight.toDp()
+                }
             Column(
                 Modifier.weight(1f, fill = false)
                     .then(if (compact) Modifier.heightIn(max = oneLine) else Modifier)

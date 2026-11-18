@@ -98,8 +98,14 @@ public fun Modifier.kitBorderLight(shape: Shape, on: Boolean, filled: Boolean = 
     val saver = LocalKitAppearance.current.saver || LocalKitSignals.current.powerSave
     val colors = LocalKitColors.current
     val style = LocalKitStyle.current
-    val look = remember(style.style, style.spec.tokens.glow, saver) { borderLightLook(style.style, style.spec.tokens.glow, saver) }
-    val palette = remember(colors.accent, colors.dark, look.muted, filled) { borderLightPalette(colors.accent, colors.dark, look.muted, filled) }
+    val look =
+        remember(style.style, style.spec.tokens.glow, saver) {
+            borderLightLook(style.style, style.spec.tokens.glow, saver)
+        }
+    val palette =
+        remember(colors.accent, colors.dark, look.muted, filled) {
+            borderLightPalette(colors.accent, colors.dark, look.muted, filled)
+        }
     val phase = borderLightPhase(saver)
     val travels = !saver && KitMotion.state.ambientLoops
     val haloLayer = rememberBlurLayer(look.halo)
@@ -109,8 +115,14 @@ public fun Modifier.kitBorderLight(shape: Shape, on: Boolean, filled: Boolean = 
         val outline = shape.createOutline(size, layoutDirection, this)
         val ring = BorderRing(outline, size)
         val core = RingLayer(outline, size, look.core, palette.coreStops, blurred = false) { it.dp.toPx() }
-        val near = look.near?.let { RingLayer(outline, size, it, palette.glowStops, blurred = nearLayer != null) { v -> v.dp.toPx() } }
-        val halo = look.halo?.let { RingLayer(outline, size, it, palette.glowStops, blurred = haloLayer != null) { v -> v.dp.toPx() } }
+        val near =
+            look.near?.let {
+                RingLayer(outline, size, it, palette.glowStops, blurred = nearLayer != null) { v -> v.dp.toPx() }
+            }
+        val halo =
+            look.halo?.let {
+                RingLayer(outline, size, it, palette.glowStops, blurred = haloLayer != null) { v -> v.dp.toPx() }
+            }
         onDrawWithContent {
             val s = strength.value
             if (s <= 0f || ring.length <= 0f) {
@@ -120,9 +132,15 @@ public fun Modifier.kitBorderLight(shape: Shape, on: Boolean, filled: Boolean = 
             val u = phase()
             val angle = ring.headAngle(u)
             val breath = if (travels) haloBreath(u) else 1f
-            halo?.let { drawRing(it, ring.center, angle, glowAlpha(s * breath, it.glow.alpha, if (dark) 1f else LIGHT_HALO_GAIN), haloLayer) }
+            halo?.let {
+                val alpha = glowAlpha(s * breath, it.glow.alpha, if (dark) 1f else LIGHT_HALO_GAIN)
+                drawRing(it, ring.center, angle, alpha, haloLayer)
+            }
             drawContent()
-            near?.let { drawRing(it, ring.center, angle, glowAlpha(s, it.glow.alpha, if (dark) 1f else LIGHT_NEAR_GAIN), nearLayer) }
+            near?.let {
+                val alpha = glowAlpha(s, it.glow.alpha, if (dark) 1f else LIGHT_NEAR_GAIN)
+                drawRing(it, ring.center, angle, alpha, nearLayer)
+            }
             drawRing(core, ring.center, angle, s * core.glow.alpha, null)
         }
     }
@@ -145,7 +163,8 @@ private const val LIGHT_NEAR_GAIN: Float = 1.1f
 /** No glow layer is drawn opaque: a saturated, flat-topped glow reads as a smudge, not light. */
 private const val MAX_GLOW_ALPHA: Float = 0.9f
 
-private fun glowAlpha(strength: Float, alpha: Float, gain: Float): Float = (strength * alpha * gain).coerceAtMost(MAX_GLOW_ALPHA)
+private fun glowAlpha(strength: Float, alpha: Float, gain: Float): Float =
+    (strength * alpha * gain).coerceAtMost(MAX_GLOW_ALPHA)
 
 /** Halo strength over a turn: 0.82..1, two breaths per turn; 1 at the turn's start and end, so it closes. */
 internal fun haloBreath(phase: Float): Float = 0.91f + 0.09f * cos(4f * PI.toFloat() * phase)
@@ -158,7 +177,8 @@ internal fun haloBreath(phase: Float): Float = 0.91f + 0.09f * cos(4f * PI.toFlo
 private fun borderLightPhase(saver: Boolean): () -> Float {
     if (saver || !KitMotion.state.ambientLoops) return { BORDER_LIGHT_STILL_PHASE }
     val turn = rememberInfiniteTransition(label = "border light")
-    val phase = turn.animateFloat(0f, 1f, KitMotion.specs.lap(BORDER_LIGHT_TURN_MS), label = "distance round the button")
+    val phase =
+        turn.animateFloat(0f, 1f, KitMotion.specs.lap(BORDER_LIGHT_TURN_MS), label = "distance round the button")
     return { phase.value }
 }
 
@@ -170,7 +190,10 @@ private fun borderLightPhase(saver: Boolean): () -> Float {
 private fun rememberBlurLayer(glow: BorderGlow?): GraphicsLayer? {
     if (glow == null || glow.blurDp <= 0f) return null
     val density = LocalDensity.current
-    val effect = remember(density, glow.blurDp) { with(density) { glow.blurDp.dp.toPx() }.let { BlurEffect(it, it, TileMode.Decal) } }
+    val effect =
+        remember(density, glow.blurDp) {
+            with(density) { glow.blurDp.dp.toPx() }.let { BlurEffect(it, it, TileMode.Decal) }
+        }
     if (!effect.isSupported()) return null
     val layer = rememberGraphicsLayer()
     return remember(layer, effect) { layer.apply { renderEffect = effect } }
@@ -187,13 +210,24 @@ internal data class BorderGlow(val widthDp: Float, val blurDp: Float, val alpha:
 
 /** The light's layers for one style: [core] always, [near] and [halo] where the style glows. */
 @Immutable
-internal data class BorderLightLook(val core: BorderGlow, val near: BorderGlow?, val halo: BorderGlow?, val muted: Boolean)
+internal data class BorderLightLook(
+    val core: BorderGlow,
+    val near: BorderGlow?,
+    val halo: BorderGlow?,
+    val muted: Boolean,
+)
 
 /** Per style, from its own glow tokens. Saver paints the rim only: the core line, no glow, no blur. */
 internal fun borderLightLook(style: Style, glow: StyleGlow, saver: Boolean): BorderLightLook {
     val look =
         when {
-            !glow.halo -> BorderLightLook(BorderGlow((glow.lineWidthDp ?: 2f) + 0.5f, 0f, 1f), null, null, muted = style == Style.Paper)
+            !glow.halo ->
+                BorderLightLook(
+                    BorderGlow((glow.lineWidthDp ?: 2f) + 0.5f, 0f, 1f),
+                    null,
+                    null,
+                    muted = style == Style.Paper,
+                )
             style == Style.Glass ->
                 BorderLightLook(
                     core = BorderGlow(1.4f, 0f, 1f),
@@ -216,13 +250,22 @@ internal fun borderLightLook(style: Style, glow: StyleGlow, saver: Boolean): Bor
 
 /**
  * The light's colours, from the pack's accent in HCT: [lead] is the accent's own hue, [cool] and [warm] its neighbours
- * either side, [head] the white-hot tip, [base] the faint ring. Dark: high, luminous tones. Light: deep, saturated tones
- * (a pale glow vanishes on a pale page), the tip white only on a filled button.
+ * either side, [head] the white-hot tip, [base] the faint ring. Dark: high, luminous tones. Light: deep, saturated
+ * tones (a pale glow vanishes on a pale page), the tip white only on a filled button.
  */
 @Immutable
-internal data class BorderLightPalette(val head: Color, val lead: Color, val cool: Color, val warm: Color, val base: Color, val baseAlpha: Float, val dark: Boolean) {
+internal data class BorderLightPalette(
+    val head: Color,
+    val lead: Color,
+    val cool: Color,
+    val warm: Color,
+    val base: Color,
+    val baseAlpha: Float,
+    val dark: Boolean,
+) {
     /** The core line: the tip, a crisp front, the faint ring, one glint ahead, then the tail warm → cool → lead. */
-    val coreStops: Array<Pair<Float, Color>> = stops(head, baseAlpha, glint = 0.45f, warmA = 0.7f, coolA = 0.95f, leadA = 1f, front = 0.02f)
+    val coreStops: Array<Pair<Float, Color>> =
+        stops(head, baseAlpha, glint = 0.45f, warmA = 0.7f, coolA = 0.95f, leadA = 1f, front = 0.02f)
 
     /**
      * The glows: the same comet, the ring nearly dark so only the comet glows. On a light page the tip is the lead
@@ -231,9 +274,26 @@ internal data class BorderLightPalette(val head: Color, val lead: Color, val coo
      */
     val glowStops: Array<Pair<Float, Color>> =
         if (dark) stops(head, 0.05f, glint = 0.3f, warmA = 0.5f, coolA = 0.85f, leadA = 1f, front = 0.02f)
-        else stops(lead.copy(alpha = 0.8f), 0.05f, glint = 0.3f, warmA = 0.5f, coolA = 0.75f, leadA = 0.82f, front = 0.07f)
+        else
+            stops(
+                lead.copy(alpha = 0.8f),
+                0.05f,
+                glint = 0.3f,
+                warmA = 0.5f,
+                coolA = 0.75f,
+                leadA = 0.82f,
+                front = 0.07f,
+            )
 
-    private fun stops(tip: Color, ring: Float, glint: Float, warmA: Float, coolA: Float, leadA: Float, front: Float): Array<Pair<Float, Color>> {
+    private fun stops(
+        tip: Color,
+        ring: Float,
+        glint: Float,
+        warmA: Float,
+        coolA: Float,
+        leadA: Float,
+        front: Float,
+    ): Array<Pair<Float, Color>> {
         val faint = base.copy(alpha = ring)
         // 0 and 1 are the head (the gradient closes on it). Travel is clockwise: just past 0 lies ahead of the head,
         // just before 1 behind it, where the tail runs.
@@ -290,7 +350,9 @@ private const val WARM_STEP: Double = 32.0
 /** Paper's light is ink on paper: a little over half the colour. */
 private const val MUTED_CHROMA: Double = 0.55
 
-/** HCT hues that read as red (crimson to vermilion). The light is an invitation, never an alert: it never takes them. */
+/**
+ * HCT hues that read as red (crimson to vermilion). The light is an invitation, never an alert: it never takes them.
+ */
 private const val RED_FROM: Double = 355.0
 private const val RED_MID: Double = 22.0
 private const val RED_TO: Double = 50.0
@@ -367,7 +429,11 @@ private fun outlinePath(outline: Outline, size: Size, outPx: Float): Path =
                 addPath(outline.path)
                 if (outPx != 0f && size.width > 0f && size.height > 0f) {
                     translate(Offset(-size.width / 2f, -size.height / 2f))
-                    transform(Matrix().apply { scale((size.width + 2f * outPx) / size.width, (size.height + 2f * outPx) / size.height) })
+                    transform(
+                        Matrix().apply {
+                            scale((size.width + 2f * outPx) / size.width, (size.height + 2f * outPx) / size.height)
+                        }
+                    )
                     translate(Offset(size.width / 2f, size.height / 2f))
                 }
             }
@@ -378,7 +444,10 @@ private fun RoundRect.grow(by: Float): RoundRect {
     fun CornerRadius.grow() = CornerRadius((x + by).coerceAtLeast(0f), (y + by).coerceAtLeast(0f))
     return RoundRect(
         left - by, top - by, right + by, bottom + by,
-        topLeftCornerRadius.grow(), topRightCornerRadius.grow(), bottomRightCornerRadius.grow(), bottomLeftCornerRadius.grow(),
+        topLeftCornerRadius.grow(),
+        topRightCornerRadius.grow(),
+        bottomRightCornerRadius.grow(),
+        bottomLeftCornerRadius.grow(),
     )
 }
 
@@ -386,12 +455,21 @@ private fun RoundRect.grow(by: Float): RoundRect {
  * One layer's drawing, cached per size: its outline centred on the origin, a scratch path and matrix, the brush and
  * its strokes. Per frame it only turns the scratch path: no allocation.
  */
-private class RingLayer(outline: Outline, size: Size, val glow: BorderGlow, stops: Array<Pair<Float, Color>>, blurred: Boolean, px: (Float) -> Float) {
-    private val centred = outlinePath(outline, size, px(glow.outDp)).apply { translate(Offset(-size.width / 2f, -size.height / 2f)) }
+private class RingLayer(
+    outline: Outline,
+    size: Size,
+    val glow: BorderGlow,
+    stops: Array<Pair<Float, Color>>,
+    blurred: Boolean,
+    px: (Float) -> Float,
+) {
+    private val centred =
+        outlinePath(outline, size, px(glow.outDp)).apply { translate(Offset(-size.width / 2f, -size.height / 2f)) }
     val turned = Path()
     private val matrix = Matrix()
     val brush: Brush = Brush.sweepGradient(*stops, center = Offset.Zero)
-    val strokes: List<Pair<Stroke, Float>> = ringStrokes(px(glow.widthDp), if (glow.blurDp > 0f && !blurred) px(glow.blurDp) else 0f)
+    val strokes: List<Pair<Stroke, Float>> =
+        ringStrokes(px(glow.widthDp), if (glow.blurDp > 0f && !blurred) px(glow.blurDp) else 0f)
     val roomPx: Float = px(glow.roomDp)
 
     /** The outline turned back by [degrees]: drawn under a canvas turned by [degrees], it stays exactly in place. */
@@ -429,7 +507,9 @@ private fun DrawScope.drawRing(layer: RingLayer, center: Offset, angle: Float, a
     layer.turnBack(angle)
     val stroke: DrawScope.() -> Unit = {
         rotate(angle, pivot = Offset.Zero) {
-            layer.strokes.forEach { (s, a) -> drawPath(layer.turned, layer.brush, alpha = (alpha * a).coerceAtMost(1f), style = s) }
+            layer.strokes.forEach { (s, a) ->
+                drawPath(layer.turned, layer.brush, alpha = (alpha * a).coerceAtMost(1f), style = s)
+            }
         }
     }
     if (blur == null) {
