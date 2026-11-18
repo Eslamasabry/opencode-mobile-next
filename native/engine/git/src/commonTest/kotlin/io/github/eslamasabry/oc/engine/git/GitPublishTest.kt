@@ -50,9 +50,14 @@ private fun createdRepo(): GitHubReply =
 class GitPublishTest {
     private val ref = ConversationRef(ProfileId("p1"), SessionId("s"))
     private val nul = "\u0000"
-    private fun snapshot(remotes: String) =
+    private fun snapshot(remotes: String, upstream: String? = null) =
         arrayOf(
-            StepReply("status", 0, "# branch.oid abc$nul# branch.head main$nul"),
+            StepReply(
+                "status",
+                0,
+                "# branch.oid abc$nul# branch.head main$nul" +
+                    (upstream?.let { "# branch.upstream $it$nul" } ?: ""),
+            ),
             StepReply("unstaged"),
             StepReply("staged"),
             StepReply("log"),
@@ -61,12 +66,22 @@ class GitPublishTest {
             StepReply("remotes", 0, remotes),
         )
 
-    private fun shellFor(host: GitHost, shell: GitShell) = GitWorkspaces { GitWorkspaceResolution.Available(GitWorkspace(host, "/home/oc/my app", shell)) }
+    private fun shellFor(host: GitHost, shell: GitShell, credentials: GitCredentialDrop? = null) =
+        GitWorkspaces {
+            GitWorkspaceResolution.Available(
+                GitWorkspace(host, "/home/oc/my app", shell, credentials = credentials)
+            )
+        }
 
-    private suspend fun signedIn(scope: TestScope, http: GitHubHttp, withToken: Boolean = true): GitHubAccount {
+    private suspend fun signedIn(
+        scope: TestScope,
+        http: GitHubHttp,
+        withToken: Boolean = true,
+        token: String = "gho_secret_token",
+    ): GitHubAccount {
         val redactor = Redactor()
         val store = GitHubTokenStore(MemorySecrets(), redactor)
-        if (withToken) store.write(ref.profileId, GitHubCredential("gho_secret_token", "octocat"))
+        if (withToken) store.write(ref.profileId, GitHubCredential(token, "octocat"))
         val account =
             GitHubAccount(ref.profileId, store, GitHubDeviceFlow(http, redactor, { 0L }, sleep = {}), scope, { 0L })
         account.load()
@@ -154,6 +169,53 @@ class GitPublishTest {
         page.publish("my-app", true)
         assertEquals(GitProblem.GitHubTokenRejected, page.state.value.result?.problem)
         assertEquals(GitHubSignInProblem.TokenRejected, assertIs<GitHubSignIn.SignedOut>(account.state.value).problem)
+    }
+
+    @Test
+    fun `B-SEC-082 latest check and pull use app sign-in only in built-in Linux`() = runTest {
+        val token = "test-github-token"
+        val account = signedIn(this, PublishGitHub(createdRepo()), token = token)
+        val credentials = RecordingGitCredentialDrop()
+        val replies =
+            snapshot("remote.origin.url https://github.com/o/r.git\n", upstream = "origin/main").toList() +
+                listOf(
+                    StepReply("head", 0, "main\n"),
+                    StepReply("upstream", 0, "origin/main\n"),
+                    StepReply("fetch"),
+                    StepReply("pull", 0, "Already up to date.\n"),
+                )
+        val linuxShell =
+            FakeShell { script ->
+                GitShellReply.Output(envelopeOf(*replies.filter { runs(script, it.name) }.toTypedArray()))
+            }
+        val linuxPage =
+            GitPage(
+                ref,
+                shellFor(GitHost.BuiltinLinux, linuxShell, credentials),
+                account,
+            )
+        linuxPage.refresh()
+        linuxPage.checkForUpdates()
+        linuxPage.pull()
+
+        assertEquals(GitCheck.Done, linuxPage.state.value.check)
+        assertEquals(GitActionNote.UpToDate, linuxPage.state.value.result?.note)
+        assertEquals(listOf(token, token), credentials.placed)
+        assertEquals(2, credentials.removed.size)
+        val authenticated = linuxShell.scripts.filter { runs(it, "fetch") || runs(it, "pull") }
+        assertEquals(2, authenticated.size)
+        assertTrue(authenticated.all { token !in it && "x-access-token" in it })
+
+        val serverShell =
+            FakeShell { script ->
+                GitShellReply.Output(envelopeOf(*replies.filter { runs(script, it.name) }.toTypedArray()))
+            }
+        val serverPage = GitPage(ref, shellFor(GitHost.Server, serverShell), account)
+        serverPage.refresh()
+        serverPage.pull()
+        val serverPull = serverShell.scripts.single { runs(it, "pull") }
+        assertFalse("x-access-token" in serverPull)
+        assertFalse(token in serverPull)
     }
 
     @Test
