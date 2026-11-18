@@ -13,7 +13,7 @@ import kotlinx.serialization.json.longOrNull
  * The allow-list guard on the REAL request body. It reads the JSON that is about to leave the phone, not the typed
  * event that made it, and lets through only what the lists name:
  * - the event's own keys: `type`, and in `payload` the fixed set below, each with the one form it may take (a listed
- *   page address and title, the fixed host name, a language word, a build tag, a whole-number time, an event name);
+ *   page address and title, the fixed host name, a language tag, a build tag, a whole-number time, an event name);
  * - `data`: a key of the event's own words ([productSchema], with a listed, safe value) or an envelope field
  *   ([UmamiField], with a listed word or a matching number).
  * A key or value that is not named is DROPPED from the body (an event whose required parts are not valid is withheld
@@ -31,8 +31,8 @@ public object UmamiBodyGuard {
     )
 
     private val website = Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-    /** The language word only (`en`, `ar`): never a region, a script or an extension. */
-    private val language = Regex("[a-z]{2,3}")
+    /** The phone's language tag as it is (`en`, `ar-EG`): a bounded shape, so nothing else rides in the field. */
+    private val language = Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")
     private val tag = Regex("(?:test-)?[0-9]{1,10}")
     private val keyName = Regex("[a-z][a-z0-9_]{0,39}")
     private val payloadKeys =
@@ -103,7 +103,7 @@ public object UmamiBodyGuard {
         mapOf(
             "website" to { word -> website.matches(word) },
             "hostname" to { word -> word == "opencode-mobile.app" },
-            "language" to { word -> language.matches(word) },
+            "language" to { word -> word.length <= LANGUAGE_MAX && language.matches(word) },
             "url" to { word -> word in addresses },
             "title" to { word -> word in titles },
             "tag" to { word -> tag.matches(word) },
@@ -141,4 +141,6 @@ public object UmamiBodyGuard {
     /** A key name for the log: only a plain lower-case word is ever repeated. */
     private fun safe(key: String): String = if (keyName.matches(key)) key else "?"
 
+
+    private const val LANGUAGE_MAX = 35
 }

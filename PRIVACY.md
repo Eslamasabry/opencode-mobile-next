@@ -194,7 +194,7 @@ account, conversation, file name, project name, server address or model key is s
 Umami receives the same listed events and permitted properties above. A screen becoming visible
 is a page view with one fixed address per screen category, such as /home or /conversation;
 other actions are named events with that screen address. Each has its own timestamp, the app's
-version name and build number, a fixed app hostname and language, and fixed words and ranges about the
+version name and build number, a fixed app hostname and the app language with its region (such as ar-EG), and fixed words and ranges about the
 app and the phone, nothing else: the Android main version number (for example 16) (`os_major`), the device class (phone or tablet)
 (`device_class`) and the build number. Besides those: `version` and `build`; `channel` (public or test build);
 `width_class` (compact, medium or expanded); `text_scale` (smaller, default, larger or largest); `abi` (arm64, arm32,
