@@ -182,6 +182,7 @@ class PhoneAgentAutoUpdate(
                         }
                         is PhoneAgentInstallResult.Refused ->
                             (answer.issue != PhoneAgentInstallIssue.Busy).also { spent ->
+                                log.i { "install of ${agent.raw} refused: ${answer.issue}" }
                                 if (spent) {
                                     val space = answer.issue == PhoneAgentInstallIssue.Space
                                     afterTry(agent, started = false, short = space)
@@ -319,6 +320,11 @@ class PhoneAgentAutoUpdate(
             var room: PhoneAgentSpace? = null
             if (short) safely { room = phones.installSpace(agent.raw)?.takeIf { it.short } }
             downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, room)
+            // The fixed reason, never text from a job: the room it needed and the room there was.
+            log.i {
+                "install of ${agent.raw} not started" +
+                    (room?.let { ": needs ${it.neededBytes / MB_BYTES} MB, ${it.freeBytes / MB_BYTES} MB free" } ?: "")
+            }
             delay(UNSTARTED_GRACE.seconds)
             updaterRef?.settle(agent, AgentUpdateStep.Failed)
         }
