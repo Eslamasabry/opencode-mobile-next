@@ -32,6 +32,24 @@ public object HomePreviewRules {
             else -> AskKind.Other
         }
 
+    /**
+     * What a waiting "read" request targets, in plain words (B-457): [name] is the file's name or the project's name, or
+     * null when it is this conversation's folder and no name is known ("Asks to read this folder"). Never a raw path.
+     */
+    public data class ReadTarget(val name: String?)
+
+    /** [command] is the server's target (a path, a pattern, or empty); [directory] and [project] are the row's own. */
+    public fun readTarget(command: String, directory: String?, project: String?): ReadTarget {
+        val base = directory?.trim()?.trimEnd('/')?.takeIf { it.isNotEmpty() }
+        val folderName = project?.trim()?.takeIf { it.isNotEmpty() } ?: base?.substringAfterLast('/')?.takeIf { it.isNotEmpty() }
+        val raw = command.trim().removeSuffix("*").trimEnd('/')
+        val whole = raw.isEmpty() || raw == "." || (base != null && raw == base)
+        if (whole) return ReadTarget(folderName)
+        val rel = if (base != null && raw.startsWith("$base/")) raw.removePrefix("$base/") else raw
+        val last = rel.substringAfterLast('/').trim()
+        return ReadTarget(last.takeIf { it.isNotEmpty() } ?: folderName)
+    }
+
     /** The longest preview kept; the row cuts it again to its width. */
     public const val MAX_CHARS: Int = 120
 

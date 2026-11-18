@@ -7,4 +7,5 @@
     <string name="chatsHomeAsksToEdit">Просит изменить: %1$s</string>
     <string name="chatsHomeAsksToRead">Просит прочитать: %1$s</string>
     <string name="chatsHomeAsksOther">Просит разрешение: %1$s</string>
+    <string name="chatsHomeAsksToReadFolder">Просит прочитать эту папку</string>
 </resources>

@@ -7,4 +7,5 @@
     <string name="chatsHomeAsksToEdit">يطلب تعديل: %1$s</string>
     <string name="chatsHomeAsksToRead">يطلب قراءة: %1$s</string>
     <string name="chatsHomeAsksOther">يطلب إذنًا: %1$s</string>
+    <string name="chatsHomeAsksToReadFolder">يطلب قراءة هذا المجلد</string>
 </resources>

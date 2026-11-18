@@ -51,7 +51,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
@@ -198,7 +203,7 @@ public fun KitChip(
         ) {
             if (icon != null) KitGlyph(icon, c.text2, iconSize)
             else Box(Modifier.size(Space.S2.dp).background(dotInk, androidx.compose.foundation.shape.CircleShape).testTag("kit-status-dot"))
-            BasicText(text, Modifier.weight(1f, fill = false).testTag("kit-chip-label"), style = plainStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            ChipLabel(text, Modifier.weight(1f, fill = false).testTag("kit-chip-label"), style = plainStyle, maxLines = 1, softWrap = true, overflow = TextOverflow.Ellipsis)
         }
         return
     }
@@ -237,7 +242,7 @@ public fun KitChip(
                     }
                 }
             }
-            if (!narrow) BasicText(
+            if (!narrow) ChipLabel(
                 text,
                 Modifier.weight(1f, fill = false)
                     .testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label")
@@ -326,5 +331,33 @@ private class ChipZoneInteractions(private val nativeInk: Boolean) : MutableInte
     override fun tryEmit(interaction: Interaction): Boolean {
         val accepted = face.tryEmit(interaction)
         return if (nativeInk && interaction is PressInteraction) ink.tryEmit(interaction) && accepted else accepted
+    }
+}
+
+/**
+ * A chip's words under the ONE frame rule (B-457): the size the platform makes of the spec at the current scale, never
+ * above 1.3 x the spec (as `KitText` Frame, and so as the status pill beside the chips), laid out under font scale 1.
+ */
+@Composable
+private fun ChipLabel(
+    text: AnnotatedString,
+    modifier: Modifier,
+    style: TextStyle,
+    maxLines: Int,
+    softWrap: Boolean,
+    overflow: TextOverflow,
+) {
+    val app = LocalKitAppDensity.current ?: LocalDensity.current
+    val specSp = style.fontSize.value
+    val target = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
+    val k = target / specSp
+    val sized =
+        style.copy(
+            fontSize = target.sp,
+            lineHeight = if (style.lineHeight.isSpecified) (style.lineHeight.value * k).sp else style.lineHeight,
+            letterSpacing = if (style.letterSpacing.isSpecified) (style.letterSpacing.value * k).sp else style.letterSpacing,
+        )
+    CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
+        BasicText(text, modifier, style = sized, maxLines = maxLines, softWrap = softWrap, overflow = overflow)
     }
 }

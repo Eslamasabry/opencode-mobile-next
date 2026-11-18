@@ -7,4 +7,5 @@
     <string name="chatsHomeAsksToEdit">Demande à modifier\u00A0: %1$s</string>
     <string name="chatsHomeAsksToRead">Demande à lire\u00A0: %1$s</string>
     <string name="chatsHomeAsksOther">Demande une autorisation\u00A0: %1$s</string>
+    <string name="chatsHomeAsksToReadFolder">Demande à lire ce dossier</string>
 </resources>
