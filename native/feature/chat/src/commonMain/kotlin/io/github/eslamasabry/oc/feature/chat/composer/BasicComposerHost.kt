@@ -310,6 +310,20 @@ public fun BasicComposer(
     val editor = remember(state.targetKey) { DraftEditorState() }
     var repeatRevision by remember(state.targetKey) { mutableStateOf<Long?>(null) }
     val editSerialAtComposition = editor.userEditSerial
+    // DIAGNOSTIC (throwaway branch): numbers only, never the words.
+    val diag = remember { io.github.eslamasabry.oc.core.common.AppLog.tagged("typing-diag") }
+    val diagEnabledWas = remember(state.targetKey) { arrayOfNulls<Boolean>(1) }
+    val diagEnabled = editorReady && state.draft.ready
+    androidx.compose.runtime.SideEffect {
+        if (diagEnabledWas[0] != diagEnabled) {
+            diag.i {
+                "box enabled=$diagEnabled editorReady=$editorReady draftReady=${state.draft.ready} " +
+                    "boxLen=${field.text.length} engineLen=${state.draft.text.length} rev=${state.draft.restoreRevision} " +
+                    "serial=${editor.userEditSerial} focused=${chrome.typing.focused}"
+            }
+            diagEnabledWas[0] = diagEnabled
+        }
+    }
     // Restore/clear only external revisions. Ordinary typing never assigns text or moves IME
     // selection.
     LaunchedEffect(field, state.draft.ready, state.draft.restoreRevision) {
@@ -318,6 +332,11 @@ public fun BasicComposer(
                 (!editorReady || editor.restoreRevision != state.draft.restoreRevision)
         ) {
             val current = field.text.toString()
+            diag.i {
+                "restore effect editorReady=$editorReady boxLen=${current.length} engineLen=${state.draft.text.length} " +
+                    "rev=${state.draft.restoreRevision} seenRev=${editor.restoreRevision} serial=${editor.userEditSerial} " +
+                    "serialAtComposition=$editSerialAtComposition lastReportedLen=${editor.lastReported?.length}"
+            }
             editor.restoreRevision = state.draft.restoreRevision
             if (
                 editorReady &&
@@ -327,7 +346,10 @@ public fun BasicComposer(
                 editor.lastReported = current
                 actions.draftChanged(current)
             } else {
-                if (current != state.draft.text) field.edit { replace(0, length, state.draft.text) }
+                if (current != state.draft.text) {
+                    diag.w { "WRITE-BACK boxLen=${current.length} engineLen=${state.draft.text.length} serial=${editor.userEditSerial}" }
+                    field.edit { replace(0, length, state.draft.text) }
+                }
                 editor.lastReported = state.draft.text
             }
             editorReady = true
@@ -1238,6 +1260,10 @@ public fun BasicComposer(
                                         )
                                     ),
                             onTextChanged = { accepted ->
+                                diag.i {
+                                    "typed boxLen=${accepted.length} serial=${editor.userEditSerial + 1} " +
+                                        "engineLen=${state.draft.text.length} rev=${state.draft.restoreRevision}"
+                                }
                                 editor.userEditSerial += 1
                                 editor.lastReported = accepted
                                 repeatRevision = null
