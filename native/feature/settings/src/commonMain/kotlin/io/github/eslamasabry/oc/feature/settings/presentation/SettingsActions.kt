@@ -98,6 +98,9 @@ public interface SettingsActions {
     /** Appearance › Spacing: the person's choice over the style's own. */
     public fun onSpacing(spacing: Density) {}
 
+    /** Appearance › Colours › Waiting marks: Colour (true) or Ink (false); applies at once. */
+    public fun onWaitMarks(colour: Boolean) {}
+
     /** Appearance › Glass look (under Glass): applies the look at once (the page behind the picker shows it). */
     public fun onGlassLook(look: io.github.eslamasabry.oc.ui.design.style.GlassLookId) {}
 

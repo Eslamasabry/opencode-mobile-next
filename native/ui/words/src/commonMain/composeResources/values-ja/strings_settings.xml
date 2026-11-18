@@ -787,4 +787,8 @@
     <string name="appearancePreviewReply">完了しました。3つのファイルを変更し、すべてのチェックに通っています。</string>
     <string name="appearancePreviewAction">変更を確認</string>
     <string name="appearancePreviewSpoken">この選択を適用したアプリのサンプル</string>
+    <string name="appearanceWaitMarks">待機マーク</string>
+    <string name="appearanceWaitMarksInk">インク</string>
+    <string name="appearanceWaitMarksColour">カラー</string>
+    <string name="appearanceWaitMarksNote">「OpenCodeを起動中…」などの言葉の横に出る、小さな動く絵です。</string>
 </resources>

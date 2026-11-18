@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">服务器后台检查</string>
     <string name="nativeSearchAliasesBackgroundChecks">后台检查; 轮询; 监控</string>
     <string name="nativeSearchPlaceAppearance">外观</string>
-    <string name="nativeSearchAliasesAppearance">主题; 颜色; 风格</string>
+    <string name="nativeSearchAliasesAppearance">主题; 颜色; 风格; 等待标记</string>
     <string name="nativeSearchPlaceLanguage">语言</string>
     <string name="nativeSearchAliasesLanguage">阿拉伯语; 英语; 区域</string>
     <string name="nativeSearchPlaceTips">提示</string>

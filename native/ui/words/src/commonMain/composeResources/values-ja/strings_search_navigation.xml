@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">サーバーのバックグラウンド確認</string>
     <string name="nativeSearchAliasesBackgroundChecks">バックグラウンド確認、定期確認、監視</string>
     <string name="nativeSearchPlaceAppearance">外観</string>
-    <string name="nativeSearchAliasesAppearance">テーマ、カラー、スタイル</string>
+    <string name="nativeSearchAliasesAppearance">テーマ、カラー、スタイル、待機マーク</string>
     <string name="nativeSearchPlaceLanguage">言語</string>
     <string name="nativeSearchAliasesLanguage">アラビア語、英語、ロケール</string>
     <string name="nativeSearchPlaceTips">ヒント</string>

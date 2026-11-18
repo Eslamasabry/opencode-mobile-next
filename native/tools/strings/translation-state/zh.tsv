@@ -1200,6 +1200,10 @@ appearanceSurfaceSoft	5b75cb5532
 appearanceSurfaceSolid	e38b8d1c4a
 appearanceTextHelp	ecb8ca7ed4
 appearanceTurnOffSaver	2e2da01ba0
+appearanceWaitMarks	f898e5f478
+appearanceWaitMarksColour	0683c358d3
+appearanceWaitMarksInk	ecb2285178
+appearanceWaitMarksNote	ba01f4c906
 approvalAllow	56f76c0729
 approvalAllowedWhat	1de049a410
 approvalAlwaysAllowExact	eb68e821c1
@@ -7963,7 +7967,7 @@ nativePhraseChipsTitle	eedcd4961e
 nativeSearchAliasesAgents	1e65916ee7
 nativeSearchAliasesAiSetup	10f0b344b6
 nativeSearchAliasesAllConversations	8e09714480
-nativeSearchAliasesAppearance	77b0026ab1
+nativeSearchAliasesAppearance	82706e3adc
 nativeSearchAliasesBackgroundChecks	40dbc75176
 nativeSearchAliasesChats	212dc5efcb
 nativeSearchAliasesCommands	81ccd5d61f

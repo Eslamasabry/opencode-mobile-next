@@ -834,4 +834,8 @@
     <string name="consentWhyNeedsYouWhileOpen">Você só recebe avisos enquanto o app está aberto. Toque para manter a conexão em segundo plano ativa.</string>
     <string name="consentWhyNeedsYouChannelOff">O Android está com as notificações de perguntas deste app desativadas. Toque para ativá-las nas configurações do Android.</string>
     <string name="backgroundStatusTitle">Conexão em segundo plano</string>
+    <string name="appearanceWaitMarks">Marcas de espera</string>
+    <string name="appearanceWaitMarksInk">Tinta</string>
+    <string name="appearanceWaitMarksColour">Cor</string>
+    <string name="appearanceWaitMarksNote">Os pequenos desenhos animados ao lado de frases como “Iniciando o OpenCode…”.</string>
 </resources>
