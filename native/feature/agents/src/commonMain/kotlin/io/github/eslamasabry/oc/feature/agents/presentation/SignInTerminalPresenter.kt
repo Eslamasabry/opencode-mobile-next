@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.agents.signin.AgentRef
 import io.github.eslamasabry.oc.feature.agents.signin.SignInAgents
+import io.github.eslamasabry.oc.feature.agents.signin.SignInCheck
 import io.github.eslamasabry.oc.feature.agents.signin.SignInClipboard
 import io.github.eslamasabry.oc.feature.agents.signin.SignInCommand
 import io.github.eslamasabry.oc.feature.agents.signin.SignInDetails
@@ -51,6 +52,7 @@ public class SignInTerminalPresenter(
     private var watched: TerminalModel? = null
     private var found = SignInFound()
     private var checking = false
+    private var rechecking = false
     private var pendingPage: String? = null
 
     /**
@@ -74,11 +76,12 @@ public class SignInTerminalPresenter(
                         offersAntigravityNote = agent.id == "gemini",
                         firstUse = plan.firstUse,
                         typesAuth = plan.typesAuth,
-                        // Antigravity's sign-in ends with a code to paste. The readable view has a
-                        // real text field (long-press paste, the keyboard, Send); the live grid did
-                        // not take keyboard input on the phone (owner report, merge41), so the
+                        // Antigravity's sign-in ends with a code to paste, and Claude Code's may ask
+                        // for one ("Paste code here if prompted"). The readable view has a real text
+                        // field (long-press paste, the keyboard, Send); the live grid did not take
+                        // keyboard input on the phone (owner reports, merge41 and 2026-11-18), so the
                         // field is where the code goes. The person can still switch to the grid.
-                        accessibleMode = if (agent.id == ANTIGRAVITY) true else it.accessibleMode,
+                        accessibleMode = if (agent.id in ASKS_FOR_CODE) true else it.accessibleMode,
                     )
                 }
                 when (val built = agents.command(owner, agent)) {
@@ -116,6 +119,8 @@ public class SignInTerminalPresenter(
                     startStep = null,
                     failureDetails = null,
                     stopFailed = false,
+                    checkBusy = false,
+                    checkCode = null,
                 )
         }
         val states = scope.launch { next.state.collect { onSession(next, it) } }
@@ -123,7 +128,7 @@ public class SignInTerminalPresenter(
             next.openUrls.collect { url ->
                 if (agent.id == CLAUDE && next === session) {
                     handedOver = url
-                    ui.update { it.copy(canOpenPage = true) }
+                    ui.update { it.copy(canOpenPage = true, pageAddress = url) }
                 }
                 requestPage(url, next)
             }
@@ -187,8 +192,9 @@ public class SignInTerminalPresenter(
                 found = agents.read(transcript)
                 ui.update {
                     it.copy(
-                        transcript = transcript,
+                        transcript = foldAddresses(transcript),
                         canOpenPage = page() != null,
+                        pageAddress = page(),
                         code = found.code,
                     )
                 }
@@ -220,14 +226,63 @@ public class SignInTerminalPresenter(
             ui.update { it.copy(step = SignInStep.SetUpDone, stopFailed = !ended) }
             return
         }
-        ui.update { it.copy(step = SignInStep.Checking, inputEnabled = false) }
-        val signedIn = agents.confirmSignedIn(owner, agent)
+        ui.update { it.copy(step = SignInStep.Checking, inputEnabled = false, checkBusy = false, checkCode = null) }
+        val answer = read()
         val stopped = stopFirst || owned.end() is Outcome.Ok
+        show(answer, stopped)
+    }
+
+    /**
+     * Three answers, never two (owner, 2026-11-18): only the agent's own "signed out" is NotYet. A read that could
+     * not tell (busy, timed out, no answer) is tried again within the host's bound ([SignInAgents.checkTries]),
+     * saying while it waits that a conversation keeps the agent busy; then it is CouldNotCheck, with one "Check
+     * sign-in again".
+     */
+    private suspend fun read(): SignInCheck {
+        val tries = agents.checkTries.coerceAtLeast(1)
+        var round = 0
+        var answer = agents.checkSignedIn(owner, agent, round)
+        while (round + 1 < tries && worthAnother(answer, round)) {
+            ui.update { it.copy(checkBusy = (answer as? SignInCheck.CouldNotCheck)?.busy == true) }
+            round++
+            answer = agents.checkSignedIn(owner, agent, round)
+        }
+        return answer
+    }
+
+    /** A reason that can pass by itself; a time-out already waited its whole budget, so it gets one more try only. */
+    private fun worthAnother(answer: SignInCheck, round: Int): Boolean {
+        val open = answer as? SignInCheck.CouldNotCheck ?: return false
+        return open.passing && !(open.code == SignInCheck.CouldNotCheck.TIMED_OUT && round >= 1)
+    }
+
+    private fun show(answer: SignInCheck, stopped: Boolean) {
         ui.update {
             it.copy(
-                step = if (signedIn) SignInStep.SignedIn else SignInStep.NotYet,
+                step =
+                    when (answer) {
+                        SignInCheck.SignedIn -> SignInStep.SignedIn
+                        SignInCheck.SignedOut -> SignInStep.NotYet
+                        is SignInCheck.CouldNotCheck -> SignInStep.CouldNotCheck
+                    },
+                checkBusy = false,
+                checkCode = (answer as? SignInCheck.CouldNotCheck)?.code,
                 stopFailed = !stopped,
             )
+        }
+    }
+
+    /** "Check sign-in again" after [SignInStep.CouldNotCheck]: the account only, no new sign-in. */
+    private fun checkAgain() {
+        if (rechecking) return
+        rechecking = true
+        scope.launch {
+            try {
+                ui.update { it.copy(step = SignInStep.Checking, checkBusy = false, checkCode = null) }
+                show(read(), stopped = !ui.value.stopFailed)
+            } finally {
+                rechecking = false
+            }
         }
     }
 
@@ -292,6 +347,7 @@ public class SignInTerminalPresenter(
     }
 
     override fun finish() {
+        if (ui.value.step == SignInStep.CouldNotCheck) return checkAgain()
         val owned = session ?: return
         if (checking) return
         checking = true
@@ -341,6 +397,7 @@ public class SignInTerminalPresenter(
             canOpenPage = false,
             code = null,
             linkPrompt = null,
+            pageAddress = null,
         )
     }
 
@@ -352,6 +409,25 @@ public class SignInTerminalPresenter(
     internal companion object {
         const val CLAUDE = "claude"
         const val ANTIGRAVITY = "antigravity"
+
+        /** Agents whose sign-in may ask for a code typed back into the program: their page opens on the field. */
+        val ASKS_FOR_CODE: Set<String> = setOf(CLAUDE, ANTIGRAVITY)
+
+        /** The reason a read that never ran gives under Details. */
+        const val NO_ANSWER = "noAnswer"
+
+        private val ADDRESS = Regex("""https?://[^\s/?#]+[^\s]*""")
+
+        /**
+         * The terminal text as the readable view shows it: an address with a path or a query (a sign-in page's wall of
+         * query text) folds to its site and an ellipsis. "Open sign-in page" opens it, and Details holds it whole.
+         */
+        fun foldAddresses(text: String): String =
+            ADDRESS.replace(text) { match ->
+                val whole = match.value
+                val site = whole.substringBefore("://") + "://" + whole.substringAfter("://").takeWhile { it !in "/?#" }
+                if (whole.length > site.length + 1) "$site/\u2026" else whole
+            }
 
         /** A pasted code stays far below this; anything longer is not a sign-in code. */
         const val PASTE_MAX = 4096

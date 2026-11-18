@@ -21,8 +21,14 @@ public enum class SignInStep {
     /** An agent set up at first use finished its set-up terminal: it is marked set up and the screen goes back. */
     SetUpDone,
 
-    /** The read did not say signed in ("isn't signed in yet. Start the sign-in again…"). */
+    /** The agent itself said it is not signed in ("isn't signed in yet. Start the sign-in again…"). */
     NotYet,
+
+    /**
+     * The read gave no answer about the account (busy, timed out, no answer), even after its own bounded retries:
+     * "Couldn't check…", one "Check sign-in again", the reason under Details. Never shown as "not signed in".
+     */
+    CouldNotCheck,
 
     /** Could not keep the sign-in running; [SignInTerminalUi.failureCode] under Details. */
     Failed,
@@ -74,11 +80,27 @@ public data class SignInTerminalUi(
     /** The last attempt to stop the sign-in failed; it still runs and is still protected. */
     val stopFailed: Boolean = false,
     val linkPrompt: SignInPagePrompt? = null,
+    /**
+     * While [SignInStep.Checking]: the last read was held back because a conversation's program is busy, and the
+     * check waits for it ("…is busy with a conversation. Checking when it's free…").
+     */
+    val checkBusy: Boolean = false,
+    /** [SignInStep.CouldNotCheck]'s fixed reason for Details (`agentBusy`, `timedOut`, …); never CLI text. */
+    val checkCode: String? = null,
+    /**
+     * The whole address "Open sign-in page" opens, for Details only (the page shows the action, never the address as
+     * reading text). Never logged.
+     */
+    val pageAddress: String? = null,
 ) {
+    /** The agent's program still runs and takes input: the only time the code field and "Paste code" exist. */
+    val takesInput: Boolean
+        get() = step == SignInStep.Running && inputEnabled
+
     override fun toString(): String =
         "SignInTerminalUi(step=$step, terminal=${terminal != null}, transcript=${transcript.length} chars, " +
             "canOpenPage=$canOpenPage, code=${code != null}, failureCode=$failureCode, startStep=$startStep, " +
-            "stopFailed=$stopFailed)"
+            "stopFailed=$stopFailed, checkBusy=$checkBusy, checkCode=$checkCode, pageAddress=${pageAddress != null})"
 }
 
 public data class SignInPagePrompt(val host: String, val insecure: Boolean)
@@ -107,7 +129,10 @@ public interface SignInTerminalActions {
 
     public fun setAccessibleMode(on: Boolean)
 
-    /** "Done": stops the sign-in if it still runs, then reads the account. */
+    /**
+     * "Done": stops the sign-in if it still runs, then reads the account. After [SignInStep.CouldNotCheck] it is
+     * "Check sign-in again": it reads the account again, without a new sign-in.
+     */
     public fun finish()
 
     /** "Sign in again" after NotYet or a failure. */

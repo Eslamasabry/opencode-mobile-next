@@ -266,9 +266,9 @@
     <string name="agentsFailBusy">Một thiết lập khác đang chạy. Hãy chờ nó xong.</string>
     <string name="agentsSignInTitle">Đăng nhập bằng %1$s</string>
     <string name="agentsSignInIntro">%1$s đăng nhập bằng các lời nhắc riêng của nó, trên tài khoản Claude của chính bạn theo điều khoản của Anthropic. Ứng dụng không bao giờ thấy thông tin đăng nhập của bạn.</string>
-    <string name="agentsSignInTerminalIntro">%1$s mở trang đăng nhập của nó. Hãy đăng nhập ở đó bằng tài khoản Claude của bạn, rồi quay lại. Nếu %1$s yêu cầu mã, hãy sao chép mã trên trang và chọn Dán.</string>
+    <string name="agentsSignInTerminalIntro">%1$s mở trang đăng nhập của nó. Hãy đăng nhập ở đó bằng tài khoản Claude của bạn, rồi quay lại. Nếu %1$s yêu cầu mã, hãy sao chép mã trên trang và chọn Dán mã.</string>
     <string name="agentsSignInIntroOther">%1$s đăng nhập bằng các lời nhắc riêng của nó, trên tài khoản của chính bạn với nhà cung cấp của nó. Ứng dụng không bao giờ thấy thông tin đăng nhập của bạn.</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s đăng nhập tại đây bằng các lời nhắc riêng của nó. Nếu nó mở một trang, hãy đăng nhập ở đó rồi quay lại. Nếu nó yêu cầu mã hoặc khóa, hãy chọn Dán.</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s đăng nhập tại đây bằng các lời nhắc riêng của nó. Nếu nó mở một trang, hãy đăng nhập ở đó rồi quay lại. Nếu nó yêu cầu mã hoặc khóa, hãy chọn Dán mã.</string>
     <string name="agentsSignInAgain">Đăng nhập lại</string>
     <string name="agentsSignInTerminalNotYet">%1$s chưa được đăng nhập. Hãy bắt đầu đăng nhập lại khi bạn sẵn sàng.</string>
     <string name="agentsSignInStopFailed">Không dừng được việc đăng nhập. Hãy giữ ứng dụng mở và thử lại.</string>
@@ -315,7 +315,7 @@
     <string name="agentsStateNoDownload">Chưa có bản tải đã xác minh</string>
     <string name="agentsInstallHint">Cài đặt</string>
     <string name="agentsActionFailed">Thao tác không thực hiện được trên điện thoại này. Mở Chi tiết để xem lý do.</string>
-    <string name="agentsSignInPaste">Dán</string>
+    <string name="agentsSignInPaste">Dán mã</string>
     <string name="agentsSignInStartPrepare">Ứng dụng không chuẩn bị được thư mục của tác nhân trên điện thoại này.</string>
     <string name="agentsSignInStartServer">OpenCode trên điện thoại này chưa khởi động.</string>
     <string name="agentsSignInStartConnect">Ứng dụng không kết nối được với OpenCode trên điện thoại này.</string>
@@ -581,4 +581,11 @@
     <string name="agentsRetiredBody">%1$s không còn được cung cấp trên điện thoại này nên không thể thiết lập hay dùng lại. Hãy gỡ để giải phóng dung lượng nó chiếm. Các tác nhân và cuộc trò chuyện khác của bạn vẫn còn.</string>
     <string name="agentsRemoveChip">Gỡ</string>
     <string name="chatUiRunOnThisPhone">Chạy trên điện thoại này</string>
+    <string name="agentsSignInCheckingAgent">Đang kiểm tra xem %1$s đã đăng nhập chưa…</string>
+    <string name="agentsSignInCheckingBusy">%1$s đang bận với một cuộc trò chuyện. Sẽ kiểm tra đăng nhập khi nó rảnh…</string>
+    <string name="agentsSignInCouldNotCheck">Không thể kiểm tra xem %1$s đã đăng nhập chưa</string>
+    <string name="agentsSignInCouldNotCheckBody">Có thể bạn đã đăng nhập thành công. Hãy kiểm tra lại để hỏi %1$s ngay bây giờ.</string>
+    <string name="agentsSignInCheckAgain">Kiểm tra đăng nhập lại</string>
+    <string name="agentsSignInCodeField">Mã đăng nhập</string>
+    <string name="agentsSignInSendCode">Gửi mã</string>
 </resources>

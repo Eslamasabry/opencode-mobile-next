@@ -292,9 +292,9 @@
     <string name="agentsFailStale">Esta verificação está desatualizada. Execute-a de novo.</string>
     <string name="agentsFailBusy">Outra configuração está em andamento. Aguarde ela terminar.</string>
     <string name="agentsSignInIntro">%1$s faz o login com as próprias telas, na sua própria conta do Claude, sob os termos da Anthropic. O app nunca vê o seu login.</string>
-    <string name="agentsSignInTerminalIntro">%1$s abre a página de login. Entre lá com sua conta do Claude e volte. Se %1$s pedir um código, copie-o na página e escolha Colar.</string>
+    <string name="agentsSignInTerminalIntro">%1$s abre a página de login. Entre lá com sua conta do Claude e volte. Se %1$s pedir um código, copie-o na página e escolha Colar código.</string>
     <string name="agentsSignInIntroOther">%1$s faz o login com as próprias telas, na sua própria conta com o provedor dele. O app nunca vê o seu login.</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s faz o login aqui, com as próprias telas. Se ele abrir uma página, entre lá e volte. Se pedir um código ou uma chave, escolha Colar.</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s faz o login aqui, com as próprias telas. Se ele abrir uma página, entre lá e volte. Se pedir um código ou uma chave, escolha Colar código.</string>
     <string name="agentsSignInTerminalNotYet">%1$s ainda não tem login. Inicie o login de novo quando quiser.</string>
     <string name="agentsSignInStopFailed">Não foi possível interromper o login. Mantenha o app aberto e tente novamente.</string>
     <string name="agentsSignInChecking">Verificando o login…</string>
@@ -325,7 +325,7 @@
     <string name="agentsSwitchToBuiltIn">Usar o servidor integrado</string>
     <string name="agentsStateNoDownload">Ainda sem download verificado</string>
     <string name="agentsActionFailed">Isso não funcionou neste celular. Abra os detalhes para ver o motivo.</string>
-    <string name="agentsSignInPaste">Colar</string>
+    <string name="agentsSignInPaste">Colar código</string>
     <string name="agentsSignInStartPrepare">O app não conseguiu preparar a pasta do agente neste celular.</string>
     <string name="agentsSignInStartServer">O OpenCode deste celular não iniciou.</string>
     <string name="agentsSignInStartConnect">O app não conseguiu se conectar ao OpenCode deste celular.</string>
@@ -598,4 +598,11 @@
     <string name="agentsRetiredBody">%1$s não é mais oferecido neste telefone, então não pode ser configurado nem usado de novo. Remova-o para liberar o espaço que ocupa. Seus outros agentes e conversas ficam.</string>
     <string name="agentsRemoveChip">Remover</string>
     <string name="chatUiRunOnThisPhone">Executar neste celular</string>
+    <string name="agentsSignInCheckingAgent">Verificando se %1$s está conectado…</string>
+    <string name="agentsSignInCheckingBusy">%1$s está ocupado com uma conversa. O login será verificado quando ele estiver livre…</string>
+    <string name="agentsSignInCouldNotCheck">Não foi possível verificar se %1$s está conectado</string>
+    <string name="agentsSignInCouldNotCheckBody">O login pode ter dado certo. Verifique de novo para perguntar a %1$s agora.</string>
+    <string name="agentsSignInCheckAgain">Verificar o login de novo</string>
+    <string name="agentsSignInCodeField">Código de login</string>
+    <string name="agentsSignInSendCode">Enviar código</string>
 </resources>

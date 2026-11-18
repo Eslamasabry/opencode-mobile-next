@@ -226,29 +226,25 @@ class NativePhoneSignIn(
                 return SignInCommand(recipe.executable, recipe.signInArgs, home = owner.raw).ok()
             }
 
-            override suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean {
-                if (!owns(owner)) return false
-                val descriptor = catalog.byId(AgentId(agent.id)) ?: return false
-                val script =
-                    AgentAuthScripts.script(descriptor, AuthScriptAction.Probe) ?: return false
-                val result =
-                    withContext(dispatchers.io) {
-                        attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
-                            linux.agentAuthProbe(
-                                mapOf(
-                                    "profileId" to owner.raw,
-                                    "agentId" to agent.id,
-                                    "action" to "probe",
-                                    "script" to AgentAuthScripts.forProfile(owner, script),
-                                    "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
-                                )
-                            )
-                        }
+            override val checkTries: Int
+                get() = SignInCheckRules.TRIES
+
+            override suspend fun checkSignedIn(owner: ProfileId, agent: AgentRef, round: Int): SignInCheck {
+                if (round > 0) delay(SignInCheckRules.pauseMillis(round))
+                val descriptor = catalog.byId(AgentId(agent.id))
+                val script = descriptor?.let { AgentAuthScripts.script(it, AuthScriptAction.Probe) }
+                val read =
+                    when {
+                        !owns(owner) -> SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
+                        script == null -> SignInCheck.CouldNotCheck(SignInCheckRules.NO_PROBE)
+                        else -> probeAfterSignIn(owner, agent, script)
                     }
-                val signedIn = owns(owner) && (result as? Outcome.Ok)?.value?.get("state") == "signedIn"
+                // The scope may have changed during the read: then it is no answer about this sign-in.
+                val answer = if (owns(owner)) read else SignInCheck.CouldNotCheck(SignInCheckRules.STALE_SCOPE)
                 // Issue 147: a completed sign-in ends a lapse a run reported (AppPhoneAgents.noteSignedIn).
-                if (signedIn) phones.value.noteSignedIn(owner, descriptor.id)
-                return signedIn
+                if (answer == SignInCheck.SignedIn && descriptor != null)
+                    phones.value.noteSignedIn(owner, descriptor.id)
+                return answer
             }
 
             // The set-up terminal ended and the person comes back: the registry has seen the agent set up, so it is a
@@ -265,6 +261,26 @@ class NativePhoneSignIn(
                     SignInFound(it.page?.url, it.code)
                 }
         }
+
+    /** The private sign-in read right after this page's sign-in ended ([BuiltinLinux.agentAuthProbe] `afterSignIn`). */
+    private suspend fun probeAfterSignIn(owner: ProfileId, agent: AgentRef, script: String): SignInCheck {
+        val result =
+            withContext(dispatchers.io) {
+                attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                    linux.agentAuthProbe(
+                        mapOf(
+                            "profileId" to owner.raw,
+                            "agentId" to agent.id,
+                            "action" to "probe",
+                            "script" to AgentAuthScripts.forProfile(owner, script),
+                            "timeoutSeconds" to if (agent.id == "claude") 65 else 10,
+                        ),
+                        afterSignIn = true,
+                    )
+                }
+            }
+        return SignInCheckRules.answer((result as? Outcome.Ok)?.value)
+    }
 
     /**
      * Opens the sign-in PTY on the phone's own OpenCode server. Each refusal names the step it

@@ -730,8 +730,14 @@ agentsSetupTitleNoSize	98143b6fe0
 agentsSignInAction	1a10cab5d0
 agentsSignInAgain	c1fc2947b9
 agentsSignInBadCode	dba19f5211
+agentsSignInCheckAgain	8bd7d0cb67
 agentsSignInChecking	f3bf3ef33c
+agentsSignInCheckingAgent	74b8c54b8d
+agentsSignInCheckingBusy	248864a6ac
+agentsSignInCodeField	7d8091f773
 agentsSignInCopyCode	811038095c
+agentsSignInCouldNotCheck	643e4d0023
+agentsSignInCouldNotCheckBody	ba2f348022
 agentsSignInDone	3b63d00855
 agentsSignInFailed	df3bdd859e
 agentsSignInHostDown	ff3df594b6
@@ -740,8 +746,9 @@ agentsSignInIntroOther	8b9112cf95
 agentsSignInLimit	1d3b718c38
 agentsSignInNotConfirmedBody	1e4700556f
 agentsSignInOpenPage	9d3d8e7b8b
-agentsSignInPaste	b239678924
+agentsSignInPaste	b8e668fdc4
 agentsSignInRejected	cd5add6525
+agentsSignInSendCode	4997613a29
 agentsSignInStart	b20645e38a
 agentsSignInStartAttach	0c863ad813
 agentsSignInStartCheck	8cadf096c8
@@ -750,8 +757,8 @@ agentsSignInStartPrepare	b80262da90
 agentsSignInStartServer	c8a9868045
 agentsSignInStartTerminal	b93c3110b6
 agentsSignInStopFailed	9904e39a0d
-agentsSignInTerminalIntro	c04a5ae330
-agentsSignInTerminalIntroOther	30d5454dd8
+agentsSignInTerminalIntro	284d75e193
+agentsSignInTerminalIntroOther	233d9b93fb
 agentsSignInTerminalNotYet	cca9167250
 agentsSignInTitle	b20645e38a
 agentsSignInUnavailable	ff6bb24013

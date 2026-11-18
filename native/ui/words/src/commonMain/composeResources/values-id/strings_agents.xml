@@ -266,9 +266,9 @@
     <string name="agentsFailBusy">Penyiapan lain sedang berjalan. Tunggu sampai selesai.</string>
     <string name="agentsSignInTitle">Masuk dengan %1$s</string>
     <string name="agentsSignInIntro">%1$s masuk lewat perintahnya sendiri, dengan akun Claude Anda sendiri sesuai ketentuan Anthropic. Aplikasi tidak pernah melihat data masuk Anda.</string>
-    <string name="agentsSignInTerminalIntro">%1$s membuka halaman masuknya. Masuk di sana dengan akun Claude Anda, lalu kembali. Jika %1$s meminta kode, salin kode di halaman itu dan pilih Tempel.</string>
+    <string name="agentsSignInTerminalIntro">%1$s membuka halaman masuknya. Masuk di sana dengan akun Claude Anda, lalu kembali. Jika %1$s meminta kode, salin kode di halaman itu dan pilih Tempel kode.</string>
     <string name="agentsSignInIntroOther">%1$s masuk lewat perintahnya sendiri, dengan akun Anda sendiri di penyedianya. Aplikasi tidak pernah melihat data masuk Anda.</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s masuk di sini lewat perintahnya sendiri. Jika membuka halaman, masuk di sana lalu kembali. Jika meminta kode atau kunci, pilih Tempel.</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s masuk di sini lewat perintahnya sendiri. Jika membuka halaman, masuk di sana lalu kembali. Jika meminta kode atau kunci, pilih Tempel kode.</string>
     <string name="agentsSignInAgain">Masuk lagi</string>
     <string name="agentsSignInTerminalNotYet">%1$s belum masuk. Mulai proses masuk lagi saat Anda siap.</string>
     <string name="agentsSignInStopFailed">Proses masuk tidak dapat dihentikan. Biarkan aplikasi terbuka dan coba lagi.</string>
@@ -315,7 +315,7 @@
     <string name="agentsStateNoDownload">Belum ada unduhan terverifikasi</string>
     <string name="agentsInstallHint">Pasang</string>
     <string name="agentsActionFailed">Tidak berhasil di ponsel ini. Buka Detail untuk melihat alasannya.</string>
-    <string name="agentsSignInPaste">Tempel</string>
+    <string name="agentsSignInPaste">Tempel kode</string>
     <string name="agentsSignInStartPrepare">Aplikasi tidak dapat menyiapkan folder agen di ponsel ini.</string>
     <string name="agentsSignInStartServer">OpenCode di ponsel ini tidak mulai.</string>
     <string name="agentsSignInStartConnect">Aplikasi tidak dapat terhubung ke OpenCode di ponsel ini.</string>
@@ -581,4 +581,11 @@
     <string name="agentsRetiredBody">%1$s tidak lagi ditawarkan di ponsel ini, jadi tidak bisa disiapkan atau dipakai lagi. Hapus untuk membebaskan ruang yang dipakainya. Agen dan percakapan Anda yang lain tetap ada.</string>
     <string name="agentsRemoveChip">Hapus</string>
     <string name="chatUiRunOnThisPhone">Jalankan di ponsel ini</string>
+    <string name="agentsSignInCheckingAgent">Memeriksa apakah %1$s sudah masuk…</string>
+    <string name="agentsSignInCheckingBusy">%1$s sedang sibuk dengan percakapan. Status masuk akan diperiksa saat sudah tidak sibuk…</string>
+    <string name="agentsSignInCouldNotCheck">Tidak dapat memeriksa apakah %1$s sudah masuk</string>
+    <string name="agentsSignInCouldNotCheckBody">Proses masuk mungkin sudah berhasil. Periksa lagi untuk menanyakan ke %1$s sekarang.</string>
+    <string name="agentsSignInCheckAgain">Periksa status masuk lagi</string>
+    <string name="agentsSignInCodeField">Kode masuk</string>
+    <string name="agentsSignInSendCode">Kirim kode</string>
 </resources>
