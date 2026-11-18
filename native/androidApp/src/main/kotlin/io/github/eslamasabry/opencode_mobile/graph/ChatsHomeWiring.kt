@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
+import io.github.eslamasabry.oc.feature.chats.presentation.AppStart
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeSource
@@ -74,6 +75,9 @@ private fun optional(key: String, value: String?): Map<String, Any> = if (value 
 private val QUIET_RETRY_EVERY = 3.seconds
 private val QUIET_RETRY_WHEN_FAILED = 15.seconds
 private val STOP_SETTLES = 3.seconds
+
+/** How long after the app's own work on the helper its source is still joining again (never read as failed). */
+private val HELPER_SETTLE = 30.seconds
 
 /**
  * One source selector over the actual runtime; hiding a source never closes a graph an open chat
@@ -171,6 +175,29 @@ class AppChatsHome(
         }
     }
 
+    /** When the app's own work on each helper last showed (its update or start stage), for the grace after it. */
+    private val helperWorkAt = java.util.concurrent.ConcurrentHashMap<ProfileId, Long>()
+    private var settleLook: kotlinx.coroutines.Job? = null
+
+    /**
+     * The helper [id] is being installed or restarted by the app (the update, or its start stage), or did so within
+     * [HELPER_SETTLE] (the source joins again after the helper answers). A look is asked for when the grace ends, so a
+     * real failure then shows, once, and never clears by itself within seconds.
+     */
+    private fun helperSettling(id: ProfileId, updating: Boolean): Boolean {
+        val now = clock.now().toEpochMilliseconds()
+        if (updating || stages.stageOfHelper(id).value != null) helperWorkAt[id] = now
+        val since = helperWorkAt[id] ?: return false
+        val settling = now - since < HELPER_SETTLE.inWholeMilliseconds
+        if (settling && settleLook?.isActive != true) {
+            settleLook = scope.launch {
+                delay(HELPER_SETTLE + 1.seconds)
+                publish()
+            }
+        }
+        return settling
+    }
+
     private fun publish() {
         val active = runtime.profiles.activeId.value
         val updating = agentUpdate.decision.value.takeIf { it.step == AgentUpdateStep.Updating }
@@ -180,6 +207,9 @@ class AppChatsHome(
                     // F: side_connections.dart:93-99: the phone agents are one switch (named for what they are), part of
                     // This phone: never the server. Not answering only when their helper's start failed (issue 147).
                     val agents = runtime.isPhoneHelper(loaded.id)
+                    // The app's OWN install or restart of the helper (an update, or its start stage) and a short while
+                    // after it, while the source joins again: waiting, never "didn't start" (and never a flash).
+                    val settling = agents && helperSettling(loaded.id, updating != null)
                     // Issue 147: an agents' source with no start, no list and no failure gets a start (never a bare
                     // "Starting" with nothing behind it); during an agent update the update says why it waits.
                     if (agents && updating == null) runtime.keepHelperListed(loaded.id)
@@ -196,9 +226,13 @@ class AppChatsHome(
                         // the home's notice), never left reading "Starting"; during an update the update speaks.
                         unreachable =
                             loaded.id in runtime.sourceFailures &&
-                                (!agents || (updating == null && loaded.id !in runtime.helperStarting.value)),
+                                (!agents || (!settling && loaded.id !in runtime.helperStarting.value)),
                         agents = agents,
-                        starting = runtime.startingSource(loaded.id, agentsUpdating = agents && updating != null),
+                        starting =
+                            runtime.startingSource(loaded.id, agentsUpdating = agents && updating != null)
+                                ?: AppStart.Agents.takeIf {
+                                    settling && loaded.id != active && runtime.listSourceShown(loaded.id)
+                                },
                         updatingAgent =
                             updating?.agent?.takeIf { agents }?.let { AgentCatalog.builtIn.byId(it)?.name },
                         secret =
