@@ -39,6 +39,12 @@ public data class KitStatus(
     val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     /** The condition is a wait that ends by itself: the line shows the kit's working mark (still when motion is off) in place of its glyph. */
     val working: Boolean = false,
+    /**
+     * Which of the app's waits a [working] line names ("Starting OpenCode…"): its waiting mark stands in the working
+     * mark's place, same box. Null keeps the working mark. [waitFraction] is a download's share done (0..1).
+     */
+    val wait: io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind? = null,
+    val waitFraction: Float = 0f,
 ) {
     /** Lower is more important. */
     val priority: Int

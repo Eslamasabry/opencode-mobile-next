@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark
+import io.github.eslamasabry.oc.ui.kit.wait.LocalKitWaitHere
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -113,6 +115,8 @@ public fun KitChecklistStep(
 
 @Composable
 internal fun StepMark(state: KitStepState) {
+    // A step whose words name a wait (a download with its share): that wait's mark in the working arc's slot.
+    if (state == KitStepState.Working) LocalKitWaitHere.current?.let { return StepWaitMark(it) }
     val colors = LocalKitColors.current
     when (state) {
         KitStepState.Done -> KitStatusIcon(StatusTone.Ok)
@@ -169,4 +173,11 @@ internal fun StepMark(state: KitStepState) {
             }
         }
     }
+}
+
+/** A step whose words name a wait (a download with its share): that wait's mark, in the working arc's slot. */
+@Composable
+private fun StepWaitMark(wait: io.github.eslamasabry.oc.ui.kit.wait.KitWaitHere) {
+    val size = LocalKitTokens.current.smallIcon.dp
+    KitWaitMark(wait.kind, tone = TextTone.Secondary, size = size, fraction = wait.fraction)
 }

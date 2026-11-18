@@ -140,6 +140,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
@@ -573,6 +575,9 @@ public fun ChatsScreen(
                                     labelStatus =
                                         if (lineWords == HomeLineWinner.Download) downloadStatus?.message
                                         else state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    // Every stage Home names is something this phone is starting: its mark stands
+                                    // before the words. The kit draws and animates it; this only switches it on.
+                                    labelWait = KitWaitKind.Starting.takeIf { lineWords == HomeLineWinner.Stage },
                                     labelAction = statusAction,
                                 ) {
                                     recent.forEach { row ->
@@ -1236,7 +1241,8 @@ private fun QuestionAnswers(
         return
     }
     if (flags.questionSending) {
-        KitReceipt(state = KitReceiptState.Sending)
+        // The answer on its way: the Sending mark in the receipt's mark box.
+        KitWaitMarkHere(KitWaitKind.Sending) { KitReceipt(state = KitReceiptState.Sending) }
         return
     }
     if (flags.questionRefused) {
@@ -1358,6 +1364,9 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, what, it) } ?: what,
                 tone = StatusTone.Progress,
                 working = true,
+                // A known share: the Downloading mark, its line as thick as the words' percent says.
+                wait = KitWaitKind.Downloading.takeIf { phase.percent != null },
+                waitFraction = (phase.percent ?: 0) / 100f,
             )
         }
         HomeDownloadPhase.Failed ->
