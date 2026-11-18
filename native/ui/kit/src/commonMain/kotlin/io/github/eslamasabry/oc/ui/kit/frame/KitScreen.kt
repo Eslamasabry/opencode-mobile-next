@@ -543,7 +543,14 @@ public fun KitScreen(
                                         // in below them over TOP_DISSOLVE_DP.
                                         clearAbove =
                                             if (topPart == null) null
-                                            else if (floatChrome) ({ (statusPx + with(density) { (if (barFace != null) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() }) })
+                                            else if (floatChrome) ({
+                                                // A status line under the capsule (a notice, the demo's disclosure) is part of the
+                                                // chrome's block: the body is gone above its foot, so a transcript row never draws
+                                                // over the line's words (device look on 10083, text 200 %). With no line, only the
+                                                // status area and the capsule's own margin are cleared.
+                                                if (ownsLine && line != null) (statusPx + topPx).toFloat()
+                                                else (statusPx + with(density) { (if (barFace != null) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() })
+                                            })
                                             else ({ (statusPx + topPx).toFloat() }),
                                         topReach = if (floatChrome) 0.dp else TOP_DISSOLVE_DP.dp,
                                         // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
