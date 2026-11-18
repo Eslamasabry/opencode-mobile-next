@@ -106,7 +106,7 @@ public fun umamiEvent(
     if (event == null || clean == null || visible == null) return null
     return UmamiEvent(payload = UmamiPayload(
         website = website,
-        language = device.language.takeIf { it.length <= 35 && it.matches(Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")) } ?: "und",
+        language = device.language.takeIf { it.matches(Regex("[a-z]{2,3}")) } ?: "und",
         url = visible.url,
         title = visible.title,
         tag = build.tag,
