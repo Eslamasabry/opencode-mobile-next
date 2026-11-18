@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * P12-CHAT-FEEL: what the chat hands to the platform — the clipboard, the share sheet and links.
@@ -57,6 +58,13 @@ public interface ChatOutside {
      * Agents page and New conversation offer it as a normal choice. Nothing of the answer is passed.
      */
     public fun agentAnswered(owner: ProfileId, agent: String) {}
+
+    /**
+     * B-458: the sign-in of [owner]'s phone agents as the Agents page reads it right now, by provider id (true: signed
+     * in, false: needs a sign-in; absent: not known yet). Emits again on every change. A stopped turn's "Sign in again"
+     * follows it, never a flag of the chat's own, so it holds after the app is closed and opened again.
+     */
+    public fun agentSignIns(owner: ProfileId): Flow<Map<String, Boolean>> = flowOf(emptyMap())
 
     /**
      * Issue 147: a reply of [owner]'s phone agent behind [provider] ended on its sign-in at [atMs] (wall clock): the

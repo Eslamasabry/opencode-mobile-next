@@ -108,6 +108,11 @@ class AndroidChatOutside(
         appScope.launch { phones.value.noteSetUp(owner, AgentId(agent)) }
     }
 
+    override fun agentSignIns(owner: ProfileId): Flow<Map<String, Boolean>> {
+        val agents = phones.value
+        return agents.state.map { agents.signIns(owner, it) }.distinctUntilChanged()
+    }
+
     override fun agentSignInLapsed(owner: ProfileId, provider: String, atMs: Long) {
         appScope.launch { phones.value.noteSignInLapsed(owner, provider, atMs) }
     }

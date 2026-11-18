@@ -13,24 +13,15 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
  * [waiting]: a card still needs the person (a permission card they answered no longer does); [declined]: tool call ids
  * of permission cards answered Deny.
  */
-public data class StepRequestReading(
-    val waiting: Boolean = false,
-    val declined: Set<String> = emptySet(),
-    /** Tool call ids of permission cards still waiting: their steps stay live, whatever is sent after them. */
-    val waitingCalls: Set<String> = emptySet(),
-) {
+public data class StepRequestReading(val waiting: Boolean = false, val declined: Set<String> = emptySet()) {
     public companion object {
         public fun of(cards: List<RequestCardUi>): StepRequestReading {
             val declined = HashSet<String>()
-            val waitingCalls = HashSet<String>()
             var waiting = false
             for (card in cards) {
                 val answered = (card as? RequestCardUi.Permission)?.let { answeredWords(it.state) }
                 if (answered == null) {
-                    if (RunTailRules.waitsForYou(card.state)) {
-                        waiting = true
-                        (card as? RequestCardUi.Permission)?.captured?.callId?.let { waitingCalls += it }
-                    }
+                    if (RunTailRules.waitsForYou(card.state)) waiting = true
                     continue
                 }
                 val call = (card as RequestCardUi.Permission).captured?.callId
@@ -38,7 +29,7 @@ public data class StepRequestReading(
                     declined += call
                 }
             }
-            return StepRequestReading(waiting, declined, waitingCalls)
+            return StepRequestReading(waiting, declined)
         }
 
         /** The words of an answer that is held, sending or sent; null while the card waits or the answer failed. */

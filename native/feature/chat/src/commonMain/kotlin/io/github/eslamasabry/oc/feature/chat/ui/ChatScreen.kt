@@ -134,6 +134,8 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListStat
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.messageViewSendAgain
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignedInPast
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
@@ -1146,6 +1148,17 @@ public fun ChatScreen(
                                             remember(state.setUpReplies, actions) {
                                                 AgentSetUpReply(state.setUpReplies, actions::setUpAgent)
                                             },
+                                        LocalSignInTurnReply provides
+                                            run {
+                                                val sendAgain = stringResource(Res.string.messageViewSendAgain)
+                                                remember(state.signInTurns, sendAgain, actions) {
+                                                    SignInTurnReply(
+                                                        state.signInTurns,
+                                                        sendAgain,
+                                                        actions::retryLastPrompt,
+                                                    )
+                                                }
+                                            },
                                         LocalInPlaceRequests provides inPlaceRequests,
                                     ) {
                                         ChatTranscriptList(
@@ -1889,6 +1902,7 @@ internal fun rememberReplyActions(
     // B-AGENT-189 (#137): a lapsed sign-in of an agent on this phone says "sign in again" and offers Sign in.
     val signInAgainTemplate = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
     val signInAgainLabel = stringResource(Res.string.agentsSignInAgain)
+    val signInPastTemplate = stringResource(Res.string.chatSendFailureSignedInPast, "\u0000")
     val phoneAgentSignIn = remember(actions) { actions.phoneAgentSignIn() }
     val signInAgainWords: (String) -> String? = remember(signInAgainTemplate) {
         { provider ->
@@ -1897,6 +1911,15 @@ internal fun rememberReplyActions(
                 "codex" -> "Codex"
                 else -> null
             }?.let { signInAgainTemplate.replace("\u0000", it) }
+        }
+    }
+    val signInPastWords: (String) -> String? = remember(signInPastTemplate) {
+        { provider ->
+            when (provider) {
+                "claude" -> "Claude Code"
+                "codex" -> "Codex"
+                else -> null
+            }?.let { signInPastTemplate.replace("\u0000", it) }
         }
     }
     return remember(
@@ -1910,6 +1933,7 @@ internal fun rememberReplyActions(
         continueLabel,
         signInSettings,
         signInAgainWords,
+        signInPastWords,
         signInAgainLabel,
         phoneAgentSignIn,
         models,
@@ -1976,6 +2000,7 @@ internal fun rememberReplyActions(
             signInAgainWords = if (phoneAgentSignIn) signInAgainWords else null,
             signInAgainLabel = signInAgainLabel,
             onAgentSignIn = actions::openAgentSignIn,
+            signInPastWords = if (phoneAgentSignIn) signInPastWords else null,
             onThisPhone = phoneAgentSignIn,
             models = models,
             canCompact = canCompact,
