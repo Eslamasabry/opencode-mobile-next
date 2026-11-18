@@ -348,12 +348,14 @@ private fun SubAgentGroup(
 ) {
     val mask = rememberKitMask()
     val childNeeds = LocalChildNeedsYou.current
-    val c = StepListRules.counts(group)
+    val c = StepListRules.counts(group, childNeeds)
     val sep = stringResource(Res.string.kitWorkSeparator)
+    val waitingWords = stringResource(Res.string.kitWorkWaitingForYou)
     val note =
         listOfNotNull(
                 c.done.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkSubAgentsDone, it, it) },
                 c.working.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkSubAgentsWorking, it, it) },
+                waitingWords.takeIf { c.waiting > 0 },
                 c.failed.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldFailed, it, it) },
                 c.declined.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldDeclined, it, it) },
                 c.stopped.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkSubAgentsStopped, it, it) },

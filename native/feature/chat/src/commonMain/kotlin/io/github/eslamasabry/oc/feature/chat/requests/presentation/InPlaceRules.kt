@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.requests.presentation
 
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
+import io.github.eslamasabry.oc.feature.chat.presentation.StepEntry
+import io.github.eslamasabry.oc.feature.chat.presentation.StepListRules
 
 /**
  * D1 "steps only" (owner 2026-11-14): which permission asks are answered in place under their step. An ask is drawn
@@ -14,10 +16,16 @@ public object InPlaceRules {
         if (work == null || cards.isEmpty()) return emptyMap()
         val calls = work.steps.mapNotNullTo(HashSet()) { it.callId }
         if (calls.isEmpty()) return emptyMap()
+        // Sub-agents started together are ONE group row, which draws no ask under its children (and is folded): their
+        // asks stay in the slot above the message box, where the box's "above" is true.
+        val grouped =
+            StepListRules.entries(work, emptyList())
+                .filterIsInstance<StepEntry.Group>()
+                .flatMapTo(HashSet()) { group -> group.steps.mapNotNull { it.callId } }
         val out = LinkedHashMap<String, RequestCardUi>()
         for (card in cards) {
             val call = (card as? RequestCardUi.Permission)?.captured?.callId ?: continue
-            if (call in calls && call !in out) out[call] = card
+            if (call in calls && call !in grouped && call !in out) out[call] = card
         }
         return out
     }

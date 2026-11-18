@@ -49,7 +49,15 @@ public data class StepFold(val hidden: Int, val declined: Int, val failed: Int)
 public data class StepListCut(val earlier: List<StepEntry>, val shown: List<StepEntry>, val fold: StepFold?)
 
 /** How many sub-agents of a group stand where (the group row's quiet words). */
-public data class GroupCounts(val done: Int, val working: Int, val failed: Int, val declined: Int, val stopped: Int)
+public data class GroupCounts(
+    val done: Int,
+    val working: Int,
+    val failed: Int,
+    val declined: Int,
+    val stopped: Int,
+    /** Sub-agents with an open request of their own: they are neither done nor working, they wait on the person. */
+    val waiting: Int = 0,
+)
 
 /**
  * The rules of a turn's step list (D1): which rows it has, which sub-agents make one group, and what folds.
@@ -163,13 +171,19 @@ public object StepListRules {
     }
 
     /** Where a group's sub-agents stand. */
-    public fun counts(group: StepEntry.Group): GroupCounts {
+    public fun counts(group: StepEntry.Group, waitingSessions: Set<String> = emptySet()): GroupCounts {
         var done = 0
         var working = 0
         var failed = 0
         var declined = 0
         var stopped = 0
+        var waiting = 0
         for (s in group.steps) {
+            // The same open-requests set that makes a parent read "Needs you": a sub-agent that asks is not done.
+            if (s.facts.childSessionId?.let { it in waitingSessions } == true) {
+                waiting++
+                continue
+            }
             when (s.state) {
                 StepState.Done -> done++
                 StepState.Running,
@@ -180,7 +194,7 @@ public object StepListRules {
                 StepState.NotRun -> stopped++
             }
         }
-        return GroupCounts(done, working, failed, declined, stopped)
+        return GroupCounts(done, working, failed, declined, stopped, waiting)
     }
 
     /**
