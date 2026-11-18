@@ -28,7 +28,7 @@
     <string name="collectStart">应用启动速度，以及上次进程退出（app_exit）的固定原因（exit_reason）。如果 Android 有记录，还包括进程当时是否在前台（foreground，yes/no）</string>
     <string name="collectSmooth">页面的流畅度（逾期、缓慢和冻结帧的比例）、屏幕刷新率，以及对话中当时的活动（回复到达、滚动、菜单或面板打开、键盘显示或空闲）</string>
     <string name="collectMemory">来自 Android 的内存警告</string>
-    <string name="collectDevice">你手机的内存和可用存储范围、处理器类型和 WebView 版本、是否允许通知，以及你所用服务器的类型和版本。我们自己的 Umami 服务器只会收到应用版本和构建编号、语言、Android 主版本及设备类别（手机或平板）。手机型号和屏幕尺寸由 Google Analytics 自行从 Android 获取。</string>
+    <string name="collectDevice">你手机的内存和可用存储范围、处理器类型和 WebView 版本、是否允许通知，以及你所用服务器的类型和版本。我们自己的 Umami 服务器只会收到应用版本和构建编号、应用语言及地区（例如 ar-EG）、Android 主版本及设备类别（手机或平板）。手机型号和屏幕尺寸由 Google Analytics 自行从 Android 获取。</string>
     <string name="collectCrashKind">错误的类型及其在应用代码中的位置，绝不包含错误消息</string>
     <string name="collectExit">应用进程上次意外结束时，会发送一份名为 process_exit 的报告及其固定原因（exit_reason）。你自己要求的停止（Android 称为 user_requested）绝不会作为报告发送：只在开启“使用情况和应用健康”时统计</string>
     <string name="collectSteps">你最后 30 步操作，以 chat.send 这样的简短词语表示</string>
@@ -41,6 +41,6 @@
     <string name="collectStarAsk">是否显示、点击或关闭了在 GitHub 上为项目加星标的一次性请求</string>
     <string name="collectTurns">每轮如何结束（完成、没有可显示的内容、停止、错误、连接中断或批准请求无人回答），到首个可见回复和智能体首次工作迹象的时间、总耗时、使用的工具数，以及断线后是否恢复</string>
     <string name="collectApprovals">请求的类型（运行、编辑、读取、网页或问题），你的回答、已保存的选择自动回答或运行被停止，回答的位置（对话、主页、通知或小组件）及等待时间。绝不包含命令、文件或问题本身</string>
-    <string name="nativeTelemetryUsageDetail">向 Google Analytics for Firebase 发送匿名计数：你使用哪几类页面和功能，连接、发送、设置、智能体、后台服务和更新是否正常，应用启动有多快、页面有多流畅，内存警告，以及你手机的内存、可用存储、CPU 和 WebView 版本的范围。同时向 Firebase Performance Monitoring 发送耗时：应用启动、连接、首次回复、设置步骤和启动智能体各花了多久。只包含固定的词、范围和数字，外加一个随机的安装 ID、你的手机型号和 Android 版本。不含代码、对话、文件、地址、密钥或广告 ID。 使用情况报告还会发送到我们自行运营的分析服务器：托管在 Railway 的 Umami。Umami 不存储 IP 地址，也不存储个人身份标识符。它只使用一次连接地址来确定大致位置，并保留一个每月更换的匿名访客哈希；这个哈希无法还原为你的地址或设备。Umami 只会收到应用版本和构建编号、语言、Android 主版本号（例如 16）以及设备是手机还是平板，不会收到设备的其他任何信息：没有屏幕尺寸、型号、制造商、时区，也没有设备或安装标识符。</string>
+    <string name="nativeTelemetryUsageDetail">向 Google Analytics for Firebase 发送匿名计数：你使用哪几类页面和功能，连接、发送、设置、智能体、后台服务和更新是否正常，应用启动有多快、页面有多流畅，内存警告，以及你手机的内存、可用存储、CPU 和 WebView 版本的范围。同时向 Firebase Performance Monitoring 发送耗时：应用启动、连接、首次回复、设置步骤和启动智能体各花了多久。只包含固定的词、范围和数字，外加一个随机的安装 ID、你的手机型号和 Android 版本。不含代码、对话、文件、地址、密钥或广告 ID。 使用情况报告还会发送到我们自行运营的分析服务器：托管在 Railway 的 Umami。Umami 不存储 IP 地址，也不存储个人身份标识符。它只使用一次连接地址来确定大致位置，并保留一个每月更换的匿名访客哈希；这个哈希无法还原为你的地址或设备。Umami 只会收到应用版本和构建编号、应用语言及地区（例如 ar-EG）、Android 主版本号（例如 16）以及设备是手机还是平板，不会收到设备的其他任何信息：没有屏幕尺寸、型号、制造商、时区，也没有设备或安装标识符。</string>
     <string name="nativeTelemetryConsentBody">如果你同意，使用情况和应用运行状况报告会发送到 Google Firebase，以及我们自行运营、托管在 Railway 上的 Umami 服务器。崩溃报告会发送到 Google Firebase。Umami 不存储 IP 地址或个人身份标识符。你可以在“设置 › 隐私和数据”中分别更改选择。</string>
 </resources>
