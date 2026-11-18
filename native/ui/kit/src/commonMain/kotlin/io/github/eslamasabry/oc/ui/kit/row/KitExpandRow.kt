@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,8 +21,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -95,9 +103,17 @@ public fun KitExpandRow(
     inset: Boolean = true,
     /** One line (kit_row_parts.dart:879); from 1.3× text two. A preview title ends with "…" where it is cut. */
     titleMaxLines: Int = 1,
+    /**
+     * When the person opens the row, the row and what it opened scroll into view once the opening has finished (a row
+     * low in a sheet or page would otherwise open below the visible end). Off by default.
+     */
+    revealWhenOpened: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    KitExpandRow(title, expanded, modifier, supporting, onExpandedChange, leading, inset, titleMaxLines, 1, false, content)
+    KitExpandRow(
+        title, expanded, modifier, supporting, onExpandedChange, leading, inset, titleMaxLines, 1, false,
+        revealWhenOpened = revealWhenOpened, content = content,
+    )
 }
 
 /** [KitExpandRow] with the supporting line's lines (1 by default, 2 where the fold's line explains itself) and [bare]. */
@@ -113,6 +129,8 @@ public fun KitExpandRow(
     titleMaxLines: Int,
     supportingMaxLines: Int,
     bare: Boolean,
+    /** See the short form's `revealWhenOpened`. */
+    revealWhenOpened: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalKitColors.current
@@ -122,13 +140,23 @@ public fun KitExpandRow(
     val reduced = specs.state.reduced
     val scale = kitTextScale()
     val turn by animateFloatAsState(if (expanded) HALF_TURN else 0f, specs.enter(), label = "expand-chevron")
-    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
+    // Look 10100: a row opened low in a sheet left what it opened below the sheet's end. A scroll asked for while the
+    // row still unfolds stops at the body's end of that moment (a few pixels), so the row asks once the unfolding has
+    // finished and the body has its full height. Only when the person opened it (a tap or the accessibility action),
+    // never for a row that is already open when the page appears.
+    val reveal = remember { BringIntoViewRequester() }
+    var revealPending by remember { mutableStateOf(false) }
+    val change: (Boolean) -> Unit = { open ->
+        revealPending = open && revealWhenOpened
+        onExpandedChange(open)
+    }
+    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).then(if (revealWhenOpened) Modifier.bringIntoViewRequester(reveal) else Modifier)) {
         Row(
             Modifier.fillMaxWidth()
                 .testTag("kit-expand-row-header")
-                .kitTappable(onClick = { onExpandedChange(!expanded) }, role = KitTappableRole.Row, shape = KitShapeId.Square)
+                .kitTappable(onClick = { change(!expanded) }, role = KitTappableRole.Row, shape = KitShapeId.Square)
                 .semantics(mergeDescendants = true) {
-                    if (expanded) collapse { onExpandedChange(false); true } else expand { onExpandedChange(true); true }
+                    if (expanded) collapse { change(false); true } else expand { change(true); true }
                 }
                 // 56 dp with one line, 64 with two (kit_row.dart:497-507); the 48 dp chevron reaches into the words' room.
                 .heightIn(min = (if (supporting != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
@@ -165,6 +193,17 @@ public fun KitExpandRow(
             enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
             exit = if (reduced) ExitTransition.None else shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
         ) {
+            if (revealPending) {
+                val unfolded = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
+                LaunchedEffect(unfolded) {
+                    if (unfolded) {
+                        // One frame: the scrolling body has taken its full height first.
+                        withFrameNanos {}
+                        reveal.bringIntoView()
+                        revealPending = false
+                    }
+                }
+            }
             if (bare) {
                 Column(Modifier.fillMaxWidth(), content = content)
             } else {
