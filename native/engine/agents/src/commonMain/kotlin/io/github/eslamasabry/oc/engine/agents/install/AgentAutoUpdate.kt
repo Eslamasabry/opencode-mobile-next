@@ -251,8 +251,8 @@ public class AgentAutoUpdater(
     }
 
     /**
-     * The install of [agent] moved to [step] outside the updater's own looks. [AgentUpdateStep.Failed]: it ended without
-     * finishing, ran past its bound, was refused or never started. A failed try never marks the agent current: it is
+     * The install of [agent] moved to [step] outside the updater's own looks. [AgentUpdateStep.Failed]: it ended
+     * without finishing, ran past its bound, was refused or never started. A failed try never marks the agent current: it is
      * given back (the next look sees it behind again) up to [MAX_RETRIES] more times, spaced, then it is left to the
      * person's Try again. [AgentUpdateStep.Updating]: the person's Try again started it, so every earlier failure is
      * forgotten and the other agents that are behind are tried in their turn.

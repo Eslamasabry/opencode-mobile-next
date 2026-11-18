@@ -235,13 +235,7 @@ class PhoneAgentAutoUpdate(
                 safely { phones.warmForUpdate() }
                 safely { updater.changed() }
                 // The room line is read again at every look: freed space (or a Try again) never leaves a stale amount.
-                safely {
-                    val agent = status.decision.value.agent
-                    if (downloads.helperShort.value != null && agent != null) {
-                        val room = phones.installSpace(agent.raw)
-                        downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, room)
-                    }
-                }
+                safely { rereadRoom(phones, downloads, status.decision.value.agent) }
                 delay(LOOK_EVERY.seconds)
             }
         }
@@ -431,3 +425,9 @@ private fun homeShort(name: String, room: PhoneAgentSpace?): HomeShortSpace? =
     }
 
 private const val MB_BYTES = 1_000_000L
+
+/** Reads the room for [agent] again while Home shows a room line, so freed space never leaves a stale amount. */
+private suspend fun rereadRoom(phones: AppPhoneAgents, downloads: PhoneDownloads, agent: AgentId?) {
+    if (downloads.helperShort.value == null || agent == null) return
+    downloads.helperShort.value = homeShort(phones.nameOf(agent) ?: agent.raw, phones.installSpace(agent.raw))
+}

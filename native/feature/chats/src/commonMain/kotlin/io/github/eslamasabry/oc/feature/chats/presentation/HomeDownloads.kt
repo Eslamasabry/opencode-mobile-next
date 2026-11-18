@@ -74,7 +74,9 @@ public object HomeDownloadRules {
      * waits for Wi-Fi; OpenCode before the helper. Null when nothing is happening.
      */
     public fun shown(facts: List<HomeDownloadFact>): HomeDownloadFact? =
-        facts.sortedWith(compareBy({ rank(it.phase) }, { if (it.short != null) 0 else 1 }, { it.kind.ordinal })).firstOrNull()
+        facts
+            .sortedWith(compareBy({ rank(it.phase) }, { if (it.short != null) 0 else 1 }, { it.kind.ordinal }))
+            .firstOrNull()
 
     /**
      * Home's one place for "what is happening to this phone" is the Recent label's end (stage words, or the download).
