@@ -787,7 +787,7 @@
         <item quantity="other">جدول، %1$d من الصفوف</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">جدول، صف واحد</string>
-    <string name="kitToolNotRun">لم يُنفّذ</string>
+    <string name="kitToolNotRun">توقّف قبل أن تجيب</string>
     <string name="kitToolWaiting">بانتظار</string>
     <string name="kitToolRunning">قيد التشغيل</string>
     <string name="kitToolWaitingForYou">بانتظارك</string>

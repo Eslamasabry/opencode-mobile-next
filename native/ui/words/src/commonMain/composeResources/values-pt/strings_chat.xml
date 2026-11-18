@@ -769,7 +769,7 @@
         <item quantity="other">Tabela, %1$d linhas</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">Tabela, 1 linha</string>
-    <string name="kitToolNotRun">Não executado</string>
+    <string name="kitToolNotRun">Parou antes de você responder</string>
     <string name="kitToolWaiting">Aguardando</string>
     <string name="kitToolRunning">Executando</string>
     <string name="kitToolWaitingForYou">Aguardando você</string>

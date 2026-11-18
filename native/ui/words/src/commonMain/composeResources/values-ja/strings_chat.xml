@@ -800,7 +800,7 @@
         <item quantity="other">表、%1$d行</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">表、1行</string>
-    <string name="kitToolNotRun">未実行</string>
+    <string name="kitToolNotRun">回答前に停止しました</string>
     <string name="kitToolWaiting">待機中</string>
     <string name="kitToolRunning">実行中</string>
     <string name="kitToolWaitingForYou">対応待ち</string>

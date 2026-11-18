@@ -622,7 +622,7 @@
         <item quantity="other">表格，%1$d 行</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">表格，1 行</string>
-    <string name="kitToolNotRun">未运行</string>
+    <string name="kitToolNotRun">在你回答前已停止</string>
     <string name="kitToolWaiting">等待中</string>
     <string name="kitToolRunning">运行中</string>
     <string name="kitToolWaitingForYou">等待你操作</string>

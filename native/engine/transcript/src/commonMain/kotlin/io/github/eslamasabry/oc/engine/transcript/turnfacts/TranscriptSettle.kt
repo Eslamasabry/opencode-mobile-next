@@ -88,7 +88,12 @@ public fun settleStaleLive(
                     !isBackground(part)
             ) {
                 val edited = parts ?: message.parts.toMutableList().also { parts = it }
-                edited[p] = part.copy(tool = tool.copy(status = ToolStatus.Completed))
+                // Words later in the turn prove the step finished. With none, the run just ended (a force-stop, a lost
+                // connection) while the step still said it ran, perhaps waiting for an answer that never came: that is
+                // no proof it ran. It settles as not run, never as "Ran 1 command" (B-461 job 2).
+                edited[p] =
+                    if (wordsLater) part.copy(tool = tool.copy(status = ToolStatus.Completed))
+                    else part.copy(tool = tool.copy(status = ToolStatus.Pending, startedAtMs = null))
             }
         }
         parts?.let { replace[i] = message.copy(parts = it.toImmutableList()) }

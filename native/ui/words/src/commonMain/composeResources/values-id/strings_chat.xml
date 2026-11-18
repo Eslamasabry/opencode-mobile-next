@@ -626,7 +626,7 @@
         <item quantity="other">Tabel, %1$d baris</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">Tabel, 1 baris</string>
-    <string name="kitToolNotRun">Tidak dijalankan</string>
+    <string name="kitToolNotRun">Berhenti sebelum Anda menjawab</string>
     <string name="kitToolWaiting">Menunggu</string>
     <string name="kitToolRunning">Berjalan</string>
     <string name="kitToolWaitingForYou">Menunggu Anda</string>

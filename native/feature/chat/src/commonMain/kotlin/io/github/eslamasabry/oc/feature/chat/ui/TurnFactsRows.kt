@@ -82,6 +82,7 @@ import io.github.eslamasabry.oc.ui.words.res.edgeLightWorking
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitToolDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
+import io.github.eslamasabry.oc.ui.words.res.kitToolNotRun
 import io.github.eslamasabry.oc.ui.words.res.kitToolStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldFailed
@@ -356,6 +357,7 @@ private fun SubAgentGroup(
             .joinToString(sep)
             .ifEmpty { null }
     val stopped = stringResource(Res.string.kitToolStopped)
+    val notRunWord = stringResource(Res.string.kitToolNotRun)
     val sessions = group.steps.associate { it.partId to it.facts.childSessionId }
     val children =
         group.steps.map { s ->
@@ -366,7 +368,7 @@ private fun SubAgentGroup(
                 state = subAgentState(s.state),
                 seconds = s.durationMs?.takeIf { s.state == StepState.Done }?.let { it / 1_000 },
                 denied = s.state == StepState.Declined,
-                word = if (s.state == StepState.Stopped || s.state == StepState.NotRun) stopped else null,
+                word = when (s.state) { StepState.Stopped -> stopped; StepState.NotRun -> notRunWord; else -> null },
             )
         }
     KitStepGroup(
