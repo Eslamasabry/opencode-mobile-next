@@ -69,6 +69,8 @@ class PhoneDownloads(
 
     /** The agents' install that stopped for want of room: what it needs and what the phone has (null when none). */
     internal val helperShort = MutableStateFlow<HomeShortSpace?>(null)
+    /** OpenCode's automatic update ended below the pin, tried again a few times: Home says it failed. */
+    internal val openCodeShort = MutableStateFlow(false)
     internal val openCodeWaiting = MutableStateFlow(false)
     internal val openCodeHeld = MutableStateFlow<OpenCodeHold?>(null)
     @Volatile internal var openCode: PhoneOpenCodeAutoUpdate? = null
@@ -92,14 +94,14 @@ class PhoneDownloads(
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
         combine(
-                combine(openCodeWaiting, openCodeHeld, helperShort) { waiting, held, short ->
-                    Triple(waiting, held, short)
+                combine(openCodeWaiting, openCodeHeld, helperShort, openCodeShort) { waiting, held, short, fell ->
+                    SideFacts(waiting, held, short, fell)
                 },
                 setup.progress,
                 phones.state,
                 agentStatus.decision,
                 networkRead,
-            ) { (waiting, held, short), progress, agentState, decision, read ->
+            ) { (waiting, held, short, fell), progress, agentState, decision, read ->
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =
@@ -113,8 +115,14 @@ class PhoneDownloads(
                     HomeDownloadMapping.facts(
                         openCodeWaiting = downloadWaitingSaid(waiting, read),
                         openCodeRunning = update && progress.state == SetupState.Running,
-                        openCodeFailed = update && progress.state == SetupState.Failed,
-                        openCodePercent = (progress.overall * 100).roundToInt(),
+                        // The update ended below its pin (read again after the job): the failed row, with Try again.
+                        openCodeFailed = (update && progress.state == SetupState.Failed) || fell,
+                        // OpenCode's OWN progress, never another component's (the job lists the shared parts too).
+                        openCodePercent =
+                            progress.components
+                                .firstOrNull { it.id == SetupComponentIds.OPENCODE }
+                                ?.fraction
+                                ?.let { (it * 100).roundToInt() },
                         helper = helper,
                         helperInstall =
                             when (install?.phase) {
@@ -185,3 +193,11 @@ internal fun downloadNetworkMetered(network: SetupNetwork): Boolean = network !=
  * mobile data, so the line stays quiet (the update itself still waits; unknown stays "ask").
  */
 internal fun downloadWaitingSaid(waiting: Boolean, networkRead: Boolean): Boolean = waiting && networkRead
+
+/** What the downloads line reads beside the setup job: waiting, held, the helper's room, a short OpenCode update. */
+private data class SideFacts(
+    val waiting: Boolean,
+    val held: OpenCodeHold?,
+    val helperShort: HomeShortSpace?,
+    val openCodeShort: Boolean,
+)

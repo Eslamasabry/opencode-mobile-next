@@ -129,16 +129,70 @@ public class OpenCodeAutoUpdater(
         meteredAllowed = true
     }
 
+    /** The update job this updater started has ended and the installed version is still below the pin, for good. */
+    public val fellShort: StateFlow<Boolean> get() = short.asStateFlow()
+    private val short = MutableStateFlow(false)
+    private var awaiting: String? = null
+    private var sawRunning = false
+    private var awaitingSince = 0L
+    private var retryNotBefore = 0L
+    private val shortfalls = mutableMapOf<String, Int>()
+
+    private fun belowPin(): Boolean {
+        val installed = host.installedVersion?.trim()?.removePrefix("v")
+        return !installed.isNullOrEmpty() && installed != host.pinnedVersion
+    }
+
+    /**
+     * Done is not "installed == pin": once the job this updater started has ended, the installed version is read again.
+     * Still below the pin is a failure with its reason: tried again at the next safe look (a bounded number of times,
+     * spaced), then left on Home's failed row with Try again.
+     */
+    private suspend fun verifyEnded(key: String) {
+        if (jobs.running) {
+            sawRunning = true
+            return
+        }
+        if (!sawRunning && nowMs() - awaitingSince < START_GRACE_MS) return
+        awaiting = null
+        withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+        if (!belowPin()) {
+            short.value = false
+            shortfalls.remove(key)
+        } else if (!jobs.failed) {
+            val n = (shortfalls[key] ?: 0) + 1
+            shortfalls[key] = n
+            note("job ended but installed ${host.installedVersion} is below pin ${host.pinnedVersion} (try $n)")
+            if (n < MAX_TRIES) {
+                attempted -= key
+                retryNotBefore = nowMs() + RETRY_SPACING_MS
+            } else {
+                short.value = true
+            }
+        }
+    }
+
     public suspend fun changed() {
         if (!checking.tryLock()) return
         try {
             val key = "${host.runtime}:${host.pinnedVersion}"
+            if (awaiting == key) verifyEnded(key)
+            if (short.value && !jobs.running) {
+                // The person's Try again may have brought it to the pin: read again before keeping the failed row.
+                withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+                if (!belowPin()) short.value = false
+            }
+            if (nowMs() < retryNotBefore) return
             if (!decide(key, explain = true)) return
             withTimeoutOrNull(READ_LIMIT) { host.refresh() }
             if (!decide(key)) return
             // A try refused before the job started is not spent: the next look tries again.
             if (jobs.updateOpenCode(host.runtime)) {
                 attempted += key
+                awaiting = key
+                sawRunning = false
+                awaitingSince = nowMs()
+                short.value = false
                 meteredAllowed = false
                 waiting.value = false
             } else note("refused before it started; will try again")
@@ -153,6 +207,11 @@ public class OpenCodeAutoUpdater(
 
         /** A hold shorter than this stays silent (it ends by itself); a longer one is told on Home. */
         public val TOLD_AFTER: kotlin.time.Duration = 2.minutes
+
+        /** Tries in all (the first included) before a job that ends below the pin is left to Try again. */
+        internal const val MAX_TRIES: Int = 3
+        internal const val RETRY_SPACING_MS: Long = 600_000L
+        internal const val START_GRACE_MS: Long = 60_000L
     }
 
     /** Why the update is held while behind the pin on a free network; null when it goes or is not held. */
