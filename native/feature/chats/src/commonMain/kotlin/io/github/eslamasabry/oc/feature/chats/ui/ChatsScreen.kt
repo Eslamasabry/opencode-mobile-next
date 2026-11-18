@@ -1391,7 +1391,11 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                         )
                     }
                         ?: stringResource(
-                            if (openCode) Res.string.phoneDownloadFailedOpenCode else Res.string.phoneDownloadFailedHelper
+                            if (openCode) {
+                                Res.string.phoneDownloadFailedOpenCode
+                            } else {
+                                Res.string.phoneDownloadFailedHelper
+                            },
                         ),
                 tone = StatusTone.Attention,
                 action = KitLineAction(stringResource(Res.string.commonRetry), actions::actOnDownload),

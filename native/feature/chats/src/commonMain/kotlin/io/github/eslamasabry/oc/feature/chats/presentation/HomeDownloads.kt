@@ -129,7 +129,6 @@ public object HomeDownloadMapping {
         helper: HomeHelperStep,
         helperInstall: HomeInstallPhase,
         helperPercent: Int?,
-        helperShort: HomeShortSpace? = null,
     ): List<HomeDownloadFact> = buildList {
         when {
             openCodeRunning ->
@@ -140,25 +139,16 @@ public object HomeDownloadMapping {
         when (helper) {
             HomeHelperStep.None -> Unit
             HomeHelperStep.Waiting -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))
+            HomeHelperStep.Updating,
             HomeHelperStep.Failed ->
-                add(
-                    when (helperInstall) {
-                        HomeInstallPhase.Installing ->
-                            HomeDownloadFact(
-                                HomeDownloadKind.Helper,
-                                HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100)),
-                            )
-                        else -> HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Failed, short = helperShort)
-                    }
-                )
-            HomeHelperStep.Updating ->
                 add(
                     HomeDownloadFact(
                         HomeDownloadKind.Helper,
                         when (helperInstall) {
                             HomeInstallPhase.Failed -> HomeDownloadPhase.Failed
                             HomeInstallPhase.Installing -> HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100))
-                            HomeInstallPhase.None -> HomeDownloadPhase.Running(null)
+                            HomeInstallPhase.None ->
+                                if (helper == HomeHelperStep.Failed) HomeDownloadPhase.Failed else HomeDownloadPhase.Running(null)
                         },
                     )
                 )

@@ -92,7 +92,9 @@ class PhoneDownloads(
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
         combine(
-                combine(openCodeWaiting, openCodeHeld, helperShort) { waiting, held, short -> Triple(waiting, held, short) },
+                combine(openCodeWaiting, openCodeHeld, helperShort) { waiting, held, short ->
+                    Triple(waiting, held, short)
+                },
                 setup.progress,
                 phones.state,
                 agentStatus.decision,
@@ -122,8 +124,15 @@ class PhoneDownloads(
                                 else -> HomeInstallPhase.None
                             },
                         helperPercent = install?.fraction?.let { (it * 100).roundToInt() },
-                        helperShort = short,
                     )
+                        // A helper install that stopped for want of room says how much, beside the failed row.
+                        .map { fact ->
+                            if (fact.kind == HomeDownloadKind.Helper && fact.phase == HomeDownloadPhase.Failed) {
+                                fact.copy(short = short)
+                            } else {
+                                fact
+                            }
+                        }
                 HomeDownloadMapping.withHeld(
                     said,
                     when (held) {
@@ -162,9 +171,7 @@ class PhoneDownloads(
             HomeDownloadKind.Helper ->
                 agentStatus.decision.value.agent?.let { agent ->
                     val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value
-                    if (answer == PhoneAgentInstallResult.Started) agents?.retried(agent)
-                    // Still short of room: the row says how much, again, instead of failing without a word.
-                    else agents?.noteShort(agent)
+                    agents?.afterTry(agent, started = answer == PhoneAgentInstallResult.Started, short = true)
                 }
         }
     }

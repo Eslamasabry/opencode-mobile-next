@@ -247,16 +247,12 @@ public class AgentAutoUpdater(
     }
 
     /**
-     * The install of [agent] ended without finishing, or ran past its bound: the "Updating" wait ends here, never on
-     * its own luck. The decision stays [AgentUpdateStep.Failed] until the next try is started.
+     * The install of [agent] moved to [step] outside the updater's own looks: [AgentUpdateStep.Failed] when it ended
+     * without finishing, ran past its bound or never started (the "Updating" wait ends here, never on its own luck;
+     * kept until the next try), [AgentUpdateStep.Updating] when the person's Try again started it again.
      */
-    public fun failed(agent: AgentId) {
-        publish(AgentUpdateDecision(AgentUpdateStep.Failed, agent))
-    }
-
-    /** The person started the install of [agent] again after it failed (Try again): the wait says so again. */
-    public fun restarted(agent: AgentId) {
-        publish(AgentUpdateDecision(AgentUpdateStep.Updating, agent))
+    public fun settle(agent: AgentId, step: AgentUpdateStep) {
+        publish(AgentUpdateDecision(step, agent))
     }
 
     private fun hold(step: AgentUpdateStep) {

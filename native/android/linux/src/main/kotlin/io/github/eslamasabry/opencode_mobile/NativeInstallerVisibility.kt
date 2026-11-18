@@ -2,7 +2,6 @@ package io.github.eslamasabry.opencode_mobile
 
 /** A missing /proc entry never proves that a recorded installer process died. */
 internal object NativeInstallerVisibility {
-    private const val SAFE = "ownershipUnknown"
     private const val MAX_KNOWN_IDENTITIES = 130
     private const val MAX_INVENTORY_IDENTITIES = 128
 

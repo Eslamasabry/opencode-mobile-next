@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentSpace
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeShortSpace
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
@@ -23,6 +24,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecord
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecorded
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateJobs
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
@@ -166,7 +168,7 @@ class PhoneAgentAutoUpdate(
                 override suspend fun update(agent: AgentId): Boolean {
                     val answer =
                         (phones.install(agent.raw) as? Outcome.Ok)?.value
-                            ?: return true.also { endedUnstarted(agent) }
+                            ?: return true.also { afterTry(agent, started = false, short = false) }
                     return when (answer) {
                         PhoneAgentInstallResult.Started -> {
                             log.i { "update started" }
@@ -181,8 +183,8 @@ class PhoneAgentAutoUpdate(
                         is PhoneAgentInstallResult.Refused ->
                             (answer.issue != PhoneAgentInstallIssue.Busy).also { spent ->
                                 if (spent) {
-                                    if (answer.issue == PhoneAgentInstallIssue.Space) noteShort(agent)
-                                    endedUnstarted(agent)
+                                    val space = answer.issue == PhoneAgentInstallIssue.Space
+                                    afterTry(agent, started = false, short = space)
                                 }
                             }
                     }
@@ -270,7 +272,7 @@ class PhoneAgentAutoUpdate(
                         SetupState.Running -> Unit
                         SetupState.Failed -> {
                             log.i { "update ended without finishing" }
-                            updaterRef?.failed(agent)
+                            updaterRef?.settle(agent, AgentUpdateStep.Failed)
                             return
                         }
                         else -> {
@@ -281,50 +283,44 @@ class PhoneAgentAutoUpdate(
                 }
                 PhoneAgentInstallPhase.Failed,
                 PhoneAgentInstallPhase.Interrupted -> {
-                    updaterRef?.failed(agent)
+                    updaterRef?.settle(agent, AgentUpdateStep.Failed)
                     return
                 }
             }
         }
         // Past the bound (a quarter hour): the wait ends as a failure the person can try again.
         log.i { "update ran past its bound" }
-        updaterRef?.failed(agent)
+        updaterRef?.settle(agent, AgentUpdateStep.Failed)
     }
 
     /**
-     * Says how much room [agent]'s install needs and how much the phone has (the same read the Agents page's review
-     * uses), so Home's failed row names the reason. Nothing old was touched: the check runs before the job starts.
+     * The end of an install the person's Try again or the automatic try handed over. [started]: it runs, so the
+     * decision says Updating again and a watcher follows it to its end. Otherwise (a failed hand-over, or a refusal
+     * Try again cannot change; [short] when it was for want of room) no watcher exists, so the wait it announced is
+     * ended here as Failed a moment after the decision, and Home's row says how much room is missing (the check runs
+     * before the job starts, so nothing old was touched).
      */
-    internal suspend fun noteShort(agent: AgentId) {
-        val space = phones.installSpace(agent.raw)?.takeIf { it.short } ?: return
-        downloads.helperShort.value =
-            HomeShortSpace(
-                phones.nameOf(agent) ?: agent.raw,
-                ((space.neededBytes + 999_999L) / 1_000_000L).toInt(),
-                (space.freeBytes / 1_000_000L).toInt(),
-            )
-        updaterRef?.failed(agent)
-    }
-
-    /**
-     * An install that never started (it failed to hand over, or was refused for a reason Try again cannot change) was
-     * counted as started: no watcher follows it, so the wait it announced is ended here, a moment after the decision.
-     */
-    private fun endedUnstarted(agent: AgentId) {
-        appScope.launch(dispatchers.io) {
-            delay(UNSTARTED_GRACE.seconds)
-            updaterRef?.failed(agent)
+    internal fun afterTry(agent: AgentId, started: Boolean, short: Boolean) {
+        if (started) {
+            downloads.helperShort.value = null
+            updaterRef?.settle(agent, AgentUpdateStep.Updating)
+            appScope.launch(dispatchers.io) { safely { finish(agent) } }
+            return
         }
-    }
-
-    /**
-     * The person's Try again started the install of [agent]: the decision says Updating again and this waits for the
-     * install's end exactly as the automatic try does, so a second failure ends the wait too.
-     */
-    fun retried(agent: AgentId) {
-        downloads.helperShort.value = null
-        updaterRef?.restarted(agent)
-        appScope.launch(dispatchers.io) { safely { finish(agent) } }
+        appScope.launch(dispatchers.io) {
+            var room: PhoneAgentSpace? = null
+            if (short) safely { room = phones.installSpace(agent.raw)?.takeIf { it.short } }
+            downloads.helperShort.value =
+                room?.let {
+                    HomeShortSpace(
+                        phones.nameOf(agent) ?: agent.raw,
+                        ((it.neededBytes + MB - 1) / MB).toInt(),
+                        (it.freeBytes / MB).toInt(),
+                    )
+                }
+            delay(UNSTARTED_GRACE.seconds)
+            updaterRef?.settle(agent, AgentUpdateStep.Failed)
+        }
     }
 
     /** The agents behind only by their install record (same version), for the update's end. */
@@ -399,6 +395,7 @@ class PhoneAgentAutoUpdate(
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
         const val UNSTARTED_GRACE = 2L
+        const val MB = 1_000_000L
         const val WAIT_STEPS = 180
         const val RELOAD_EVERY = 15L
         const val RELOAD_TRIES = 480

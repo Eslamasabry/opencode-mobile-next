@@ -3792,7 +3792,7 @@ class BuiltinLinux(private val context: Context) {
         while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(
             PROCESS_POLL_MS
         )
-        if (targets().isNotEmpty()) throw OwnershipProofException("drainTimeout")
+        ownershipRequire(targets().isEmpty(), "drainTimeout")
         try {
             // A normal app start may create new tracked helpers after the old Stop
             // snapshot. They are peers of this live drain, never cold writer exemptions.

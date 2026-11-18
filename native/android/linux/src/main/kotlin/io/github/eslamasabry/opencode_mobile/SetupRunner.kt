@@ -369,6 +369,25 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     /**
+     * [runScript], looked at again a few times, a few seconds apart, when the ownership proof fails: a process of this
+     * app that is still ending can make it fail for a moment. After the last look the failure ends the step as before
+     * (never a silent wait).
+     */
+    private fun runScriptProven(spec: Spec, component: SetupComponentStatus, compatible: Boolean): String? {
+        var tries = 1
+        while (true) {
+            try {
+                return runScript(spec, component, compatible)
+            } catch (e: Throwable) {
+                if (!NativeRuntimeOwnership.isUnknownFailure(e) || cancelled || tries >= OWNERSHIP_TRIES) throw e
+            }
+            tries++
+            Log.w(BuiltinLinux.TAG, "setup step ${spec.id}: ownership not proven; looking again")
+            synchronized(lock) { (lock as Object).wait(OWNERSHIP_PAUSE_MS) }
+        }
+    }
+
+    /**
      * [runScript], run again (up to [SetupStepRetry.ATTEMPTS] times) when it
      * was interrupted rather than failed, so a stop the person did not ask
      * for never needs Continue setup or a force stop. The row says so.
@@ -376,29 +395,10 @@ class SetupRunner private constructor(private val context: Context) {
     private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? {
         var attempt = 1
         var compatible = false
-        var ownershipTries = 1
         while (true) {
             try {
                 lastExitCode = null
-                val failure =
-                    try {
-                        runScript(spec, component, compatible)
-                    } catch (error: Throwable) {
-                        // A process of this app that is still ending can make the ownership proof fail for a moment.
-                        // Look again a few times, a few seconds apart; then the failure ends the step as before
-                        // (never a silent wait).
-                        if (
-                            !NativeRuntimeOwnership.isUnknownFailure(error) ||
-                                cancelled ||
-                                ownershipTries >= OWNERSHIP_TRIES
-                        ) {
-                            throw error
-                        }
-                        ownershipTries++
-                        Log.w(BuiltinLinux.TAG, "setup step ${spec.id}: ownership not proven; looking again")
-                        synchronized(lock) { (lock as Object).wait(OWNERSHIP_PAUSE_MS) }
-                        continue
-                    }
+                val failure = runScriptProven(spec, component, compatible)
                 if (SetupStepRetry.compatibility(lastExitCode, compatible, cancelled)) {
                     // A program inside Ubuntu segfaulted (issue #117): once more, the careful way.
                     compatible = true
