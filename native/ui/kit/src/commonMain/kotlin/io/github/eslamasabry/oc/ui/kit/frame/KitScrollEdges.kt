@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.unit.Dp
 
@@ -96,6 +97,11 @@ internal fun Modifier.kitScrollEdges(
      * behind a glass part still shows through it.
      */
     keepWithin: ((Float) -> RoundRect?)? = null,
+    /**
+     * The floating part at the bottom (the message box), read while drawing with the box's width and height: the bottom
+     * band is cleared around its outline, from its top edge down, ending at that edge in the same short soft ramp.
+     */
+    keepBottom: ((Float, Float) -> RoundRect?)? = null,
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     val flat = ground.isSpecified && ground.alpha >= 1f
@@ -125,14 +131,39 @@ internal fun Modifier.kitScrollEdges(
                                 bandPath.reset()
                                 bandPath.addRect(Rect(0f, 0f, w, t))
                                 bandPath.addRoundRect(keep)
-                                drawPath(bandPath, ink.copy(alpha = k), blendMode = mode)
+                                // Whole above the soft end, then a short ramp that ends at the band's foot: the margins and
+                                // the corner gaps outside the outline fade out, never a straight cut across a glyph.
+                                val ramp = minOf(SOFT_END_DP.dp.toPx(), t)
+                                clipRect(0f, 0f, w, t - ramp) { drawPath(bandPath, ink.copy(alpha = k), blendMode = mode) }
+                                clipRect(0f, t - ramp, w, t) {
+                                    drawPath(
+                                        bandPath,
+                                        Brush.verticalGradient(listOf(ink.copy(alpha = k), ink.copy(alpha = 0f)), startY = t - ramp, endY = t),
+                                        blendMode = mode,
+                                    )
+                                }
                             }
                         }
                         if (r > 0f) drawRect(top.of(1f, 0f, k, t, t + r, ink), Offset(0f, t), Size(w, r), blendMode = mode)
                     }
                 }
                 val kb = if (fadeFromBottom != null) bottomStrength().coerceIn(0f, 1f) else 0f
-                if (fadeFromBottom != null && kb > 0f) {
+                val keepB = if (fadeFromBottom != null && kb > 0f) keepBottom?.invoke(w, size.height) else null
+                if (keepB != null) {
+                    val y = keepB.top.coerceIn(0f, size.height)
+                    bandPath.reset()
+                    bandPath.addRect(Rect(0f, y, w, size.height))
+                    bandPath.addRoundRect(keepB)
+                    val ramp = minOf(SOFT_END_DP.dp.toPx(), size.height - y)
+                    clipRect(0f, y, w, y + ramp) {
+                        drawPath(
+                            bandPath,
+                            Brush.verticalGradient(listOf(ink.copy(alpha = 0f), ink.copy(alpha = kb)), startY = y, endY = y + ramp),
+                            blendMode = mode,
+                        )
+                    }
+                    clipRect(0f, y + ramp, w, size.height) { drawPath(bandPath, ink.copy(alpha = kb), blendMode = mode) }
+                } else if (fadeFromBottom != null && kb > 0f) {
                     val from = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
                     val y0 = wholePx(from)
                     val r = wholePx(from + (bottomReachPx?.invoke() ?: bottomReach.toPx())) - y0
@@ -146,6 +177,9 @@ internal fun Modifier.kitScrollEdges(
         }
     return if (flat) this.then(draw) else graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.then(draw)
 }
+
+/** The soft end, dp, of a band cleared around a floating part: it ends at the part's foot (top) in this short ramp. */
+internal const val SOFT_END_DP: Int = 10
 
 /** One edge's clearing gradient, kept until its strength or its span changes. */
 internal class EdgeBrush {
