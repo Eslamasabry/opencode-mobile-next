@@ -5,6 +5,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.engine.runtime.install.ManagedRuntime
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeAutoUpdater
@@ -38,6 +39,7 @@ class PhoneOpenCodeAutoUpdate(
     private val leases: NativeChatLeases,
     private val appScope: AppCoroutineScope,
     private val downloads: PhoneDownloads,
+    private val visibility: AppVisibility,
 ) {
     private var started = false
     @Volatile private var updaterRef: OpenCodeAutoUpdater? = null
@@ -83,9 +85,11 @@ class PhoneOpenCodeAutoUpdate(
                 // started and failed is left to the manual row; the setup job reports its own failure.
                 override suspend fun updateOpenCode(runtime: String): Boolean {
                     val result = setup.update()
+                    // Busy in either form (a runtime slot, or a payload lease held by an agents' install) means it did
+                    // not start: the try is kept, never spent.
                     val refused =
                         (result as? Outcome.Failed)?.failure.let {
-                            it is Failure.Runtime && it.problem == RuntimeProblem.SlotBusy
+                            (it is Failure.Runtime && it.problem == RuntimeProblem.SlotBusy) || it is Failure.Busy
                         }
                     if (refused) log.i { "update refused before it started (work running or not known idle)" }
                     return !refused
@@ -122,8 +126,9 @@ class PhoneOpenCodeAutoUpdate(
             ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
                 val reading = idle.get()
-                val busy = settle.busy(reading.idle)
-                busy
+                // Not in front: the restart that ends the update needs the foreground service admission only a
+                // visible app has, so the try is kept (with the backoff) and the next look in front runs it.
+                settle.busy(reading.idle) || visibility.state.value != Visibility.Foreground
             }
         updaterRef = updater
         downloads.openCode = this
@@ -142,7 +147,11 @@ class PhoneOpenCodeAutoUpdate(
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
-            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled, reads),
+            merge(
+                combine(runtime.serverFacts, setup.progress, leases.busy, visibility.state) { _, _, _, _ -> },
+                settled,
+                reads,
+            ),
             log = { log.i { it } },
         )
         appScope.launch {
