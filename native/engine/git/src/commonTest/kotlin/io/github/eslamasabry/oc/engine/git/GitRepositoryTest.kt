@@ -122,6 +122,34 @@ class GitRepositoryTest {
     }
 
     @Test
+    fun `B-BUILD-020 pull and fetch use the stored GitHub token only through a temporary credential file`() = runTest {
+        val token = "test-github-token"
+        val credentials = RecordingGitCredentialDrop()
+        val shell =
+            FakeShell.steps(
+                StepReply("head", 0, "main\n"),
+                StepReply("upstream", 0, "origin/main\n"),
+                StepReply("pull", 0, "Already up to date.\n"),
+                StepReply("fetch"),
+            )
+        val repo = GitRepository(shell, "/p", credentials = credentials)
+
+        assertTrue(repo.pull(token).ok)
+        assertTrue(repo.fetch(token).ok)
+
+        assertEquals(listOf(token, token), credentials.placed)
+        assertEquals(2, credentials.removed.size)
+        assertTrue(shell.scripts.all { token !in it })
+        for (script in shell.scripts) {
+            assertTrue("OC_TOKEN_FILE='/tmp/git-token'" in script)
+            assertTrue("x-access-token" in script)
+            assertTrue("github.com" in script)
+        }
+        assertTrue("'pull' '--ff-only' '--no-rebase'" in shell.scripts.first())
+        assertTrue("'fetch' '--quiet'" in shell.scripts.last())
+    }
+
+    @Test
     fun `B-BUILD-020 first push sets upstream on origin, no remote is typed, a rejected push says pull first`() = runTest {
         val first =
             FakeShell.steps(StepReply("head", 0, "feature/x\n"), StepReply("upstream", 128, "", "fatal: no upstream"), StepReply("remotes", 0, "fork\norigin\n"), StepReply("push", 0, "", "To github.com"))
