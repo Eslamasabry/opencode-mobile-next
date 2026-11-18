@@ -306,6 +306,8 @@ private fun FullLine(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val hairline = kitHairline()
+    // On a floating page the row is a part of its own (rounded, with the capsule's surface): no straight line under it.
+    val floating = io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenFloating.current
     val slowLabel = stringResource(Res.string.kitSinceStillWaiting, ESCALATE_AFTER.inWholeSeconds.toString())
     val announced = if (slow) "${line.message}\n$slowLabel" else line.message
     val shownSupporting = if (countdown) supporting else if (slow) slowLabel else supporting
@@ -330,8 +332,10 @@ private fun FullLine(
             .fillMaxWidth()
             .heightIn(min = tokens.statusLineMin.dp)
             .drawBehind {
-                val w = hairline.toPx()
-                drawRect(colors.hairline, Offset(0f, size.height - w), Size(size.width, w))
+                if (!floating) {
+                    val w = hairline.toPx()
+                    drawRect(colors.hairline, Offset(0f, size.height - w), Size(size.width, w))
+                }
             }
             .padding(
                 start = tokens.gutter.dp,
