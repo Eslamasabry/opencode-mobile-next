@@ -25,7 +25,7 @@ public val LocalKitScreenFloating: ProvidableCompositionLocal<Boolean> = staticC
 /** True inside a [KitHeaderCapsule]: the bar's title takes one line (its subtitle or scope line sits under it). */
 public val LocalKitHeaderCapsule: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
-/** The margin above and below the capsule, dp; the frame starts the transcript's clip this far under the status area. */
+/** The margin above and below the capsule, dp. */
 internal const val HEADER_CAPSULE_MARGIN_DP: Int = 4
 
 /** The capsule's side margin, dp: where the message box and the transcript's bubbles stand (measured on the real chat). */
@@ -93,4 +93,32 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
     ) {
         CompositionLocalProvider(LocalKitHeaderCapsule provides true, content = content)
     }
+}
+
+/**
+ * The capsule's own surface for a part that stands under it on a floating page (the pinned status row): the same
+ * material (surface step, corner, hairline in Solid, the style's face in Glass and Frosted) and the same side margin as
+ * the capsule, so the two read as parts of one family and the transcript never shows through the row's words.
+ */
+@Composable
+internal fun Modifier.kitFloatingPartSurface(): Modifier {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val style = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style
+    val look =
+        io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
+            io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
+                shape = io.github.eslamasabry.oc.ui.design.tokens.KitShapeId.Panel,
+                level = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingLevel(colors),
+                ownFill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors),
+                radius = tokens.composerRadius.dp,
+                nested = true,
+            )
+        )
+    val solid = style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+    return this
+        .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
+        .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
+        .then(look.modifier)
 }

@@ -41,7 +41,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import io.github.eslamasabry.oc.ui.kit.frame.kitReportsOutline
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.getValue
@@ -206,7 +205,6 @@ public fun KitComposerBox(
         val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquid != null)
         Column(
             Modifier.fillMaxWidth()
-                .kitReportsOutline(corner)
                 // Words on glass: while the box is liquid, the transcript its glass sees fades out under it (whole at its
                 // top edge, gone by the inner end of the lens rim), so nothing bright passes behind the words.
                 .then(if (liquid != null) Modifier.kitScreenWordsPane(LiquidRole.Composer) else Modifier)

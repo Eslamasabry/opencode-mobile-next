@@ -47,9 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.pointer.pointerInput
@@ -436,10 +434,6 @@ public fun KitScreen(
             // once (it must never bend the pill's own picture). Nothing floats under the bar (audit 1, 2026-11-14: the
             // chat's "N earlier messages" is the transcript's first row now), so the top edge is the bar's alone.
             var topBottom by remember { mutableFloatStateOf(Float.NaN) }
-            // The header part's own height (the capsule and its margins), without the status line under it.
-            var barOnlyPx by remember { mutableIntStateOf(0) }
-            var barOnlyTop by remember { mutableFloatStateOf(Float.NaN) }
-            val capsuleCorner = LocalKitTokens.current.composerRadius
             val fadeBottomPx = with(density) { COMPOSER_FADE_DP.dp.toPx() }
             val floatGapPx = with(density) { FLOAT_GAP_DP.dp.toPx() }
             val bottomExtraTarget by remember(floatGapPx) {
@@ -547,67 +541,30 @@ public fun KitScreen(
                                         // Owner 2026-11-14 ("Wtfff"): floating things own their ground. Nothing of the
                                         // body is drawn under the status bar, the bar or its status line; it dissolves
                                         // in below them over TOP_DISSOLVE_DP.
+                                        // Floating chrome (owner 2026-11-18, "text can flow around the capsule", "hard cuts are
+                                        // bad"): nothing is cleared around the capsule or the box. The body passes behind both and
+                                        // each covers it with its own fill (Glass shows it through). Only the status area is
+                                        // cleared, ending in a short soft fade under it, so text never meets the clock.
                                         clearAbove =
                                             if (topPart == null) null
-                                            else if (floatChrome) ({
-                                                // The band above the capsule's foot is cleared (the status area, the margins, the
-                                                // gaps at its curved corners), except inside the capsule's own outline (keepWithin
-                                                // below). A status line under the capsule is part of the block: the band runs to
-                                                // its foot (device looks on 10083 and 10084). The cut follows the outline, no
-                                                // plate, no line, no fade is added.
-                                                if (ownsLine && line != null) (statusPx + topPx).toFloat()
-                                                else (statusPx + barOnlyPx - with(density) { (if (barFace != null) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() })
-                                            })
+                                            else if (floatChrome) ({ statusPx.toFloat() })
                                             else ({ (statusPx + topPx).toFloat() }),
-                                        topReach = if (floatChrome) 0.dp else TOP_DISSOLVE_DP.dp,
+                                        topReach = if (floatChrome) FLOW_FADE_DP.dp else TOP_DISSOLVE_DP.dp,
                                         // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
                                         // behind the chrome, so the body's dissolve alone ends the content before the
                                         // bar; Glass's the same. It grows with what lies under the chrome (none at
                                         // rest: a page at rest looks as it did; at once under reduced motion).
-                                        topReachPx = if (floatChrome) ({ 0f }) else topDissolve,
+                                        topReachPx = if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } }) else topDissolve,
                                         // And nothing in or under the bottom block (its chips row, the message box): the
                                         // body fades out over the 16 dp above it. A list that ends itself (above the jump
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
                                         fadeFromBottom =
                                             if (bottomPart == null) null
-                                            else if (floatChrome) ({ with(density) { Space.S2.dp.toPx() } })
+                                            else if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } })
                                             else ({ bottomPx + fadeBottomPx }),
-                                        bottomReach = if (floatChrome) 0.dp else COMPOSER_FADE_DP.dp,
+                                        bottomReach = if (floatChrome) FLOW_FADE_DP.dp else COMPOSER_FADE_DP.dp,
                                         bottomStrength = { if (zones.claims > 0) 0f else 1f },
                                         ground = flatGround,
-                                        keepWithin =
-                                            if (!floatChrome || topPart == null) null
-                                            else ({ width: Float ->
-                                                val glass = barFace != null
-                                                val sideDp = if (glass) LIQUID_BAR_INSET_X else HEADER_CAPSULE_SIDE_DP
-                                                val insetY = with(density) { (if (glass) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() }
-                                                // A little inside the pane's rim (2 dp), so nothing above or beside the rim is
-                                                // ever left uncleared: what shows a hair behind the rim is a glass rim's own.
-                                                val snug = with(density) { 2.dp.toPx() }
-                                                val side = with(density) { sideDp.dp.toPx() } + snug
-                                                val base = if (barOnlyTop.isNaN()) statusPx.toFloat() else barOnlyTop
-                                                val top = base + insetY + snug
-                                                val bottom = base + barOnlyPx - insetY - snug
-                                                val radius = with(density) { (if (glass) LIQUID_BAR_RADIUS else capsuleCorner).dp.toPx() } - snug
-                                                val r = minOf(radius, (bottom - top) / 2f).coerceAtLeast(0f)
-                                                if (bottom <= top || barOnlyPx <= 0) null
-                                                else RoundRect(side, top, width - side, bottom, CornerRadius(r, r))
-                                            }),
-                                        keepBottom =
-                                            if (!floatChrome || bottomPart == null) null
-                                            else ({ width: Float, height: Float ->
-                                                val o = bottomState.outline
-                                                if (o.width <= 0f || o.height <= 0f) null
-                                                else {
-                                                    val snug = with(density) { 2.dp.toPx() }
-                                                    val rr = (bottomState.outlineRadius - snug).coerceAtLeast(0f)
-                                                    val l = o.left + snug
-                                                    val t = o.top + snug
-                                                    val rgt = o.right - snug
-                                                    val bt = minOf(o.bottom - snug, height)
-                                                    if (rgt <= l || bt <= t) null else RoundRect(l, t, rgt, bt, CornerRadius(minOf(rr, (bt - t) / 2f), minOf(rr, (bt - t) / 2f)))
-                                                }
-                                            }),
                                     )
                             )
                             .kitMaxWidth(cap)
@@ -633,8 +590,6 @@ public fun KitScreen(
                         topPart?.let {
                             Box(
                                 Modifier.fillMaxWidth()
-                                    .onSizeChanged { barOnlyPx = it.height }
-                                    .onGloballyPositioned { barOnlyTop = it.positionInRoot().y }
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, topFrost) else Modifier)
                             ) {
@@ -651,7 +606,10 @@ public fun KitScreen(
                         if (ownsLine)
                             KitStatusLineFold(
                                 line,
-                                Modifier.kitStatusRoom()
+                                // A floating page lets the body pass behind its parts, so the status row is a part with its own
+                                // surface, the capsule's (Solid face, Glass pane): the transcript never shows through its words.
+                                Modifier.then(if (floatChrome) Modifier.kitFloatingPartSurface() else Modifier)
+                                    .kitStatusRoom()
                                     .verticalScroll(rememberScrollState())
                                     .testTag("kit-screen-status"),
                             )
@@ -1324,6 +1282,9 @@ internal const val HEADER_FADE_DP = 12
  * content reads as a cut: every dp of it changes the content's strength by at most a sixteenth.
  */
 internal const val TOP_DISSOLVE_DP = 24
+
+/** The only fade a floating chrome page keeps, dp: under the status bar and above the gesture area, so text never meets them. */
+internal const val FLOW_FADE_DP = 12
 
 /**
  * How far above a footer (a pinned foot's words, a floating foot pane) a page's content is already gone, dp (audit 2,

@@ -37,10 +37,6 @@ import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 public class KitScreenBottom internal constructor() {
     internal var slab: Boolean by mutableStateOf(false)
 
-    /** The message box's outline in root px (its bounds; Rect.Zero until placed) and its corner radius, px. */
-    internal var outline: androidx.compose.ui.geometry.Rect by mutableStateOf(androidx.compose.ui.geometry.Rect.Zero)
-    internal var outlineRadius: Float by mutableFloatStateOf(0f)
-
     /**
      * The top edge, in root px, of the block's liquid pane that carries words to read or type (the message box); NaN
      * while there is none. What the block's glass sees of the body fades out below it ([KitWordsFade]).
@@ -287,19 +283,4 @@ public fun Modifier.kitScreenListEdges(): Modifier {
         bottomStrength = { if (zones.bottomGone().isNaN() || at[0].isNaN()) 0f else 1f },
         ground = zones.ground,
     )
-}
-
-/**
- * Reports this part's bounds as the screen's bottom outline: the page clears its body around that outline (the corner
- * gaps and margins beside a floating message box), ending in a short soft ramp at its top, never a straight cut.
- */
-@Composable
-public fun Modifier.kitReportsOutline(corner: androidx.compose.ui.unit.Dp): Modifier {
-    val bottom = LocalKitScreenBottom.current ?: return this
-    val radius = with(LocalDensity.current) { corner.toPx() }
-    return this.onGloballyPositioned { c ->
-        val at = c.positionInRoot()
-        bottom.outline = androidx.compose.ui.geometry.Rect(at.x, at.y, at.x + c.size.width, at.y + c.size.height)
-        bottom.outlineRadius = radius
-    }
 }
