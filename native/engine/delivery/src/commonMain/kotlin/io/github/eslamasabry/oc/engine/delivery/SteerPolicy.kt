@@ -61,7 +61,12 @@ public object SteerPolicy {
     /** Steers and voice-conversation sends stay transport-first: they need the exact message id (09 §4.2 step 6). */
     public fun bubbleFirst(route: SendRoute): Boolean = route != SendRoute.Steer
 
-    /** The durable marker is for ordinary sends on queue-capable servers, never for steers (09 §4.2 step 5). */
+    /**
+     * The durable marker is for every send that goes out on a queue-capable server, steers included (B-461: a steer
+     * sent while an approval waited was memory only, and a restart lost the person's words). After a process death the
+     * marker comes back for the person's review ("not confirmed yet"), never for an automatic resend; an accepted send
+     * clears it (09 §4.2 step 5).
+     */
     public fun holdsMarker(route: SendRoute, capabilities: ServerCapabilities): Boolean =
-        capabilities.offlinePromptQueue && route != SendRoute.Steer && route != SendRoute.Blocked && route != SendRoute.Offline
+        capabilities.offlinePromptQueue && route != SendRoute.Blocked && route != SendRoute.Offline
 }

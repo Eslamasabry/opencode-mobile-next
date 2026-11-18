@@ -405,6 +405,9 @@ public class PromptDelivery(
             // Steers stay transport-first: they need the exact message id.
             val ready = link.awaitActionTransport()
             if (ready is Outcome.Failed || !sameTarget(link, origin)) {
+                // Nothing left the phone: the marker written above goes again, the words stay in the box.
+                reviewId?.let { queue.finishOnline(it, dispatched = false, accepted = false, error = null) }
+                forgetResolvedReviews()
                 return (ready as? Outcome.Failed)?.failure?.failed()
                     ?: Failure.Refused(RefusalReason.StaleScope).failed()
             }
