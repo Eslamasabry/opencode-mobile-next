@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFieldGroup
+
 /**
  * The two answers of Flutter 2.1.5's health and diagnostics contract (docs/telemetry/health-and-diagnostics.md
  * on release/2.1.5): `usage` (usage and app health, sections B to D) and `crashes` (crash reports, section A).
@@ -84,13 +87,33 @@ public enum class CollectItem {
     Steps,
     CrashKeys,
     Report,
+
+    /** What our own server gets, one line per [UmamiFieldGroup]: the build, the phone, the look, the use. */
+    OwnBuild,
+    OwnPhone,
+    OwnLook,
+    OwnUse,
 }
+
+/** The fields of our own server's envelope that a line names; null for every other line. */
+public val CollectItem.ownGroup: UmamiFieldGroup?
+    get() =
+        when (this) {
+            CollectItem.OwnBuild -> UmamiFieldGroup.Build
+            CollectItem.OwnPhone -> UmamiFieldGroup.Phone
+            CollectItem.OwnLook -> UmamiFieldGroup.Look
+            CollectItem.OwnUse -> UmamiFieldGroup.Use
+            else -> null
+        }
 
 /** Which consent sends an item: its group on the page. */
 public enum class CollectGroup {
     Usage,
     Crashes,
     Report,
+
+    /** Sent to our own analytics server only, with Usage and app health on. */
+    OwnServer,
 }
 
 /**
@@ -127,6 +150,8 @@ public object HealthContract {
             CollectGroup.Crashes to
                 listOf(CollectItem.CrashKind, CollectItem.Exit, CollectItem.Steps, CollectItem.CrashKeys),
             CollectGroup.Report to listOf(CollectItem.Report),
+            CollectGroup.OwnServer to
+                listOf(CollectItem.OwnBuild, CollectItem.OwnPhone, CollectItem.OwnLook, CollectItem.OwnUse),
         )
 
     public val contractEvents: Map<CollectItem, List<String>> =
@@ -183,5 +208,16 @@ public object HealthContract {
                     "report_code",
                 ),
             CollectItem.Report to listOf("problem_report"),
-        )
+        ) + UmamiFieldGroup.entries.associate { group ->
+            // From the one field list: a field added there is named here, so the notices must name it too.
+            ownItem(group) to UmamiField.entries.filter { it.group == group }.map { it.wire }
+        }
+
+    private fun ownItem(group: UmamiFieldGroup): CollectItem =
+        when (group) {
+            UmamiFieldGroup.Build -> CollectItem.OwnBuild
+            UmamiFieldGroup.Phone -> CollectItem.OwnPhone
+            UmamiFieldGroup.Look -> CollectItem.OwnLook
+            UmamiFieldGroup.Use -> CollectItem.OwnUse
+        }
 }
