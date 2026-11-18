@@ -19,7 +19,6 @@ import io.github.eslamasabry.oc.ui.kit.logo.KitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitMonochromeMarks
 import io.github.eslamasabry.oc.ui.kit.logo.agentMarkArt
-import io.github.eslamasabry.oc.ui.kit.logo.forGround
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -55,11 +54,18 @@ class KitAgentMarkColorTest {
     }
 
     @Test
-    fun `B-KIT-292 a brand blue too dark for a dark ground is lifted there and left as shipped on light`() {
-        val qwen = "<path fill=\"#082dff\"/>"
-        assertEquals(qwen, forGround(qwen, dark = false))
-        assertEquals("<path fill=\"#7a90ff\"/>", forGround(qwen, dark = true))
-        assertEquals(ORANGE, forGround(ORANGE, dark = true))
+    fun `B-KIT-292 a brand blue too dark for a dark ground is drawn in the ink there and as shipped on light`() {
+        val qwen = "<svg><path fill=\"#082dff\"/></svg>"
+        val nearBlack = Color(0xFF0D0F12)
+        val onDark = agentMarkArt(qwen, MONO, monochrome = false, dark = true, ground = nearBlack)
+        assertNotNull(onDark)
+        assertTrue(onDark.tinted)
+        assertEquals(MONO, onDark.svg)
+        val onLight = agentMarkArt(qwen, MONO, monochrome = false, dark = false, ground = Color(0xFFF4F4F2))
+        assertNotNull(onLight)
+        assertFalse(onLight.tinted)
+        assertEquals(qwen, onLight.svg)
+        assertEquals(ORANGE, agentMarkArt(ORANGE, MONO, monochrome = false, dark = true, ground = nearBlack)?.svg)
     }
 
     private fun centre(monochrome: Boolean): Color {
