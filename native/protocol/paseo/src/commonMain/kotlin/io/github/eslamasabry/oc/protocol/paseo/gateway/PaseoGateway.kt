@@ -2749,6 +2749,12 @@ internal class PaseoLive {
      */
     var turnErrorShown = false
 
+    /**
+     * What the shared sign-in rule read in the turn's own failure words (its error row or its `turn_failed`); only
+     * the value is kept, never the words (B-AGENT-433).
+     */
+    var turnSignIn: io.github.eslamasabry.oc.core.model.transcript.AgentSignIn? = null
+
     /** The newest item of the turn in progress is a call the person declined at its card (fault 5). */
     var endsOnDecline = false
 

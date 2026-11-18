@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignIn
 import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.SessionContextUse
 import io.github.eslamasabry.oc.core.model.SessionSelection
@@ -332,6 +333,13 @@ private val NOT_SIGN_IN = Regex(
  */
 internal fun paseoFailureMeansSignIn(text: String): Boolean =
     !NOT_SIGN_IN.containsMatchIn(text) && (AgentSignInWords.gone(text) || SIGN_IN_ASK.containsMatchIn(text))
+
+/**
+ * signin-truth (B-AGENT-433): what an agent's own failure [text] says of its sign-in, as the one shared rule types it
+ * ([AgentSignInWords.of]); null for a limit, a busy provider or anything else. Only the value leaves here.
+ */
+internal fun paseoFailureSignIn(text: String?): AgentSignIn? =
+    text?.takeIf(::paseoFailureMeansSignIn)?.let(AgentSignInWords::of)
 
 /** Whether a reply's whole [text] is the agent's own failure line, not prose ([FAILURE_LINE]). */
 private fun failureLine(text: String): Boolean = text.length <= FAILURE_LINE_MAX && FAILURE_LINE.containsMatchIn(text)

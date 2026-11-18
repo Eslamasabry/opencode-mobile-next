@@ -308,10 +308,25 @@ public class AndroidAlertShade(
             }
         // A stopped chat says why in a plain sentence from a reason token, never the server's text
         // (B-SEC-104).
-        val text =
-            if (alert.kind == AlertKind.Error) words.text(reasonRes(alert.reason)) else copy.body
+        val text = if (alert.kind == AlertKind.Error) reasonText(alert) else copy.body
         return title to text
     }
+
+    /**
+     * The fixed sentence of [CodingAlert.reason]. The sign-in sentence names the agent only with a
+     * name of the app's own shape ([CodingAlert.AGENT_NAME]); anything else reads "The agent"
+     * (B-ANDR-131, B-SEC-231).
+     */
+    private fun reasonText(alert: CodingAlert): String =
+        if (alert.reason == StopReason.SignInAgain) {
+            if (CodingAlert.AGENT_NAME.matches(alert.agentName)) {
+                words.text(R.string.notify_alert_reason_sign_in_again, alert.agentName)
+            } else {
+                words.text(R.string.notify_alert_reason_sign_in_again_any)
+            }
+        } else {
+            words.text(reasonRes(alert.reason))
+        }
 
     private fun publicVersion(channel: NotifyChannel, title: String): Notification =
         NotificationCompat.Builder(words.localized(), channel.id)
@@ -487,6 +502,7 @@ public class AndroidAlertShade(
                 StopReason.Filter -> R.string.notify_alert_reason_filter
                 StopReason.Model -> R.string.notify_alert_reason_model
                 StopReason.Other -> R.string.notify_alert_reason_other
+                StopReason.SignInAgain -> R.string.notify_alert_reason_sign_in_again_any
             }
     }
 }

@@ -163,6 +163,80 @@ class AlertShadeTest {
         assertEquals(NotificationCompat.CATEGORY_ERROR, n.category)
     }
 
+    private fun stopped(reason: StopReason, agentName: String = "", session: String = "ses_7") =
+        CodingAlert(
+            AlertKind.Error, session, AlertKeys.status("p1", session), profileId = "p1", chatTitle = "Deploy",
+            agentName = agentName, reason = reason,
+        )
+
+    @Test
+    fun `B-ANDR-131 a turn stopped on the agent's lapsed sign-in names the agent and opens that conversation`() {
+        val error = stopped(StopReason.SignInAgain, agentName = "Claude Code")
+        shade.show(error, AlertRoute.Post(NotifyChannel.CodingAction, null))
+        val n = posted(error.key)
+        assertEquals("Stopped: Deploy", n.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        val text = n.extras.getCharSequence(Notification.EXTRA_TEXT).toString()
+        assertEquals("Claude Code needs you to sign in again.", text)
+        val lockScreen = n.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString()
+        assertEquals("OpenCode · a chat stopped", lockScreen, "the lock screen keeps its fixed, nameless words")
+        // A tap opens that conversation, as for every stopped chat.
+        val content = shadowOf(n.contentIntent)
+        assertTrue(content.isActivityIntent)
+        assertEquals(FrozenComponents.MAIN_ACTIVITY, content.savedIntent.component!!.className)
+        assertEquals("ses_7", content.savedIntent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID))
+        assertEquals("p1", content.savedIntent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID))
+        assertEquals(AlertKind.Error.wire, content.savedIntent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_KIND))
+        // Every agent the app names gets its own name in the same sentence.
+        for (agent in listOf("Codex", "Antigravity")) {
+            val other = stopped(StopReason.SignInAgain, agentName = agent, session = "ses_$agent")
+            shade.show(other, AlertRoute.Post(NotifyChannel.CodingAction, null))
+            assertEquals(
+                "$agent needs you to sign in again.",
+                posted(other.key).extras.getCharSequence(Notification.EXTRA_TEXT).toString(),
+            )
+        }
+    }
+
+    @Test
+    fun `B-SEC-231 the sign-in sentence carries no agent or server words, and a name it cannot trust is left out`() {
+        val agentWords =
+            listOf(
+                "",
+                "OAuth refresh token is no longer valid; run /login to re-authenticate",
+                "Claude Code: token sk-abcdefghijklmnop",
+                "https://evil.example/login",
+            )
+        for ((index, name) in agentWords.withIndex()) {
+            val error = stopped(StopReason.SignInAgain, agentName = name, session = "ses_$index")
+            shade.show(error, AlertRoute.Post(NotifyChannel.CodingAction, null))
+            val text = posted(error.key).extras.getCharSequence(Notification.EXTRA_TEXT).toString()
+            assertEquals("The agent needs you to sign in again.", text, name)
+        }
+    }
+
+    @Test
+    fun `B-SEC-104 every stop reason says one fixed sentence, whatever words came with the run`() {
+        val fixed =
+            mapOf(
+                StopReason.Auth to "The provider rejected the key. Sign in again to continue.",
+                StopReason.Context to "The conversation is too long for the model.",
+                StopReason.Length to "The reply hit its length limit.",
+                StopReason.Filter to "The provider blocked the reply.",
+                StopReason.Model to "That model is not available. Choose another to continue.",
+                StopReason.Other to "Something went wrong.",
+                StopReason.SignInAgain to "Codex needs you to sign in again.",
+            )
+        assertEquals(StopReason.entries.toSet(), fixed.keys, "every token has its sentence here")
+        for ((reason, sentence) in fixed) {
+            // The detail is where a finished reply's line goes; a stopped chat never shows it.
+            val error = stopped(reason, agentName = "Codex", session = "ses_${reason.wire}")
+                .copy(detail = "Not logged in · Please run /login")
+            shade.show(error, AlertRoute.Post(NotifyChannel.CodingAction, null))
+            val text = posted(error.key).extras.getCharSequence(Notification.EXTRA_TEXT).toString()
+            assertEquals(sentence, text, "$reason")
+        }
+    }
+
     @Test
     fun `P0_6 a channel the person turned off reports Blocked instead of posting`() {
         manager.getNotificationChannel("opencode_coding_action").let {

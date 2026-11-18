@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.android.notifications.ReplyStopper
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswer
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
 import io.github.eslamasabry.oc.android.notifications.ShadeReply
+import io.github.eslamasabry.oc.android.notifications.StopReason
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
@@ -367,6 +368,8 @@ class PlatformHub(
     private val endedKinds = mutableMapOf<ConversationRef, AlertKind>()
     private val endedReasons =
         mutableMapOf<ConversationRef, io.github.eslamasabry.oc.android.notifications.StopReason>()
+    /** The reason each claimed stopped alert said, so a later typed reason can restate it. */
+    private val postedReasons = mutableMapOf<ConversationRef, StopReason>()
     private var lastWaiting: List<Waiting> = emptyList()
     private var wasVisible = false
     private val statusPosted =
@@ -817,6 +820,7 @@ class PlatformHub(
                                 eventStarted += ref
                                 endedKinds.remove(ref)
                                 endedReasons.remove(ref)
+                                postedReasons.remove(ref)
                                 runEvents.remove(ref)
                                 shade.dismiss(AlertKeys.status(id.raw, event.sessionId.raw))
                             }
@@ -834,43 +838,7 @@ class PlatformHub(
                                         as?
                                         io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed
                                 if (failed != null)
-                                    endedReasons[ref] =
-                                        when (failed.kind) {
-                                            io.github.eslamasabry.oc.core.model.transcript
-                                                .MessageErrorKind
-                                                .ProviderAuth ->
-                                                io.github.eslamasabry.oc.android.notifications
-                                                    .StopReason
-                                                    .Auth
-                                            io.github.eslamasabry.oc.core.model.transcript
-                                                .MessageErrorKind
-                                                .ContextOverflow ->
-                                                io.github.eslamasabry.oc.android.notifications
-                                                    .StopReason
-                                                    .Context
-                                            io.github.eslamasabry.oc.core.model.transcript
-                                                .MessageErrorKind
-                                                .OutputLength ->
-                                                io.github.eslamasabry.oc.android.notifications
-                                                    .StopReason
-                                                    .Length
-                                            io.github.eslamasabry.oc.core.model.transcript
-                                                .MessageErrorKind
-                                                .ContentFilter ->
-                                                io.github.eslamasabry.oc.android.notifications
-                                                    .StopReason
-                                                    .Filter
-                                            io.github.eslamasabry.oc.core.model.transcript
-                                                .MessageErrorKind
-                                                .ModelNotFound ->
-                                                io.github.eslamasabry.oc.android.notifications
-                                                    .StopReason
-                                                    .Model
-                                            else ->
-                                                io.github.eslamasabry.oc.android.notifications
-                                                    .StopReason
-                                                    .Other
-                                        }
+                                    endedReasons[ref] = StoppedAlertRules.stopReason(failed)
                                 alerts(runtime.snapshot.value, lastWaiting, visible.value > 0)
                             }
                             else -> Unit
@@ -1513,22 +1481,19 @@ class PlatformHub(
                 }
             running[ref] = busyNow && ending == null
             if (kind == null || item.isSubagent) continue
-            if (
-                endedKinds[ref] == kind ||
-                    (endedKinds[ref] == AlertKind.Error && kind == AlertKind.Complete)
-            )
-                continue
+            val reason = endedReasons[ref] ?: StopReason.Other
+            if (StoppedAlertRules.alreadySaid(endedKinds[ref], kind, postedReasons[ref], reason)) continue
+            // A stopped alert already claimed is being restated with its typed reason.
+            val restating = endedKinds[ref] == AlertKind.Error
             // Claim even when suppressed (foreground/quiet/off): a later repaint never replays a
             // finished run.
             endedKinds[ref] = kind
+            if (kind == AlertKind.Error) postedReasons[ref] = reason
             eventStarted.remove(ref)
-            val alert =
-                endedAlert(kind, item, names[item.profileId])
-                    .copy(
-                        reason =
-                            endedReasons[ref]
-                                ?: io.github.eslamasabry.oc.android.notifications.StopReason.Other
-                    )
+            val alert = endedAlert(kind, item, names[item.profileId]).copy(reason = reason)
+            // Restated in place only while the first alert is still showing: a person who dismissed it (or never
+            // got it) is not shown it again.
+            if (restating && !shade.isShowing(alert.key)) continue
             val allowed =
                 facts.copy(
                     subAgentSession = item.isSubagent,
@@ -1699,6 +1664,7 @@ class PlatformHub(
             profileId = item.profileId.raw,
             subtext = NotificationText.subtitle(server, item.projectName),
             chatTitle = item.title.orEmpty(),
+            agentName = StoppedAlertRules.agentName(item),
             // A feed preview can be the person's prompt: finished text is fetched from assistant
             // messages only.
             detail = "",

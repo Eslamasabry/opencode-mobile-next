@@ -1,12 +1,17 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.android.notifications.AlertKind
+import io.github.eslamasabry.oc.android.notifications.StopReason
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.Channel
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.core.common.WireTag
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignIn
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.android.notifications.NotificationText
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
@@ -104,6 +109,45 @@ class PlatformRulesTest {
         assertNull(PlatformRules.endedAlertKind(true, ChatStatus.Running))
         assertNull(PlatformRules.endedAlertKind(true, ChatStatus.NeedsYou))
         assertNull(PlatformRules.endedAlertKind(false, ChatStatus.Failed))
+    }
+
+    private fun reason(kind: MessageErrorKind?, signIn: AgentSignIn? = null) =
+        StoppedAlertRules.stopReason(RunOutcome.Failed(kind, WireTag("PaseoTurnFailed"), null, signIn))
+
+    @Test
+    fun `B-ANDR-131 a run stopped on the agent's lapsed sign-in gets that reason and the agent's name`() {
+        assertEquals(StopReason.SignInAgain, reason(null, AgentSignIn.Expired))
+        // Never signed in and a refused key keep what they said before; they are not "sign in again".
+        assertEquals(StopReason.Other, reason(null, AgentSignIn.NeverSignedIn))
+        assertEquals(StopReason.Other, reason(null, AgentSignIn.Refused))
+        // OpenCode's provider key keeps its own sentence; the other typed kinds keep theirs.
+        assertEquals(StopReason.Auth, reason(MessageErrorKind.ProviderAuth))
+        assertEquals(StopReason.Context, reason(MessageErrorKind.ContextOverflow))
+        assertEquals(StopReason.Other, reason(null))
+        // Every agent kind the app names, on any server (This phone or a paired computer: the row's agent decides).
+        for ((agent, name) in listOf("claude" to "Claude Code", "codex" to "Codex", "antigravity" to "Antigravity")) {
+            for (server in listOf(a, b)) {
+                assertEquals(name, StoppedAlertRules.agentName(item(server, "s1").copy(agentId = agent)))
+            }
+        }
+        // An alert already posted with the plain words says the typed reason once it arrives; nothing else repeats.
+        assertTrue(StoppedAlertRules.restates(StopReason.Other, StopReason.SignInAgain))
+        assertFalse(StoppedAlertRules.restates(StopReason.SignInAgain, StopReason.SignInAgain))
+        assertFalse(StoppedAlertRules.restates(StopReason.SignInAgain, StopReason.Other))
+        assertFalse(StoppedAlertRules.restates(null, StopReason.SignInAgain))
+        val stop = AlertKind.Error
+        assertFalse(StoppedAlertRules.alreadySaid(stop, stop, StopReason.Other, StopReason.SignInAgain), "said again")
+        assertTrue(StoppedAlertRules.alreadySaid(stop, stop, StopReason.SignInAgain, StopReason.SignInAgain))
+        assertTrue(StoppedAlertRules.alreadySaid(stop, AlertKind.Complete, StopReason.SignInAgain, StopReason.Other))
+        assertFalse(StoppedAlertRules.alreadySaid(null, stop, null, StopReason.SignInAgain))
+    }
+
+    @Test
+    fun `B-SEC-231 a stopped alert names the agent from the app's own list, never the row's words`() {
+        val row = item(a, "s1", title = "OAuth token expired").copy(agentId = "claude", agentLabel = "Not logged in")
+        assertEquals("Claude Code", StoppedAlertRules.agentName(row))
+        val unknown = item(a, "s2").copy(agentId = "some-agent", agentLabel = "Your login session has expired")
+        assertEquals("", StoppedAlertRules.agentName(unknown), "no name the app does not know")
     }
 
     @Test
