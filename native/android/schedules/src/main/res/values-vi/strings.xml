@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">Lời nhắc theo lịch sáng nay</string>
     <string name="oc_schedule_digest_body">%1$d đã trả lời, %2$d chưa hoàn tất, %3$d bỏ qua</string>
     <string name="oc_schedule_open">Mở</string>
+    <string name="oc_schedule_why_web_failed">Tìm kiếm web không hoạt động trên máy chủ này. Hãy mở cuộc trò chuyện để xem đã xảy ra gì.</string>
 </resources>

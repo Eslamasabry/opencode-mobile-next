@@ -93,4 +93,5 @@
     <string name="schedule40Friday">T6</string>
     <string name="schedule40Saturday">T7</string>
     <string name="schedule40Sunday">CN</string>
+    <string name="schedule40WhyWebFailed">Tìm kiếm web không hoạt động trên máy chủ này nên không có bản tóm tắt. Hãy thử lại sau, hoặc mở cuộc trò chuyện để xem tác nhân đã thử gì.</string>
 </resources>

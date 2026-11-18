@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">Perintah terjadwal pagi ini</string>
     <string name="oc_schedule_digest_body">%1$d dibalas, %2$d tidak selesai, %3$d dilewati</string>
     <string name="oc_schedule_open">Buka</string>
+    <string name="oc_schedule_why_web_failed">Pencarian web tidak berfungsi di server ini. Buka percakapan untuk melihat yang terjadi.</string>
 </resources>

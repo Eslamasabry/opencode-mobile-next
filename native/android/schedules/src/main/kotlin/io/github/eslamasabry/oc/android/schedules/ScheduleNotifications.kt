@@ -93,6 +93,7 @@ public class ScheduleNotifications(
                 app.getString(
                     when (report.errorCode) {
                         "needs_you", "permission_required" -> R.string.oc_schedule_why_needs_you
+                        "web_failed" -> R.string.oc_schedule_why_web_failed
                         "auth_required" -> R.string.oc_schedule_why_sign_in
                         "agent_failed" -> R.string.oc_schedule_why_agent
                         "timeout", "uncertain_delivery", "interrupted" -> R.string.oc_schedule_why_timeout

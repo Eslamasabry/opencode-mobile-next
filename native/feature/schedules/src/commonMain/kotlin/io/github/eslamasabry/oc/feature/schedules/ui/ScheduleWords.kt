@@ -92,6 +92,7 @@ import io.github.eslamasabry.oc.ui.words.res.schedule40WhyCertificate
 import io.github.eslamasabry.oc.ui.words.res.schedule40WhyCleartext
 import io.github.eslamasabry.oc.ui.words.res.schedule40WhyMissed
 import io.github.eslamasabry.oc.ui.words.res.schedule40WhyNeedsYou
+import io.github.eslamasabry.oc.ui.words.res.schedule40WhyWebFailed
 import io.github.eslamasabry.oc.ui.words.res.schedule40WhyNetwork
 import io.github.eslamasabry.oc.ui.words.res.schedule40WhyStaleTarget
 import io.github.eslamasabry.oc.ui.words.res.schedule40WhyUncertain
@@ -174,6 +175,8 @@ public class ScheduleWords internal constructor(private val templates: Map<Sched
             null -> ""
             "needs_you", "permission_required" ->
                 word(ScheduleWord.WhyNeedsYou)
+            "web_failed" ->
+                word(ScheduleWord.WhyWebFailed)
             "auth_required" ->
                 word(ScheduleWord.WhyAuth)
             "agent_failed" ->
@@ -291,6 +294,7 @@ internal enum class ScheduleWord {
     LastRunning,
     Late,
     WhyNeedsYou,
+    WhyWebFailed,
     WhyAuth,
     WhyAgentFailed,
     WhyUncertain,
@@ -386,6 +390,7 @@ private fun ScheduleWord.resource(): StringResource = when (this) {
     ScheduleWord.LastRunning -> Res.string.schedule40LastRunning
     ScheduleWord.Late -> Res.string.schedule40Late
     ScheduleWord.WhyNeedsYou -> Res.string.schedule40WhyNeedsYou
+    ScheduleWord.WhyWebFailed -> Res.string.schedule40WhyWebFailed
     ScheduleWord.WhyAuth -> Res.string.schedule40WhyAuth
     ScheduleWord.WhyAgentFailed -> Res.string.schedule40WhyAgentFailed
     ScheduleWord.WhyUncertain -> Res.string.schedule40WhyUncertain
@@ -483,6 +488,7 @@ private fun compatibilityTemplates(ar: Boolean): Map<ScheduleWord, String> =
         ScheduleWord.LastRunning to "يعمل منذ %1\$s",
         ScheduleWord.Late to "تأخر",
         ScheduleWord.WhyNeedsYou to "ينتظر ردّك. افتح المحادثة للمتابعة.",
+        ScheduleWord.WhyWebFailed to "لم يعمل البحث في الويب على هذا الخادم، لذا لا يوجد ملخص. حاول لاحقًا أو افتح المحادثة لترى ما جرّبه الوكيل.",
         ScheduleWord.WhyAuth to "طلب الخادم تسجيل الدخول مجددًا. راجع كلمة المرور المحفوظة في الخوادم.",
         ScheduleWord.WhyAgentFailed to "توقف الوكيل بخطأ. افتح المحادثة لترى ما حدث.",
         ScheduleWord.WhyUncertain to "لم يكتمل في الوقت المحدد. لم يُرسل مرة أخرى؛ راجع المحادثة قبل تشغيله مجددًا.",
@@ -576,6 +582,7 @@ private fun compatibilityTemplates(ar: Boolean): Map<ScheduleWord, String> =
         ScheduleWord.LastRunning to "Running since %1\$s",
         ScheduleWord.Late to "ran late",
         ScheduleWord.WhyNeedsYou to "It's waiting for your answer. Open the conversation to continue.",
+        ScheduleWord.WhyWebFailed to "The web search did not work on this server, so there is no brief. Try again later, or open the conversation to see what the agent tried.",
         ScheduleWord.WhyAuth to "The server asked to sign in again. Check the saved password in Servers.",
         ScheduleWord.WhyAgentFailed to "The agent stopped with an error. Open the conversation to see what happened.",
         ScheduleWord.WhyUncertain to "It didn't finish in time. It was not sent again; check the conversation before running it again.",

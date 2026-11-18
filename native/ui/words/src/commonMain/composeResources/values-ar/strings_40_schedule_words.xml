@@ -91,4 +91,5 @@
     <string name="schedule40Friday">الجمعة</string>
     <string name="schedule40Saturday">السبت</string>
     <string name="schedule40Sunday">الأحد</string>
+    <string name="schedule40WhyWebFailed">لم يعمل البحث في الويب على هذا الخادم، لذا لا يوجد ملخص. حاول لاحقًا أو افتح المحادثة لترى ما جرّبه الوكيل.</string>
 </resources>

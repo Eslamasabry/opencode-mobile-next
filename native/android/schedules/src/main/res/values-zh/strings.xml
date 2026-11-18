@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">今早的定时提示</string>
     <string name="oc_schedule_digest_body">%1$d 个已回复，%2$d 个未完成，%3$d 个已跳过</string>
     <string name="oc_schedule_open">打开</string>
+    <string name="oc_schedule_why_web_failed">此服务器上的网络搜索没有成功。打开对话查看发生了什么。</string>
 </resources>

@@ -15,4 +15,5 @@
     <string name="oc_schedule_digest_title">الطلبات المجدولة هذا الصباح</string>
     <string name="oc_schedule_digest_body">%1$d تم الرد، %2$d لم يكتمل، %3$d تم التخطي</string>
     <string name="oc_schedule_open">فتح</string>
+    <string name="oc_schedule_why_web_failed">لم يعمل البحث في الويب على هذا الخادم. افتح المحادثة لترى ما حدث.</string>
 </resources>

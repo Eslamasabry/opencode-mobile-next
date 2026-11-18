@@ -93,4 +93,5 @@
     <string name="schedule40Friday">Sex</string>
     <string name="schedule40Saturday">Sáb</string>
     <string name="schedule40Sunday">Dom</string>
+    <string name="schedule40WhyWebFailed">A pesquisa na web não funcionou neste servidor, então não há resumo. Tente de novo mais tarde ou abra a conversa para ver o que o agente tentou.</string>
 </resources>

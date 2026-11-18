@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">今朝のスケジュールされたプロンプト</string>
     <string name="oc_schedule_digest_body">%1$d件返信済み、%2$d件未完了、%3$d件スキップ</string>
     <string name="oc_schedule_open">開く</string>
+    <string name="oc_schedule_why_web_failed">このサーバーではウェブ検索がうまく動きませんでした。会話を開いて何が起きたか確認してください。</string>
 </resources>

@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">Mensajes programados de esta mañana</string>
     <string name="oc_schedule_digest_body">%1$d respondidos, %2$d sin terminar, %3$d omitidos</string>
     <string name="oc_schedule_open">Abrir</string>
+    <string name="oc_schedule_why_web_failed">La búsqueda en la web no funcionó en este servidor. Abre la conversación para ver qué pasó.</string>
 </resources>

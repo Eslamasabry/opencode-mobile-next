@@ -323,7 +323,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                         if (draft.thisConversation) Res.string.scheduleInThisConversation
                         else Res.string.scheduleNewConversation
                     ),
-            supportingMaxLines = if (draft.assistant) 3 else 1,
+            supportingMaxLines = if (draft.assistant) Int.MAX_VALUE else 1,
             trailing =
                 if (draft.assistant || state.canChooseConversation) KitRowTrailing.Chevron
                 else KitRowTrailing.None,
@@ -354,7 +354,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                         else -> stringResource(Res.string.scheduleWebReadsNote)
                     },
                 enabled = if (state.canReadWeb) enabled else KitEnabled.Disabled(noServer),
-                supportingMaxLines = 4,
+                supportingMaxLines = Int.MAX_VALUE,
                 onCheckedChange = {
                     draft.webReads = it
                     if (it) draft.webReadsMoved = false

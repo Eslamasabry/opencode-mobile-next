@@ -39,6 +39,7 @@
     <string name="schedule40LastRunning">Running since %1$s</string>
     <string name="schedule40Late">ran late</string>
     <string name="schedule40WhyNeedsYou">It's waiting for your answer. Open the conversation to continue.</string>
+    <string name="schedule40WhyWebFailed">The web search did not work on this server, so there is no brief. Try again later, or open the conversation to see what the agent tried.</string>
     <string name="schedule40WhyAuth">The server asked to sign in again. Check the saved password in Servers.</string>
     <string name="schedule40WhyAgentFailed">The agent stopped with an error. Open the conversation to see what happened.</string>
     <string name="schedule40WhyUncertain">It didn't finish in time. It was not sent again; check the conversation before running it again.</string>

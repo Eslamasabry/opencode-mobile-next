@@ -93,4 +93,5 @@
     <string name="schedule40Friday">Ven</string>
     <string name="schedule40Saturday">Sam</string>
     <string name="schedule40Sunday">Dim</string>
+    <string name="schedule40WhyWebFailed">La recherche sur le web n’a pas fonctionné sur ce serveur, il n’y a donc pas de résumé. Réessayez plus tard ou ouvrez la conversation pour voir ce que l’agent a essayé.</string>
 </resources>

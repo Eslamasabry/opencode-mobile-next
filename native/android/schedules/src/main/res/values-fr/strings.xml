@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">Invites planifiées ce matin</string>
     <string name="oc_schedule_digest_body">%1$d avec réponse, %2$d non terminées, %3$d ignorées</string>
     <string name="oc_schedule_open">Ouvrir</string>
+    <string name="oc_schedule_why_web_failed">La recherche sur le web n’a pas fonctionné sur ce serveur. Ouvrez la conversation pour voir ce qui s’est passé.</string>
 </resources>

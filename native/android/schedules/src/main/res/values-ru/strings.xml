@@ -16,4 +16,5 @@
     <string name="oc_schedule_digest_title">Запросы по расписанию этим утром</string>
     <string name="oc_schedule_digest_body">Ответов: %1$d, не завершено: %2$d, пропущено: %3$d</string>
     <string name="oc_schedule_open">Открыть</string>
+    <string name="oc_schedule_why_web_failed">Поиск в интернете не сработал на этом сервере. Откройте чат, чтобы увидеть, что произошло.</string>
 </resources>

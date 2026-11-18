@@ -93,4 +93,5 @@
     <string name="schedule40Friday">金</string>
     <string name="schedule40Saturday">土</string>
     <string name="schedule40Sunday">日</string>
+    <string name="schedule40WhyWebFailed">このサーバーではウェブ検索がうまく動かず、まとめはありません。後でもう一度試すか、会話を開いてエージェントが試したことを確認してください。</string>
 </resources>

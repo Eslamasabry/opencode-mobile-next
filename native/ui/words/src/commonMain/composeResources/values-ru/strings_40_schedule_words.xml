@@ -93,4 +93,5 @@
     <string name="schedule40Friday">Пт</string>
     <string name="schedule40Saturday">Сб</string>
     <string name="schedule40Sunday">Вс</string>
+    <string name="schedule40WhyWebFailed">Поиск в интернете не сработал на этом сервере, поэтому сводки нет. Попробуйте позже или откройте чат, чтобы увидеть, что пробовал агент.</string>
 </resources>

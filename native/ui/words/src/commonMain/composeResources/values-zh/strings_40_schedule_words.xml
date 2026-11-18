@@ -93,4 +93,5 @@
     <string name="schedule40Friday">周五</string>
     <string name="schedule40Saturday">周六</string>
     <string name="schedule40Sunday">周日</string>
+    <string name="schedule40WhyWebFailed">此服务器上的网络搜索没有成功，所以没有简报。请稍后再试，或打开对话查看智能体尝试了什么。</string>
 </resources>

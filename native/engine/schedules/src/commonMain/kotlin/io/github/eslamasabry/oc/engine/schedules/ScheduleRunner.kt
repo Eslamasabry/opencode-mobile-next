@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.core.model.SessionSelection
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -342,6 +343,16 @@ public class ScheduleRunner(
             return false
         }
 
+        /** Web-read tool calls of this run that ended failed or cancelled (the tool's own typed name and status). */
+        fun failedWebTools(replies: List<MessageWithParts>): Int =
+            replies.sumOf { message ->
+                message.parts.count {
+                    it.type == PartType.Tool &&
+                        it.toolName?.let(ScheduleWebReads::isWebRead) == true &&
+                        (it.tool?.status == ToolStatus.Error || it.tool?.status == ToolStatus.Cancelled)
+                }
+            }
+
         private suspend fun follow(
             gateway: ServerGateway,
             target: SessionId,
@@ -358,6 +369,13 @@ public class ScheduleRunner(
                     return result(RunStatus.Failed, "agent_failed")
                 }
                 if (needsYou(gateway, target)) return result(RunStatus.Failed, "needs_you")
+                // B-440: a web read this run answered ended failed or cancelled on the server (seen on a live server: its
+                // web search tool says "cancelled"). Nothing is waiting for a person, so say what happened and stop the
+                // agent from asking again.
+                if (webReads > 0 && failedWebTools(replies) >= WEB_FAILED_AFTER) {
+                    withContext(NonCancellable) { withTimeoutOrNull(CLOSE_WAIT_MS) { gateway.stop(target) } }
+                    return result(RunStatus.Failed, "web_failed", session.title?.trim()?.takeIf { it.isNotEmpty() })
+                }
                 if (
                     gateway.capabilities.value.forms &&
                         read { gateway.sessionForms(target) }.isNotEmpty()
@@ -410,6 +428,7 @@ public class ScheduleRunner(
         public const val UNCONFIRMED: String = "unconfirmed"
 
         private const val MAX_REPLY_TRIES = 3
+        private const val WEB_FAILED_AFTER = 2
         private const val NO_REPLY_AFTER_MS = 600_000L
         private const val CLOSE_WAIT_MS = 3_000L
         private const val PHONE_READY_MS = 90_000L
