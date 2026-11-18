@@ -7,4 +7,5 @@
     <string name="chatsHomeAsksToEdit">请求编辑：%1$s</string>
     <string name="chatsHomeAsksToRead">请求读取：%1$s</string>
     <string name="chatsHomeAsksOther">请求权限：%1$s</string>
+    <string name="chatsHomeAsksToReadFolder">请求读取此文件夹</string>
 </resources>
