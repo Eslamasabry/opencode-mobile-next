@@ -322,7 +322,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         // for a failure what happened and what to do next.
         state.lastRun?.let { run ->
             KitRow(
-                title = lastLine(run, state.nowMs, words),
+                title = lastLine(run, state.nowMs, words, rememberClockOf(state.nowMs)),
                 leading = KitRowLeading.Glyph(KitIcons.clock),
                 supporting =
                     run.errorCode?.let(words::why)
@@ -484,8 +484,8 @@ private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: Schedu
     val time =
         io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules.time(fields.time)
             ?: return words.save
-    val clock =
-        "${time.first.toString().padStart(2, '0')}:${time.second.toString().padStart(2, '0')}"
+    // The wheel's own clock words (the phone's 12 or 24 hour style), so the button, the row and the wheel agree.
+    val clock = rememberClockOf(nowMs)(time.first, time.second)
     val whenText =
         if (fields.kind == RecurrenceKind.Once) {
             io.github.eslamasabry.oc.engine.schedules.ScheduleTime.at(
