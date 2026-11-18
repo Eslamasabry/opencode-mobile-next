@@ -118,3 +118,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10092 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: approval-stays 268569150a (B-459, whole-pixel snap) + font-scale-audit 92f688c3be + signin-clears-turn 7be47b9bb2 (B-458), on top of 10091's signin-polish, plus-light, notify-signin-again (source 783f60ea56) |
 | 10093 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: the build for the owner: chat-edges-flow c467fa1444 + privacy-words 7ecf132333 on top of 10092's approval-stays, font-scale-audit, signin-clears-turn (source 4261c2e440) |
 | 10094 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: voice-conversation-door c38a82213b (B-461) on top of 10093's content (source 09ba5d9698) |
+| 10095 | build | 2026-11-18 | look build for the next-update branch b7-dailynews with web reads, not the line (source 3ccd091814, native/listb-look-3) |
