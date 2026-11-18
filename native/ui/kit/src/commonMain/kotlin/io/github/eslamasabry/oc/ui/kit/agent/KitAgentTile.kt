@@ -124,6 +124,8 @@ public fun KitAgentTile(
                 role = if (large) TypeRole.Headline else TypeRole.Title,
                 tone = if (dimmed) TextTone.Secondary else TextTone.Primary,
                 maxLines = 2,
+                // A name never breaks inside a word ("Antigravit / y" at text 1.3 in a 360 dp grid): it shrinks to fit.
+                wholeWords = true,
             )
             if (state.isNotEmpty()) {
                 Spacer(Modifier.height(Space.S1.dp))
