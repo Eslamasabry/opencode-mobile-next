@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @SingleIn(AppScope::class)
 @Inject
-class PhoneAgentUpdateStatus {
+class PhoneAgentUpdateStatus(val choices: PhoneUpdateChoices) {
     private val state = MutableStateFlow(AgentUpdateDecision(AgentUpdateStep.NotLooked))
 
     val decision: StateFlow<AgentUpdateDecision> = state.asStateFlow()

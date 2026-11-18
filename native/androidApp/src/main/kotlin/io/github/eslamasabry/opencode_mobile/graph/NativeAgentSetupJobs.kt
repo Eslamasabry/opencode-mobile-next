@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.opencode_mobile.BuildConfig
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.SetupDiskSpace
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
@@ -97,7 +98,9 @@ class NativeAgentSetupJobs(
                 val estimate = guard.downloadBytesFor(descriptor) ?: error("unavailable")
                 val installed =
                     descriptor.recipe?.artifacts?.values?.mapNotNull { it.installedBytes }?.maxOrNull()
-                val required = requiredSetupFreeBytes(estimate, installed)
+                val required = if (components.any { it.id == "agent-${agent.raw}" }) {
+                    requiredSetupFreeBytes(estimate, installed)
+                } else SetupDiskSpace.MIN_INSTALL_BYTES
                 check(app.filesDir.usableSpace >= required) { "storage" }
                 val lock =
                     app.assets.open("agents/paseo-package-lock.json").bufferedReader().use {

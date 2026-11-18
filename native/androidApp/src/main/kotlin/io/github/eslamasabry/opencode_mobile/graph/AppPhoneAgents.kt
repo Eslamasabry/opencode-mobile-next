@@ -436,6 +436,46 @@ class AppPhoneAgents(
         )
     }
 
+    /** Only the payload and version probes from this process, never the persisted recall rows. */
+    internal suspend fun choiceVersions(): Map<AgentId, String> = lane.read { stop ->
+        val owner = agentOwner(ownerId())
+        if (owner == null || needsRestart || !linux.installed) return@read emptyMap()
+        val installing = setupJobs.anySetupRunning() != false
+        buildMap {
+            for (agent in phoneCatalog()) {
+                if (stop.isStopped) break
+                val present = PhoneAgentPayloads.present(linux, requireNotNull(agent.recipe).executable)
+                val answer = versionOf(owner, agent, present, installing, stop)
+                val version = answer?.get("foundVersion") as? String
+                if (version != null) put(agent.id, version)
+            }
+        }
+    }.orEmpty()
+
+    internal suspend fun choiceInstallBusy() = payloads.installGate.isLocked || setupJobs.anySetupRunning() != false
+
+    internal suspend fun removeWithInstallGate(id: AgentId): Outcome<PhoneAgentRemoval> {
+        if (!payloads.installGate.tryLock()) return Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Busy))
+        return try {
+            remove(id.raw)
+        } finally {
+            payloads.installGate.unlock()
+        }
+    }
+
+    /** The same bounded, unprivileged version projection used for the catalog, including older layouts. */
+    internal fun choiceVersion(executable: String, pin: String): String? =
+        agentOwner(ownerId())?.let { owner ->
+            linux.agentHost.checks.version(owner.raw, executable, pin)["foundVersion"] as? String
+        }
+
+    /** A shared-only job never includes the anchor agent's own payload step. */
+    internal suspend fun startSharedUpdate(anchor: AgentId): Boolean {
+        val owner = ownerId() ?: return false
+        val shared = installation(owner).components(anchor).filterNot { it.id == "agent-${anchor.raw}" }
+        return setupJobs.start(owner, anchor, shared) is Outcome.Ok
+    }
+
     private fun ownerId(): ProfileId? =
         try {
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)
