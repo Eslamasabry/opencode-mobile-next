@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.Sessio
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.feature.chat.ui.LocalChildNeedsYou
 import io.github.eslamasabry.oc.feature.chat.ui.MessageTeachingScope
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
@@ -407,6 +408,7 @@ public class ChatEntries(
                 if (replyOffer == null) offerDetails = false
             }
             val requests by vm.requests.collectAsStateWithLifecycle()
+            val childNeeds by vm.childNeeds.collectAsStateWithLifecycle()
             val slot =
                 requests?.state?.collectAsStateWithLifecycle()?.value
                     ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
@@ -599,7 +601,7 @@ public class ChatEntries(
                 eligible = state.rows.any { it is BlockRow } && facts.reading.metadata.isNotEmpty(),
                 blocked = slot.card != null || state.live != null || state.menu != null,
             ) {
-                CompositionLocalProvider(LocalChatCards provides cardSlot) {
+                CompositionLocalProvider(LocalChatCards provides cardSlot, LocalChildNeedsYou provides childNeeds) {
                     environment.Provide {
                         KitSheetHost {
                             KitGrowPage(growKey = route.ref) {
@@ -748,6 +750,7 @@ public class ChatEntries(
                                 },
                                 open = pendingOpen,
                                 onDismiss = { pendingOpen = false },
+                                replyRunning = state.live != null,
                             )
                             QueueMoveScreen(queueMoveState, queueMove)
                             SessionTransferSheet(transferState, transfer)
@@ -806,5 +809,10 @@ internal fun phoneFolderStatus(
         // Never tapped twice: while it runs the line has no action, only what is happening.
         action = action?.takeUnless { fixing }?.let { KitLineAction(stringResource(it), fix) },
         working = fixing,
+        // A restart is the server (or the agents) coming up again: the Starting mark.
+        wait =
+            io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Starting.takeIf {
+                fixing && reach == io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Restart
+            },
     )
 }

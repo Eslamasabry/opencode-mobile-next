@@ -724,7 +724,7 @@ private fun ringActions(state: KitEdgeDockState, ring: KitDockRing, index: Int, 
     if (ring.state == KitDockRingState.NeedsYou) {
         list += CustomAccessibilityAction(words.actionOn(words.allow, ring.name)) { intents.onAllow(ring.key); true }
         list += CustomAccessibilityAction(words.actionOn(words.deny, ring.name)) { intents.onDeny(ring.key); true }
-    } else if (ring.state.running) {
+    } else if (ring.actionState.running) {
         list += CustomAccessibilityAction(words.actionOn(words.stop, ring.name)) { intents.onStop(ring.key); true }
     }
     for (c in ring.children) {
@@ -752,7 +752,9 @@ private fun DockFootNode(state: KitEdgeDockState, words: KitDockWords, intents: 
                 IntOffset(((cx - 24f) * density).roundToInt(), ((cy - 24f) * density).roundToInt())
             }
             .size(48.dp)
-            .graphicsLayer { alpha = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value)) },
+            .graphicsLayer {
+                alpha = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value))
+            },
         contentAlignment = Alignment.Center,
     ) {
         KitIconButton(

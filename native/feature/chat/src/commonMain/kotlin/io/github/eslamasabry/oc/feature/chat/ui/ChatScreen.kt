@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.ui.input.key.KeyEventType
@@ -96,6 +98,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
+import io.github.eslamasabry.oc.ui.kit.foundation.kitOnHeightChanged
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -133,8 +136,9 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAction
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.messageViewSendAgain
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignedInPast
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
@@ -1059,6 +1063,25 @@ public fun ChatScreen(
                                 Modifier,
                             )
                             monitoredForm?.invoke()
+                            // The card above the box takes at most the room MEASURED between the top block's foot and
+                            // the box (not a share of the window); in less than the title, two body lines and the
+                            // answers need, its body shows one line and "Details" has the rest, before anything could
+                            // draw over the pinned notice (look 10098).
+                            val bottomRoom = io.github.eslamasabry.oc.ui.kit.frame.LocalKitBottomRoom.current?.invoke()
+                            val composerPx = remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                            val cardRoom =
+                                bottomRoom?.let { room ->
+                                    room -
+                                        with(androidx.compose.ui.platform.LocalDensity.current) {
+                                            composerPx.intValue.toDp()
+                                        }
+                                }
+                            val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+                            androidx.compose.runtime.CompositionLocalProvider(
+                                io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestRoom provides cardRoom,
+                                io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestCompact provides
+                                    (cardRoom != null && cardRoom < REQUEST_FULL_ROOM_DP.dp * fontScale),
+                            ) {
                             if (requestActions != null)
                                 ChatRequestSlot(
                                     requests,
@@ -1070,6 +1093,7 @@ public fun ChatScreen(
                                     placed = if (inPlaceRequests == null) emptySet() else placedRequests.values.mapTo(HashSet()) { it.id },
                                     details = requestDetails,
                                 )
+                            }
                             if (requests.card == null) formSlot?.invoke(Modifier)
                             // The composer is the conversation's, as wide as the conversation's pane (E20-S27). It
                             // stands in its place while the conversation loads (owner 2026-11-14: the page lost its
@@ -1086,7 +1110,8 @@ public fun ChatScreen(
                                     // F1: the message box sits 8 dp above the screen's bottom edge, as Flutter's
                                     // (golden chat_approval_ask: box bottom at 907 of 915); the screen's bottom slot
                                     // already keeps that room. E: on wide windows it shares the 700 dp pane.
-                                    Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(top = Space.S2.dp),
+                                    Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(top = Space.S2.dp)
+                                        .kitOnHeightChanged { composerPx.intValue = it },
                                 )
                               }
                         }
@@ -1146,6 +1171,17 @@ public fun ChatScreen(
                                         LocalAgentSetUpReply provides
                                             remember(state.setUpReplies, actions) {
                                                 AgentSetUpReply(state.setUpReplies, actions::setUpAgent)
+                                            },
+                                        LocalSignInTurnReply provides
+                                            run {
+                                                val sendAgain = stringResource(Res.string.messageViewSendAgain)
+                                                remember(state.signInTurns, sendAgain, actions) {
+                                                    SignInTurnReply(
+                                                        state.signInTurns,
+                                                        sendAgain,
+                                                        actions::retryLastPrompt,
+                                                    )
+                                                }
                                             },
                                         LocalInPlaceRequests provides inPlaceRequests,
                                     ) {
@@ -1638,6 +1674,9 @@ private fun connectionLine(
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
             working = !signIn,
+            // The waits the app names by their kind: the phone's own server coming up, and an agent or its helper
+            // getting ready. The kit draws their marks in the working mark's place; the other waits keep it.
+            wait = waitOf(wait),
         )
     }
     // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
@@ -1648,6 +1687,7 @@ private fun connectionLine(
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
             working = true,
+            wait = KitWaitKind.Warming,
         )
     val restartAgent =
         if (line.canRestartAgent)
@@ -1889,7 +1929,8 @@ internal fun rememberReplyActions(
         stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.agentErrorOpenSettings)
     // B-AGENT-189 (#137): a lapsed sign-in of an agent on this phone says "sign in again" and offers Sign in.
     val signInAgainTemplate = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
-    val signInAgainLabel = stringResource(Res.string.chatSendFailureSignInAction)
+    val signInAgainLabel = stringResource(Res.string.agentsSignInAgain)
+    val signInPastTemplate = stringResource(Res.string.chatSendFailureSignedInPast, "\u0000")
     val phoneAgentSignIn = remember(actions) { actions.phoneAgentSignIn() }
     val signInAgainWords: (String) -> String? = remember(signInAgainTemplate) {
         { provider ->
@@ -1898,6 +1939,15 @@ internal fun rememberReplyActions(
                 "codex" -> "Codex"
                 else -> null
             }?.let { signInAgainTemplate.replace("\u0000", it) }
+        }
+    }
+    val signInPastWords: (String) -> String? = remember(signInPastTemplate) {
+        { provider ->
+            when (provider) {
+                "claude" -> "Claude Code"
+                "codex" -> "Codex"
+                else -> null
+            }?.let { signInPastTemplate.replace("\u0000", it) }
         }
     }
     return remember(
@@ -1911,6 +1961,7 @@ internal fun rememberReplyActions(
         continueLabel,
         signInSettings,
         signInAgainWords,
+        signInPastWords,
         signInAgainLabel,
         phoneAgentSignIn,
         models,
@@ -1977,6 +2028,7 @@ internal fun rememberReplyActions(
             signInAgainWords = if (phoneAgentSignIn) signInAgainWords else null,
             signInAgainLabel = signInAgainLabel,
             onAgentSignIn = actions::openAgentSignIn,
+            signInPastWords = if (phoneAgentSignIn) signInPastWords else null,
             onThisPhone = phoneAgentSignIn,
             models = models,
             canCompact = canCompact,
@@ -2220,3 +2272,17 @@ private fun rememberMessageErrorWords(): (MessageErrorKind) -> String {
         }
     }
 }
+
+/**
+ * The room, dp at text 1.0, a request card needs for its title, two body lines and its answers; below it the body shows
+ * one line.
+ */
+private const val REQUEST_FULL_ROOM_DP: Int = 170
+
+/** The kind of wait a server wait is, where the app has a mark for it: the server coming up, an agent getting ready. */
+private fun waitOf(wait: ChatServerWait): KitWaitKind? =
+    when (wait) {
+        ChatServerWait.Starting, ChatServerWait.StartingLinux, ChatServerWait.StartingOpenCode -> KitWaitKind.Starting
+        ChatServerWait.StartingHelper, ChatServerWait.StartingAgent -> KitWaitKind.Warming
+        else -> null
+    }

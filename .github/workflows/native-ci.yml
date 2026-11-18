@@ -4,7 +4,7 @@
 #
 # Lanes (native/tool/ci/LANES.md):
 #   fast    default for a manual dispatch. Compile + desktop tests of the modules changed against `base` (and their
-#           direct dependents; everything if too much changed) without picture tests + the APK, all in parallel.
+#           all dependents, transitively; everything if too much changed) without picture tests + the APK, all in parallel.
 #   full    every module, picture tests included, compared with the CI-recorded goldens. Push runs use this.
 #   candidate all module tests with pictures, quality/security, Android host/unit and release self-tests; no APK/signing.
 #   goldens re-records the desktop goldens on the runner and uploads them as the `ci-goldens` artifact.
@@ -28,10 +28,18 @@ on:
         description: Optional Gradle tasks (e.g. ":ui:kit:desktopTest"); when set, only these run instead of the shards
         type: string
         default: ""
+      apk:
+        description: "Upload the preview APK as an artifact (about 100 MB; default off to save GitHub egress and storage). For someone without a build machine; owner and interim builds come from the build server. master, tags and apk_only always upload."
+        type: boolean
+        default: false
       apk_only:
         description: Build only the preview APK (signed with the preview key), skip compile and test shards
         type: boolean
         default: false
+      references:
+        description: "Custom-tasks runs only: required = run the tests as a lane that fetches its pictures does (OC_REFERENCES=required), so a missing picture fails instead of skipping"
+        type: string
+        default: ""
       android_unit:
         description: "Run the Android library unit tests (native/android/*) and the :androidApp unit tests with the fast and full lanes; they count in the verdict. Untick for a quicker run that skips them"
         type: boolean
@@ -142,6 +150,28 @@ jobs:
         run: |
           set -o pipefail
           bash native/tool/test/run_tests.sh B-BUILD-024 2>&1 | tee "$RUNNER_TEMP/detekt-ratchet.log"
+      - name: CI egress self-tests (verdict from logs when downloads are refused, a too-old base is refused)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-CI-30 2>&1 | tee "$RUNNER_TEMP/ci-egress.log"
+      - name: Fast-lane module selection self-tests (a changed module reaches every dependent, transitively)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-CI-313 2>&1 | tee "$RUNNER_TEMP/fast-selection.log"
+      - name: Refuse a quick-lane base that is far older than where this branch left the line
+        if: ${{ inputs.lane == 'fast' }}
+        working-directory: .
+        env:
+          BASE: ${{ inputs.base || 'native/screens-merge41' }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git fetch --no-tags origin +refs/heads/native/glass-next:refs/remotes/origin/native/glass-next || true
+          if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else
+            ref="origin/$BASE"; git rev-parse --verify -q "$ref^{commit}" >/dev/null || git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+          fi
+          bash native/tool/ci/base_check.sh "$ref" origin/native/glass-next "$BRANCH" || [ $? = 2 ]
       - name: Pick the lane and the modules
         id: p
         env:
@@ -186,12 +216,15 @@ jobs:
       - name: Candidate plan and self-test evidence
         if: ${{ always() && inputs.lane == 'candidate' }}
         run: python3 -I tool/ci/candidate_plan.py candidate reports "$RUNNER_TEMP/ci-self.log" "$RUNNER_TEMP/release-self.log" "$RUNNER_TEMP/release-tools.log"
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: ${{ always() && inputs.lane == 'candidate' }}
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ always() && inputs.lane == 'candidate' }}
         with:
           name: report-candidate-plan
           path: native/reports/candidate-plan.json
-          retention-days: 14
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: error
 
   compile:
@@ -236,12 +269,15 @@ jobs:
           all_tests = any(re.search(r'(^|\s)> Task :compileAllTests(\s|$)', l) for l in log)
           json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure', 'gradle_ran': ran, 'compile_all_tests': all_tests}, open('reports/compile.json', 'w'))
           PY
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-compile
           path: native/reports/compile.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   test:
@@ -342,12 +378,15 @@ jobs:
           GRADLE_LOG: ${{ runner.temp }}/gradle.log
           TASKS: ${{ steps.pick.outputs.tasks }}
         run: python3 -I tool/ci/test_report.py "${LANE}-${{ matrix.shard }}" reports >> "$GITHUB_STEP_SUMMARY"
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-test-${{ matrix.shard }}
           path: native/reports/report-*.json
-          retention-days: 14
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: ignore
       - name: Upload test reports
         if: ${{ steps.gradle.outcome == 'failure' }}
@@ -357,7 +396,7 @@ jobs:
           path: |
             native/**/build/reports/tests/
             native/**/build/test-results/
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   record:
@@ -402,14 +441,17 @@ jobs:
         with:
           name: ci-goldens
           path: native/reports/ci-goldens.tgz
-          retention-days: 14
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: error
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-record
           path: native/reports/record.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   apk:
@@ -464,13 +506,15 @@ jobs:
             echo "::error::APK is not signed with the preview key"; exit 1
           fi
       - name: Upload APK
+        # Only on request (apk=true or apk_only), on master and on tags: a quick lane's 100 MB APK was 93% of a day's artifacts.
+        if: ${{ inputs.apk == true || inputs.apk_only == true || github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: native-previewBenchmark-apk
           path: |
             native/androidApp/build/outputs/apk/**/*.apk
             native/benchmark/build/outputs/apk/**/*.apk
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: error
       - name: Upload APK for the phone sync (native/next only)
         # The PC's phone-sync timer (phone-sync.sh on the maintainer PC) polls for this artifact name. Dispatch with
@@ -480,32 +524,37 @@ jobs:
         with:
           name: native-next-apk
           path: native/androidApp/build/outputs/apk/**/*.apk
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: error
       - name: APK report
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
+          UPLOADED: ${{ inputs.apk == true || inputs.apk_only == true || github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           mkdir -p reports
           failed=false; [ "$JOB_STATUS" = failure ] && failed=true
           ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/apk.log" 2>/dev/null && ran=true
+          art=native-previewBenchmark-apk; [ "$UPLOADED" = true ] || art="(built, not uploaded: dispatch with apk=true)"
           apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk 2>/dev/null | head -1 || true)
           if [ -n "$apk" ]; then
-            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s,"failed":%s,"gradle_ran":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" "$ran" > reports/apk.json
+            printf '{"artifact":"%s","file":"%s","mb":%s,"failed":%s,"gradle_ran":%s}' "$art" "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" "$ran" > reports/apk.json
           else echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/apk.json; fi
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: report-apk
           path: native/reports/apk.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   custom:
     name: custom tasks
     needs: where
-    if: ${{ inputs.tasks != '' }}
+    if: ${{ inputs.tasks != '' && !startsWith(inputs.tasks, 'owner_build ') }}
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
@@ -527,6 +576,7 @@ jobs:
         shell: bash
         env:
           CUSTOM_TASKS: ${{ inputs.tasks }}
+          OC_REFERENCES: ${{ inputs.references }}
         run: |
           set -o pipefail
           case "$CUSTOM_TASKS" in
@@ -538,6 +588,20 @@ jobs:
               exit 0 ;;
           esac
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
+      - name: Pack the goldens this run changed or added (a record run's result)
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          git status --porcelain --untracked-files=all -- 'native/*/src/desktopTest/goldens/*' 'native/*/*/src/desktopTest/goldens/*' | cut -c4- > "$RUNNER_TEMP/changed-goldens.txt" || true
+          mkdir -p native/reports
+          if [ -s "$RUNNER_TEMP/changed-goldens.txt" ]; then tar czf native/reports/goldens-custom.tgz -T "$RUNNER_TEMP/changed-goldens.txt"; cat "$RUNNER_TEMP/changed-goldens.txt" >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-goldens-custom
+          path: native/reports/goldens-custom.tgz
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Custom report
         if: always()
         env:
@@ -554,6 +618,9 @@ jobs:
             *) TASKS="${{ inputs.tasks }}" GRADLE_LOG="$RUNNER_TEMP/custom.log" GRADLE_OUTCOME="$JOB_STATUS" \
                  python3 -I tool/ci/test_report.py custom reports >> "$GITHUB_STEP_SUMMARY" ;;
           esac
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -563,7 +630,7 @@ jobs:
             native/reports/report-custom.json
             native/reports/detekt.json
             native/build/reports/detekt/
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
   detekt:
@@ -600,6 +667,9 @@ jobs:
           print('### detekt: ' + (', '.join(f'{m}: {n} new' for m, n in sorted(r['findings'].items())) or '0 new findings')
                 + f' on {", ".join(r["modules"]) or "ratchet only"} (ratchet {r["ratchet"]}, scope {r["scope"]})')
           PY
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -607,6 +677,14 @@ jobs:
           path: |
             native/reports/detekt.json
             native/build/reports/detekt/
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
+          if-no-files-found: ignore
+      # The JUnit files of the custom run, so a test's duration can be read after the run (small: xml only).
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-junit-custom
+          path: native/**/build/test-results/**/*.xml
           retention-days: 7
           if-no-files-found: ignore
 
@@ -663,6 +741,9 @@ jobs:
           print(json.dumps({'failed': sys.argv[2] == 'true', 'gradle_ran': sys.argv[3] == 'true', 'tests': r.get('tests', 0),
                             'failing': [f['id'] for f in r.get('failures', [])][:40], 'real': r.get('real_failures', [])[:20]}))
           PY
+      - name: Verdict inputs in the log (read back when GitHub refuses artifact downloads)
+        if: always()
+        run: bash tool/ci/verdict_log.sh reports
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -670,7 +751,7 @@ jobs:
           path: |
             native/reports/android-unit.json
             native/reports/report-android-unit.json
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
       - name: Android unit and picture evidence
         if: failure()
@@ -681,13 +762,126 @@ jobs:
             native/**/build/reports/tests/
             native/**/build/test-results/
             native/**/build/outputs/roborazzi/
-          retention-days: 7
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
+          if-no-files-found: ignore
+
+  # `tasks=owner_build <full sha> <versionCode> [abis] [mapping]`: the owner-key build compiled HERE, UNSIGNED, and signed afterwards on the
+  # maintainer's own PC (build-takeover-gh.sh). It holds NO signing secret and writes NO key file: the release APKs come out unsigned,
+  # exactly as the build server's owner build leaves them (androidApp/build.gradle.kts leaves the release APK unsigned when no key
+  # file is given). The only secret read is FIREBASE_GOOGLE_SERVICES_B64 (Crashlytics config, not a signing key), installed the way
+  # native-release.yml installs it and never printed. Same build as build-takeover-remote.sh: :androidApp:assembleSwitchRelease, no
+  # -Poc.publicRelease (version name <name>-test.<code>), the versionCode written into the runner's copy of version.properties only.
+  # (Its own workflow file cannot be dispatched from a branch: only a workflow already on the default branch can.)
+  owner-build:
+    name: owner build (unsigned)
+    if: ${{ startsWith(inputs.tasks, 'owner_build ') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    concurrency:
+      group: native-owner-build-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Check the request and check out the commit to build
+        id: req
+        env:
+          TASKS: ${{ inputs.tasks }}
+        run: |
+          set -euo pipefail
+          read -r _ sha code abis mapping <<<"$TASKS"
+          abis="${abis:-arm64-v8a}"; mapping="${mapping:-false}"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::the commit must be a full 40-character sha"; exit 1; }
+          [[ "$code" =~ ^[0-9]+$ ]] || { echo "::error::the code must be a number"; exit 1; }
+          for a in ${abis//,/ }; do
+            case "$a" in arm64-v8a|x86_64|universal) ;; *) echo "::error::unknown abi $a"; exit 1 ;; esac
+          done
+          git fetch --no-tags --depth=1 origin "$sha"
+          git checkout -q --detach "$sha"
+          echo "building $(git rev-parse HEAD)"
+          { echo "code=$code"; echo "abis=$abis"; echo "mapping=$mapping"; } >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/native-setup
+      - name: Write the build number into this runner's copy
+        working-directory: ${{ github.workspace }}
+        env:
+          CODE: ${{ steps.req.outputs.code }}
+        run: sed -i "s/^versionCode=.*/versionCode=$CODE/" native/version.properties
+      - name: Install the Firebase config (never in git, never printed)
+        env:
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          set -euo pipefail
+          [ -n "$FIREBASE_B64" ] || { echo "::error::FIREBASE_GOOGLE_SERVICES_B64 is not set"; exit 1; }
+          dir="$RUNNER_TEMP/oc-firebase"
+          mkdir -p "$dir"
+          printf '%s' "$FIREBASE_B64" | base64 -d > "$dir/google-services-io.github.eslamasabry.opencode_mobile.json"
+          echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
+          echo "Firebase config installed"
+      - name: Compile the unsigned switch release
+        working-directory: ${{ github.workspace }}/native
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          start=$(date +%s)
+          ./gradlew --console=plain "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8" :androidApp:assembleSwitchRelease
+          secs=$(( $(date +%s) - start ))
+          echo "OWNER-BUILD-COMPILE-SECONDS $secs"
+          echo "### Compile on the runner: ${secs} s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Delete the Firebase config
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/oc-firebase"
+      - name: Collect the unsigned APKs and print their sha256
+        id: collect
+        working-directory: ${{ github.workspace }}
+        env:
+          ABIS: ${{ steps.req.outputs.abis }}
+          MAPPING: ${{ steps.req.outputs.mapping }}
+        run: |
+          set -euo pipefail
+          src=native/androidApp/build/outputs/apk/switch/release
+          out="$RUNNER_TEMP/owner-out"; mkdir -p "$out"
+          want="arm64-v8a ${ABIS//,/ }"
+          for abi in $(printf '%s\n' $want | sort -u); do
+            f=$(ls -t "$src"/*-"$abi"-release*.apk 2>/dev/null | head -1 || true)
+            [ -n "$f" ] || { echo "::error::no $abi APK in $src"; ls "$src"; exit 1; }
+            cp "$f" "$out/$abi.apk"
+            echo "OWNER-BUILD-SHA256 $abi $(sha256sum "$out/$abi.apk" | cut -d' ' -f1) $(stat -c %s "$out/$abi.apk")"
+          done
+          if [ "$MAPPING" = true ]; then
+            m=native/androidApp/build/outputs/mapping/switchRelease/mapping.txt
+            if [ -f "$m" ]; then gzip -1 -c "$m" > "$out/mapping.txt.gz"; else echo "::warning::no mapping file"; fi
+          fi
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
+      - name: Upload the unsigned arm64 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-unsigned-arm64-${{ steps.req.outputs.code }}
+          path: ${{ steps.collect.outputs.dir }}/arm64-v8a.apk
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload the other unsigned APKs (only when asked)
+        if: ${{ contains(steps.req.outputs.abis, 'x86_64') || contains(steps.req.outputs.abis, 'universal') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-unsigned-others-${{ steps.req.outputs.code }}
+          path: |
+            ${{ steps.collect.outputs.dir }}/x86_64.apk
+            ${{ steps.collect.outputs.dir }}/universal.apk
+          retention-days: 1
+          if-no-files-found: ignore
+      - name: Upload the R8 mapping (only when asked)
+        if: ${{ steps.req.outputs.mapping == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-mapping-${{ steps.req.outputs.code }}
+          path: ${{ steps.collect.outputs.dir }}/mapping.txt.gz
+          retention-days: 1
           if-no-files-found: ignore
 
   summary:
     name: summary
     needs: [where, plan, compile, test, apk, record, custom, android-unit, detekt]
-    if: ${{ always() }}
+    if: ${{ always() && !startsWith(inputs.tasks, 'owner_build ') }}
     # No job-level continue-on-error: this job's exit code is summary.py's verdict on every branch (1 = FAIL, 2 = integrity:
     # Gradle never ran, a shard left no report), so the run page reads red exactly when the summary says FAIL.
     runs-on: ubuntu-latest

@@ -118,7 +118,7 @@
     <string name="e7ModelUiPreview">プレビュー</string>
     <string name="e7ModelUiSelectionGone">この選択は利用できなくなりました。モデルを再読み込みしてからもう一度お試しください。</string>
     <string name="e7VoiceUiLocalInput">ローカル音声入力</string>
-    <string name="e7VoiceUiPrivacyDownload">音声がこのスマートフォンから外に出ることはありません。</string>
+    <string name="e7VoiceUiPrivacyDownload">音声はこのスマートフォンにとどまります。話した言葉はスマートフォン上で文字に変換され、その後音声は残りません。音声モデルのダウンロードには一度だけインターネットが必要です。</string>
     <string name="e7VoiceUiNoBuiltInMic">Androidでは内蔵マイクが見つかりませんでした。有線またはUSBマイクでは音声入力が使える場合があります。</string>
     <string name="e7VoiceUiLanguage">文字起こし言語</string>
     <string name="e7VoiceUiVerifying">ダウンロードしたモデルを検証中</string>

@@ -187,9 +187,22 @@ class FakeAgents(
         }
     }
 
-    override suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean {
+    /** Answers the next checks give, in order; once empty, [signedIn] decides (signed in, or signed out). */
+    val answers = ArrayDeque<SignInCheck>()
+    val rounds = mutableListOf<Int>()
+    var tries = 1
+
+    /** Called at the start of each check round, before it answers (a test reads the screen while it waits). */
+    var onRound: (Int) -> Unit = {}
+
+    override val checkTries: Int
+        get() = tries
+
+    override suspend fun checkSignedIn(owner: ProfileId, agent: AgentRef, round: Int): SignInCheck {
         confirms++
-        return signedIn
+        rounds += round
+        onRound(round)
+        return answers.removeFirstOrNull() ?: if (signedIn) SignInCheck.SignedIn else SignInCheck.SignedOut
     }
 
     override suspend fun markSetUp(owner: ProfileId, agent: AgentRef) {

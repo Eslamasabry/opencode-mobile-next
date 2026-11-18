@@ -272,9 +272,9 @@
     <string name="agentsFailBusy">Une autre configuration est en cours. Attendez qu’elle se termine.</string>
     <string name="agentsSignInTitle">Se connecter avec %1$s</string>
     <string name="agentsSignInIntro">%1$s se connecte avec ses propres invites, sur votre propre compte Claude, selon les conditions d’Anthropic. L’application ne voit jamais votre connexion.</string>
-    <string name="agentsSignInTerminalIntro">%1$s ouvre sa page de connexion. Connectez-vous-y avec votre compte Claude, puis revenez. Si %1$s demande un code, copiez-le sur la page et choisissez Coller.</string>
+    <string name="agentsSignInTerminalIntro">%1$s ouvre sa page de connexion. Connectez-vous-y avec votre compte Claude, puis revenez. Si %1$s demande un code, copiez-le sur la page et choisissez Coller le code.</string>
     <string name="agentsSignInIntroOther">%1$s se connecte avec ses propres invites, sur votre propre compte chez son fournisseur. L’application ne voit jamais votre connexion.</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s se connecte ici avec ses propres invites. S’il ouvre une page, connectez-vous-y puis revenez. S’il demande un code ou une clé, choisissez Coller.</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s se connecte ici avec ses propres invites. S’il ouvre une page, connectez-vous-y puis revenez. S’il demande un code ou une clé, choisissez Coller le code.</string>
     <string name="agentsSignInAgain">Se reconnecter</string>
     <string name="agentsSignInTerminalNotYet">%1$s n’est pas encore connecté. Relancez la connexion quand vous voulez.</string>
     <string name="agentsSignInStopFailed">La connexion n’a pas pu être arrêtée. Gardez l’application ouverte et réessayez.</string>
@@ -321,7 +321,7 @@
     <string name="agentsStateNoDownload">Pas encore de téléchargement vérifié</string>
     <string name="agentsInstallHint">Installer</string>
     <string name="agentsActionFailed">Cela n’a pas fonctionné sur ce téléphone. Ouvrez les détails pour savoir pourquoi.</string>
-    <string name="agentsSignInPaste">Coller</string>
+    <string name="agentsSignInPaste">Coller le code</string>
     <string name="agentsSignInStartPrepare">L’application n’a pas pu préparer le dossier de l’agent sur ce téléphone.</string>
     <string name="agentsSignInStartServer">OpenCode n’a pas démarré sur ce téléphone.</string>
     <string name="agentsSignInStartConnect">L’application n’a pas pu se connecter à OpenCode sur ce téléphone.</string>
@@ -597,4 +597,11 @@
     <string name="agentsRetiredBody">%1$s n’est plus proposé sur ce téléphone : il ne peut plus être configuré ni utilisé. Supprimez-le pour libérer la place qu’il prend. Vos autres agents et conversations restent.</string>
     <string name="agentsRemoveChip">Supprimer</string>
     <string name="chatUiRunOnThisPhone">À exécuter sur ce téléphone</string>
+    <string name="agentsSignInCheckingAgent">Vérification de la connexion de %1$s…</string>
+    <string name="agentsSignInCheckingBusy">%1$s est occupé par une conversation. La connexion sera vérifiée dès qu’il sera libre…</string>
+    <string name="agentsSignInCouldNotCheck">Impossible de vérifier si %1$s est connecté</string>
+    <string name="agentsSignInCouldNotCheckBody">La connexion a peut-être fonctionné. Vérifiez à nouveau pour interroger %1$s maintenant.</string>
+    <string name="agentsSignInCheckAgain">Vérifier la connexion à nouveau</string>
+    <string name="agentsSignInCodeField">Code de connexion</string>
+    <string name="agentsSignInSendCode">Envoyer le code</string>
 </resources>

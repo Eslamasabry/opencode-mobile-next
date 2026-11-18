@@ -756,7 +756,11 @@ public data class KitTerminalKey(
     val onClick: () -> Unit,
 )
 
-/** A visible, horizontally scrollable key bar shared by local and server terminals. */
+/**
+ * A visible, horizontally scrollable key bar shared by local and server terminals. Its keys keep the kit's gap between
+ * buttons, and the bar keeps the same space above it, so it never sits flush under the row before it (owner's look of
+ * build 10086: the keys touched each other and the code field).
+ */
 @Composable
 public fun KitTerminalKeyBar(
     keys: List<KitTerminalKey>,
@@ -764,7 +768,12 @@ public fun KitTerminalKeyBar(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).testTag("terminal-key-bar")
+        modifier
+            .padding(top = Space.S2.dp)
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .testTag("terminal-key-bar"),
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         keys.forEach { key ->
             KitButton(

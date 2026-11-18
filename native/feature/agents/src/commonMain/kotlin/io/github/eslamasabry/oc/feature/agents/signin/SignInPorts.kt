@@ -191,6 +191,33 @@ public class SignInFound(public val page: String? = null, public val code: Strin
     override fun toString(): String = "SignInFound(page=${page != null}, code=${code != null})"
 }
 
+/** What reading the account after a sign-in found: three answers, never two. */
+public sealed interface SignInCheck {
+    public data object SignedIn : SignInCheck
+
+    /** The agent itself said it is not signed in. */
+    public data object SignedOut : SignInCheck
+
+    /**
+     * No answer about the account: [code] is the fixed reason for Details (`agentBusy`, `timedOut`, `hostUnavailable`,
+     * `invalidResponse`, `staleScope`, …), never CLI text. [busy]: a conversation's Claude Code program held it back.
+     */
+    public data class CouldNotCheck(val code: String) : SignInCheck {
+        val busy: Boolean
+            get() = code == BUSY
+
+        /** A reason that can pass by itself (busy, timed out, the phone's one check slot taken): worth another try. */
+        val passing: Boolean
+            get() = code == BUSY || code == TIMED_OUT || code == HOST_UNAVAILABLE
+
+        public companion object {
+            public const val BUSY: String = "agentBusy"
+            public const val TIMED_OUT: String = "timedOut"
+            public const val HOST_UNAVAILABLE: String = "hostUnavailable"
+        }
+    }
+}
+
 /** The agents engine's sign-in model, as the screen needs it. */
 public interface SignInAgents {
     public fun plan(agent: AgentRef): SignInPlan
@@ -202,10 +229,16 @@ public interface SignInAgents {
     public fun command(owner: ProfileId, agent: AgentRef): Outcome<SignInCommand>
 
     /**
-     * The terminal ended: re-read the account; true only on a `SignedIn` projection (exit code 0 is
-     * never proof).
+     * The terminal ended: re-read the account. [SignInCheck.SignedIn] only on a `SignedIn` projection (exit code 0 is
+     * never proof), [SignInCheck.SignedOut] only on a `SignedOut` one; anything else (busy, timed out, no answer, a
+     * changed scope) is [SignInCheck.CouldNotCheck], never "not signed in" (owner, 2026-11-18). [round] counts the
+     * tries of one check from 0; the host waits its own pause before a later try (the screen never sleeps).
      */
-    public suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean
+    public suspend fun checkSignedIn(owner: ProfileId, agent: AgentRef, round: Int = 0): SignInCheck
+
+    /** How many tries one check makes before it says it could not check ([checkSignedIn]'s [round] bound). */
+    public val checkTries: Int
+        get() = 1
 
     /**
      * `SignInOutputReader` over the transcript: the newest https page not on this phone, and a

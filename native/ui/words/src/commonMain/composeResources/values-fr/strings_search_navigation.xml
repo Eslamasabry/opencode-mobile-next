@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Vérifications des serveurs en arrière-plan</string>
     <string name="nativeSearchAliasesBackgroundChecks">Vérifications en arrière-plan\u00A0; interrogation\u00A0; surveillance</string>
     <string name="nativeSearchPlaceAppearance">Apparence</string>
-    <string name="nativeSearchAliasesAppearance">Thème\u00A0; couleurs\u00A0; style</string>
+    <string name="nativeSearchAliasesAppearance">Thème\u00A0; couleurs\u00A0; style\u00A0; signes d’attente</string>
     <string name="nativeSearchPlaceLanguage">Langue</string>
     <string name="nativeSearchAliasesLanguage">Arabe\u00A0; anglais\u00A0; français\u00A0; paramètres régionaux</string>
     <string name="nativeSearchPlaceTips">Astuces</string>

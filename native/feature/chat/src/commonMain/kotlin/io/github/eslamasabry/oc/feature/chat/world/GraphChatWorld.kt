@@ -564,6 +564,8 @@ internal class GraphChatWorld(
     private val recoveryIds = HashMap<String, Long>()
     private val mutableRequests = MutableStateFlow<ChatRequestsModel?>(null)
     override val requests: StateFlow<ChatRequestsModel?> = mutableRequests
+    private val mutableChildNeeds = MutableStateFlow<Set<String>>(emptySet())
+    override val childNeedsYou: StateFlow<Set<String>> = mutableChildNeeds
 
     /** The handle, its graph and the collectors feeding it. Replaced as a whole on reload. */
     private class Attached(
@@ -1162,6 +1164,13 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     mutableRequests.value?.state?.collect { publishVoiceConversation() }
                 },
+                // Read at every change, never kept: a delegated step whose sub-agent waits on the person says so, and
+                // says no more the moment the request is answered (the engine's list drops it).
+                scope.launch(registry.mainContext) {
+                    services.chatRequests.engine.pending.collect { open ->
+                        mutableChildNeeds.value = open.mapTo(hashSetOf()) { it.sessionId.raw } - sid.raw
+                    }
+                },
                 scope.launch(registry.mainContext) {
                     graph.session.reads.missing.collect { missing ->
                         if (sid in missing && currentAttached()?.graph === graph) {
@@ -1184,6 +1193,11 @@ internal class GraphChatWorld(
                 },
                 scope.launch(registry.mainContext) {
                     delivery.queue?.state?.collect { queue -> retireSettledMarkers(queue) }
+                },
+                // A marker the server's own copy has met (the process died after the request left, with no journalled
+                // receipt to look up): the delivered message and the "not confirmed" row never stand together.
+                scope.launch(registry.mainContext) {
+                    turnFeed.collect { feed -> retireDeliveredMarkers(feed.ledger.messages, delivery) }
                 },
                 scope.launch(registry.mainContext) {
                     handle.state.collect { s ->
@@ -2528,6 +2542,56 @@ internal class GraphChatWorld(
             Outcome.Ok(confirmed)
         } finally {
             checkingReceipts.remove(localId)
+        }
+    }
+
+    /**
+     * A restored marker whose words the server already holds as a user message of this conversation, written at or
+     * after the moment the marker was (its dispatch time): the send did arrive. The receipt journal cannot say so when
+     * the process died with the request in flight (an online send is journalled only after the fact), so without this
+     * the person would see their delivered message and a "not confirmed yet" row for the same words, and a Send again
+     * would send them twice. The marker goes and nothing is sent. A different clock on the server, or words not yet in
+     * the transcript, leave the marker for the person's Review and Check again, as before.
+     */
+    private fun retireDeliveredMarkers(
+        messages: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>,
+        delivery: ConnectionDelivery,
+    ) {
+        if (recoveryIds.isEmpty()) return
+        val queue = delivery.queue ?: return
+        val users =
+            messages.filter { it.info.role == Role.User }.map { m ->
+                m.info.time?.createdMs to
+                    m.parts.filter { it.type == PartType.Text && !it.synthetic }.joinToString("\n") { it.text }.trim()
+            }
+        val delivered =
+            recoveryIds.filter { (reviewId, localId) ->
+                localId !in checkingReceipts &&
+                    mutablePending.value.any { it.localId == localId && it.state == PendingState.Unconfirmed } &&
+                    queue.entries().firstOrNull { it.id == reviewId }?.let { entry ->
+                        val sent = entry.dispatchedAt ?: return@let false
+                        val words = entry.text.trim()
+                        words.isNotEmpty() && users.any { (at, text) -> at != null && at >= sent && text == words }
+                    } == true
+            }
+        if (delivered.isEmpty()) return
+        val a = currentAttached() ?: return
+        a.graph.scope.launch(registry.mainContext) {
+            for ((reviewId, localId) in delivered) {
+                if (!checkingReceipts.add(localId)) continue
+                try {
+                    if (queue.remove(reviewId) is Outcome.Failed) continue
+                    mutablePending.update { list -> list.filterNot { it.localId == localId }.toImmutableList() }
+                    acknowledgedDraft(localId)
+                    recoveryIds.remove(reviewId)
+                    sentSnapshots.remove(localId)
+                    canonical.remove(localId)
+                    baselines.remove(localId)
+                    deliveryIds.remove(localId)
+                } finally {
+                    checkingReceipts.remove(localId)
+                }
+            }
         }
     }
 

@@ -141,6 +141,12 @@ public enum class AgentUpdateStep {
 
     /** The install was refused (no room, not installable here): the manual Install says why. */
     Refused,
+
+    /**
+     * The install of [AgentUpdateDecision.agent] was started and ended without finishing (or ran past its bound): the
+     * wait for it is over and Home says so with Try again. Kept until the next decision.
+     */
+    Failed,
 }
 
 public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: AgentId? = null) {
@@ -158,6 +164,7 @@ public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: Agen
             AgentUpdateStep.Updating -> "agent update: started ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Updated -> "agent update: finished ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Refused -> "agent update: install refused for ${agent?.raw ?: "an agent"}"
+            AgentUpdateStep.Failed -> "agent update: did not finish for ${agent?.raw ?: "an agent"}"
         }
 }
 
@@ -175,12 +182,18 @@ public class AgentAutoUpdater(
     private val jobs: AgentUpdateJobs,
     /** One line per change of what the updater sees: which condition holds it back (no personal data). */
     private val log: ((String) -> Unit)? = null,
+    /** A monotonic clock in milliseconds, for the spacing of a retry; the default never spaces one. */
+    private val nowMs: () -> Long = { 0L },
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
     private val attempted = mutableSetOf<String>()
+    private val failures = mutableMapOf<String, Int>()
+    private val retryNotBefore = mutableMapOf<String, Long>()
     private val checking = Mutex()
     private var readTried = false
+    private var busyUntil = 0L
+    private var busyStreak = 0
     private var meteredAllowed = false
 
     /**
@@ -199,6 +212,9 @@ public class AgentAutoUpdater(
     public suspend fun changed() {
         if (!checking.tryLock()) return
         try {
+            // Refused for busy (work running, or another install job holds the one gate): the try is kept, and the
+            // next look is after the backoff, never at once.
+            if (nowMs() < busyUntil) return
             if (host.readDue && !readTried) {
                 // The read starts a process per installed agent: not under a setup job or a half-finished move, and
                 // once per run, so a read that cannot finish never repeats.
@@ -224,9 +240,12 @@ public class AgentAutoUpdater(
                 attempted += "$key/${target.raw}"
                 attempted += "$key/$HELPER"
                 meteredAllowed = false
+                busyStreak = 0
                 publish(AgentUpdateDecision(AgentUpdateStep.Updating, target))
             } else {
-                note("refused before it started; will try again")
+                busyStreak++
+                busyUntil = busyDeadline(nowMs(), busyStreak)
+                note("refused before it started (busy); waiting, the try is kept")
                 publish(AgentUpdateDecision(AgentUpdateStep.Refused, target))
             }
         } finally {
@@ -237,6 +256,36 @@ public class AgentAutoUpdater(
     /** The binding saw the install of [agent] end (Done): the line says it was updated until the next decision. */
     public fun finished(agent: AgentId) {
         publish(AgentUpdateDecision(AgentUpdateStep.Updated, agent))
+    }
+
+    /**
+     * The install of [agent] moved to [step] outside the updater's own looks.
+     * [AgentUpdateStep.Failed]: it ended without finishing, ran past its bound, was refused or never started. A failed
+     * try never marks the agent current: it is given back (the next look sees it behind again) up to [MAX_RETRIES]
+     * more times, spaced, then it is left to the person's Try again.
+     * [AgentUpdateStep.Updating]: the person's Try again started it, so every earlier failure is forgotten and the
+     * other agents that are behind are tried in their turn.
+     */
+    public fun settle(agent: AgentId, step: AgentUpdateStep) {
+        val key = host.pinKey
+        val mine = "$key/${agent.raw}"
+        val helper = "$key/$HELPER"
+        if (step == AgentUpdateStep.Failed) {
+            val n = (failures[mine] ?: 0) + 1
+            failures[mine] = n
+            if (n <= MAX_RETRIES) {
+                attempted -= mine
+                attempted -= helper
+                retryNotBefore[mine] = nowMs() + RETRY_SPACING_MS
+            }
+        } else if (step == AgentUpdateStep.Updating) {
+            attempted.clear()
+            failures.clear()
+            retryNotBefore.clear()
+            attempted += mine
+            attempted += helper
+        }
+        publish(AgentUpdateDecision(step, agent))
     }
 
     private fun hold(step: AgentUpdateStep) {
@@ -252,6 +301,8 @@ public class AgentAutoUpdater(
 
     private companion object {
         const val HELPER = "helper"
+        const val MAX_RETRIES = 2
+        const val RETRY_SPACING_MS = 600_000L
     }
 
     private fun note(line: String) {
@@ -264,7 +315,11 @@ public class AgentAutoUpdater(
     private fun decide(key: String, explain: Boolean = false): AgentId? {
         // One automatic try per agent (and per helper) and pinned set: an agent that was tried is not asked again, and
         // does not keep another agent that is behind from being updated.
-        val behind = host.behind.filterTo(mutableSetOf()) { "$key/${it.raw}" !in attempted }
+        val now = nowMs()
+        val behind =
+            host.behind.filterTo(mutableSetOf()) {
+                "$key/${it.raw}" !in attempted && now >= (retryNotBefore["$key/${it.raw}"] ?: 0L)
+            }
         val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
         // An update the app was stopped in the middle of runs again first (the install skips what is in place).
         val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted }
@@ -305,6 +360,7 @@ public class AgentAutoUpdater(
                     when {
                         state.value.step == AgentUpdateStep.Updating && running -> return
                         state.value.step == AgentUpdateStep.Updated -> return
+                        state.value.step == AgentUpdateStep.Failed -> return
                         else -> AgentUpdateStep.NothingBehind
                     }
                 running -> AgentUpdateStep.WaitingSetup
@@ -317,3 +373,15 @@ public class AgentAutoUpdater(
         publish(AgentUpdateDecision(step, target))
     }
 }
+
+private const val BUSY_BACKOFF_MS = 30_000L
+private const val BUSY_BACKOFF_MAX_MS = 120_000L
+private const val BUSY_DOUBLINGS = 3
+
+/** When a busy-refused try looks again: 30 s, doubling, at most 2 min. No clock (0) means no backoff. */
+private fun busyDeadline(now: Long, streak: Int): Long =
+    if (now == 0L) {
+        0L
+    } else {
+        now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
+    }

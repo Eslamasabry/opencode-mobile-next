@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.TextRange
+import androidx.compose.foundation.layout.RowScope
+import io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerRecorder
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitFieldQuietRange
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -159,6 +164,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerAddToTurn
 import io.github.eslamasabry.oc.ui.words.res.kitComposerField
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSend
+import io.github.eslamasabry.oc.ui.words.res.kitVoiceTranscribing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
@@ -303,6 +310,14 @@ public fun BasicComposer(
     val editor = remember(state.targetKey) { DraftEditorState() }
     var repeatRevision by remember(state.targetKey) { mutableStateOf<Long?>(null) }
     val editSerialAtComposition = editor.userEditSerial
+    // The engine showed the box's last words: nothing is in flight any more.
+    if (editor.awaitingEngine && state.draft.text == editor.lastReported) editor.awaitingEngine = false
+    // A box that has opened never closes again while it has focus or holds words: the draft going not-ready again
+    // (the profile fenced, a world rebuilt) must not drop the next keystrokes of a person who is typing.
+    val boxLatch = remember(state.targetKey) { booleanArrayOf(false) }
+    val boxReady = editorReady && state.draft.ready
+    if (boxReady) boxLatch[0] = true
+    val boxOpen = boxReady || (boxLatch[0] && (field.text.isNotEmpty() || chrome.typing.focused))
     // Restore/clear only external revisions. Ordinary typing never assigns text or moves IME
     // selection.
     LaunchedEffect(field, state.draft.ready, state.draft.restoreRevision) {
@@ -320,8 +335,17 @@ public fun BasicComposer(
                 editor.lastReported = current
                 actions.draftChanged(current)
             } else {
-                if (current != state.draft.text) field.edit { replace(0, length, state.draft.text) }
-                editor.lastReported = state.draft.text
+                val engineText = state.draft.text
+                if (current != engineText && editorReady && editor.awaitingEngine) {
+                    // The engine is behind: this restore carries older words than the box has (a burst of typing
+                    // right after the box opened, or while a restore was on its way). Keep the newer words and tell
+                    // the engine, never the other way round.
+                    editor.lastReported = current
+                    actions.draftChanged(current)
+                } else if (!editor.isJustSent(engineText)) {
+                    if (current != engineText) field.edit { replace(0, length, engineText) }
+                    editor.adopted(engineText)
+                }
             }
             editorReady = true
         }
@@ -408,7 +432,9 @@ public fun BasicComposer(
         // clear revision empties the field for good. A send that does not go puts them back.
         val serial = editor.userEditSerial
         field.edit { replace(0, length, "") }
-        editor.lastReported = ""
+        editor.adopted("")
+        editor.sentWords = text
+        editor.sentSerial = editor.userEditSerial
         scope.launch {
             if (actions.send(text)) {
                 // A local admission is not a server acknowledgement. The draft owner publishes its
@@ -419,7 +445,7 @@ public fun BasicComposer(
                 if (liftId != null) lift?.cancel(liftId)
                 if (SendFieldRules.restoreAfterFailedSend(field.text.toString(), serial, editor.userEditSerial)) {
                     field.edit { replace(0, length, text) }
-                    editor.lastReported = text
+                    editor.adopted(text)
                 }
             }
         }
@@ -444,7 +470,7 @@ public fun BasicComposer(
                 followed = null
                 if (field.text.isEmpty()) {
                     field.edit { replace(0, length, state.draft.text) }
-                    editor.lastReported = state.draft.text
+                    editor.adopted(state.draft.text)
                 }
             }
         }
@@ -474,7 +500,17 @@ public fun BasicComposer(
             send = send,
             canSend = { canSend },
             conversationRef = conversationRef,
-        )
+        ).also {
+            it.replaceAt = { words, cursor ->
+                field.edit {
+                    replace(0, length, words)
+                    selection = TextRange(cursor.coerceIn(0, length))
+                }
+                editor.userEditSerial += 1
+                editor.lastReported = words
+                actions.draftChanged(words)
+            }
+        }
     // Leaving this conversation (a switch, Files, Back) ends any dictation into its box.
     voice?.StopWhenLeft(voiceField)
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
@@ -831,6 +867,7 @@ public fun BasicComposer(
             },
             onDismiss = { projectFilesOpen = false },
         )
+        // The hands-free voice conversation's pill (dictation draws inside the box, below).
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-attachments")) {
@@ -953,7 +990,15 @@ public fun BasicComposer(
         // button never changes under a finger.
         val voiceActive = voice?.isActive(voiceField) == true
         val inlineAtStart = remember(voiceActive) { typed }
-        val inlineMic = if (voiceActive) inlineAtStart else typed
+        // Owner 2026-11-17 ("Wtf is this ugly microphone flow?"): while words are dictated the box itself is the
+        // recorder: ✕, the live waveform and the time, ✓ in one row inside it, the words above. A tapped dictation's
+        // mic gives way to that row and Send keeps its place, meaning "write down and send"; a held mic stays under
+        // the finger where the hold began.
+        val recording = voice?.recording(voiceField)
+        val tapRecording = recording != null && recording.dictating && !recording.held
+        val recorderPart: (@Composable RowScope.() -> Unit)? =
+            if (recording != null && voice != null) ({ voice.Recorder(voiceField, Modifier.weight(1f)) }) else null
+        val inlineMic = if (voiceActive) inlineAtStart && !tapRecording else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
         val stopsFirst = (busy && state.restarts) || SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
@@ -1079,6 +1124,12 @@ public fun BasicComposer(
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
         KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = true) { stacked ->
+            // While dictating, the hands-free voice mode or a reply read aloud, the box itself is the recorder (its
+            // row in the place of the plus and the chips); dictated words still forming are drawn quieter in the field.
+            CompositionLocalProvider(
+                LocalKitComposerRecorder provides recorderPart,
+                LocalKitFieldQuietRange provides recording?.unconfirmed,
+            ) {
             KitComposerBox(
                 running = RunTailRules.boxRunning(RunTailRules.tail(busy, chrome.stopping(), waitingRequest)),
                 stacked = stacked,
@@ -1089,6 +1140,9 @@ public fun BasicComposer(
                 },
                 fieldEnd = { if (stopShown) stopPart() },
                 above = {
+                    // A dictation that ended with something to say (nothing heard, the microphone is off, it failed,
+                    // no speech model) says it here, inside the box, with its way forward.
+                    voice?.Note(voiceField, Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp))
                     phraseRow()
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(
@@ -1188,7 +1242,7 @@ public fun BasicComposer(
                             framed = false,
                             focusRequester = focus,
                             enabled =
-                                if (editorReady && state.draft.ready) KitEnabled.Enabled
+                                if (boxOpen) KitEnabled.Enabled
                                 else
                                     KitEnabled.Disabled(
                                         // Issue 147: it always ends: the draft, or a plain line that it could not be opened.
@@ -1239,10 +1293,23 @@ public fun BasicComposer(
                         KitComposerPrimaryAction(
                             // Without voice the empty box shows a disabled Send, never an empty slot
                             // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).
-                            hasMessage = inlineMic || voice == null,
+                            hasMessage = inlineMic || voice == null || tapRecording,
                             mic = { voice?.Mic(voiceField, Modifier) },
                             send = {
-                                if (stopsFirst && typed && sendReady)
+                                if (tapRecording)
+                                    // While a tapped dictation runs, Send writes the words down and sends them, once.
+                                    KitComposerSend(
+                                        label = recording?.sendLabel ?: sendLabel,
+                                        onClick = { recording?.sendNow?.invoke() },
+                                        enabled =
+                                            if (sendReady && !state.sending && recording?.sendNow != null) {
+                                                KitEnabled.Enabled
+                                            } else {
+                                                KitEnabled.Disabled(stringResource(Res.string.kitVoiceTranscribing))
+                                            },
+                                        modifier = Modifier.testTag("chat-send-button"),
+                                    )
+                                else if (stopsFirst && typed && sendReady)
                                     KitStopAndSendPill(
                                         label = stringResource(Res.string.kitComposerStopAndSend),
                                         onClick = stopAndSend,
@@ -1284,6 +1351,7 @@ public fun BasicComposer(
                         )
                 },
             )
+            }
         }
         }
     }
@@ -1444,8 +1512,38 @@ private class FollowedSend(val text: String, val serial: Long) {
  */
 private class DraftEditorState {
     var restoreRevision: Long? = null
+
+    /**
+     * The words last handed to the draft engine by the box. Setting it means the box reported (or is about to report)
+     * them, so the engine's copy is [awaitingEngine] until it shows them.
+     */
     var lastReported: String? = null
+        set(value) {
+            field = value
+            awaitingEngine = true
+        }
     var userEditSerial: Long = 0
+
+    /**
+     * True from a report until the engine's copy was seen to equal it. While true the engine is BEHIND the box (the
+     * keystrokes in flight), so a restore carrying the engine's text is older than the box's words and must never be
+     * written over them. An external write (first load, reviewed text, clear after a send) finds it false: the engine
+     * had caught up and then changed by itself.
+     */
+    var awaitingEngine: Boolean = false
+
+    /** The words of the send just made and the edit serial then: a restore carrying them is not written back. */
+    var sentWords: String? = null
+    var sentSerial: Long = 0
+
+    /** Whether [engineText] is the words just sent with no edit since: the engine still holds them until it clears. */
+    fun isJustSent(engineText: String): Boolean = sentWords == engineText && userEditSerial == sentSerial
+
+    /** The box took [text] from the engine (or cleared itself without a report): nothing is in flight. */
+    fun adopted(text: String) {
+        lastReported = text
+        awaitingEngine = false
+    }
 }
 
 /** The type a picture's name says (the intake checks the bytes again); PNG when it says none. */

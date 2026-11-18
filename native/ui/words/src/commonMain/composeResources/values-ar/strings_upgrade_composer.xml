@@ -2,7 +2,7 @@
     <string name="upgradeComposerAsk">اسأل %1$s…</string>
     <string name="upgradeComposerFree"> · مجاني</string>
     <string name="upgradeComposerVoiceHoldTitle">تحدث مع الوكيل</string>
-    <string name="upgradeComposerVoiceHold">اضغط مطولًا على الميكروفون وتحدث، وارفع إصبعك لتظهر كلماتك في الخانة. لمحادثة صوتية، افتح + واختر محادثة صوتية.</string>
+    <string name="upgradeComposerVoiceHold">اضغط مطولًا على الميكروفون وتحدث، وارفع إصبعك لتظهر كلماتك في الخانة. لمحادثة صوتية، اضغط على الميكروفون ثم اضغط محادثة صوتية.</string>
     <string name="upgradeComposerHoldDictate">اضغط مطولًا للإملاء</string>
     <string name="chatReplyInHint">رد في %1$s</string>
     <string name="chatWaitingForAnswerAbove">بانتظار إجابتك أعلاه</string>

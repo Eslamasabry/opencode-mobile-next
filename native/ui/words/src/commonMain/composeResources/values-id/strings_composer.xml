@@ -59,7 +59,7 @@
     <string name="e7ModelUiDefault">Bawaan</string>
     <string name="e7ModelUiSelectionGone">Pilihan ini tidak lagi tersedia. Muat ulang model lalu coba lagi.</string>
     <string name="e7VoiceUiLocalInput">Input suara lokal</string>
-    <string name="e7VoiceUiPrivacyDownload">Audio tidak pernah keluar dari ponsel ini.</string>
+    <string name="e7VoiceUiPrivacyDownload">Audio tetap di ponsel ini. Ucapan Anda diubah menjadi teks di ponsel, dan audionya tidak disimpan setelahnya. Mengunduh model ucapan memerlukan internet satu kali.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android melaporkan tidak ada mikrofon bawaan. Input suara mungkin masih bisa dipakai dengan mikrofon berkabel atau USB.</string>
     <string name="e7VoiceUiLanguage">Bahasa transkripsi</string>
     <string name="e7VoiceUiVerifying">Memverifikasi model yang diunduh</string>

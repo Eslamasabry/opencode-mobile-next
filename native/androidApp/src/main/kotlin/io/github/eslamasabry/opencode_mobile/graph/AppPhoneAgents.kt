@@ -241,7 +241,8 @@ class AppPhoneAgents(
                 AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
                 AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
                 AgentUpdateStep.Updated -> PhoneAgentUpdateNote.Updated
-                AgentUpdateStep.Refused -> PhoneAgentUpdateNote.Refused
+                AgentUpdateStep.Refused,
+                AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
             }
         updateNote = note to name
         mutable.update { it.copy(updateNote = note, updateAgentName = name) }
@@ -1231,7 +1232,13 @@ class AppPhoneAgents(
         noteSignInLapsed(phone, provider, atMs, PhoneAgentFacts.LapseSource.Start)
     }
 
-    /** A sign-in of [phone]'s [agent] completed (its sign-in page confirmed it): its lapse, if any, ends. */
+    /**
+     * A sign-in of [phone]'s [agent] completed (its sign-in page's own check read "signed in"): its lapse, if any,
+     * ends, and that answer is the agent's newest one at once. B-454: the chat that offered "Sign in again" keeps its
+     * Claude Code program loaded, so the reads of this list that follow are held back ("agentBusy") and keep the last
+     * answer; that answer is now this one, never an older "signed out", and every reader of [state] reads the agent
+     * signed in without another tap.
+     */
     @Suppress("TooGenericExceptionCaught")
     internal suspend fun noteSignedIn(phone: ProfileId, agent: AgentId) {
         if (needsRestart || ownerId() != phone) return
@@ -1244,6 +1251,54 @@ class AppPhoneAgents(
         } catch (_: Exception) {
             // Not kept this time: the next completed sign-in says it again.
         }
+        synchronized(admission) {
+            if (owner in denied) return
+            val key = owner to agent
+            val now = SystemClock.elapsedRealtime()
+            // The page's answer carries no account name: a "signed in" already known keeps its own.
+            if (accounts[key]?.state != AuthState.SignedIn) accounts[key] = AuthProjection(AuthState.SignedIn)
+            answeredAt[key] = now
+            askedAt[key] = now
+            lastNoAnswer.remove(key)
+            // The mirror of noteSignInLapsed: the next read works out the rest of the row from this answer.
+            mutable.update { state ->
+                state.copy(
+                    agents =
+                        state.agents
+                            .map {
+                                if (it.id == agent.raw && it.status == PhoneAgentStatus.SignInNeeded)
+                                    it.copy(
+                                        status = PhoneAgentStatus.Ready,
+                                        signInCheckFailed = false,
+                                        signInEvidence = null,
+                                    )
+                                else it
+                            }
+                            .toImmutableList()
+                )
+            }
+        }
+    }
+
+    /**
+     * B-458: the sign-in of [phone]'s agents as [state] reads it now, by provider id: true when the agent reads ready
+     * (or at its plan limit, which is signed in), false when it reads Sign in needed. An agent whose sign-in is not
+     * known yet (checking, not installed, stopped) is absent. Empty when [state] is not [phone]'s. A chat's stopped
+     * turns follow this, so a confirmed sign-in ([noteSignedIn]) clears their "Sign in again" everywhere at once.
+     */
+    internal fun signIns(phone: ProfileId, state: PhoneAgentsState): Map<String, Boolean> {
+        if (state.owner != phone) return emptyMap()
+        return state.agents
+            .mapNotNull { row ->
+                val provider = catalog.byId(AgentId(row.id))?.providerId ?: return@mapNotNull null
+                when (row.status) {
+                    PhoneAgentStatus.Ready,
+                    PhoneAgentStatus.Limit -> provider to true
+                    PhoneAgentStatus.SignInNeeded -> provider to false
+                    else -> null
+                }
+            }
+            .toMap()
     }
 
     /** The agents [phone]'s registry has seen set up ([noteSetUp]); empty when none or not this phone. */
@@ -1350,6 +1405,8 @@ class AppPhoneAgents(
      * Linux and takes no lane (the last read's rows say whether the shared parts are in place), so the review can say
      * it at once.
      */
+    internal fun nameOf(agent: AgentId): String? = catalog.byId(agent)?.name
+
     override suspend fun installSpace(id: String): PhoneAgentSpace? {
         val owner = ownerId() ?: return null
         val abi = architecture() ?: return null

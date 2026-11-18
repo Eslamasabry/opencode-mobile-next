@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -75,12 +76,12 @@ public fun KitCommandRow(
                 Modifier.weight(1f).padding(vertical = Space.S2.dp),
                 verticalArrangement = Arrangement.spacedBy(FlutterKitTokens.ROW_LINE_GAP.dp),
             ) {
-                KitText(title, role = TypeRole.RowTitle, maxLines = kitRowTitleLines(scale))
+                KitText(title, role = TypeRole.RowTitle, maxLines = kitRowTitleLines(kitFontScale()))
                 KitText(
                     supporting,
                     role = TypeRole.Secondary,
                     tone = TextTone.Secondary,
-                    maxLines = kitRowSupportingLines(scale, COMMAND_SUPPORTING_LINES),
+                    maxLines = kitRowSupportingLines(kitFontScale(), COMMAND_SUPPORTING_LINES),
                 ) // F: lib/ui/screens/development_services_screen.dart:1009
                 below?.invoke()
             }

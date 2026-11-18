@@ -786,4 +786,8 @@
     <string name="consentWhyNeedsYouWhileOpen">Notifikasi hanya muncul saat aplikasi terbuka. Ketuk untuk menjaga koneksi latar belakang tetap aktif.</string>
     <string name="consentWhyNeedsYouChannelOff">Android mematikan notifikasi pertanyaan dari aplikasi ini. Ketuk untuk menyalakannya di setelan Android.</string>
     <string name="backgroundStatusTitle">Koneksi latar belakang</string>
+    <string name="appearanceWaitMarks">Tanda tunggu</string>
+    <string name="appearanceWaitMarksInk">Tinta</string>
+    <string name="appearanceWaitMarksColour">Warna</string>
+    <string name="appearanceWaitMarksNote">Gambar kecil bergerak di samping tulisan seperti “Memulai OpenCode…”.</string>
 </resources>

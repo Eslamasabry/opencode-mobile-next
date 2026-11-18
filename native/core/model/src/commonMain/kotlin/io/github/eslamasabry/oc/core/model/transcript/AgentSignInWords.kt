@@ -11,7 +11,8 @@ package io.github.eslamasabry.oc.core.model.transcript
  * - [neverSignedIn]: the agent was never signed in ("Not logged in. Please run /login"). The words are "sign in".
  * [gone] is either of them, or any other sign-in refusal (an unusable key, "failed to authenticate").
  *
- * The text is only matched, never shown.
+ * The text is only matched, never shown. [of] gives the same answer as a value ([AgentSignIn]) that may travel where
+ * the words may not: a run's end, a notification's reason.
  */
 public object AgentSignInWords {
     private fun ci(pattern: String) = Regex(pattern, RegexOption.IGNORE_CASE)
@@ -50,4 +51,21 @@ public object AgentSignInWords {
     /** Any of the agent's own words that its sign-in cannot be used: [expired], [neverSignedIn], a login ask, a refusal. */
     public fun gone(text: String): Boolean =
         expired(text) || NEVER.containsMatchIn(text) || LOGIN_ASK.containsMatchIn(text) || REFUSED.containsMatchIn(text)
+
+    /** What this rule reads in [text], typed: [expired], else [neverSignedIn], else any other [gone]; else null. */
+    public fun of(text: String?): AgentSignIn? =
+        when {
+            text == null -> null
+            expired(text) -> AgentSignIn.Expired
+            neverSignedIn(text) -> AgentSignIn.NeverSignedIn
+            gone(text) -> AgentSignIn.Refused
+            else -> null
+        }
 }
+
+/**
+ * The agent's own sign-in as [AgentSignInWords] read it, without the words. Kept apart because the words to the person
+ * differ: [Expired] is "sign in again", [NeverSignedIn] is "sign in", [Refused] (an unusable key, "failed to
+ * authenticate") has neither.
+ */
+public enum class AgentSignIn { Expired, NeverSignedIn, Refused }

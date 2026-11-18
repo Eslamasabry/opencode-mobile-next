@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit
 
 import androidx.compose.ui.text.AnnotatedString
 import io.github.eslamasabry.oc.ui.kit.text.kitHighlighted
+import io.github.eslamasabry.oc.ui.kit.text.kitWholeWords
 import io.github.eslamasabry.oc.ui.kit.effects.kitWordsPlate
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.text.BasicText
@@ -55,6 +56,11 @@ public fun KitText(
     tabular: Boolean = false,
     /** Search's matched words: each word of it is drawn in the accent ink ([kitHighlighted]); null = plain. */
     highlight: String? = null,
+    /**
+     * A name that must never break inside a word (an agent's name in a narrow tile): when one of its words is wider
+     * than the room at this size, the words shrink just enough to keep it whole ([kitWholeWords]).
+     */
+    wholeWords: Boolean = false,
 ) {
     // pageTitle / sectionLabel are role hints; the head typography resolves the role alone.
     val base = LocalKitTypography.current.style(role)
@@ -80,7 +86,14 @@ public fun KitText(
         )
     val marked = if (highlight.isNullOrBlank()) AnnotatedString(text) else kitHighlighted(text, highlight)
     if (kind == KitTextKind.Reading) {
-        BasicText(marked, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        BasicText(
+            marked,
+            modifier,
+            style = style,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = wholeWordsSize(wholeWords, style.fontSize),
+        )
         return
     }
     // Frame text, the Flutter way: min(platform size at the current scale, 1.3 × spec), per role size. Compose text
@@ -97,9 +110,19 @@ public fun KitText(
             letterSpacing = (style.letterSpacing.value * k).sp,
         )
     CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
-        BasicText(marked, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        BasicText(
+            marked,
+            modifier,
+            style = sized,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = wholeWordsSize(wholeWords, sized.fontSize),
+        )
     }
 }
+
+/** [KitText]'s `wholeWords`: the shrink-to-whole-words size rule when asked for, else none. */
+private fun wholeWordsSize(on: Boolean, size: androidx.compose.ui.unit.TextUnit) = if (on) kitWholeWords(size) else null
 
 private val TITLE_ROLES = setOf(TypeRole.LargeTitle, TypeRole.Title, TypeRole.Headline, TypeRole.RowTitle)
 

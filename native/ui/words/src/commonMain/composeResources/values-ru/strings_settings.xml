@@ -856,4 +856,8 @@
     <string name="consentWhyNeedsYouWhileOpen">Уведомления приходят, только пока приложение открыто. Нажмите, чтобы оставить фоновое подключение включённым.</string>
     <string name="consentWhyNeedsYouChannelOff">В Android отключены уведомления с вопросами от этого приложения. Нажмите, чтобы включить их в настройках Android.</string>
     <string name="backgroundStatusTitle">Соединение в фоне</string>
+    <string name="appearanceWaitMarks">Значки ожидания</string>
+    <string name="appearanceWaitMarksInk">Чернила</string>
+    <string name="appearanceWaitMarksColour">Цвет</string>
+    <string name="appearanceWaitMarksNote">Маленькие движущиеся картинки рядом со словами вроде «Запуск OpenCode…».</string>
 </resources>

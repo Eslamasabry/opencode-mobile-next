@@ -315,6 +315,8 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
             leading = KitIcons.layers,
             modifier = Modifier.testTag("composer-tools-advanced"),
         ) {
+            // The rows that open with "More tools" come into view once they have unfolded: the kit's expand row does
+            // that inside a sheet (looks 10098 and 10100).
             conversation(close)
         }
     }

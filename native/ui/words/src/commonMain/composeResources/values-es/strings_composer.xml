@@ -196,7 +196,7 @@
     <string name="e7LibraryNoServerCommandsFound">No se encontraron comandos del servidor</string>
     <string name="e7LibraryCommandsFromYourProjectAndSkillsAppear">Aquí aparecen los comandos de tu proyecto y de tus habilidades.</string>
     <string name="e7VoiceUiLocalInput">Entrada de voz local</string>
-    <string name="e7VoiceUiPrivacyDownload">El audio nunca sale de este teléfono.</string>
+    <string name="e7VoiceUiPrivacyDownload">El audio se queda en este teléfono. Tu voz se convierte en texto en el teléfono y el audio no se guarda después. Descargar el modelo de voz necesita internet una vez.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android indica que no hay micrófono integrado. La entrada de voz aún puede funcionar con un micrófono con cable o USB.</string>
     <string name="e7VoiceUiLanguage">Idioma de transcripción</string>
     <string name="e7VoiceUiVerifying">Verificando el modelo descargado</string>

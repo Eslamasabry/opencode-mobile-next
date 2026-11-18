@@ -2,8 +2,8 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="voiceNativeDetect">Определить по речи</string>
-    <string name="voiceNativeSizeMb">%1$d МБ</string>
-    <string name="voiceNativePhoneEngine">Голосовой ввод использует встроенное распознавание речи телефона, поэтому аудио остаётся на этом телефоне. Если его нет, значок микрофона не показывается. Эта версия пока не использует модели речи ниже.</string>
+    <string name="voiceNativeSizeMb">%1$d\u00A0МБ</string>
+    <string name="voiceNativePhoneEngine">Голосовой ввод просит Android распознавать речь на самом телефоне (Android 12 и новее) с предпочтением офлайн-распознавания; действуют условия конфиденциальности Android для этой службы. Если её нет, значок микрофона не показывается. Эта версия пока не использует модели речи ниже.</string>
     <string name="voiceNativeNaturalNeedsEngine">Нужен офлайн-движок речи, которого в этой версии пока нет.</string>
     <string name="voiceNativeSettingsAction">Настройки голоса</string>
     <string name="voiceNativeStoppedAfterPause">Остановлено после паузы. Ваш текст в поле ввода.</string>
@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">Читать вслух</string>
     <string name="voiceNativePartial">Загружено %1$s из %2$s</string>
     <string name="voiceNativePhoneRecognizer">Распознавание речи на телефоне</string>
+    <string name="kitVoiceDiscard">Удалить запись</string>
+    <string name="kitVoiceUseWords">Вставить слова в поле сообщения</string>
+    <string name="kitVoiceSendSpoken">Отправить сказанное</string>
+    <string name="kitVoiceListeningFor">Слушаю, %1$s</string>
 </resources>

@@ -104,6 +104,7 @@ public fun turnWork(
     stopped: Boolean = false,
     waitingForYou: Boolean = false,
     declinedCalls: Set<String> = emptySet(),
+    waitingCalls: Set<String> = emptySet(),
 ): Map<String, TurnWork> {
     if (snapshot.messages.isEmpty()) return emptyMap()
     val settled = settleStaleLive(snapshot.messages, busy)
@@ -116,13 +117,21 @@ public fun turnWork(
                 newest = newest,
                 busy = busy,
                 stopped = stopped && newest,
-                waiting = waitingForYou && newest,
+                waiting = waitingForYou && (newest || holdsWaitingCall(turn, waitingCalls)),
                 declinedCalls = declinedCalls,
+                waitingCalls = waitingCalls,
             )
             ?.let { out[turn.turnId] = it }
     }
     return out
 }
+
+/** Whether one of [turn]'s tool calls is still asking the person (an open permission request names it). */
+private fun holdsWaitingCall(turn: LedgerTurn, waitingCalls: Set<String>): Boolean =
+    waitingCalls.isNotEmpty() &&
+        turn.messages.any { m ->
+            m.parts.any { p -> p.type == PartType.Tool && p.callId?.let { it in waitingCalls } == true }
+        }
 
 private fun work(
     turn: LedgerTurn,
@@ -131,6 +140,7 @@ private fun work(
     stopped: Boolean,
     waiting: Boolean,
     declinedCalls: Set<String>,
+    waitingCalls: Set<String> = emptySet(),
 ): TurnWork? {
     val steps = ArrayList<TurnStep>()
     var counts = WorkCounts()
@@ -145,7 +155,10 @@ private fun work(
             if (p.type != PartType.Tool) continue
             // Claude Code's "a background task ended" notice is a notice, not a step of this turn.
             if (isBackgroundTaskNotice(p.toolName ?: "")) continue
-            val step = step(p, live = newest && busy, declinedCalls = declinedCalls) ?: continue
+            // A call whose permission card is still open stays live whatever is sent after it: a later message makes a
+            // newer turn, and that must not settle the step to "Stopped" while the person has a decision to make.
+            val asking = p.callId?.let { it in waitingCalls } == true
+            val step = step(p, live = (newest && busy) || asking, declinedCalls = declinedCalls) ?: continue
             steps += step
             counts = count(counts, p, step, editedFiles)
         }

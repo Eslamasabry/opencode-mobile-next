@@ -902,4 +902,8 @@
     <string name="consentWhyNeedsYouWhileOpen">تصلك الإشعارات فقط والتطبيق مفتوح. اضغط لإبقاء الاتصال في الخلفية مفعّلًا.</string>
     <string name="consentWhyNeedsYouChannelOff">أوقف Android إشعارات الأسئلة لهذا التطبيق. اضغط لتشغيلها في إعدادات Android.</string>
     <string name="backgroundStatusTitle">الاتصال في الخلفية</string>
+    <string name="appearanceWaitMarks">علامات الانتظار</string>
+    <string name="appearanceWaitMarksInk">حبر</string>
+    <string name="appearanceWaitMarksColour">ألوان</string>
+    <string name="appearanceWaitMarksNote">الصور الصغيرة المتحركة بجانب عبارات مثل «جارٍ تشغيل OpenCode…».</string>
 </resources>

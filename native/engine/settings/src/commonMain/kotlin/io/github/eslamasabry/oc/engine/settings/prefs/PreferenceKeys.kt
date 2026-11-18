@@ -33,6 +33,9 @@ public object DevicePreferenceKeys {
      * its "Use in the whole app" line says on. Missing = the shipped glass. One per install, never per profile.
      */
     public const val GLASS_TUNING: String = "oc.glassTuning"
+
+    /** The waiting marks' colouring (2026-11-18): `ink` (default, never stored) or `colour`. One per install. */
+    public const val WAIT_MARKS: String = "oc.waitMarks"
     public const val REASONING: String = "oc.transcript.reasoningExpanded"
     public const val TIMESTAMPS: String = "oc.transcript.timestampsVisible"
     public const val MOTION: String = "oc.effectsMotion"
@@ -61,7 +64,7 @@ public object DevicePreferenceKeys {
     public val READ: Set<String> = linkedSetOf(
         APPEARANCE, THEME_PACK, LOCALE, TEXT_SIZE, ACCENT, FROST, REASONING, TIMESTAMPS, MOTION, CELEBRATIONS, GLOW,
         GLOW_STYLE, LIVE_BACKGROUND, LIVE_HELD_BY_STYLE, LIVE_STYLE, LIVE_INTENSITY, SURFACE_STYLE, CORNERS, DENSITY,
-        GLASS_EDGES, GLASS_LOOK, GLASS_TUNING,
+        GLASS_EDGES, GLASS_LOOK, GLASS_TUNING, WAIT_MARKS,
     )
 
     /** The keys that make up the facade's `effects` value (provenance: any of them stored = explicit). */
@@ -75,6 +78,7 @@ public object DevicePreferenceKeys {
         listOf(
             APPEARANCE, THEME_PACK, LOCALE, TEXT_SIZE, ACCENT, FROST, MOTION, GLOW_STYLE, LIVE_STYLE, LIVE_INTENSITY,
             SURFACE_STYLE, CORNERS, DENSITY, DEPTH, EDGES, GLOW_COLOURS, GLOW_SPEED, GLASS_EDGES, GLASS_LOOK, GLASS_TUNING,
+            WAIT_MARKS,
         ).forEach { app(it, PrefType.Str) }
         listOf(REASONING, TIMESTAMPS, CELEBRATIONS, GLOW, LIVE_BACKGROUND, LIVE_HELD_BY_STYLE)
             .forEach { app(it, PrefType.Bool) }

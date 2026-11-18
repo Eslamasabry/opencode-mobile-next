@@ -173,6 +173,10 @@ public fun KitTheme(
         LocalKitSignals provides signals,
         LocalKitIconFamilies provides iconFamilies,
         LocalKitAppearance provides effectiveAppearance,
+        // The person's Colours › Waiting marks choice, once for the whole app.
+        io.github.eslamasabry.oc.ui.kit.wait.LocalKitWaitMode provides
+            if (appearance.colourWaitMarks) io.github.eslamasabry.oc.ui.kit.wait.KitWaitMode.Colour
+            else io.github.eslamasabry.oc.ui.kit.wait.KitWaitMode.Ink,
         LocalKitStyle provides styleState,
         // The Glass lab's tuning, while its "Use in the whole app" switch is on (null: the shipped glass).
         io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassTuning provides appearance.glassTuning?.takeIf { it.inApp },

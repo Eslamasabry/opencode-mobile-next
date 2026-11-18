@@ -92,5 +92,11 @@ public object KitMotionManifest {
             "KitStaggerRow" to KitMotionClass.Travel,
             "KitModelSheet.rows" to KitMotionClass.Travel,
             "KitModelSheet.star" to KitMotionClass.Settle,
+            // The border light round a kit button (B-452): its turn, and its strength fading in and out.
+            "kitBorderLight" to KitMotionClass.AmbientLoop,
+            "kitBorderLight.fade" to KitMotionClass.Fade,
+            // The waiting marks: each drawing's own loop, and the mark coming and going with its words.
+            "KitWaitMark" to KitMotionClass.AmbientLoop,
+            "KitWaitMark.presence" to KitMotionClass.Fade,
         )
 }

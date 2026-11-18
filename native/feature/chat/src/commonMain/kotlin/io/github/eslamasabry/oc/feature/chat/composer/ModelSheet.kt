@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
-import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -145,27 +144,30 @@ internal fun ModelSheet(
                 }
             }
         },
-        below = {
-            if (models.choices.isNotEmpty()) {
-                val selected = models.selected
-                val levels = ModelPicker.thinkingLevels(models)
-                if (selected != null && levels.isNotEmpty()) {
-                    KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                    // One line that scrolls sideways (never wraps), the chosen level filled.
-                    KitFilterChips(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
-                        levels.forEach { level ->
-                            KitChip(
-                                label =
-                                    if (level.isEmpty())
-                                        stringResource(Res.string.composerFullThinkingDefault)
-                                    else effortWords(level),
-                                kind = KitChipKind.Action,
-                                selected = level == models.variant,
-                                onClick = { scope.launch { actions.selectModel(selected, level) } },
-                            )
-                        }
+        // The thinking level comes first, under the title and above the search: it frames the choice of model, and it
+        // stays put while the list scrolls. Every level is shown whole (the chips wrap, never cut by the edge); a model
+        // without levels, or one whose name carries its effort, has no row at all.
+        header = {
+            val selected = models.selected
+            val levels = ModelPicker.thinkingLevels(models)
+            if (models.choices.isNotEmpty() && selected != null && levels.isNotEmpty()) {
+                KitSectionLabel(stringResource(Res.string.composerFullThinking))
+                KitChipWrap(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
+                    levels.forEach { level ->
+                        KitChip(
+                            label =
+                                if (level.isEmpty()) stringResource(Res.string.composerFullThinkingDefault)
+                                else effortWords(level),
+                            kind = KitChipKind.Action,
+                            selected = level == models.variant,
+                            onClick = { scope.launch { actions.selectModel(selected, level) } },
+                        )
                     }
                 }
+            }
+        },
+        below = {
+            if (models.choices.isNotEmpty()) {
                 if (models.agents.isNotEmpty()) {
                     // Flutter's agent rows: the built-in agents by name with what they do, never the server's id.
                     KitRowGroup(

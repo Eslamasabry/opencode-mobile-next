@@ -2,8 +2,8 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="voiceNativeDetect">Deteksi dari ucapan</string>
-    <string name="voiceNativeSizeMb">%1$d MB</string>
-    <string name="voiceNativePhoneEngine">Pengetikan suara memakai pengenalan ucapan bawaan ponsel Anda, jadi audio tetap di ponsel ini. Ponsel tanpa fitur itu tidak menampilkan mikrofon. Versi ini belum memakai model ucapan di bawah.</string>
+    <string name="voiceNativeSizeMb">%1$d\u00A0MB</string>
+    <string name="voiceNativePhoneEngine">Pengetikan suara meminta Android untuk mengenali ucapan di ponsel itu sendiri (Android 12 dan yang lebih baru), dengan mengutamakan pengenalan offline; ketentuan privasi Android untuk layanan itu berlaku. Ponsel tanpa fitur itu tidak menampilkan mikrofon. Versi ini belum memakai model ucapan di bawah.</string>
     <string name="voiceNativeNaturalNeedsEngine">Memerlukan mesin ucapan offline, yang belum disertakan di versi ini.</string>
     <string name="voiceNativeSettingsAction">Pengaturan suara</string>
     <string name="voiceNativeStoppedAfterPause">Berhenti setelah jeda. Ucapan Anda ada di kotak.</string>
@@ -11,4 +11,8 @@
     <string name="voiceNativeReadAloud">Bacakan</string>
     <string name="voiceNativePartial">Terunduh %1$s dari %2$s</string>
     <string name="voiceNativePhoneRecognizer">Pengenalan ucapan ponsel</string>
+    <string name="kitVoiceDiscard">Buang rekaman</string>
+    <string name="kitVoiceUseWords">Masukkan kata-kata ke kotak pesan</string>
+    <string name="kitVoiceSendSpoken">Kirim yang Anda ucapkan</string>
+    <string name="kitVoiceListeningFor">Mendengarkan, %1$s</string>
 </resources>

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import io.github.eslamasabry.oc.engine.analytics.DeviceClass
+import io.github.eslamasabry.oc.engine.analytics.NeverCollected
 import io.github.eslamasabry.oc.engine.analytics.health.BreadcrumbWords
 import io.github.eslamasabry.oc.engine.analytics.health.HealthWords
 import io.github.eslamasabry.oc.engine.analytics.health.PerfSchema
@@ -9,6 +11,8 @@ import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFieldGroup
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiPages
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiEvent
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
@@ -94,6 +98,9 @@ class PrivacyNoticeSyncTest {
         words += BreadcrumbWords.named.keys.flatMap { it.split('.') }
         words += BreadcrumbWords.named.values.flatten()
         words += "linux_setup" // the prefix of `linux_setup_<step>`
+        // The fields our own server may get (UmamiField): their names and every fixed word they take are names too.
+        words += UmamiField.wires
+        words += UmamiField.entries.flatMap { it.allowedWords.orEmpty() }
         words += setOf("breadcrumbs", "problem_report") // crash-side lines that are not events
         return SendableNames(
             events = productSchema,
@@ -349,17 +356,116 @@ class PrivacyNoticeSyncTest {
 
     @Test
     fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
-        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"))
+        val device = UmamiDevice("en", "browser", 16, DeviceClass.Phone)
+        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), device)
         for ((name, fields) in productSchema) {
             val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
                 source, 1000)!!
-            assertEquals(setOf("version", "build"), event.payload.data.keys - fields.keys, name)
+            val added = event.payload.data.keys - fields.keys
+            assertEquals(setOf("version", "build", "os_major", "device_class"), added, name)
         }
-        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
+        val wiringPath = "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/" +
+            "telemetry/Telemetry.kt"
+        val wiring = File(repo, wiringPath).readText()
         assertTrue("UsageTelemetryVendor" in wiring && "UmamiSender(" in wiring, "the notice covers the sender that the app actually builds")
         assertTrue("BuildConfig.VERSION_NAME" in wiring && "BuildConfig.VERSION_CODE" in wiring, "version facts come from this build")
         val firebase = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/FirebaseTelemetryVendor.kt").readText()
         assertTrue("setUserProperty(\"app_build\", null)" in firebase, "usage off clears the Google build property")
+    }
+
+    @Test
+    fun `B-SEC-217 guard - the telemetry wiring reads no device fact beyond the Android major and the class`() {
+        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
+        val device = wiring.substringAfter("val device = {").substringBefore("val configured")
+        val allowed = setOf("Build.VERSION.RELEASE", "smallestScreenWidthDp", "Locale.getDefault")
+        for (word in listOf(
+            "displayMetrics", "widthPixels", "heightPixels", "densityDpi", "Build.MODEL", "Build.MANUFACTURER",
+            "Build.BRAND", "Build.DEVICE", "Build.PRODUCT", "Build.HARDWARE", "Build.FINGERPRINT", "Build.SERIAL",
+            "Build.ID", "SDK_INT",
+            "TimeZone", "ANDROID_ID", "Settings.Secure", "advertising", "telephony", "Display",
+        )) assertTrue(word !in device, "the Umami device may not read $word")
+        assertTrue(allowed.all { it in device }, "the device reads the Android major, the width class and the language")
+    }
+
+    @Test
+    fun `B-SEC-218 the notices name the three device fields for our server and no screen size for it`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        val facts = listOf("Android main version number", "device class (phone or tablet)", "build number",
+            "no screen size or resolution")
+        for (fact in facts) {
+            assertTrue(fact in umami, "PRIVACY.md Umami part must name $fact")
+        }
+        val saysResolution = Regex("(?i)and\\s+screen\\s+resolution").find(umami) != null
+        assertTrue(!saysResolution, "PRIVACY.md must not say Umami gets the resolution")
+        assertTrue("no screen size or resolution" in umami, "PRIVACY.md says the screen size is not sent to Umami")
+        val en = File(repo, "native/ui/words/src/commonMain/composeResources/values")
+        val policy = xmlString(File(en, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+        val detail = xmlString(File(en, "strings_s28_privacy.xml"), "nativeTelemetryUsageDetail")
+        val device = xmlString(File(en, "strings_s28_privacy.xml"), "collectDevice")
+        for ((name, text) in listOf("policy" to policy, "usage detail" to detail)) {
+            val namesFields = "main version number" in text && "phone or a tablet" in text
+            assertTrue(namesFields, "$name names the major and the class")
+            assertTrue("not the screen size" in text, "$name says the screen size is not sent to Umami")
+        }
+        val googleOnly = "Google Analytics also receives, on its own, a random install ID, the phone model" in device &&
+            "never the screen size" in device
+        assertTrue(googleOnly, "the page puts the screen size on Google's side only")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }.filter { it != "en" }) {
+            val dir = File(en.parentFile, "values-$tag")
+            val translated = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            val umamiPart = translated.substringAfter("Umami").substringBefore("256")
+            assertTrue("16" in umamiPart, "$tag policy gives the Android main version example for Umami")
+            val line = xmlString(File(dir, "strings_s28_privacy.xml"), "collectDevice")
+            assertTrue("Umami" in line && "Google Analytics" in line, "$tag page puts the screen size on Google's side")
+        }
+        val claimed =
+            NeverCollected.entries.any { it.name in setOf("ScreenSize", "DeviceModel", "TimeZone", "Location") }
+        assertTrue(!claimed, "the never-list cannot claim what Google Analytics receives on its own")
+    }
+
+    @Test
+    fun `B-SEC-219 every field our own server may get is named in PRIVACY, the policy and the page`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        val words = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val dir = File(words, if (tag == "en") "values" else "values-$tag")
+            val policy = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            val page = UmamiFieldGroup.entries.joinToString(" ") { group ->
+                xmlString(File(dir, "strings_s28_privacy.xml"), "collectOwn" + group.name)
+            }
+            for (field in UmamiField.entries) {
+                assertTrue("`${field.wire}`" in umami, "PRIVACY.md names `${field.wire}` for Umami")
+                assertTrue(has(policy, field.wire), "$tag: the bundled policy names ${field.wire}")
+                assertTrue(has(page, field.wire), "$tag: What we collect must name ${field.wire} (own server)")
+            }
+        }
+        val label = xmlString(File(words, "values/strings_s28_privacy.xml"), "collectOwnLabel")
+        assertTrue("Only to our own server" in label)
+    }
+
+    @Test
+    fun `B-SEC-227 our own server gets a random install ID and the phone model, and the notices say so`() {
+        val md = File(repo, "PRIVACY.md").readText()
+        val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
+        for (fact in listOf("`install_id`", "`phone_model`", "deleted when you switch usage off", "count installs",
+            "not Google's ID")) {
+            assertTrue(fact in umami, "PRIVACY.md Umami part must say $fact")
+        }
+        assertTrue("device or installation ID" !in md, "PRIVACY.md no longer says our server gets no installation ID")
+        val en = File(repo, "native/ui/words/src/commonMain/composeResources/values")
+        val rules = xmlString(File(en, "strings_s28_privacy.xml"), "collectRules")
+        val saysOwnId = "none of those" !in rules && "install ID" in rules
+        assertTrue(saysOwnId, "the page says our server gets its own install ID")
+        val install = xmlString(File(en, "strings_s28_privacy.xml"), "collectOwnInstall")
+        val installOk = "install_id" in install && "switch them off" in install && "not Google" in install
+        assertTrue(installOk, "the install line")
+        val umamiDir = "native/engine/analytics/src/jvmShared/kotlin/io/github/eslamasabry/oc/engine/analytics/umami/"
+        val sender = File(repo, umamiDir + "UmamiSender.kt").readText()
+        assertTrue("installId?.on(false)" in sender, "switching usage off deletes the install id")
+        val id = File(repo, umamiDir + "UmamiInstallId.kt").readText()
+        assertTrue("if (!enabled) return null" in id && "file.delete()" in id, "no id exists while the switch is off")
     }
 
     // ---- the tests ----
@@ -434,10 +540,66 @@ class PrivacyNoticeSyncTest {
             val rows = File(locale, "strings_s28_privacy.xml").readText()
             for (field in listOf("cause", "app_exit", "exit_reason", "foreground"))
                 assertTrue(has(rows, field), "$tag What we collect must name $field")
-            for (word in listOf("cause", "thinking_silent", "tool_running", "retrying", "stream_dead_refetched", "stream_silent", "unknown", "app_exit", "exit_reason", "foreground"))
+            val stallWords = listOf("cause", "thinking_silent", "tool_running", "retrying", "stream_dead_refetched",
+                "stream_silent", "unknown", "app_exit", "exit_reason", "foreground")
+            for (word in stallWords)
                 assertTrue(has(policy, word), "$tag policy must name $word")
         }
         assertTrue(HealthContract.contractEvents.values.flatten().contains("app_exit"), "What we collect names the event")
+    }
+
+    private val voiceOverclaims = listOf(
+        "so the audio stays on this phone",
+        "so recorded audio stays on the phone",
+        "فيبقى الصوت على هذا الهاتف",
+        "el audio se queda en este teléfono",
+        "l'audio reste sur ce téléphone",
+        "audio tetap di ponsel ini",
+        "外に出ることはありません",
+        "o áudio fica neste celular",
+        "аудио остаётся на этом телефоне",
+        "âm thanh vẫn ở trên điện thoại này",
+        "音频保留在这部手机上",
+    )
+
+    private fun xmlString(file: File, key: String): String =
+        Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL)
+            .find(file.readText())!!.groupValues[1]
+
+    private fun assertBothVoicePaths(where: String, text: String) {
+        val ok = "huggingface.co" in text && "Android 12" in text
+        assertTrue(ok, "$where must name both voice paths")
+    }
+
+    @Test
+    fun `B-SEC-213 privacy policy, What we collect and voice settings name both voice paths truthfully`() {
+        val mdText = File(repo, "PRIVACY.md").readText()
+        val md = section(mdText, "## Microphone and local voice input", "## Optional assistant on this phone")
+        assertBothVoicePaths("PRIVACY.md voice section", md)
+        for (fact in listOf("never leaves the phone", "EXTRA_PREFER_OFFLINE", "privacy terms apply")) {
+            assertTrue(fact in md, "PRIVACY.md voice section must name '$fact'")
+        }
+        val wiringPath = "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/VoiceWiring.kt"
+        val wiring = File(repo, wiringPath).readText()
+        assertTrue("SpeechRecognizer.createOnDeviceSpeechRecognizer(" in wiring, "uses on-device recognizer")
+        assertTrue("RecognizerIntent.EXTRA_PREFER_OFFLINE" in wiring, "sets EXTRA_PREFER_OFFLINE")
+        assertTrue("SpeechRecognizer.createSpeechRecognizer(" !in wiring, "never uses default recognizer")
+        val kdocDir = "native/engine/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/voice/dictation"
+        val kdoc = File(repo, "$kdocDir/OnDeviceSpeech.kt").readText()
+        assertTrue("audio never leaves the phone" !in kdoc && "Android guarantees" !in kdoc, "KDoc truthful")
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            val policy = xmlString(File(locale, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            val never = xmlString(File(locale, "strings_s28_privacy.xml"), "collectNever")
+            val voice = xmlString(File(locale, "strings_voice_native.xml"), "voiceNativePhoneEngine")
+            assertBothVoicePaths("${locale.name} policy", policy)
+            assertBothVoicePaths("${locale.name} never", never)
+            assertTrue("Android 12" in voice, "${locale.name}: voice")
+            assertTrue("createOnDeviceSpeechRecognizer" !in voice && "createOnDeviceSpeechRecognizer" !in never,
+                "${locale.name}: no code identifier in the words people read")
+            for (overclaim in voiceOverclaims) assertTrue(overclaim !in voice, "${locale.name}: $overclaim")
+        }
     }
 
 }

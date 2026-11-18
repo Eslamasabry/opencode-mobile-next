@@ -68,4 +68,6 @@
     <string name="notify_answer_in_app">Mở OpenCode để trả lời</string>
     <string name="notify_reply_watch_title">Vẫn đang xử lý câu trả lời của bạn</string>
     <string name="notify_status_public_working">OpenCode · đang làm việc</string>
+    <string name="notify_alert_reason_sign_in_again">%1$s cần bạn đăng nhập lại.</string>
+    <string name="notify_alert_reason_sign_in_again_any">Tác nhân cần bạn đăng nhập lại.</string>
 </resources>

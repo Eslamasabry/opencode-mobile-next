@@ -580,7 +580,8 @@ public fun KitAccentRow(
                 add { AccentCircle(s, s.id == selected, onTap = { if (s.id != selected) onChanged(s.id) }, caption = s.label, ring = colors.accent) }
             }
         }
-        val perRow = 4 // F: lib/ui/kit/kit_option_card.dart:983
+        // F: lib/ui/kit/kit_option_card.dart:983 (4); three from 2x text, so a colour's name stays whole.
+        val perRow = if (io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale() >= ACCENT_THREE_AT) 3 else 4
         Column(group.fillMaxWidth()) {
             cells.chunked(perRow).forEachIndexed { r, row ->
                 if (r > 0) Spacer(Modifier.height(Space.S2.dp))
@@ -683,6 +684,7 @@ private fun AccentCircle(swatch: KitAccentSwatch, selected: Boolean, onTap: () -
                     tone = if (selected) TextTone.Primary else TextTone.Secondary,
                     textAlign = TextAlign.Center,
                     maxLines = 2, // F: lib/ui/kit/kit_option_card.dart:1166
+                    wholeWords = true, // a colour's name never breaks inside a word in its narrow cell
                 )
             }
         }
@@ -866,3 +868,6 @@ private fun glassSampleCard(r: SurfaceRequest): io.github.eslamasabry.oc.ui.desi
 
 /** A line of words in a theme card's picture, in dp. */
 private const val THEME_BAR_DP = 3
+
+/** The text size (the chosen one) from which the named accent circles sit three to a row. */
+private const val ACCENT_THREE_AT = 2.0f

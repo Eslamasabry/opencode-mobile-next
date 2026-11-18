@@ -261,7 +261,8 @@ class SetupRunner private constructor(private val context: Context) {
                     throw error
                 } catch (e: Throwable) {
                     // Agent process exceptions can include private home paths.
-                    Log.e(BuiltinLinux.TAG, "setup component failed: ${BuiltinLinux.failureShape(e)}")
+                    val shape = BuiltinLinux.failureShape(e)
+                    Log.e(BuiltinLinux.TAG, "setup component ${spec.id} failed: $shape")
                     if (NativeRuntimeOwnership.isUnknownFailure(e)) NativeRuntimeOwnership.UNKNOWN_CODE
                     else "The setup step could not finish. Try again."
                 }
@@ -309,6 +310,10 @@ class SetupRunner private constructor(private val context: Context) {
                 }
                 state.error = failure
                 if (state.state == "done") state.current = null
+                // Which part ended it, by component id and state only: no job text, path or argument.
+                if (state.state == "failed") {
+                    Log.w(BuiltinLinux.TAG, "setup job failed at ${state.current}: ${componentStates(state)}")
+                }
             }
         }
         try {
@@ -342,6 +347,9 @@ class SetupRunner private constructor(private val context: Context) {
         }
     }
 
+    private fun componentStates(job: SetupJobState): String =
+        job.components.joinToString(" ") { "${it.id}=${it.state}" }
+
     private fun runNative(spec: Spec, component: SetupComponentStatus): String? {
         if (spec.id != "linux") return "Unknown native component ${spec.id}"
         val downloading = spec.labels["download"] ?: "Downloading Linux base"
@@ -368,6 +376,25 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     /**
+     * [runScript], looked at again a few times, a few seconds apart, when the ownership proof fails: a process of this
+     * app that is still ending can make it fail for a moment. After the last look the failure ends the step as before
+     * (never a silent wait).
+     */
+    private fun runScriptProven(spec: Spec, component: SetupComponentStatus, compatible: Boolean): String? {
+        var tries = 1
+        while (true) {
+            try {
+                return runScript(spec, component, compatible)
+            } catch (e: IllegalStateException) {
+                if (!NativeRuntimeOwnership.isUnknownFailure(e) || cancelled || tries >= OWNERSHIP_TRIES) throw e
+            }
+            tries++
+            Log.w(BuiltinLinux.TAG, "setup step ${spec.id}: ownership not proven; looking again")
+            synchronized(lock) { (lock as Object).wait(OWNERSHIP_PAUSE_MS) }
+        }
+    }
+
+    /**
      * [runScript], run again (up to [SetupStepRetry.ATTEMPTS] times) when it
      * was interrupted rather than failed, so a stop the person did not ask
      * for never needs Continue setup or a force stop. The row says so.
@@ -378,7 +405,7 @@ class SetupRunner private constructor(private val context: Context) {
         while (true) {
             try {
                 lastExitCode = null
-                val failure = runScript(spec, component, compatible)
+                val failure = runScriptProven(spec, component, compatible)
                 if (SetupStepRetry.compatibility(lastExitCode, compatible, cancelled)) {
                     // A program inside Ubuntu segfaulted (issue #117): once more, the careful way.
                     compatible = true
@@ -680,6 +707,9 @@ class SetupRunner private constructor(private val context: Context) {
         private val PASEO_CHECK_STAGES = setOf(
             "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
         )
+        /** An unproven ownership is looked at this many times in all (the first try included), this far apart. */
+        private const val OWNERSHIP_TRIES = 3
+        private const val OWNERSHIP_PAUSE_MS = 3000L
         private const val WRITE_INTERVAL_MS = 250L
         private const val NOTIFY_INTERVAL_MS = 1000L
 

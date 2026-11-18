@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.analytics.umami
 
+import io.github.eslamasabry.oc.engine.analytics.DeviceClass
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.util.concurrent.CountDownLatch
@@ -20,7 +21,7 @@ class UmamiHttpTest {
         UmamiSource(
             "00000000-0000-4000-8000-000000000001",
             UmamiBuild("3.0.1", "10081"),
-            UmamiDevice("en", "1080x2340", "browser"),
+            UmamiDevice("en", "browser", 16, DeviceClass.Phone),
         )
 
     @Test
@@ -103,5 +104,54 @@ class UmamiHttpTest {
         for (item in items) {
             assertEquals("month", (item as JsonObject).getValue("payload").jsonObject["salt"]?.jsonPrimitive?.content)
         }
+    }
+
+    private fun wirePayload(device: UmamiDevice, props: Map<String, String> = mapOf("kind" to "cold")): JsonObject {
+        val src = UmamiSource(source.website, source.build, device)
+        val event = umamiEvent("app_open", props, umamiPages.getValue("conversations"), src, 1000)!!
+        val (_, body) = capture("""{"sessionId":"s","visitId":"v"}""") { url ->
+            kotlinx.coroutines.runBlocking { UmamiHttp(url) { "Mozilla/5.0" }.prepare(listOf(event)).execute() }
+        }
+        val resolution = Regex("[0-9]{3,5}\\s*[x\u00d7]\\s*[0-9]{3,5}")
+        assertTrue(!resolution.containsMatchIn(body), "no resolution anywhere in the body")
+        return UmamiCodec.json.parseToJsonElement(body).jsonObject.getValue("payload").jsonObject
+    }
+
+    @Test
+    fun `B-SEC-214 the request body on the wire carries no screen resolution`() = runTest {
+        val payload = wirePayload(source.device)
+        assertTrue("screen" !in payload.keys, "the exact screen size is not sent: ${payload.keys}")
+    }
+
+    @Test
+    fun `B-SEC-215 the wire carries the Android major, the device class, the build and the tag`() = runTest {
+        val payload = wirePayload(source.device)
+        val data = payload.getValue("data").jsonObject
+        assertEquals("16", data["os_major"]?.jsonPrimitive?.content)
+        assertEquals("phone", data["device_class"]?.jsonPrimitive?.content)
+        assertEquals("10081", data["build"]?.jsonPrimitive?.content)
+        assertEquals("10081", payload["tag"]?.jsonPrimitive?.content, "the tag stays")
+        val tablet = wirePayload(UmamiDevice("en", "browser", 15, DeviceClass.Tablet)).getValue("data").jsonObject
+        assertEquals("15", tablet["os_major"]?.jsonPrimitive?.content)
+        assertEquals("tablet", tablet["device_class"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `B-SEC-216 guard - the wire payload holds exactly the allowed device facts and nothing else`() = runTest {
+        val payload = wirePayload(source.device)
+        assertEquals(
+            setOf("website", "hostname", "language", "url", "title", "tag", "timestamp", "data", "name", "salt"),
+            payload.keys,
+        )
+        val dataKeys = payload.getValue("data").jsonObject.keys
+        assertEquals(setOf("kind", "version", "build", "os_major", "device_class"), dataKeys)
+        // A new fact about the device needs a decision: it fails here until the notices and this list say so.
+        assertEquals(
+            listOf("language", "userAgent", "osMajor", "deviceClass", "facts"),
+            UmamiDevice::class.java.declaredFields.map { it.name }.filter { !it.startsWith("$") },
+        )
+        // A foldable or desktop gives no class at all, and an absurd major no version: nothing invented.
+        val odd = wirePayload(UmamiDevice("en", "browser", 0, DeviceClass.Foldable)).getValue("data").jsonObject
+        assertTrue("os_major" !in odd.keys && "device_class" !in odd.keys, odd.keys.toString())
     }
 }

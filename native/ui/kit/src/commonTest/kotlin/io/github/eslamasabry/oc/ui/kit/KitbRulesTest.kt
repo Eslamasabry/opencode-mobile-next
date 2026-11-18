@@ -111,6 +111,10 @@ class KitbRulesTest {
                 // The finger-linked tabs and the model sheet built on them (2026-11-10).
                 "KitTabStrip.pill", "KitTabPages.drag", "KitTabPages.settle", "KitTabPages.tap", "KitModelSheet.rows",
                 "KitModelSheet.star",
+                // The border light round a kit button (B-452).
+                "kitBorderLight", "kitBorderLight.fade",
+                // The waiting marks.
+                "KitWaitMark", "KitWaitMark.presence",
             )
         assertEquals(expected, KitMotionManifest.parts.keys)
         assertEquals(KitMotionClass.Travel, KitMotionManifest.parts.getValue("KitSwap.count"))

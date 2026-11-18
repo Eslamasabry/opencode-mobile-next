@@ -295,9 +295,9 @@
     <string name="agentsFailStale">Эта проверка устарела. Запустите её снова.</string>
     <string name="agentsFailBusy">Выполняется другая настройка. Дождитесь её завершения.</string>
     <string name="agentsSignInIntro">%1$s предлагает собственные запросы для входа в вашу учётную запись Claude на условиях Anthropic. Приложение никогда не видит ваши данные для входа.</string>
-    <string name="agentsSignInTerminalIntro">%1$s откроет свою страницу входа. Войдите там в свою учётную запись Claude и вернитесь. Если %1$s попросит код, скопируйте его на странице и выберите «Вставить».</string>
+    <string name="agentsSignInTerminalIntro">%1$s откроет свою страницу входа. Войдите там в свою учётную запись Claude и вернитесь. Если %1$s попросит код, скопируйте его на странице и выберите «Вставить код».</string>
     <string name="agentsSignInIntroOther">%1$s предлагает собственные запросы для входа в вашу учётную запись у его провайдера. Приложение никогда не видит ваши данные для входа.</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s выполняет вход здесь через собственные запросы. Если он откроет страницу, войдите там и вернитесь. Если он попросит код или ключ, выберите «Вставить».</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s выполняет вход здесь через собственные запросы. Если он откроет страницу, войдите там и вернитесь. Если он попросит код или ключ, выберите «Вставить код».</string>
     <string name="agentsSignInTerminalNotYet">Вход в %1$s ещё не выполнен. Начните вход снова, когда будете готовы.</string>
     <string name="agentsSignInStopFailed">Не удалось остановить вход. Не закрывайте приложение и повторите.</string>
     <string name="agentsSignInChecking">Проверка входа…</string>
@@ -328,7 +328,7 @@
     <string name="agentsSwitchToBuiltIn">Перейти на встроенный сервер</string>
     <string name="agentsStateNoDownload">Проверенной загрузки пока нет</string>
     <string name="agentsActionFailed">На этом телефоне не получилось. Причину смотрите в подробностях.</string>
-    <string name="agentsSignInPaste">Вставить</string>
+    <string name="agentsSignInPaste">Вставить код</string>
     <string name="agentsSignInStartPrepare">Приложению не удалось подготовить папку агента на этом телефоне.</string>
     <string name="agentsSignInStartServer">OpenCode на этом телефоне не запустился.</string>
     <string name="agentsSignInStartConnect">Приложению не удалось подключиться к OpenCode на этом телефоне.</string>
@@ -606,4 +606,11 @@
     <string name="agentsRetiredBody">%1$s больше не предлагается на этом телефоне, поэтому его нельзя настроить или использовать снова. Удалите его, чтобы освободить занятое место. Остальные агенты и беседы остаются.</string>
     <string name="agentsRemoveChip">Удалить</string>
     <string name="chatUiRunOnThisPhone">Выполните на этом телефоне</string>
+    <string name="agentsSignInCheckingAgent">Проверяем, выполнен ли вход в %1$s…</string>
+    <string name="agentsSignInCheckingBusy">%1$s занят разговором. Вход проверим, когда он освободится…</string>
+    <string name="agentsSignInCouldNotCheck">Не удалось проверить, выполнен ли вход в %1$s</string>
+    <string name="agentsSignInCouldNotCheckBody">Возможно, вход уже выполнен. Проверьте ещё раз, чтобы спросить %1$s сейчас.</string>
+    <string name="agentsSignInCheckAgain">Проверить вход ещё раз</string>
+    <string name="agentsSignInCodeField">Код входа</string>
+    <string name="agentsSignInSendCode">Отправить код</string>
 </resources>

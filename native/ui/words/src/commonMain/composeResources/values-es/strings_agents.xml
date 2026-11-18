@@ -91,9 +91,9 @@
     <string name="agentsFailBusy">Hay otra configuración en curso. Espera a que termine.</string>
     <string name="agentsSignInTitle">Iniciar sesión con %1$s</string>
     <string name="agentsSignInIntro">%1$s inicia sesión con sus propios pasos, con tu propia cuenta de Claude y según los términos de Anthropic. La app nunca ve tu inicio de sesión.</string>
-    <string name="agentsSignInTerminalIntro">%1$s abre su página de inicio de sesión. Inicia sesión allí con tu cuenta de Claude y vuelve. Si %1$s pide un código, cópialo en la página y elige Pegar.</string>
+    <string name="agentsSignInTerminalIntro">%1$s abre su página de inicio de sesión. Inicia sesión allí con tu cuenta de Claude y vuelve. Si %1$s pide un código, cópialo en la página y elige Pegar código.</string>
     <string name="agentsSignInIntroOther">%1$s inicia sesión con sus propios pasos, con tu propia cuenta de su proveedor. La app nunca ve tu inicio de sesión.</string>
-    <string name="agentsSignInTerminalIntroOther">%1$s inicia sesión aquí con sus propios pasos. Si abre una página, inicia sesión allí y vuelve. Si pide un código o una clave, elige Pegar.</string>
+    <string name="agentsSignInTerminalIntroOther">%1$s inicia sesión aquí con sus propios pasos. Si abre una página, inicia sesión allí y vuelve. Si pide un código o una clave, elige Pegar código.</string>
     <string name="agentsSignInAgain">Iniciar sesión de nuevo</string>
     <string name="agentsSignInTerminalNotYet">%1$s aún no ha iniciado sesión. Vuelve a iniciar el proceso cuando quieras.</string>
     <string name="agentsSignInStopFailed">No se pudo detener el inicio de sesión. Mantén la app abierta e inténtalo de nuevo.</string>
@@ -140,7 +140,7 @@
     <string name="agentsStateNoDownload">Aún no hay descarga verificada</string>
     <string name="agentsInstallHint">Instalar</string>
     <string name="agentsActionFailed">Eso no funcionó en este teléfono. Abre Detalles para ver por qué.</string>
-    <string name="agentsSignInPaste">Pegar</string>
+    <string name="agentsSignInPaste">Pegar código</string>
     <string name="agentsSignInOpenPage">Abrir página de inicio de sesión</string>
     <string name="agentsSignInCopyCode">Copiar código %1$s</string>
     <string name="agentsStateNotCertified">Aún no certificado en esta versión</string>
@@ -598,4 +598,11 @@
     <string name="agentsRetiredBody">%1$s ya no se ofrece en este teléfono, así que no se puede configurar ni volver a usar. Quítalo para liberar el espacio que ocupa. Tus otros agentes y conversaciones se quedan.</string>
     <string name="agentsRemoveChip">Quitar</string>
     <string name="chatUiRunOnThisPhone">Ejecutar en este teléfono</string>
+    <string name="agentsSignInCheckingAgent">Comprobando que %1$s ha iniciado sesión…</string>
+    <string name="agentsSignInCheckingBusy">%1$s está ocupado con una conversación. Se comprobará el inicio de sesión cuando esté libre…</string>
+    <string name="agentsSignInCouldNotCheck">No se pudo comprobar si %1$s ha iniciado sesión</string>
+    <string name="agentsSignInCouldNotCheckBody">Puede que el inicio de sesión haya funcionado. Vuelve a comprobarlo para preguntar a %1$s ahora.</string>
+    <string name="agentsSignInCheckAgain">Volver a comprobar el inicio de sesión</string>
+    <string name="agentsSignInCodeField">Código de inicio de sesión</string>
+    <string name="agentsSignInSendCode">Enviar código</string>
 </resources>

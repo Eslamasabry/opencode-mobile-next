@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.feature.chat.presentation.SignInTurn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -250,6 +251,8 @@ internal class ReplyActions(
     val signInAgainWords: ((String) -> String?)? = null,
     val signInAgainLabel: String? = null,
     val onAgentSignIn: (String) -> Unit = {},
+    /** B-458: the same sentence in the past ("Claude Code needed you to sign in again"), for a turn signed in since. */
+    val signInPastWords: ((String) -> String?)? = null,
     /** This conversation runs on this phone: failure words name this phone, never a computer. */
     val onThisPhone: Boolean = false,
     /** Error-card recovery (Flutter `assistant_error_row.dart`); a null label hides that fix. */
@@ -311,6 +314,20 @@ internal class AgentSetUpReply(
 
 internal val LocalAgentSetUpReply =
     androidx.compose.runtime.compositionLocalOf<AgentSetUpReply?> { null }
+
+/**
+ * B-458: the stopped turns whose agent's sign-in ran out, and what each offers now ([SignInTurn]); [onSendAgain] sends
+ * the newest turn's message again. The chat screen provides it; without it those turns keep today's words.
+ */
+@Immutable
+internal class SignInTurnReply(
+    val turns: Map<String, SignInTurn>,
+    val sendAgainLabel: String,
+    val onSendAgain: () -> Unit,
+)
+
+internal val LocalSignInTurnReply =
+    androidx.compose.runtime.compositionLocalOf<SignInTurnReply?> { null }
 
 /**
  * B2: a short, safe code for a send failure (no server text, no address): what QA asked to see
@@ -531,9 +548,13 @@ internal fun ChatTranscriptList(
     // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
     val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }
     val latestWaitingIndex by rememberUpdatedState(waitingIndex)
-    // Keyed on the first row too: while a reply runs the newest key is the live line's and does not change.
-    val firstRowKey = unique.firstOrNull()?.key
-    LaunchedEffect(waitingKey, newestKey, firstRowKey, pending.size, waitingJump) {
+    // Keyed on the newest row that is not the person's own message: while a reply runs the newest key is the live
+    // line's and does not change. A message the person sends or queues while a decision waits is their own newest
+    // action: the list goes to the end for it, as it does for any send (onSent), and this pull must not take the page
+    // back up to the card and leave "Jump to latest" over their queued bubble (B-459). The card stays in view above the
+    // bubble.
+    val firstRowKey = unique.firstOrNull { it !is PromptRow }?.key
+    LaunchedEffect(waitingKey, live != null, firstRowKey, waitingJump) {
         if (latestWaitingIndex == null) return@LaunchedEffect
         // After the frames in which the new row is laid out and the list's own follow (index 0) has run.
         repeat(3) { withFrameNanos {} }
@@ -1358,15 +1379,29 @@ private fun ChatRow(
                         val stillWorking =
                             facts.live is LiveNoticeUi.Retry ||
                                 facts.work[row.turnId]?.state == WorkLineState.Running
-                        KitQuietLine(
-                            stringResource(
-                                if (stillWorking) Res.string.liveFailedStillWorking
-                                else Res.string.liveFailedStopped
-                            ),
-                            modifier = Modifier.semantics {
-                                liveRegion = LiveRegionMode.Polite
-                            },
-                        )
+                        // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". When it is the
+                        // cause, that sentence REPLACES "send a message to carry on" (sending cannot work until the
+                        // person signs in), and its one button is the only way on.
+                        val limitForSignIn = reply?.let { LocalLimitSwitchReply.current?.limitSwitch?.get(row.turnId) }
+                        val setUpForSignIn = LocalAgentSetUpReply.current?.needs?.get(row.turnId)
+                        val signInAgainEarly =
+                            if (
+                                setUpForSignIn == null &&
+                                    limitForSignIn == null &&
+                                    AgentErrorText.signInExpired(reason)
+                            )
+                                row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
+                            else null
+                        if (signInAgainEarly == null)
+                            KitQuietLine(
+                                stringResource(
+                                    if (stillWorking) Res.string.liveFailedStillWorking
+                                    else Res.string.liveFailedStopped
+                                ),
+                                modifier = Modifier.semantics {
+                                    liveRegion = LiveRegionMode.Polite
+                                },
+                            )
                         val kind = ReplyFailureKind.of(reason)
                         // The server's typed error class reads first (rest-1); the reason text only
                         // drives the generic words when there is no typed class.
@@ -1381,11 +1416,17 @@ private fun ChatRow(
                         // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
                         val setUpReply = LocalAgentSetUpReply.current
                         val setUp = setUpReply?.needs?.get(row.turnId)
-                        // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again".
+                        // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". B-458: once the agent
+                        // is signed in again (or for an older turn), the same sentence in the past and no Sign in.
+                        val signInTurns = LocalSignInTurnReply.current
+                        val signInTurn = signInTurns?.turns?.get(row.turnId)
+                        val signInPast =
+                            signInTurn == SignInTurn.Past ||
+                                signInTurn == SignInTurn.PastSendAgain
                         val signInAgain =
-                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
-                                row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
-                            else null
+                            if (signInAgainEarly != null && signInPast)
+                                row.providerId?.let { reply?.signInPastWords?.invoke(it) } ?: signInAgainEarly
+                            else signInAgainEarly
                         if (setUp != null)
                             KitQuietLine(listWords.setUpNeeded(setUp.name), modifier = Modifier.testTag("chat-reply-set-up"))
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
@@ -1402,6 +1443,8 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            // A set-up need or a lapsed sign-in has its one way on; the other fixes stand down.
+                            val otherWays = setUp == null && signInAgain == null
                             if (setUp != null && setUpReply != null)
                                 KitButton(
                                     listWords.setUpAction(setUp.name),
@@ -1411,7 +1454,8 @@ private fun ChatRow(
                                 )
                             val signInAgainLabel = reply?.signInAgainLabel
                             val signInAgainAgent = row.providerId
-                            if (signInAgain != null && signInAgainLabel != null && signInAgainAgent != null) {
+                            val offersSignIn = signInAgain != null && !signInPast
+                            if (offersSignIn && signInAgainLabel != null && signInAgainAgent != null) {
                                 val agentId = signInAgainAgent
                                 KitButton(
                                     signInAgainLabel,
@@ -1420,8 +1464,19 @@ private fun ChatRow(
                                     modifier = Modifier.testTag("error-action-sign-in-again"),
                                 )
                             }
+                            // B-458: signed in again and nothing sent since: the one way on is this message again.
                             if (
-                                setUp == null &&
+                                signInAgain != null && signInTurns != null &&
+                                    signInTurn == SignInTurn.PastSendAgain
+                            )
+                                KitButton(
+                                    signInTurns.sendAgainLabel,
+                                    signInTurns.onSendAgain,
+                                    role = KitButtonRole.Primary,
+                                    modifier = Modifier.testTag("error-action-send-again"),
+                                )
+                            if (
+                                otherWays &&
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null
                             ) {
@@ -1433,7 +1488,7 @@ private fun ChatRow(
                             }
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
-                            if (reply != null && setUp == null) {
+                            if (reply != null && otherWays) {
                                 val suggestion =
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
@@ -1542,7 +1597,7 @@ private fun ChatRow(
                             // turn picks up there).
                             val continueLabel = reply?.continueLabel
                             if (
-                                setUp == null &&
+                                otherWays &&
                                     kind == ReplyFailureKind.ConnectionLost &&
                                     !continueLabel.isNullOrBlank()
                             )

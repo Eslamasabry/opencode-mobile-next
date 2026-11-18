@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Kiểm tra nền của máy chủ</string>
     <string name="nativeSearchAliasesBackgroundChecks">Kiểm tra nền; thăm dò; giám sát</string>
     <string name="nativeSearchPlaceAppearance">Giao diện</string>
-    <string name="nativeSearchAliasesAppearance">Chủ đề; màu sắc; kiểu</string>
+    <string name="nativeSearchAliasesAppearance">Chủ đề; màu sắc; kiểu; dấu hiệu chờ</string>
     <string name="nativeSearchPlaceLanguage">Ngôn ngữ</string>
     <string name="nativeSearchAliasesLanguage">Tiếng Việt; tiếng Anh; ngôn ngữ vùng</string>
     <string name="nativeSearchPlaceTips">Mẹo</string>

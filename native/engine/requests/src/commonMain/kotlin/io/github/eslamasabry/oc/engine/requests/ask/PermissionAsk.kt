@@ -165,7 +165,7 @@ public object PermissionAsk {
             "websearch" -> AskVerb.WebSearch
             "grep", "glob" -> AskVerb.Search
             "list", "ls" -> AskVerb.ReadFolder
-            "task" -> AskVerb.Task
+            "task", "subagent" -> AskVerb.Task
             "skill" -> AskVerb.Skill
             "mode" -> AskVerb.Mode
             "doom_loop" -> AskVerb.DoomLoop

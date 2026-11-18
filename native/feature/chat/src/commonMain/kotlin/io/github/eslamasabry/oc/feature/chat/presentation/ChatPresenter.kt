@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
+import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt
@@ -231,6 +232,11 @@ public class ChatPresenter(
                 // Open while starting: what the page waits for, said on the connection line.
                 .combine(world.serverWait) { i, w -> i.copy(retry = i.retry.copy(serverWait = w)) }
                 .combine(setUpChanges()) { i, _ -> i }
+                // B-458: the phone agents' sign-in as it is now; the stopped turns follow it.
+                .combine(signInChanges()) { i, s ->
+                    signInsNow = s
+                    i
+                }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
                 syncRead()
@@ -532,8 +538,62 @@ public class ChatPresenter(
                 l.starAsk && !t.run.busy && i.link == ChatLink.Live &&
                     world.requests.value?.state?.value?.card == null,
             setUpReplies = setUpReplies(t.rows),
+            signInTurns = signInTurns(t.rows, waiting = i.pending.isNotEmpty()),
         )
     }
+
+    /** B-458: the sign-in of this chat's phone agents right now, by provider id ([ChatOutside.agentSignIns]). */
+    private var signInsNow: Map<String, Boolean> = emptyMap()
+    private var lastSignInTurns: kotlinx.collections.immutable.ImmutableMap<String, SignInTurn> = persistentMapOf()
+
+    private fun signInChanges(): Flow<Map<String, Boolean>> {
+        val port = outside
+        val owner = signInOwner()
+        return if (port == null || owner == null) flowOf(emptyMap())
+        else port.agentSignIns(owner).onStart { emit(emptyMap()) }
+    }
+
+    /**
+     * B-458 (owner, build 10086: the old turn still offered "Sign in again" after the sign-in worked): each stopped
+     * turn whose agent's sign-in ran out, newest first. While the agent reads signed in now, every such turn is past
+     * ("needed you to sign in again", no button), and the newest one also offers to send its message again when
+     * nothing was sent after it ([waiting]: a message on its way counts). While it needs a sign-in (or is not known
+     * yet), only the newest such turn of that agent offers Sign in again; older ones are past. Decided from the agent's
+     * state every time the transcript is read, so it holds after the app is opened again.
+     */
+    private fun signInTurns(
+        rows: ImmutableList<TranscriptRow>,
+        waiting: Boolean,
+    ): kotlinx.collections.immutable.ImmutableMap<String, SignInTurn> {
+        val turns: Map<String, SignInTurn> = if (signInOwner() == null) emptyMap() else signInTurnMap(rows, waiting)
+        if (turns != lastSignInTurns) lastSignInTurns = turns.toPersistentMap()
+        return lastSignInTurns
+    }
+
+    /** [signInTurns]' reading of the transcript, newest first. */
+    private fun signInTurnMap(rows: ImmutableList<TranscriptRow>, waiting: Boolean): Map<String, SignInTurn> {
+        val runtime = world.runtimeId()
+        val newestPrompt = rows.firstOrNull { it is PromptRow }?.turnId
+        val offered = HashSet<String>()
+        val turns = LinkedHashMap<String, SignInTurn>()
+        for (failed in failedTurns(rows)) {
+            val footer = failed.footer
+            if (footer.reason?.let(AgentErrorText::signInExpired) != true) continue
+            val provider = runtime ?: footer.providerId ?: continue
+            turns[footer.turnId] = signInTurnOf(provider, last = footer.turnId == newestPrompt && !waiting, offered)
+        }
+        return turns
+    }
+
+    /**
+     * One stopped sign-in turn of [provider]: [last] = nothing was sent after it; [offered] = agents already offered.
+     */
+    private fun signInTurnOf(provider: String, last: Boolean, offered: MutableSet<String>): SignInTurn =
+        when {
+            signInsNow[provider] == true -> if (last) SignInTurn.PastSendAgain else SignInTurn.Past
+            offered.add(provider) -> SignInTurn.Offer
+            else -> SignInTurn.Past
+        }
 
     private var lastPending: ImmutableList<PendingSend> = persistentListOf()
 
@@ -1726,16 +1786,14 @@ public class ChatPresenter(
         if (!world.capabilities.value.fileBrowsing) return
         val transcript = world.transcript.value
         for (path in paths) {
-            if (path in local.value.confirmedPaths) continue
             val seen = pathChecks[path]
             // A miss is checked again only after the conversation moved on and is idle (Flutter:
             // agents name a file
             // moments before they create it), never once per streamed word.
-            if (
-                seen != null &&
-                    (seen == CHECKING || seen == transcript.revision || transcript.run.busy)
-            )
-                continue
+            val skip =
+                path in local.value.confirmedPaths ||
+                    (seen != null && (seen == CHECKING || seen == transcript.revision || transcript.run.busy))
+            if (skip) continue
             if (pathChecks.size >= MAX_PATH_CHECKS) pathChecks.remove(pathChecks.keys.first())
             pathChecks[path] = CHECKING
             launcher.launch {

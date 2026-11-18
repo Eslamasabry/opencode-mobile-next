@@ -1552,15 +1552,38 @@ class BuiltinLinux(private val context: Context) {
             },
             authOtherOwners::snapshot,
             ::claudeCliRunning,
+            ::claudeSignInAge,
         )
     }
 
     /**
-     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
-     * end a read's probe instead of waiting for it.
+     * How long ago [profileId]'s stored Claude Code sign-in was written (its file's time only; nothing is read from
+     * it), or null when there is none or it is not a plain file. [PhoneAgentAuthHoldBack] uses it.
      */
-    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> =
-        privateAgentAuth.run(arguments, stop)
+    private fun claudeSignInAge(profileId: String): Long? =
+        try {
+            check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
+            val file =
+                File(
+                    PhoneAgentPaths.resolve(
+                        context.filesDir,
+                        "linux/ubuntu/home/oc/.oc-profiles/$profileId/claude",
+                    ),
+                    PhoneAgentClaudeHome.CREDENTIALS,
+                )
+            val stat = Os.lstat(file.absolutePath)
+            if (!OsConstants.S_ISREG(stat.st_mode)) null
+            else System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(stat.st_mtime)
+        } catch (_: Exception) {
+            null
+        }
+
+    /**
+     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
+     * end a read's probe instead of waiting for it. [afterSignIn]: the sign-in page's check ([PhoneAgentAuthHoldBack]).
+     */
+    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null, afterSignIn: Boolean = false): Map<String, Any?> =
+        privateAgentAuth.run(arguments, stop, afterSignIn)
 
     val agentSignIn by lazy { PhoneAgentSignIn(this) }
     val agentHost by lazy { PhoneAgentHost(this) }
@@ -3769,7 +3792,7 @@ class BuiltinLinux(private val context: Context) {
         while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(
             PROCESS_POLL_MS
         )
-        check(targets().isEmpty()) { "ownershipUnknown" }
+        ownershipRequire(targets().isEmpty(), "drainTimeout")
         try {
             // A normal app start may create new tracked helpers after the old Stop
             // snapshot. They are peers of this live drain, never cold writer exemptions.
@@ -6571,6 +6594,11 @@ exec gc supervisor run
     var message: String? = null
         private set
 
+    /** The technical text of a failed install, for the Details page only; never copy. */
+    @Volatile
+    var failureDetails: String? = null
+        private set
+
     /** Starts [install] on its own thread; [phase] says how it went. */
     @Synchronized
     fun installInBackground() {
@@ -6581,6 +6609,7 @@ exec gc supervisor run
         }
         phase = "installing"
         message = null
+        failureDetails = null
         Thread {
             try {
                 install { step -> message = step }
@@ -6588,8 +6617,9 @@ exec gc supervisor run
                 message = null
             } catch (error: Throwable) {
                 Log.e(TAG, "install failed", error)
+                failureDetails = InstallFailure.details(error)
                 phase = "failed"
-                message = error.message ?: error.javaClass.simpleName
+                message = InstallFailure.shown(error)
             }
         }
             .start()
@@ -6998,11 +7028,13 @@ exec gc supervisor run
                         it.className.startsWith("io.github.eslamasabry")
                     }
                 val fixed = current.message?.takeIf { it == "ownershipUnknown" }
+                val token = (current as? OwnershipProofException)?.token
                 val errno = (current as? ErrnoException)?.let { OsConstants.errnoName(it.errno) }
                 parts +=
                     listOfNotNull(
                             current.javaClass.simpleName,
                             fixed,
+                            token,
                             errno,
                             frame?.let { "${it.methodName}:${it.lineNumber}" },
                         )

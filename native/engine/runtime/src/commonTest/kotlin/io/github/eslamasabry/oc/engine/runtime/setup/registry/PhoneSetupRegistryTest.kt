@@ -67,7 +67,7 @@ class PhoneSetupRegistryTest {
         assertTrue(opencode.installScript.contains("x86_64|amd64)"))
         assertFalse(opencode.installScript.contains("npm install -g") || opencode.installScript.contains("OC_PROOT_SETUP"), "never npm in the app's own Ubuntu")
         assertTrue(opencode.checkScript.contains("= '/opt/opencode2/bin/opencode2' ]"))
-        assertTrue(opencode.checkScript.contains("[ \"\$installed\" = '2.2.6' ]"))
+        assertTrue(opencode.checkScript.contains("[ \"\$installed\" = '2.3.2' ]"))
         // An unpinned or malformed version is refused by the install, never a crash of the registry.
         val other = registry.components(mapOf("opencode" to mapOf("version" to "9.9.9"))).single { it.id == "opencode" }
         assertTrue(other.installScript.contains("This app can only install its own pinned OpenCode"))
@@ -79,9 +79,13 @@ class PhoneSetupRegistryTest {
     @Test
     fun `B-LINUX-200 the registry's Node component downloads the pinned artifact per ABI and only the pinned Node passes its check`() {
         val node = all.single { it.id == SetupComponentIds.NODE }
-        assertTrue(node.checkScript.contains("[ \"\$(node --version)\" = 'v24.22.2' ]"))
-        assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2 ;;"))
-        assertTrue(node.installScript.contains("x86_64|amd64) node_arch=x64; node_sha=361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9 ;;"))
+        assertTrue(node.checkScript.contains("[ \"\$(node --version)\" = 'v24.22.3' ]"))
+        val arm64Line = "aarch64|arm64) node_arch=arm64; " +
+            "node_sha=261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8 ;;"
+        val x64Line = "x86_64|amd64) node_arch=x64; " +
+            "node_sha=061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2 ;;"
+        assertTrue(node.installScript.contains(arm64Line))
+        assertTrue(node.installScript.contains(x64Line))
         assertTrue(node.installScript.contains("oc_stage 'Downloading Node.js 24.22.2'\n"))
         assertTrue(
             node.installScript.contains(

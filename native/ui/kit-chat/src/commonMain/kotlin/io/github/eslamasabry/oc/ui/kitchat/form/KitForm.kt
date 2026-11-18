@@ -248,7 +248,13 @@ private fun MultiSelectField(
 
 /** The "Something else" words of a select (shown once chosen) or a multi-select (always offered). */
 @Composable
-private fun OwnWords(field: KitFormField, label: String, initial: String, enabled: KitEnabled, onWords: (String) -> Unit) {
+private fun OwnWords(
+    field: KitFormField,
+    label: String,
+    initial: String,
+    enabled: KitEnabled,
+    onWords: (String) -> Unit,
+) {
     val state = rememberTextFieldState(initial)
     val report by rememberUpdatedState(onWords)
     LaunchedEffect(state) {

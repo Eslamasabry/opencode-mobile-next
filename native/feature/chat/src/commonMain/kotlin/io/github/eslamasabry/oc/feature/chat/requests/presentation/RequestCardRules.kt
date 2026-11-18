@@ -15,7 +15,10 @@ public object RequestCardRules {
 
     /** Verbs whose question already names the kind of action ("Edit game.js?", "Run npm test?"). */
     private val selfNaming =
-        setOf(AskVerb.Run, AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read, AskVerb.ReadFolder, AskVerb.Fetch, AskVerb.WebSearch)
+        setOf(
+            AskVerb.Run, AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read, AskVerb.ReadFolder, AskVerb.Fetch,
+            AskVerb.WebSearch, AskVerb.Task,
+        )
 
     /** The "Tool: …" line only where the question does not already say what kind of thing asks. */
     public fun showsToolLine(ask: AskView): Boolean = ask.verb !in selfNaming

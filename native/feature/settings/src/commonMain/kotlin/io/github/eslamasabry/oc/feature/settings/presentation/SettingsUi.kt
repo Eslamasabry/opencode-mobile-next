@@ -127,6 +127,8 @@ public data class AppearanceUi(
     val glassLookHold: EdgeHold? = null,
     /** The Glass lab row (preview builds): it opens [SettingsPage.GlassLab]. */
     val glassLab: Boolean = false,
+    /** Colours › Waiting marks: Colour (true) or Ink (false, the default). */
+    val waitMarksColour: Boolean = false,
     val guide: AppearanceGuideRecord? = null,
     val question: AppearanceQuestion? = null,
     val questions: List<AppearanceQuestion> = emptyList(),
@@ -140,7 +142,21 @@ public sealed interface SpeechModel {
 
     public data class Downloading(val name: String) : SpeechModel
 
-    public data class Ready(val name: String) : SpeechModel
+    /**
+     * The engine that types speech is ready. Its name is words, so the page writes it in the app's language when it is
+     * shown (the hub said "Whisper speech models" in English after the language changed: the name had been written
+     * once, at app start).
+     */
+    public data class Ready(val engine: SpeechEngine) : SpeechModel
+}
+
+/** Which engine types speech on this phone ([SpeechModel.Ready]). */
+public enum class SpeechEngine {
+    /** The app's own Whisper speech models. */
+    Whisper,
+
+    /** Android's own on-device speech recognition. */
+    PhoneRecognizer,
 }
 
 public data class VoiceFacts(

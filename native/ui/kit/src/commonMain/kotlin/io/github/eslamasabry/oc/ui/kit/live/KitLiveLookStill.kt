@@ -52,12 +52,16 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Draws the aurora [image] over the whole scope at [drift], through [filter], at [alpha] (`kit_live_aurora_image.dart:282-314`). */
+/** [AuroraImage.sourceRect]'s width and height, after its left and top. */
+private const val SRC_WIDTH = 2
+private const val SRC_HEIGHT = 3
+
 internal fun DrawScope.drawAuroraPlate(image: ImageBitmap, filter: ColorFilter, alpha: Float, drift: AuroraImage.Drift) {
     val src = AuroraImage.sourceRect(image.width.toFloat(), image.height.toFloat(), size.width, size.height, drift)
     drawImage(
         image,
         srcOffset = IntOffset(src[0].roundToInt(), src[1].roundToInt()),
-        srcSize = IntSize(src[2].roundToInt().coerceAtLeast(1), src[3].roundToInt().coerceAtLeast(1)),
+        srcSize = IntSize(src[SRC_WIDTH].roundToInt().coerceAtLeast(1), src[SRC_HEIGHT].roundToInt().coerceAtLeast(1)),
         dstOffset = IntOffset.Zero,
         dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
         alpha = alpha,
@@ -133,7 +137,9 @@ internal fun KitLiveLookStill(look: String?, modifier: Modifier = Modifier) {
         modifier
             .clip(RoundedCornerShape(corner))
             .background(ground)
-            .drawBehind { plate?.let { (image, filter) -> drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(0.0)) } }
+            .drawBehind {
+                plate?.let { (image, filter) -> drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(0.0)) }
+            }
             .clearAndSetSemantics {}
     ) {
         if (shaderLook != null) LiveSample(shaderLook, Modifier.matchParentSize())

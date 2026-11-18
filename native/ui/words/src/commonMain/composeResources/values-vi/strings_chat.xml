@@ -1250,4 +1250,5 @@
     <string name="stageOpeningConversation">Đang mở cuộc trò chuyện…</string>
     <string name="kitTurnLiveStillThinking">Vẫn đang suy nghĩ</string>
     <string name="chatQuietThinkingHint">Một số mô hình suy nghĩ trong im lặng vài phút mà không hiện nội dung.</string>
+    <string name="kitToolUnanswered">Đã dừng trước khi bạn trả lời</string>
 </resources>

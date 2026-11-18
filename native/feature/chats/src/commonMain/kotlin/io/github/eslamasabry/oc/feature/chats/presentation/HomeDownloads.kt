@@ -26,14 +26,28 @@ public sealed interface HomeDownloadPhase {
 
     /** It ended without finishing. The words are plain; technical text stays out of the line. */
     public data object Failed : HomeDownloadPhase
+
+    /**
+     * The update is ready but has waited a while for the phone to be free ([why]); it installs by itself then. Said
+     * only after a short bounded wait, so a hold is never silent for long. Nothing to tap: it needs no choice.
+     */
+    public data class Held(val why: HomeHold) : HomeDownloadPhase
 }
+
+/** Why a ready update waits (the plain words are in the strings, one per reason). */
+public enum class HomeHold { Reply, PhoneNotReady }
 
 /** One download's state; [megabytes] is the honest "about" size in [HomeDownloadSizes]. */
 public data class HomeDownloadFact(
     val kind: HomeDownloadKind,
     val phase: HomeDownloadPhase,
     val megabytes: Int = HomeDownloadSizes.of(kind),
+    /** A failed download that stopped for want of room: what it needs and what the phone has. */
+    val short: HomeShortSpace? = null,
 )
+
+/** The room a stopped download needs and the room the phone has, in megabytes, with the agent's own name. */
+public data class HomeShortSpace(val name: String, val neededMb: Int, val freeMb: Int)
 
 /**
  * The sizes the line and the ask say, in one place. They are measured, not read from a release manifest: on the
@@ -51,30 +65,64 @@ public object HomeDownloadSizes {
         }
 }
 
+/** Whose words the line shows ([HomeDownloadRules.placeWins]). */
+public enum class HomeLineWinner { Stage, Download, None }
+
 public object HomeDownloadRules {
     /**
      * The one download the Home line talks about: one that downloads now first, then one that failed, then one that
      * waits for Wi-Fi; OpenCode before the helper. Null when nothing is happening.
      */
     public fun shown(facts: List<HomeDownloadFact>): HomeDownloadFact? =
-        facts.sortedWith(compareBy({ rank(it.phase) }, { it.kind.ordinal })).firstOrNull()
+        facts
+            .sortedWith(compareBy({ rank(it.phase) }, { if (it.short != null) 0 else 1 }, { it.kind.ordinal }))
+            .firstOrNull()
+
+    /**
+     * Home's one place for "what is happening to this phone" is the Recent label's end (stage words, or the download).
+     * Which says its words when both have some: a download that is running (the share done is the news) wins, then
+     * the start-up stage (it is what stands between the person and their agents and ends by itself in seconds), then a
+     * download that failed or waits for Wi-Fi (both stay until the person acts, so they show the moment the stage
+     * ends). Nothing is lost: the loser's words come back; nothing is stacked.
+     */
+    public fun placeWins(stage: HomeStage?, download: HomeDownloadFact?): HomeLineWinner =
+        when {
+            download?.phase is HomeDownloadPhase.Running -> HomeLineWinner.Download
+            stage != null -> HomeLineWinner.Stage
+            download != null -> HomeLineWinner.Download
+            else -> HomeLineWinner.None
+        }
+
+    private const val HELD_RANK = 3
 
     private fun rank(phase: HomeDownloadPhase): Int =
         when (phase) {
             is HomeDownloadPhase.Running -> 0
             HomeDownloadPhase.Failed -> 1
             HomeDownloadPhase.Waiting -> 2
+            is HomeDownloadPhase.Held -> HELD_RANK
         }
 }
 
 /** What the agents' automatic update is doing, as far as Home cares. */
-public enum class HomeHelperStep { None, Waiting, Updating }
+public enum class HomeHelperStep { None, Waiting, Updating, Failed }
 
 /** The agents' install job, as far as Home cares. */
 public enum class HomeInstallPhase { None, Installing, Failed }
 
 /** Turns the two updates' readings into the facts Home shows (pure: the app only supplies the readings). */
 public object HomeDownloadMapping {
+    /**
+     * The OpenCode update that is ready but held back ([why]) says so after the facts, only when OpenCode has no
+     * line of its own (running, failed or waiting for Wi-Fi): one line per download, never stacked.
+     */
+    public fun withHeld(facts: List<HomeDownloadFact>, why: HomeHold?): List<HomeDownloadFact> =
+        if (why == null || facts.any { it.kind == HomeDownloadKind.OpenCode }) {
+            facts
+        } else {
+            facts + HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Held(why))
+        }
+
     public fun facts(
         openCodeWaiting: Boolean,
         openCodeRunning: Boolean,
@@ -93,14 +141,20 @@ public object HomeDownloadMapping {
         when (helper) {
             HomeHelperStep.None -> Unit
             HomeHelperStep.Waiting -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))
-            HomeHelperStep.Updating ->
+            HomeHelperStep.Updating,
+            HomeHelperStep.Failed ->
                 add(
                     HomeDownloadFact(
                         HomeDownloadKind.Helper,
                         when (helperInstall) {
                             HomeInstallPhase.Failed -> HomeDownloadPhase.Failed
                             HomeInstallPhase.Installing -> HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100))
-                            HomeInstallPhase.None -> HomeDownloadPhase.Running(null)
+                            HomeInstallPhase.None ->
+                                if (helper == HomeHelperStep.Failed) {
+                                    HomeDownloadPhase.Failed
+                                } else {
+                                    HomeDownloadPhase.Running(null)
+                                }
                         },
                     )
                 )

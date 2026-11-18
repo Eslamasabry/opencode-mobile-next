@@ -290,9 +290,9 @@
     <string name="agentsFailStale">この確認結果は古くなっています。もう一度実行してください。</string>
     <string name="agentsFailBusy">別のセットアップが実行中です。完了するまでお待ちください。</string>
     <string name="agentsSignInIntro">%1$sはAnthropicの規約に基づき、ご自身のClaudeアカウントを使って専用の画面でサインインします。このアプリがサインイン情報を取得することはありません。</string>
-    <string name="agentsSignInTerminalIntro">%1$sがサインインページを開きます。Claudeアカウントでサインインしてから戻ってください。%1$sがコードを求めた場合は、ページ上のコードをコピーして「貼り付け」を選んでください。</string>
+    <string name="agentsSignInTerminalIntro">%1$sがサインインページを開きます。Claudeアカウントでサインインしてから戻ってください。%1$sがコードを求めた場合は、ページ上のコードをコピーして「コードを貼り付け」を選んでください。</string>
     <string name="agentsSignInIntroOther">%1$sはプロバイダーのご自身のアカウントを使い、専用の画面でサインインします。このアプリがサインイン情報を取得することはありません。</string>
-    <string name="agentsSignInTerminalIntroOther">%1$sはここで専用の画面を使ってサインインします。ページが開いた場合はサインインしてから戻ってください。コードやキーを求められた場合は「貼り付け」を選んでください。</string>
+    <string name="agentsSignInTerminalIntroOther">%1$sはここで専用の画面を使ってサインインします。ページが開いた場合はサインインしてから戻ってください。コードやキーを求められた場合は「コードを貼り付け」を選んでください。</string>
     <string name="agentsSignInTerminalNotYet">%1$sはまだサインインしていません。準備ができたらサインインをやり直してください。</string>
     <string name="agentsSignInStopFailed">サインインを停止できませんでした。アプリを開いたまま、もう一度お試しください。</string>
     <string name="agentsSignInChecking">サインインを確認中…</string>
@@ -323,7 +323,7 @@
     <string name="agentsSwitchToBuiltIn">内蔵サーバーに切り替える</string>
     <string name="agentsStateNoDownload">検証済みのダウンロードがまだありません</string>
     <string name="agentsActionFailed">このスマートフォンで操作を実行できませんでした。理由は「詳細」を確認してください。</string>
-    <string name="agentsSignInPaste">貼り付け</string>
+    <string name="agentsSignInPaste">コードを貼り付け</string>
     <string name="agentsSignInStartPrepare">このスマートフォンにエージェントのフォルダを準備できませんでした。</string>
     <string name="agentsSignInStartServer">このスマートフォンのOpenCodeが起動しませんでした。</string>
     <string name="agentsSignInStartConnect">このスマートフォンのOpenCodeに接続できませんでした。</string>
@@ -582,4 +582,11 @@
     <string name="agentsOwnAgentReadyLater">実行中のタスクが終了すると使用できるようになります。</string>
     <string name="agentsUpdatingAgent">%1$sをアップデート中…</string>
     <string name="agentsOwnAgentFailed">このスマートフォンでは実行できませんでした。もう一度お試しください。</string>
+    <string name="agentsSignInCheckingAgent">%1$sにサインインしているか確認しています…</string>
+    <string name="agentsSignInCheckingBusy">%1$sは会話の処理中です。空き次第サインインを確認します…</string>
+    <string name="agentsSignInCouldNotCheck">%1$sにサインインしているか確認できませんでした</string>
+    <string name="agentsSignInCouldNotCheckBody">サインインは完了しているかもしれません。もう一度確認すると、今すぐ%1$sに問い合わせます。</string>
+    <string name="agentsSignInCheckAgain">サインインをもう一度確認</string>
+    <string name="agentsSignInCodeField">サインインコード</string>
+    <string name="agentsSignInSendCode">コードを送信</string>
 </resources>

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.phonesetup.ui
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -814,6 +816,10 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                                         ?: stringResource(Res.string.setupProgressViewStarting)
                             }
                     }
+                // A download whose share is known: the Downloading mark in the working arc's place.
+                val running = component.state == ComponentState.Running
+                val share = component.fraction?.toFloat()?.coerceIn(0f, 1f)?.takeIf { running }
+                KitWaitMarkHere(KitWaitKind.Downloading.takeIf { share != null }, share ?: 0f) {
                 KitChecklistStep(
                     itemTitle(
                         component.id,
@@ -833,6 +839,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                     total = rows.size,
                     supporting = supporting,
                 )
+                }
             }
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
@@ -887,7 +894,7 @@ private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
         )
         state.progress.state == SetupState.Done && state.canMakeProject -> ReadyProject(state, actions)
         state.progress.state == SetupState.Done ->
-            KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done, fullWidth = true)
+            KitButton(stringResource(Res.string.chatsHomeNewChat), actions::done, fullWidth = true)
     }
 }
 

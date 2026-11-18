@@ -18,7 +18,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** One process-wide reader/mutation gate for the phone's shared pinned agent payloads. */
+/**
+ * One process-wide reader/mutation gate for the phone's shared pinned agent payloads. It also owns [installGate], the
+ * one gate of the phone's install jobs: the setup engine and the agents' installer share components and the one
+ * installer slot, so each takes it with tryLock for its whole START PHASE (its checks, until its job is registered as
+ * running in its own record); a failed tryLock is busy and the try is kept. After registration it is released and each
+ * side's own "a job is running" check covers the rest.
+ */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<ProfileCloser>())
@@ -31,6 +37,9 @@ class PhonePayloadGuard(
     private val lastKnown: LastKnown,
 ) : ProfileCloser {
     override val owner = ":engine:agents/payloads"
+
+    /** The one gate of the phone's install jobs (see the class note). */
+    val installGate = kotlinx.coroutines.sync.Mutex()
     private val lock = Any()
     private var readers = 0
     private var mutating = false

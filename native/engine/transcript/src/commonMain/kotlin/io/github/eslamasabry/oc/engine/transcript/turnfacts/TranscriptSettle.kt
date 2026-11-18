@@ -4,10 +4,12 @@ import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.Part
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 // Port of Flutter lib/domain/transcript_settle.dart (B-CHAT-116/117): live state that has outlived what it
@@ -38,6 +40,38 @@ public fun isCompactionLineLive(part: Part): Boolean =
  * Returns [messages] itself when nothing needed settling. [moreFollows]: [messages] is the start of a longer
  * conversation (the rest begins with a prompt), so its last message is not the newest.
  */
+/** [settleStaleLive]'s compaction line that is no longer live: it reads as passed. */
+private fun compactionPassed(message: MessageWithParts): MessageWithParts =
+    message.copy(
+        parts =
+            message.parts
+                .map { p ->
+                    if (isCompactionLineLive(p)) {
+                        p.copy(noticeMetadata = (p.noticeMetadata + (KIND to COMPACTION_PASSED)).toPersistentMap())
+                    } else {
+                        p
+                    }
+                }
+                .toImmutableList()
+    )
+
+/**
+ * [settleStaleLive]'s still-live step of a turn that ended. Words later in the turn prove the step finished. With none,
+ * the run just ended (a force-stop, a lost connection) while the step still said it ran, perhaps waiting for an answer
+ * that never came: that is no proof it ran. It settles as not run, never as "Ran 1 command" (B-461 job 2).
+ */
+private fun settledStep(part: Part, tool: ToolState, wordsLater: Boolean): Part =
+    if (wordsLater) part.copy(tool = tool.copy(status = ToolStatus.Completed))
+    else
+        part.copy(
+            tool =
+                tool.copy(
+                    status = ToolStatus.Pending,
+                    metadata =
+                        JsonObject((tool.metadata ?: JsonObject(emptyMap())) + (UNANSWERED_KEY to JsonPrimitive(true))),
+                )
+        )
+
 public fun settleStaleLive(
     messages: List<MessageWithParts>,
     busy: Boolean,
@@ -54,22 +88,7 @@ public fun settleStaleLive(
         }
         val compaction = message.parts.any(::isCompactionLineLive)
         if (compaction && (!busy || moreFollows || i < messages.lastIndex)) {
-            replace[i] =
-                message.copy(
-                    parts =
-                        message.parts
-                            .map { p ->
-                                if (isCompactionLineLive(p)) {
-                                    p.copy(
-                                        noticeMetadata =
-                                            (p.noticeMetadata + (KIND to COMPACTION_PASSED)).toPersistentMap()
-                                    )
-                                } else {
-                                    p
-                                }
-                            }
-                            .toImmutableList()
-                )
+            replace[i] = compactionPassed(message)
             continue
         }
         if (message.info.role != Role.Assistant) continue
@@ -88,7 +107,7 @@ public fun settleStaleLive(
                     !isBackground(part)
             ) {
                 val edited = parts ?: message.parts.toMutableList().also { parts = it }
-                edited[p] = part.copy(tool = tool.copy(status = ToolStatus.Completed))
+                edited[p] = settledStep(part, tool, wordsLater)
             }
         }
         parts?.let { replace[i] = message.copy(parts = it.toImmutableList()) }
@@ -122,3 +141,6 @@ private fun isBackground(part: Part): Boolean =
 
 /** Dart `value == true`: only the JSON boolean true. */
 private fun isTrue(value: JsonElement?): Boolean = value is JsonPrimitive && !value.isString && value.content == "true"
+
+/** Set on a step the run ended on while it still waited for an answer (settled as not run, never as completed). */
+public const val UNANSWERED_KEY: String = "oc.unanswered"

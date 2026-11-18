@@ -138,12 +138,19 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadOnMobile
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadReadyPhone
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadReadyReply
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningPercent
@@ -181,6 +188,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsInstallNeedsSpace
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
@@ -280,6 +288,12 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    // The phone's two automatic downloads say themselves at the end of the Recent label (the stage words' place), not
+    // in a bar above the title (owner, build 10077). Only a page with no Recent list falls back to the status line.
+    val downloadStatus = homeDownloadStatus(state.download, actions)
+    val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
+    val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download)
+    val statusAction = downloadStatus?.action.takeIf { lineWords == HomeLineWinner.Download }
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
@@ -341,9 +355,19 @@ public fun ChatsScreen(
                     fabLabel = stringResource(Res.string.chatsHomeNewChat),
                     fabIcon = KitIcons.add,
                     onFab = actions::newConversation,
+                    // The light runs round the + only while a New conversation tap is kept for a server that is still
+                    // opening (the notice above names the wait, the same condition): the conversation is being
+                    // prepared and opens by itself. It fades out the moment that ends: opened, cancelled, refused or
+                    // the bounded wait spent. A failure never glows.
+                    fabLight =
+                        state.newWaiting && !state.newBlocked &&
+                            state.home.opening?.phase != ChatsOpeningPhase.Failed,
                 )
             }),
-        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition } ?: homeDownloadStatus(state.download, actions),
+        status =
+            backExit
+                ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition }
+                ?: downloadStatus.takeIf { !downloadInList },
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -552,9 +576,19 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
                                     prominentDividers = true,
-                                    labelStatus = state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    labelStatus =
+                                        if (lineWords == HomeLineWinner.Download) downloadStatus?.message
+                                        else state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    // Every stage Home names is something this phone is starting: its mark stands
+                                    // before the words. The kit draws and animates it; this only switches it on.
+                                    labelWait = KitWaitKind.Starting.takeIf { lineWords == HomeLineWinner.Stage },
+                                    labelAction = statusAction,
                                 ) {
-                                    recent.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
+                                    recent.forEach { row ->
+                                        key(row.key) {
+                                            ConversationRow(row, rowWords, rowFlags(row, state), mask, actions)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1039,7 +1073,8 @@ private fun ConversationRow(
             ?: row.ago?.let { agoText(it) }
     val preview =
         row.permission?.let {
-            val target = KitBidi.ltr(mask(it.command))
+            // A short command reads as one piece: "ls -la" never breaks at its space.
+            val target = KitBidi.ltr(io.github.eslamasabry.oc.ui.kit.text.kitKeepShortTogether(mask(it.command)))
             when (HomePreviewRules.askKind(it.kind)) {
                 HomePreviewRules.AskKind.Run -> stringResource(Res.string.chatsHomeAsksToRun, target)
                 HomePreviewRules.AskKind.Edit -> stringResource(Res.string.chatsHomeAsksToEdit, target)
@@ -1210,7 +1245,8 @@ private fun QuestionAnswers(
         return
     }
     if (flags.questionSending) {
-        KitReceipt(state = KitReceiptState.Sending)
+        // The answer on its way: the Sending mark in the receipt's mark box.
+        KitWaitMarkHere(KitWaitKind.Sending) { KitReceipt(state = KitReceiptState.Sending) }
         return
     }
     if (flags.questionRefused) {
@@ -1318,7 +1354,8 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                         if (openCode) Res.string.phoneDownloadWaitingOpenCode else Res.string.phoneDownloadWaitingHelper,
                         download.megabytes,
                     ),
-                tone = StatusTone.Attention,
+                // Waiting is not failing: a calm mark, no warning triangle.
+                tone = StatusTone.Neutral,
                 action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
             )
         is HomeDownloadPhase.Running -> {
@@ -1331,19 +1368,53 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, what, it) } ?: what,
                 tone = StatusTone.Progress,
                 working = true,
+                // A known share: the Downloading mark, its line as thick as the words' percent says.
+                wait = KitWaitKind.Downloading.takeIf { phase.percent != null },
+                waitFraction = (phase.percent ?: 0) / 100f,
             )
         }
-        HomeDownloadPhase.Failed ->
+        is HomeDownloadPhase.Held ->
             KitStatus(
                 kind = KitStatusKind.Update,
                 id = "phone-download:${download.kind.name}",
                 message =
-                    stringResource(if (openCode) Res.string.phoneDownloadFailedOpenCode else Res.string.phoneDownloadFailedHelper),
+                    stringResource(
+                        if (phase.why == HomeHold.Reply) Res.string.phoneDownloadReadyReply
+                        else Res.string.phoneDownloadReadyPhone,
+                    ),
+                // Ready, not stuck: a calm mark and nothing to tap; it installs by itself.
+                tone = StatusTone.Neutral,
+            )
+        HomeDownloadPhase.Failed ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                id = "phone-download:${download.kind.name}",
+                message = homeFailedWords(download),
                 tone = StatusTone.Attention,
                 action = KitLineAction(stringResource(Res.string.commonRetry), actions::actOnDownload),
             )
     }
 }
+
+/** Why a download stopped, in plain words: for want of room it says how much; otherwise the plain failure. */
+@Composable
+private fun homeFailedWords(download: HomeDownloadFact): String {
+    val short = download.short
+    return when {
+        short != null ->
+            stringResource(
+                Res.string.agentsInstallNeedsSpace,
+                short.name,
+                homeMegabytes(short.neededMb),
+                homeMegabytes(short.freeMb),
+            )
+        download.kind == HomeDownloadKind.OpenCode -> stringResource(Res.string.phoneDownloadFailedOpenCode)
+        else -> stringResource(Res.string.phoneDownloadFailedHelper)
+    }
+}
+
+/** "764 MB" for a size said in megabytes (a no-break space keeps the unit with its number). */
+private fun homeMegabytes(mb: Int): String = "$mb\u00A0MB"
 
 /** The voice download's mobile-data ask (same KitConfirm structure): the size, Download now, Wait for Wi-Fi. */
 @Composable

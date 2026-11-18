@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /** The phone's installed and pinned OpenCode readings, and the events that wake the automatic update. */
 class OpenCodeAutoUpdateWiringTest {
-    private val pinned = "2.2.6"
+    private val pinned = "2.3.2"
 
     @Test
     fun `installed and pinned versions are present when the host is installed and the profile knows its version`() {
@@ -37,7 +37,7 @@ class OpenCodeAutoUpdateWiringTest {
         }
 
         override val installedVersion: String? get() = version
-        override val pinnedVersion: String = "2.2.6"
+        override val pinnedVersion: String = "2.3.2"
         override val runtime: String = "opencode2"
         override val switchPending: Boolean = false
         override val installProblem: Boolean = false
@@ -88,7 +88,7 @@ class OpenCodeAutoUpdateWiringTest {
     @Test
     fun `an up to date server is never touched`() = runTest {
         val jobs = Jobs()
-        val host = Host("2.2.6")
+        val host = Host("2.3.2")
         val job = launchOpenCodeAutoUpdate(OpenCodeAutoUpdater(host, jobs) { false }, host, MutableSharedFlow<Unit>())
         advanceUntilIdle()
         assertEquals(0, jobs.runs)
@@ -127,7 +127,7 @@ class OpenCodeAutoUpdateWiringTest {
         updater.changed()
         updater.changed()
         assertEquals(1, lines.size)
-        assertEquals(true, "busy=true" in lines.single() && "installed=2.1.1" in lines.single() && "pinned=2.2.6" in lines.single())
+        assertEquals(true, "busy=true" in lines.single() && "installed=2.1.1" in lines.single() && "pinned=2.3.2" in lines.single())
     }
 
     private class LateHost : OpenCodeHostFacts {
@@ -138,7 +138,7 @@ class OpenCodeAutoUpdateWiringTest {
 
         // The saved profile is not loaded yet at the first reads.
         override val installedVersion: String? get() = if (refreshes >= 3) "2.1.1" else null
-        override val pinnedVersion: String = "2.2.6"
+        override val pinnedVersion: String = "2.3.2"
         override val runtime: String = "opencode2"
         override val switchPending: Boolean = false
         override val installProblem: Boolean = false
@@ -164,14 +164,14 @@ class OpenCodeAutoUpdateWiringTest {
         val host = Host("2.1.1")
         val job = launchOpenCodeAutoUpdate(OpenCodeAutoUpdater(host, Jobs()) { true }, host, MutableSharedFlow<Unit>(), lines::add)
         runCurrent()
-        assertEquals(true, lines.first().startsWith("started; installed=2.1.1 pinned=2.2.6"))
+        assertEquals(true, lines.first().startsWith("started; installed=2.1.1 pinned=2.3.2"))
         job.cancel()
     }
 
     private class HangingHost : OpenCodeHostFacts {
         override suspend fun refresh() = kotlinx.coroutines.awaitCancellation()
         override val installedVersion: String = "2.1.1"
-        override val pinnedVersion: String = "2.2.6"
+        override val pinnedVersion: String = "2.3.2"
         override val runtime: String = "opencode2"
         override val switchPending: Boolean = false
         override val installProblem: Boolean = false

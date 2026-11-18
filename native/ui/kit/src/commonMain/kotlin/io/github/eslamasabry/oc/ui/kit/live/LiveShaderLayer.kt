@@ -79,10 +79,10 @@ internal fun LiveShaderLayer(
 /**
  * [look]'s shader as a picture for Glass's panes to blur (owner 2026-11-09: in-flow panes show real glass over the
  * shader looks): the paint the glass backdrop records (`kitGlassBackdropSource`), drawing the ground and the shader at
- * the look's own resolution into one offscreen layer scaled up and finished, exactly as [LiveShaderLayer] draws it. The page shows the
- * backdrop's recording, so the look is drawn once per frame and every pane samples that one picture; [time] is read in
- * the paint, so a clock step re-records this paint alone, and a still look (Calm, reduced motion, a resting clock)
- * records nothing. Null where the platform has no runtime shaders.
+ * the look's own resolution into one offscreen layer scaled up and finished, exactly as [LiveShaderLayer] draws it. The
+ * page shows the backdrop's recording, so the look is drawn once per frame and every pane samples that one picture;
+ * [time] is read in the paint, so a clock step re-records this paint alone, and a still look (Calm, reduced motion, a
+ * resting clock) records nothing. Null where the platform has no runtime shaders.
  */
 @Composable
 internal fun rememberLiveShaderBackdrop(
@@ -232,8 +232,8 @@ internal fun LiveStill(palette: LivePalette, strength: Float, modifier: Modifier
 }
 
 /**
- * A glow's stops that ease to nothing (a Gaussian sampled at [EASED_STOPS] points, reaching zero exactly at the rim), so
- * the still's glows dissolve into the ground: two stops made a linear ramp whose end showed as a ring.
+ * A glow's stops that ease to nothing (a Gaussian sampled at [EASED_STOPS] points, reaching zero exactly at the rim),
+ * so the still's glows dissolve into the ground: two stops made a linear ramp whose end showed as a ring.
  */
 internal fun easedGlow(color: Color, alpha: Float): Array<Pair<Float, Color>> =
     Array(EASED_STOPS) { i ->
@@ -245,9 +245,9 @@ internal fun easedGlow(color: Color, alpha: Float): Array<Pair<Float, Color>> =
 private const val EASED_STOPS: Int = 9
 
 /**
- * The time a look reads in draw: the clock while it [animates], else the still frame's moment. With [fps] the time steps
- * at most that many times a second: a draw block that reads it is invalidated only when the step changes (a derived
- * state), so a faster screen does not redraw it more often.
+ * The time a look reads in draw: the clock while it [animates], else the still frame's moment. With [fps] the time
+ * steps at most that many times a second: a draw block that reads it is invalidated only when the step changes (a
+ * derived state), so a faster screen does not redraw it more often.
  */
 @Composable
 internal fun rememberLiveTime(clock: LiveFrameClock, animates: Boolean, fps: Int = 0): () -> Float =

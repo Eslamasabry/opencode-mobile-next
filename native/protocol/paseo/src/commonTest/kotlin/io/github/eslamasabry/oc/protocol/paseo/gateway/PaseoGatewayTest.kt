@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignIn
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -352,8 +353,12 @@ class PaseoGatewayTest {
             h.events.filterIsInstance<GatewayEvent.PartDelta>().none { "authenticate" in it.delta },
             "no later piece reaches the reply text",
         )
-        // The error row already said why: no second, generic failure.
-        assertTrue(h.events.filterIsInstance<GatewayEvent.RunEnded>().none { it.outcome is RunOutcome.Failed })
+        // The error row already said why: no second, generic failure. The run's end says only, as a value, that the
+        // agent's sign-in stopped it (B-AGENT-433: the notification's reason), never with words.
+        val ended = assertIs<RunOutcome.Failed>(h.events.filterIsInstance<GatewayEvent.RunEnded>().single().outcome)
+        assertEquals(AgentSignIn.Expired, ended.agentSignIn)
+        assertNull(ended.kind)
+        assertNull(ended.details)
     }
 
     @Test
@@ -382,6 +387,57 @@ class PaseoGatewayTest {
         h.daemon.push("agent_stream", stream("a1", turn("turn_failed", "kilo")))
         h.pump()
         assertTrue(h.events.filterIsInstance<GatewayEvent.RunEnded>().any { it.outcome is RunOutcome.Failed })
+    }
+
+    private fun GatewayHarness.failedEnd(): RunOutcome.Failed =
+        assertIs<RunOutcome.Failed>(events.filterIsInstance<GatewayEvent.RunEnded>().single().outcome)
+
+    @Test
+    fun `B-AGENT-433 a reply that said the sign-in ran out ends the turn failed with that value`() = runTest {
+        val h = streaming()
+        val words = "Failed to authenticate: OAuth session expired and could not be refreshed"
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        h.daemon.push("agent_stream", stream("a1", timeline(jsonOf("type" to "assistant_message", "text" to words))))
+        h.daemon.push("agent_stream", stream("a1", turn("turn_failed")))
+        h.pump()
+        val failed = h.failedEnd()
+        assertEquals(AgentSignIn.Expired, failed.agentSignIn)
+        assertNull(failed.details, "never the agent's words")
+        assertEquals(PaseoTurnFailedTag, failed.tag)
+        // The next turn starts clean: a failure without a word carries no sign-in.
+        h.events.clear()
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        h.daemon.push("agent_stream", stream("a1", turn("turn_failed")))
+        h.pump()
+        assertNull(h.failedEnd().agentSignIn)
+    }
+
+    @Test
+    fun `B-AGENT-433 the shared rule reads every agent's turn failure, keeping meanings apart`() = runTest {
+        val codexWords =
+            "Your access token could not be refreshed because your refresh token was already used. " +
+                "Please log out and sign in again."
+        val cases =
+            listOf(
+                Triple("claude", "OAuth refresh token is no longer valid; run /login", AgentSignIn.Expired),
+                Triple("codex", codexWords, AgentSignIn.Expired),
+                Triple("antigravity", "Your login session has expired", AgentSignIn.Expired),
+                Triple("claude", "Not logged in", AgentSignIn.NeverSignedIn),
+                // A limit is never a sign-in, even when it mentions one.
+                Triple("claude", "Claude AI usage limit reached. Sign in again after the reset.", null),
+                Triple("claude", "ECONNRESET: fetch failed", null),
+            )
+        for ((provider, words, expected) in cases) {
+            val h = streaming()
+            val failedTurn = jsonOf("type" to "turn_failed", "provider" to provider, "error" to words)
+            h.daemon.push("agent_stream", stream("a1", turn("turn_started", provider)))
+            h.daemon.push("agent_stream", stream("a1", failedTurn))
+            h.pump()
+            val failed = h.failedEnd()
+            assertEquals(expected, failed.agentSignIn, "$provider: $words")
+            assertNull(failed.details, "never the daemon's words")
+            assertNull(failed.kind)
+        }
     }
 
     @Test

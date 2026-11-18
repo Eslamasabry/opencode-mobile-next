@@ -187,7 +187,9 @@ class ReleaseShapeTest {
         assertTrue(release.contains("GO=false"), "the default never commits, tags or pushes")
         assertTrue(release.contains("readonly RELEASE_BRANCH=\"master\""))
         assertTrue(release.contains("git status --porcelain=v1 --untracked-files=all"))
-        val beforeGo = release.substringBefore("if \$GO; then")
+        // Lines that only PRINT (`say "  would run   git tag ..."`, the dry-run block) write nothing; a real git call does.
+        val beforeGo =
+            release.substringBefore("if \$GO; then").lines().filterNot { it.trimStart().startsWith("say ") }.joinToString("\n")
         assertFalse(Regex("""git (tag|push|commit)""").containsMatchIn(beforeGo), "nothing is written before the --go branch")
         assertTrue(release.contains("allocate --kind release"), "the number comes from the allocator (+10 steps)")
         assertTrue(release.contains("identity_gate.sh"))

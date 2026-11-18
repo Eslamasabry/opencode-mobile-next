@@ -73,3 +73,12 @@ zh	setupOutputWaiting
 # 2026-11-11: problem reports no longer hold a log, so the row says what happens (other languages fall back to English until translated).
 # 2026-11-12: Help > Tips mini tutorial "Make it yours" step 2 names all six styles (Glass and Signal were missing), spelled as the Style page spells them.
 # 2026-11-15: issue 147 walk F-021: the Git page copy rewritten in plain words (Clone a repository -> Copy a project from the web).
+# 2026-11-18: owner, sign-in page: the action is "Paste code" and both intros name it so (no sentence promises an action the page does not offer).
+en	agentsSignInPaste
+en	agentsSignInTerminalIntroOther
+# 2026-11-18: privacy words (look of 10086): the voice privacy line says what the Arabic said (stays on the phone, turned into text on the phone, not kept, the model download needs the internet once) in every language, with "phone"; Arabic "Privacy and data" drops "local" (one name).
+en	e7VoiceUiPrivacyDownload
+es	e7VoiceUiPrivacyDownload
+zh	e7VoiceUiPrivacyDownload
+ar	e7VoiceUiPrivacyDownload
+ar	settingsHubPrivacyRow

@@ -83,6 +83,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitToolDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
 import io.github.eslamasabry.oc.ui.words.res.kitToolStopped
+import io.github.eslamasabry.oc.ui.words.res.kitToolUnanswered
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldFailed
 import io.github.eslamasabry.oc.ui.words.res.kitWorkHideEarlierSteps
@@ -205,7 +206,10 @@ internal fun TurnWorkLine(
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
     val cut = remember(rows) { StepListRules.cut(rows) }
-    val open = folds.open[foldKey] == true
+    // A turn with a delegated step whose sub-agent waits on the person opens on entry (the person's own fold wins once
+    // tapped), so the way to the child, "Open its conversation", is one tap from the row.
+    val childNeeds = LocalChildNeedsYou.current
+    val open = folds.open[foldKey] ?: work.steps.any { it.waitsOnChild(childNeeds) }
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
     val summed = StepListRules.sums(work.state)
@@ -343,6 +347,7 @@ private fun SubAgentGroup(
     words: KitStepTreeWords,
 ) {
     val mask = rememberKitMask()
+    val childNeeds = LocalChildNeedsYou.current
     val c = StepListRules.counts(group)
     val sep = stringResource(Res.string.kitWorkSeparator)
     val note =
@@ -363,7 +368,7 @@ private fun SubAgentGroup(
             KitTreeStep(
                 key = s.partId,
                 name = name,
-                state = subAgentState(s.state),
+                state = if (s.waitsOnChild(childNeeds)) KitTreeStepState.NeedsYou else subAgentState(s.state),
                 seconds = s.durationMs?.takeIf { s.state == StepState.Done }?.let { it / 1_000 },
                 denied = s.state == StepState.Declined,
                 word = if (s.state == StepState.Stopped || s.state == StepState.NotRun) stopped else null,
@@ -382,6 +387,12 @@ private fun SubAgentGroup(
             ),
     )
 }
+
+/** Sessions with an open request of their own, so a delegated step's sub-agent that waits on the person shows it. */
+internal val LocalChildNeedsYou = androidx.compose.runtime.compositionLocalOf<Set<String>> { emptySet() }
+
+/** This delegated step's sub-agent has an open request: the step reads "Waiting for you" and opens its conversation. */
+private fun TurnStep.waitsOnChild(open: Set<String>): Boolean = facts.childSessionId?.let { it in open } == true
 
 /** A sub-agent's place on the tree, from its call's state (a declined one is drawn failed, said "You declined this"). */
 private fun subAgentState(state: StepState): KitTreeStepState =
@@ -566,6 +577,7 @@ private fun StepRow(
     stopping: Boolean,
 ) {
     val lead = steps.first()
+    val childNeeds = LocalChildNeedsYou.current
     val run = family != null && steps.size > 1
     if (run && family != null) {
         val runKey = "run:${lead.partId}"
@@ -594,7 +606,7 @@ private fun StepRow(
         onOpenSession,
         onOpenFile,
         reply,
-        waitingForYou = !stopping && stepWaitsForYou(lead.state, work.state),
+        waitingForYou = !stopping && (stepWaitsForYou(lead.state, work.state) || lead.waitsOnChild(childNeeds)),
         stopSaidBelow = lead === work.steps.lastOrNull(),
     )
 }
@@ -685,7 +697,17 @@ private fun OneStep(
             subject =
                 if (f.kind == ToolKind.Shell && f.shell != null) null
                 else stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput) ?: stepSubjectWords(f),
-            detail = declinedWith ?: stepDetailWords(f),
+            // A step the run ended on before the person answered says why it did not run, under its one name.
+            detail =
+                declinedWith
+                    ?: (if (
+                            (step.state == StepState.Stopped || step.state == StepState.NotRun) &&
+                                out.metadata?.containsKey(
+                                    io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY
+                                ) == true
+                        )
+                        stringResource(Res.string.kitToolUnanswered)
+                    else stepDetailWords(f)),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
             status =
                 if (waitingForYou) KitToolStatus.WaitingForYou
@@ -725,7 +747,8 @@ private fun OneStep(
     val full = folds.full[key] == true
     // Issue 147 (F-033): a command that is running and has put something out opens by itself, so its growing tail is in
     // view without a tap. It stays open when the command ends (its output stays readable); the person's own fold wins.
-    if (opensItself(step, waitingForYou, text != null))
+    // A delegated step whose sub-agent waits on the person opens by itself too: its "Open its conversation" is in view.
+    if (opensItself(step, waitingForYou, text != null) || (waitingForYou && child != null))
         LaunchedEffect(key) { if (folds.open[key] == null) folds.open[key] = true }
     KitToolRow(
         view = view,
@@ -901,6 +924,10 @@ internal fun stepOutputShown(step: TurnStep, showAll: Boolean): String? {
     val last = KIT_COMMAND_OUTPUT_LINES
     val shown =
         when {
+            // The server's own line for a stopped tool ("Tool execution interrupted: shell") is not copy: the box says
+            // "Stopped before it finished" in the kit's words, the raw line stays in the message's Details.
+            step.state == StepState.Stopped &&
+                io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps.isStopError(out.text.trim()) -> ""
             step.state == StepState.Running -> out.liveTail.lines().takeLast(last).joinToString("\n")
             step.state == StepState.Failed && step.facts.kind == ToolKind.Shell && !showAll ->
                 out.text.trimEnd().lines().takeLast(last).joinToString("\n")

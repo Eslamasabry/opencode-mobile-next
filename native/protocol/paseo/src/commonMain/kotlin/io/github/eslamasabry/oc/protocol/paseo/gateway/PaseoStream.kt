@@ -10,6 +10,9 @@ import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.domain.events.UserPromptEcho
 import io.github.eslamasabry.oc.core.model.SessionStatus
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignIn
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
+import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
 import io.github.eslamasabry.oc.core.model.transcript.Part
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -18,6 +21,7 @@ import io.github.eslamasabry.oc.protocol.paseo.longOrNull
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemId
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemMessage
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoDeclinedToolCall
+import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoFailureSignIn
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoMergeToolCall
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoWithoutGoalMarker
 import io.github.eslamasabry.oc.protocol.paseo.obj
@@ -61,6 +65,7 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
             state.stopAsked = false
             state.runId = null
             state.turnErrorShown = false
+            state.turnSignIn = null
             state.failedBeforeLoad = false
             awaitingTurn.remove(id)
             turnActive += id
@@ -100,11 +105,18 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
             emitStatus(id, SessionStatus.Idle)
             val shown = state.turnErrorShown
             state.turnErrorShown = false
+            // B-AGENT-433: a turn the agent's own sign-in stopped says so as a value (its row, else the daemon's
+            // error words, read by the shared rule); the words never ride along.
+            val signIn = state.turnSignIn ?: paseoFailureSignIn(event.str("error"))
+            state.turnSignIn = null
             emit(
                 GatewayEvent.RunEnded(
                     session,
-                    if (shown) RunOutcome.Succeeded
-                    else RunOutcome.Failed(null, PaseoTurnFailedTag, null),
+                    when {
+                        signIn != null -> RunOutcome.Failed(null, PaseoTurnFailedTag, null, agentSignIn = signIn)
+                        shown -> RunOutcome.Succeeded
+                        else -> RunOutcome.Failed(null, PaseoTurnFailedTag, null)
+                    },
                 )
             )
         }
@@ -186,6 +198,7 @@ internal fun PaseoGateway.onTimelineItem(
             if (mapped?.info?.errorText != null) {
                 state.turnErrorShown = true
                 state.failedBeforeLoad = true
+                state.turnSignIn = rowSignIn(mapped.info) ?: state.turnSignIn
                 state.open.remove(messageId)
                 emit(GatewayEvent.MessageUpserted(mapped.info))
                 // A prefix may already have arrived as text before it identified the failure line.
@@ -232,6 +245,7 @@ internal fun PaseoGateway.onTimelineItem(
     if (message.info.errorText != null) {
         state.turnErrorShown = true
         state.failedBeforeLoad = true
+        state.turnSignIn = rowSignIn(message.info) ?: state.turnSignIn
     } else if (
         message.info.role == Role.User ||
             message.parts.any { it.type == PartType.Text && it.text.isNotBlank() }
@@ -277,3 +291,7 @@ internal fun PaseoGateway.finishOpen(state: PaseoLive) {
     }
     state.open.clear()
 }
+
+/** The sign-in an error row was filed under ([paseoItemMessage] files only the agent's own sign-in failure so). */
+private fun rowSignIn(info: MessageInfo): AgentSignIn? =
+    if (info.errorKind == MessageErrorKind.ProviderAuth) paseoFailureSignIn(info.errorText) else null

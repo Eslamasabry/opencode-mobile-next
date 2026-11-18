@@ -148,9 +148,19 @@ class WaitingDecisionVisibleTest {
             assertDecisionWhole()
         }
 
+    // B-459 (268569150a): a sent or queued message goes to the END, as any send does; the card stays above it. A message
+    // taller than the page therefore shows the message, not the card; the box tap (the test above) brings the page back.
     @Test
-    fun `F-023 a long message sent while a decision waits leaves the decision in view`() =
-        run(queued = true) { assertDecisionWhole() }
+    fun `F-023 a long message sent while a decision waits goes to the end and a tap in the box brings the card back`() =
+        run(queued = true) {
+            assertTrue(
+                onAllNodesWithText("Also tell me", substring = true).fetchSemanticsNodes().isNotEmpty(),
+                "the sent message is in view at the end of the page",
+            )
+            onNodeWithTag("chat-composer-field").performClick()
+            waitForIdle()
+            assertDecisionWhole()
+        }
 }
 
 private val denySid get() = Ref.sessionId.raw

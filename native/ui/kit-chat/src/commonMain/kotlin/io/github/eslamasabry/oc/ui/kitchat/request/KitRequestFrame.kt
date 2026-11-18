@@ -59,6 +59,7 @@ import io.github.eslamasabry.oc.ui.kit.style.KitSignalNeedsYou
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouWaiting
 import io.github.eslamasabry.oc.ui.words.res.kitRequestNeedsYouLabel
@@ -163,8 +164,15 @@ public fun KitRequestFrame(
             verticalArrangement = Arrangement.spacedBy(if (question) Space.S4.dp else Space.S3.dp),
         ) {
         CompositionLocalProvider(LocalKitNested provides (dressed != null)) {
+            val compact = LocalKitRequestCompact.current
+            val oneLine =
+                with(androidx.compose.ui.platform.LocalDensity.current) {
+                    LocalKitTypography.current.style(TypeRole.Body).lineHeight.toDp()
+                }
             Column(
-                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                Modifier.weight(1f, fill = false)
+                    .then(if (compact) Modifier.heightIn(max = oneLine) else Modifier)
+                    .verticalScroll(rememberScrollState()),
                 // The question look spaces its own lines (tag 8, title 4, block 16); the standard card keeps 8.
                 verticalArrangement = if (question) Arrangement.Top else Arrangement.spacedBy(Space.S2.dp),
                 content = content,

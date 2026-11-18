@@ -145,6 +145,21 @@ public enum class TabBodyMotion { FadeThrough, CrossFade, Instant }
 
 /** Dart `KitTabSwitcher`/`KitTabStrip` rules (B-KIT-050). */
 public object TabRules {
+    /**
+     * The least a tab's words shrink to when the strip, packed, still has no place to rest on whole tabs ([fitAfter]).
+     * The words never go below their own spec size either way.
+     */
+    public const val MIN_FIT: Float = 0.6f
+
+    /**
+     * The next shrink of a packed strip's words that overruns its window: the share of the window it now fills, with a
+     * little room to spare, never below [MIN_FIT].
+     */
+    public fun fitAfter(fit: Float, view: Float, content: Float): Float =
+        if (content <= 0f || view <= 0f) fit else maxOf(MIN_FIT, fit * (view / content) * FIT_SPARE)
+
+    private const val FIT_SPARE = 0.98f
+
     public const val MIN_TABS: Int = 2
     public const val MAX_TABS: Int = 8
 
@@ -357,6 +372,9 @@ internal fun TabStrip(
     // A strip that overruns its window by less than a tab has no place to rest on whole tabs: it packs the tabs closer
     // (the Appearance page's four tabs at 360 dp), and only then scrolls.
     var tight by remember(tabs) { mutableStateOf(false) }
+    // Packed and still without a place to rest on whole tabs (Appearance's four tabs at 2x text, look of build 10093:
+    // "Text & motion" stood cut at the edge), the words shrink toward their own size until the strip fits.
+    var fit by remember(tabs, LocalDensity.current.fontScale) { mutableFloatStateOf(1f) }
     val rest: (Int) -> Int = { v ->
         val s = model.slots
         TabRules.restSnap(v, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl) ?: v
@@ -394,7 +412,12 @@ internal fun TabStrip(
             delay(STRIP_SETTLE_MS)
             val s = model.slots
             val goal = TabRules.restSnap(scroll.value, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl)
-            if (goal == null) tight = true else if (goal != scroll.value) scroll.animateScrollTo(goal)
+            when {
+                goal == null && !tight -> tight = true
+                goal == null && fit > TabRules.MIN_FIT ->
+                    fit = TabRules.fitAfter(fit, scroll.viewportSize.toFloat(), s.content)
+                goal != null && goal != scroll.value -> scroll.animateScrollTo(goal)
+            }
         }
     }
     val solid = style.style == Style.Solid
@@ -420,6 +443,7 @@ internal fun TabStrip(
     val gap = Space.S2.dp // F: lib/ui/kit/motion/kit_tab_switcher.dart:228
     // C08: a strip wider than the window fades out at the edge with more past it (the board's "Don" stood cut there).
     Box(modifier.clipToBounds().kitScrollFade(scroll).testTag("kit-tab-strip")) {
+      CompositionLocalProvider(LocalTabFit provides fit) {
         Layout(
             modifier =
                 Modifier.horizontalScroll(scroll)
@@ -579,8 +603,12 @@ internal fun TabStrip(
                 }
             }
         }
+      }
     }
 }
+
+/** How far a packed strip's words are shrunk to fit ([TabRules.fitAfter]); 1 = their usual size. */
+private val LocalTabFit = androidx.compose.runtime.compositionLocalOf { 1f }
 
 /** How fast a strip scrolled away by hand comes back under the pill: all of the way in half a page of travel. */
 private const val STRIP_RETURN: Float = 2f
@@ -675,7 +703,9 @@ private fun TabText(text: String, role: TypeRole, color: Color, cap: Float?, tab
     val base = LocalKitTypography.current.style(role)
     val app = LocalKitAppDensity.current ?: LocalDensity.current
     val spec = base.fontSize.value
-    val target = if (cap == null) spec else minOf(with(app) { spec.sp.toDp().value }, spec * cap)
+    val capped = if (cap == null) spec else minOf(with(app) { spec.sp.toDp().value }, spec * cap)
+    // A packed strip that still overruns shrinks its words, never below their own spec size.
+    val target = if (cap == null || capped <= spec) capped else maxOf(spec, capped * LocalTabFit.current)
     val k = target / spec
     val style: TextStyle =
         base.copy(

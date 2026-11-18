@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -44,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -134,6 +137,10 @@ public fun KitComposerBox(
     /** At the end of the words' own row when [stacked] (the slab's Stop while a reply runs): the row under keeps still. */
     fieldEnd: @Composable RowScope.() -> Unit = {},
 ) {
+    // While the person dictates (owner 2026-11-17, "the box itself becomes the recorder"): the recorder row
+    // ([KitVoiceRecorderRow], handed down by [LocalKitComposerRecorder]) takes the place of the plus and the chips
+    // inside this box, with [trailing] (Send) kept at the end in its place. The words stay above it.
+    val recorder = LocalKitComposerRecorder.current
     val tokens = LocalKitTokens.current
     val largeText = LocalDensity.current.fontScale >= 1.5f
     val appearance = LocalKitAppearance.current
@@ -194,13 +201,22 @@ public fun KitComposerBox(
         // (Android 13+, where not held); null keeps the style's own face.
         val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape, join = joinBody)
         val slab = kitComposerSlab()
+        // A tip anchored inside the box (hold Send, Stop after this step) stands above or below the whole box, never
+        // over the words in it (look 10100: "Hold Send…" covered a shared link).
+        val tipClear = remember { io.github.eslamasabry.oc.ui.kit.teaching.KitTipClearance() }
         // Nothing inside the box is glass of its own: its chips and Stop are parts of this one pane.
         // Every part inside is nested in the box's outline (Brutal: edged, never a second shadow).
-        CompositionLocalProvider(LocalKitLiquidChrome provides null, LocalKitComposerSlab provides slab, io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true) {
+        CompositionLocalProvider(
+            LocalKitLiquidChrome provides null,
+            LocalKitComposerSlab provides slab,
+            io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true,
+            io.github.eslamasabry.oc.ui.kit.teaching.LocalKitTipClearance provides tipClear,
+        ) {
         // The slab answers a finger on its controls: a soft light under it, a brighter edge.
         val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquid != null)
         Column(
             Modifier.fillMaxWidth()
+                .onGloballyPositioned { tipClear.boundsInWindow = it.boundsInWindow() }
                 // Words on glass: while the box is liquid, the transcript its glass sees fades out under it (whole at its
                 // top edge, gone by the inner end of the lens rim), so nothing bright passes behind the words.
                 .then(if (liquid != null) Modifier.kitScreenWordsPane(LiquidRole.Composer) else Modifier)
@@ -217,7 +233,9 @@ public fun KitComposerBox(
                 .padding(Space.S1.dp + io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset())
                 .testTag("kit-composer-box")
         ) {
-            above()
+            // Whatever rides above the field (a note, the attachments, the suggestions) keeps a Space.S1 gap from it
+            // (layout rule `tight`): the gap exists only when something is above, so an empty slot adds nothing.
+            Box(Modifier.fillMaxWidth().gapBelowWhenFilled(Space.S1.dp)) { above() }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 if (!stacked) leading()
                 Box(
@@ -233,6 +251,10 @@ public fun KitComposerBox(
                 // Stop at the end of the words' row keeps Send's inset (audit 2026-11-14: it sat 12 px from the rim while
                 // Send's disc sits a target's margin in), so the two read as one column of actions.
                 if (!stacked) trailing() else Row(Modifier.composerActionInset(tokens.minTarget), verticalAlignment = Alignment.CenterVertically) { fieldEnd() }
+            }
+            // One row box (no stacking): the recorder takes its own line under the words, inside the box.
+            if (!stacked && recorder != null) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { recorder() }
             }
             if (stacked) {
               androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -258,7 +280,7 @@ public fun KitComposerBox(
                 // directly above it keep a Space.S1 gap (layout rule `tight`, LAYOUT-RULES.md; the guard's
                 // kit_composer_idle_empty found 0.0 dp between the field and Add).
                 Spacer(Modifier.height(Space.S1.dp))
-                if (ownLine)
+                if (ownLine && recorder == null)
                     FlowRow(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -270,16 +292,23 @@ public fun KitComposerBox(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    leading()
-                    if (ownLine) Spacer(Modifier.weight(1f))
-                    else
-                        // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
-                        // (the model) shows its name; the later ones (the approval mode) shorten first.
-                        KitComposerChipLine(
-                            Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
-                        ) {
-                            chips()
+                    // The mic grows into the recorder row from the end where it stood, and back (Full); Calm fades;
+                    // Off is instant. Send ([trailing]) never moves.
+                    KitRecorderSwap(recorder, Modifier.weight(1f)) { rec ->
+                        if (rec != null) rec()
+                        else {
+                            leading()
+                            if (ownLine) Spacer(Modifier.weight(1f))
+                            else
+                                // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
+                                // (the model) shows its name; the later ones (the approval mode) shorten first.
+                                KitComposerChipLine(
+                                    Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
+                                ) {
+                                    chips()
+                                }
                         }
+                    }
                     trailing()
                 }
                 }
@@ -320,6 +349,9 @@ public fun KitComposerChip(
     collapsible: Boolean = false,
 ) {
     val iconOnly = wordless || (collapsible && LocalComposerChipsCollapsed.current)
+    // Beside the status strip's chips the model's words wrap onto a second line instead of ending in "…" (frame words
+    // wrap or the part grows, screen standard 5).
+    val wrapsWords = LocalComposerChipWraps.current
     val colors = LocalKitColors.current
     // On the slab the chip is a quiet tint of the glass it lies in, never an opaque plate.
     val face =
@@ -383,11 +415,11 @@ public fun KitComposerChip(
                 // The chip line gives a bounded width (it no longer scrolls), so the words take what the glyphs
                 // leave and the caret stays. Only a chip that [shrinks] may end in "…".
                 Modifier.weight(1f, fill = false).widthIn(max = COMPOSER_CHIP_WORDS_MAX.dp)
-                    .then(if (shrinks) Modifier.kitMayTruncate("composer-chip") else Modifier),
+                    .then(if (shrinks && !wrapsWords) Modifier.kitMayTruncate("composer-chip") else Modifier),
                 role = TypeRole.Label,
                 tone = if (active) TextTone.Accent else TextTone.Primary,
                 kind = KitTextKind.Frame,
-                maxLines = if (LocalDensity.current.fontScale >= 1.5f) Int.MAX_VALUE else 1,
+                maxLines = if (LocalDensity.current.fontScale >= 1.5f || wrapsWords) Int.MAX_VALUE else 1,
             )
             if (opensPicker)
                 Image(
@@ -640,6 +672,10 @@ private const val COMPOSER_CHIP_FRAME_DP: Float = 58f
 private const val COMPOSER_APPROVAL_CHARS: Int = 15
 private const val COMPOSER_GAP_DP: Int = 8
 
+/** True inside the status strip's model slot: the chip's words wrap instead of ending in "…". */
+internal val LocalComposerChipWraps: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.compositionLocalOf { false }
+
 /** True while the box's row cannot show both chips whole: a chip marked `collapsible` then shows its icon alone. */
 internal val LocalComposerChipsCollapsed: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
     androidx.compose.runtime.staticCompositionLocalOf { false }
@@ -680,3 +716,11 @@ private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> U
         }
     }
 }
+
+/** Adds [gap] under this part only when it measured taller than nothing. */
+private fun Modifier.gapBelowWhenFilled(gap: androidx.compose.ui.unit.Dp): Modifier =
+    this.layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        val extra = if (placeable.height > 0) gap.roundToPx() else 0
+        layout(placeable.width, placeable.height + extra) { placeable.place(0, 0) }
+    }

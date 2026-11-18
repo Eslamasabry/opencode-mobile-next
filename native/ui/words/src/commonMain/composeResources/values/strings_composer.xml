@@ -60,7 +60,7 @@
     <string name="e7ModelUiDefault">Default</string>
     <string name="e7ModelUiSelectionGone">This choice is no longer available. Refresh models and try again.</string>
     <string name="e7VoiceUiLocalInput">Local voice input</string>
-    <string name="e7VoiceUiPrivacyDownload">Audio never leaves this phone.</string>
+    <string name="e7VoiceUiPrivacyDownload">Audio stays on this phone. Your speech is turned into text on the phone, and the audio is not kept afterwards. Downloading the speech model needs the internet once.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android reports no built-in microphone. Voice input may still work with a wired or USB microphone.</string>
     <string name="e7VoiceUiLanguage">Transcription language</string>
     <string name="e7VoiceUiVerifying">Verifying downloaded model</string>

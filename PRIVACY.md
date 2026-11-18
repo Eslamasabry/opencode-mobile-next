@@ -92,14 +92,17 @@ With `crashes` on, the app sends:
 
 - **Fatal and non-fatal errors**: the kind of error (for example "Invalid
   state") and the code locations (library, line and column) it happened in,
-  never its message; for a failure the app handled, one of five fixed names with
+  never its message; for a failure the app handled, one of seven fixed names with
   a few short codes: `setup_step_failed` (the setup step, the kind of error
   and, when the phone closed the app, why), `process_exit` (the `exit_reason`
   below), `voice_model_download_failed` (the kind of problem and the voice
   pack name), `prompt_not_accepted` (whether the server refused the message
-  before or after it was sent, the kind of failure and how long it took) and
+  before or after it was sent, the kind of failure and how long it took),
   `net_client_close_failed` (the kind of error, when closing the connection to a
-  server failed). A crash in the app's Android (Java or Kotlin) code
+  server failed), `phrase_chips_unreadable` (no code: your learned phrase
+  suggestions could not be read and were kept aside) and
+  `phone_server_follow_refused` (no code: the phone server could not be told
+  that the app is in front, twice in a row). A crash in the app's Android (Java or Kotlin) code
   carries only the exception class names and their code locations.
 - **Why Android ended the app last time**: on the next start, one of crash,
   crash_native, anr, low_memory, excessive_resource, signaled,
@@ -171,7 +174,7 @@ number), `notif_allowed` (yes or no), `server_kind` (phone, computer or both),
 first use: the same words as `journey_milestone`).
 
 Google Analytics adds on its own a random app-instance identifier, the phone
-model, Android version, app version, language, the time, and a coarse location
+model, Android version, screen size, app version, language, the time, and a coarse location
 (country and region) it works out from the connection without keeping the IP
 address. It also counts a few events of its own, such as the first open and
 the length of a session. The advertising ID and Android ID (SSAID) are never
@@ -185,22 +188,39 @@ project.)
 Usage reports also go to an analytics server we run ourselves: **Umami, hosted with Railway**.
 Umami stores no IP address and no identifier of the person. It uses the connection address once
 to work out a coarse location. It keeps an anonymous visitor hash that changes every month; the
-hash cannot be turned back into your address or your device. No device or installation ID,
+hash cannot be turned back into your address or your device. No Android or advertising ID,
 account, conversation, file name, project name, server address or model key is sent to Umami.
+The one ID it gets is a random install ID that the app makes itself (`install_id`, below), and it
+gets the phone model (`phone_model`).
 
 Umami receives the same listed events and permitted properties above. A screen becoming visible
 is a page view with one fixed address per screen category, such as /home or /conversation;
 other actions are named events with that screen address. Each has its own timestamp, the app's
-version name and build number, a fixed app hostname, language and screen resolution. A browser-like
-User-Agent carries the Android version and device class, without a device identifier. The build
-number is also the tag. Google receives the app version automatically and the `app_build` user
+version name and build number, a fixed app hostname and the app language with its region (such as ar-EG), and fixed words and ranges about the
+app and the phone, nothing else: the Android main version number (for example 16) (`os_major`), the device class (phone or tablet)
+(`device_class`) and the build number. Besides those: `version` and `build`; `channel` (public or test build);
+`width_class` (compact, medium or expanded); `text_scale` (smaller, default, larger or largest); `abi` (arm64, arm32,
+x86_64 or other); `ram_range` and `free_storage_range` (the same ranges as the Google user properties);
+`style` (solid, glass, soft, brutal, paper or signal); `theme_mode` (system, light, dark or saver); `battery_saver`
+(yes or no); `install_age` (under 1 day, 1 to 7 days, 7 to 30 days, over 30 days); `agents` (which of codex, opencode and
+paseo servers are connected, product names only); `connection_kind` (phone, computer, remote, or a mix, or none; never
+an address); `phone_model` (the phone's model name, for example Pixel 8: letters, digits, space and . _ + - only, at
+most 40 characters; never the maker); and `install_id` (a random UUID that the app makes on the phone for our own server,
+only while usage is on: not Google's ID and not made from the phone, the account or any Android ID; it is deleted when you
+switch usage off, so a new one is made if you switch it on again; it is used to count installs and to see whether the
+app keeps working for the same install over time). The same list is what "What we collect" shows under "Only to our own server". Before a request leaves the
+phone, the app checks its real body against this list and drops any key or value not on it (logging only the key's name).
+Taken together, these can tell one phone’s reports from another’s. They never say who you are, and the app sends no name or account with them.
+A browser-like User-Agent repeats only the Android main version and the device class.
+Nothing else about the device goes to Umami: no screen size or resolution, maker, time zone, place,
+minor version, or Android, advertising or Google ID. The build number is also the tag. Google receives the app version automatically and the `app_build` user
 property is the build number, set only with usage on and cleared when it is off.
 
 The private queue holds up to 256 events and 256 KiB of encoded event data (300 KiB including
 queue framing). Events older than three days are discarded when the app next uses the queue;
 they are never sent. Short request timeouts and increasing back-off limit failed requests. Retries happen during normal app use; this queue starts no
-background work and sets no alarms. Turning usage off drops the queue and cancels an in-flight
-request. Crash reports, problem reports and Performance traces still go only to Google.
+background work and sets no alarms. Turning usage off drops the queue, cancels an in-flight
+request and deletes the install ID. Crash reports, problem reports and Performance traces still go only to Google.
 
 ### Performance
 
@@ -363,11 +383,23 @@ context. Copy and Clear remain local actions.
 
 ## Microphone and local voice input
 
-Microphone access is requested only when you start voice input. Recorded audio
-is transcribed locally on the device with a downloaded speech model. The app
-does not upload the recording, and voice input never sends a prompt
-automatically. Transcribed text is sent only if you choose to submit it as part
-of a prompt.
+Microphone access is requested only when you start voice input. Voice input has
+two paths:
+
+- **Downloaded speech models:** when a speech model downloaded from
+  `huggingface.co` is used, recorded audio is transcribed on the device by that
+  model and never leaves the phone; the model download carries only the file's
+  address and your IP address, and Hugging Face's own terms apply to it.
+- **Android's on-device speech recognizer (fallback):** when a downloaded
+  speech model is not used, the app asks Android for its on-device speech
+  recognizer (`SpeechRecognizer.createOnDeviceSpeechRecognizer`, Android 12 and
+  later) and sets the offline preference
+  (`RecognizerIntent.EXTRA_PREFER_OFFLINE`), and never uses Android's default
+  speech recognizer; that system recognition service's own privacy terms apply.
+
+The app does not upload the recording, and voice input never sends a prompt on
+its own. Transcribed text is sent only if you choose to submit it as part of a
+prompt.
 
 ## Optional assistant on this phone
 

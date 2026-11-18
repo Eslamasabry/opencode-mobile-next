@@ -272,6 +272,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 stringResource(
                                     if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
                                 ),
+                            supportingMaxLines = PHONE_STORAGE_LINES,
                             leading = KitRowLeading.Glyph(KitIcons.folders),
                             trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
                             onClick = if (on) null else actions::allowPhoneStorage,
@@ -850,3 +851,6 @@ internal fun folderBarActions(
         )
     )
 }
+
+/** Lines the phone-storage row's explanation may take: it says what the access gives, so it is never cut. */
+private const val PHONE_STORAGE_LINES = 3

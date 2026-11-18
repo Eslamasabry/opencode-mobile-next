@@ -181,6 +181,23 @@ internal const val ANNOUNCED_LINES: Int = 3
 internal const val ANNOUNCE_EVERY_MS: Long = 1_000
 
 /**
+ * How a page frames [KitTerminalView] (and [KitTerminalAccessible]), set with [LocalKitTerminalFrame] around it.
+ *
+ * [gutter]: the page's body runs edge to edge ([io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges.Bleed]), so the
+ * text, the field, the links and the key bar take the page gutter instead of touching the window edge.
+ * [input]: false once the program ended for good (a finished sign-in): the readable view shows its text without the
+ * "Send to terminal" field, so nothing invites typing into a program that is gone.
+ * [links]: false on a page that offers the one address the program printed as its own action (the sign-in's "Open
+ * sign-in page"): no second "Open link" row under the text.
+ */
+@Immutable
+public data class KitTerminalFrame(val gutter: Boolean = false, val input: Boolean = true, val links: Boolean = true)
+
+/** The [KitTerminalFrame] of the terminal views below it; the default frames nothing differently. */
+public val LocalKitTerminalFrame: androidx.compose.runtime.ProvidableCompositionLocal<KitTerminalFrame> =
+    androidx.compose.runtime.staticCompositionLocalOf { KitTerminalFrame() }
+
+/**
  * A live terminal with accessible mode (plan 06 §7.7 `KitTerminalView` `.live` + `.accessible`;
  * DESKTOP-WEB-CROSS-30).
  *
@@ -213,6 +230,9 @@ public fun KitTerminalView(
     showAccessibleSwitch: Boolean = true,
     above: @Composable ColumnScope.() -> Unit = {},
 ) {
+    val frame = LocalKitTerminalFrame.current
+    val side = if (frame.gutter) LocalKitTokens.current.gutter.dp else 0.dp
+    val inset = Modifier.padding(start = side, end = side)
     val signals by LocalKitPlatform.current.signals.collectAsState()
     val on =
         KitTerminalRules.accessibleOn(
@@ -238,21 +258,24 @@ public fun KitTerminalView(
                 onSend = onSend,
                 words = words,
                 inputEnabled = inputEnabled,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.weight(1f).fillMaxWidth().then(inset),
             )
         } else {
-            KitTerminalLive(platformView, title, words.terminal, Modifier.weight(1f).fillMaxWidth())
+            KitTerminalLive(platformView, title, words.terminal, Modifier.weight(1f).fillMaxWidth().then(inset))
         }
-        KitTerminalLinks(
-            transcript,
-            columns =
-                (platformView as? io.github.eslamasabry.oc.core.common.terminal.TerminalSurface)
-                    ?.columns
-                    ?.takeIf { it > 0 } ?: 80,
-        )
+        if (frame.links)
+            KitTerminalLinks(
+                transcript,
+                modifier = inset,
+                columns =
+                    (platformView as? io.github.eslamasabry.oc.core.common.terminal.TerminalSurface)
+                        ?.columns
+                        ?.takeIf { it > 0 } ?: 80,
+            )
         if (defaultKeyBar)
             KitTerminalKeyBar(
                 onSend = onSend,
+                modifier = inset,
                 enabled =
                     if (inputEnabled) KitEnabled.Enabled
                     else KitEnabled.Disabled(words.inputUnavailable),
@@ -289,6 +312,7 @@ public fun KitTerminalAccessible(
     modifier: Modifier = Modifier,
     inputEnabled: Boolean = true,
 ) {
+    val showInput = LocalKitTerminalFrame.current.input
     val lines =
         remember(transcript) { TerminalTranscript.lines(TerminalTranscript.forDisplay(transcript)) }
     val listState = rememberLazyListState()
@@ -339,26 +363,37 @@ public fun KitTerminalAccessible(
                 contentDescription = spoken
             }
         )
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            KitField(
-                state = field,
-                label = words.sendToTerminal,
-                modifier = Modifier.weight(1f).testTag(KitTerminalTags.INPUT),
-                kind = KitFieldKind.Mono,
-                imeAction = ImeAction.Send,
-                enabled = enabled,
-                onSubmit = send,
-            )
-            Spacer(Modifier.size(8.dp))
-            KitButton(
-                label = words.send,
-                onClick = send,
-                modifier = Modifier.testTag(KitTerminalTags.SEND),
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-            )
-        }
+        if (showInput) TerminalSendRow(field, words, enabled, send)
+    }
+}
+
+/** The accessible view's "Send to terminal" field and its Send button, bottoms aligned. */
+@Composable
+private fun TerminalSendRow(
+    field: androidx.compose.foundation.text.input.TextFieldState,
+    words: KitTerminalWords,
+    enabled: KitEnabled,
+    send: () -> Unit,
+) {
+    Spacer(Modifier.height(8.dp))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+        KitField(
+            state = field,
+            label = words.sendToTerminal,
+            modifier = Modifier.weight(1f).testTag(KitTerminalTags.INPUT),
+            kind = KitFieldKind.Mono,
+            imeAction = ImeAction.Send,
+            enabled = enabled,
+            onSubmit = send,
+        )
+        Spacer(Modifier.size(8.dp))
+        KitButton(
+            label = words.send,
+            onClick = send,
+            modifier = Modifier.testTag(KitTerminalTags.SEND),
+            role = KitButtonRole.Secondary,
+            enabled = enabled,
+        )
     }
 }
 

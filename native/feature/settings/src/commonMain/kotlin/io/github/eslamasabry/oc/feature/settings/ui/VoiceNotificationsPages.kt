@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.words.res.voiceNativePhoneRecognizer
+import io.github.eslamasabry.oc.ui.words.res.voiceNoticesWhisper
+import io.github.eslamasabry.oc.feature.settings.presentation.SpeechEngine
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ColumnScope
@@ -85,7 +88,13 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
                 title = stringResource(Res.string.settingsV3VoiceTyping),
                 supporting =
                     when (model) {
-                        is SpeechModel.Ready -> model.name
+                        is SpeechModel.Ready ->
+                            stringResource(
+                                when (model.engine) {
+                                    SpeechEngine.Whisper -> Res.string.voiceNoticesWhisper
+                                    SpeechEngine.PhoneRecognizer -> Res.string.voiceNativePhoneRecognizer
+                                }
+                            )
                         is SpeechModel.Downloading ->
                             stringResource(Res.string.voiceSetupDownloadingPack, model.name)
                         is SpeechModel.NotDownloaded ->

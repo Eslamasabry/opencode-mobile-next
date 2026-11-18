@@ -86,6 +86,26 @@ class ProfileScopeTest {
     }
 
     @Test
+    fun `B-STATE-061 deleting a profile deletes its unreadable phrase suggestions kept aside`() = runTest {
+        val backend = FakeBackend(
+            mapOf(
+                "flutter.oc.phraseChipsAside.$doomed" to RawPref.Str("{not json"),
+                "flutter.oc.phraseChipsAside.$keeper" to RawPref.Str("[broken"),
+                "flutter.oc.profiles" to RawPref.Str("[{\"id\":\"$doomed\"},{\"id\":\"$keeper\"}]"),
+            ),
+        )
+        val store = storeOver(backend, StandardTestDispatcher(testScheduler))
+        val scope = DefaultProfileScope(store, MapSecretStore(), WriterLane("app"))
+        scope.register(KeyShape("oc.phraseChipsAside.", KeyScope.Profile, PrefType.Str, ":engine:composer", "aside"))
+
+        scope.sweep(ProfileId(doomed), retained = emptySet())
+
+        val left = store.keys()
+        assertTrue("oc.phraseChipsAside.$doomed" !in left, "the doomed profile's aside key is gone: $left")
+        assertTrue("oc.phraseChipsAside.$keeper" in left, "the other profile's aside key stays: $left")
+    }
+
+    @Test
     fun `B-SEC-039 owned data lists the profile's secrets by registered prefix and nothing of others`() = runTest {
         val store = storeOver(FakeBackend(), StandardTestDispatcher(testScheduler))
         val secrets = MapSecretStore(

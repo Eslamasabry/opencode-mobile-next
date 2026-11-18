@@ -767,6 +767,7 @@
     </plurals>
     <string name="kitMarkdownTable__eq1">Table, 1 row</string>
     <string name="kitToolNotRun">Not run</string>
+    <string name="kitToolUnanswered">Stopped before you answered</string>
     <string name="kitToolWaiting">Waiting</string>
     <string name="kitToolRunning">Running</string>
     <string name="kitToolWaitingForYou">Waiting for you</string>

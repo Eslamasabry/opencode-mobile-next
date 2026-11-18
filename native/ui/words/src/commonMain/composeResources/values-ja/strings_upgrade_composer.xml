@@ -6,6 +6,6 @@
     <string name="chatWaitingForAnswerAbove">上の質問への回答をお待ちください</string>
     <string name="upgradeComposerFree"> · 無料</string>
     <string name="upgradeComposerVoiceHoldTitle">エージェントと話す</string>
-    <string name="upgradeComposerVoiceHold">マイクを長押しして話し、離すと入力欄にテキストが入ります。音声会話を始めるには「+」を開いて「音声会話」を選んでください。</string>
+    <string name="upgradeComposerVoiceHold">マイクを長押しして話し、離すと入力欄にテキストが入ります。音声会話を始めるには、マイクをタップして「音声会話」をタップしてください。</string>
     <string name="upgradeComposerHoldDictate">長押しして音声入力</string>
 </resources>

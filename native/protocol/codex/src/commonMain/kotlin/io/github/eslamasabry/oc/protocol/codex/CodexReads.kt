@@ -129,7 +129,7 @@ private constructor(
             )
         if (reply is Outcome.Failed) return reply
         val agent = ((reply as Outcome.Ok).value["userAgent"] as? JsonPrimitive)?.contentOrNull
-        qualified = agent != null && Regex("""(^|/)0\.153\.4(?:\s|$)""").containsMatchIn(agent)
+        qualified = CodexAccountGate.supported(agent)
         return socket.sendText(
             buildJsonObject {
                 put("method", "initialized")

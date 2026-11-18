@@ -36,7 +36,11 @@ import io.github.eslamasabry.oc.engine.analytics.health.HealthExit
 import io.github.eslamasabry.oc.engine.analytics.health.HealthExitMarks
 import io.github.eslamasabry.oc.engine.analytics.health.HealthPlatform
 import io.github.eslamasabry.oc.engine.analytics.health.HealthTelemetry
+import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFacts
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
 import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.analytics.product.ProductLifecycle
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
@@ -95,6 +99,9 @@ class AppTelemetryHealth(
 
     /** A reply finished arriving (set by the consent question, which waits for it). */
     @Volatile var onReplyFinished: (() -> Unit)? = null
+
+    /** The server says nothing of this app is busy any more: the owed consent question may try again. */
+    @Volatile var onQuiet: (() -> Unit)? = null
     private var health: HealthTelemetry? = null
     private val lifecycle by lazy { ProductLifecycle(telemetry, clock) }
 
@@ -163,7 +170,14 @@ class AppTelemetryHealth(
         val answers = TelemetryAnswers(stores.prefs, stores.lanes.app)
         val elapsed = { SystemClock.elapsedRealtime() }
         val wall = { clock.now().toEpochMilliseconds() }
-        val chat = ChatJourney(elapsed, HealthFlow(), PrefsFirstReply(answers, scope)) { onReplyFinished?.invoke() }
+        val chat =
+            ChatJourney(
+                elapsed,
+                HealthFlow(),
+                PrefsFirstReply(answers, scope),
+                onReplyDone = { onReplyFinished?.invoke() },
+                onQuiet = { onQuiet?.invoke() },
+            )
         val approvals = ApprovalMeter(elapsed, HealthFlow()) { AppJourneys.chatOrNull }
         val setup =
             SetupJourney(
@@ -243,10 +257,16 @@ class AppTelemetryHealth(
         scope.launch {
             combine(connections.value.servers, registry.value.live) { servers, live ->
                     val kinds = live.values.map { if (it.profile.managedOnPhone) "phone" else "computer" }.toSet()
-                    Triple(servers.size, kinds, live.isNotEmpty())
+                    // For our own server: fixed product names and kinds only, never an address, a name or an id.
+                    val links = live.values.map { linkWord(it.profile) }.toSet()
+                    val agents = live.values.map { agentWord(it.profile) }.toSet()
+                    Seen(servers.size, kinds, live.isNotEmpty(), links, agents)
                 }
                 .distinctUntilChanged()
-                .collect { (saved, kinds, anyLive) ->
+                .collect { seen ->
+                    val (saved, kinds, anyLive) = seen
+                    UmamiFacts.put(UmamiField.ConnectionKind, UmamiField.joined(seen.links))
+                    UmamiFacts.put(UmamiField.Agents, UmamiField.joined(seen.agents))
                     val phone = "phone" in kinds
                     health.updateConnection(
                         serverKind = if (phone) "phone" else if (anyLive) "computer" else "none",
@@ -264,6 +284,14 @@ class AppTelemetryHealth(
                 }
         }
     }
+
+    private data class Seen(
+        val saved: Int,
+        val kinds: Set<String>,
+        val anyLive: Boolean,
+        val links: Set<String>,
+        val agents: Set<String>,
+    )
 
     // ---- activities: first frame, warm start, background ----
 
@@ -564,3 +592,19 @@ internal class AndroidHealthPlatform(
             }
     }
 }
+
+/** For our own server: the kind of connection as one fixed word, never an address, a name or an id. */
+private fun linkWord(profile: ServerProfile): String =
+    when {
+        profile.managedOnPhone -> "phone"
+        profile.backend == BackendKind.Paseo -> "computer"
+        else -> "remote"
+    }
+
+/** The agent server's product name as one fixed word. */
+private fun agentWord(profile: ServerProfile): String =
+    when (profile.backend) {
+        BackendKind.OpenCode2 -> "opencode"
+        BackendKind.Paseo -> "paseo"
+        BackendKind.Codex -> "codex"
+    }

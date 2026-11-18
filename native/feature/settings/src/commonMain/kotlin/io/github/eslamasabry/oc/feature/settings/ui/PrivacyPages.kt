@@ -81,7 +81,8 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
                 modifier = Modifier.testTag("privacy-what-we-collect"),
                 leading = KitRowLeading.Glyph(KitIcons.info),
                 supporting = stringResource(Res.string.collectRowSummary),
-                supportingMaxLines = 2,
+                // Whole at 360 dp (look of build 10086: it ended in "…" at text 1.0): it wraps as far as it needs.
+                supportingMaxLines = Int.MAX_VALUE,
                 trailing = KitRowTrailing.Chevron,
                 onClick = { actions.onOpen(SettingsPage.WhatWeCollect) },
             )
@@ -139,6 +140,13 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
         }
         HealthContract.items.getValue(CollectGroup.Crashes).forEach { CollectRow(it) }
     }
+    KitRowGroup(
+        label = stringResource(Res.string.collectOwnLabel),
+        modifier = Modifier.testTag("collect-own-server"),
+    ) {
+        HealthContract.items.getValue(CollectGroup.OwnServer).forEach { CollectRow(it) }
+        KitRow(title = stringResource(Res.string.collectOwnTogether), titleMaxLines = Int.MAX_VALUE)
+    }
     KitRowGroup(label = stringResource(Res.string.collectReportLabel)) {
         HealthContract.items.getValue(CollectGroup.Report).forEach { CollectRow(it) }
     }
@@ -179,4 +187,9 @@ internal fun collectWords(item: CollectItem): StringResource =
         CollectItem.Steps -> Res.string.collectSteps
         CollectItem.CrashKeys -> Res.string.collectCrashKeys
         CollectItem.Report -> Res.string.collectReport
+        CollectItem.OwnBuild -> Res.string.collectOwnBuild
+        CollectItem.OwnPhone -> Res.string.collectOwnPhone
+        CollectItem.OwnLook -> Res.string.collectOwnLook
+        CollectItem.OwnUse -> Res.string.collectOwnUse
+        CollectItem.OwnInstall -> Res.string.collectOwnInstall
     }

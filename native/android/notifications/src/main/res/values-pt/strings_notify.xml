@@ -77,4 +77,6 @@
         <item quantity="many">%s conversas concluídas</item>
         <item quantity="other">%s conversas concluídas</item>
     </plurals>
+    <string name="notify_alert_reason_sign_in_again">%1$s precisa que você faça login de novo.</string>
+    <string name="notify_alert_reason_sign_in_again_any">O agente precisa que você faça login de novo.</string>
 </resources>

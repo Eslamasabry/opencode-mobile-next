@@ -75,16 +75,16 @@ class CatalogInventoryTest {
 
     /**
      * Pins that moved on native after the Flutter freeze, old text to new, applied to that agent's saved entry only:
-     * OpenCode 2 2.2.5 -> 2.2.6 (93fcf4049; the values AgentPinsParityTest checks literally); omp's set-up command; the 2026-11-14 agent upgrades
+     * OpenCode 2 2.2.5 -> 2.3.2 (93fcf4049; the values AgentPinsParityTest checks literally); omp's set-up command; the 2026-11-14 agent upgrades
      * below. Every other field still has to equal the inventory byte for byte.
      */
     private val postFreezeMoves = mapOf(
         "opencode2" to listOf(
-            "2.2.5" to "2.2.6",
+            "2.2.5" to "2.3.2",
             "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053" to
-                "22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898",
+                "91a937129efdae8eb8c0c5018ae533f9f35117f26ffd9a4d1f7a5f9da1e69306",
             "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08" to
-                "00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce",
+                "e567dcdb1310dcae4e442077e0d508e10a80c1b996131a04dc9b978cdd26e5cd",
         ),
         // 2026-11-13: omp is set up in the app's terminal with `omp login` (its bare TUI was the old sign-in command).
         "omp-acp" to listOf(
@@ -100,44 +100,44 @@ class CatalogInventoryTest {
             number("installedBytes", 280536544, 287484080),
         ),
         // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
-        // 2.1.325, Codex 0.169.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
+        // 2.1.327, Codex 0.170.0, Antigravity 1.5.11, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
         // same agents' pins literally. Gemini CLI and Cline did not move.
         "claude" to listOf(
-            text("2.1.319", "2.1.325"),
-            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-arm64/claude"),
-            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67"),
-            number("downloadBytes", 339797432, 364701112),
-            number("installedBytes", 339797432, 364701112),
-            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-x64/claude"),
-            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "0dc4f4a9a165fc60746d7ae8489712e5fc352f1e7ad4eb22e7141bd0812eb0cf"),
-            number("downloadBytes", 340226576, 365842960),
-            number("installedBytes", 340226576, 365842960),
+            text("2.1.319", "2.1.327"),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.327/linux-arm64/claude"),
+            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "acf0ef2f9da8d5ab08f193f007e19a06cbfb608b96a2f1f758d63a92a386cff8"),
+            number("downloadBytes", 339797432, 371779000),
+            number("installedBytes", 339797432, 371779000),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.327/linux-x64/claude"),
+            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "343c744baa14bfd38286a7cb90871051f04379956da6c5b803a9e66019a76ac9"),
+            number("downloadBytes", 340226576, 372904464),
+            number("installedBytes", 340226576, 372904464),
         ),
         "codex" to listOf(
-            text("0.167.0", "0.169.0"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
-            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "c8d0b4ab2a97c595b70b10412d36d0d5464dcef1e1d3246b073d48017cdf5a4f"),
-            number("downloadBytes", 114300898, 194441793),
-            number("installedBytes", 278794648, 493772076),
+            text("0.167.0", "0.170.0"),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.170.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
+            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "3f7e1ae38c4fe27322e082b855e8eec936d08fa538d62b71c07e2a53f34e8847"),
+            number("downloadBytes", 114300898, 195884517),
+            number("installedBytes", 278794648, 497311036),
             // Issue 147: the official package, whose entry is bin/codex beside its code-mode host.
             text("codex-aarch64-unknown-linux-musl", "bin/codex"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
-            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "3b8ed091149cc63a59046b9f094bcfa21cdb4dda15ede441ce369bcee4a71ba0"),
-            number("downloadBytes", 122587028, 192339692),
-            number("installedBytes", 320575976, 497056070),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.170.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
+            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "a77ff87be7ba809d715728270a78f5ce3527dc07529416d1ef8929b90b8475eb"),
+            number("downloadBytes", 122587028, 193641516),
+            number("installedBytes", 320575976, 501309254),
             text("codex-x86_64-unknown-linux-musl", "bin/codex"),
         ),
         "antigravity" to listOf(
-            text("1.5.3", "1.5.9"),
-            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/cli_linux_arm64.tar.gz"),
-            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca"),
-            number("downloadBytes", 69843447, 90318517),
-            number("installedBytes", 235622776, 249582256),
-            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/cli_linux_x64.tar.gz"),
-            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa"),
-            number("downloadBytes", 73694700, 99166075),
-            number("installedBytes", 246837648, 265700040),
+            text("1.5.3", "1.5.11"),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.11-6132547114106880/linux-arm/cli_linux_arm64.tar.gz"),
+            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "de4fea15f83f40685cb30374b58337318d58340efcc8779a2eb1461b620b69f4"),
+            number("downloadBytes", 69843447, 91203180),
+            number("installedBytes", 235622776, 252531376),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.11-6132547114106880/linux-x64/cli_linux_x64.tar.gz"),
+            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "df652c98fdf519a87c017b4e1d92f3fdb66c344de16e5e685c596637bbd28334"),
+            number("downloadBytes", 73694700, 100130747),
+            number("installedBytes", 246837648, 268841672),
         ),
         "qwen" to listOf(
             text("0.26.4", "0.27.3"),

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.protocol.codex.transport
 
+import io.github.eslamasabry.oc.protocol.codex.CodexAccountGate
 import io.github.eslamasabry.oc.protocol.codex.CodexEndpoint
 import io.github.eslamasabry.oc.protocol.codex.CodexException
 import io.github.eslamasabry.oc.protocol.codex.CodexFailureKind
@@ -62,7 +63,7 @@ public class CodexTransport(
 
     public val connected: Boolean get() = socket != null && initialized
 
-    /** Account methods are enabled only for the schema this client verified (the 0.153.4 `userAgent`). */
+    /** Account methods are on for a plain release at or above the verified 0.153.4 ([CodexAccountGate]). */
     public var accountApiSupported: Boolean = false
 
     /** Adds a synchronous observer; returns the remover. */
@@ -120,7 +121,7 @@ public class CodexTransport(
                 requireInitialized = false,
             ).result.await()
             val agent = answer["userAgent"].stringOrNull()
-            accountApiSupported = agent != null && PINNED_AGENT.containsMatchIn(agent)
+            accountApiSupported = CodexAccountGate.supported(agent)
             sendRaw(jsonOf("method" to "initialized", "params" to emptyMap<String, Any>()), myEpoch)
             initialized = true
             return myEpoch
@@ -327,8 +328,5 @@ public class CodexTransport(
     public companion object {
         public const val MAX_FRAME_BYTES: Int = 4 * 1024 * 1024
         public const val MAX_PENDING: Int = 64
-
-        /** The verified app-server build (Dart `RegExp(r'(^|/)0\.153\.4(?:\s|$)')`). */
-        private val PINNED_AGENT = Regex("""(^|/)0\.153\.4(?:\s|$)""")
     }
 }

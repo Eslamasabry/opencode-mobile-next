@@ -1375,4 +1375,5 @@
     <string name="stageOpeningConversation">Abriendo la conversación…</string>
     <string name="kitTurnLiveStillThinking">Sigue pensando</string>
     <string name="chatQuietThinkingHint">Algunos modelos piensan en silencio durante varios minutos.</string>
+    <string name="kitToolUnanswered">Se detuvo antes de que respondieras</string>
 </resources>

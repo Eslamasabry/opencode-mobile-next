@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Фоновые проверки серверов</string>
     <string name="nativeSearchAliasesBackgroundChecks">Фоновые проверки; опрос; мониторинг Background checks; polling; monitor</string>
     <string name="nativeSearchPlaceAppearance">Внешний вид</string>
-    <string name="nativeSearchAliasesAppearance">Тема; цвета; стиль Theme; colors; style</string>
+    <string name="nativeSearchAliasesAppearance">Тема; цвета; стиль; значки ожидания Theme; colors; style; waiting marks</string>
     <string name="nativeSearchPlaceLanguage">Язык</string>
     <string name="nativeSearchAliasesLanguage">Арабский; английский; локаль Arabic; English; locale</string>
     <string name="nativeSearchPlaceTips">Советы</string>

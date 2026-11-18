@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowTitle
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
@@ -236,7 +237,9 @@ private fun RowBody(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val scale = kitTextScale()
-    val large = TextScalePolicy.isLargeText(scale)
+    // Rules read the chosen size ([kitFontScale]); glyphs keep the drawn one ([scale]).
+    val chosen = kitFontScale()
+    val large = TextScalePolicy.isLargeText(chosen)
     val supportLine =
         when {
             !enabled -> disabledReason
@@ -340,7 +343,9 @@ private fun RowBody(
                             Modifier.weight(1f).kitGrowTitle(growKey).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
                             tone = if (!enabled || unavailable) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
-                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
+                            maxLines =
+                                if (titleIsFileName && large) Int.MAX_VALUE
+                                else kitRowTitleLines(chosen, titleMaxLines),
                             highlight = highlight,
                             // Flutter lays a row title out in the ambient direction, so an Arabic title in an English
                             // list starts on the reading edge (kit_sheet_default: "العربية"); never at the row's end.
@@ -367,7 +372,7 @@ private fun RowBody(
                             style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
                                 color = colors.text2, textDirection = TextDirection.Content,
                             ),
-                            maxLines = kitRowSupportingLines(scale, supportingMaxLines),
+                            maxLines = kitRowSupportingLines(chosen, supportingMaxLines),
                             overflow = TextOverflow.Ellipsis,
                         )
                     } else if (stateWord != null && word != null) {
@@ -403,7 +408,9 @@ private fun RowBody(
                                 Modifier.testTag("kit-row-supporting").kitMayTruncate("row-supporting"),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
-                                maxLines = if (!enabled || unavailable) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
+                                maxLines =
+                                    if (!enabled || unavailable) Int.MAX_VALUE
+                                    else kitRowSupportingLines(chosen, supportingMaxLines),
                                 highlight = highlight.takeIf { enabled && !unavailable },
                             )
                         }

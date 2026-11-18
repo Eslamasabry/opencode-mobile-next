@@ -51,12 +51,16 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitProminentRule
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkDefaults
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -75,6 +79,13 @@ import org.jetbrains.compose.resources.stringResource
 
 /** The roomy conversation row's rules, apart from the drawing. */
 public object KitRecentRowRules {
+    /** Whether the row has a time or a state word to show at its end. */
+    public fun endShown(time: String?, state: KitRowState?): Boolean = time != null || state?.word != null
+
+    /** At large text a row that is not waiting shows its end under the words, not beside them. */
+    public fun endStacked(large: Boolean, waiting: Boolean, time: String?, state: KitRowState?): Boolean =
+        large && !waiting && endShown(time, state)
+
     /** The agent's mark, drawn bare at the row's start (no tile, no container: owner 2026-11-08). */
     public const val MARK_DP: Int = 28
 
@@ -209,11 +220,14 @@ public fun KitRecentRow(
                         if (pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
                     }
                     if (line != null || shownProject != null) SecondLine(shownProject, line, previewLines)
+                    // At large text the time and the state word go under the words instead of beside them, so a
+                    // fixed end column never squeezes the title to a few words (look of build 10093 at 200 %).
+                    if (KitRecentRowRules.endStacked(large, waiting, time, state)) End(time, state, stacked = true)
                 }
                 if (waiting) {
                     Spacer(Modifier.width(Space.S3.dp))
                     WaitingEnd()
-                } else if (time != null || state?.word != null) {
+                } else if (!large && KitRecentRowRules.endShown(time, state)) {
                     Spacer(Modifier.width(Space.S3.dp))
                     End(time, state, Modifier.widthIn(max = endMax))
                 }
@@ -303,13 +317,18 @@ private fun SecondLine(project: String?, line: String?, previewLines: Int) {
 
 /**
  * The time on top; the state word under it in its colour (Working with a small green dot). [modifier] caps its width
- * ([KitRecentRowRules.END_SHARE]); a longer word is cut with an ellipsis.
+ * ([KitRecentRowRules.END_SHARE]); a longer word is cut with an ellipsis. [stacked]: at large text it sits under the
+ * row's words, at their start.
  */
 @Composable
-private fun End(time: String?, state: KitRowState?, modifier: Modifier = Modifier) {
+private fun End(time: String?, state: KitRowState?, modifier: Modifier = Modifier, stacked: Boolean = false) {
     val colors = LocalKitColors.current
     val typography = LocalKitTypography.current
-    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    Column(
+        modifier,
+        horizontalAlignment = if (stacked) Alignment.Start else Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
         if (time != null)
             KitText(time.replace(' ', ' '), role = TypeRole.Caption, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary, maxLines = 1)
         val word = state?.word
@@ -368,6 +387,7 @@ private fun stateColor(colors: KitColors, tone: KitRowStateTone): Color =
  * Hidden: none
  * Replaces: none
  */
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitRowPanel(
     modifier: Modifier = Modifier,
@@ -382,6 +402,17 @@ public fun KitRowPanel(
      * them once when they change.
      */
     labelStatus: String? = null,
+    /**
+     * The kind of wait [labelStatus] names ("Starting Linux…" is [KitWaitKind.Starting]): its waiting mark stands
+     * before the words, in their ink, no taller than their line, and comes and goes with them. Null (words that name
+     * no wait, or no words) shows no mark.
+     */
+    labelWait: KitWaitKind? = null,
+    /**
+     * The one act that belongs to [labelStatus] ("Download on mobile data"): shown under the words, level with them, in
+     * the accent, in a 48 dp target. Null shows the words alone.
+     */
+    labelAction: KitLineAction? = null,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -391,7 +422,8 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus)) }
+        val status = kitLabelStatus(labelStatus, labelAction, labelWait)
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = status) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -415,28 +447,68 @@ public fun KitRowPanel(
  * after that the last words stay while they fade out.
  */
 @Composable
-private fun kitLabelStatus(status: String?): (@Composable () -> Unit)? {
+private fun kitLabelStatus(
+    status: String?,
+    action: KitLineAction? = null,
+    wait: KitWaitKind? = null,
+): (@Composable () -> Unit)? {
     val held = remember { mutableStateOf<String?>(null) }
     if (status != null && held.value != status) held.value = status
+    // The mark of the last words, so it fades out with them.
+    val heldWait = remember { mutableStateOf<KitWaitKind?>(null) }
+    if (status != null && heldWait.value != wait) heldWait.value = wait
     val words = held.value ?: return null
+    val mark = heldWait.value
     val visible = remember { MutableTransitionState(false) }
     visible.targetState = status != null
     val reduced = KitMotion.state.reduced
     val specs = KitMotion.specs
+    val target = LocalKitTokens.current.minTarget.dp
     return {
         AnimatedVisibility(
             visibleState = visible,
             enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
             exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
         ) {
-            KitText(
-                words,
-                Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
-                role = TypeRole.Label,
-                tone = TextTone.Secondary,
-                maxLines = 1,
-            )
+            Column(if (action != null) Modifier.fillMaxWidth() else Modifier) {
+                LabelStatusWords(words, mark, maxLines = if (action != null) 2 else 1)
+                // The status's own act, under its words and level with them: a 48 dp target, the accent so it reads as
+                // something to tap (never a bar or a row of its own).
+                if (status != null && action != null)
+                    KitTappable(
+                        onClick = action.onClick,
+                        enabled = action.enabled,
+                        disabledReason = action.disabledReason,
+                        modifier = Modifier.heightIn(min = target).testTag("kit-row-panel-status-action"),
+                    ) {
+                        Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
+                            KitText(action.label, role = TypeRole.Label, tone = TextTone.Accent, maxLines = 2)
+                        }
+                    }
+            }
         }
+    }
+}
+
+/** The status words with their waiting [mark] before them, in one ink; the mark is no taller than the words' line. */
+@Composable
+private fun LabelStatusWords(words: String, mark: KitWaitKind?, maxLines: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (mark != null) {
+            // The words' own line height at most: the label's line keeps its height when the mark comes.
+            val line = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Label).lineHeight.toDp() }
+            KitWaitMark(mark, tone = TextTone.Secondary, size = minOf(line, KitWaitMarkDefaults.Size))
+            Spacer(Modifier.width(Space.S1.dp))
+        }
+        KitText(
+            words,
+            Modifier.weight(1f, fill = false)
+                .testTag("kit-row-panel-status")
+                .semantics { liveRegion = LiveRegionMode.Polite },
+            role = TypeRole.Label,
+            tone = TextTone.Secondary,
+            maxLines = maxLines,
+        )
     }
 }
 

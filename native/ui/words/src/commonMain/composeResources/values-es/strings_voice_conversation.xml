@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">No se pudieron restablecer los consejos. Inténtalo de nuevo.</string>
     <string name="voiceConversationNativeTourReplay">Muéstrame</string>
     <string name="voiceConversationNativeTourLoadFailed">No se pudieron abrir los consejos. Inténtalo de nuevo.</string>
+    <string name="voiceConversationDoorDraft">Envía o borra tu mensaje primero</string>
 </resources>

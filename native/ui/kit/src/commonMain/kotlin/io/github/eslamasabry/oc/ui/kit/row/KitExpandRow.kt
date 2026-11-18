@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,8 +22,16 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetTyping
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -47,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -121,13 +132,18 @@ public fun KitExpandRow(
     val reduced = specs.state.reduced
     val scale = kitTextScale()
     val turn by animateFloatAsState(if (expanded) HALF_TURN else 0f, specs.enter(), label = "expand-chevron")
-    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
+    val reveal = rememberExpandReveal()
+    val change: (Boolean) -> Unit = { open ->
+        reveal?.pending = open
+        onExpandedChange(open)
+    }
+    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).then(reveal?.modifier ?: Modifier)) {
         Row(
             Modifier.fillMaxWidth()
                 .testTag("kit-expand-row-header")
-                .kitTappable(onClick = { onExpandedChange(!expanded) }, role = KitTappableRole.Row, shape = KitShapeId.Square)
+                .kitTappable(onClick = { change(!expanded) }, role = KitTappableRole.Row, shape = KitShapeId.Square)
                 .semantics(mergeDescendants = true) {
-                    if (expanded) collapse { onExpandedChange(false); true } else expand { onExpandedChange(true); true }
+                    if (expanded) collapse { change(false); true } else expand { change(true); true }
                 }
                 // 56 dp with one line, 64 with two (kit_row.dart:497-507); the 48 dp chevron reaches into the words' room.
                 .heightIn(min = (if (supporting != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
@@ -145,10 +161,21 @@ public fun KitExpandRow(
                 Spacer(Modifier.width(Space.S3.dp))
             }
             Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
-                KitText(title, Modifier.testTag("kit-row-title"), role = TypeRole.RowTitle, maxLines = kitRowTitleLines(scale, titleMaxLines))
+                KitText(
+                    title,
+                    Modifier.testTag("kit-row-title"),
+                    role = TypeRole.RowTitle,
+                    maxLines = kitRowTitleLines(kitFontScale(), titleMaxLines),
+                )
                 supporting?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
-                    KitText(it, Modifier.testTag("kit-row-supporting"), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(scale, supportingMaxLines))
+                    KitText(
+                        it,
+                        Modifier.testTag("kit-row-supporting"),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines),
+                    )
                 }
             }
             Spacer(Modifier.width(Space.S2.dp))
@@ -164,6 +191,7 @@ public fun KitExpandRow(
             enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
             exit = if (reduced) ExitTransition.None else shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
         ) {
+            RevealWhenUnfolded(reveal)
             if (bare) {
                 Column(Modifier.fillMaxWidth(), content = content)
             } else {
@@ -177,6 +205,41 @@ public fun KitExpandRow(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Look 10100: a row opened low in a sheet left what it opened under the sheet's end. A scroll asked for while the row
+ * still unfolds stops at the body's end of that moment (a few pixels), and nothing asked again. So, inside a scrolling
+ * sheet body, a row the person opened (a tap or the accessibility action; never one already open when the sheet
+ * appears) brings itself and what it opened into view one frame after the unfolding has finished.
+ */
+private class ExpandReveal {
+    val requester = BringIntoViewRequester()
+    var pending by mutableStateOf(false)
+    val modifier: Modifier = Modifier.bringIntoViewRequester(requester)
+}
+
+/** Null outside a scrolling sheet body ([LocalKitSheetTyping] marks one): there a row opens where it stands. */
+@Composable
+private fun rememberExpandReveal(): ExpandReveal? {
+    if (LocalKitSheetTyping.current == null) return null
+    return remember { ExpandReveal() }
+}
+
+@Composable
+private fun AnimatedVisibilityScope.RevealWhenUnfolded(reveal: ExpandReveal?) {
+    if (reveal == null || !reveal.pending) return
+    val unfolded =
+        transition.currentState == EnterExitState.Visible &&
+            transition.targetState == EnterExitState.Visible
+    LaunchedEffect(unfolded) {
+        if (unfolded) {
+            // One frame: the scrolling body has taken its full height first.
+            withFrameNanos {}
+            reveal.requester.bringIntoView()
+            reveal.pending = false
         }
     }
 }

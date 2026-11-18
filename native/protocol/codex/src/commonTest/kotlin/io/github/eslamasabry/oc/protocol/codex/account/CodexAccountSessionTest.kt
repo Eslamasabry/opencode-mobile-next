@@ -92,7 +92,7 @@ class CodexAccountSessionTest {
 
     @Test
     fun `B-AGENT-051 a wrong-version handshake disables account actions without breaking the connection`() = runTest {
-        val other = FakeAppServer(userAgent = "codex_cli_rs/0.154.0 (fixture)")
+        val other = FakeAppServer(userAgent = "codex_cli_rs/0.153.3 (fixture)")
         val t = transport(FakeSockets(other))
         t.connect()
         val account = CodexAccountSession(t) { true }

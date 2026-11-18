@@ -1676,13 +1676,16 @@ public class PaseoGateway(
     override suspend fun stop(session: SessionId, resume: Boolean): Outcome<StopResult> = call {
         if (isReadOnlySession(session)) paseoFail(PaseoFailureKind.Unavailable)
         if (session.raw in drafts) return@call StopResult.NothingRunning
+        // The helper answers a cancel of an idle agent with success, so its answer cannot say whether anything ran:
+        // what the stream last said does (an idle parent whose sub-agent works is the case).
+        val idle = statuses[session.raw] == SessionStatus.Idle
         live[session.raw]?.stopAsked = true
         transport.request(
             "cancel_agent_request",
             jsonOf("agentId" to real(paseoString(session.raw, max = 256))),
             mutation = true,
         )
-        StopResult.Stopped
+        if (idle) StopResult.NothingRunning else StopResult.Stopped
     }
 
     /**
@@ -2748,6 +2751,12 @@ internal class PaseoLive {
      * notice.
      */
     var turnErrorShown = false
+
+    /**
+     * What the shared sign-in rule read in the turn's own failure words (its error row or its `turn_failed`); only
+     * the value is kept, never the words (B-AGENT-433).
+     */
+    var turnSignIn: io.github.eslamasabry.oc.core.model.transcript.AgentSignIn? = null
 
     /** The newest item of the turn in progress is a call the person declined at its card (fault 5). */
     var endsOnDecline = false

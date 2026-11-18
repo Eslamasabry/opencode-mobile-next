@@ -61,7 +61,7 @@ internal data class InstallerTicket(
                 InstallerOperation.valueOf(value["operation"] as String),
                 NativeRuntimeReceipt.read(value["ownership"] as Map<*, *>),
                 identities.map { RuntimeProcessIdentity.read(it as Map<*, *>) })
-        } catch (_: Exception) { throw IllegalArgumentException(SAFE) }
+        } catch (_: Exception) { throw OwnershipProofException("ticketUndecodable") }
     }
 }
 
@@ -109,7 +109,10 @@ internal object NativeInstallerOwnership {
         val current = inventory.associateBy { it.pid }
         // This check precedes peer admission, so a reused observation cannot become a reader.
         for (observation in observed) {
-            require(current[observation.pid] == null || observation.sameProcess(current[observation.pid])) { SAFE }
+            ownershipRequire(
+                current[observation.pid] == null || observation.sameProcess(current[observation.pid]),
+                "pidReused",
+            )
         }
         val ownedIdentities = listOfNotNull(receipt.root, receipt.leader) + observed
         val forbidden = ownedIdentities.map { it.pid }.toMutableSet()
@@ -119,7 +122,7 @@ internal object NativeInstallerOwnership {
         val other = receipt.other.associateBy { it.pid }.toMutableMap()
         for (peer in peers) {
             val exact = current[peer.pid]
-            require(peer.sameProcess(exact)) { SAFE }
+            ownershipRequire(peer.sameProcess(exact), "peerExitedBetweenReads")
             // Use the current kernel shape, never stale caller parent/session fields.
             require(exact!!.pid !in forbidden && exact.session != receipt.leader?.session) { SAFE }
             val old = other[exact.pid]
@@ -134,7 +137,7 @@ internal object NativeInstallerOwnership {
         inventory: List<RuntimeProcessIdentity>, registeredReaders: Set<Int>,
         absenceConfirmed: (Int) -> Boolean, nonceMatches: (Int, String) -> Boolean,
     ): NativeRuntimeOwnership.Drain {
-        require(ticket.rootfsGeneration == rootfsGeneration && ticket.ownership.boot == boot) { SAFE }
+        ownershipRequire(ticket.rootfsGeneration == rootfsGeneration && ticket.ownership.boot == boot, "bootMismatch")
         require(inventory.size <= MAX_INSTALLER_IDENTITIES &&
             inventory.map { it.pid }.distinct().size == inventory.size) { SAFE }
         NativeInstallerVisibility.requireMissingGone(
@@ -143,15 +146,24 @@ internal object NativeInstallerOwnership {
         val current = inventory.associateBy { it.pid }
         // A reused observed PID is never converted into ownership, even when listed as a reader.
         for (observation in ticket.observed) {
-            require(current[observation.pid] == null || observation.sameProcess(current[observation.pid])) { SAFE }
+            ownershipRequire(
+                current[observation.pid] == null || observation.sameProcess(current[observation.pid]),
+                "pidReused",
+            )
         }
         val base = NativeRuntimeOwnership.plan(ticket.ownership, boot, inventory, registeredReaders,
             requireCompleteInventory = false, nonceMatches = nonceMatches)
         val installer = base.server.map { it.pid }.toMutableSet()
         installer.addAll(ticket.observed.filter { it.sameProcess(current[it.pid]) }.map { it.pid })
         expand(inventory, installer)
-        require(installer.intersect(base.other).isEmpty() && installer.intersect(registeredReaders).isEmpty()) { SAFE }
-        require(inventory.all { it.pid in installer || it.pid in base.other || it.pid in registeredReaders }) { SAFE }
+        ownershipRequire(
+            installer.intersect(base.other).isEmpty() && installer.intersect(registeredReaders).isEmpty(),
+            "ownersOverlap",
+        )
+        ownershipRequire(
+            inventory.all { it.pid in installer || it.pid in base.other || it.pid in registeredReaders },
+            "unclassifiedSameUid",
+        )
         // Completion requires a fresh plan with server.isEmpty(), not a missing parent or exit code.
         return NativeRuntimeOwnership.Drain(inventory.filter { it.pid in installer }
             .sortedBy { if (it.pid == ticket.ownership.root?.pid) 1 else 0 }, base.other)

@@ -30,8 +30,9 @@ class ComposerVoicePresenterTest {
             presenter.attach(field)
         }
 
-        fun listening(words: String) {
-            dictation.state.value = VoiceState.Listening(Instant.fromEpochMilliseconds(0), VoiceMode.Tap, 0, words)
+        fun listening(words: String, partial: String = "") {
+            dictation.state.value =
+                VoiceState.Listening(Instant.fromEpochMilliseconds(0), VoiceMode.Tap, 0, words, partial)
         }
     }
 
@@ -364,5 +365,146 @@ class ComposerVoicePresenterTest {
         rig.field.value = "draft!"
         rig.presenter.fieldChanged(rig.field.value)
         assertNull(rig.presenter.state.value.note)
+    }
+
+    @Test
+    fun `B-MEDIA-063 the box's Send while listening writes the words down and sends them once`() =
+        runTest {
+            val rig = Rig(this)
+            runCurrent()
+            rig.presenter.tapMic()
+            runCurrent()
+            rig.listening("ship it")
+            runCurrent()
+            rig.presenter.doneAndSend()
+            rig.presenter.doneAndSend()
+            runCurrent()
+            assertEquals(1, rig.dictation.finishes, "a second press before the words are written is the same request")
+            rig.dictation.state.value = VoiceState.Writing("ship it")
+            runCurrent()
+            rig.presenter.doneAndSend()
+            runCurrent()
+            assertEquals(1, rig.dictation.finishes, "a press while writing asks nothing more")
+            rig.dictation.state.value = VoiceState.Done("ship it", VoiceEnd.Person)
+            runCurrent()
+            assertEquals(listOf("ship it"), rig.field.sent, "the words go once")
+            assertEquals(MicPhase.Idle, rig.presenter.state.value.phase)
+        }
+
+    @Test
+    fun `B-MEDIA-061 discard puts the box back as it was and sends nothing`() = runTest {
+        val rig = Rig(this)
+        rig.field.value = "Whats next"
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("and the tests")
+        runCurrent()
+        rig.presenter.cancel()
+        runCurrent()
+        assertEquals(listOf(false), rig.dictation.cancels)
+        assertEquals("Whats next", rig.field.value)
+        assertTrue(rig.field.sent.isEmpty(), "nothing is sent on discard")
+    }
+
+    private fun TestScope.streaming(): Rig {
+        val rig = Rig(this)
+        rig.field.value = "Whats next"
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        return rig
+    }
+
+    @Test
+    fun `B-MEDIA-072 words still forming appear in the box while listening, after the text typed before`() =
+        runTest {
+        val rig = streaming()
+        rig.listening("", partial = "hel")
+        runCurrent()
+        assertEquals("Whats next hel", rig.field.value)
+        assertEquals(11..13, rig.presenter.state.value.unconfirmed, "the forming words are marked to draw quieter")
+        rig.listening("", partial = "hello wor")
+        runCurrent()
+        assertEquals("Whats next hello wor", rig.field.value)
+        assertEquals(11..19, rig.presenter.state.value.unconfirmed, "all of it is still forming")
+    }
+
+    @Test
+    fun `B-MEDIA-073 confirmed words replace the forming ones in the box`() = runTest {
+        val rig = streaming()
+        rig.listening("", partial = "hello wor")
+        runCurrent()
+        rig.listening("hello world", partial = "")
+        runCurrent()
+        assertEquals("Whats next hello world", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed, "nothing is unconfirmed any more")
+        rig.listening("hello world", partial = "and")
+        runCurrent()
+        assertEquals("Whats next hello world and", rig.field.value)
+        assertEquals(23..25, rig.presenter.state.value.unconfirmed)
+    }
+
+    @Test
+    fun `B-MEDIA-075 discard removes only what this dictation added and keeps the text typed before`() = runTest {
+        val rig = streaming()
+        rig.listening("hello", partial = "wor")
+        runCurrent()
+        assertEquals("Whats next hello wor", rig.field.value)
+        rig.presenter.cancel()
+        runCurrent()
+        assertEquals("Whats next", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed)
+        assertTrue(rig.field.sent.isEmpty())
+    }
+
+    @Test
+    fun `B-MEDIA-076 use the words ends listening and keeps the text already in the box`() = runTest {
+        val rig = streaming()
+        rig.listening("hello", partial = "wor")
+        runCurrent()
+        rig.presenter.done()
+        runCurrent()
+        assertEquals(1, rig.dictation.finishes, "✓ ends listening")
+        rig.dictation.state.value = VoiceState.Done("hello world", VoiceEnd.Person)
+        runCurrent()
+        assertEquals("Whats next hello world", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed)
+        assertTrue(rig.field.sent.isEmpty(), "✓ never sends")
+    }
+
+    @Test
+    fun `B-MEDIA-077 with an engine that streams nothing the final text lands as before`() = runTest {
+        val rig = streaming()
+        rig.listening("")
+        runCurrent()
+        assertEquals("Whats next", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed)
+        rig.dictation.state.value = VoiceState.Done("hello", VoiceEnd.Person)
+        runCurrent()
+        assertEquals("Whats next hello", rig.field.value)
+    }
+
+    @Test
+    fun `B-MEDIA-078 a replacement swaps only the dictated words, typed text and the cursor stay right`() = runTest {
+        val rig = Rig(this)
+        // Typed text on both sides of the cursor: the words go in after "Whats next".
+        rig.field.value = "Whats next? Thanks"
+        rig.field.sel = 10..10
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("hello wrld")
+        runCurrent()
+        assertEquals("Whats next hello wrld ? Thanks", rig.field.value)
+        assertEquals(21, rig.field.cursor, "the cursor sits after the dictated words")
+        // The engine swaps "wrld" for its polished "world" (HeardChange.Replaced): only the dictated words change.
+        rig.listening("hello world", partial = "and")
+        runCurrent()
+        assertEquals("Whats next hello world and ? Thanks", rig.field.value)
+        val kept = rig.field.value.startsWith("Whats next ") && rig.field.value.endsWith(" ? Thanks")
+        assertTrue(kept, "typed text kept")
+        assertEquals(26, rig.field.cursor, "the cursor stays after the dictated words")
+        assertEquals(23..25, rig.presenter.state.value.unconfirmed)
     }
 }

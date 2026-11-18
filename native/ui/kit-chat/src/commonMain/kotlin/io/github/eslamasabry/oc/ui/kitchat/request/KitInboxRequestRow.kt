@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -79,11 +80,19 @@ public fun KitInboxRequestRow(
                 Spacer(Modifier.height(Space.S1.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                     KitText(title, Modifier.weight(1f), role = TypeRole.Headline)
-                    if (!deciding && scale < 1.3f) KitButton(openActionLabel, onOpen, role = KitButtonRole.Secondary, enabled = openEnabled, semanticsLabel = openLabel) // F: lib/ui/kit/kit_request_row.dart:112
+                    // F: lib/ui/kit/kit_request_row.dart:112
+                    if (!deciding && kitFontScale() < 1.3f)
+                        KitButton(
+                            openActionLabel,
+                            onOpen,
+                            role = KitButtonRole.Secondary,
+                            enabled = openEnabled,
+                            semanticsLabel = openLabel,
+                        )
                 }
             }
         }
-        if (!deciding && scale >= 1.3f) { // F: lib/ui/kit/kit_request_row.dart:112
+        if (!deciding && kitFontScale() >= 1.3f) { // F: lib/ui/kit/kit_request_row.dart:112
             Spacer(Modifier.height(Space.S3.dp))
             KitButton(openActionLabel, onOpen, Modifier.align(Alignment.End), role = KitButtonRole.Secondary, enabled = openEnabled, semanticsLabel = openLabel)
         }

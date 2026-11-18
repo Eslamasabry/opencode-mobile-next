@@ -105,6 +105,9 @@ public interface StopMemory {
 
     public fun markStoppedByPerson(ref: ConversationRef)
 
+    /** Whether [ref]'s newest turn is already recorded as stopped by the person. */
+    public fun stoppedByPerson(ref: ConversationRef): Boolean = false
+
     public fun clearStoppedByPerson(ref: ConversationRef)
 }
 

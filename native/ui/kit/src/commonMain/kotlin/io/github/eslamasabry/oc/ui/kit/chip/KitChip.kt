@@ -238,7 +238,13 @@ public fun KitChip(
                 }
             }
             if (!narrow) BasicText(
-                text, Modifier.weight(1f, fill = false).testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label"),
+                text,
+                Modifier.weight(1f, fill = false)
+                    .testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label")
+                    // A model's name beside the chips gives way at its end when the box is narrow (it keeps its first
+                    // characters, B-438), and a removable chip is a file or folder name, which may be longer than the
+                    // chip's cap: both declare the cut, and the full name is spoken.
+                    .then(if (adaptiveModel) Modifier.kitMayTruncate("model-chip") else if (kind == KitChipKind.Removable) Modifier.kitMayTruncate("attachment-name") else Modifier),
                 style = style,
                 // An action chip's label ("New conversation", on a tile half a phone wide) wraps at its words, never "New conver…".
                 maxLines = if (wraps == true) Int.MAX_VALUE else if (wraps == null && kind == KitChipKind.Action && !adaptiveModel) 2 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523

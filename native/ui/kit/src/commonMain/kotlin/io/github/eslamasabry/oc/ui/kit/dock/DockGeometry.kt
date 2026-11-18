@@ -361,7 +361,8 @@ internal data class DockTarget(val kind: DockTargetKind, val child: Int, val rec
 /**
  * The targets a ring offers in the swell, in order (owner 2026-11-11: no shortened action words). The scrub swell shows
  * only what belongs to the ring's state, with room for its full words: Open, then Allow and Deny for a request or Stop
- * while it runs. Rename and Remove live in the held ring's card (the peek) and in the list, where there is room.
+ * while it runs (the ring's [KitDockRing.actionState]: a sub-agent's work rolled into the state offers no Stop). Rename
+ * and Remove live in the held ring's card (the peek) and in the list, where there is room.
  */
 internal fun swellActions(state: KitDockRingState, kind: SwellKind): List<DockTargetKind> {
     if (kind == SwellKind.Rename) return emptyList()

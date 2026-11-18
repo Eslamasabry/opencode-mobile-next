@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -35,6 +36,18 @@ public object OpenCodeAutoUpdateRule {
         if (switchPending || installProblem) return false
         return true
     }
+}
+
+/**
+ * Why the update is held back while the phone is behind the pin on a network that is free to download over. Said on
+ * Home after [OpenCodeAutoUpdater.TOLD_AFTER], never at once (a short hold ends by itself).
+ */
+public enum class OpenCodeHold {
+    /** A reply (or other work on the server) is running: the update restarts the server, so it waits for it. */
+    Busy,
+
+    /** A setup job runs, a switch is half done or the server has a problem: it waits until the server is ready. */
+    NotReady,
 }
 
 /** What the auto-updater reads about the phone server's OpenCode (This phone's host model). */
@@ -82,9 +95,20 @@ public class OpenCodeAutoUpdater(
     private val jobs: OpenCodeUpdateJobs,
     /** One line per change of what the updater sees: which condition holds it back (no personal data). */
     private val log: ((String) -> Unit)? = null,
+    /** A monotonic clock in milliseconds; the default (no clock) never tells a hold. */
+    private val nowMs: () -> Long = { 0L },
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
+    private var holdSince: Long? = null
+    private val holding = MutableStateFlow<OpenCodeHold?>(null)
+
+    /**
+     * The update has been held back for [TOLD_AFTER] without a break while the phone is behind the pin on an unmetered
+     * network, and why. Null while it is not behind, not held, or held only briefly. A metered network has its own
+     * line ([waitingForUnmetered]); a failed update job shows as failed, so neither is repeated here.
+     */
+    public val held: StateFlow<OpenCodeHold?> = holding.asStateFlow()
 
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
@@ -105,19 +129,104 @@ public class OpenCodeAutoUpdater(
         meteredAllowed = true
     }
 
+    /** The update job this updater started has ended and the installed version is still below the pin, for good. */
+    public val fellShort: StateFlow<Boolean> get() = short.asStateFlow()
+    private val short = MutableStateFlow(false)
+
+    /** A try ended below the pin and the next waits for its time and an idle phone: Home says it is finishing. */
+    public val retrying: StateFlow<Boolean> get() = finishing.asStateFlow()
+    private val finishing = MutableStateFlow(false)
+    private var retryArmed = false
+    private var busyStreak = 0
+    private var busyWaiting = false
+    private var awaiting: String? = null
+    private var sawRunning = false
+    private var awaitingSince = 0L
+    private var retryNotBefore = 0L
+    private val shortfalls = mutableMapOf<String, Int>()
+
+    private fun belowPin(): Boolean {
+        val installed = host.installedVersion?.trim()?.removePrefix("v")
+        return !installed.isNullOrEmpty() && installed != host.pinnedVersion
+    }
+
+    /**
+     * Done is not "installed == pin": once the job this updater started has ended, the installed version is read again.
+     * Still below the pin is a failure with its reason: tried again at the next safe look (a bounded number of times,
+     * spaced), then left on Home's failed row with Try again.
+     */
+    private suspend fun verifyEnded(key: String) {
+        if (jobs.running) {
+            sawRunning = true
+            return
+        }
+        if (!sawRunning && nowMs() - awaitingSince < START_GRACE_MS) return
+        awaiting = null
+        withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+        if (!belowPin()) {
+            short.value = false
+            shortfalls.remove(key)
+        } else {
+            // Below the pin, the job done or failed: a failure after the switch leaves the new program whole on disk
+            // while the old one still serves, and the next job (whose check finds the new one in place) only restarts
+            // the server. So it is tried again at the next idle look, spaced, a bounded number of times.
+            val n = (shortfalls[key] ?: 0) + 1
+            shortfalls[key] = n
+            note("job ended but installed ${host.installedVersion} is below pin ${host.pinnedVersion} (try $n)")
+            if (n < MAX_TRIES) {
+                attempted -= key
+                retryNotBefore = nowMs() + RETRY_SPACING_MS
+                retryArmed = true
+                finishing.value = true
+            } else {
+                short.value = true
+                finishing.value = false
+            }
+        }
+    }
+
     public suspend fun changed() {
         if (!checking.tryLock()) return
         try {
             val key = "${host.runtime}:${host.pinnedVersion}"
+            if (awaiting == key) verifyEnded(key)
+            if (short.value && !jobs.running) {
+                // The person's Try again may have brought it to the pin: read again before keeping the failed row.
+                withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+                if (!belowPin()) short.value = false
+            }
+            if (nowMs() < retryNotBefore) {
+                // Waiting for the spacing: told like any hold (after a while), never as a failure.
+                track(if (workBusy()) OpenCodeHold.Busy else OpenCodeHold.NotReady)
+                return
+            }
+            if (busyWaiting) {
+                busyWaiting = false
+                note("the wait for the other job is over; trying again")
+            }
             if (!decide(key, explain = true)) return
             withTimeoutOrNull(READ_LIMIT) { host.refresh() }
             if (!decide(key)) return
             // A try refused before the job started is not spent: the next look tries again.
             if (jobs.updateOpenCode(host.runtime)) {
                 attempted += key
+                awaiting = key
+                sawRunning = false
+                awaitingSince = nowMs()
+                short.value = false
+                retryArmed = false
+                finishing.value = false
+                busyStreak = 0
                 meteredAllowed = false
                 waiting.value = false
-            } else note("refused before it started; will try again")
+            } else {
+                // Busy (work running, or another install job holds the one gate): the try is kept, and nothing spins:
+                // the next look is after a backoff (30 s, doubling, at most 2 min), not at once.
+                busyStreak++
+                retryNotBefore = busyDeadline(nowMs(), busyStreak)
+                if (!busyWaiting) note("refused before it started (busy); waiting, the try is kept")
+                busyWaiting = true
+            }
         } finally {
             checking.unlock()
         }
@@ -126,6 +235,42 @@ public class OpenCodeAutoUpdater(
     public companion object {
         /** How long a status read may take before the decision goes on without it. */
         public val READ_LIMIT: kotlin.time.Duration = 15.seconds
+
+        /** A hold shorter than this stays silent (it ends by itself); a longer one is told on Home. */
+        public val TOLD_AFTER: kotlin.time.Duration = 2.minutes
+
+        /** Tries in all (the first included) before a job that ends below the pin is left to Try again. */
+        internal const val MAX_TRIES: Int = 3
+        internal const val RETRY_SPACING_MS: Long = 600_000L
+        internal const val START_GRACE_MS: Long = 60_000L
+    }
+
+    /** Why the update is held while behind the pin on a free network; null when it goes or is not held. */
+    private fun holdReason(
+        installed: String?,
+        tried: Boolean,
+        networkMetered: Boolean,
+        go: Boolean,
+        busy: Boolean,
+    ): OpenCodeHold? {
+        val behind = !installed.isNullOrEmpty() && installed != host.pinnedVersion && !tried && !networkMetered
+        return when {
+            !behind || go -> null
+            busy -> OpenCodeHold.Busy
+            jobs.running || host.switchPending || host.installProblem -> OpenCodeHold.NotReady
+            else -> null
+        }
+    }
+
+    /** Starts, keeps or ends the hold; [held] says its reason only once it has lasted [TOLD_AFTER]. */
+    private fun track(why: OpenCodeHold?) {
+        if (why == null) {
+            holdSince = null
+            holding.value = null
+            return
+        }
+        val since = holdSince ?: nowMs().also { holdSince = it }
+        holding.value = if (nowMs() - since >= TOLD_AFTER.inWholeMilliseconds) why else null
     }
 
     private fun note(line: String) {
@@ -139,7 +284,8 @@ public class OpenCodeAutoUpdater(
         val busy = workBusy()
         val running = jobs.running
         val switchPending = host.switchPending
-        val problem = host.installProblem || jobs.failed
+        // A try that ended below the pin is tried again although its job failed: the retry is armed.
+        val problem = (host.installProblem || jobs.failed) && !retryArmed
         val tried = key in attempted
         val networkMetered = host.metered
         val metered = networkMetered && !meteredAllowed
@@ -156,6 +302,7 @@ public class OpenCodeAutoUpdater(
                 attemptedThisRun = tried,
                 metered = metered,
             )
+        track(holdReason(inst, tried, networkMetered, go, busy))
         if (explain) {
             note(
                 "installed=${installed ?: "unknown"} pinned=${host.pinnedVersion} busy=$busy engineRunning=$running " +
@@ -234,3 +381,15 @@ public class OpenCodeUpdateRestart(
 
     private suspend fun status(): RuntimeStatus? = (port.refreshStatus() as? Outcome.Ok)?.value
 }
+
+private const val BUSY_BACKOFF_MS = 30_000L
+private const val BUSY_BACKOFF_MAX_MS = 120_000L
+private const val BUSY_DOUBLINGS = 3
+
+/** When a busy-refused try looks again: 30 s, doubling, at most 2 min. No clock (0) means no backoff. */
+private fun busyDeadline(now: Long, streak: Int): Long =
+    if (now == 0L) {
+        0L
+    } else {
+        now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
+    }

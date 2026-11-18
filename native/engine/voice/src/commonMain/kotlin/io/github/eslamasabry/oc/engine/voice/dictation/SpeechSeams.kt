@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.engine.voice.models.DeviceProbeResult
 import io.github.eslamasabry.oc.engine.voice.models.InstalledPack
 import io.github.eslamasabry.oc.engine.voice.models.ModelPacks
 import io.github.eslamasabry.oc.engine.voice.state.PackId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /** Plan 10 §4.5. Android: `SherpaSpeechRecognizer` (sherpa-onnx Whisper, one decode at a time app-wide). */
 public interface SpeechRecognizer {
@@ -17,6 +19,17 @@ public interface SpeechRecognizer {
 public interface RecognizerSession {
     /** One ≤ 30 s chunk of 16 kHz float samples. Cancellation stops waiting; a decode inside JNI finishes, discarded. */
     public suspend fun transcribe(samples: FloatArray): Outcome<String>
+
+    /**
+     * What an engine that streams hears while the person speaks, beside [transcribe]'s result (owner 2026-11-17: the
+     * text streams into the message box "like the big guys"): words still forming ([HeardChange.Partial]), words it
+     * confirms between chunks ([HeardChange.Confirmed]; such an engine returns "" from [transcribe] for them), and
+     * earlier dictated words it swaps for better ones ([HeardChange.Replaced]: the planned hybrid, live words while
+     * speaking, then a polished pass when the person stops). Today's Whisper decodes a whole chunk at once and streams
+     * nothing: this flow is empty.
+     */
+    public val heard: Flow<HeardChange>
+        get() = emptyFlow()
 
     public suspend fun close()
 }
@@ -59,3 +72,18 @@ public fun ModelPacks.asSpeechPackSource(): SpeechPackSource =
 
         override val language: VoiceLanguage get() = state.value.language
     }
+
+/** One change to the words a dictation has heard ([RecognizerSession.heard]). */
+public sealed interface HeardChange {
+    /** The words being heard now; they may still change. Each one replaces the last; "" clears them. */
+    public data class Partial(val text: String) : HeardChange
+
+    /** Words now confirmed: they join the dictated text, and the partial words are gone. */
+    public data class Confirmed(val text: String) : HeardChange
+
+    /**
+     * Earlier dictated words swapped for new ones: [range] (UTF-16 indices) of the confirmed dictated text so far,
+     * [text] in its place. Text typed in the box is never part of it.
+     */
+    public data class Replaced(val range: IntRange, val text: String) : HeardChange
+}

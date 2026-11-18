@@ -277,10 +277,19 @@ class ChatEdgesBuildRenders {
                     Screen(Scene.Commands, Style.Solid, facts(Scene.Commands, NOW), still = true, dark = dark, owner = owner)
                 }
             }
+            // The test clock is stepped by hand: the cost of this scene follows the SIMULATED animated time (the live
+            // background's lens pass is drawn in software on a runner), and on auto-advance every waitForIdle drew a
+            // frame, which took the whole one-minute limit under load (same treatment as KitLiquidJoinKitTest). Frames
+            // drawn: 2 to compose, 1 after the scroll, 1 jump of 1 s (default) or 2 of 0.5 s (owner): at most 5; at the
+            // measured worst of about 6 s a frame that is 30 s, half the limit. Nothing rendered or asserted changes.
+            mainClock.autoAdvance = false
+            mainClock.advanceTimeByFrame()
+            mainClock.advanceTimeByFrame()
             waitForIdle()
             onNodeWithTag("transcript-list").performScrollToIndex(5)
+            mainClock.advanceTimeByFrame()
             waitForIdle()
-            if (!owner) mainClock.advanceTimeBy(1_000)
+            mainClock.advanceTimeBy(if (owner) 500 else 1_000, ignoreFrameDuration = true)
             waitForIdle()
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (owner) "owner" else "default"}-${if (dark) "dark" else "light"}-3.png"))
         }

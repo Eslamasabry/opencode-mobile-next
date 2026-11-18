@@ -149,6 +149,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         started: SharingStarted,
         work: CoroutineContext = EmptyCoroutineContext,
         declined: Flow<Set<String>> = flowOf(emptySet()),
+        waitingCalls: Flow<Set<String>> = flowOf(emptySet()),
     ): StateFlow<TurnFactsUi> {
         val progress = MutableStateFlow<Long?>(null)
         val core =
@@ -156,9 +157,9 @@ public class TurnFactsPresenter(private val clock: Clock) {
                 .onEach { progress.value = it.lastProgressAtMs }
                 .distinctUntilChanged(::sameApartFromProgress)
         val ticks = factTicks(clock, core.map { ticking(it) }, TICK_MS)
-        return combine(core, waiting, ticks, declined) { f, w, now, d ->
+        return combine(core, waiting, ticks, declined, waitingCalls) { f, w, now, d, calls ->
                 val newest = progress.value
-                present(if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest), now, w, d)
+                present(if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest), now, w, d, calls)
             }
             .flowOn(work)
             .stateIn(scope, started, TurnFactsUi.Empty)
@@ -185,6 +186,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         nowMs: Long,
         waitingForYou: Boolean = false,
         declinedCalls: Set<String> = emptySet(),
+        waitingCalls: Set<String> = emptySet(),
     ): TurnFactsUi {
         val snapshot = feed.ledger
         // W4: a run the person's refusal ended is not a stop, nor a server restart (OC2 reports it as "shutdown").
@@ -212,6 +214,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     stopped = stopped,
                     waitingForYou = waitingForYou,
                     declinedCalls = declinedCalls,
+                    waitingCalls = waitingCalls,
                 )
                 .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs, feed.waits) }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())

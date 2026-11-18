@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Revisiones del servidor en segundo plano</string>
     <string name="nativeSearchAliasesBackgroundChecks">Revisiones en segundo plano; sondeo; monitor</string>
     <string name="nativeSearchPlaceAppearance">Apariencia</string>
-    <string name="nativeSearchAliasesAppearance">Tema; colores; estilo</string>
+    <string name="nativeSearchAliasesAppearance">Tema; colores; estilo; marcas de espera</string>
     <string name="nativeSearchPlaceLanguage">Idioma</string>
     <string name="nativeSearchAliasesLanguage">Árabe; inglés; configuración regional</string>
     <string name="nativeSearchPlaceTips">Consejos</string>

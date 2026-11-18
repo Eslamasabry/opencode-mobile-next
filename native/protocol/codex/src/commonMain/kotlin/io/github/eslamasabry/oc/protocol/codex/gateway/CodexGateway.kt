@@ -48,6 +48,7 @@ import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StopResult
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.Todo
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.protocol.codex.CodexCapabilities
 import io.github.eslamasabry.oc.protocol.codex.CodexException
@@ -941,6 +942,16 @@ public class CodexGateway(
         }
     }
 
+    /**
+     * A failed turn ends with no kind, no details and no words. The one shared rule ([AgentSignInWords.of]) reads the
+     * turn's error message and only its typed answer rides along, so a stopped chat can say the agent's own sign-in ran
+     * out (B-AGENT-433); the message itself never leaves here (B-SEC-104).
+     */
+    private fun failedTurn(turn: JsonObject): RunOutcome.Failed {
+        val message = (turn["error"] as? JsonObject)?.get("message").stringOrNull()
+        return RunOutcome.Failed(null, TURN_FAILED, null, agentSignIn = AgentSignInWords.of(message))
+    }
+
     private fun handleRpc(event: CodexRpcEvent) {
         runRevision++
         val p = event.params
@@ -984,7 +995,7 @@ public class CodexGateway(
                 approvals.keys.removeAll(settled)
                 val outcome =
                     when (turn["status"].stringOrNull()) {
-                        "failed" -> RunOutcome.Failed(null, TURN_FAILED, null)
+                        "failed" -> failedTurn(turn)
                         "interrupted" -> RunOutcome.Interrupted(InterruptReason.Unknown)
                         // Idle is never reported as a successful run.
                         else -> RunOutcome.Idle

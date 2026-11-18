@@ -146,6 +146,9 @@ public class AppCodexReads(
     private suspend fun readUsage(context: UsageReadContext): Outcome<UsageSourceResult> {
         val current = live.get() ?: return UsageSourceResult().ok()
         if (context.connections.none { it.id == current.id }) return UsageSourceResult().ok()
+        // A server below the account floor (CodexAccountGate) answers no account questions: no Plans card at all, not a
+        // "codex" card in "reader broken" whose Try again could never work.
+        if (!current.reader.accountQualified) return UsageSourceResult().ok()
         fun failed(failure: Failure): Outcome<UsageSourceResult> =
             if (failure is Failure.Network || !current.reader.connected || live.get() !== current)
                 UsageSourceResult(unreached = setOf(current.id)).ok()
@@ -209,6 +212,11 @@ public class AppCodexReads(
                 first?.primary?.let { window("primary", it) },
                 first?.secondary?.let { window("secondary", it) },
             )
+        // An account kind this app does not know (a Google-cloud account, anything newer) that gives no limit window says
+        // nothing about limits: "no limits" would be an untrue claim. Only a ChatGPT account may read as "no limits".
+        if (windows.isEmpty() && !accountType.lowercase().startsWith("chatgpt"))
+            return UsageSourceResult(authoritativeSignIns = setOf(current.id)).ok()
+        // A plan this app does not know shows NO plan line (Codex sends the plan as an id, never as a label).
         val plan =
             account.plan?.lowercase()?.takeIf {
                 it in setOf("free", "go", "plus", "pro", "team", "business", "enterprise", "edu")

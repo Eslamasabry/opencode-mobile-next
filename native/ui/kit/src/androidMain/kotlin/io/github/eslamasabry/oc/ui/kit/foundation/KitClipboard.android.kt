@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.AndroidClipboard
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -45,14 +46,7 @@ internal fun KitAndroidClipboardBoundary(context: Context, mode: KitClipboardMod
     val legacy = LocalClipboardManager.current
     val source = LocalKitClipboardSource.current ?: remember(current, legacy) { KitClipboardSource(current, legacy) }
     val original = source.clipboard
-    val clipboard = remember(original, mode) {
-        object : Clipboard by original {
-            override suspend fun setClipEntry(clipEntry: ClipEntry?) {
-                clipEntry?.clipData?.let { KitAndroidClipboard.protect(it, mode) }
-                original.setClipEntry(clipEntry)
-            }
-        }
-    }
+    val clipboard = remember(original, mode) { policyClipboard(original, mode) }
     val manager = remember(source, context, mode) {
         object : androidx.compose.ui.platform.ClipboardManager by source.legacy {
             override fun setText(annotatedString: AnnotatedString) {
@@ -61,4 +55,27 @@ internal fun KitAndroidClipboardBoundary(context: Context, mode: KitClipboardMod
         }
     }
     CompositionLocalProvider(LocalKitClipboardSource provides source, LocalClipboard provides clipboard, LocalClipboardManager provides manager, content = content)
+}
+
+/**
+ * The policy wrapper must stay an [AndroidClipboard]: Compose's text fields read the platform manager through
+ * `getNativeClipboardManager`, which throws for any other [Clipboard]: a plain wrapper crashed every text field's selection toolbar.
+ */
+private fun policyClipboard(original: Clipboard, mode: KitClipboardMode): Clipboard {
+    val platform = original as? AndroidClipboard ?: return object : Clipboard by original {
+        override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+            clipEntry?.clipData?.let { KitAndroidClipboard.protect(it, mode) }
+            original.setClipEntry(clipEntry)
+        }
+    }
+    return object : AndroidClipboard {
+        override val clipboardManager: ClipboardManager get() = platform.clipboardManager
+
+        override suspend fun getClipEntry(): ClipEntry? = platform.getClipEntry()
+
+        override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+            clipEntry?.clipData?.let { KitAndroidClipboard.protect(it, mode) }
+            platform.setClipEntry(clipEntry)
+        }
+    }
 }

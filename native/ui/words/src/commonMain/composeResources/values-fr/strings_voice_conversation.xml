@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">Impossible de réinitialiser les astuces. Réessayez.</string>
     <string name="voiceConversationNativeTourReplay">Montrez-moi</string>
     <string name="voiceConversationNativeTourLoadFailed">Impossible d'ouvrir les astuces. Réessayez.</string>
+    <string name="voiceConversationDoorDraft">Envoyez ou effacez d'abord votre message</string>
 </resources>

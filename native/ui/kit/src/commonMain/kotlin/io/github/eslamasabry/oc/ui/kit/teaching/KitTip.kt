@@ -30,11 +30,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.roundToIntRect
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -106,6 +111,18 @@ public object TipRules {
     public fun riseDp(state: KitMotionState): Int = if (state.travels) MotionTokens.TIP_RISE_DP else 0
 }
 
+/**
+ * A part whose words a tip must never cover (owner, look 10100: "Hold Send…" lay over a shared link in the message
+ * box). The part writes its window box here as it is placed; a [KitTip] anchored inside it stands above or below the
+ * whole part instead of over it. A plain holder, not snapshot state: it is read only when the tip is placed.
+ */
+public class KitTipClearance {
+    public var boundsInWindow: Rect = Rect.Zero
+}
+
+/** The [KitTipClearance] of the part around this point, if any (the message box provides its own). */
+public val LocalKitTipClearance: ProvidableCompositionLocal<KitTipClearance?> = staticCompositionLocalOf { null }
+
 /** Where a tip stands against its anchor. */
 public enum class KitTipPlacement {
     /** Above the anchor (below near the top of the window), aligned with its nearer edge. */
@@ -148,6 +165,7 @@ public fun KitTip(
     // is written once, so a tip asked for before its anchor's first layout still finds its side.
     val bounds = remember { arrayOf(Rect.Zero) }
     var placed by remember { mutableStateOf(false) }
+    val clearance = LocalKitTipClearance.current
     val windowHeight = LocalWindowInfo.current.containerSize.height.toFloat()
     val above = remember(visible, placed, windowHeight) { TipRules.above(bounds[0].top, windowHeight) }
     val windowWidth = LocalWindowInfo.current.containerSize.width.toFloat()
@@ -183,7 +201,8 @@ public fun KitTip(
         if (showing) {
             val gap = with(LocalDensity.current) { Space.S2.dp.roundToPx() }
             val rise = with(LocalDensity.current) { TipRules.riseDp(motion).dp.roundToPx() }
-            val place = remember(above, gap, beside) { TipPosition(above, gap, beside) }
+            // Never over the words of the part around the anchor (the message box): above or below all of it.
+            val place = rememberTipPosition(above, gap, beside, clearance)
             val bubble: @Composable () -> Unit = {
                 val enter: EnterTransition =
                     if (motion.reduced) EnterTransition.None
@@ -210,13 +229,20 @@ public fun KitTip(
     }
 }
 
+/** Where the tip stands; the system gesture area at the window's foot is not its room, so it stands above it. */
+@Composable
+private fun rememberTipPosition(above: Boolean, gap: Int, beside: Boolean, clearance: KitTipClearance?): TipPosition {
+    val footInset = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+    return remember(above, gap, beside, clearance, footInset) { TipPosition(above, gap, beside, clearance, footInset) }
+}
+
 /**
  * The tip's bubble in the window's menu layer: placed by [place] against the anchor's bounds, in the layer's own
  * pixels, following the anchor while it moves (the keyboard opening). The layer takes no touch for it: only the bubble
  * answers a tap; a touch elsewhere goes to the page, and the tip leaves by itself or when its moment ends.
  */
 @Composable
-private fun TipInLayer(layer: KitMenuLayerState, place: PopupPositionProvider, anchorInWindow: () -> Rect, bubble: @Composable () -> Unit) {
+private fun TipInLayer(layer: KitMenuLayerState, place: TipPosition, anchorInWindow: () -> Rect, bubble: @Composable () -> Unit) {
     val entry = remember { MenuLayerEntry() }
     val locals = currentCompositionLocalContext
     SideEffect {
@@ -230,7 +256,14 @@ private fun TipInLayer(layer: KitMenuLayerState, place: PopupPositionProvider, a
                     val origin = layer.origin
                     val anchor = IntRect(at.left.toInt() - origin.x, at.top.toInt() - origin.y, at.right.toInt() - origin.x, at.bottom.toInt() - origin.y)
                     val window = IntSize(constraints.maxWidth, constraints.maxHeight)
-                    placeables.forEach { p -> p.place(place.calculatePosition(anchor, window, layoutDirection, IntSize(p.width, p.height))) }
+                    val clear =
+                        place.clearInWindow()?.let { c ->
+                            IntRect(
+                                c.left.toInt() - origin.x, c.top.toInt() - origin.y,
+                                c.right.toInt() - origin.x, c.bottom.toInt() - origin.y,
+                            )
+                        }
+                    placeables.forEach { p -> p.place(place.at(anchor, clear, window, IntSize(p.width, p.height))) }
                 }
             }
         }
@@ -278,8 +311,23 @@ public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
  * Above or below the anchor, aligned with the anchor's nearer edge, kept inside the window; inside a tall anchor
  * ([TipRules.inside]) at its top edge plus the gap, never on its far side.
  */
-private class TipPosition(private val above: Boolean, private val gap: Int, private val beside: Boolean = false) : PopupPositionProvider {
-    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+private class TipPosition(
+    private val above: Boolean,
+    private val gap: Int,
+    private val beside: Boolean = false,
+    /** The part the tip stands clear of ([KitTipClearance], window pixels); null: none. */
+    private val clearance: KitTipClearance? = null,
+    /** The system navigation or gesture area at the window's foot, px: the tip never reaches into it. */
+    private val footInset: Int = 0,
+) : PopupPositionProvider {
+    fun clearInWindow(): Rect? = clearance?.boundsInWindow
+
+    // The popup's anchor bounds are window pixels, as the clearance is.
+    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset =
+        at(anchorBounds, clearInWindow()?.roundToIntRect(), windowSize, popupContentSize)
+
+    /** The tip's top-left for [anchorBounds], standing above or below all of [clear] when it is given (same space). */
+    fun at(anchorBounds: IntRect, clear: IntRect?, windowSize: IntSize, popupContentSize: IntSize): IntOffset {
         if (beside) {
             val (bx, by) =
                 TipRules.besideEdge(
@@ -288,14 +336,25 @@ private class TipPosition(private val above: Boolean, private val gap: Int, priv
                 )
             return IntOffset(bx, by)
         }
+        val around = clear?.takeIf { it.width > 0 && it.height > 0 }
+        val top = around?.let { minOf(it.top, anchorBounds.top) } ?: anchorBounds.top
+        val bottom = around?.let { maxOf(it.bottom, anchorBounds.bottom) } ?: anchorBounds.bottom
         val nearStart = anchorBounds.center.x < windowSize.width / 2
         val x =
             (if (nearStart) anchorBounds.left else anchorBounds.right - popupContentSize.width)
                 .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+        // Below a part kept clear there may be no room (a message box at the foot of the window, the gesture area under
+        // it): clamped into the window the tip would lie back over that part, so it stands above it instead.
+        val usableBottom = windowSize.height - footInset
+        val noRoomBelow = around != null && bottom + gap + popupContentSize.height > usableBottom
         val y =
-            (if (TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat())) anchorBounds.top + gap
-            else if (above) anchorBounds.top - gap - popupContentSize.height else anchorBounds.bottom + gap)
-                .coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
+            // Inside a tall anchor only when no part is to be kept clear: then it stands outside that part.
+            when {
+                around == null && TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat()) ->
+                    anchorBounds.top + gap
+                above || noRoomBelow -> top - gap - popupContentSize.height
+                else -> bottom + gap
+            }.coerceIn(0, (usableBottom - popupContentSize.height).coerceAtLeast(0))
         return IntOffset(x, y)
     }
 }

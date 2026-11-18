@@ -76,4 +76,6 @@
     <string name="notify_answer_in_app">Ouvrez OpenCode pour répondre</string>
     <string name="notify_reply_watch_title">Votre réponse est toujours en cours</string>
     <string name="notify_status_public_working">OpenCode · au travail</string>
+    <string name="notify_alert_reason_sign_in_again">%1$s vous demande de vous connecter à nouveau.</string>
+    <string name="notify_alert_reason_sign_in_again_any">L\u0027agent vous demande de vous connecter à nouveau.</string>
 </resources>

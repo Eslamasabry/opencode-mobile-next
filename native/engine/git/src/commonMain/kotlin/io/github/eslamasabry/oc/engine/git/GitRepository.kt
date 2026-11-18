@@ -391,57 +391,71 @@ public class GitRepository(
      * `git pull --ff-only`. A branch without upstream is [GitProblem.NoUpstream]; diverged history
      * cannot fast-forward.
      */
-    public suspend fun pull(): GitActionResult {
-        val script =
-            GitScript(
-                directory,
-                listOf(
-                    GitStep(
-                        "head",
-                        GIT + listOf("symbolic-ref", "--short", "-q", "HEAD"),
-                        stopOnFailure = true,
-                    ),
-                    GitStep(
-                        "upstream",
-                        GIT + listOf("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"),
-                        stopOnFailure = true,
-                    ),
-                    GitStep("pull", GIT + listOf("pull", "--ff-only", "--no-rebase")),
-                    GitStep(
-                        "count",
-                        GIT + listOf("rev-list", "--count", "ORIG_HEAD..HEAD"),
-                        optional = true,
-                    ),
-                ),
-            )
-        val envelope =
-            when (val run = run(script, networkTimeoutMs)) {
-                is Run.Failed -> return GitActionResult.failure(GitAction.Pull, run.failure)
-                is Run.Done -> run.envelope
-            }
-        val head = envelope["head"]!!
-        if (!head.ok)
-            return fail(
-                GitAction.Pull,
-                classifyGitError(head.stderr) ?: GitProblem.DetachedHead,
-                head,
-            )
-        val upstream = envelope["upstream"]!!
-        if (!upstream.ok) {
-            val problem =
-                if (classifyGitError(upstream.stderr) == GitProblem.NotARepository)
-                    GitProblem.NotARepository
-                else GitProblem.NoUpstream
-            return fail(GitAction.Pull, problem, upstream)
+    public suspend fun pull(gitHubToken: String? = null): GitActionResult =
+        withGitHubToken(GitAction.Pull, gitHubToken) { file, secrets -> pullWithAuth(file, secrets) }
+
+    private suspend fun pullWithAuth(file: GitSecretFile?, secrets: List<String>): GitActionResult =
+        when (val run = run(pullScript(file), networkTimeoutMs, secrets)) {
+            is Run.Failed -> GitActionResult.failure(GitAction.Pull, run.failure)
+            is Run.Done -> pullResult(run.envelope, file, secrets)
         }
+
+    private fun pullScript(file: GitSecretFile?): GitScript =
+        GitScript(
+            directory,
+            listOf(
+                GitStep(
+                    "head",
+                    GIT + listOf("symbolic-ref", "--short", "-q", "HEAD"),
+                    stopOnFailure = true,
+                ),
+                GitStep(
+                    "upstream",
+                    GIT + listOf("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"),
+                    stopOnFailure = true,
+                ),
+                GitStep(
+                    "pull",
+                    GIT +
+                        (if (file == null) emptyList() else gitHubCredentialOptions) +
+                        listOf("pull", "--ff-only", "--no-rebase"),
+                ),
+                GitStep(
+                    "count",
+                    GIT + listOf("rev-list", "--count", "ORIG_HEAD..HEAD"),
+                    optional = true,
+                ),
+            ),
+            environment = if (file == null) emptyMap() else mapOf(GIT_TOKEN_FILE to file.shellPath),
+            removeOnExit = file?.let { listOf(it.shellPath) }.orEmpty(),
+        )
+
+    private fun pullResult(envelope: GitEnvelope, file: GitSecretFile?, secrets: List<String>): GitActionResult {
+        // A step after a failed one is absent (stopOnFailure), so each is read only once the earlier ones passed.
+        val head = envelope["head"]!!
+        return when {
+            !head.ok -> fail(GitAction.Pull, classifyGitError(head.stderr) ?: GitProblem.DetachedHead, head)
+            !envelope["upstream"]!!.ok -> {
+                val upstream = envelope["upstream"]!!
+                val problem =
+                    if (classifyGitError(upstream.stderr) == GitProblem.NotARepository)
+                        GitProblem.NotARepository
+                    else GitProblem.NoUpstream
+                fail(GitAction.Pull, problem, upstream)
+            }
+            !envelope["pull"]!!.ok -> fail(GitAction.Pull, null, envelope["pull"]!!, file != null, secrets)
+            else -> pulled(envelope)
+        }
+    }
+
+    private fun pulled(envelope: GitEnvelope): GitActionResult {
         val pull = envelope["pull"]!!
-        if (!pull.ok) return fail(GitAction.Pull, null, pull)
         val upToDate = "already up to date" in "${pull.stdout}\n${pull.stderr}".lowercase()
         return GitActionResult.success(
             GitAction.Pull,
             if (upToDate) GitActionNote.UpToDate else GitActionNote.Pulled,
             count = if (upToDate) null else envelope["count"]?.stdout?.trim()?.toIntOrNull(),
-            target = upstream.stdout.trim(),
+            target = envelope["upstream"]!!.stdout.trim(),
         )
     }
 
@@ -833,40 +847,41 @@ public class GitRepository(
      * the next read. Says [GitProblem.NoUpstream] when the branch tracks nothing (nothing to
      * check).
      */
-    public suspend fun fetch(): GitActionResult {
-        val envelope =
-            when (
-                val run =
-                    run(
-                        GitScript(
-                            directory,
-                            listOf(
-                                GitStep(
-                                    "upstream",
-                                    GIT +
-                                        listOf(
-                                            "rev-parse",
-                                            "--abbrev-ref",
-                                            "--symbolic-full-name",
-                                            "@{u}",
-                                        ),
-                                    stopOnFailure = true,
-                                ),
-                                GitStep("fetch", GIT + listOf("fetch", "--quiet")),
-                            ),
-                        ),
-                        networkTimeoutMs,
-                    )
-            ) {
-                is Run.Failed -> return GitActionResult.failure(GitAction.Refresh, run.failure)
-                is Run.Done -> run.envelope
-            }
-        val upstream = envelope["upstream"]!!
-        if (!upstream.ok) return fail(GitAction.Refresh, GitProblem.NoUpstream, upstream)
-        val step = envelope["fetch"]!!
-        if (!step.ok) return fail(GitAction.Refresh, null, step)
-        return GitActionResult.success(GitAction.Refresh, GitActionNote.UpToDate)
-    }
+    public suspend fun fetch(gitHubToken: String? = null): GitActionResult =
+        withGitHubToken(GitAction.Refresh, gitHubToken) { file, secrets -> fetchWithAuth(file, secrets) }
+
+    private suspend fun fetchWithAuth(file: GitSecretFile?, secrets: List<String>): GitActionResult =
+        when (val run = run(fetchScript(file), networkTimeoutMs, secrets)) {
+            is Run.Failed -> GitActionResult.failure(GitAction.Refresh, run.failure)
+            is Run.Done -> fetchResult(run.envelope, file, secrets)
+        }
+
+    private fun fetchScript(file: GitSecretFile?): GitScript =
+        GitScript(
+            directory,
+            listOf(
+                GitStep(
+                    "upstream",
+                    GIT + listOf("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"),
+                    stopOnFailure = true,
+                ),
+                GitStep(
+                    "fetch",
+                    GIT +
+                        (if (file == null) emptyList() else gitHubCredentialOptions) +
+                        listOf("fetch", "--quiet"),
+                ),
+            ),
+            environment = if (file == null) emptyMap() else mapOf(GIT_TOKEN_FILE to file.shellPath),
+            removeOnExit = file?.let { listOf(it.shellPath) }.orEmpty(),
+        )
+
+    private fun fetchResult(envelope: GitEnvelope, file: GitSecretFile?, secrets: List<String>): GitActionResult =
+        when {
+            !envelope["upstream"]!!.ok -> fail(GitAction.Refresh, GitProblem.NoUpstream, envelope["upstream"]!!)
+            !envelope["fetch"]!!.ok -> fail(GitAction.Refresh, null, envelope["fetch"]!!, file != null, secrets)
+            else -> GitActionResult.success(GitAction.Refresh, GitActionNote.UpToDate)
+        }
 
     /**
      * Starts Git in the project without changing its files. The first branch is `main`, as on a new GitHub repository,
@@ -935,6 +950,37 @@ public class GitRepository(
 
     // -------------------------------------------------------------- helpers
 
+    private suspend fun withGitHubToken(
+        action: GitAction,
+        token: String?,
+        run: suspend (GitSecretFile?, List<String>) -> GitActionResult,
+    ): GitActionResult {
+        val drop = credentials
+        if (token.isNullOrEmpty() || drop == null) return run(null, emptyList())
+        return runWithTokenFile(action, drop, token, run)
+    }
+
+    /** One command with the token in its own private file, removed afterwards even when the command is cancelled. */
+    private suspend fun runWithTokenFile(
+        action: GitAction,
+        drop: GitCredentialDrop,
+        token: String,
+        run: suspend (GitSecretFile?, List<String>) -> GitActionResult,
+    ): GitActionResult {
+        val file =
+            (withContext(NonCancellable) { drop.place(token) } as? Outcome.Ok)?.value
+                ?: return GitActionResult.failure(action, GitFailure(GitProblem.EnvironmentUnavailable))
+        var removed = false
+        val result =
+            try {
+                run(file, listOf(token))
+            } finally {
+                removed = withContext(NonCancellable) { drop.remove(file) is Outcome.Ok }
+            }
+        return if (removed) result
+        else GitActionResult.failure(action, GitFailure(GitProblem.EnvironmentUnavailable))
+    }
+
     private suspend fun single(
         action: GitAction,
         argv: List<String>,
@@ -963,11 +1009,14 @@ public class GitRepository(
         action: GitAction,
         problem: GitProblem?,
         step: GitStepResult,
+        usedGitHubToken: Boolean = false,
+        secrets: List<String> = emptyList(),
     ): GitActionResult {
-        val details = scrubGitText("${step.stderr}\n${step.stdout}".trim(), emptyList())
+        val raw = "${step.stderr}\n${step.stdout}".trim()
+        val details = scrubGitText(raw, secrets)
         return GitActionResult.failure(
             action,
-            GitFailure(problem ?: classifyGitError(details) ?: GitProblem.Unknown, details),
+            GitFailure(problem ?: classifyGitError(raw, usedGitHubToken) ?: GitProblem.Unknown, details),
         )
     }
 

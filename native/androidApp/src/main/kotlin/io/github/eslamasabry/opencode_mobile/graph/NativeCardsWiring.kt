@@ -148,15 +148,11 @@ class NativeCardsQualifier(
                     pins.catalog().byId(AgentId("claude"))?.recipe?.version
                         ?: return@withContext null
                 val hostVersion = linux.agentHost.status(owner)["helperVersion"] as? String
-                // Qualification belongs to these recorded pins, not to a future recipe or a
-                // provider label.
-                if (
-                    claude != "2.1.325" ||
-                        pins.node.version != "v24.22.2" ||
-                        pins.paseo.version != "0.15.4" ||
-                        hostVersion != pins.paseo.version
-                )
-                    return@withContext null
+                // Qualification belongs to the recorded pins, not to a future recipe or a provider label: the
+                // pins ARE what is qualified, so a pin move can never switch the cards install off (before,
+                // three literals here named the pinned Claude, Node and Paseo and any move silently did).
+                // What stays checked is the helper that actually runs: it must be the pinned one.
+                if (hostVersion != pins.paseo.version) return@withContext null
                 val qualified = CardsPins(claude, pins.node.version, true)
                 val script =
                     if (verify) CardsInstallScripts.verification(owner, CardAgent.Claude, qualified)

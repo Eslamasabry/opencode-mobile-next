@@ -98,7 +98,10 @@ public class KitRequestChange(
 // Issue 147 (F-016): the request stack in the conversation is this tall plus room for the card's caption and gap, so a card
 // at its cap is whole in it: the answers are never cut off by the stack's own edge. (The stack was 0.40 against 0.45.)
 private const val HEIGHT_SHARE = 0.45f
-private const val HEIGHT_SHARE_LARGE_TEXT = 0.60f
+// At 2x text the card's own words are bigger, but the room is not: 60 % plus the stack's caption, the message box and
+// the notice under the capsule left the card over the capsule's title (device look 10093, text 200 %). The body scrolls
+// inside the card and its answers stay at its foot, so the card can be shorter.
+private const val HEIGHT_SHARE_LARGE_TEXT = 0.40f
 private const val LARGE_TEXT = 2.0f
 
 /**
@@ -109,7 +112,7 @@ private const val LARGE_TEXT = 2.0f
  * Allow once is the primary answer (secondary among list rows), Deny is never drawn in the primary colour, and Always allow
  * shows only when [alwaysLabel] and [onAlways] are given.
  *
- * The card is at most 700 dp wide and 45 % of the window tall (60 % at 2× text and above); longer
+ * The card is at most 700 dp wide and 45 % of the window tall (40 % at 2× text and above); longer
  * words scroll inside it while the answers stay in sight. While it cannot answer ([enabled] false,
  * e.g. an answer is being sent) the buttons are disabled and say why ([disabledReason], required
  * then).
@@ -495,15 +498,33 @@ private fun AlwaysLink(label: String, onAlways: () -> Unit, enabled: Boolean, re
 internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Commit
 
 /**
- * 45 % of the window's height (60 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
+ * 45 % of the window's height (40 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
  * every kit part reads; the raw platform container can be another size, e.g. a test host).
  */
 @Composable
 internal fun maxCardHeight(): Dp {
     val density = LocalDensity.current
     val heightDp = LocalKitWindow.current.heightDp
-    if (heightDp <= 0f) return Dp.Infinity
+    // The space the page measured for the card between the pinned notice and the message box (the stack's caption and
+    // gap are inside it): the card never takes more, whatever share of the window it would otherwise be.
+    val room = LocalKitRequestRoom.current?.let { (it - REQUEST_STACK_EXTRA).coerceAtLeast(REQUEST_MIN_CARD) }
+    if (heightDp <= 0f) return room ?: Dp.Infinity
     val fontScale = (LocalKitAppDensity.current ?: density).fontScale
     val share = if (fontScale >= LARGE_TEXT) HEIGHT_SHARE_LARGE_TEXT else HEIGHT_SHARE
-    return (heightDp * share).dp
+    val byShare = (heightDp * share).dp
+    return if (room == null) byShare else minOf(byShare, room)
 }
+
+/** The room (dp) the page measured for a request card above the message box; null where the page measures none. */
+public val LocalKitRequestRoom: androidx.compose.runtime.ProvidableCompositionLocal<Dp?> =
+    androidx.compose.runtime.staticCompositionLocalOf { null }
+
+/**
+ * True when that room is too small for the title, two body lines and the answers: the card's body then shows ONE line
+ * (the target's "Details" opens the rest) before anything could overlap.
+ */
+public val LocalKitRequestCompact: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.staticCompositionLocalOf { false }
+
+private val REQUEST_STACK_EXTRA: Dp = 48.dp
+private val REQUEST_MIN_CARD: Dp = 96.dp

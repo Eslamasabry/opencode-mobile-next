@@ -513,6 +513,7 @@ class NativePhoneSetup(
 
     private suspend fun command(
         prepareMigration: Boolean = true,
+        holdGate: Boolean = true,
         action: suspend (SetupEngine) -> Unit,
     ): Outcome<Unit> =
         withContext(serial) {
@@ -545,7 +546,11 @@ class NativePhoneSetup(
                                 is Outcome.Ok -> Unit
                             }
                         val setup = get()
-                        action(setup)
+                        // The start phase (checks, until the job is registered) holds the one install gate; a gate
+                        // held by the agents' installer is busy, the try is kept.
+                        if (!underGate(payloadGuard.installGate, holdGate) { action(setup) }) {
+                            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+                        }
                         shown.value = setup.progress.value
                         if (shown.value.state == SetupState.Failed)
                             Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
@@ -640,12 +645,24 @@ class NativePhoneSetup(
     val updateJob = io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJob()
 
     suspend fun update(): Outcome<Unit> {
-        if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+        // Work running, an agents' install running, or one starting (the gate): say busy, the try is kept.
+        val agentsRunning = (native { runner.running } as? Outcome.Ok)?.value != false
+        val gated = !agentsRunning && runtime.mayUpdate() && payloadGuard.installGate.tryLock()
+        if (!gated) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         updateJob.starting(shown.value.jobId)
+        var joined = false
         try {
-            return command { it.run(setOf(SetupComponentIds.OPENCODE), RUNTIME_PARAMS) }
+            val result =
+                command(holdGate = false) { engine ->
+                    // Another job already runs (the agents' install, a repair): run() would only watch it, and it is
+                    // not the update. Say busy, so the try is not spent and that job is not shown as the update.
+                    if (engine.progress.value.state == SetupState.Running) joined = true
+                    else engine.run(setOf(SetupComponentIds.OPENCODE), RUNTIME_PARAMS)
+                }
+            return if (joined) Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy)) else result
         } finally {
-            updateJob.started(shown.value.jobId)
+            payloadGuard.installGate.unlock()
+            if (joined) updateJob.abandoned() else updateJob.started(shown.value.jobId)
         }
     }
 
@@ -710,4 +727,16 @@ rm -f "$node_file"
 oc_version "$(node --version | sed 's/^v//')"
 """
     }
+}
+
+/** Runs [action] (a job's start phase) holding [gate] when [hold]; false, nothing run, when the gate is busy. */
+private suspend fun underGate(gate: Mutex, hold: Boolean, action: suspend () -> Unit): Boolean {
+    val held = hold && gate.tryLock()
+    if (hold && !held) return false
+    try {
+        action()
+    } finally {
+        if (held) gate.unlock()
+    }
+    return true
 }

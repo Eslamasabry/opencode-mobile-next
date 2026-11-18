@@ -415,7 +415,7 @@ with tarfile.open(sys.argv[1], 'w:bz2') as t:
     fun `B-LINUX-123 npm bundle wrapper keeps siblings under the pinned private Node`() {
         val node = File("${guest.home}/.local/node/bin/node")
         node.parentFile.mkdirs()
-        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n")
+        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.3; else exec /bin/sh \"\$@\"; fi\n")
         run(listOf("chmod", "700", node.path))
         archive(
             """import io, sys, tarfile
@@ -604,7 +604,7 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     fun `B-AGENT-VER an npm bundle's version check asks Gemini CLI not to start a second Node`() {
         val node = File("${guest.home}/.local/node/bin/node")
         node.parentFile.mkdirs()
-        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n")
+        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.3; else exec /bin/sh \"\$@\"; fi\n")
         run(listOf("chmod", "700", node.path))
         // The entry answers only when asked not to relaunch, as a stand-in for the second Node.js it would start.
         archive(

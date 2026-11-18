@@ -28,7 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -54,7 +54,7 @@ public fun KitVitalsStrip(
 ) {
     require(vitals.size <= 4)
     val tokens = LocalKitTokens.current
-    val scale = kitTextScale()
+    val scale = kitFontScale() // the chosen size, not the drawn one: [kitFontScale]
     Column(
         modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()
             .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),

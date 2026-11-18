@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.analytics.umami
 
+import io.github.eslamasabry.oc.engine.analytics.DeviceClass
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.analytics.health.NoOpTelemetryVendor
@@ -57,7 +58,7 @@ class UmamiSenderTest {
         val sender = UmamiSender(
             website = "00000000-0000-4000-8000-000000000001",
             build = UmamiBuild("3.0.1-test.10081", "10081"),
-            device = { UmamiDevice("ar", "1080x2340", "browser") },
+            device = { UmamiDevice("ar", "browser", 16, DeviceClass.Phone) },
             now = { now },
             store = store,
             transport = transport.takeIf { configured },
@@ -117,22 +118,23 @@ class UmamiSenderTest {
 
     @Test
     fun `B-180 every event maps its exact allowed keys and drops forbidden additions`() {
-        val device = UmamiDevice("en-US", "1080x2340", "browser")
+        val device = UmamiDevice("en-US", "browser", 16, DeviceClass.Phone)
         for ((name, fields) in productSchema) {
             val props = fields.mapValues { it.value.first() }
             val event = assertNotNull(umamiEvent(name, props + mapOf("prompt" to "private", "id" to "secret", "model_key" to "private"),
                 umamiPages.getValue("chat"), UmamiSource("website", UmamiBuild("3.0.1", "10081"), device), 2000))
             assertEquals("event", event.type, name)
-            assertEquals(fields.keys + setOf("version", "build"), event.payload.data.keys, name)
+            val wanted = fields.keys + setOf("version", "build", "os_major", "device_class")
+            assertEquals(wanted, event.payload.data.keys, name)
             val wire = UmamiCodec.json.parseToJsonElement(UmamiCodec.batch(listOf(event))).jsonArray.single().jsonObject
             assertEquals(setOf("type", "payload"), wire.keys, name)
             val payload = wire.getValue("payload").jsonObject
-            val expected = setOf("website", "hostname", "language", "screen", "url", "title", "tag", "timestamp", "data", "salt") +
+            val expected = setOf("website", "hostname", "language", "url", "title", "tag", "timestamp", "data", "salt") +
                 if (name == "screen_view") emptySet() else setOf("name")
             assertEquals(expected, payload.keys, name)
             // Umami rotates the anonymous visitor hash on this word (v3.5.0 request-schema.ts `salt`, crypto.ts getSalt).
             assertEquals("month", payload.getValue("salt").jsonPrimitive.content, "$name pins the monthly hash period")
-            assertEquals(fields.keys + setOf("version", "build"), payload.getValue("data").jsonObject.keys, name)
+            assertEquals(wanted, payload.getValue("data").jsonObject.keys, name)
             assertEquals(name.takeUnless { it == "screen_view" }, event.payload.name, name)
             val page = if (name == "screen_view" || name == "jank") umamiPages.getValue(props.getValue("screen")) else umamiPages.getValue("chat")
             assertEquals(page.url, event.payload.url, name)
@@ -146,12 +148,12 @@ class UmamiSenderTest {
 
     @Test
     fun `B-180 forbidden values in listed fields and arbitrary page addresses cannot enter the payload`() {
-        val device = UmamiDevice("en-US", "1080x2340", "browser")
+        val device = UmamiDevice("en-US", "browser", 16, DeviceClass.Phone)
         val build = UmamiBuild("3.0.1", "10081")
         val source = UmamiSource("website", build, device)
         val mapped = umamiEvent("chat_turn", mapOf("agent" to "private/model", "server_kind" to "private.example", "outcome" to "user text"),
             umamiPages.getValue("chat"), source, 1000)!!
-        assertEquals(setOf("version", "build"), mapped.payload.data.keys)
+        assertEquals(setOf("version", "build", "os_major", "device_class"), mapped.payload.data.keys)
         assertEquals("/conversation", mapped.payload.url)
         val chat = umamiPages.getValue("chat")
         assertNull(umamiEvent("app_open", emptyMap(), UmamiPage("/conversation/private", "Private"), source, 1000))
@@ -374,7 +376,11 @@ class UmamiSenderTest {
         assertEquals(listOf("app_exit" to mapOf("exit_reason" to "crash", "foreground" to "yes")), google.filter { it.first == "app_exit" })
         val own = r.transport.batches.flatten().filter { it.payload.name == "app_exit" }
         assertEquals(1, own.size)
-        assertEquals(mapOf("exit_reason" to "crash", "foreground" to "yes", "version" to "3.0.1-test.10081", "build" to "10081"), own.single().payload.data)
+        val expected = mapOf(
+            "exit_reason" to "crash", "foreground" to "yes", "version" to "3.0.1-test.10081", "build" to "10081",
+            "os_major" to "16", "device_class" to "phone",
+        )
+        assertEquals(expected, own.single().payload.data)
     }
 
 }

@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.KeyboardActionHandler
@@ -639,11 +641,22 @@ private fun FieldBox(
                     multilineLines.last.coerceAtLeast(multilineLines.first.coerceAtLeast(1)),
             )
         else TextFieldLineLimits.SingleLine
+    // Dictation streaming into the message box (owner 2026-11-17): the words still forming, quieter until confirmed.
+    val quietInk = colors.text2
+    val quiet =
+        LocalKitFieldQuietRange.current?.let { range ->
+            OutputTransformation {
+                val from = range.first.coerceIn(0, length)
+                val to = (range.last + 1).coerceIn(from, length)
+                if (to > from) addStyle(SpanStyle(color = quietInk), from, to)
+            }
+        }
     BasicTextField(
         state = state,
         modifier = box.semantics { contentDescription = label },
         enabled = on,
         inputTransformation = finalInput,
+        outputTransformation = quiet,
         textStyle = style,
         keyboardOptions = keyboard,
         onKeyboardAction = submit,
@@ -757,3 +770,11 @@ private fun rememberFieldLook(ownFill: Color, selected: Boolean): FieldLook {
         )
     return FieldLook(look, style.style == Style.Solid)
 }
+
+/**
+ * Words in a [KitField]'s value still forming (UTF-16 indices; dictation streaming into the message box, owner
+ * 2026-11-17): the field draws them in the quieter text colour until they are confirmed. Paint only: the value and its
+ * selection are unchanged. The host provides it around the one field it is for; null (the default) draws nothing quiet.
+ */
+public val LocalKitFieldQuietRange: androidx.compose.runtime.ProvidableCompositionLocal<IntRange?> =
+    androidx.compose.runtime.compositionLocalOf { null }

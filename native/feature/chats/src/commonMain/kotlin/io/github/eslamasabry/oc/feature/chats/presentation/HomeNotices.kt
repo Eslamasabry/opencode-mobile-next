@@ -73,11 +73,14 @@ public object HomeNotices {
     /**
      * The connections the home lists as not answering, except the one still opening (it has its own card) and a server
      * on this phone that the person runs themselves ([ChatsListSourceUi.selfRun]): that one is off, not broken, unless
-     * it is the server new conversations start on.
+     * it is the server new conversations start on. A source the app itself is starting (This phone's server, the
+     * phone's agents: [ChatsListSourceUi.starting], which covers an install or a restart of the helper in progress)
+     * is waiting, not failing: it never reads "didn't start" beside its own "Starting..." line.
      */
     public fun unreachable(state: ChatsUi): List<ChatsListSourceUi> =
         state.home.sources.filter {
-            it.shown && it.unreachable && it.profile != state.home.opening?.profile && !(it.selfRun && !it.main)
+            it.shown && it.unreachable && it.starting == null && it.profile != state.home.opening?.profile &&
+                !(it.selfRun && !it.main)
         }
 
     /**

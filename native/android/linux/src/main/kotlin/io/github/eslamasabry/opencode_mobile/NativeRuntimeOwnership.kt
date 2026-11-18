@@ -69,6 +69,16 @@ internal data class NativeRuntimeReceipt(
     }
 }
 
+/**
+ * The ownership proof failed at one named predicate. The message stays the fixed sentinel every classifier reads;
+ * [token] is a fixed name (never a PID, path or argument) that the setup log line carries.
+ */
+internal class OwnershipProofException(val token: String) : IllegalArgumentException("ownershipUnknown")
+
+internal fun ownershipRequire(ok: Boolean, token: String) {
+    if (!ok) throw OwnershipProofException(token)
+}
+
 /** Pure admission: all same-UID children must have a positive, current ownership proof. */
 internal object NativeRuntimeOwnership {
     const val UNKNOWN_CODE = "runtime_ownership_unknown"
@@ -128,13 +138,13 @@ internal object NativeRuntimeOwnership {
         current: List<RuntimeProcessIdentity>, registered: Set<Int>,
         requireCompleteInventory: Boolean = true, nonceMatches: (Int, String) -> Boolean,
     ): Drain {
-        require(receipt.boot == boot) { "ownershipUnknown" }
+        ownershipRequire(receipt.boot == boot, "bootMismatch")
         val byPid = current.associateBy { it.pid }
         receipt.root?.let { root ->
-            require(byPid[root.pid] == null || root.sameProcess(byPid[root.pid])) { "ownershipUnknown" }
+            ownershipRequire(byPid[root.pid] == null || root.sameProcess(byPid[root.pid]), "pidReused")
         }
         receipt.leader?.let { leader ->
-            require(byPid[leader.pid] == null || leader.sameProcess(byPid[leader.pid])) { "ownershipUnknown" }
+            ownershipRequire(byPid[leader.pid] == null || leader.sameProcess(byPid[leader.pid]), "pidReused")
         }
         val knownOther = receipt.other.filter { it.sameProcess(byPid[it.pid]) }.map { it.pid }.toMutableSet()
         expand(current, knownOther)
@@ -144,10 +154,10 @@ internal object NativeRuntimeOwnership {
             for (p in current) if (p.session == leader.session && nonceMatches(p.pid, receipt.nonce)) server.add(p.pid)
         }
         expand(current, server)
-        require(server.intersect(knownOther).isEmpty()) { "ownershipUnknown" }
-        require(!requireCompleteInventory || current.all {
+        ownershipRequire(server.intersect(knownOther).isEmpty(), "ownersOverlap")
+        ownershipRequire(!requireCompleteInventory || current.all {
             it.pid in registered || it.pid in server || it.pid in knownOther
-        }) { "ownershipUnknown" }
+        }, "unclassifiedSameUid")
         // A prepared gate has no executable workload. Unknown survivors still fail closed above.
         return Drain(
             current.filter { it.pid in server }.sortedBy { if (it.pid == receipt.root?.pid) 1 else 0 }, knownOther,

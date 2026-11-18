@@ -104,6 +104,7 @@ class PhoneOpenCodeAutoUpdate(
                 host,
                 jobs,
                 log = { log.i { it } },
+                nowMs = { SystemClock.elapsedRealtime() },
             ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
                 val reading = idle.get()
@@ -114,6 +115,10 @@ class PhoneOpenCodeAutoUpdate(
         downloads.openCode = this
         downloads.start()
         appScope.launch { updater.waitingForUnmetered.collect { downloads.openCodeWaiting.value = it } }
+        // Held a while for a busy or not-ready phone: Home says so in its one download line (never at once).
+        appScope.launch { updater.held.collect { downloads.openCodeHeld.value = it } }
+        appScope.launch { updater.fellShort.collect { downloads.openCodeShort.value = it } }
+        appScope.launch { updater.retrying.collect { downloads.openCodeRetrying.value = it } }
         val reads =
             openCodeAutoUpdateLooks(host, {
                 val now = runtime.readWorkIdle()
