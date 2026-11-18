@@ -724,7 +724,7 @@ private fun ringActions(state: KitEdgeDockState, ring: KitDockRing, index: Int, 
     if (ring.state == KitDockRingState.NeedsYou) {
         list += CustomAccessibilityAction(words.actionOn(words.allow, ring.name)) { intents.onAllow(ring.key); true }
         list += CustomAccessibilityAction(words.actionOn(words.deny, ring.name)) { intents.onDeny(ring.key); true }
-    } else if (ring.state.running) {
+    } else if (ring.actionState.running) {
         list += CustomAccessibilityAction(words.actionOn(words.stop, ring.name)) { intents.onStop(ring.key); true }
     }
     for (c in ring.children) {
