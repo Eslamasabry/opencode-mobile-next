@@ -71,7 +71,72 @@ esac
 umask 077
 """
 
-    /** The Node.js the agent host runs on, downloaded per ABI against its pin. */
+    /**
+     * If no `node` name exists (a kill between the two renames of the one-time switch from the old single folder),
+     * point it at the newest versioned Node folder that runs. Every check and install starts with this, so a Node that
+     * starts is back before anything else looks at it.
+     */
+    private val NODE_HEAL: String = """oc_node_heal() {
+  [ ! -e /home/oc/.local/node ] && [ ! -L /home/oc/.local/node ] || return 0
+  for oc_h in ${D}(ls -1A /home/oc/.local 2>/dev/null | grep -E '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}' | sort -V -r); do
+    [ -d "/home/oc/.local/${D}oc_h" ] && [ ! -L "/home/oc/.local/${D}oc_h" ] || continue
+    "/home/oc/.local/${D}oc_h/bin/node" --version >/dev/null 2>&1 || continue
+    rm -f "/home/oc/.local/node.heal.${D}${D}"
+    ln -s "${D}oc_h" "/home/oc/.local/node.heal.${D}${D}" && mv -T "/home/oc/.local/node.heal.${D}${D}" /home/oc/.local/node || true
+    return 0
+  done
+  return 0
+}
+"""
+
+    /**
+     * What may keep an old Node folder or an old helper tree. `oc_node_stock`: the folder holds only what Node's own
+     * archive holds (`bin/{node,npm,npx,corepack}`, `lib/node_modules/{npm,corepack}`); anything else in it is
+     * something a person installed with `npm install -g` into Node's own prefix, so it stays. `oc_no_old_node`: no
+     * process runs on an older Node folder, which is how a helper started before the update shows itself; its tree
+     * stays until it restarts.
+     */
+    private val NODE_GUARDS: String = """oc_node_stock() {
+  for oc_s in ${D}(ls -1A "${D}1/bin" 2>/dev/null); do
+    case "${D}oc_s" in node|npm|npx|corepack) ;; *) return 1 ;; esac
+  done
+  for oc_s in ${D}(ls -1A "${D}1/lib/node_modules" 2>/dev/null); do
+    case "${D}oc_s" in npm|corepack) ;; *) return 1 ;; esac
+  done
+  return 0
+}
+oc_no_old_node() {
+  oc_cur_node=${D}(readlink -f /home/oc/.local/node 2>/dev/null) || return 1
+  for oc_d in ${D}(ls -1A /home/oc/.local 2>/dev/null | grep -E '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}'); do
+    [ "/home/oc/.local/${D}oc_d" != "${D}oc_cur_node" ] || continue
+    if oc_in_use "/home/oc/.local/${D}oc_d"; then return 1; fi
+  done
+  return 0
+}
+oc_paseo_prune() {
+  # A helper started before the update still runs on the older Node and its older tree: nothing of it goes then.
+  if oc_no_old_node; then
+    oc_prune_versions /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
+      '^[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}${D}' /home/oc/.local/bin/paseo
+  fi
+  oc_prune_one ${INSTALL_DIRECTORY}.oc-good
+}
+oc_node_prune() {
+  oc_prune_versions /home/oc/.local 'node-$NODE_VERSION' '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}' \
+    /home/oc/.local/bin/node oc_node_stock
+  oc_prune_one /home/oc/.local/node-$NODE_VERSION.old
+  oc_prune_one /home/oc/.local/node.old
+}
+"""
+
+    /**
+     * The Node.js the agent host runs on, downloaded per ABI against its pin. Each version lives in its OWN folder
+     * (`/home/oc/.local/node-<version>`) beside the old one and is proven there. `/home/oc/.local/node` (the name
+     * every script and the helper use) is a link switched by one atomic rename: a kill at any point leaves a Node
+     * that starts, old or new. A phone from before the folders were versioned has a real `node` folder: the first
+     * switch renames it to its own versioned name (kept as the last good) and links, two renames healed by
+     * [NODE_HEAL]. Old Node folders are removed only after the new one answered its version through the node name.
+     */
     public val nodeInstall: String = """set -eu
 $REQUIRE_AGENT_USER
 case "${D}(uname -m)" in
@@ -79,36 +144,80 @@ case "${D}(uname -m)" in
   x86_64|amd64) node_arch=x64; node_sha=$NODE_X64_SHA256 ;;
 esac
 node_dir=/home/oc/.local/node
+node_home=/home/oc/.local/node-$NODE_VERSION
 node_part=/home/oc/.cache/oc-setup/node-$NODE_VERSION-linux-${D}node_arch.tar.gz
 mkdir -p /home/oc/.local/bin /home/oc/.cache/oc-setup
-trap 'rm -rf "${D}node_dir.new"' EXIT
+[ ! -L /home/oc/.local ] || exit 1
+${ScriptPrune.FUNCTION}
+$NODE_HEAL
+$NODE_GUARDS
+node_link_new="${D}node_dir.link.${D}${D}"
+trap 'rm -rf "${D}node_home.new"; rm -f "${D}node_link_new"' EXIT
 trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
-oc_stage 'Downloading Node.js $NODE_VERSION'
-oc_download "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-${D}node_arch.tar.gz" \
-  "${D}node_part" "${D}node_sha"
-oc_stage 'Preparing Node.js'
-rm -rf "${D}node_dir.new"
-mkdir -p "${D}node_dir.new"
-oc_untar "${D}node_part" "${D}node_dir.new" 1
-[ "${D}("${D}node_dir.new/bin/node" --version)" = '$NODE_VERSION' ]
-rm -rf "${D}node_dir.old"
-if [ -d "${D}node_dir" ]; then mv "${D}node_dir" "${D}node_dir.old"; fi
-if ! mv "${D}node_dir.new" "${D}node_dir"; then
-  [ ! -d "${D}node_dir.old" ] || mv "${D}node_dir.old" "${D}node_dir"
+oc_node_heal
+# Points the node name at a versioned folder by one atomic rename (the old folder is untouched until this instant).
+oc_node_point() {
+  rm -f "${D}node_link_new"
+  ln -s "${D}1" "${D}node_link_new"
+  mv -T "${D}node_link_new" "${D}node_dir"
+}
+if ! { [ -d "${D}node_home" ] && [ ! -L "${D}node_home" ] &&
+  [ "${D}("${D}node_home/bin/node" --version 2>/dev/null)" = '$NODE_VERSION' ]; }; then
+  oc_stage 'Downloading Node.js $NODE_VERSION'
+  oc_download "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-${D}node_arch.tar.gz" \
+    "${D}node_part" "${D}node_sha"
+  oc_stage 'Preparing Node.js'
+  rm -rf "${D}node_home.new"
+  mkdir -p "${D}node_home.new"
+  oc_untar "${D}node_part" "${D}node_home.new" 1
+  # Proven here, beside the old Node, before anything is switched.
+  [ "${D}("${D}node_home.new/bin/node" --version)" = '$NODE_VERSION' ]
+  # A same-name folder that did not pass is set aside, never deleted before the new one is proven below.
+  if [ -e "${D}node_home" ] || [ -L "${D}node_home" ]; then
+    rm -rf "${D}node_home.old"
+    mv -T "${D}node_home" "${D}node_home.old"
+  fi
+  mv -T "${D}node_home.new" "${D}node_home"
+fi
+node_before=
+if [ -L "${D}node_dir" ]; then
+  node_before=${D}(readlink "${D}node_dir")
+elif [ -d "${D}node_dir" ]; then
+  # From before the folders carried their version: this folder IS the old Node. It keeps its own versioned name.
+  node_old=${D}("${D}node_dir/bin/node" --version 2>/dev/null || true)
+  case "${D}node_old" in v[0-9]*.[0-9]*.[0-9]*) ;; *) node_old=v0.0.${D}${D} ;; esac
+  [ ! -e "/home/oc/.local/node-${D}node_old" ] || node_old=v0.0.${D}${D}
+  node_before="node-${D}node_old"
+  mv -T "${D}node_dir" "/home/oc/.local/${D}node_before"
+fi
+oc_node_point "node-$NODE_VERSION"
+if [ "${D}("${D}node_dir/bin/node" --version 2>/dev/null)" != '$NODE_VERSION' ]; then
+  # Started through the name every script uses, or back to what was there.
+  [ -z "${D}node_before" ] || oc_node_point "${D}node_before"
   exit 1
 fi
 for node_tool in node npm npx; do
-  ln -sf "${D}node_dir/bin/${D}node_tool" "/home/oc/.local/bin/${D}node_tool"
+  if [ "${D}(readlink "/home/oc/.local/bin/${D}node_tool" 2>/dev/null)" != "${D}node_dir/bin/${D}node_tool" ]; then
+    ln -s "${D}node_dir/bin/${D}node_tool" "/home/oc/.local/bin/${D}node_tool.new.${D}${D}"
+    mv -T "/home/oc/.local/bin/${D}node_tool.new.${D}${D}" "/home/oc/.local/bin/${D}node_tool"
+  fi
 done
-rm -rf "${D}node_dir.old"
+# The new Node answered through the node name: only now do older Node folders go.
+oc_node_prune
 rm -f "${D}node_part"
 oc_version '$NODE_VERSION'
 """
 
     public val nodeCheck: String = """set -eu
+${ScriptPrune.FUNCTION}
+$NODE_HEAL
+$NODE_GUARDS
+oc_node_heal
 [ "${D}(/home/oc/.local/node/bin/node --version)" = '$NODE_VERSION' ]
+# Old Node folders that an earlier install had to keep (something still ran on them) go here, once nothing does.
+oc_node_prune
 printf '%s\n' '$NODE_VERSION'
 """
 
@@ -132,6 +241,8 @@ printf '%s\n' '$NODE_VERSION'
         val packageBase64 = Base64.encode(PACKAGE_JSON.encodeToByteArray())
         return """set -eu
 ${SetupPrelude.COMPONENT_UPDATE_PRELUDE}
+${ScriptPrune.FUNCTION}
+$NODE_GUARDS
 $REQUIRE_AGENT_USER
 export PATH=/home/oc/.local/node/bin:/home/oc/.local/bin:/usr/bin:/bin
 [ "${D}(node --version)" = '$NODE_VERSION' ]
@@ -238,12 +349,16 @@ if ! host_version=${D}(env -i HOME="${D}host_cache/probe-home" PATH="${D}PATH" \
 fi
 oc_update_commit "${D}host_dir" || oc_paseo_activation_failed
 oc_update_commit "${D}host_link" || oc_paseo_activation_failed
+# The new helper answered its launch command and version through the link and is committed: older helper trees go.
+oc_paseo_prune
 oc_version '$VERSION'
 """
     }
 
     public val check: String = """set -eu
 ${SetupPrelude.COMPONENT_UPDATE_PRELUDE}
+${ScriptPrune.FUNCTION}
+$NODE_GUARDS
 host_dir=$INSTALL_DIRECTORY
 oc_update_recover "${D}host_dir"
 oc_update_recover /home/oc/.local/bin/paseo
@@ -274,6 +389,8 @@ env -i HOME="${D}probe_dir" PATH="${D}PATH" timeout 30 /home/oc/.local/bin/paseo
 grep -q -- '--home' "${D}probe_dir/launch-check.log"
 [ "${D}(env -i HOME="${D}probe_dir" PATH="${D}PATH" timeout 30 \
   /home/oc/.local/bin/paseo --version 2>/dev/null)" = '$VERSION' ]
+# Older helper trees that an earlier install had to keep (the old helper still ran) go here, once it does not.
+oc_paseo_prune
 printf '%s\n' '$VERSION'
 """
 }
