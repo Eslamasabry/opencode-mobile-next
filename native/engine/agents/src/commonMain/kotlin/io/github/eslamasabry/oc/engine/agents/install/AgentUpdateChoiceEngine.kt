@@ -185,7 +185,10 @@ private suspend fun AgentChoiceHost.removeChosen(
 ): Map<AgentId, RemovalRefusal> = buildMap {
     for (item in items) {
         val consumed = decisions.consume(item.id)
-        val result = if (consumed is Outcome.Ok) remove(item.id) else consumed
+        val result = when (consumed) {
+            is Outcome.Ok -> this@removeChosen.remove(item.id)
+            is Outcome.Failed -> consumed
+        }
         val why = when (val value = (result as? Outcome.Ok)?.value) {
             is RemovalResult.Removed -> null
             is RemovalResult.Refused -> value.reason
