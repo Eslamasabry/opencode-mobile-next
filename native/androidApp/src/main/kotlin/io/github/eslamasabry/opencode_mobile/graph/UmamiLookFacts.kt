@@ -12,8 +12,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
- * Keeps the style word for our own analytics server up to date while the app runs: the app's own six styles, as a fixed word (never the colours, never a person's choice of anything else). The
- * words only wait in memory; nothing leaves the phone unless the usage-reports switch is on.
+ * Keeps the style word for our own analytics server up to date while the app runs: the app's own six styles, as a
+ * fixed word (never the colours, never a person's choice of anything else). The word only waits in memory; nothing
+ * leaves the phone unless the usage-reports switch is on.
  */
 @SingleIn(AppScope::class)
 @Inject
