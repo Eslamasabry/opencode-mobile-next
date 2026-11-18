@@ -100,19 +100,19 @@ class CatalogInventoryTest {
             number("installedBytes", 280536544, 287484080),
         ),
         // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
-        // 2.1.325, Codex 0.169.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
+        // 2.1.327, Codex 0.169.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
         // same agents' pins literally. Gemini CLI and Cline did not move.
         "claude" to listOf(
-            text("2.1.319", "2.1.325"),
-            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-arm64/claude"),
-            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67"),
-            number("downloadBytes", 339797432, 364701112),
-            number("installedBytes", 339797432, 364701112),
-            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-x64/claude"),
-            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "0dc4f4a9a165fc60746d7ae8489712e5fc352f1e7ad4eb22e7141bd0812eb0cf"),
-            number("downloadBytes", 340226576, 365842960),
-            number("installedBytes", 340226576, 365842960),
+            text("2.1.319", "2.1.327"),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.327/linux-arm64/claude"),
+            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "acf0ef2f9da8d5ab08f193f007e19a06cbfb608b96a2f1f758d63a92a386cff8"),
+            number("downloadBytes", 339797432, 371779000),
+            number("installedBytes", 339797432, 371779000),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.327/linux-x64/claude"),
+            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "343c744baa14bfd38286a7cb90871051f04379956da6c5b803a9e66019a76ac9"),
+            number("downloadBytes", 340226576, 372904464),
+            number("installedBytes", 340226576, 372904464),
         ),
         "codex" to listOf(
             text("0.167.0", "0.169.0"),

@@ -134,7 +134,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-130 Claude's check ends with a sign-in read and signed-out becomes needs sign-in`() = runTest {
         val rig = Rig(Abi.Arm64V8a)
-        rig.installed(AgentId.CLAUDE, "2.1.325")
+        rig.installed(AgentId.CLAUDE, "2.1.327")
         rig.host.authResult = { _, _, _ -> AuthProjection(AuthState.SignedOut).ok() }
         val r = rig.check.run(owner, AgentId.CLAUDE)
         assertEquals(PhoneCheckFailure.NeedsSignIn, r.failure)

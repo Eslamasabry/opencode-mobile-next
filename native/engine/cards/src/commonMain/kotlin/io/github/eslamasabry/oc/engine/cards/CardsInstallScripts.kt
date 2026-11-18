@@ -9,7 +9,7 @@ import kotlin.io.encoding.Base64
  * Transport qualification is version-specific: refresh only with new runtime evidence.
  */
 public data class CardsPins(
-    val claudeVersion: String = "2.1.325",
+    val claudeVersion: String = "2.1.327",
     val nodeVersion: String = "v24.22.2",
     /** Claude Code and the Paseo daemon are tested releases and Node is the qualified pin. */
     val qualified: Boolean = true,

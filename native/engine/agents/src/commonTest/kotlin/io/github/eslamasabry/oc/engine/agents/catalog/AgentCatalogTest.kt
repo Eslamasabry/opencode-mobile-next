@@ -126,7 +126,7 @@ class AgentCatalogTest {
         assertEquals(AgentSignInMethod.ApiKeyHost, catalog.byId(AgentId("qwen"))!!.signInMethod)
         assertEquals(listOf("--acp"), catalog.byId(AgentId("gemini"))!!.recipe!!.launchArgs)
         assertEquals(AgentArtifactFormat.NpmTarGz, catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format)
-        assertEquals("2.1.325", catalog.byId(AgentId("claude"))!!.recipe!!.version)
+        assertEquals("2.1.327", catalog.byId(AgentId("claude"))!!.recipe!!.version)
         assertEquals(listOf("auth", "login", "--claudeai"), catalog.byId(AgentId("claude"))!!.recipe!!.signInArgs)
         assertEquals(AgentLimitation.NeedsPhoneCheck, catalog.byId(AgentId("claude"))!!.limitation)
         assertEquals(AgentLimitation.GooseProvider, catalog.byId(AgentId("goose"))!!.limitation)
@@ -171,7 +171,7 @@ class AgentCatalogTest {
         assertEquals("v24.22.2", pins.node.version)
         assertEquals("95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2", pins.node.sha256[AgentArchitecture.Arm64])
         assertEquals("361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9", pins.node.sha256[AgentArchitecture.X64])
-        assertTrue("2.1.325" in pins.claudeCodeTestedVersions)
+        assertTrue("2.1.327" in pins.claudeCodeTestedVersions)
     }
 
     // Owner 2026-11-13: Gemini CLI is deprecated upstream and is no longer offered. A copy already on a phone keeps its

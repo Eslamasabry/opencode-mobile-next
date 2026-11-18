@@ -16,8 +16,8 @@ public object PaseoTestedVersions {
     /** The daemon version the phone helper installs. */
     public const val PHONE_PIN: String = "0.15.4"
 
-    /** Claude Code builds. 2.1.325 is the current pin; 2.1.321, 2.1.319, 2.1.316, 2.1.294 (the 0.11.2 pin) and 2.1.283 stay accepted. */
-    public val claudeCode: ImmutableSet<String> = persistentSetOf("2.1.283", "2.1.294", "2.1.316", "2.1.319", "2.1.321", "2.1.325")
+    /** Claude Code builds. 2.1.327 is the current pin; 2.1.325, 2.1.321, 2.1.319, 2.1.316, 2.1.294 (the 0.11.2 pin) and 2.1.283 stay accepted. */
+    public val claudeCode: ImmutableSet<String> = persistentSetOf("2.1.283", "2.1.294", "2.1.316", "2.1.319", "2.1.321", "2.1.325", "2.1.327")
 
     /** Whether [version] (the number the daemon reported) is a tested release. */
     public fun paseoSupports(version: String?): Boolean = version != null && version in paseo
