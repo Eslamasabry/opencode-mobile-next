@@ -505,8 +505,26 @@ internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Commit
 internal fun maxCardHeight(): Dp {
     val density = LocalDensity.current
     val heightDp = LocalKitWindow.current.heightDp
-    if (heightDp <= 0f) return Dp.Infinity
+    // The space the page measured for the card between the pinned notice and the message box (the stack's caption and
+    // gap are inside it): the card never takes more, whatever share of the window it would otherwise be.
+    val room = LocalKitRequestRoom.current?.let { (it - REQUEST_STACK_EXTRA).coerceAtLeast(REQUEST_MIN_CARD) }
+    if (heightDp <= 0f) return room ?: Dp.Infinity
     val fontScale = (LocalKitAppDensity.current ?: density).fontScale
     val share = if (fontScale >= LARGE_TEXT) HEIGHT_SHARE_LARGE_TEXT else HEIGHT_SHARE
-    return (heightDp * share).dp
+    val byShare = (heightDp * share).dp
+    return if (room == null) byShare else minOf(byShare, room)
 }
+
+/** The room (dp) the page measured for a request card above the message box; null where the page measures none. */
+public val LocalKitRequestRoom: androidx.compose.runtime.ProvidableCompositionLocal<Dp?> =
+    androidx.compose.runtime.staticCompositionLocalOf { null }
+
+/**
+ * True when that room is too small for the title, two body lines and the answers: the card's body then shows ONE line
+ * (the target's "Details" opens the rest) before anything could overlap.
+ */
+public val LocalKitRequestCompact: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.staticCompositionLocalOf { false }
+
+private val REQUEST_STACK_EXTRA: Dp = 48.dp
+private val REQUEST_MIN_CARD: Dp = 96.dp

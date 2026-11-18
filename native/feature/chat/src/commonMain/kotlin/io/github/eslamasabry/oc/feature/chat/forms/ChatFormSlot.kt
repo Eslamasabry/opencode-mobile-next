@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.kit.frame.kitFloatingPart
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -52,7 +53,7 @@ public fun ChatFormSlot(
     if (form == null) {
         if (state.notice != null)
             Row(
-                modifier.fillMaxWidth(),
+                modifier.fillMaxWidth().kitFloatingPart(Space.S3.dp),
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 KitReceipt(KitReceiptState.AnsweredElsewhere())
@@ -69,7 +70,7 @@ public fun ChatFormSlot(
         Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             when (phase) {
                 is AnswerPhase.Held ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                    Row(Modifier.kitFloatingPart(Space.S3.dp), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitText(
                             stringResource(Res.string.stateFormHeld),
                             Modifier.weight(1f),
@@ -81,7 +82,7 @@ public fun ChatFormSlot(
                         )
                     }
                 is AnswerPhase.Sending ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                    Row(Modifier.kitFloatingPart(Space.S3.dp), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitText(title, Modifier.weight(1f), role = TypeRole.Body)
                         if (phase.slow)
                             KitText(

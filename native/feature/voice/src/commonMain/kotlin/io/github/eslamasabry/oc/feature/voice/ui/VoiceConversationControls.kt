@@ -4,11 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.voice.presentation.ComposerVoicePresenter
 import io.github.eslamasabry.oc.feature.voice.presentation.ComposerVoiceUi
 import io.github.eslamasabry.oc.feature.voice.presentation.ConversationReplyNote
 import io.github.eslamasabry.oc.feature.voice.presentation.MicPhase
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.frame.kitFloatingPart
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
@@ -81,7 +84,7 @@ internal fun VoiceConversationControls(
         }
         return
     }
-    Column(modifier.testTag("voice-conversation")) {
+    Column(modifier.kitFloatingPart(Space.S3.dp).testTag("voice-conversation")) {
         state.tutorialStep?.let { step ->
             KitNotice(
                 message =

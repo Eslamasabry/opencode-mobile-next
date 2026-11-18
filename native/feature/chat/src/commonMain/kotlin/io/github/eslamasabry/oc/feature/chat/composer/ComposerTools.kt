@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -315,7 +320,17 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
             leading = KitIcons.layers,
             modifier = Modifier.testTag("composer-tools-advanced"),
         ) {
-            conversation(close)
+            // The rows that open with "More tools" come into view at once (look 10098): the sheet scrolls to them, or
+            // grows to its content up to its maximum, never leaving them under its foot.
+            val shown = remember { BringIntoViewRequester() }
+            LaunchedEffect(open) {
+                if (open) {
+                    withFrameNanos {}
+                    withFrameNanos {}
+                    shown.bringIntoView()
+                }
+            }
+            Box(Modifier.bringIntoViewRequester(shown)) { conversation(close) }
         }
     }
 }

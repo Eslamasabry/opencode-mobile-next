@@ -748,6 +748,7 @@ public class ChatEntries(
                                 },
                                 open = pendingOpen,
                                 onDismiss = { pendingOpen = false },
+                                replyRunning = state.live != null,
                             )
                             QueueMoveScreen(queueMoveState, queueMove)
                             SessionTransferSheet(transferState, transfer)

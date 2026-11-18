@@ -284,3 +284,11 @@ public fun Modifier.kitScreenListEdges(): Modifier {
         ground = zones.ground,
     )
 }
+
+/**
+ * The room, in dp, between the top block's foot and the bottom block's own bottom padding on a floating page: what the
+ * whole bottom block (a request card and the message box) may take before it would draw over the pinned notice or the
+ * capsule. Read where it is used (it follows the top block's height); null off a floating page.
+ */
+public val LocalKitBottomRoom: androidx.compose.runtime.ProvidableCompositionLocal<(() -> androidx.compose.ui.unit.Dp)?> =
+    androidx.compose.runtime.staticCompositionLocalOf { null }

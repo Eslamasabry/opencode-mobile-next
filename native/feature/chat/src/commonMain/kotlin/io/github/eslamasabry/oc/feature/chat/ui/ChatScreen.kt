@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -1060,6 +1061,21 @@ public fun ChatScreen(
                                 Modifier,
                             )
                             monitoredForm?.invoke()
+                            // The card above the box takes at most the room MEASURED between the top block's foot and the box (not
+                            // a share of the window); in less than the title, two body lines and the answers need, its body shows one
+                            // line and "Details" has the rest, before anything could draw over the pinned notice (look 10098).
+                            val bottomRoom = io.github.eslamasabry.oc.ui.kit.frame.LocalKitBottomRoom.current?.invoke()
+                            val composerPx = remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                            val cardRoom =
+                                bottomRoom?.let { room ->
+                                    room - with(androidx.compose.ui.platform.LocalDensity.current) { composerPx.intValue.toDp() }
+                                }
+                            val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+                            androidx.compose.runtime.CompositionLocalProvider(
+                                io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestRoom provides cardRoom,
+                                io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestCompact provides
+                                    (cardRoom != null && cardRoom < REQUEST_FULL_ROOM_DP.dp * fontScale),
+                            ) {
                             if (requestActions != null)
                                 ChatRequestSlot(
                                     requests,
@@ -1071,6 +1087,7 @@ public fun ChatScreen(
                                     placed = if (inPlaceRequests == null) emptySet() else placedRequests.values.mapTo(HashSet()) { it.id },
                                     details = requestDetails,
                                 )
+                            }
                             if (requests.card == null) formSlot?.invoke(Modifier)
                             // The composer is the conversation's, as wide as the conversation's pane (E20-S27). It
                             // stands in its place while the conversation loads (owner 2026-11-14: the page lost its
@@ -1087,7 +1104,8 @@ public fun ChatScreen(
                                     // F1: the message box sits 8 dp above the screen's bottom edge, as Flutter's
                                     // (golden chat_approval_ask: box bottom at 907 of 915); the screen's bottom slot
                                     // already keeps that room. E: on wide windows it shares the 700 dp pane.
-                                    Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(top = Space.S2.dp),
+                                    Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(top = Space.S2.dp)
+                                        .onSizeChanged { composerPx.intValue = it.height },
                                 )
                               }
                         }
@@ -2244,3 +2262,6 @@ private fun rememberMessageErrorWords(): (MessageErrorKind) -> String {
         }
     }
 }
+
+/** The room, dp at text 1.0, a request card needs for its title, two body lines and its answers; below it the body shows one line. */
+private const val REQUEST_FULL_ROOM_DP: Int = 170

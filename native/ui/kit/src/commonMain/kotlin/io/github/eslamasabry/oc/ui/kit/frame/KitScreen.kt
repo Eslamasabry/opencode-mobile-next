@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -400,6 +401,11 @@ public fun KitScreen(
             // includes that fade, so at rest the last line sits above it (and the first under the bar's 12 dp one).
             val faded = !edgesFade && !kitChromeIsGlass()
             val floatChrome = floating && edgesFade
+            // Three-button navigation (the bottom tappable-element inset is not zero; it is zero with gestures): the page's
+            // content fades out over the bar's height plus the usual short fade, so the buttons sit over clean ground or the
+            // live background, with no scrim and no edge. Whole pixels. Gesture mode is unchanged.
+            val tappableBottomPx = WindowInsets.tappableElement.getBottom(density)
+            val flowFadePx = with(density) { FLOW_FADE_DP.dp.roundToPx() } + tappableBottomPx
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
             // over what scrolls behind them; a null face keeps today's ground.
             // Joined glass (KitLiquidJoin.kt): a menu from the bar's controls, or the jump pill on the message box, is one
@@ -524,7 +530,16 @@ public fun KitScreen(
             ) {
               // ONE provider around all three parts (the top block, the body, the bottom block), so a part added later
               // cannot fall outside it: the pinned status row read the flag as false and kept its hairline (look 10096).
-              CompositionLocalProvider(LocalKitScreenFloating provides floatChrome) {
+              val windowHeightPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height
+              val bottomRoom: () -> androidx.compose.ui.unit.Dp = {
+                  with(density) {
+                      (windowHeightPx - statusPx - topPx - insets.getBottom(density) - (Space.S2 * 2).dp.roundToPx()).coerceAtLeast(0).toDp()
+                  }
+              }
+              CompositionLocalProvider(
+                  LocalKitScreenFloating provides floatChrome,
+                  LocalKitBottomRoom provides (if (floatChrome) bottomRoom else null),
+              ) {
                 CompositionLocalProvider(
                     LocalChromePadding provides padding,
                     LocalKitScreenScroll provides scroll,
@@ -566,9 +581,10 @@ public fun KitScreen(
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
                                         fadeFromBottom =
                                             if (bottomPart == null) null
-                                            else if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } })
+                                            else if (floatChrome) ({ flowFadePx.toFloat() })
                                             else ({ bottomPx + fadeBottomPx }),
                                         bottomReach = if (floatChrome) FLOW_FADE_DP.dp else COMPOSER_FADE_DP.dp,
+                                        bottomReachPx = if (floatChrome) ({ flowFadePx.toFloat() }) else null,
                                         bottomStrength = { if (zones.claims > 0) 0f else 1f },
                                         ground = flatGround,
                                     )
