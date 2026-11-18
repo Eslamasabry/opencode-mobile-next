@@ -25,7 +25,7 @@ public val LocalKitScreenFloating: ProvidableCompositionLocal<Boolean> = staticC
 /** True inside a [KitHeaderCapsule]: the bar's title takes one line (its subtitle or scope line sits under it). */
 public val LocalKitHeaderCapsule: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
-/** The margin above and below the capsule, dp; the frame starts the transcript's clip this far under the status area. */
+/** The margin above and below the capsule, dp. */
 internal const val HEADER_CAPSULE_MARGIN_DP: Int = 4
 
 /** The capsule's side margin, dp: where the message box and the transcript's bubbles stand (measured on the real chat). */
