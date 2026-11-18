@@ -310,6 +310,12 @@ public fun BasicComposer(
     val editor = remember(state.targetKey) { DraftEditorState() }
     var repeatRevision by remember(state.targetKey) { mutableStateOf<Long?>(null) }
     val editSerialAtComposition = editor.userEditSerial
+    // A box that has opened never closes again while it has focus or holds words: the draft going not-ready again
+    // (the profile fenced, a world rebuilt) must not drop the next keystrokes of a person who is typing.
+    val boxLatch = remember(state.targetKey) { booleanArrayOf(false) }
+    val boxReady = editorReady && state.draft.ready
+    if (boxReady) boxLatch[0] = true
+    val boxOpen = boxReady || (boxLatch[0] && (field.text.isNotEmpty() || chrome.typing.focused))
     // Restore/clear only external revisions. Ordinary typing never assigns text or moves IME
     // selection.
     LaunchedEffect(field, state.draft.ready, state.draft.restoreRevision) {
@@ -327,8 +333,17 @@ public fun BasicComposer(
                 editor.lastReported = current
                 actions.draftChanged(current)
             } else {
-                if (current != state.draft.text) field.edit { replace(0, length, state.draft.text) }
-                editor.lastReported = state.draft.text
+                val engineText = state.draft.text
+                if (current != engineText && editorReady && editor.wasReported(engineText)) {
+                    // The engine is behind: this restore is an older copy of the box's own words (a burst of typing
+                    // right after the box opened, or while a restore was on its way). Keep the newer words and tell
+                    // the engine, never the other way round.
+                    editor.lastReported = current
+                    actions.draftChanged(current)
+                } else {
+                    if (current != engineText) field.edit { replace(0, length, engineText) }
+                    editor.lastReported = engineText
+                }
             }
             editorReady = true
         }
@@ -1223,7 +1238,7 @@ public fun BasicComposer(
                             framed = false,
                             focusRequester = focus,
                             enabled =
-                                if (editorReady && state.draft.ready) KitEnabled.Enabled
+                                if (boxOpen) KitEnabled.Enabled
                                 else
                                     KitEnabled.Disabled(
                                         // Issue 147: it always ends: the draft, or a plain line that it could not be opened.
@@ -1493,8 +1508,36 @@ private class FollowedSend(val text: String, val serial: Long) {
  */
 private class DraftEditorState {
     var restoreRevision: Long? = null
+
+    /** The words last handed to the draft engine. Every one is remembered, so an older one coming back is known. */
     var lastReported: String? = null
+        set(value) {
+            field = value
+            if (value != null) rememberReported(value)
+        }
     var userEditSerial: Long = 0
+
+    private val reported = LinkedHashSet<Long>()
+
+    private fun key(text: String): Long = (text.length.toLong() shl HASH_BITS) xor text.hashCode().toLong()
+
+    private fun rememberReported(text: String) {
+        reported.remove(key(text))
+        reported.add(key(text))
+        if (reported.size > REPORTED_KEPT) reported.remove(reported.first())
+    }
+
+    /**
+     * Whether [text] is something this box itself already handed to the engine. The engine's copy lags the box by the
+     * keystrokes still in flight, so a restore carrying such words is an OLDER version of the box's own words and must
+     * never be written back over the newer ones.
+     */
+    fun wasReported(text: String): Boolean = key(text) in reported
+
+    private companion object {
+        const val REPORTED_KEPT = 512
+        const val HASH_BITS = 32
+    }
 }
 
 /** The type a picture's name says (the intake checks the bytes again); PNG when it says none. */
