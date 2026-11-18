@@ -41,10 +41,38 @@ class PhoneGateTest {
         val v = "2.1.327"
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
         assertEquals(CheckRequiredReason.FirstCheck, PhoneGate.changeReason(null, claude, pins))
-        assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"), claude, pins))
-        assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.3"), claude, pins))
-        assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.16.1", pins.paseo.packageLockSha256, "v22.0.0"), claude, pins))
-        assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"), claude, pins))
+        assertEquals(
+            CheckRequiredReason.AgentVersion,
+            PhoneGate.changeReason(
+                gate("claude", "2.1.294", sha, "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"),
+                claude,
+                pins,
+            ),
+        )
+        assertEquals(
+            CheckRequiredReason.HelperVersion,
+            PhoneGate.changeReason(
+                gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.3"),
+                claude,
+                pins,
+            ),
+        )
+        assertEquals(
+            CheckRequiredReason.HelperVersion,
+            PhoneGate.changeReason(
+                gate("claude", v, sha, "0.16.1", pins.paseo.packageLockSha256, "v22.0.0"),
+                claude,
+                pins,
+            ),
+        )
+        assertEquals(
+            CheckRequiredReason.InstallationChanged,
+            PhoneGate.changeReason(
+                gate("claude", v, "0".repeat(64), "0.16.1", pins.paseo.packageLockSha256, "v24.22.3"),
+                claude,
+                pins,
+            ),
+        )
         // Unreadable proof is never qualification.
         assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(JsonObject(mapOf("fingerprint" to JsonPrimitive("broken"))), claude, pins))
     }

@@ -203,8 +203,10 @@ public object BuiltinScriptTexts {
         "fi\n" +
         "if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then\n" +
         "  case \"\$(uname -m)\" in\n" +
-        "    aarch64|arm64) node_arch=arm64; node_sha=261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8 ;;\n" +
-        "    x86_64|amd64) node_arch=x64; node_sha=061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2 ;;\n" +
+        "    aarch64|arm64) node_arch=arm64; " +
+        "node_sha=261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8 ;;\n" +
+        "    x86_64|amd64) node_arch=x64; " +
+        "node_sha=061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2 ;;\n" +
         "    *) echo \"[oc] Unsupported CPU: \$(uname -m)\" >&2; exit 64 ;;\n" +
         "  esac\n" +
         "  node_version=v24.22.3\n" +
