@@ -35,7 +35,7 @@
     <string name="collectMemory">Memory warnings from Android</string>
     <string name="collectDevice">Ranges for your phone’s memory and free storage, its processor type and WebView version, whether notifications are allowed, and the kind and version of server you use. Our own Umami server gets only the app version and build number, language, Android main version and device class (phone or tablet). Google Analytics also receives the phone model and screen size from Android on its own.</string>
     <string name="collectCrashKind">The kind of error and where in the app’s code it happened, never its message</string>
-    <string name="collectExit">Unexpected process exits (process_exit). Stops Android calls user_requested are counted only with Usage and app health, never sent as exceptions</string>
+    <string name="collectExit">When the app’s process ended unexpectedly last time, a report named process_exit with its fixed reason (exit_reason). A stop you asked for, which Android names user_requested, is never sent as a report: it is only counted with Usage and app health</string>
     <string name="collectSteps">Your last 30 steps, as short words such as chat.send</string>
     <string name="collectCrashKeys">The app version, how it was installed, the kind of server, whether this phone’s server is running, how many connections are open, the server version, and the kind and code of a report</string>
     <string name="collectReport">What you write about the problem, the last time the app closed unexpectedly, the app and Android versions, a memory range and the kind of server, with keys, addresses and paths blanked. No log and no conversation. You see all of it and choose Send or Cancel.</string>

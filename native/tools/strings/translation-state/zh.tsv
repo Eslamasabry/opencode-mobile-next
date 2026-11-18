@@ -2391,7 +2391,7 @@ collectCrashKind	cffc0cbf8b
 collectCrashesLabel	9ecbc9dad7
 collectDevice	ca7ea9e36d
 collectDrop	13bd95a3dd
-collectExit	3715cbb996
+collectExit	34768d63e2
 collectJourney	fa461aab2a
 collectMemory	39a3b87916
 collectNever	0b27a37bc6
@@ -3911,7 +3911,7 @@ e7VoiceUiNoResponse	3d01a977fe
 e7VoiceUiNotNow	7212523f9d
 e7VoiceUiPermissionBlocked	12bc4cbc12
 e7VoiceUiPermissionRequired	fc48769f6e
-e7VoiceUiPrivacyDownload	270ea77a38
+e7VoiceUiPrivacyDownload	c48885716f
 e7VoiceUiRetry	454b12ef6b
 e7VoiceUiSetupFailed	70f0acf4d7
 e7VoiceUiStartListening	b1ebc1ca25

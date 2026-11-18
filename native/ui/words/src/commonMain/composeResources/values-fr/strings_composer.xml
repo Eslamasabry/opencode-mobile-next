@@ -59,7 +59,7 @@
     <string name="e7ModelUiDefault">Par défaut</string>
     <string name="e7ModelUiSelectionGone">Ce choix n’est plus disponible. Actualisez les modèles et réessayez.</string>
     <string name="e7VoiceUiLocalInput">Saisie vocale locale</string>
-    <string name="e7VoiceUiPrivacyDownload">L’audio ne quitte jamais ce téléphone.</string>
+    <string name="e7VoiceUiPrivacyDownload">L’audio reste sur ce téléphone. Votre voix est transformée en texte sur le téléphone, et l’audio n’est pas conservé ensuite. Le téléchargement du modèle vocal nécessite Internet une seule fois.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android n’indique aucun microphone intégré. La saisie vocale peut quand même fonctionner avec un microphone filaire ou USB.</string>
     <string name="e7VoiceUiLanguage">Langue de transcription</string>
     <string name="e7VoiceUiVerifying">Vérification du modèle téléchargé</string>

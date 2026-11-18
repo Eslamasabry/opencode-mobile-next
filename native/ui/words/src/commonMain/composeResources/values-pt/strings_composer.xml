@@ -122,7 +122,7 @@
     <string name="e7ModelUiPreview">Prévia</string>
     <string name="e7ModelUiSelectionGone">Esta escolha não está mais disponível. Atualize os modelos e tente novamente.</string>
     <string name="e7VoiceUiLocalInput">Entrada de voz local</string>
-    <string name="e7VoiceUiPrivacyDownload">O áudio nunca sai deste celular.</string>
+    <string name="e7VoiceUiPrivacyDownload">O áudio fica neste celular. Sua fala é transformada em texto no celular, e o áudio não é guardado depois. Baixar o modelo de fala precisa de internet uma vez.</string>
     <string name="e7VoiceUiNoBuiltInMic">O Android informa que não há microfone embutido. A entrada de voz ainda pode funcionar com um microfone com fio ou USB.</string>
     <string name="e7VoiceUiLanguage">Idioma da transcrição</string>
     <string name="e7VoiceUiVerifying">Verificando o modelo baixado</string>

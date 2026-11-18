@@ -123,7 +123,7 @@
     <string name="e7ModelUiPreview">Предварительная версия</string>
     <string name="e7ModelUiSelectionGone">Этот вариант больше недоступен. Обновите список моделей и повторите попытку.</string>
     <string name="e7VoiceUiLocalInput">Локальный голосовой ввод</string>
-    <string name="e7VoiceUiPrivacyDownload">Звук не покидает этот телефон.</string>
+    <string name="e7VoiceUiPrivacyDownload">Звук остаётся на этом телефоне. Речь превращается в текст на телефоне, и звук после этого не сохраняется. Для загрузки речевой модели интернет нужен один раз.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android не нашёл встроенный микрофон. Голосовой ввод может работать с проводным или USB-микрофоном.</string>
     <string name="e7VoiceUiLanguage">Язык распознавания</string>
     <string name="e7VoiceUiVerifying">Проверяем загруженную модель</string>

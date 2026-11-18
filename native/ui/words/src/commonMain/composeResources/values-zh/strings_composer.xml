@@ -60,7 +60,7 @@
     <string name="e7ModelUiDefault">默认</string>
     <string name="e7ModelUiSelectionGone">此选项已不可用。请刷新模型后重试。</string>
     <string name="e7VoiceUiLocalInput">本地语音输入</string>
-    <string name="e7VoiceUiPrivacyDownload">音频不会离开本机。</string>
+    <string name="e7VoiceUiPrivacyDownload">音频留在这部手机上。你的语音在手机上转换为文字，之后不会保留音频。下载语音模型只需联网一次。</string>
     <string name="e7VoiceUiNoBuiltInMic">Android 报告没有内置麦克风。语音输入仍可通过有线或 USB 麦克风工作。</string>
     <string name="e7VoiceUiLanguage">转写语言</string>
     <string name="e7VoiceUiVerifying">正在校验已下载的模型</string>

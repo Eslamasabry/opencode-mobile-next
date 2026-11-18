@@ -60,7 +60,7 @@
     <string name="e7ModelUiDefault">الافتراضي</string>
     <string name="e7ModelUiSelectionGone">لم يعد هذا الخيار متاحًا. حدّث النماذج وحاول مجددًا.</string>
     <string name="e7VoiceUiLocalInput">إدخال صوتي محلي</string>
-    <string name="e7VoiceUiPrivacyDownload">يبقى الصوت على هذا الجهاز. يُحوَّل الكلام إلى نص محليًا ويُحذف الصوت بعد الاستخدام. يتطلب تنزيل النموذج مرة واحدة اتصالًا بالإنترنت.</string>
+    <string name="e7VoiceUiPrivacyDownload">يبقى الصوت على هذا الهاتف. يُحوَّل كلامك إلى نص على الهاتف، ولا يُحتفَظ بالصوت بعد ذلك. يتطلب تنزيل نموذج الكلام الاتصال بالإنترنت مرة واحدة.</string>
     <string name="e7VoiceUiNoBuiltInMic">يشير Android إلى عدم وجود ميكروفون مدمج. قد يعمل الإدخال الصوتي باستخدام ميكروفون سلكي أو USB.</string>
     <string name="e7VoiceUiLanguage">لغة تحويل الكلام إلى نص</string>
     <string name="e7VoiceUiVerifying">جارٍ التحقّق من النموذج المنزّل</string>
