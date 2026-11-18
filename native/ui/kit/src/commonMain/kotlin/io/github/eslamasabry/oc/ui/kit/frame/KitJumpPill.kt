@@ -44,7 +44,9 @@ import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -450,17 +452,24 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
                 faceAlpha = JUMP_BUTTON_FILL_ALPHA,
             )
         )
+    // The caller's place (align, padding) belongs on the node the caller put in its Box: the transition's own
+    // node. Given to
+    // the face inside AnimatedVisibility it is ignored, and on a phone, where motion is on, the arrow lay at the origin
+    // under the status bar (device check 46, build 10077).
+    val spoken = modifier.semantics(mergeDescendants = true) {
+        contentDescription = label
+        role = androidx.compose.ui.semantics.Role.Button
+        this.onClick(null) { onClick(); true }
+    }
     val face: @Composable () -> Unit = {
         Box(
-            modifier
+            Modifier
                 .testTag("kit-jump-button")
                 .heightIn(min = tokens.minTarget.dp)
                 .widthIn(min = tokens.minTarget.dp)
                 .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
-                .semantics(mergeDescendants = true) {
-                    contentDescription = label
-                    role = androidx.compose.ui.semantics.Role.Button
-                },
+                // The words and the role are on the caller's node (below), the one a screen reader and a test find.
+                .clearAndSetSemantics {},
             contentAlignment = Alignment.Center,
         ) {
             Box(
@@ -474,11 +483,12 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
         }
     }
     if (KitMotion.state.reduced) {
-        if (visible) face()
+        if (visible) Box(spoken) { face() }
         return
     }
     AnimatedVisibility(
         visible,
+        spoken,
         enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(initialScale = 0.8f),
         exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 0.8f),
     ) { face() }

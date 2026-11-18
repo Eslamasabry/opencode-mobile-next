@@ -65,6 +65,8 @@ import kotlin.test.assertTrue
  * mask, no fade, and "Jump to latest" a round arrow at the box's end corner. One scene, every state; [Scene.floating]
  * false is the old frame, which the red runs use.
  */
+// Pixel-measuring scenes: the messages carry the numbers, and the sampling loops nest.
+@Suppress("MaxLineLength", "NestedBlockDepth")
 class ChatFloatingEdgesTest {
     private data class Scene(
         val floating: Boolean = true,
@@ -77,6 +79,12 @@ class ChatFloatingEdgesTest {
         val white: Boolean = false,
         val dark: Boolean = true,
         val picture: Color = Color.White,
+        val motion: MotionLevel = MotionLevel.Off,
+        val style: Style = Style.Solid,
+        /** A phone's real numbers: its density and its status and gesture bars, dp (the default is the harness's own). */
+        val density: Float = 1f,
+        val statusDp: Int = STATUS_DP,
+        val navDp: Int = NAV_DP,
     )
 
     private val rows = (0 until 40).map { i -> if (i == 0) "Row zero the newest line of the conversation" else "Row $i: the build finished and every check passed, then the notes were written." }
@@ -84,17 +92,17 @@ class ChatFloatingEdgesTest {
     private fun ComposeUiTest.show(scene: Scene) {
         setContent {
             CompositionLocalProvider(
-                LocalDensity provides Density(1f, scene.fontScale),
+                LocalDensity provides Density(scene.density, scene.fontScale),
                 LocalLayoutDirection provides if (scene.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
             ) {
                 KitTheme(
-                    KitAppearance(mode = if (scene.dark) AppearanceMode.Dark else AppearanceMode.Light, style = Style.Solid, motion = MotionLevel.Off),
+                    KitAppearance(mode = if (scene.dark) AppearanceMode.Dark else AppearanceMode.Light, style = scene.style, motion = scene.motion),
                     DesktopKitPlatform(),
                     if (scene.rtl) "ar" else "en",
                     stillFrame = true,
                 ) {
                     CompositionLocalProvider(
-                        LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = if (scene.keyboard) 330.dp else NAV_DP.dp),
+                        LocalKitScreenInsets provides WindowInsets(top = scene.statusDp.dp, bottom = if (scene.keyboard) 330.dp else scene.navDp.dp),
                     ) {
                         Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                             val source = rememberKitFrostState()
@@ -169,7 +177,7 @@ class ChatFloatingEdgesTest {
         waitForIdle()
     }
 
-    private fun run(scene: Scene, body: ComposeUiTest.() -> Unit) = runDesktopComposeUiTest(W, H) { show(scene); body() }
+    private fun run(scene: Scene, body: ComposeUiTest.() -> Unit) = runDesktopComposeUiTest((W * scene.density).toInt(), (H * scene.density).toInt()) { show(scene); body() }
 
     @Test
     fun `B-CHAT-EDGE-001 the last line of a conversation rests fully above the box at rest`() =
@@ -245,6 +253,25 @@ class ChatFloatingEdgesTest {
             // No words on it: its label is spoken, never drawn.
             assertTrue(onAllNodesWithText("Jump to latest", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "words are drawn on the button")
         }
+
+    @Test
+    fun `B-CHAT-EDGE-023 with motion on, the jump arrow stands centred just above the box and inside the screen`() {
+        // Device check 46 (build 10077): with motion on, the arrow sat at [0,0][126,126] under the status bar, because
+        // its place (align + padding) was given to the face inside the enter/exit transition, which ignores it. The
+        // earlier tests ran with motion off, where it is placed right, and only asked that the arrow exist.
+        for (style in listOf(Style.Solid, Style.Glass, Style.Soft)) for (keyboard in listOf(false, true)) for (rtl in listOf(false, true))
+        run(Scene(motion = MotionLevel.Full, rtl = rtl, keyboard = keyboard, style = style)) {
+            scrollAway()
+            mainClock.advanceTimeBy(800)
+            waitForIdle()
+            val button = bounds("jump-to-latest")
+            val box = bounds("kit-composer-box")
+            assertEquals(W / 2f, button.center.x, 1f, "the arrow is centred ($style, keyboard $keyboard, rtl $rtl): $button")
+            assertTrue(button.bottom <= box.top + 1f && button.bottom >= box.top - 40f, "the arrow stands just above the box: $button, box $box")
+            assertTrue(button.top >= STATUS_DP + 48f, "the arrow is clear of the status area and the header: $button")
+            assertTrue(button.right <= W && button.left >= 0f && button.bottom <= H, "the arrow is inside the screen: $button")
+        }
+    }
 
     @Test
     fun `B-CHAT-EDGE-009 the jump control stays centred in a right-to-left reading and leaves at the end`() =
@@ -332,6 +359,108 @@ class ChatFloatingEdgesTest {
             val under = image[W / 2, H - NAV_DP - 3]
             assertTrue(under.red < 0.5f, "the picture shows between the box and the gesture area")
         }
+
+
+    /** A phone's numbers (a 2.625 density, a tall status bar, a gesture bar), every style that floats, dark and light. */
+    private val phone = listOf(Style.Solid, Style.Glass, Style.Soft).flatMap { st -> listOf(true, false).map { d -> Scene(density = 2.625f, statusDp = 52, navDp = 24, style = st, dark = d, motion = MotionLevel.Full) } }
+
+    private fun ComposeUiTest.scrolled(): androidx.compose.ui.graphics.ImageBitmap {
+        onNodeWithTag("transcript-list").performScrollToIndex(12)
+        mainClock.advanceTimeBy(800)
+        waitForIdle()
+        return onNodeWithTag("scene").captureToImage()
+    }
+
+    private fun same(a: Color, b: Color, tol: Float = 0.02f) =
+        kotlin.math.abs(a.red - b.red) <= tol && kotlin.math.abs(a.green - b.green) <= tol && kotlin.math.abs(a.blue - b.blue) <= tol
+
+    @Test
+    fun `B-CHAT-EDGE-024 the status area shows the ground only, down to the capsule, with the phone's real insets`() {
+        for (scene in phone.filter { it.style != Style.Soft }) run(scene.copy(white = false)) {
+            val image = scrolled().toPixelMap()
+            val capsule = bounds("kit-header-capsule")
+            val d = scene.density
+            val ground = image[2, 2]
+            // From the top of the window to the capsule's top edge, the whole width: one colour, the page's ground.
+            var y = 0
+            while (y < capsule.top.toInt() - 1) {
+                var x = 0
+                while (x < (W * d).toInt()) {
+                    assertTrue(same(image[x, y], ground), "words show above the capsule at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground; capsule top ${capsule.top}")
+                    x += 3
+                }
+                y += 1
+            }
+        }
+    }
+
+    @Test
+    fun `B-CHAT-EDGE-025 no transcript text shows below the box's top, outside its rounded corners, nor in the gesture area`() {
+        for (scene in phone) run(scene) {
+            val image = scrolled().toPixelMap()
+            val box = bounds("kit-composer-box")
+            val d = scene.density
+            val r = 24f * d
+            val groundLum = lum(image[2, (H * d).toInt() - 2])
+            val pad = 4f * d // the tag sits inside the box's own padding
+            // The box's two lower corners: what lies outside the rounded outline is page ground, never a letter.
+            for (corner in listOf(true, false)) {
+                var y = (box.bottom + pad - r).toInt()
+                while (y < (box.bottom + pad).toInt()) {
+                    var x = 0
+                    while (x < r.toInt()) {
+                        val px = if (corner) (box.left - pad).toInt() + x else (box.right + pad).toInt() - 1 - x
+                        val cx = if (corner) box.left - pad + r else box.right + pad - r
+                        val cy = box.bottom + pad - r
+                        val out = Math.hypot((px - cx).toDouble(), (y - cy).toDouble()) > r + 10 * d
+                        if (out && y > cy) assertTrue(kotlin.math.abs(lum(image[px, y]) - groundLum) < 0.25f, "a letter shows outside the box's corner at ($px,$y), ${scene.style} dark=${scene.dark}: ${image[px, y]} vs ground $groundLum, box $box")
+                        x += 1
+                    }
+                    y += 1
+                }
+            }
+            // Below the box: the ground, one colour, to the bottom of the window (the gesture area).
+            val ground = image[2, (H * d).toInt() - 2]
+            var y = (box.bottom + 14f * d).toInt()
+            while (y < (H * d).toInt()) {
+                var x = 0
+                while (x < (W * d).toInt()) {
+                    assertTrue(same(image[x, y], ground, 0.2f), "the gesture area is not one ground at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground")
+                    x += 7
+                }
+                y += 3
+            }
+        }
+    }
+
+    @Test
+    fun `B-CHAT-EDGE-026 the gesture area is dark in Glass dark with the live background off`() =
+        run(Scene(density = 2.625f, statusDp = 52, navDp = 24, style = Style.Glass, dark = true, motion = MotionLevel.Full)) {
+            val image = scrolled().toPixelMap()
+            val d = 2.625f
+            for (y in listOf((H * d).toInt() - 3, (H * d).toInt() - (12 * d).toInt(), (H * d).toInt() - (23 * d).toInt())) for (x in listOf(3, (W * d / 2).toInt(), (W * d).toInt() - 4)) {
+                val c = image[x, y]
+                assertTrue(c.alpha > 0.99f && lum(c) < 0.1f, "the gesture area at ($x,$y) is $c, not the dark ground")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-EDGE-027 the header capsule is one part in every style, nothing is cast beside or under it`() {
+        for (style in listOf(Style.Brutal, Style.Paper, Style.Signal, Style.Solid)) for (dark in listOf(true, false)) run(Scene(style = style, dark = dark)) {
+            val image = onNodeWithTag("scene").captureToImage().toPixelMap()
+            val c = bounds("kit-header-capsule")
+            val ground = image[2, c.center.y.toInt()]
+            // The margin beside the capsule (x just past its end edge, over its height) is the page's ground: no offset block.
+            for (dx in listOf(3, 6)) {
+                var y = c.top.toInt() + 12
+                while (y < c.bottom.toInt() - 12) {
+                    val px = image[c.right.toInt() + dx, y]
+                    assertTrue(same(px, ground, 0.05f), "something is cast beside the capsule at (${c.right.toInt() + dx},$y), $style dark=$dark: $px vs $ground")
+                    y += 2
+                }
+            }
+        }
+    }
 
     private companion object {
         const val W = 360
