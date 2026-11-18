@@ -275,22 +275,6 @@ class AppTelemetryHealth(
         }
     }
 
-    /** For our own server: the kind of connection as one fixed word, never an address, a name or an id. */
-    private fun linkWord(profile: ServerProfile): String =
-        when {
-            profile.managedOnPhone -> "phone"
-            profile.backend == BackendKind.Paseo -> "computer"
-            else -> "remote"
-        }
-
-    /** The agent server's product name as one fixed word. */
-    private fun agentWord(profile: ServerProfile): String =
-        when (profile.backend) {
-            BackendKind.OpenCode2 -> "opencode"
-            BackendKind.Paseo -> "paseo"
-            BackendKind.Codex -> "codex"
-        }
-
     private data class Seen(
         val saved: Int,
         val kinds: Set<String>,
@@ -598,3 +582,19 @@ internal class AndroidHealthPlatform(
             }
     }
 }
+
+/** For our own server: the kind of connection as one fixed word, never an address, a name or an id. */
+private fun linkWord(profile: ServerProfile): String =
+    when {
+        profile.managedOnPhone -> "phone"
+        profile.backend == BackendKind.Paseo -> "computer"
+        else -> "remote"
+    }
+
+/** The agent server's product name as one fixed word. */
+private fun agentWord(profile: ServerProfile): String =
+    when (profile.backend) {
+        BackendKind.OpenCode2 -> "opencode"
+        BackendKind.Paseo -> "paseo"
+        BackendKind.Codex -> "codex"
+    }
