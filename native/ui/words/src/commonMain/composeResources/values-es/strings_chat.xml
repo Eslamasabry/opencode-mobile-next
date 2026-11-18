@@ -421,7 +421,7 @@
     <string name="kitAgentOpen">Abrir la conversación de %1$s</string>
     <string name="kitAgentLabel__yes">%1$s, %2$s, %3$s</string>
     <string name="kitAgentLabel__other">%1$s, %3$s</string>
-    <string name="kitToolNotRun">Se detuvo antes de que respondieras</string>
+    <string name="kitToolNotRun">No se ejecutó</string>
     <string name="kitToolWaiting">En espera</string>
     <string name="kitToolRunning">En ejecución</string>
     <string name="kitToolWaitingForYou">Esperándote</string>
@@ -1375,4 +1375,5 @@
     <string name="stageOpeningConversation">Abriendo la conversación…</string>
     <string name="kitTurnLiveStillThinking">Sigue pensando</string>
     <string name="chatQuietThinkingHint">Algunos modelos piensan en silencio durante varios minutos.</string>
+    <string name="kitToolUnanswered">Se detuvo antes de que respondieras</string>
 </resources>

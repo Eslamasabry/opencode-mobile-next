@@ -800,7 +800,7 @@
         <item quantity="other">表、%1$d行</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">表、1行</string>
-    <string name="kitToolNotRun">回答前に停止しました</string>
+    <string name="kitToolNotRun">未実行</string>
     <string name="kitToolWaiting">待機中</string>
     <string name="kitToolRunning">実行中</string>
     <string name="kitToolWaitingForYou">対応待ち</string>
@@ -1249,4 +1249,5 @@
     <string name="composerPasteImageFromClipboardSupporting">コピーした画像を添付</string>
     <string name="composerPasteImageEmpty">クリップボードに画像がありません。</string>
     <string name="chatRequestAnswerRequired">必須の質問に先に回答してください。</string>
+    <string name="kitToolUnanswered">回答前に停止しました</string>
 </resources>

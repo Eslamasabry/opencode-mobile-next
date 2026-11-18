@@ -690,7 +690,7 @@
         <item quantity="other">Tableau, %1$d lignes</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">Tableau, 1 ligne</string>
-    <string name="kitToolNotRun">Arrêté avant votre réponse</string>
+    <string name="kitToolNotRun">Non exécuté</string>
     <string name="kitToolWaiting">En attente</string>
     <string name="kitToolRunning">En cours</string>
     <string name="kitToolWaitingForYou">En attente de vous</string>
@@ -1374,4 +1374,5 @@
     <string name="stageOpeningConversation">Ouverture de la conversation…</string>
     <string name="kitTurnLiveStillThinking">Réfléchit encore</string>
     <string name="chatQuietThinkingHint">Certains modèles réfléchissent en silence pendant plusieurs minutes.</string>
+    <string name="kitToolUnanswered">Arrêté avant votre réponse</string>
 </resources>

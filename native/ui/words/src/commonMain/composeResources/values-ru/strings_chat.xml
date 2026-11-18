@@ -802,7 +802,7 @@
         <item quantity="other">Таблица, %1$d строки</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">Таблица, 1 строка</string>
-    <string name="kitToolNotRun">Остановлено до вашего ответа</string>
+    <string name="kitToolNotRun">Не запускалось</string>
     <string name="kitToolWaiting">Ожидание</string>
     <string name="kitToolRunning">Выполняется</string>
     <string name="kitToolWaitingForYou">Ждёт вас</string>
@@ -1437,4 +1437,5 @@
     <string name="stageOpeningConversation">Открытие беседы…</string>
     <string name="kitTurnLiveStillThinking">Всё ещё думает</string>
     <string name="chatQuietThinkingHint">Некоторые модели думают молча несколько минут.</string>
+    <string name="kitToolUnanswered">Остановлено до вашего ответа</string>
 </resources>

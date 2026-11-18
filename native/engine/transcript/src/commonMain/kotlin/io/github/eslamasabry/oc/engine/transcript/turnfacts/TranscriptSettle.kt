@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 // Port of Flutter lib/domain/transcript_settle.dart (B-CHAT-116/117): live state that has outlived what it
@@ -93,7 +94,14 @@ public fun settleStaleLive(
                 // no proof it ran. It settles as not run, never as "Ran 1 command" (B-461 job 2).
                 edited[p] =
                     if (wordsLater) part.copy(tool = tool.copy(status = ToolStatus.Completed))
-                    else part.copy(tool = tool.copy(status = ToolStatus.Pending, startedAtMs = null))
+                    else
+                        part.copy(
+                            tool =
+                                tool.copy(
+                                    status = ToolStatus.Pending,
+                                    metadata = JsonObject((tool.metadata ?: JsonObject(emptyMap())) + (UNANSWERED_KEY to JsonPrimitive(true))),
+                                )
+                        )
             }
         }
         parts?.let { replace[i] = message.copy(parts = it.toImmutableList()) }
@@ -127,3 +135,6 @@ private fun isBackground(part: Part): Boolean =
 
 /** Dart `value == true`: only the JSON boolean true. */
 private fun isTrue(value: JsonElement?): Boolean = value is JsonPrimitive && !value.isString && value.content == "true"
+
+/** Set on a step the run ended on while it still waited for an answer (settled as not run, never as completed). */
+public const val UNANSWERED_KEY: String = "oc.unanswered"

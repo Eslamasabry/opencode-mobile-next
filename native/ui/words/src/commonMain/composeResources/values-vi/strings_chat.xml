@@ -626,7 +626,7 @@
         <item quantity="other">Bảng, %1$d hàng</item>
     </plurals>
     <string name="kitMarkdownTable__eq1">Bảng, 1 hàng</string>
-    <string name="kitToolNotRun">Đã dừng trước khi bạn trả lời</string>
+    <string name="kitToolNotRun">Chưa chạy</string>
     <string name="kitToolWaiting">Đang chờ</string>
     <string name="kitToolRunning">Đang chạy</string>
     <string name="kitToolWaitingForYou">Đang chờ bạn</string>
@@ -1250,4 +1250,5 @@
     <string name="stageOpeningConversation">Đang mở cuộc trò chuyện…</string>
     <string name="kitTurnLiveStillThinking">Vẫn đang suy nghĩ</string>
     <string name="chatQuietThinkingHint">Một số mô hình suy nghĩ trong im lặng vài phút mà không hiện nội dung.</string>
+    <string name="kitToolUnanswered">Đã dừng trước khi bạn trả lời</string>
 </resources>
