@@ -1,0 +1,55 @@
+# Config of the OC source rules (tools/rules). Only these rules run (ocSourceRules passes --disable-default-rulesets); the
+# style rules stay with tool/qa/detekt.sh. Nothing is excluded here: each rule decides by the file's layer and source set,
+# as the guard test it replaces did. Old debt is in quality/config/rule-baseline/*.txt, which the rules read.
+build:
+  maxIssues: 0
+config:
+  validation: false
+  warningsAsErrors: true
+console-reports:
+  active: true
+oc-rules:
+  OcKitOnlyFeatures:
+    active: true
+  OcPresentationPlainKotlin:
+    active: true
+  OcNoRunCatchingInSuspend:
+    active: true
+  OcNoDispatchersOrClock:
+    active: true
+  OcLogOnlyThroughAppLog:
+    active: true
+  OcNoJvmInCommon:
+    active: true
+  OcRedactorOptInPlace:
+    active: true
+  OcNoGlobalScopeOrRunBlocking:
+    active: true
+  OcMaterial3OnlyInKits:
+    active: true
+  OcNoFeatureToFeature:
+    active: true
+  OcNoLabelledReturnInContent:
+    active: true
+  OcRawKeyboardInset:
+    active: true
+  OcFailureLabel:
+    active: true
+  OcLayerRecord:
+    active: true
+  OcRawDelayLoop:
+    active: true
+  OcTextGlyph:
+    active: true
+  OcKitIconSize:
+    active: true
+  OcSecNoAutoLink:
+    active: true
+  OcSecTlsTrustOnlyInTrustGate:
+    active: true
+  OcSecNoPinnerOrNetLogging:
+    active: true
+  OcSecWebViewOnlyInKitWebPreview:
+    active: true
+  OcSecNoWeakRandomForSecrets:
+    active: true

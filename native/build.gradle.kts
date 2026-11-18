@@ -44,3 +44,17 @@ apply(from = "tool/ci/quarantine.gradle.kts")
 
 // CI lanes (tool/ci/LANES.md): -PskipGoldens=true drops the picture tests, -PonlyGoldens=true runs only them.
 apply(from = "tool/ci/goldens.gradle.kts")
+
+// B1-LINT: the guard tests that scan source, as rules checked on the compile check path (tools/rules). Every module's
+// main Kotlin compile first waits for ocSourceRules (detekt with the OC rules over the whole tree) and ocDataChecks
+// (the repository-file checks); both run once per build and are skipped when nothing they read changed. A violation
+// fails the compile check with a plain message and a way forward. -Poc.skipRules=true skips both for one run.
+subprojects {
+    if (path != ":tools:rules") {
+        tasks.configureEach {
+            if (name.startsWith("compile") && name.contains("Kotlin") && !name.contains("Test")) {
+                dependsOn(":tools:rules:ocSourceRules", ":tools:rules:ocDataChecks")
+            }
+        }
+    }
+}
