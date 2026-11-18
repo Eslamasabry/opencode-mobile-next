@@ -209,7 +209,7 @@ class FakeAgents(
         setUp += "${owner.raw}/${agent.id}"
     }
 
-    override fun read(transcript: String): SignInFound {
+    override suspend fun read(transcript: String): SignInFound {
         val page = Regex("https://\\S+").findAll(transcript).lastOrNull()?.value
         val code = Regex("\\b[A-Z0-9]{4}-[A-Z0-9]{4,5}\\b").find(transcript)?.value
         return SignInFound(page, code)
