@@ -107,7 +107,7 @@ class CodexTransportTest {
         t.connect()
         assertEquals(listOf<String?>("initialize", "initialized"), server.methods())
         assertTrue(t.accountApiSupported)
-        val other = FakeAppServer(userAgent = "codex_cli_rs/0.154.0 (fixture)")
+        val other = FakeAppServer(userAgent = "codex_cli_rs/0.153.3 (fixture)")
         val t2 = transport(FakeSockets(other))
         t2.connect()
         assertTrue(t2.connected)

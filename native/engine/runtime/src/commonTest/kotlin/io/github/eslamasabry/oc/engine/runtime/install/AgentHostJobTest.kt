@@ -95,7 +95,7 @@ class AgentHostJobTest {
         assertTrue("aarch64|arm64) node_arch=arm64; node_sha=${AgentNode.ARM64_SHA256} ;;" in AgentNode.INSTALL)
         assertTrue(AgentNode.INSTALL.indexOf("oc_download") < AgentNode.INSTALL.indexOf("oc_untar"))
         assertEquals(
-            "set -eu\n[ \"\$(/home/oc/.local/node/bin/node --version)\" = 'v24.22.2' ]\nprintf '%s\\n' 'v24.22.2'\n",
+            "set -eu\n[ \"\$(/home/oc/.local/node/bin/node --version)\" = 'v24.22.3' ]\nprintf '%s\\n' 'v24.22.3'\n",
             AgentNode.CHECK,
         )
     }

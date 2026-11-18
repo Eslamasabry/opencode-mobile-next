@@ -365,9 +365,9 @@ public data class OpenCodeAsset(val url: String, val sha256: String, val member:
 
 public data class OpenCodeAssets(val arm64: OpenCodeAsset, val x64: OpenCodeAsset)
 
-/** The pinned OpenCode 2 program (`@opencode/cli` 2.2.6 per-platform packages; SHA-256 of those tarballs). */
+/** The pinned OpenCode 2 program (`@opencode/cli` 2.3.2 per-platform packages; SHA-256 of those tarballs). */
 public object OpenCodePins {
-    public const val VERSION: String = "2.2.6"
+    public const val VERSION: String = "2.3.2"
     public const val RUNTIME: String = "opencode2"
     public const val COMMAND: String = "opencode2"
     public const val DIR: String = "/opt/opencode2"
@@ -376,14 +376,16 @@ public object OpenCodePins {
         OpenCodeAssets(
             arm64 =
                 OpenCodeAsset(
-                    url = "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.6.tgz",
-                    sha256 = "22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898",
+                    url = "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.3.2.tgz",
+                    sha256 = "91a937129efdae8eb8c0c5018ae533f9f35117f26ffd9a4d1f7a5f9da1e69306",
                     member = "package/bin/opencode",
                 ),
             x64 =
                 OpenCodeAsset(
-                    url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.6.tgz",
-                    sha256 = "00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce",
+                    url =
+                        "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/" +
+                            "-/cli-linux-x64-baseline-2.3.2.tgz",
+                    sha256 = "e567dcdb1310dcae4e442077e0d508e10a80c1b996131a04dc9b978cdd26e5cd",
                     member = "package/bin/opencode",
                 ),
         )
@@ -391,10 +393,10 @@ public object OpenCodePins {
 
 /** The pinned Node.js (termuxLocalAgentsPins in lib/termux/scripts/local_agents_script.dart). */
 public object NodePins {
-    public const val VERSION: String = "v24.22.2"
+    public const val VERSION: String = "v24.22.3"
     public const val BASE_URL: String = "https://nodejs.org/dist"
-    public const val SHA256_ARM64: String = "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2"
-    public const val SHA256_X64: String = "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9"
+    public const val SHA256_ARM64: String = "261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8"
+    public const val SHA256_X64: String = "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2"
 }
 
 /** Wraps an install body in the setup prelude (`withSetupPrelude`, bound by the wiring to :engine:setupscripts). */

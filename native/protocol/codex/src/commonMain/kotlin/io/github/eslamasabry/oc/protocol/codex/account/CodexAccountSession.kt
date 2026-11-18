@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.protocol.codex.CodexAccountGate
 import io.github.eslamasabry.oc.protocol.codex.CodexException
 import io.github.eslamasabry.oc.protocol.codex.CodexFailureKind
 import io.github.eslamasabry.oc.protocol.codex.boolOrNull
@@ -110,7 +111,7 @@ public class CodexAccountSession(
         return AgentAccount(
             type = text(account["type"], 80),
             email = optionalText(account["email"], 320),
-            plan = optionalText(account["planType"], 100),
+            plan = CodexAccountGate.shownPlan(optionalText(account["planType"], 100)),
             requiresSignIn = required,
         )
     }

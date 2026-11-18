@@ -41,7 +41,7 @@ class ClaudeInstallScriptTest {
                     "${isolatedScript()}\n",
             )
             assertEquals(23, result.exitCode, result.stderr)
-            assertTrue("/2.1.325/linux-${expected.first}/claude" in result.stdout, result.stdout)
+            assertTrue("/2.1.327/linux-${expected.first}/claude" in result.stdout, result.stdout)
             assertTrue(expected.second in result.stdout)
             assertFalse(File("${temp.path}/bin/claude").exists())
         }
