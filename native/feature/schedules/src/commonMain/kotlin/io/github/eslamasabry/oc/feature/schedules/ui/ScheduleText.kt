@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.feature.schedules.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.scheduleWebReadsDone
+import org.jetbrains.compose.resources.pluralStringResource
 import io.github.eslamasabry.oc.engine.schedules.Recurrence
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
@@ -52,6 +55,19 @@ internal fun repeatWords(
         RecurrenceKind.Weekdays -> words.weekdays(clock)
         RecurrenceKind.Interval -> words.everyHours(recurrence.hours)
     }
+}
+
+/** [lastLine] and, when the run answered web reads without asking, how many ("Read the web 2 times without asking"). */
+@Composable
+internal fun lastRunText(
+    last: LastRunUi,
+    nowMs: Long,
+    words: ScheduleWords,
+    clockOf: ((Int, Int) -> String)? = null,
+): String {
+    val line = lastLine(last, nowMs, words, clockOf)
+    if (last.webReads <= 0) return line
+    return "$line · ${pluralStringResource(Res.plurals.scheduleWebReadsDone, last.webReads, last.webReads)}"
 }
 
 internal fun lastLine(

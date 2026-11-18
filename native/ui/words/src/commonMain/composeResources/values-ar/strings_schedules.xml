@@ -100,4 +100,16 @@
     <string name="scheduleAssistantNote">مجلد فارغ للأخبار وعمليات البحث. اضغط لاختيار مشروع آخر.</string>
     <string name="scheduleAssistantCannot">لا يستطيع هذا الخادم إنشاء مجلد Assistant. اختر مشروعًا للأخبار اليومية.</string>
     <string name="scheduleAssistantFailed">تعذّر إنشاء مجلد Assistant. اختر مشروعًا بدلًا منه.</string>
+    <string name="scheduleWebReadsLabel">السماح لهذا التشغيل بقراءة الويب دون سؤال</string>
+    <string name="scheduleWebReadsNote">تتم الإجابة فقط عن عمليات البحث في الويب وقراءة الصفحات، مرة واحدة لكل منها. أي شيء آخر ما زال ينتظرك.</string>
+    <string name="scheduleWebReadsMoved">تم الإيقاف لأن هذا المشروع ليس مجلد Assistant. فعّله فقط إذا كان يجب أن تقرأ التشغيلات هنا الويب دون سؤال.</string>
+    <string name="scheduleWebReadsNoServer">لا يميّز هذا الخادم قراءات الويب عن الطلبات الأخرى، لذا يظل التشغيل المجدول ينتظرك.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="zero">قرأ الويب %1$s مرة دون سؤال</item>
+        <item quantity="one">قرأ الويب مرة واحدة دون سؤال</item>
+        <item quantity="two">قرأ الويب مرتين دون سؤال</item>
+        <item quantity="few">قرأ الويب %1$s مرات دون سؤال</item>
+        <item quantity="many">قرأ الويب %1$s مرة دون سؤال</item>
+        <item quantity="other">قرأ الويب %1$s مرة دون سؤال</item>
+    </plurals>
 </resources>

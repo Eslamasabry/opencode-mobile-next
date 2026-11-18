@@ -493,6 +493,7 @@ class AppScheduleServers(
                     server.capabilities.value.scheduledPrompts,
                     recent,
                     canMakeFolder = server.capabilities.value.projectFolderCreation,
+                    canReadWeb = server.capabilities.value.webReadPermissions,
                 )
             }
         }

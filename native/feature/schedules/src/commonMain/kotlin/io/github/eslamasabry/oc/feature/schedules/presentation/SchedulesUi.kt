@@ -30,6 +30,8 @@ public data class ScheduleTarget(
     val recentProject: String?,
     /** ServerCapabilities.projectFolderCreation of the live connection: the server can make the Assistant folder. */
     val canMakeFolder: Boolean = false,
+    /** ServerCapabilities.webReadPermissions of the live connection: web reads are typed asks a run may answer. */
+    val canReadWeb: Boolean = false,
 )
 
 public data class ModelChoice(val providerId: String, val modelId: String, val label: String)
@@ -92,11 +94,13 @@ public data class LastRunUi(
     val atMs: Long,
     val sessionId: String?,
     val late: Boolean,
+    /** B-440: web reads this run answered without asking (0 shows no words). */
+    val webReads: Int = 0,
 )
 
 /** A run as its row and the editor's last-run line read it. */
 internal fun ScheduledRun.toLastRunUi(): LastRunUi =
-    LastRunUi(status, errorCode, finishedAtMs ?: startedAtMs, sessionId, late)
+    LastRunUi(status, errorCode, finishedAtMs ?: startedAtMs, sessionId, late, webReadsAllowed)
 
 public data class ScheduleRowUi(
     val id: String,
@@ -195,6 +199,8 @@ public data class EditorFields(
     val topic: String = "",
     /** B-440: the project is the Assistant folder, made on the first save (the project path stays empty until then). */
     val assistant: Boolean = false,
+    /** B-440: a run answers the server's typed web-read asks once each, without asking. Off unless chosen. */
+    val webReads: Boolean = false,
     val prompt: String = "",
     val project: String = "",
     val kind: RecurrenceKind = RecurrenceKind.Once,
@@ -218,6 +224,8 @@ public data class ScheduleEditUi(
     val canChooseConversation: Boolean = false,
     /** B-440: the live server can make the Assistant folder (false until the live read, and on servers that cannot). */
     val canMakeFolder: Boolean = false,
+    /** B-440: the live server types web reads, so the switch can work (false until the live read, and where it cannot). */
+    val canReadWeb: Boolean = false,
     val issue: EditIssue? = null,
     val error: ScheduleCode? = null,
     val saving: Boolean = false,

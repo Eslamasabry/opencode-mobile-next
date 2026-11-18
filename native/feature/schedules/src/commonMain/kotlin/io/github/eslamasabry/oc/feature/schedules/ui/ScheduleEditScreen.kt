@@ -57,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -136,6 +138,10 @@ private class EditorDraft(start: EditorFields) {
     val topic = TextFieldState(start.topic)
     var starter by mutableStateOf(start.starter)
     var assistant by mutableStateOf(start.assistant)
+    var webReads by mutableStateOf(start.webReads)
+
+    /** The project left the Assistant folder and the switch went off for that: the row says why until it is turned on again. */
+    var webReadsMoved by mutableStateOf(false)
 
     /** The person left the Assistant folder to pick a project: the path field shows and stays while they type. */
     var choosingProject by mutableStateOf(false)
@@ -154,6 +160,7 @@ private class EditorDraft(start: EditorFields) {
             starter = starter,
             topic = topic.text.toString(),
             assistant = assistant,
+            webReads = webReads,
             prompt = prompt.text.toString(),
             project = project.text.toString(),
             kind = kind,
@@ -177,6 +184,18 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         if (state.editing) return@LaunchedEffect
         if (draft.starter == ScheduleStarter.News && draft.topic.text.isEmpty()) topicFocus.requestFocus()
         else promptFocus.requestFocus()
+    }
+    // B-440: leaving the Assistant folder turns the web-read switch off, with its reason; the person may turn it on again.
+    LaunchedEffect(draft) {
+        var was = EditorRules.inAssistant(draft.fields())
+        snapshotFlow { EditorRules.inAssistant(draft.fields()) }
+            .collect { now ->
+                if (was && !now && draft.webReads) {
+                    draft.webReads = false
+                    draft.webReadsMoved = true
+                }
+                was = now
+            }
     }
     // B-440: typing the topic rewrites the prompt it filled, until the person edits that prompt themselves.
     LaunchedEffect(draft, newsTemplate) {
@@ -318,11 +337,34 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
             enabled = enabled.isEnabled,
             disabledReason = enabled.reason,
         )
+        // B-440: a run of this schedule may read the web without asking (searches and page reads only, once each).
+        if (!state.updating || state.canReadWeb) {
+            Spacer(Modifier.height(Space.S3.dp))
+            val noServer = stringResource(Res.string.scheduleWebReadsNoServer)
+            KitRowGroup {
+            KitSwitchRow(
+                stringResource(Res.string.scheduleWebReadsLabel),
+                draft.webReads && state.canReadWeb,
+                supporting =
+                    when {
+                        !state.canReadWeb -> null
+                        draft.webReadsMoved && !draft.webReads -> stringResource(Res.string.scheduleWebReadsMoved)
+                        else -> stringResource(Res.string.scheduleWebReadsNote)
+                    },
+                enabled = if (state.canReadWeb) enabled else KitEnabled.Disabled(noServer),
+                supportingMaxLines = 4,
+                onCheckedChange = {
+                    draft.webReads = it
+                    if (it) draft.webReadsMoved = false
+                },
+            )
+            }
+        }
         // B-NAV-055 (Flutter schedule_sheet.dart `schedule-last-run`): what the last run did, and
         // for a failure what happened and what to do next.
         state.lastRun?.let { run ->
             KitRow(
-                title = lastLine(run, state.nowMs, words, rememberClockOf(state.nowMs)),
+                title = lastRunText(run, state.nowMs, words, rememberClockOf(state.nowMs)),
                 leading = KitRowLeading.Glyph(KitIcons.clock),
                 supporting =
                     run.errorCode?.let(words::why)

@@ -90,4 +90,11 @@
     <string name="scheduleAssistantNote">用于新闻和查询的空文件夹。点按可选择其他项目。</string>
     <string name="scheduleAssistantCannot">此服务器无法创建 Assistant 文件夹。请为每日新闻选择一个项目。</string>
     <string name="scheduleAssistantFailed">无法创建 Assistant 文件夹。请改为选择一个项目。</string>
+    <string name="scheduleWebReadsLabel">允许此次运行不经询问读取网络</string>
+    <string name="scheduleWebReadsNote">只会回答网络搜索和网页读取，各一次。其他请求仍会等你处理。</string>
+    <string name="scheduleWebReadsMoved">已关闭，因为此项目不是 Assistant 文件夹。仅当此处的运行应当不经询问读取网络时才开启。</string>
+    <string name="scheduleWebReadsNoServer">此服务器无法区分网络读取和其他请求，因此定时运行仍会等你处理。</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="other">未经询问读取网络 %1$s 次</item>
+    </plurals>
 </resources>

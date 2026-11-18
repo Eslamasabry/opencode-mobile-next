@@ -89,4 +89,11 @@
     <string name="scheduleAssistantNote">Một thư mục trống cho tin tức và tra cứu. Chạm để chọn dự án khác.</string>
     <string name="scheduleAssistantCannot">Máy chủ này không thể tạo thư mục Assistant. Hãy chọn một dự án cho tin tức hằng ngày.</string>
     <string name="scheduleAssistantFailed">Không thể tạo thư mục Assistant. Hãy chọn một dự án thay thế.</string>
+    <string name="scheduleWebReadsLabel">Cho phép lượt chạy này đọc web mà không hỏi</string>
+    <string name="scheduleWebReadsNote">Chỉ các lượt tìm kiếm web và đọc trang được trả lời, mỗi loại một lần. Mọi thứ khác vẫn chờ bạn.</string>
+    <string name="scheduleWebReadsMoved">Đã tắt vì dự án này không phải là thư mục Assistant. Chỉ bật nếu các lượt chạy ở đây được phép đọc web mà không hỏi.</string>
+    <string name="scheduleWebReadsNoServer">Máy chủ này không phân biệt việc đọc web với các yêu cầu khác, nên lượt chạy theo lịch vẫn chờ bạn.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="other">Đã đọc web %1$s lần mà không hỏi</item>
+    </plurals>
 </resources>

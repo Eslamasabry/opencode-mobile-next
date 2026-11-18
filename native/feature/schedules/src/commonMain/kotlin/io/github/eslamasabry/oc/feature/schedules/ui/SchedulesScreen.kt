@@ -242,12 +242,12 @@ private fun ScheduleRow(
     val line =
         when {
             ended ->
-                last?.let { lastLine(it, state.nowMs, words, clockOf) }
+                last?.let { lastRunText(it, state.nowMs, words, clockOf) }
                     ?: stringResource(Res.string.scheduleFinished)
             last?.status == RunStatus.Running -> stringResource(Res.string.scheduleSendingNow)
             !row.enabled -> "${words.paused} · $rule"
             else ->
-                listOfNotNull(rule, last?.let { lastLine(it, state.nowMs, words, clockOf) })
+                listOfNotNull(rule, last?.let { lastRunText(it, state.nowMs, words, clockOf) })
                     .joinToString(" · ")
         }
     if (ended) {

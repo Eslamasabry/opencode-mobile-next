@@ -89,4 +89,11 @@
     <string name="scheduleAssistantNote">Folder kosong untuk berita dan pencarian. Ketuk untuk memilih proyek lain.</string>
     <string name="scheduleAssistantCannot">Server ini tidak dapat membuat folder Assistant. Pilih proyek untuk berita harian.</string>
     <string name="scheduleAssistantFailed">Folder Assistant tidak dapat dibuat. Pilih proyek sebagai gantinya.</string>
+    <string name="scheduleWebReadsLabel">Izinkan eksekusi ini membaca web tanpa bertanya</string>
+    <string name="scheduleWebReadsNote">Hanya pencarian web dan pembacaan halaman yang dijawab, masing-masing sekali. Hal lain tetap menunggu Anda.</string>
+    <string name="scheduleWebReadsMoved">Dimatikan karena proyek ini bukan folder Assistant. Nyalakan hanya jika eksekusi di sini boleh membaca web tanpa bertanya.</string>
+    <string name="scheduleWebReadsNoServer">Server ini tidak membedakan pembacaan web dari permintaan lain, jadi eksekusi terjadwal tetap menunggu Anda.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="other">Membaca web %1$s kali tanpa bertanya</item>
+    </plurals>
 </resources>

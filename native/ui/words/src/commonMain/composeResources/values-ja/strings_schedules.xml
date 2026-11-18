@@ -89,4 +89,11 @@
     <string name="scheduleAssistantNote">ニュースや調べ物のための空のフォルダです。タップして別のプロジェクトを選べます。</string>
     <string name="scheduleAssistantCannot">このサーバーでは Assistant フォルダを作成できません。毎日のニュース用にプロジェクトを選んでください。</string>
     <string name="scheduleAssistantFailed">Assistant フォルダを作成できませんでした。代わりにプロジェクトを選んでください。</string>
+    <string name="scheduleWebReadsLabel">この実行が確認なしでウェブを読むことを許可する</string>
+    <string name="scheduleWebReadsNote">ウェブ検索とページの読み取りだけに、それぞれ1回ずつ答えます。それ以外は引き続きあなたの返答を待ちます。</string>
+    <string name="scheduleWebReadsMoved">このプロジェクトは Assistant フォルダではないためオフにしました。ここでの実行が確認なしでウェブを読んでよい場合のみオンにしてください。</string>
+    <string name="scheduleWebReadsNoServer">このサーバーはウェブの読み取りを他のリクエストと区別できないため、スケジュール実行は引き続きあなたの返答を待ちます。</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="other">確認なしでウェブを %1$s 回読みました</item>
+    </plurals>
 </resources>

@@ -10474,6 +10474,11 @@ scheduleTomorrow	0dba16c1d9
 scheduleUnavailable	248b685ac1
 scheduleUncertain	1ffde95b49
 scheduleUnsupported	81d7e0e398
+scheduleWebReadsDone	22f70373c4
+scheduleWebReadsLabel	76e4e5c7c8
+scheduleWebReadsMoved	3e494a307f
+scheduleWebReadsNoServer	02202d2055
+scheduleWebReadsNote	193d636e99
 scheduleWeekdaysShort	cb6aad9884
 scheduleWheelDay	1c4e1b5a81
 scheduleWheelHowOften	10c2055a41

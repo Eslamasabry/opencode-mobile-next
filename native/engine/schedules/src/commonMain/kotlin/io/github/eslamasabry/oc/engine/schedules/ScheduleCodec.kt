@@ -91,6 +91,7 @@ public object ScheduleCodec {
             "nextRunAt" to value.nextRunAtMs?.let(::isoUtc),
             "createdAt" to isoUtc(value.createdAtMs),
             "revision" to value.revision.toLong(),
+            "webReads" to value.webReads,
         )
 
     public fun run(value: ScheduledRun): Map<String, Any?> =
@@ -104,6 +105,7 @@ public object ScheduleCodec {
             "finishedAt" to value.finishedAtMs?.let(::isoUtc),
             "sessionId" to value.sessionId,
             "errorCode" to value.errorCode,
+            "webReadsAllowed" to value.webReadsAllowed.toLong(),
         )
 
     public fun digest(value: ScheduleDigest): Map<String, Any?> =
@@ -170,6 +172,8 @@ public object ScheduleCodec {
                 nextRunAtMs = json.timeOrNull("nextRunAt"),
                 createdAtMs = parseIso(json.str("createdAt")),
                 revision = json.int("revision"),
+                // Stored before B-440: no such key, so off.
+                webReads = json["webReads"] as? Boolean ?: false,
             )
         if (!value.valid) throw ScheduleFormatException()
         return value
@@ -187,6 +191,8 @@ public object ScheduleCodec {
                 finishedAtMs = json.timeOrNull("finishedAt"),
                 sessionId = json.strOrNull("sessionId"),
                 errorCode = json.strOrNull("errorCode"),
+                // Stored before B-440: no such key, so none.
+                webReadsAllowed = (json["webReadsAllowed"] as? Long)?.toInt()?.coerceIn(0, 1_000) ?: 0,
             )
         if (!value.valid) throw ScheduleFormatException()
         return value

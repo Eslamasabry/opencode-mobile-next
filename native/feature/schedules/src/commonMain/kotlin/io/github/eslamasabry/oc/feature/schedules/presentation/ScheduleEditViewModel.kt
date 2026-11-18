@@ -31,6 +31,13 @@ import kotlinx.coroutines.launch
 public object EditorRules {
     private val timePattern = Regex("^(\\d{1,2})[:.](\\d{2})$")
 
+    /** The server folder Daily news starts in; a schedule whose project is a folder of this name is "in the Assistant folder". */
+    public const val ASSISTANT_NAME: String = "Assistant"
+
+    /** B-440: the project is the Assistant folder (chosen, to be made at save, or already a folder of that name). */
+    public fun inAssistant(fields: EditorFields): Boolean =
+        fields.assistant || fields.project.trimEnd('/').substringAfterLast('/') == ASSISTANT_NAME
+
     /** The Daily news starter's time of day. */
     public const val NEWS_TIME: String = "20:00"
 
@@ -105,6 +112,7 @@ public object EditorRules {
             hours = if (rec.kind == RecurrenceKind.Interval) rec.hours.toString() else "3",
             missed = schedule.missedPolicy,
             thisConversation = schedule.sessionId != null,
+            webReads = schedule.webReads,
             model =
                 schedule.modelProviderId?.let { provider ->
                     models.firstOrNull {
@@ -232,7 +240,9 @@ public class ScheduleEditViewModel(
                     if (route.from == null && keptItem != null)
                         (keptFirst ?: keptPort?.read(route.profileId, keptItem))?.fields()
                     else null
-                if (prior?.starter == ScheduleStarter.News) restoredNews(base, prior, target.canMakeFolder) else base
+                if (prior?.starter == ScheduleStarter.News)
+                    restoredNews(base, prior, target.canMakeFolder, target.canReadWeb)
+                else base
             }
         val title =
             if (sessionId != null) route.from?.let { servers.conversation(it)?.title } else null
@@ -254,6 +264,7 @@ public class ScheduleEditViewModel(
                 continuesConversation = sessionId != null,
                 canChooseConversation = sessionId != null,
                 canMakeFolder = target.canMakeFolder,
+                canReadWeb = target.canReadWeb,
                 conversationTitle = title,
                 lastRun = lastRun?.toLastRunUi(),
             )
@@ -265,8 +276,10 @@ public class ScheduleEditViewModel(
     }
 
     /** B-440: Daily news fields: Daily at 20:00, its own conversation, the Assistant folder (or no project to pick from). */
-    private fun newsFields(was: EditorFields, canMake: Boolean): EditorFields =
+    private fun newsFields(was: EditorFields, canMake: Boolean, canReadWeb: Boolean): EditorFields =
         was.copy(
+            // On for Daily news where the Assistant folder is the project and the server types web reads; changeable.
+            webReads = canReadWeb && canMake,
             starter = ScheduleStarter.News,
             kind = RecurrenceKind.Daily,
             time = EditorRules.NEWS_TIME,
@@ -277,8 +290,8 @@ public class ScheduleEditViewModel(
             project = if (canMake) was.project else "",
         )
 
-    private fun restoredNews(base: EditorFields, prior: EditorFields, canMake: Boolean): EditorFields {
-        val news = newsFields(base, canMake).copy(topic = prior.topic)
+    private fun restoredNews(base: EditorFields, prior: EditorFields, canMake: Boolean, canReadWeb: Boolean): EditorFields {
+        val news = newsFields(base, canMake, canReadWeb).copy(topic = prior.topic, webReads = prior.webReads && canReadWeb)
         // A project the person chose instead of the Assistant folder comes back as chosen.
         return if (canMake && !prior.assistant) news.copy(assistant = false, project = prior.project) else news
     }
@@ -318,7 +331,7 @@ public class ScheduleEditViewModel(
             when (starter) {
                 ScheduleStarter.News -> {
                     if (was.project.isNotBlank()) recentProject = was.project
-                    newsFields(was, now.canMakeFolder)
+                    newsFields(was, now.canMakeFolder, now.canReadWeb)
                         // A prompt the person already wrote stays; only an empty one is filled.
                         .copy(prompt = was.prompt.ifBlank { EditorRules.newsPrompt(was.topic, template) })
                 }
@@ -326,6 +339,7 @@ public class ScheduleEditViewModel(
                     was.copy(
                         starter = starter,
                         assistant = false,
+                        webReads = false,
                         project = was.project.ifBlank { recentProject },
                         prompt =
                             if (was.prompt == EditorRules.newsPrompt(was.topic, template)) "" else was.prompt,
@@ -341,7 +355,7 @@ public class ScheduleEditViewModel(
     override fun save(input: EditorFields) {
         if (mutable.value.saving || mutable.value.phase != EditPhase.Ready) return
         // The Assistant folder does not exist until this save makes it; the rest of the form is checked as it is.
-        val checked = if (input.assistant) input.copy(project = ASSISTANT_FOLDER) else input
+        val checked = if (input.assistant) input.copy(project = EditorRules.ASSISTANT_NAME) else input
         val (recurrence, issue) = EditorRules.recurrence(checked, clock.now().toEpochMilliseconds())
         if (recurrence == null) {
             mutable.update { it.copy(issue = issue, error = null) }
@@ -382,6 +396,7 @@ public class ScheduleEditViewModel(
                     modelProviderId = input.model?.providerId,
                     modelId = input.model?.modelId,
                     missedPolicy = input.missed,
+                    webReads = input.webReads && mutable.value.canReadWeb,
                 )
             when (engine.save(profile, draft, editing)) {
                 is Outcome.Ok -> {
@@ -407,11 +422,6 @@ public class ScheduleEditViewModel(
                     }
             }
         }
-    }
-
-    private companion object {
-        /** The folder's name on the server; the words call it "Assistant". */
-        const val ASSISTANT_FOLDER = "Assistant"
     }
 
     @AssistedFactory

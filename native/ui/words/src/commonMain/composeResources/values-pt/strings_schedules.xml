@@ -93,4 +93,13 @@
     <string name="scheduleAssistantNote">Uma pasta vazia para notícias e pesquisas. Toque para escolher outro projeto.</string>
     <string name="scheduleAssistantCannot">Este servidor não consegue criar uma pasta Assistant. Escolha um projeto para as notícias diárias.</string>
     <string name="scheduleAssistantFailed">Não foi possível criar a pasta Assistant. Escolha um projeto no lugar.</string>
+    <string name="scheduleWebReadsLabel">Deixar esta execução ler a web sem perguntar</string>
+    <string name="scheduleWebReadsNote">Só as pesquisas na web e as leituras de páginas são respondidas, uma vez cada. Todo o resto continua esperando por você.</string>
+    <string name="scheduleWebReadsMoved">Desativado porque este projeto não é a pasta Assistant. Ative apenas se as execuções aqui devem ler a web sem perguntar.</string>
+    <string name="scheduleWebReadsNoServer">Este servidor não distingue leituras da web de outros pedidos, então uma execução agendada continua esperando por você.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="one">Leu a web uma vez sem perguntar</item>
+        <item quantity="many">Leu a web %1$s vezes sem perguntar</item>
+        <item quantity="other">Leu a web %1$s vezes sem perguntar</item>
+    </plurals>
 </resources>

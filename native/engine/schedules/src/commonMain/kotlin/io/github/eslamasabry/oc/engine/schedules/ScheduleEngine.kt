@@ -46,6 +46,8 @@ public data class ScheduleDraft(
     val modelProviderId: String? = null,
     val modelId: String? = null,
     val missedPolicy: MissedRunPolicy = MissedRunPolicy.CatchUp,
+    /** B-440: see [ScheduledPrompt.webReads]. */
+    val webReads: Boolean = false,
 )
 
 /**
@@ -230,6 +232,7 @@ public class ScheduleEngine(
                         enabled = true,
                         nextRunAtMs = next,
                         revision = (editing?.revision ?: 0) + 1,
+                        webReads = draft.webReads,
                     )
                 store.save(schedule)
                 saved = schedule

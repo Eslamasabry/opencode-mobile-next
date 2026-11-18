@@ -93,4 +93,13 @@
     <string name="scheduleAssistantNote">Un dossier vide pour les actualités et les recherches. Touchez pour choisir un autre projet.</string>
     <string name="scheduleAssistantCannot">Ce serveur ne peut pas créer de dossier Assistant. Choisissez un projet pour les actualités du jour.</string>
     <string name="scheduleAssistantFailed">Impossible de créer le dossier Assistant. Choisissez plutôt un projet.</string>
+    <string name="scheduleWebReadsLabel">Laisser cette exécution lire le web sans demander</string>
+    <string name="scheduleWebReadsNote">Seules les recherches web et les lectures de pages reçoivent une réponse, une fois chacune. Tout le reste attend toujours votre réponse.</string>
+    <string name="scheduleWebReadsMoved">Désactivé car ce projet n’est pas le dossier Assistant. Ne l’activez que si les exécutions ici doivent lire le web sans demander.</string>
+    <string name="scheduleWebReadsNoServer">Ce serveur ne distingue pas les lectures du web des autres demandes, donc une exécution programmée vous attend toujours.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="one">A lu le web une fois sans demander</item>
+        <item quantity="many">A lu le web %1$s fois sans demander</item>
+        <item quantity="other">A lu le web %1$s fois sans demander</item>
+    </plurals>
 </resources>

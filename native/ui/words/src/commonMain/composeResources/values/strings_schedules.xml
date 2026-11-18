@@ -92,4 +92,12 @@
     <string name="scheduleAssistantNote">An empty folder for news and lookups. Tap to choose another project.</string>
     <string name="scheduleAssistantCannot">This server can't make an Assistant folder. Choose a project for the daily news.</string>
     <string name="scheduleAssistantFailed">Couldn't make the Assistant folder. Choose a project instead.</string>
+    <string name="scheduleWebReadsLabel">Let this run read the web without asking</string>
+    <string name="scheduleWebReadsNote">Only web searches and page reads are answered, once each. Anything else still waits for you.</string>
+    <string name="scheduleWebReadsMoved">Turned off because this project is not the Assistant folder. Turn it on only if runs here should read the web unasked.</string>
+    <string name="scheduleWebReadsNoServer">This server does not tell web reads apart from other requests, so a scheduled run still waits for you.</string>
+    <plurals name="scheduleWebReadsDone">
+        <item quantity="one">Read the web once without asking</item>
+        <item quantity="other">Read the web %1$s times without asking</item>
+    </plurals>
 </resources>
