@@ -292,16 +292,21 @@ internal fun installFailedMessage(installation: PhoneAgentInstallation, name: St
     }
 }
 
-/** Pinned payload only. Unknown sizes stay absent; bytes are never borrowed from another CPU. */
+/**
+ * Pinned payload only. Unknown sizes stay absent; bytes are never borrowed from another CPU. The number and its unit
+ * are joined by a no-break space, so a narrow tile never reads "192 / MB" (owner's look of build 10086).
+ */
 internal fun agentPayloadSize(bytes: Long): String =
     KitBidi.ltr(
         when {
             bytes >= 1_000_000_000L -> {
                 val tenths = (bytes / 100_000_000.0).roundToLong()
-                "${tenths / 10}.${tenths % 10} GB"
+                "${tenths / 10}.${tenths % 10}${NBSP}GB"
             }
-            bytes >= 1_000_000L -> "${(bytes / 1_000_000.0).roundToLong()} MB"
-            bytes >= 1_000L -> "${(bytes / 1_000.0).roundToLong()} kB"
-            else -> "$bytes B"
+            bytes >= 1_000_000L -> "${(bytes / 1_000_000.0).roundToLong()}${NBSP}MB"
+            bytes >= 1_000L -> "${(bytes / 1_000.0).roundToLong()}${NBSP}kB"
+            else -> "$bytes${NBSP}B"
         }
     )
+
+private const val NBSP = '\u00A0'
