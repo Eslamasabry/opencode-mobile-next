@@ -147,7 +147,7 @@ class UmamiHttpTest {
         assertEquals(setOf("kind", "version", "build", "os_major", "device_class"), dataKeys)
         // A new fact about the device needs a decision: it fails here until the notices and this list say so.
         assertEquals(
-            listOf("language", "userAgent", "osMajor", "deviceClass"),
+            listOf("language", "userAgent", "osMajor", "deviceClass", "facts"),
             UmamiDevice::class.java.declaredFields.map { it.name }.filter { !it.startsWith("$") },
         )
         // A foldable or desktop gives no class at all, and an absurd major no version: nothing invented.
