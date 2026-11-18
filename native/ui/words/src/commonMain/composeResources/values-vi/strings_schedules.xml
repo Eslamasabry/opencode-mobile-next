@@ -84,7 +84,7 @@
     <string name="scheduleStarterNews">Tin tức hằng ngày</string>
     <string name="scheduleStarterNewsTopic">Chủ đề</string>
     <string name="scheduleStarterNewsHint">Ví dụ: giá bất động sản ở Dubai</string>
-    <string name="scheduleNewsPrompt">Tìm những tin quan trọng nhất hôm nay về %1$s từ các nguồn đáng tin cậy. Mở đầu câu trả lời bằng một câu đơn giản tối đa 90 ký tự tóm tắt lại, rồi nêu tối đa năm mục ngắn, mỗi mục kèm nguồn. Nếu không có gì quan trọng xảy ra, hãy nói điều đó ngay trong câu đầu tiên.</string>
+    <string name="scheduleNewsPrompt">Tìm những tin quan trọng nhất hôm nay về %1$s từ các nguồn đáng tin cậy. Hãy tìm trên web; nếu tìm kiếm web không khả dụng, hãy mở trực tiếp các trang tin đáng tin cậy. Mở đầu câu trả lời bằng một câu đơn giản tối đa 90 ký tự tóm tắt lại, rồi nêu tối đa năm mục ngắn, mỗi mục kèm nguồn. Nếu không có gì quan trọng xảy ra, hãy nói điều đó ngay trong câu đầu tiên.</string>
     <string name="scheduleAssistantTitle">Assistant</string>
     <string name="scheduleAssistantNote">Một thư mục trống cho tin tức và tra cứu. Chạm để chọn dự án khác.</string>
     <string name="scheduleAssistantCannot">Máy chủ này không thể tạo thư mục Assistant. Hãy chọn một dự án cho tin tức hằng ngày.</string>

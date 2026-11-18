@@ -85,7 +85,7 @@
     <string name="scheduleStarterNews">每日新闻</string>
     <string name="scheduleStarterNewsTopic">主题</string>
     <string name="scheduleStarterNewsHint">例如：迪拜房价</string>
-    <string name="scheduleNewsPrompt">从可靠来源查找今天关于%1$s的最重要新闻。回复以一句不超过 90 个字符的简明句子开头概括要点，然后列出最多五条简短的要点，每条注明来源。如果没有重要的事发生，请在第一句话中说明。</string>
+    <string name="scheduleNewsPrompt">从可靠来源查找今天关于%1$s的最重要新闻。请在网上搜索；如果网络搜索不可用，就直接打开可靠的新闻网站。回复以一句不超过 90 个字符的简明句子开头概括要点，然后列出最多五条简短的要点，每条注明来源。如果没有重要的事发生，请在第一句话中说明。</string>
     <string name="scheduleAssistantTitle">Assistant</string>
     <string name="scheduleAssistantNote">用于新闻和查询的空文件夹。点按可选择其他项目。</string>
     <string name="scheduleAssistantCannot">此服务器无法创建 Assistant 文件夹。请为每日新闻选择一个项目。</string>

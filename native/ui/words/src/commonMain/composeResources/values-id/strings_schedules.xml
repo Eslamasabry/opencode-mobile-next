@@ -84,7 +84,7 @@
     <string name="scheduleStarterNews">Berita harian</string>
     <string name="scheduleStarterNewsTopic">Topik</string>
     <string name="scheduleStarterNewsHint">Contoh: harga properti di Dubai</string>
-    <string name="scheduleNewsPrompt">Cari berita terpenting hari ini tentang %1$s dari sumber tepercaya. Awali balasanmu dengan satu kalimat sederhana maksimal 90 karakter yang merangkumnya, lalu berikan hingga lima butir singkat, masing-masing dengan sumbernya. Jika tidak ada yang penting, katakan itu di kalimat pertama.</string>
+    <string name="scheduleNewsPrompt">Cari berita terpenting hari ini tentang %1$s dari sumber tepercaya. Cari di web; jika pencarian web tidak tersedia, buka situs berita tepercaya secara langsung. Awali balasanmu dengan satu kalimat sederhana maksimal 90 karakter yang merangkumnya, lalu berikan hingga lima butir singkat, masing-masing dengan sumbernya. Jika tidak ada yang penting, katakan itu di kalimat pertama.</string>
     <string name="scheduleAssistantTitle">Assistant</string>
     <string name="scheduleAssistantNote">Folder kosong untuk berita dan pencarian. Ketuk untuk memilih proyek lain.</string>
     <string name="scheduleAssistantCannot">Server ini tidak dapat membuat folder Assistant. Pilih proyek untuk berita harian.</string>

@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
+import io.github.eslamasabry.oc.core.model.FormSpec
 import io.github.eslamasabry.oc.core.model.PermissionReply
 import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.ServerLocation
@@ -21,6 +22,7 @@ import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -343,6 +345,32 @@ public class ScheduleRunner(
             return false
         }
 
+        var lastProgressAt = nowMs()
+        var lastShape = ""
+
+        /** True when the agent's messages changed since the last look (a part came, or a tool changed state). */
+        fun progress(replies: List<MessageWithParts>): Boolean {
+            val shape =
+                replies.joinToString("|") { m -> m.info.id + ":" + m.parts.joinToString(",") { "${it.id}${it.tool?.status}${it.text.length}" } }
+            val changed = shape != lastShape
+            lastShape = shape
+            return changed
+        }
+
+        /** The one form a run may wait out: the server's web-search provider choice, matched by its exact kind only. */
+        val formSeen = mutableMapOf<String, Long>()
+
+        fun blockingForm(forms: List<FormSpec>): Boolean {
+            for (form in forms) {
+                val kind = (form.metadata?.get("kind") as? JsonPrimitive)?.takeIf { it.isString }?.content
+                if (kind != SEARCH_PROVIDER_FORM) return true
+                // The form times itself out after a minute and the tool fails; a form still open well after that is a person's.
+                val first = formSeen.getOrPut(form.id.raw) { nowMs() }
+                if (nowMs() - first > SEARCH_FORM_WAIT_MS) return true
+            }
+            return false
+        }
+
         /** Web-read tool calls of this run that ended failed or cancelled (the tool's own typed name and status). */
         fun failedWebTools(replies: List<MessageWithParts>): Int =
             replies.sumOf { message ->
@@ -369,22 +397,26 @@ public class ScheduleRunner(
                     return result(RunStatus.Failed, "agent_failed")
                 }
                 if (needsYou(gateway, target)) return result(RunStatus.Failed, "needs_you")
-                // B-440: a web read this run answered ended failed or cancelled on the server (seen on a live server: its
-                // web search tool says "cancelled"). Nothing is waiting for a person, so say what happened and stop the
-                // agent from asking again.
-                if (webReads > 0 && failedWebTools(replies) >= WEB_FAILED_AFTER) {
-                    withContext(NonCancellable) { withTimeoutOrNull(CLOSE_WAIT_MS) { gateway.stop(target) } }
-                    return result(RunStatus.Failed, "web_failed", session.title?.trim()?.takeIf { it.isNotEmpty() })
-                }
-                if (
-                    gateway.capabilities.value.forms &&
-                        read { gateway.sessionForms(target) }.isNotEmpty()
-                ) {
+                if (gateway.capabilities.value.forms && blockingForm(read { gateway.sessionForms(target) })) {
                     return result(RunStatus.Failed, "needs_you")
                 }
                 val status = read { gateway.sessionStatuses() }[target]
+                val idle = status == null || status == SessionStatus.Idle
+                // B-440: a web read this run answered ended failed or cancelled (a live server's web search says
+                // "cancelled" when its provider choice was not answered). That alone is not the end: the agent may
+                // fetch pages instead. The run ends here only when it can make no progress: the agent ended its turn
+                // without a brief, or nothing new arrived for a bounded wait.
+                val failedWeb = webReads > 0 && failedWebTools(replies) > 0
+                val moved = progress(replies)
+                if (moved) lastProgressAt = nowMs()
+                if (failedWeb && idle && replyLine(replies) == null) {
+                    return result(RunStatus.Failed, "web_failed", session.title?.trim()?.takeIf { it.isNotEmpty() })
+                }
+                if (failedWeb && !idle && nowMs() - lastProgressAt >= NO_PROGRESS_MS) {
+                    return result(RunStatus.Failed, "web_failed", session.title?.trim()?.takeIf { it.isNotEmpty() })
+                }
                 if (
-                    (status == null || status == SessionStatus.Idle) &&
+                    idle &&
                         replies.any { it.info.time?.completedMs != null }
                 ) {
                     return result(
@@ -428,7 +460,14 @@ public class ScheduleRunner(
         public const val UNCONFIRMED: String = "unconfirmed"
 
         private const val MAX_REPLY_TRIES = 3
-        private const val WEB_FAILED_AFTER = 2
+        /** The kind the server stamps on its web-search provider choice form (metadata.kind), never a title. */
+        private const val SEARCH_PROVIDER_FORM = "websearch.provider"
+
+        /** The server fails the tool one minute after asking; this adds margin. */
+        private const val SEARCH_FORM_WAIT_MS = 90_000L
+
+        /** No new part or tool state for this long, after an answered web read failed, ends the run as web_failed. */
+        private const val NO_PROGRESS_MS = 150_000L
         private const val NO_REPLY_AFTER_MS = 600_000L
         private const val CLOSE_WAIT_MS = 3_000L
         private const val PHONE_READY_MS = 90_000L

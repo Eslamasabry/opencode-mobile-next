@@ -88,7 +88,7 @@
     <string name="scheduleStarterNews">Notícias diárias</string>
     <string name="scheduleStarterNewsTopic">Assunto</string>
     <string name="scheduleStarterNewsHint">Por exemplo: preços de imóveis em Dubai</string>
-    <string name="scheduleNewsPrompt">Encontre as notícias mais importantes de hoje sobre %1$s em fontes confiáveis. Comece sua resposta com uma frase simples de no máximo 90 caracteres que resuma tudo, depois dê até cinco itens curtos, cada um com sua fonte. Se nada importante aconteceu, diga isso nessa primeira frase.</string>
+    <string name="scheduleNewsPrompt">Encontre as notícias mais importantes de hoje sobre %1$s em fontes confiáveis. Pesquise na web; se a pesquisa na web não estiver disponível, abra diretamente sites de notícias confiáveis. Comece sua resposta com uma frase simples de no máximo 90 caracteres que resuma tudo, depois dê até cinco itens curtos, cada um com sua fonte. Se nada importante aconteceu, diga isso nessa primeira frase.</string>
     <string name="scheduleAssistantTitle">Assistant</string>
     <string name="scheduleAssistantNote">Uma pasta vazia para notícias e pesquisas. Toque para escolher outro projeto.</string>
     <string name="scheduleAssistantCannot">Este servidor não consegue criar uma pasta Assistant. Escolha um projeto para as notícias diárias.</string>

@@ -87,7 +87,7 @@
     <string name="scheduleStarterNews">Daily news</string>
     <string name="scheduleStarterNewsTopic">Topic</string>
     <string name="scheduleStarterNewsHint">For example: Dubai property prices</string>
-    <string name="scheduleNewsPrompt">Find today's most important news about %1$s from reliable sources. Begin your reply with one plain sentence of at most 90 characters that sums it up, then give up to five short items, each with its source. If nothing important happened, say so in that first sentence.</string>
+    <string name="scheduleNewsPrompt">Find today's most important news about %1$s from reliable sources. Search the web; if web search is not available, open reliable news sites directly instead. Begin your reply with one plain sentence of at most 90 characters that sums it up, then give up to five short items, each with its source. If nothing important happened, say so in that first sentence.</string>
     <string name="scheduleAssistantTitle">Assistant</string>
     <string name="scheduleAssistantNote">An empty folder for news and lookups. Tap to choose another project.</string>
     <string name="scheduleAssistantCannot">This server can't make an Assistant folder. Choose a project for the daily news.</string>
