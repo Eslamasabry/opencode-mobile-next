@@ -570,7 +570,9 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
             rows.any { it.state == ComponentState.Checking }
     // One bar for the whole setup: it only moves forward across steps and stages. A step's own download arc used to
     // be the ring, so it read 100% when the download ended and 29% when the unpacking began.
-    val measured = if (!halted && memory.measured(row) != null) memory.overall(progress) else null
+    val measuredSteps = if (!halted && memory.measured(row) != null) memory.overall(progress) else null
+    // When the downloads have a known size the ring follows the bytes, so it and the line under it are one measure.
+    val measured = measuredSteps?.let { steps -> memory.followBytes(rows, state.bytes) ?: steps }
     val eta = memory.eta(progress, state.options?.components.orEmpty())
     val subject =
         row?.let { currentRow ->
@@ -722,10 +724,14 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                         // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
                         Spacer(Modifier.height(if (costParts.isEmpty()) Space.S6.dp else Space.S2.dp))
                         val doing = progress.activity?.let { activityWords(it) }
+                        // The clock is the current step's own: the words say so.
+                        val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
                         KitText(
-                            if (doing != null)
-                                stringResource(Res.string.setupHeartbeatLine, doing, elapsedClock(clock))
-                            else elapsedClock(clock),
+                            if (doing != null) {
+                                stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
+                            } else {
+                                stepClock
+                            },
                             Modifier.testTag("phone-setup-progress-heartbeat"),
                             role = TypeRole.RowTitle,
                             tone = TextTone.Secondary,
@@ -996,6 +1002,9 @@ internal fun nodeCannotRun(progress: SetupProgress): Boolean =
 
 private const val OVERDUE_FLOOR_SECONDS = 180
 
+/** The ring that follows the bytes stays short of full until the job itself is done (unpacking and checks remain). */
+private const val BYTES_RING_CAP = 0.98f
+
 /**
  * The memories outlive the screen: leaving the set-up page and coming back must not restart the "time left" at a
  * larger number. Few jobs ever run, so the map is capped.
@@ -1025,6 +1034,17 @@ internal class JourneyProgressMemory {
 
     private var furthestOverall = 0f
     private var furthestBytes = 0L
+    private var furthestRing = 0f
+
+    /**
+     * The ring as the share of the job's downloaded bytes (never backwards, never full before the job is done), null
+     * when no download has a known size: the same figure the line "x of y MB" under it says.
+     */
+    fun followBytes(rows: List<ComponentProgress>, total: Long): Float? {
+        val (received, whole) = bytes(rows, total) ?: return null
+        furthestRing = maxOf(furthestRing, (received.toFloat() / whole).coerceIn(0f, BYTES_RING_CAP))
+        return furthestRing
+    }
 
     /** The whole setup's fraction while it runs: never behind what it already showed, whatever stage a step is in. */
     fun overall(progress: SetupProgress): Float? {

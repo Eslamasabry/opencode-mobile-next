@@ -19,4 +19,6 @@
     <string name="chatModelFailSignInAction">登录</string>
     <string name="chatStalledOnTool">仍在等待 %1$s。</string>
     <string name="chatStalledStop">停止</string>
+    <string name="setupStepClock">此步骤 · %1$s</string>
+    <string name="setupAgentUserStep">智能体的 Linux 用户</string>
 </resources>

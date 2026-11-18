@@ -465,5 +465,6 @@ private fun holdOf(step: AgentUpdateStep): HomeHold? =
         AgentUpdateStep.Refused -> HomeHold.AgentsSetup
         AgentUpdateStep.WaitingSwitch -> HomeHold.AgentsSwitch
         AgentUpdateStep.ReadFailed -> HomeHold.AgentsRead
+        AgentUpdateStep.Reading -> HomeHold.AgentsChecking
         else -> null
     }

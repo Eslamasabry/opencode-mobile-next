@@ -376,7 +376,8 @@ internal fun itemTitle(id: String, fallback: String): String =
 private fun agentComponentTitle(id: String): String? =
     when {
         id == "agent-node" -> stringResource(Res.string.linuxRuntimeNodeTitle)
-        id == "agent-paseo" || id == "agent-user" -> stringResource(Res.string.runningPhoneGroup__agentHelper)
+        id == "agent-user" -> stringResource(Res.string.setupAgentUserStep)
+        id == "agent-paseo" -> stringResource(Res.string.runningPhoneGroup__agentHelper)
         id.startsWith("agent-") -> AgentCatalog.builtIn.byId(AgentId(id.removePrefix("agent-")))?.name
         else -> null
     }

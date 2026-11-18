@@ -191,6 +191,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsInstallNeedsSpace
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsUpdateReadFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdateReading
 import io.github.eslamasabry.oc.ui.words.res.agentsUpdateWaitingSwitch
 import io.github.eslamasabry.oc.ui.words.res.agentsUpdateWaitingSetup
 import io.github.eslamasabry.oc.ui.words.res.agentsUpdateWaitingBusy
@@ -1415,16 +1416,20 @@ private fun homeRunningStatus(
     )
 }
 
+/** The agents' update sentences follow a note; on Home they stand alone, so they start with a capital. */
+private fun String.sentence(): String = replaceFirstChar { it.uppercase() }
+
 /** Why a ready update waits, in the existing words (the agents' update's own sentences start with a capital here). */
 @Composable
 private fun homeHeldWords(why: HomeHold): String =
     when (why) {
         HomeHold.Reply -> stringResource(Res.string.phoneDownloadReadyReply)
         HomeHold.PhoneNotReady -> stringResource(Res.string.phoneDownloadReadyPhone)
-        HomeHold.AgentsIdle -> stringResource(Res.string.agentsUpdateWaitingBusy).replaceFirstChar { it.uppercase() }
-        HomeHold.AgentsSetup -> stringResource(Res.string.agentsUpdateWaitingSetup).replaceFirstChar { it.uppercase() }
-        HomeHold.AgentsSwitch -> stringResource(Res.string.agentsUpdateWaitingSwitch).replaceFirstChar { it.uppercase() }
-        HomeHold.AgentsRead -> stringResource(Res.string.agentsUpdateReadFailed).replaceFirstChar { it.uppercase() }
+        HomeHold.AgentsIdle -> stringResource(Res.string.agentsUpdateWaitingBusy).sentence()
+        HomeHold.AgentsSetup -> stringResource(Res.string.agentsUpdateWaitingSetup).sentence()
+        HomeHold.AgentsSwitch -> stringResource(Res.string.agentsUpdateWaitingSwitch).sentence()
+        HomeHold.AgentsRead -> stringResource(Res.string.agentsUpdateReadFailed).sentence()
+        HomeHold.AgentsChecking -> stringResource(Res.string.agentsUpdateReading).sentence()
     }
 
 /** Why a download stopped, in plain words: for want of room it says how much; otherwise the plain failure. */

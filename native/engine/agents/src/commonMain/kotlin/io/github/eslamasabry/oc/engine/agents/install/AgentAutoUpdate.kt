@@ -216,8 +216,7 @@ public class AgentAutoUpdater(
             // Refused for busy (work running, or another install job holds the one gate): the try is kept, and the
             // next look is after the backoff, never at once.
             if (nowMs() < busyUntil) return
-            val readAgain = readTries < MAX_READS && nowMs().let { it > 0L && it >= readRetryAt }
-            if (host.readDue && (readTries == 0 || readAgain)) {
+            if (host.readDue && readWanted(readTries, nowMs(), readRetryAt)) {
                 // The read starts a process per installed agent: not under a setup job or a half-finished move; one
                 // that cannot finish is tried again a few times, spaced (never silent: Home tells the hold).
                 when {
@@ -390,3 +389,7 @@ private fun busyDeadline(now: Long, streak: Int): Long =
     } else {
         now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
     }
+
+/** The first read of the agents' versions, or a retry of a failed one (a few, spaced; none without a clock). */
+private fun readWanted(tries: Int, now: Long, retryAt: Long): Boolean =
+    tries == 0 || (tries < MAX_READS && now > 0L && now >= retryAt)

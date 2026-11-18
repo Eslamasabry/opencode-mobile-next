@@ -103,14 +103,9 @@ class PhoneDownloads(
     override val facts: StateFlow<List<HomeDownloadFact>> =
         combine(
                 combine(
-                    openCodeWaiting, openCodeHeld, helperShort, openCodeShort, openCodeRetrying, helperHold,
-                ) { v ->
-                    @Suppress("UNCHECKED_CAST")
-                    SideFacts(
-                        v[0] as Boolean, v[1] as OpenCodeHold?, v[2] as HomeShortSpace?, v[3] as Boolean,
-                        v[4] as Boolean, v[5] as HomeHold?,
-                    )
-                },
+                    combine(openCodeWaiting, openCodeHeld, helperShort) { a, b, c -> Triple(a, b, c) },
+                    combine(openCodeShort, openCodeRetrying, helperHold) { d, e, f -> Triple(d, e, f) },
+                ) { (a, b, c), (d, e, f) -> SideFacts(a, b, c, d, e, f) },
                 setup.progress,
                 phones.state,
                 agentStatus.decision,

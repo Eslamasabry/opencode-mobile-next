@@ -19,4 +19,6 @@
     <string name="chatModelFailSignInAction">Ingresar</string>
     <string name="chatStalledOnTool">Sigue esperando a %1$s.</string>
     <string name="chatStalledStop">Detener</string>
+    <string name="setupStepClock">Este paso · %1$s</string>
+    <string name="setupAgentUserStep">Usuario de Linux para los agentes</string>
 </resources>

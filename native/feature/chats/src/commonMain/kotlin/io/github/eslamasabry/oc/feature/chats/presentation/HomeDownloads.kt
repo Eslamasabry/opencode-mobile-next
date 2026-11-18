@@ -39,11 +39,14 @@ public enum class HomeHold {
     Reply,
     PhoneNotReady,
 
-    /** The agents' update waits until the agents are idle / for a phone setup job / for a server move / its first read. */
+    /** The agents' update waits: until the agents are idle, for a setup job, for a server move, or its read failed. */
     AgentsIdle,
     AgentsSetup,
     AgentsSwitch,
     AgentsRead,
+
+    /** The agents' versions are being checked (the first look after an app update takes longer than a short wait). */
+    AgentsChecking,
 }
 
 /** One download's state; [megabytes] is the honest "about" size in [HomeDownloadSizes]. */
