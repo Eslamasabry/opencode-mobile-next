@@ -15,10 +15,27 @@ private const val D = "$"
  * - what is deleted is `root/name`, one explicit path per loop turn.
  */
 internal object ScriptPrune {
-    /** `oc_prune_versions ROOT KEEP_NAMES PATTERN LAUNCH_LINK`. */
+    /**
+     * `oc_in_use PATH`: 0 when some process has PATH (or anything under it) as its program, its working folder or a
+     * mapped file. Only `/proc/<pid>/exe`, `cwd` and `maps` are read, never a command line; what cannot be read is
+     * skipped. Under PRoot those entries carry the phone-side path, which ends with the Linux path, so the match is by
+     * suffix (a wrong match only keeps a folder). `oc_prune_versions ROOT KEEP_NAMES PATTERN LAUNCH_LINK [GUARD]`:
+     * GUARD is a function that must answer 0 for a folder to go.
+     */
     val FUNCTION: String =
-        """oc_prune_versions() {
-  oc_pr_root=${D}1 oc_pr_keep=${D}2 oc_pr_re=${D}3 oc_pr_link=${D}4
+        """oc_in_use() {
+  for oc_u in /proc/[0-9]*; do
+    [ -d "${D}oc_u" ] || continue
+    oc_u_exe=${D}(readlink "${D}oc_u/exe" 2>/dev/null) || oc_u_exe=
+    oc_u_cwd=${D}(readlink "${D}oc_u/cwd" 2>/dev/null) || oc_u_cwd=
+    case "${D}oc_u_exe" in *"${D}1"/*) return 0 ;; esac
+    case "${D}oc_u_cwd" in *"${D}1"|*"${D}1"/*) return 0 ;; esac
+    if grep -qF -- "${D}1/" "${D}oc_u/maps" 2>/dev/null; then return 0; fi
+  done
+  return 1
+}
+oc_prune_versions() {
+  oc_pr_root=${D}1 oc_pr_keep=${D}2 oc_pr_re=${D}3 oc_pr_link=${D}4 oc_pr_guard=${D}{5:-}
   [ -d "${D}oc_pr_root" ] && [ ! -L "${D}oc_pr_root" ] || return 0
   [ "${D}(cd "${D}oc_pr_root" && pwd -P)" = "${D}oc_pr_root" ] || return 0
   oc_pr_live=${D}(readlink -f "${D}oc_pr_link" 2>/dev/null) || return 0
@@ -31,13 +48,17 @@ internal object ScriptPrune {
     [ -d "${D}oc_pr_path" ] && [ ! -L "${D}oc_pr_path" ] || continue
     [ "${D}(readlink -f "${D}oc_pr_path")" = "${D}oc_pr_path" ] || continue
     [ "${D}oc_pr_path" != "${D}oc_pr_live" ] || continue
+    if [ -n "${D}oc_pr_guard" ] && ! "${D}oc_pr_guard" "${D}oc_pr_path"; then continue; fi
+    # A running program of that folder (an old helper or agent started before the update) keeps it until a later check.
+    if oc_in_use "${D}oc_pr_path"; then continue; fi
     rm -rf -- "${D}oc_pr_path"
   done || true
 }
-# oc_prune_one PATH: one named leftover (a same-name backup), only as a real directory.
+# oc_prune_one PATH: one named leftover (a same-name backup), only as a real directory nothing runs from.
 oc_prune_one() {
   [ -d "${D}1" ] && [ ! -L "${D}1" ] || return 0
   [ "${D}(readlink -f "${D}1")" = "${D}1" ] || return 0
+  if oc_in_use "${D}1"; then return 0; fi
   rm -rf -- "${D}1"
 }
 """

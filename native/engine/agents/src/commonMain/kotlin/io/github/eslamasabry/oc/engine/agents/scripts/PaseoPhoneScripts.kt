@@ -90,6 +90,46 @@ umask 077
 """
 
     /**
+     * What may keep an old Node folder or an old helper tree. `oc_node_stock`: the folder holds only what Node's own
+     * archive holds (`bin/{node,npm,npx,corepack}`, `lib/node_modules/{npm,corepack}`); anything else in it is
+     * something a person installed with `npm install -g` into Node's own prefix, so it stays. `oc_no_old_node`: no
+     * process runs on an older Node folder, which is how a helper started before the update shows itself; its tree
+     * stays until it restarts.
+     */
+    private val NODE_GUARDS: String = """oc_node_stock() {
+  for oc_s in ${D}(ls -1A "${D}1/bin" 2>/dev/null); do
+    case "${D}oc_s" in node|npm|npx|corepack) ;; *) return 1 ;; esac
+  done
+  for oc_s in ${D}(ls -1A "${D}1/lib/node_modules" 2>/dev/null); do
+    case "${D}oc_s" in npm|corepack) ;; *) return 1 ;; esac
+  done
+  return 0
+}
+oc_no_old_node() {
+  oc_cur_node=${D}(readlink -f /home/oc/.local/node 2>/dev/null) || return 1
+  for oc_d in ${D}(ls -1A /home/oc/.local 2>/dev/null | grep -E '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}'); do
+    [ "/home/oc/.local/${D}oc_d" != "${D}oc_cur_node" ] || continue
+    if oc_in_use "/home/oc/.local/${D}oc_d"; then return 1; fi
+  done
+  return 0
+}
+oc_paseo_prune() {
+  # A helper started before the update still runs on the older Node and its older tree: nothing of it goes then.
+  if oc_no_old_node; then
+    oc_prune_versions /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
+      '^[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}${D}' /home/oc/.local/bin/paseo
+  fi
+  oc_prune_one ${INSTALL_DIRECTORY}.oc-good
+}
+oc_node_prune() {
+  oc_prune_versions /home/oc/.local 'node-$NODE_VERSION' '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}' \
+    /home/oc/.local/bin/node oc_node_stock
+  oc_prune_one /home/oc/.local/node-$NODE_VERSION.old
+  oc_prune_one /home/oc/.local/node.old
+}
+"""
+
+    /**
      * The Node.js the agent host runs on, downloaded per ABI against its pin. Each version lives in its OWN folder
      * (`/home/oc/.local/node-<version>`) beside the old one and is proven there. `/home/oc/.local/node` (the name
      * every script and the helper use) is a link switched by one atomic rename: a kill at any point leaves a Node
@@ -110,6 +150,7 @@ mkdir -p /home/oc/.local/bin /home/oc/.cache/oc-setup
 [ ! -L /home/oc/.local ] || exit 1
 ${ScriptPrune.FUNCTION}
 $NODE_HEAL
+$NODE_GUARDS
 node_link_new="${D}node_dir.link.${D}${D}"
 trap 'rm -rf "${D}node_home.new"; rm -f "${D}node_link_new"' EXIT
 trap 'exit 129' HUP
@@ -164,17 +205,19 @@ for node_tool in node npm npx; do
   fi
 done
 # The new Node answered through the node name: only now do older Node folders go.
-oc_prune_versions /home/oc/.local 'node-$NODE_VERSION' '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}' /home/oc/.local/bin/node
-oc_prune_one "${D}node_home.old"
-oc_prune_one /home/oc/.local/node.old
+oc_node_prune
 rm -f "${D}node_part"
 oc_version '$NODE_VERSION'
 """
 
     public val nodeCheck: String = """set -eu
+${ScriptPrune.FUNCTION}
 $NODE_HEAL
+$NODE_GUARDS
 oc_node_heal
 [ "${D}(/home/oc/.local/node/bin/node --version)" = '$NODE_VERSION' ]
+# Old Node folders that an earlier install had to keep (something still ran on them) go here, once nothing does.
+oc_node_prune
 printf '%s\n' '$NODE_VERSION'
 """
 
@@ -199,6 +242,7 @@ printf '%s\n' '$NODE_VERSION'
         return """set -eu
 ${SetupPrelude.COMPONENT_UPDATE_PRELUDE}
 ${ScriptPrune.FUNCTION}
+$NODE_GUARDS
 $REQUIRE_AGENT_USER
 export PATH=/home/oc/.local/node/bin:/home/oc/.local/bin:/usr/bin:/bin
 [ "${D}(node --version)" = '$NODE_VERSION' ]
@@ -306,15 +350,15 @@ fi
 oc_update_commit "${D}host_dir" || oc_paseo_activation_failed
 oc_update_commit "${D}host_link" || oc_paseo_activation_failed
 # The new helper answered its launch command and version through the link and is committed: older helper trees go.
-oc_prune_versions /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
-  '^[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}${D}' "${D}host_link"
-oc_prune_one "${D}host_dir.oc-good"
+oc_paseo_prune
 oc_version '$VERSION'
 """
     }
 
     public val check: String = """set -eu
 ${SetupPrelude.COMPONENT_UPDATE_PRELUDE}
+${ScriptPrune.FUNCTION}
+$NODE_GUARDS
 host_dir=$INSTALL_DIRECTORY
 oc_update_recover "${D}host_dir"
 oc_update_recover /home/oc/.local/bin/paseo
@@ -345,6 +389,8 @@ env -i HOME="${D}probe_dir" PATH="${D}PATH" timeout 30 /home/oc/.local/bin/paseo
 grep -q -- '--home' "${D}probe_dir/launch-check.log"
 [ "${D}(env -i HOME="${D}probe_dir" PATH="${D}PATH" timeout 30 \
   /home/oc/.local/bin/paseo --version 2>/dev/null)" = '$VERSION' ]
+# Older helper trees that an earlier install had to keep (the old helper still ran) go here, once it does not.
+oc_paseo_prune
 printf '%s\n' '$VERSION'
 """
 }

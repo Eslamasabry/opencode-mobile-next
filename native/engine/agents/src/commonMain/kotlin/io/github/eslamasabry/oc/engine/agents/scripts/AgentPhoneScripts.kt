@@ -121,6 +121,7 @@ oc_update_recover "${D}oc_bin"
 $recovery
 oc_version_pattern=${versionPattern(recipe.version)}
 $PROBE
+${ScriptPrune.FUNCTION}
 [ -f "${D}oc_final/.oc-pin" ] && [ ! -L "${D}oc_final/.oc-pin" ]
 [ "${D}(cat "${D}oc_final/.oc-pin")" = "${D}oc_pin" ]
 [ "${D}(readlink "${D}oc_bin")" = "${D}oc_final/launch" ]
@@ -128,6 +129,7 @@ if [ "${D}oc_format" = executable ]; then
   [ "${D}(sha256sum "${D}oc_final/payload/${D}oc_member" | cut -d ' ' -f1)" = "${D}oc_sha" ]
 fi
 oc_probe_version "${D}oc_final"
+${pruneOldVersions(agent, keepVersions(agent, recipe), probe = false)}
 printf '%s\n' ${quote(recipe.version)}
 """
     }
@@ -231,8 +233,8 @@ printf '%s
         val activation = if (claudeUpdate) CLAUDE_ACTIVATION else ACTIVATION
         // Old versions go only once the new one is switched in AND has started from its final place; the rollback
         // recipe (Claude's previous pin) keeps its folder.
-        val keep = recipe.version + if (claudeUpdate) " ${previousClaudeRecipe.version}" else ""
-        val prune = pruneOldVersions(agent, keep)
+        val keep = keepVersions(agent, recipe)
+        val prune = pruneOldVersions(agent, keep, probe = true)
         return """${selection(agent, recipe)}
 oc_version_pattern=${versionPattern(recipe.version)}
 $PROBE
@@ -335,8 +337,12 @@ oc_version $version
      * just answered its version from its final place. Skipped, with nothing removed, when that fails. The free-space
      * pre-check does not count what this frees: it runs after the download.
      */
-    private fun pruneOldVersions(agent: AgentDescriptor, keep: String): String =
-        """if [ "${D}(readlink "${D}oc_bin")" = "${D}oc_final/launch" ] && oc_probe_version "${D}oc_final"; then
+    private fun keepVersions(agent: AgentDescriptor, recipe: AgentInstallRecipe): String =
+        recipe.version +
+            if (agent.id.raw == "claude" && recipe.executable == "claude") " ${previousClaudeRecipe.version}" else ""
+
+    private fun pruneOldVersions(agent: AgentDescriptor, keep: String, probe: Boolean): String =
+        """if [ "${D}(readlink "${D}oc_bin")" = "${D}oc_final/launch" ]${if (probe) " && oc_probe_version \"${D}oc_final\"" else ""}; then
   oc_prune_versions /home/oc/.local/share/oc-agents/${agent.id} ${quote(keep)} \
     '^[0-9]+\.[0-9]+\.[0-9]+${D}' "${D}oc_bin"
   oc_prune_one "${D}oc_final.oc-good"
