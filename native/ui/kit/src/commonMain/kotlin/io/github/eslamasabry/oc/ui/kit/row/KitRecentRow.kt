@@ -210,11 +210,14 @@ public fun KitRecentRow(
                         if (pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
                     }
                     if (line != null || shownProject != null) SecondLine(shownProject, line, previewLines)
+                    // At large text the time and the state word go under the words instead of beside them, so a
+                    // fixed end column never squeezes the title to a few words (look of build 10093 at 200 %).
+                    if (large && !waiting && (time != null || state?.word != null)) End(time, state, stacked = true)
                 }
                 if (waiting) {
                     Spacer(Modifier.width(Space.S3.dp))
                     WaitingEnd()
-                } else if (time != null || state?.word != null) {
+                } else if (!large && (time != null || state?.word != null)) {
                     Spacer(Modifier.width(Space.S3.dp))
                     End(time, state, Modifier.widthIn(max = endMax))
                 }
@@ -304,13 +307,18 @@ private fun SecondLine(project: String?, line: String?, previewLines: Int) {
 
 /**
  * The time on top; the state word under it in its colour (Working with a small green dot). [modifier] caps its width
- * ([KitRecentRowRules.END_SHARE]); a longer word is cut with an ellipsis.
+ * ([KitRecentRowRules.END_SHARE]); a longer word is cut with an ellipsis. [stacked]: at large text it sits under the
+ * row's words, at their start.
  */
 @Composable
-private fun End(time: String?, state: KitRowState?, modifier: Modifier = Modifier) {
+private fun End(time: String?, state: KitRowState?, modifier: Modifier = Modifier, stacked: Boolean = false) {
     val colors = LocalKitColors.current
     val typography = LocalKitTypography.current
-    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    Column(
+        modifier,
+        horizontalAlignment = if (stacked) Alignment.Start else Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
         if (time != null)
             KitText(time.replace(' ', ' '), role = TypeRole.Caption, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary, maxLines = 1)
         val word = state?.word

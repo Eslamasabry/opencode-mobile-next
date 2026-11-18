@@ -1062,7 +1062,8 @@ private fun ConversationRow(
             ?: row.ago?.let { agoText(it) }
     val preview =
         row.permission?.let {
-            val target = KitBidi.ltr(mask(it.command))
+            // A short command reads as one piece: "ls -la" never breaks at its space.
+            val target = KitBidi.ltr(io.github.eslamasabry.oc.ui.kit.text.kitKeepShortTogether(mask(it.command)))
             when (HomePreviewRules.askKind(it.kind)) {
                 HomePreviewRules.AskKind.Run -> stringResource(Res.string.chatsHomeAsksToRun, target)
                 HomePreviewRules.AskKind.Edit -> stringResource(Res.string.chatsHomeAsksToEdit, target)
