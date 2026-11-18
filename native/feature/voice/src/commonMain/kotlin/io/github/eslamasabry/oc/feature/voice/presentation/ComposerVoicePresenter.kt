@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
+import io.github.eslamasabry.oc.engine.voice.state.PackStatus
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -134,6 +135,8 @@ public data class ComposerVoiceUi(
     val micTip: Boolean = false,
     /** Words in the box or files on it: a voice conversation cannot start until they are sent or cleared. */
     val draft: Boolean = false,
+    /** Bytes of the speech model this phone would download; null when one is on the phone or none is needed. */
+    val modelNeededBytes: Long? = null,
     /**
      * The first-mic "Voice typing" sheet (Flutter `showVoiceAutomaticSetupSheet`): the mic found no speech model, so
      * the model picked for this phone is offered for download right here. Null: no sheet.
@@ -604,6 +607,17 @@ public class ComposerVoicePresenter(
                 parts = p
                 mutable.update { it.copy(available = p.micAvailable) }
                 offerMicTip()
+                // A voice conversation row that offers its download with the size: only where a model is needed.
+                if (p.setup != null)
+                    scope.launch {
+                        p.models.state.collect { packs ->
+                            val ids = p.models.speechPacks.map { it.id }
+                            val installed = ids.any { packs.packs[it] == PackStatus.Installed }
+                            val spec = p.models.speechPacks.firstOrNull { it.id == packs.selected } ?: p.models.speechPacks.firstOrNull()
+                            val needed = if (installed) null else spec?.totalBytes
+                            if (mutable.value.modelNeededBytes != needed) mutable.update { it.copy(modelNeededBytes = needed) }
+                        }
+                    }
                 scope.launch {
                     p.reader.state.collect { reading ->
                         if (reading is ReadAloudState.Failed && mutable.value.speakingReply)
