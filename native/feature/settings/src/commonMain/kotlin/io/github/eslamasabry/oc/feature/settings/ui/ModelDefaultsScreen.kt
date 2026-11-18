@@ -14,7 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelOption
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
@@ -67,10 +68,8 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                 )
             }
             if (known || !state.loading) {
-                KitRow(
-                    title = stringResource(Res.string.modelDefaultsScope),
-                    supportingMaxLines = 3,
-                )
+                // Reading text on the rail: it wraps at every text size, never "…".
+                KitGroupNote(stringResource(Res.string.modelDefaultsScope))
                 val currentRow = state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) } }
                 KitRow(
                     title = stringResource(Res.string.composerPreviewModelsTitle),
@@ -168,11 +167,13 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
         offersServerDefault = true,
         // The server's list is being read (also behind the kept list): the kit's loading row or working mark.
         loading = state.loading,
-        below = {
+        // The thinking level comes first, under the title and above the search, as in the chat's sheet (the same kit
+        // parts): it stays put while the list scrolls and its chips wrap, never cut by the edge.
+        header = {
             val row = state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) } }
             if (row != null && row.variants.isNotEmpty()) {
                 KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                KitFilterChips(Modifier.fillMaxWidth().testTag("model-defaults-thinking")) {
+                KitChipWrap(Modifier.fillMaxWidth().testTag("model-defaults-thinking")) {
                     (listOf("") + row.variants).forEach { level ->
                         KitChip(
                             label = if (level.isEmpty()) stringResource(Res.string.composerFullThinkingDefault) else effortWords(level),
