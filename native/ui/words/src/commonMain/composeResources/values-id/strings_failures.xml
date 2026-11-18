@@ -101,4 +101,5 @@
     <string name="agentErrorServerDiskFullPhone">Penyimpanan ponsel ini penuh.</string>
     <string name="agentErrorServerDiskFullHintPhone">Kosongkan sebagian ruang di ponsel ini, lalu coba lagi.</string>
     <string name="chatSendPhoneHelperNoAnswer">Agen di ponsel ini tidak menjawab. Mungkin masih memulai; beri mereka waktu sebentar, lalu coba lagi.</string>
+    <string name="chatSendFailureSignedInPast">%1$s sempat meminta Anda masuk lagi</string>
 </resources>

@@ -102,4 +102,5 @@
     <string name="agentErrorServerDiskFullPhone">这部手机的存储空间已满。</string>
     <string name="agentErrorServerDiskFullHintPhone">请在这部手机上释放一些空间，然后重试。</string>
     <string name="chatSendPhoneHelperNoAnswer">这部手机上的代理没有响应。它们可能仍在启动，请稍等片刻后重试。</string>
+    <string name="chatSendFailureSignedInPast">%1$s 曾需要你重新登录</string>
 </resources>

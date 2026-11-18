@@ -1711,6 +1711,7 @@ chatSendFailureSignIn	7c94ef237e
 chatSendFailureSignInAction	a22eaaaa49
 chatSendFailureSignInAgain	09dbb590a5
 chatSendFailureSignInToAgent	1a10cab5d0
+chatSendFailureSignedInPast	85f25c1461
 chatSendFolderMissing	8cc7e7d500
 chatSendLaterOrRepeat	bdaec976a4
 chatSendLaterSaved	56d0206556

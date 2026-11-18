@@ -101,4 +101,5 @@
     <string name="chatSendFailureNeedsAccount">このモデルには%1$sアカウントが必要です</string>
     <string name="agentErrorFreeTier">OpenCodeの無料モデルがこの返信を停止しました。</string>
     <string name="agentErrorFreeTierHint">無料枠では、今日の使用量が少なくても長い会話が拒否されることがあります。この会話を短くするか、新しい会話を始めると改善する場合があります。</string>
+    <string name="chatSendFailureSignedInPast">%1$sにもう一度サインインする必要がありました</string>
 </resources>

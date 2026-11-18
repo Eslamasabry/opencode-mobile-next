@@ -102,4 +102,5 @@
     <string name="agentErrorServerDiskFullPhone">مساحة التخزين على هذا الهاتف ممتلئة.</string>
     <string name="agentErrorServerDiskFullHintPhone">أخلِ بعض المساحة على هذا الهاتف ثم حاول مرة أخرى.</string>
     <string name="chatSendPhoneHelperNoAnswer">لم يردّ الوكلاء على هذا الهاتف. قد يكونون ما زالوا يبدؤون؛ امنحهم لحظة ثم حاول مرة أخرى.</string>
+    <string name="chatSendFailureSignedInPast">احتاج %1$s إلى تسجيل دخولك مرة أخرى</string>
 </resources>

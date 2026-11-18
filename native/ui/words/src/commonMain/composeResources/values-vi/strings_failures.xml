@@ -101,4 +101,5 @@
     <string name="agentErrorServerDiskFullPhone">Điện thoại này đã hết dung lượng lưu trữ.</string>
     <string name="agentErrorServerDiskFullHintPhone">Hãy giải phóng một ít dung lượng trên điện thoại này rồi thử lại.</string>
     <string name="chatSendPhoneHelperNoAnswer">Các tác nhân trên điện thoại này không phản hồi. Có thể chúng vẫn đang khởi động; hãy chờ một lát rồi thử lại.</string>
+    <string name="chatSendFailureSignedInPast">%1$s đã cần bạn đăng nhập lại</string>
 </resources>
