@@ -116,7 +116,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "codex",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "0.169.0",
+        "version": "0.170.0",
         "executable": "codex",
         "launchArgs": [
           "app-server"
@@ -127,20 +127,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-package-aarch64-unknown-linux-musl.tar.gz",
-            "sha256": "c8d0b4ab2a97c595b70b10412d36d0d5464dcef1e1d3246b073d48017cdf5a4f",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.170.0/codex-package-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "3f7e1ae38c4fe27322e082b855e8eec936d08fa538d62b71c07e2a53f34e8847",
             "format": "tarGz",
             "member": "bin/codex",
-            "downloadBytes": 194441793,
-            "installedBytes": 493772076
+            "downloadBytes": 195884517,
+            "installedBytes": 497311036
           },
           "x64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-package-x86_64-unknown-linux-musl.tar.gz",
-            "sha256": "3b8ed091149cc63a59046b9f094bcfa21cdb4dda15ede441ce369bcee4a71ba0",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.170.0/codex-package-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "a77ff87be7ba809d715728270a78f5ce3527dc07529416d1ef8929b90b8475eb",
             "format": "tarGz",
             "member": "bin/codex",
-            "downloadBytes": 192339692,
-            "installedBytes": 497056070
+            "downloadBytes": 193641516,
+            "installedBytes": 501309254
           }
         }
       }

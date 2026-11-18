@@ -144,36 +144,36 @@ class AgentPinsParityTest {
 
     @Test
     fun `B-AGENT-008 Codex pins equal the release assets checked on 2026-11-14`() {
-        // Moved after the freeze (0.167.0 -> 0.169.0). Issue 147: the pin is the official package (bin/codex beside
+        // Moved after the freeze (0.167.0 -> 0.170.0). Issue 147: the pin is the official package (bin/codex beside
         // bin/codex-code-mode-host, codex-exec-server, codex-path/rg, codex-resources), not the bare binary: Codex
         // starts its code-mode host from its own folder and failed with "host executable was not found" without it.
         // Each SHA-256 equals GitHub's own asset digest and the bytes fetched on 2026-11-15; installedBytes is the
         // whole extracted tree (the installer keeps it).
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("codex"))!!.recipe!!
-        assertEquals("0.169.0", recipe.version)
+        assertEquals("0.170.0", recipe.version)
         assertEquals("codex", recipe.executable)
         assertEquals(listOf("app-server"), recipe.launchArgs)
         assertEquals(listOf("login", "--device-auth"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://github.com/openai/codex/releases/download/rust-v0.169.0/" +
+            "https://github.com/openai/codex/releases/download/rust-v0.170.0/" +
                 "codex-package-aarch64-unknown-linux-musl.tar.gz",
             arm.url,
         )
-        assertEquals("c8d0b4ab2a97c595b70b10412d36d0d5464dcef1e1d3246b073d48017cdf5a4f", arm.sha256)
-        assertEquals(194441793L, arm.downloadBytes)
-        assertEquals(493772076L, arm.installedBytes)
+        assertEquals("3f7e1ae38c4fe27322e082b855e8eec936d08fa538d62b71c07e2a53f34e8847", arm.sha256)
+        assertEquals(195884517L, arm.downloadBytes)
+        assertEquals(497311036L, arm.installedBytes)
         assertEquals("bin/codex", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://github.com/openai/codex/releases/download/rust-v0.169.0/" +
+            "https://github.com/openai/codex/releases/download/rust-v0.170.0/" +
                 "codex-package-x86_64-unknown-linux-musl.tar.gz",
             x64.url,
         )
-        assertEquals("3b8ed091149cc63a59046b9f094bcfa21cdb4dda15ede441ce369bcee4a71ba0", x64.sha256)
-        assertEquals(192339692L, x64.downloadBytes)
-        assertEquals(497056070L, x64.installedBytes)
+        assertEquals("a77ff87be7ba809d715728270a78f5ce3527dc07529416d1ef8929b90b8475eb", x64.sha256)
+        assertEquals(193641516L, x64.downloadBytes)
+        assertEquals(501309254L, x64.installedBytes)
         assertEquals("bin/codex", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }

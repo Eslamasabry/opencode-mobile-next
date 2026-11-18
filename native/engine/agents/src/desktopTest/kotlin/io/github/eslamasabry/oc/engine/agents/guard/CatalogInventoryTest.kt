@@ -100,7 +100,7 @@ class CatalogInventoryTest {
             number("installedBytes", 280536544, 287484080),
         ),
         // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
-        // 2.1.327, Codex 0.169.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
+        // 2.1.327, Codex 0.170.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
         // same agents' pins literally. Gemini CLI and Cline did not move.
         "claude" to listOf(
@@ -115,17 +115,17 @@ class CatalogInventoryTest {
             number("installedBytes", 340226576, 372904464),
         ),
         "codex" to listOf(
-            text("0.167.0", "0.169.0"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
-            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "c8d0b4ab2a97c595b70b10412d36d0d5464dcef1e1d3246b073d48017cdf5a4f"),
-            number("downloadBytes", 114300898, 194441793),
-            number("installedBytes", 278794648, 493772076),
+            text("0.167.0", "0.170.0"),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.170.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
+            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "3f7e1ae38c4fe27322e082b855e8eec936d08fa538d62b71c07e2a53f34e8847"),
+            number("downloadBytes", 114300898, 195884517),
+            number("installedBytes", 278794648, 497311036),
             // Issue 147: the official package, whose entry is bin/codex beside its code-mode host.
             text("codex-aarch64-unknown-linux-musl", "bin/codex"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
-            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "3b8ed091149cc63a59046b9f094bcfa21cdb4dda15ede441ce369bcee4a71ba0"),
-            number("downloadBytes", 122587028, 192339692),
-            number("installedBytes", 320575976, 497056070),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.170.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
+            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "a77ff87be7ba809d715728270a78f5ce3527dc07529416d1ef8929b90b8475eb"),
+            number("downloadBytes", 122587028, 193641516),
+            number("installedBytes", 320575976, 501309254),
             text("codex-x86_64-unknown-linux-musl", "bin/codex"),
         ),
         "antigravity" to listOf(
