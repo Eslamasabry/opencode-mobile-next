@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
+import io.github.eslamasabry.oc.engine.voice.state.PackStatus
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -36,9 +37,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the composer lends the voice presenter (the pure twin of kit-chat's `KitVoiceField`). */
 public interface VoiceFieldPort {
@@ -130,6 +133,10 @@ public data class ComposerVoiceUi(
     val replyNote: ConversationReplyNote? = null,
     val tutorialStep: Int? = null,
     val micTip: Boolean = false,
+    /** Words in the box or files on it: a voice conversation cannot start until they are sent or cleared. */
+    val draft: Boolean = false,
+    /** Bytes of the speech model this phone would download; null when one is on the phone or none is needed. */
+    val modelNeededBytes: Long? = null,
     /**
      * The first-mic "Voice typing" sheet (Flutter `showVoiceAutomaticSetupSheet`): the mic found no speech model, so
      * the model picked for this phone is offered for download right here. Null: no sheet.
@@ -265,6 +272,7 @@ public class ComposerVoicePresenter(
                 handle.session.voiceConversation.collect { snapshot ->
                     val previous = observed
                     observed = snapshot
+                    refreshDraft()
                     if (mutable.value.conversation && previous.generation != snapshot.generation) {
                         exitConversation()
                         mutable.update { it.copy(replyNote = ConversationReplyNote.Review) }
@@ -599,6 +607,17 @@ public class ComposerVoicePresenter(
                 parts = p
                 mutable.update { it.copy(available = p.micAvailable) }
                 offerMicTip()
+                // A voice conversation row that offers its download with the size: only where a model is needed.
+                if (p.setup != null)
+                    scope.launch {
+                        p.models.state.collect { packs ->
+                            val ids = p.models.speechPacks.map { it.id }
+                            val installed = ids.any { packs.packs[it] == PackStatus.Installed }
+                            val spec = p.models.speechPacks.firstOrNull { it.id == packs.selected } ?: p.models.speechPacks.firstOrNull()
+                            val needed = if (installed) null else spec?.totalBytes
+                            if (mutable.value.modelNeededBytes != needed) mutable.update { it.copy(modelNeededBytes = needed) }
+                        }
+                    }
                 scope.launch {
                     p.reader.state.collect { reading ->
                         if (reading is ReadAloudState.Failed && mutable.value.speakingReply)
@@ -720,12 +739,35 @@ public class ComposerVoicePresenter(
      * The box reported its words: the note beside it stays until new words are typed.
      */
     public fun fieldChanged(text: String) {
+        refreshDraft(text)
         // Flutter `_composerNoteFollowsEdits`: the note stays beside the box until the next words; typing them
         // (anything other than what the box held when the note appeared) dismisses it.
         val typed = noteTyped
         if (typed != null && text != typed && mutable.value.note != null) {
             noteTyped = null
             mutable.update { it.copy(note = null) }
+        }
+    }
+
+    private fun refreshDraft(text: String? = field?.text()) {
+        val draft = text?.isNotEmpty() == true || observed.hasAttachments
+        if (mutable.value.draft != draft) mutable.update { it.copy(draft = draft) }
+    }
+
+    /**
+     * The door inside the recorder row: a tap on the mic is open, so the dictation is thrown away (nothing typed, nothing
+     * sent) and the hands-free voice conversation starts in its place. With words or files on the box it does nothing but
+     * say why ([ComposerVoiceUi.draft] is also drawn on the control).
+     */
+    public fun startConversationFromMic() {
+        if (mutable.value.draft) {
+            mutable.update { it.copy(replyNote = ConversationReplyNote.DraftFirst) }
+            return
+        }
+        cancel()
+        scope.launch {
+            withTimeoutOrNull(MIC_TO_CONVERSATION_WAIT_MS) { state.first { !it.active } }
+            startConversation()
         }
     }
 
@@ -1131,3 +1173,5 @@ public class ComposerVoicePresenter(
             }
     }
 }
+
+private const val MIC_TO_CONVERSATION_WAIT_MS: Long = 2_000L

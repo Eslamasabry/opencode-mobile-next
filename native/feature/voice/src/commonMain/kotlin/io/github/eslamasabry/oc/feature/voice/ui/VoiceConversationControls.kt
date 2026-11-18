@@ -46,6 +46,22 @@ internal fun VoiceConversationEntry(
                 onSelected()
                 presenter.startConversation()
             },
+            // With words or files on the box the row stays and says why (B-461); a missing speech model or a refused
+            // microphone is met by the tap: the download offer with its size, and the microphone note.
+            enabled = !state.draft,
+            disabledReason = stringResource(Res.string.voiceConversationDoorDraft),
+            supporting =
+                when {
+                    state.draft -> stringResource(Res.string.voiceConversationDoorDraft)
+                    // No speech model on the phone: the row stays and offers the download with its size (the tap opens the
+                    // same setup the mic opens).
+                    state.modelNeededBytes != null ->
+                        stringResource(Res.string.e7VoiceUiModelRequired) +
+                            stringResource(Res.string.kitWorkSeparator) +
+                            stringResource(Res.string.voiceSetupDownloadSize, sizeWords(state.modelNeededBytes))
+                    else -> null
+                },
+            supportingMaxLines = 2,
             modifier = modifier.testTag("voice-conversation-start"),
         )
     }

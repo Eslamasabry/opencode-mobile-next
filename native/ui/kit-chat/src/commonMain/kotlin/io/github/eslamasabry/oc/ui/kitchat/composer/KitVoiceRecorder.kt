@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.pace
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,9 +55,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
@@ -109,6 +113,19 @@ public data class KitRecorderLine(
 )
 
 /**
+ * The way into the hands-free voice conversation, inside the recorder row ([KitVoiceRecorderRow]): a named control with
+ * the mic's mark. [blockedReason] non-null: it stays in the row, drawn quiet, and the reason stands under the row in
+ * words (never a missing control); a tap still says it. It takes the place of the time, which is not needed while the
+ * person decides.
+ */
+@androidx.compose.runtime.Immutable
+public data class KitRecorderDoor(
+    val label: String,
+    val onClick: () -> Unit,
+    val blockedReason: String? = null,
+)
+
+/**
  * The message box while the person dictates (owner 2026-11-17, "the box itself becomes the recorder"): one row INSIDE
  * the box, never a second box. A round ✕ at the start ([cancel]: the words said are thrown away), the live waveform
  * drawn from [level] with the time beside it, and a round ✓ at the end ([accept]: the words land in the box, editable).
@@ -133,24 +150,34 @@ public fun KitVoiceRecorderRow(
     level: (() -> Float)? = null,
     cancel: KitLineAction? = null,
     accept: KitLineAction? = null,
+    door: KitRecorderDoor? = null,
 ) {
     val tokens = LocalKitTokens.current
-    Row(
-        modifier
-            .fillMaxWidth()
-            .heightIn(min = tokens.minTarget.dp)
-            .testTag(VOICE_RECORDER_TAG),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (cancel != null) RecorderDisc(cancel, KitIcons.close, TextTone.Secondary, VOICE_RECORDER_CANCEL_TAG)
-        RecorderMiddle(line, level, Modifier.weight(1f))
-        if (accept != null) RecorderDisc(accept, KitIcons.check, TextTone.Accent, VOICE_RECORDER_ACCEPT_TAG)
+    Column(modifier.fillMaxWidth().testTag(VOICE_RECORDER_TAG)) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (cancel != null) RecorderDisc(cancel, KitIcons.close, TextTone.Secondary, VOICE_RECORDER_CANCEL_TAG)
+            RecorderMiddle(line, level, Modifier.weight(1f), door)
+            if (accept != null) RecorderDisc(accept, KitIcons.check, TextTone.Accent, VOICE_RECORDER_ACCEPT_TAG)
+        }
+        val reason = door?.blockedReason
+        if (reason != null) {
+            KitText(
+                reason,
+                Modifier.padding(horizontal = Space.S2.dp).testTag(VOICE_DOOR_REASON_TAG),
+                role = TypeRole.Caption,
+                tone = TextTone.Attention,
+                kind = KitTextKind.Frame,
+            )
+        }
     }
 }
 
 /** The row's middle: the waveform or the calm progress, the stage in words, the time; one polite live region. */
 @Composable
-private fun RecorderMiddle(line: KitRecorderLine, level: (() -> Float)?, modifier: Modifier) {
+private fun RecorderMiddle(line: KitRecorderLine, level: (() -> Float)?, modifier: Modifier, door: KitRecorderDoor? = null) {
     val stage = line.stage
     val spoken = if (stage == KitRecorderStage.Listening) line.announcement ?: line.status else line.status
     val tone = if (line.attention) TextTone.Attention else TextTone.Secondary
@@ -198,7 +225,16 @@ private fun RecorderMiddle(line: KitRecorderLine, level: (() -> Float)?, modifie
             }
         }
         val elapsed = line.elapsed
-        if (elapsed != null && !working) RecorderTime(elapsed, tone)
+        if (door != null && !working) {
+            KitButton(
+                label = door.label,
+                onClick = door.onClick,
+                modifier = Modifier.testTag(VOICE_DOOR_TAG),
+                role = KitButtonRole.Tertiary,
+                icon = KitIcons.mic,
+                enabled = KitEnabled.of(door.blockedReason == null, door.blockedReason),
+            )
+        } else if (elapsed != null && !working) RecorderTime(elapsed, tone)
     }
 }
 
@@ -348,6 +384,10 @@ private fun RecorderDisc(action: KitLineAction, icon: ImageVector, tone: TextTon
 
 /** Test handles. */
 public const val VOICE_RECORDER_TAG: String = "kit-voice-recorder"
+
+/** The voice conversation door in the recorder row, and the reason line under the row while it is blocked. */
+public const val VOICE_DOOR_TAG: String = "voice-conversation-door"
+public const val VOICE_DOOR_REASON_TAG: String = "voice-conversation-door-reason"
 public const val VOICE_RECORDER_CANCEL_TAG: String = "kit-voice-recorder-cancel"
 public const val VOICE_RECORDER_ACCEPT_TAG: String = "kit-voice-recorder-accept"
 public const val VOICE_RECORDER_STATUS_TAG: String = "kit-voice-recorder-status"

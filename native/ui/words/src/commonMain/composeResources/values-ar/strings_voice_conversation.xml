@@ -10,4 +10,5 @@
     <string name="voiceConversationNativeTourResetFailed">تعذّر إعادة ضبط النصائح. حاول مرة أخرى.</string>
     <string name="voiceConversationNativeTourReplay">أرني</string>
     <string name="voiceConversationNativeTourLoadFailed">تعذّر فتح النصائح. حاول مرة أخرى.</string>
+    <string name="voiceConversationDoorDraft">أرسل رسالتك أو امسحها أولًا</string>
 </resources>

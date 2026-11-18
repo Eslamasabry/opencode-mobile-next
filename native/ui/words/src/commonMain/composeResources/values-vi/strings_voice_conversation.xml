@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">Không đặt lại được các mẹo. Hãy thử lại.</string>
     <string name="voiceConversationNativeTourReplay">Chỉ cho tôi</string>
     <string name="voiceConversationNativeTourLoadFailed">Không mở được các mẹo. Hãy thử lại.</string>
+    <string name="voiceConversationDoorDraft">Hãy gửi hoặc xóa tin nhắn của bạn trước</string>
 </resources>
