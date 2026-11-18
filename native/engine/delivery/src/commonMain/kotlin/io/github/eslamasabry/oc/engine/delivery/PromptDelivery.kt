@@ -843,9 +843,15 @@ public class PromptDelivery(
         stopMemory.noteStopFromThisApp(
             ref
         ) // before the call: the server's interrupt must not read as another device
+        val markedBefore = stopMemory.stoppedByPerson(ref)
         stopMemory.markStoppedByPerson(ref)
         return when (val r = link.stop(ref.sessionId)) {
-            is Outcome.Ok -> Unit.ok()
+            is Outcome.Ok -> {
+                // Nothing was running: nobody stopped anything, so an idle conversation (a parent whose sub-agent
+                // works) must not read "Stopped" for how its last turn ended. An earlier real Stop stays recorded.
+                if (r.value == StopResult.NothingRunning && !markedBefore) stopMemory.clearStoppedByPerson(ref)
+                Unit.ok()
+            }
             is Outcome.Failed -> r
         }
     }

@@ -482,7 +482,7 @@ public class KitEdgeDockState internal constructor() {
     internal fun layoutFor(kind: SwellKind, ring: KitDockRing): SwellLayout =
         swellLayout(
             kind = kind,
-            state = ring.state,
+            state = ring.actionState,
             childTotal = ring.childTotal,
             peekLines = ring.peek.size,
             server = ring.server != null,
