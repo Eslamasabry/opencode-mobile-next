@@ -372,6 +372,8 @@ private fun Receipt(ui: FleetGateUi, actions: FleetGateActions) {
         modifier = Modifier.testTag("fleet-gate-receipt-${kind.name.lowercase()}"),
         onRetry = if (kind == FleetGateReceiptKind.NotConfirmed || kind == FleetGateReceiptKind.Refused) actions::tryAgain else null,
         label = stringResource(Res.string.teamUiReceiptAnswered),
+        // The person's answer on its way to the team: the Sending mark while it is sent.
+        sendingMark = true,
     )
 }
 

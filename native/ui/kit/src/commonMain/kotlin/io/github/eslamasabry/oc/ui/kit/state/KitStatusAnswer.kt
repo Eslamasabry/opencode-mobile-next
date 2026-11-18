@@ -45,6 +45,8 @@ public fun KitStatusAnswer(
     line: String? = null,
     scale: KitAnswerScale = KitAnswerScale.Large,
     action: KitAction? = null,
+    /** With [KitAnswerTone.Working]: the kind of wait [answer] names; its waiting mark replaces the working mark, same box. */
+    wait: io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind? = null,
 ) {
     val tokens = LocalKitTokens.current
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth()) {
@@ -52,7 +54,7 @@ public fun KitStatusAnswer(
         Column(Modifier.fillMaxWidth().padding(horizontal = margin.dp).semantics { liveRegion = LiveRegionMode.Polite },
             horizontalAlignment = Alignment.CenterHorizontally) {
             tone?.let {
-                AnswerMark(it)
+                AnswerMark(it, wait)
                 Spacer(Modifier.height(Space.S4.dp))
             }
             AnswerWords(answer, scale)
@@ -117,12 +119,18 @@ private fun AnswerWords(text: String, scale: KitAnswerScale) {
 }
 
 @Composable
-private fun AnswerMark(tone: KitAnswerTone) {
+private fun AnswerMark(tone: KitAnswerTone, wait: io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind? = null) {
     val colors = LocalKitColors.current
     val edge = kitFocusRingWidth()
     val flat = LocalKitStyle.current.style == Style.Solid
     Box(Modifier.size(32.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) { // F: lib/ui/kit/kit_status_answer.dart:407
-    if (tone == KitAnswerTone.Working) {
+    if (tone == KitAnswerTone.Working && wait != null) {
+        io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark(
+            wait,
+            tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary,
+            size = LocalKitTokens.current.smallIcon.dp,
+        )
+    } else if (tone == KitAnswerTone.Working) {
         KitWorkingMark(colors.text2, LocalKitTokens.current.smallIcon.dp)
     } else {
     // No early return out of this block: the rest of the mark is the else branch.

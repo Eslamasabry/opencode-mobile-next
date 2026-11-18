@@ -155,7 +155,7 @@ public class Preferences(
         PreferenceChange.ResetAppearance -> effectEdits(current.effects, Effects.Defaults) + mapOf(
             K.APPEARANCE to AppearanceChoice.Dark.wire, K.THEME_PACK to ThemePack.OpenCode.wire,
             K.ACCENT to null, K.TEXT_SIZE to TextSize.Normal.wire, K.FROST to FrostStrength.Balanced.wire,
-            K.GLASS_EDGES to null, K.GLASS_LOOK to null,
+            K.GLASS_EDGES to null, K.GLASS_LOOK to null, K.WAIT_MARKS to null,
         )
         is PreferenceChange.Appearance -> mapOf(K.APPEARANCE to change.value.wire)
         is PreferenceChange.Theme -> mapOf(K.THEME_PACK to change.value.wire)
@@ -170,6 +170,7 @@ public class Preferences(
         is PreferenceChange.GlassTuning -> mapOf(K.GLASS_TUNING to change.text?.takeIf { it.isNotBlank() })
         is PreferenceChange.ReasoningExpanded -> mapOf(K.REASONING to change.value)
         is PreferenceChange.TimestampsVisible -> mapOf(K.TIMESTAMPS to change.value)
+        is PreferenceChange.WaitMarks -> mapOf(K.WAIT_MARKS to change.value.wire.takeIf { change.value != WaitMarksChoice.Ink })
         is PreferenceChange.SetEffects -> effectEdits(current.effects, change.value)
     }
 
@@ -253,6 +254,7 @@ public class Preferences(
                 glassTuning = (raw(K.GLASS_TUNING) as? String)?.takeIf { it.isNotBlank() },
                 reasoningExpanded = bool(K.REASONING, false),
                 timestampsVisible = bool(K.TIMESTAMPS, false),
+                waitMarks = wireOf<WaitMarksChoice>(raw(K.WAIT_MARKS)) ?: WaitMarksChoice.Ink,
             )
         }
     }

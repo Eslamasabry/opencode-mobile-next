@@ -224,6 +224,11 @@ public fun ThisPhoneScreen(
                         AnswerTone.Paused -> KitAnswerTone.Paused
                         AnswerTone.NeedsYou -> KitAnswerTone.NeedsYou
                     },
+                    // The server coming up (or up again by itself): the Starting mark in the working mark's place.
+                    wait =
+                        io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Starting.takeIf {
+                            state.answer.headline == AnswerHeadline.Starting || state.answer.headline == AnswerHeadline.Restarting
+                        },
                 )
             }
             if (installed) {

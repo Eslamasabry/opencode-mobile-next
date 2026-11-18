@@ -192,6 +192,11 @@ public fun KitReceipt(
      * hold must outlive the receipt (the list closing) keeps its own timer and treats this as the visual end.
      */
     onHoldEnd: (() -> Unit)? = null,
+    /**
+     * The sending state shows the Sending waiting mark (a message on its way) in the working mark's box, instead of
+     * the working mark. For receipts whose sending words say a message or an answer is on its way.
+     */
+    sendingMark: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -220,7 +225,7 @@ public fun KitReceipt(
     val line: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(glyph), contentAlignment = Alignment.Center) {
-                KitFade(words) { ReceiptMark(it, glyph, KitMotion.state.reduced) }
+                KitFade(words) { ReceiptMark(it, glyph, KitMotion.state.reduced, sendingMark) }
             }
             Spacer(Modifier.width(Space.S2.dp))
             BasicText(text, Modifier.weight(1f, fill = false), style = LocalKitTypography.current.style(TypeRole.Secondary))
@@ -299,11 +304,18 @@ private fun receiptGlyphSize(): Dp {
 
 /** The state's mark (Dart `_mark`): decoration, the word already says it. */
 @Composable
-private fun ReceiptMark(words: ReceiptWords, size: Dp, reduced: Boolean) {
+private fun ReceiptMark(words: ReceiptWords, size: Dp, reduced: Boolean, sendingMark: Boolean = false) {
     val colors = LocalKitColors.current
     when (words) {
         ReceiptWords.Sending ->
-            if (reduced) KitGlyph(KitIcons.statusDot, colors.accent, FlutterKitTokens.MARK_DOT_SIZE.dp)
+            // The message on its way: the Sending mark fills the same box (its still when motion is off).
+            if (sendingMark)
+                io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark(
+                    io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Sending,
+                    tone = TextTone.Secondary,
+                    size = size,
+                )
+            else if (reduced) KitGlyph(KitIcons.statusDot, colors.accent, FlutterKitTokens.MARK_DOT_SIZE.dp)
             else {
                 val ring = kitFocusRingWidth()
                 KitWorkingMark(colors.accent, size - ring - ring, Modifier.padding(ring), strokeWidth = ring)

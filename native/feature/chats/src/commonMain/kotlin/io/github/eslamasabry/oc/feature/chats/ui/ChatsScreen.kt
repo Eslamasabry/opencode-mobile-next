@@ -1238,7 +1238,8 @@ private fun QuestionAnswers(
         return
     }
     if (flags.questionSending) {
-        KitReceipt(state = KitReceiptState.Sending)
+        // The answer on its way: the Sending mark in the receipt's mark box.
+        KitReceipt(state = KitReceiptState.Sending, sendingMark = true)
         return
     }
     if (flags.questionRefused) {
@@ -1360,6 +1361,9 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, what, it) } ?: what,
                 tone = StatusTone.Progress,
                 working = true,
+                // A known share: the Downloading mark, its line as thick as the words' percent says.
+                wait = KitWaitKind.Downloading.takeIf { phase.percent != null },
+                waitFraction = (phase.percent ?: 0) / 100f,
             )
         }
         HomeDownloadPhase.Failed ->

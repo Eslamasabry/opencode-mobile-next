@@ -1650,6 +1650,17 @@ private fun connectionLine(
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
             working = !signIn,
+            // The waits the app names by their kind: the phone's own server coming up, and an agent or its helper
+            // getting ready. The kit draws their marks in the working mark's place; the other waits keep it.
+            wait =
+                when (wait) {
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting,
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingLinux,
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingOpenCode -> io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Starting
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingHelper,
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingAgent -> io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Warming
+                    else -> null
+                },
         )
     }
     // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
@@ -1660,6 +1671,7 @@ private fun connectionLine(
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
             working = true,
+            wait = io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Warming,
         )
     val restartAgent =
         if (line.canRestartAgent)

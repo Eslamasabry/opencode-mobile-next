@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
+import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -112,6 +114,8 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
         next = status.next,
         riskySwitch = status.kind == KitStatusKind.RiskySwitch,
         working = status.working,
+        wait = status.wait,
+        waitFraction = status.waitFraction,
     )
 }
 
@@ -151,6 +155,9 @@ public fun KitStatusLine(
     onOpen: (() -> Unit)? = null,
     riskySwitch: Boolean = false,
     working: Boolean = false,
+    /** With [working]: the kind of wait the words name; its waiting mark replaces the working mark in the same box. */
+    wait: KitWaitKind? = null,
+    waitFraction: Float = 0f,
 ) {
     kitAssert(!riskySwitch || onDismiss == null) { "KitStatusLine: a risky switch is never dismissible (SEC-9)" }
     kitAssert(onSlow.size <= 2) { "KitStatusLine.onSlow offers at most two ways out" } // F: lib/ui/kit/kit_status_line.dart:339
@@ -167,6 +174,8 @@ public fun KitStatusLine(
         semanticsLabel = semanticsLabel,
         onOpen = onOpen,
         working = working,
+        wait = wait,
+        waitFraction = waitFraction,
     )
     if (quiet) {
         KitEntrance(modifier, key = tone to glyph) {
@@ -217,6 +226,8 @@ private class StatusLineParts(
     val semanticsLabel: String?,
     val onOpen: (() -> Unit)?,
     val working: Boolean = false,
+    val wait: KitWaitKind? = null,
+    val waitFraction: Float = 0f,
 )
 
 /** The quiet line's words: the message, then the countdown when there is one. */
@@ -349,7 +360,7 @@ private fun FullLine(
             if (stacked) Modifier.padding(top = Space.S2.dp).height(bodyLine) else Modifier,
             contentAlignment = Alignment.Center,
         ) {
-            if (line.working) StatusWorking(line.tone) else StatusIcon(line.icon, line.tone)
+            if (line.working) StatusWorking(line.tone, line.wait, line.waitFraction) else StatusIcon(line.icon, line.tone)
         }
         Spacer(Modifier.width(Space.S3.dp))
         Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
@@ -418,9 +429,14 @@ private fun StatusIcon(icon: ImageVector, tone: StatusTone) {
 
 /** A wait that ends by itself: the kit's working mark in the glyph's place and tone, still when loops are not allowed. */
 @Composable
-private fun StatusWorking(tone: StatusTone) {
+private fun StatusWorking(tone: StatusTone, wait: KitWaitKind? = null, fraction: Float = 0f) {
     val tokens = LocalKitTokens.current
-    KitWorkingMark(glyphColor(tone, LocalKitColors.current), size = tokens.smallIcon.dp, modifier = Modifier.testTag("kit-status-working"))
+    if (wait != null) {
+        // The wait's own mark in the same box and tone: the words beside it do not move.
+        KitWaitMark(wait, Modifier.testTag("kit-status-working"), tone = toneFor(tone), size = tokens.smallIcon.dp, fraction = fraction)
+    } else {
+        KitWorkingMark(glyphColor(tone, LocalKitColors.current), size = tokens.smallIcon.dp, modifier = Modifier.testTag("kit-status-working"))
+    }
 }
 
 /** The line's action as a tertiary button (Dart `KitButton.fromAction(action, role: tertiary)`). */

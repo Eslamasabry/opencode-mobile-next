@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.scale
@@ -25,10 +26,12 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.kitToneOnGlass
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.lap
+import io.github.eslamasabry.oc.ui.kit.theme.KitHct
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import kotlin.math.abs
 
 /** The real kinds of wait the app has, one mark each (two drawings where the owner kept both: see [KitWaitVariant]). */
 public enum class KitWaitKind {
@@ -207,21 +210,54 @@ internal class WaitClock(val still: Boolean, val phase: WaitReading, val fractio
 @Composable
 internal fun waitColours(mode: KitWaitMode, tone: TextTone): WaitColours {
     val colors = LocalKitColors.current
-    val ink = kitToneOnGlass(tone)
+    // In Colour the mark brings its own meaning colours: a body in a colour tone (the accent of a progress line)
+    // would swallow them, so the body takes the secondary ink there.
+    val colourTone = tone == TextTone.Accent || tone == TextTone.Attention || tone == TextTone.Success
+    val ink = kitToneOnGlass(if (mode == KitWaitMode.Colour && colourTone) TextTone.Secondary else tone)
     return when (mode) {
         KitWaitMode.Ink -> WaitColours(ink = ink, warm = ink, live = ink, call = colors.attention)
-        // On a light page the warm and the accent are their own light values (made to read on that page, not a dark
-        // colour dimmed). The dot is the bright amber of the "needs you" badge in both; on a light page it carries a
-        // fine edge of the deeper amber so it holds against the page.
-        KitWaitMode.Colour ->
+        KitWaitMode.Colour -> {
+            // On a light page the warm and the accent are their own light values (made to read on that page, not a
+            // dark colour dimmed). The dot is the bright amber of the "needs you" badge in both; on a light page it
+            // carries a fine edge of the deeper amber so it holds against the page.
+            val warm =
+                remember(colors.codeString, colors.accent, colors.dark) {
+                    waitWarm(colors.codeString, colors.accent, colors.dark)
+                }
             WaitColours(
                 ink = ink,
-                warm = colors.codeString,
+                warm = warm ?: ink,
                 live = colors.accent,
                 call = colors.attentionFill,
                 callEdge = if (colors.dark) null else colors.attention,
             )
+        }
     }
+}
+
+/** The least chroma the warm light has on a dark page, and the brightest it gets there (HCT). */
+private const val WARM_CHROMA = 64.0
+private const val WARM_TONE_DARK = 74.0
+
+/** An accent this close in hue to the warm (degrees), with at least this much colour, collides with it. */
+private const val WARM_COLLIDES_WITHIN = 35.0
+private const val COLOURED = 24.0
+private const val HALF_TURN = 180.0
+private const val FULL_TURN_DEGREES = 360.0
+
+/**
+ * The warm of heat and light, from the theme's warm role ([warmRole], `codeString`). On a dark page that role is a pale
+ * peach made for code text; the sun and the steam take its own hue with more colour and a little less light, so they
+ * read as warm light. On a light page the role is already a deep warm and is used as it is. Null when the [accent] is
+ * itself a warm colour of that hue: the warm marks then draw in ink, so the warm and the accent never meet.
+ */
+internal fun waitWarm(warmRole: Color, accent: Color, dark: Boolean): Color? {
+    val warm = KitHct.of(warmRole)
+    val lead = KitHct.of(accent)
+    val apart = abs(warm.hue - lead.hue).let { if (it > HALF_TURN) FULL_TURN_DEGREES - it else it }
+    if (lead.chroma >= COLOURED && apart < WARM_COLLIDES_WITHIN) return null
+    if (!dark) return warmRole
+    return KitHct(warm.hue, maxOf(warm.chroma, WARM_CHROMA), minOf(warm.tone, WARM_TONE_DARK)).toColor()
 }
 
 /**

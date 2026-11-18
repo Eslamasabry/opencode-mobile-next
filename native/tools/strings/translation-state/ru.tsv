@@ -1206,6 +1206,10 @@ appearanceSurfaceSoft	5b75cb5532
 appearanceSurfaceSolid	e38b8d1c4a
 appearanceTextHelp	ecb8ca7ed4
 appearanceTurnOffSaver	2e2da01ba0
+appearanceWaitMarks	f898e5f478
+appearanceWaitMarksColour	0683c358d3
+appearanceWaitMarksInk	ecb2285178
+appearanceWaitMarksNote	ba01f4c906
 approvalAllow	56f76c0729
 approvalAllowedWhat	1de049a410
 approvalAlwaysAllowExact	eb68e821c1

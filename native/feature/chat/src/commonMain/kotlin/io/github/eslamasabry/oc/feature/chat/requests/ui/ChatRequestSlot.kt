@@ -786,7 +786,8 @@ private fun AnsweredLine(card: RequestCardUi, words: String, receipt: KitReceipt
         modifier = Modifier.testTag("chat-request-answered"),
         inPlace = inPlace,
     ) {
-        KitReceipt(receipt, onRetry = onRetry)
+        // While the answer is on its way the receipt shows the Sending mark.
+        KitReceipt(receipt, onRetry = onRetry, sendingMark = true)
     }
 }
 

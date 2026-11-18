@@ -340,6 +340,12 @@ private fun StepRow(step: SetupStepUi, index: Int, total: Int, failure: SetupFai
         index = index,
         total = total,
         supporting = supporting,
+        // A download whose share is known: the Downloading mark in the working arc's place, as full as the percent.
+        wait =
+            io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Downloading.takeIf {
+                step.state == ComponentState.Running && step.percent != null
+            },
+        waitFraction = (step.percent ?: 0).coerceIn(0, 100) / 100f,
     )
 }
 

@@ -806,5 +806,10 @@ internal fun phoneFolderStatus(
         // Never tapped twice: while it runs the line has no action, only what is happening.
         action = action?.takeUnless { fixing }?.let { KitLineAction(stringResource(it), fix) },
         working = fixing,
+        // A restart is the server (or the agents) coming up again: the Starting mark.
+        wait =
+            io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Starting.takeIf {
+                fixing && reach == io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Restart
+            },
     )
 }

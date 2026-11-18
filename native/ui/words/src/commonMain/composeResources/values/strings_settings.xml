@@ -793,6 +793,10 @@
     <string name="privacyPagesSummary">Servers, providers, voice, files, and updates</string>
     <string name="manageSpaceKeptAllComputers">Your computers and anything pushed to git stay</string>
     <string name="appearanceGlassLook">Glass look</string>
+    <string name="appearanceWaitMarks">Waiting marks</string>
+    <string name="appearanceWaitMarksInk">Ink</string>
+    <string name="appearanceWaitMarksColour">Colour</string>
+    <string name="appearanceWaitMarksNote">The small moving pictures beside words such as “Starting OpenCode…”.</string>
     <string name="appearanceGlassLookPick">Choose a glass look</string>
     <string name="appearanceGlassLookGlossy">Glossy</string>
     <string name="appearanceGlassLookGlossyLine">Bright shine, bends at the edges</string>

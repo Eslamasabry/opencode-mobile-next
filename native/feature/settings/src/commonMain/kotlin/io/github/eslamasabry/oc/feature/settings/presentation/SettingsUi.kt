@@ -127,6 +127,8 @@ public data class AppearanceUi(
     val glassLookHold: EdgeHold? = null,
     /** The Glass lab row (preview builds): it opens [SettingsPage.GlassLab]. */
     val glassLab: Boolean = false,
+    /** Colours › Waiting marks: Colour (true) or Ink (false, the default). */
+    val waitMarksColour: Boolean = false,
     val guide: AppearanceGuideRecord? = null,
     val question: AppearanceQuestion? = null,
     val questions: List<AppearanceQuestion> = emptyList(),

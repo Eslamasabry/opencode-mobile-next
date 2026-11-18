@@ -88,7 +88,7 @@ public fun ChatFormSlot(
                                 stringResource(Res.string.stateFormUncertain),
                                 role = TypeRole.Secondary,
                             )
-                        else KitReceipt(KitReceiptState.Sending)
+                        else KitReceipt(KitReceiptState.Sending, sendingMark = true)
                     }
                 else ->
                     KitFormCard(

@@ -65,6 +65,8 @@ public data class KitAppearance(
      * (preview builds); null draws the shipped glass.
      */
     val glassTuning: GlassTuning? = null,
+    /** `oc.waitMarks`: the waiting marks in the theme's meaning colours; false draws them in the ink of their words. */
+    val colourWaitMarks: Boolean = false,
 ) {
     public val saver: Boolean
         get() = mode == AppearanceMode.Saver

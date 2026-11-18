@@ -789,6 +789,10 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                                 it.coerceIn(0.0, 100.0).toInt(),
                             )
                         }
+                val share =
+                    if ((component.bytesTotal ?: 0) > 0 && component.bytesDone != null) {
+                        (component.bytesDone!!.toDouble() / component.bytesTotal!!.toDouble()).toFloat().coerceIn(0f, 1f)
+                    } else component.percent?.let { (it / 100.0).toFloat().coerceIn(0f, 1f) }
                 val stage =
                     component.stage?.let { setupMessageWords(it) }
                         ?: if (component.state == ComponentState.Checking)
@@ -832,6 +836,12 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                     index = index + 1,
                     total = rows.size,
                     supporting = supporting,
+                    // A download whose share is known: the Downloading mark in the working arc's place.
+                    wait =
+                        io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind.Downloading.takeIf {
+                            component.state == ComponentState.Running && share != null
+                        },
+                    waitFraction = share ?: 0f,
                 )
             }
             KitDetailsFold(

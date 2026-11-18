@@ -93,18 +93,20 @@ private const val STROKE_WAVE_LENGTH = 6.5f
 private const val STROKE_SAMPLE = 0.4f
 private const val NIB_LIFT = 2.2f
 
-private const val WRITE_FROM = 0.06f
-private const val WRITE_BY = 0.56f
-private const val LIFT_BY = 0.64f
-private const val TAKEN_FROM = 0.62f
-private const val TAKEN_BY = 0.84f
+// Writing takes about two thirds of the loop; then one lift, the line taken away while the nib floats back, a set
+// down and a short beat before the next line.
+private const val WRITE_FROM = 0.03f
+private const val WRITE_BY = 0.68f
+private const val LIFT_BY = 0.74f
+private const val TAKEN_FROM = 0.72f
+private const val TAKEN_BY = 0.86f
 private const val BACK_BY = 0.90f
 private const val SET_DOWN_FROM = 0.88f
-private const val SET_DOWN_BY = 0.98f
+private const val SET_DOWN_BY = 0.95f
 
 /** Phase 0 is here in the loop: the line half written. The still: most of the line written, the nib on it. */
 private const val NIB_LEAD = 0.36f
-private const val NIB_STILL = 0.48f
+private const val NIB_STILL = 0.55f
 
 private const val TWO_PI = 6.2831855f
 
@@ -117,7 +119,8 @@ private fun strokeY(x: Float): Float {
 internal fun WaitPen.nib(scope: DrawScope, phase: Float, still: Boolean) {
     val t = if (still) NIB_STILL else turn(phase + NIB_LEAD)
     val reach = STROKE_TO - STROKE_FROM
-    val end = STROKE_FROM + reach * easeInOut(seg(t, WRITE_FROM, WRITE_BY))
+    // The hand writes at an even pace from the moment it sets down; only the ends are soft.
+    val end = STROKE_FROM + reach * glide(seg(t, WRITE_FROM, WRITE_BY))
     val start = STROKE_FROM + reach * easeInOut(seg(t, TAKEN_FROM, TAKEN_BY))
     val back = easeInOut(seg(t, LIFT_BY, BACK_BY))
     val tipX = end - (end - STROKE_FROM) * back

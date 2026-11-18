@@ -52,6 +52,8 @@ public data class PersonalPrefs(
     val liveStrength: LiveStrength = LiveStrength.Normal,
     /** The Glass look (`oc.glassLook`): Glossy by default (glass looks 2026-11-09). */
     val glassLook: GlassLookId = GlassLookId.Glossy,
+    /** The waiting marks in Colour (`oc.waitMarks`); false = Ink, the default. */
+    val waitMarksColour: Boolean = false,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
 }
@@ -75,6 +77,9 @@ public sealed interface PersonalChange {
 
     /** The Glass look (the Glass look picker). */
     public data class Look(val look: GlassLookId) : PersonalChange
+
+    /** Colours › Waiting marks: true = Colour, false = Ink. */
+    public data class WaitMarks(val colour: Boolean) : PersonalChange
 
     /** The Accent swatch by id; null = Match theme. */
     public data class Accent(val id: String?) : PersonalChange

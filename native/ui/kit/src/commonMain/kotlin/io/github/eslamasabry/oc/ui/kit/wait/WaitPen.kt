@@ -188,6 +188,20 @@ internal fun overshoot(x: Float): Float {
     return 1f + (BACK + 1f) * d * d * d + BACK * d * d
 }
 
+private const val GLIDE_RAMP = 0.12f
+
+/** An even pace with short soft ends (a hand writing): speeds up over the first [GLIDE_RAMP], slows over the last. */
+internal fun glide(x: Float): Float {
+    val top = 1f / (1f - GLIDE_RAMP)
+    return when {
+        x <= 0f -> 0f
+        x >= 1f -> 1f
+        x < GLIDE_RAMP -> top * x * x / (2f * GLIDE_RAMP)
+        x < 1f - GLIDE_RAMP -> top * (x - GLIDE_RAMP / 2f)
+        else -> 1f - top * (1f - x) * (1f - x) / (2f * GLIDE_RAMP)
+    }
+}
+
 /** One soft beat: 0, up to 1 in the middle, back to 0. */
 internal fun bump(x: Float): Float {
     val s = sin(PI.toFloat() * x)

@@ -51,6 +51,12 @@ public fun KitChecklistStep(
     total: Int,
     modifier: Modifier = Modifier,
     supporting: String? = null,
+    /**
+     * While [state] is Working: the kind of wait [supporting] names (a download whose share is known); its waiting
+     * mark replaces the working arc in the same slot. [waitFraction] is the share done, 0..1.
+     */
+    wait: io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind? = null,
+    waitFraction: Float = 0f,
 ) {
     require(index in 1..total)
     val word =
@@ -89,7 +95,16 @@ public fun KitChecklistStep(
         ) {
             Crossfade(state, animationSpec = KitMotion.specs.quick(), label = "step-mark") { shown
                 ->
-                StepMark(shown)
+                if (shown == KitStepState.Working && wait != null) {
+                    io.github.eslamasabry.oc.ui.kit.wait.KitWaitMark(
+                        wait,
+                        tone = TextTone.Secondary,
+                        size = LocalKitTokens.current.smallIcon.dp,
+                        fraction = waitFraction,
+                    )
+                } else {
+                    StepMark(shown)
+                }
             }
         }
         Column(Modifier.weight(1f)) {
