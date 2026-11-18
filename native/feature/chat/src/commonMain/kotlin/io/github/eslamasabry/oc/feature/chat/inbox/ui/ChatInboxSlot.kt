@@ -31,6 +31,8 @@ public fun ChatInboxSlot(
     open: Boolean,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    /** False once the reply a steer was joining has ended: the row then says it waits on the server, not that it joins. */
+    replyRunning: Boolean = true,
 ) {
     LaunchedEffect(state.restore) {
         state.restore?.let {
@@ -56,7 +58,7 @@ public fun ChatInboxSlot(
                             stringResource(
                                 if (row.local && row.dispatched) Res.string.nativePendingUnconfirmed
                                 else if (row.local) Res.string.nativePendingOffline
-                                else if (row.delivery == InboxDelivery.Steer)
+                                else if (row.delivery == InboxDelivery.Steer && replyRunning)
                                     Res.string.nativePendingJoining
                                 else Res.string.nativePendingAdmitted
                             )
