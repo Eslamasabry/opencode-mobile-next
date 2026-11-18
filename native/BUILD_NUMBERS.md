@@ -114,3 +114,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10088 | build | 2026-11-18 | look build for next-update branches rich-analytics + b7-dailynews, not the line (source 179b82237f, native/listb-look-2) |
 | 10089 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: soft ends at the capsule and message box corners (source 1ae291912b) |
 | 10090 | build | 2026-11-18 | NOT BUILT: reserved for the next interim (to carry sign-in polish, plus-light, notify-signin-again, text-scale follow-up) on the coordinator's word; no APK exists for this number |
+| 10091 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: sign-in page polish (signin-polish 97ba44edb3) + light round Home's plus (plus-light 689c6c744f) + notification names the agent to sign in again (notify-signin-again 1c68e24add); text-scale follow-up NOT in (source 57085ae213) |
