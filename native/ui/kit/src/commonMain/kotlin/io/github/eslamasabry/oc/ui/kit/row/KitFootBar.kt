@@ -30,7 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
  * States: with action, without action
  * Text: frame (label), tabular count
  * Cap: the host's block
- * Motion: the button fades in and out; the link eases to its width
+ * Motion: the button fades in and out; the link eases to its width; the button's border light (kitBorderLight)
  * Hidden: none
  * Replaces: none
  */
@@ -44,6 +44,8 @@ public fun KitFootBar(
     onFab: () -> Unit,
     modifier: Modifier = Modifier,
     fabVisible: Boolean = true,
+    /** Runs the border light round the round button ([KitFab]'s `light`); the host names the reason. */
+    fabLight: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
@@ -52,6 +54,6 @@ public fun KitFootBar(
             CompositionLocalProvider(LocalKitOnRail provides false) { KitPanelLinkRow(label, count, onLink) }
         }
         if (fabVisible) Spacer(Modifier.width(Space.S3.dp))
-        KitFab(fabLabel, fabIcon, onFab, visible = fabVisible)
+        KitFab(fabLabel, fabIcon, onFab, visible = fabVisible, light = fabLight)
     }
 }

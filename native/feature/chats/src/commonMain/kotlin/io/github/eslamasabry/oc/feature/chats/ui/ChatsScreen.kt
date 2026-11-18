@@ -349,6 +349,11 @@ public fun ChatsScreen(
                     fabLabel = stringResource(Res.string.chatsHomeNewChat),
                     fabIcon = KitIcons.add,
                     onFab = actions::newConversation,
+                    // The light runs round the + only while a New conversation tap is kept for a server that is still
+                    // opening (the notice above names the wait, the same condition): the conversation is being
+                    // prepared and opens by itself. It fades out the moment that ends: opened, cancelled, refused or
+                    // the bounded wait spent. A failure never glows.
+                    fabLight = state.newWaiting && !state.newBlocked && state.home.opening?.phase != ChatsOpeningPhase.Failed,
                 )
             }),
         status =

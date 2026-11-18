@@ -83,10 +83,13 @@ public const val KIT_FAB_CLEARANCE: Int = 80 // F: lib/ui/kit/kit_floating_actio
  * reduced motion). The host places it on the gutter at the bottom end ([KitFloatingAction] does that), and the list
  * under it ends with [KIT_FAB_CLEARANCE] more room so its last row scrolls clear.
  *
- * States: default, pressed, hidden
+ * With [light] on, the kit's border light ([kitBorderLight]) runs round its edge: the disc's, or Signal's key at its
+ * sharp radius.
+ *
+ * States: default, pressed, hidden, lit
  * Text: none (the label is heard); Signal draws it as chrome, one line
  * Cap: 56 dp (Signal: the window less two gutters)
- * Motion: fade in/out; Off = instant
+ * Motion: fade in/out; Off = instant; the light: kitBorderLight's
  * Replaces: KitFloatingAction (lib/ui/kit/kit_floating_action.dart)
  */
 @Composable
@@ -102,6 +105,11 @@ public fun KitFab(
      * liquid glass over it (Android 13+, where not held); every other style ignores it.
      */
     backdrop: KitFrostState? = null,
+    /**
+     * Runs the kit's border light round the button while true. The host passes a reason a person can name (the home: a
+     * New conversation tap kept while its server opens); the button's size, place and target never change with it.
+     */
+    light: Boolean = false,
 ) {
     val reduced = KitMotion.state.reduced
     val specs = KitMotion.specs
@@ -112,13 +120,14 @@ public fun KitFab(
         enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
         exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
     ) {
-        if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick) else RoundFace(label, icon, onClick, backdrop)
+        val lit = light && visible
+        if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick, lit) else RoundFace(label, icon, onClick, backdrop, lit)
     }
 }
 
 /** The round face (kit_floating_action.dart:136-176): a stadium in the accent, from the style resolver. */
 @Composable
-private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, backdrop: KitFrostState? = null) {
+private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, backdrop: KitFrostState?, light: Boolean) {
     val colors = LocalKitColors.current
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
@@ -145,6 +154,9 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
     Box(
         Modifier.kitLiquidSwell(liquidPress)
             .size(KIT_FAB_SIZE.dp)
+            // The light is drawn round the disc, its halo under the face and its line over the edge; Glass's face is
+            // clear, so there the head is not white (it would vanish on a pale page).
+            .kitBorderLight(CircleShape, light, filled = !clear)
             // The style's face (and its shadow) is drawn before the target's circular clip, so a raised or offset
             // shadow is not cut away to nothing (device pass 2026-11-13: the round + had no shadow in Soft).
             .then(if (liquid == null) look.modifier else Modifier)
@@ -166,7 +178,7 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
  * its lip, at Signal's sharp radius; at most the window less two gutters wide.
  */
 @Composable
-private fun SignalKey(label: String, icon: ImageVector, onClick: () -> Unit) {
+private fun SignalKey(label: String, icon: ImageVector, onClick: () -> Unit, light: Boolean) {
     val pageGutter = kitPageGutter()
     val palette = SignalPalette.forRoles(LocalKitRoles.current)
     val interactions = remember { MutableInteractionSource() }
@@ -185,16 +197,19 @@ private fun SignalKey(label: String, icon: ImageVector, onClick: () -> Unit) {
         )
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val wordsColor = Color(palette.inkKeyWords.v)
+    val shape = key.shape()
     BoxWithConstraints {
         val cap: Dp = maxWidth - pageGutter * 2 // F: lib/ui/kit/kit_floating_action.dart:75
         Row(
             Modifier
                 .widthIn(max = cap)
                 .heightIn(min = KIT_FAB_SIZE.dp)
+                // The light follows the key's own rounded rectangle, measured along its outline.
+                .kitBorderLight(shape, light)
                 // The key paints its face, edge and lip before the press clip, and the press ink is clipped to the key's
                 // own corners: a Button clip of another radius cut the key's edge at its corners and its lip below it.
                 .kitDecorated(key, rtl)
-                .kitTappable(onClick = onClick, shape = KitShapeId.Button, interactionSource = interactions, pressClip = key.shape())
+                .kitTappable(onClick = onClick, shape = KitShapeId.Button, interactionSource = interactions, pressClip = shape)
                 .semantics { contentDescription = label }
                 .testTag("kit-fab")
                 .padding(start = Space.S4.dp, end = Space.S5.dp),
