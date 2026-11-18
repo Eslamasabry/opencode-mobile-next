@@ -169,8 +169,10 @@ class AgentCatalogTest {
         assertEquals("d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5", pins.paseo.packageLockSha256)
         assertEquals("/home/oc/.local/share/oc-paseo/0.16.1-d5317553e538", pins.paseo.installDirectory)
         assertEquals("v24.22.3", pins.node.version)
-        assertEquals("261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8", pins.node.sha256[AgentArchitecture.Arm64])
-        assertEquals("061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2", pins.node.sha256[AgentArchitecture.X64])
+        val nodeArm64 = "261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8"
+        val nodeX64 = "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2"
+        assertEquals(nodeArm64, pins.node.sha256[AgentArchitecture.Arm64])
+        assertEquals(nodeX64, pins.node.sha256[AgentArchitecture.X64])
         assertTrue("2.1.327" in pins.claudeCodeTestedVersions)
     }
 

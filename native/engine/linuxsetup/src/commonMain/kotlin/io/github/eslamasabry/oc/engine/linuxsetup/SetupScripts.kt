@@ -382,7 +382,9 @@ public object OpenCodePins {
                 ),
             x64 =
                 OpenCodeAsset(
-                    url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.3.2.tgz",
+                    url =
+                        "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/" +
+                            "-/cli-linux-x64-baseline-2.3.2.tgz",
                     sha256 = "e567dcdb1310dcae4e442077e0d508e10a80c1b996131a04dc9b978cdd26e5cd",
                     member = "package/bin/opencode",
                 ),
