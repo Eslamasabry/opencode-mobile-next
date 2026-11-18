@@ -47,7 +47,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.pointer.pointerInput
@@ -434,6 +436,9 @@ public fun KitScreen(
             // once (it must never bend the pill's own picture). Nothing floats under the bar (audit 1, 2026-11-14: the
             // chat's "N earlier messages" is the transcript's first row now), so the top edge is the bar's alone.
             var topBottom by remember { mutableFloatStateOf(Float.NaN) }
+            // The header part's own height (the capsule and its margins), without the status line under it.
+            var barOnlyPx by remember { mutableIntStateOf(0) }
+            val capsuleCorner = LocalKitTokens.current.composerRadius
             val fadeBottomPx = with(density) { COMPOSER_FADE_DP.dp.toPx() }
             val floatGapPx = with(density) { FLOAT_GAP_DP.dp.toPx() }
             val bottomExtraTarget by remember(floatGapPx) {
@@ -544,12 +549,13 @@ public fun KitScreen(
                                         clearAbove =
                                             if (topPart == null) null
                                             else if (floatChrome) ({
-                                                // A status line under the capsule (a notice, the demo's disclosure) is part of the
-                                                // chrome's block: the body is gone above its foot, so a transcript row never draws
-                                                // over the line's words (device look on 10083, text 200 %). With no line, only the
-                                                // status area and the capsule's own margin are cleared.
+                                                // The band above the capsule's foot is cleared (the status area, the margins, the
+                                                // gaps at its curved corners), except inside the capsule's own outline (keepWithin
+                                                // below). A status line under the capsule is part of the block: the band runs to
+                                                // its foot (device looks on 10083 and 10084). The cut follows the outline, no
+                                                // plate, no line, no fade is added.
                                                 if (ownsLine && line != null) (statusPx + topPx).toFloat()
-                                                else (statusPx + with(density) { (if (barFace != null) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() })
+                                                else (statusPx + barOnlyPx - with(density) { (if (barFace != null) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() })
                                             })
                                             else ({ (statusPx + topPx).toFloat() }),
                                         topReach = if (floatChrome) 0.dp else TOP_DISSOLVE_DP.dp,
@@ -568,6 +574,20 @@ public fun KitScreen(
                                         bottomReach = if (floatChrome) 0.dp else COMPOSER_FADE_DP.dp,
                                         bottomStrength = { if (zones.claims > 0) 0f else 1f },
                                         ground = flatGround,
+                                        keepWithin =
+                                            if (!floatChrome || topPart == null) null
+                                            else ({ width: Float ->
+                                                val glass = barFace != null
+                                                val sideDp = if (glass) LIQUID_BAR_INSET_X else HEADER_CAPSULE_SIDE_DP
+                                                val insetY = with(density) { (if (glass) LIQUID_BAR_INSET_Y else HEADER_CAPSULE_MARGIN_DP).dp.toPx() }
+                                                val side = with(density) { sideDp.dp.toPx() }
+                                                val top = statusPx + insetY
+                                                val bottom = statusPx + barOnlyPx - insetY
+                                                val radius = with(density) { (if (glass) LIQUID_BAR_RADIUS else capsuleCorner).dp.toPx() }
+                                                val r = minOf(radius, (bottom - top) / 2f).coerceAtLeast(0f)
+                                                if (bottom <= top || barOnlyPx <= 0) null
+                                                else RoundRect(side, top, width - side, bottom, CornerRadius(r, r))
+                                            }),
                                     )
                             )
                             .kitMaxWidth(cap)
@@ -593,6 +613,7 @@ public fun KitScreen(
                         topPart?.let {
                             Box(
                                 Modifier.fillMaxWidth()
+                                    .onSizeChanged { barOnlyPx = it.height }
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, topFrost) else Modifier)
                             ) {

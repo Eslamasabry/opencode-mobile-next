@@ -3,10 +3,14 @@ package io.github.eslamasabry.oc.ui.kit.frame
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -86,6 +90,12 @@ internal fun Modifier.kitScrollEdges(
      * clearing through an offscreen layer.
      */
     ground: Color = Color.Unspecified,
+    /**
+     * A floating part standing in the cleared band (the header capsule), read while drawing: the band is cleared around
+     * its rounded outline, never inside it, so nothing of the content peeks out at its curved corners and what lies
+     * behind a glass part still shows through it.
+     */
+    keepWithin: ((Float) -> RoundRect?)? = null,
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     val flat = ground.isSpecified && ground.alpha >= 1f
@@ -96,6 +106,7 @@ internal fun Modifier.kitScrollEdges(
             // and their colour lists (jank pass 2026-11-10).
             val top = EdgeBrush()
             val bottom = EdgeBrush()
+            val bandPath = Path().apply { fillType = PathFillType.EvenOdd }
             val ink = if (flat) ground else Color.Black
             val mode = if (flat) BlendMode.SrcOver else BlendMode.DstOut
             onDrawWithContent {
@@ -108,7 +119,14 @@ internal fun Modifier.kitScrollEdges(
                         val t = wholePx(edge)
                         val r = wholePx(edge + (topReachPx?.invoke() ?: topReach.toPx())) - t
                         if (t > 0f) {
-                            drawRect(ink.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = mode)
+                            val keep = keepWithin?.invoke(w)
+                            if (keep == null) drawRect(ink.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = mode)
+                            else {
+                                bandPath.reset()
+                                bandPath.addRect(Rect(0f, 0f, w, t))
+                                bandPath.addRoundRect(keep)
+                                drawPath(bandPath, ink.copy(alpha = k), blendMode = mode)
+                            }
                         }
                         if (r > 0f) drawRect(top.of(1f, 0f, k, t, t + r, ink), Offset(0f, t), Size(w, r), blendMode = mode)
                     }
