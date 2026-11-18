@@ -192,7 +192,7 @@ internal fun ModelSheet(
 }
 
 private fun kitOption(model: ComposerModel): KitModelOption =
-    KitModelOption(model.providerId, model.modelId, model.label, model.providerName)
+    KitModelOption(model.providerId, model.modelId, model.label, model.providerName, releasedAtMs = model.releasedAtMs)
 
 /** A thinking level as people read it (Flutter `presentedEffort`): "Extra high" for `xhigh`; unknown ids as they are. */
 @Composable
