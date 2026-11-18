@@ -34,6 +34,10 @@ public interface ChatWorld {
         StateFlow<io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel?>
         get() = NoRequests
 
+    /** Sessions with an open request of their own (a sub-agent waiting on the person), raw ids, this one left out. */
+    public val childNeedsYou: StateFlow<Set<String>>
+        get() = NoChildNeeds
+
     public val ref: ConversationRef
 
     /** Newest-first rows, published at most every 50 ms by the engine (plan 09 §3.5). */
@@ -569,6 +573,8 @@ private val NoRequests =
     >(
         null
     )
+
+private val NoChildNeeds = kotlinx.coroutines.flow.MutableStateFlow<Set<String>>(emptySet())
 
 private val NoOlder = kotlinx.coroutines.flow.MutableStateFlow(false)
 

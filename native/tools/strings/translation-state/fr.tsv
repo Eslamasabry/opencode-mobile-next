@@ -8792,6 +8792,8 @@ phoneDownloadAskWait	f042122837
 phoneDownloadFailedHelper	2e2ff8b474
 phoneDownloadFailedOpenCode	ce67da4078
 phoneDownloadOnMobile	7d7fbe0518
+phoneDownloadReadyPhone	9475f11261
+phoneDownloadReadyReply	5fa5c5f93e
 phoneDownloadRunningHelper	ec134bde76
 phoneDownloadRunningOpenCode	ff260fea86
 phoneDownloadRunningPercent	fa1eaf2d6a

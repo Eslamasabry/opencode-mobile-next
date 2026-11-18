@@ -564,6 +564,8 @@ internal class GraphChatWorld(
     private val recoveryIds = HashMap<String, Long>()
     private val mutableRequests = MutableStateFlow<ChatRequestsModel?>(null)
     override val requests: StateFlow<ChatRequestsModel?> = mutableRequests
+    private val mutableChildNeeds = MutableStateFlow<Set<String>>(emptySet())
+    override val childNeedsYou: StateFlow<Set<String>> = mutableChildNeeds
 
     /** The handle, its graph and the collectors feeding it. Replaced as a whole on reload. */
     private class Attached(
@@ -1161,6 +1163,13 @@ internal class GraphChatWorld(
                 },
                 scope.launch(registry.mainContext) {
                     mutableRequests.value?.state?.collect { publishVoiceConversation() }
+                },
+                // Read at every change, never kept: a delegated step whose sub-agent waits on the person says so, and
+                // says no more the moment the request is answered (the engine's list drops it).
+                scope.launch(registry.mainContext) {
+                    services.chatRequests.engine.pending.collect { open ->
+                        mutableChildNeeds.value = open.mapTo(hashSetOf()) { it.sessionId.raw } - sid.raw
+                    }
                 },
                 scope.launch(registry.mainContext) {
                     graph.session.reads.missing.collect { missing ->

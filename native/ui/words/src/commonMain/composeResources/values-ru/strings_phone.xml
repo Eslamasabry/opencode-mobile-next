@@ -950,4 +950,6 @@
     <string name="phoneDownloadAskBodyHelper">Это обновление помощника агентов на этом телефоне. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
     <string name="phoneDownloadAskNow">Скачать сейчас</string>
     <string name="phoneDownloadAskWait">Ждать Wi-Fi</string>
+    <string name="phoneDownloadReadyReply">Обновление OpenCode готово · установится, когда не будет идти ответ</string>
+    <string name="phoneDownloadReadyPhone">Обновление OpenCode готово · установится, когда сервер телефона будет готов</string>
 </resources>
