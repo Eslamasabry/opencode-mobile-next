@@ -108,3 +108,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10082 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: clipboard crash fix (source eaa11ac005) |
 | 10083 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: mic in the message box + chat page edge fixes (source 3c761208fb) |
 | 10084 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: silence in dictation + notice row at large text (source 1de9de53ce) |
+| 10085 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: voice privacy pages + header capsule corners (source 3aabf1d837) |
