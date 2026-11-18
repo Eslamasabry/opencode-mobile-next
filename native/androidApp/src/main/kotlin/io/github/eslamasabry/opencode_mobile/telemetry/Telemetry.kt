@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.analytics.umami.FileUmamiStore
 import io.github.eslamasabry.oc.engine.analytics.DeviceClass
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiFacts
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiHttp
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiSender
 import io.github.eslamasabry.oc.engine.analytics.umami.UsageTelemetryVendor
@@ -58,9 +59,10 @@ internal object Telemetry {
         val vendor: TelemetryVendor? =
             if (DeferredFirebaseTelemetryVendor.Config.present(app)) {
                 val build = UmamiBuild(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString())
+                val phoneFacts = UmamiPhoneFacts(app, System::currentTimeMillis)
                 val device = {
-                    // Only the Android MAJOR version and the class (phone or tablet): never the model, the maker,
-                    // the resolution, the time zone, an Android id or an install id (a guard test reads this block).
+                    // Only the Android MAJOR version, the class (phone or tablet) and the fixed words of `UmamiField`: never the
+                    // model, the maker, the resolution, the time zone, an Android id or an install id (a guard test reads this block).
                     val osMajor = Build.VERSION.RELEASE.substringBefore('.').toIntOrNull() ?: 0
                     val tablet = app.resources.configuration.smallestScreenWidthDp >= 600
                     val modelClass = if (tablet) "Android Tablet" else "Android Phone"
@@ -71,6 +73,9 @@ internal object Telemetry {
                             "Chrome/131.0.0.0$mobile Safari/537.36",
                         osMajor,
                         if (tablet) DeviceClass.Tablet else DeviceClass.Phone,
+                        // Fixed words and ranges only (the phone's own facts, then the app's live ones: style, theme,
+                        // kinds of connection and agent); each is checked against the one field list before it is sent.
+                        facts = phoneFacts.read() + UmamiFacts.snapshot(),
                     )
                 }
                 val configured = UmamiHttp.configured(BuildConfig.UMAMI_URL, BuildConfig.UMAMI_WEBSITE)

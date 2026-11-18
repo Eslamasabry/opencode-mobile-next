@@ -52,12 +52,17 @@ public data class UmamiDevice(
     val userAgent: String,
     val osMajor: Int,
     val deviceClass: DeviceClass,
+    /**
+     * The rest of the envelope, by [UmamiField] wire name (width class, ranges, style, ...). Anything not on that list,
+     * or holding a word it does not list, is dropped by [UmamiField.clean] before it joins an event.
+     */
+    val facts: Map<String, String> = emptyMap(),
 )
 
-/** The only device keys added to an event's data, besides `version` and `build`. */
 private const val MAX_OS_MAJOR = 999
 
-public val umamiDeviceKeys: Set<String> = setOf("os_major", "device_class")
+/** The only keys added to an event's data besides its own words and `version`/`build`: every other [UmamiField]. */
+public val umamiDeviceKeys: Set<String> = UmamiField.wires - setOf("version", "build")
 
 /** Where an event comes from: the site it counts under, the build that sent it and the device that sent it. */
 public data class UmamiSource(val website: String, val build: UmamiBuild, val device: UmamiDevice)
@@ -118,6 +123,7 @@ public fun umamiEvent(
 }
 
 private fun deviceData(device: UmamiDevice): Map<String, String> = buildMap {
+    putAll(UmamiField.clean(device.facts) - setOf("version", "build"))
     if (device.osMajor in 1..MAX_OS_MAJOR) put("os_major", device.osMajor.toString())
     when (device.deviceClass) {
         DeviceClass.Phone -> put("device_class", "phone")

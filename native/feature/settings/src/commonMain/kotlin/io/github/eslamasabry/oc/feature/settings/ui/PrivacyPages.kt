@@ -140,6 +140,13 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
         }
         HealthContract.items.getValue(CollectGroup.Crashes).forEach { CollectRow(it) }
     }
+    KitRowGroup(
+        label = stringResource(Res.string.collectOwnLabel),
+        modifier = Modifier.testTag("collect-own-server"),
+    ) {
+        HealthContract.items.getValue(CollectGroup.OwnServer).forEach { CollectRow(it) }
+        KitRow(title = stringResource(Res.string.collectOwnTogether), titleMaxLines = Int.MAX_VALUE)
+    }
     KitRowGroup(label = stringResource(Res.string.collectReportLabel)) {
         HealthContract.items.getValue(CollectGroup.Report).forEach { CollectRow(it) }
     }
@@ -180,4 +187,8 @@ internal fun collectWords(item: CollectItem): StringResource =
         CollectItem.Steps -> Res.string.collectSteps
         CollectItem.CrashKeys -> Res.string.collectCrashKeys
         CollectItem.Report -> Res.string.collectReport
+        CollectItem.OwnBuild -> Res.string.collectOwnBuild
+        CollectItem.OwnPhone -> Res.string.collectOwnPhone
+        CollectItem.OwnLook -> Res.string.collectOwnLook
+        CollectItem.OwnUse -> Res.string.collectOwnUse
     }
