@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -99,6 +98,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
+import io.github.eslamasabry.oc.ui.kit.foundation.kitOnHeightChanged
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -1111,7 +1111,7 @@ public fun ChatScreen(
                                     // (golden chat_approval_ask: box bottom at 907 of 915); the screen's bottom slot
                                     // already keeps that room. E: on wide windows it shares the 700 dp pane.
                                     Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(top = Space.S2.dp)
-                                        .onSizeChanged { composerPx.intValue = it.height },
+                                        .kitOnHeightChanged { composerPx.intValue = it },
                                 )
                               }
                         }
