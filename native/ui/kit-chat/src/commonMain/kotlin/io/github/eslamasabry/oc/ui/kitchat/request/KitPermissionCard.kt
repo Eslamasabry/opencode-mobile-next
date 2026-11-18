@@ -98,7 +98,10 @@ public class KitRequestChange(
 // Issue 147 (F-016): the request stack in the conversation is this tall plus room for the card's caption and gap, so a card
 // at its cap is whole in it: the answers are never cut off by the stack's own edge. (The stack was 0.40 against 0.45.)
 private const val HEIGHT_SHARE = 0.45f
-private const val HEIGHT_SHARE_LARGE_TEXT = 0.60f
+// At 2x text the card's own words are bigger, but the room is not: 60 % plus the stack's caption, the message box and the
+// notice under the capsule left the card over the capsule's title (device look 10093, text 200 %). The body scrolls inside
+// the card and its answers stay at its foot, so the card can be shorter.
+private const val HEIGHT_SHARE_LARGE_TEXT = 0.40f
 private const val LARGE_TEXT = 2.0f
 
 /**
@@ -109,7 +112,7 @@ private const val LARGE_TEXT = 2.0f
  * Allow once is the primary answer (secondary among list rows), Deny is never drawn in the primary colour, and Always allow
  * shows only when [alwaysLabel] and [onAlways] are given.
  *
- * The card is at most 700 dp wide and 45 % of the window tall (60 % at 2× text and above); longer
+ * The card is at most 700 dp wide and 45 % of the window tall (40 % at 2× text and above); longer
  * words scroll inside it while the answers stay in sight. While it cannot answer ([enabled] false,
  * e.g. an answer is being sent) the buttons are disabled and say why ([disabledReason], required
  * then).
@@ -495,7 +498,7 @@ private fun AlwaysLink(label: String, onAlways: () -> Unit, enabled: Boolean, re
 internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Commit
 
 /**
- * 45 % of the window's height (60 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
+ * 45 % of the window's height (40 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
  * every kit part reads; the raw platform container can be another size, e.g. a test host).
  */
 @Composable
