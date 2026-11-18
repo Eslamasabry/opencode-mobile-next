@@ -144,6 +144,7 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
         modifier = Modifier.testTag("collect-own-server"),
     ) {
         HealthContract.items.getValue(CollectGroup.OwnServer).forEach { CollectRow(it) }
+        KitRow(title = stringResource(Res.string.collectOwnTogether), titleMaxLines = Int.MAX_VALUE)
     }
     KitRowGroup(label = stringResource(Res.string.collectReportLabel)) {
         HealthContract.items.getValue(CollectGroup.Report).forEach { CollectRow(it) }

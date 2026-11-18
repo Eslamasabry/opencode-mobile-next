@@ -46,4 +46,5 @@
     <string name="collectOwnPhone">رقم إصدار Android الرئيسي في هاتفك (os_major، مثل 16)، وهاتف أو لوحي (device_class)، وعرض النافذة بوصفه مدمجًا أو متوسطًا أو موسّعًا (width_class)، وحجم النص بوصفه أصغر أو افتراضيًا أو أكبر أو الأكبر (text_scale)، وعائلة المعالج (abi)، ونطاقات الذاكرة (ram_range) والمساحة الحرة (free_storage_range). لا يُرسَل أبدًا الطراز ولا الشركة المصنّعة ولا حجم الشاشة الدقيق ولا أي معرّف</string>
     <string name="collectOwnLook">النمط الذي اخترته (style)، وإعداد السمة (theme_mode: النظام أو فاتح أو داكن أو موفّر) وهل موفّر البطارية مفعّل (battery_saver)</string>
     <string name="collectOwnUse">منذ متى ثُبّت التطبيق، في أربع مراحل (install_age)، وأنواع خوادم الوكلاء المتصلة (agents: Codex أو OpenCode أو Paseo)، وهل أنت متصل بهذا الهاتف أم بحاسوب مقترن أم بخادم بعيد (connection_kind). لا يُرسَل أبدًا عنوان أو اسم</string>
+    <string name="collectOwnTogether">عند جمعها معًا، يمكن لهذه المعلومات أن تميّز تقارير هاتف عن تقارير هاتف آخر. وهي لا تكشف أبدًا من أنت، ولا يرسل التطبيق معها أي اسم أو حساب أو معرّف.</string>
 </resources>

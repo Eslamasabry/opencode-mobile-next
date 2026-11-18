@@ -204,6 +204,7 @@ x86_64 or other); `ram_range` and `free_storage_range` (the same ranges as the G
 paseo servers are connected, product names only); and `connection_kind` (phone, computer, remote, or a mix, or none; never
 an address). The same list is what "What we collect" shows under "Only to our own server". Before a request leaves the
 phone, the app checks its real body against this list and drops any key or value not on it (logging only the key's name).
+Taken together, these can tell one phone’s reports from another’s. They never say who you are, and the app sends no name, account or ID with them.
 A browser-like User-Agent repeats only the Android main version and the device class.
 Nothing else about the device goes to Umami: no screen size or resolution, model, maker, time zone, place,
 minor version, or device or installation ID. The build number is also the tag. Google receives the app version automatically and the `app_build` user

@@ -48,4 +48,5 @@
     <string name="collectOwnPhone">你这部手机的 Android 主版本（os_major，例如 16）、手机或平板（device_class）、窗口宽度属于紧凑、中等还是扩展（width_class）、文字大小属于较小、默认、较大还是最大（text_scale）、处理器系列（abi），以及内存范围（ram_range）和可用存储范围（free_storage_range）。绝不发送型号、制造商、精确的屏幕尺寸或任何标识符</string>
     <string name="collectOwnLook">你选择的样式（style）、主题设置（theme_mode：跟随系统、浅色、深色或省电）以及省电模式是否开启（battery_saver）</string>
     <string name="collectOwnUse">应用已安装多久，分四档（install_age）、已连接的是哪几类智能体服务器（agents：Codex、OpenCode 或 Paseo），以及你连接的是这部手机、已配对的电脑还是远程服务器（connection_kind）。绝不发送地址或名称</string>
+    <string name="collectOwnTogether">这些信息合在一起，可以区分一部手机的报告和另一部手机的报告。它们绝不会说明你是谁，应用也不会随它们发送姓名、账户或标识符。</string>
 </resources>
