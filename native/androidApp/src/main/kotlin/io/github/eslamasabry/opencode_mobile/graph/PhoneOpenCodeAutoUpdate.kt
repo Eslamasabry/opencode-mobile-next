@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeAutoUpdater
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHostFacts
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJobs
+import io.github.eslamasabry.oc.engine.runtime.server.UpdaterHooks
 import io.github.eslamasabry.oc.engine.runtime.server.launchOpenCodeAutoUpdate
 import io.github.eslamasabry.oc.engine.runtime.server.openCodeAutoUpdateLooks
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
@@ -117,17 +118,20 @@ class PhoneOpenCodeAutoUpdate(
                 nowMs = { SystemClock.elapsedRealtime() },
                 // A retry waiting for its time wakes itself: ONE pending delayed look (a newer ask replaces
                 // the older one), cancelled with the app's scope.
-                onRead = { UpdaterReads.opencode.incrementAndGet() },
-                wake = { delayMs ->
-                    synchronized(wakeLock) {
-                        wakeJob?.cancel()
-                        wakeJob =
-                            appScope.launch {
-                                kotlinx.coroutines.delay(delayMs)
-                                updaterRef?.changed()
+                hooks =
+                    UpdaterHooks(
+                        onRead = { UpdaterReads.opencode.incrementAndGet() },
+                        wake = { delayMs ->
+                            synchronized(wakeLock) {
+                                wakeJob?.cancel()
+                                wakeJob =
+                                    appScope.launch {
+                                        kotlinx.coroutines.delay(delayMs)
+                                        updaterRef?.changed()
+                                    }
                             }
-                    }
-                },
+                        },
+                    ),
             ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
                 val reading = idle.get()

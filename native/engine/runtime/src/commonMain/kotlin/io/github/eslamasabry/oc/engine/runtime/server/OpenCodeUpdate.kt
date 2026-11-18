@@ -97,13 +97,8 @@ public class OpenCodeAutoUpdater(
     private val log: ((String) -> Unit)? = null,
     /** A monotonic clock in milliseconds; the default (no clock) never tells a hold. */
     private val nowMs: () -> Long = { 0L },
-    /**
-     * Asks for one more look [delayMs] from now (the binding runs a delayed, cancel-aware [changed]): a retry waiting
-     * for its time does not depend on some other state change to wake it.
-     */
-    private val wake: (delayMs: Long) -> Unit = {},
-    /** Called once for every read of the server this updater really makes (the per-minute counter). */
-    private val onRead: () -> Unit = {},
+    /** The binding's two hooks: a delayed look, and a count of the reads this updater really makes. */
+    private val hooks: UpdaterHooks = UpdaterHooks(),
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
@@ -163,7 +158,7 @@ public class OpenCodeAutoUpdater(
         val now = nowMs()
         if (now != 0L && lastRefreshAt != 0L && now - lastRefreshAt < REFRESH_SPACING_MS) return
         lastRefreshAt = now
-        onRead()
+        hooks.onRead()
         withTimeoutOrNull(READ_LIMIT) { host.refresh() }
     }
 
@@ -198,7 +193,7 @@ public class OpenCodeAutoUpdater(
             if (n < MAX_TRIES) {
                 attempted -= key
                 retryNotBefore = nowMs() + RETRY_SPACING_MS
-                wake(RETRY_SPACING_MS)
+                hooks.wake(RETRY_SPACING_MS)
                 retryArmed = true
                 finishing.value = true
             } else {
@@ -248,7 +243,7 @@ public class OpenCodeAutoUpdater(
                 // the next look is after a backoff (30 s, doubling, at most 2 min), not at once.
                 busyStreak++
                 retryNotBefore = busyDeadline(nowMs(), busyStreak)
-                if (retryNotBefore > 0L) wake(retryNotBefore - nowMs())
+                if (retryNotBefore > 0L) hooks.wake(retryNotBefore - nowMs())
                 if (!busyWaiting) note("refused before it started (busy); waiting, the try is kept")
                 busyWaiting = true
             }
@@ -419,3 +414,13 @@ private fun busyDeadline(now: Long, streak: Int): Long =
     } else {
         now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
     }
+
+/**
+ * What the binding gives the updater beyond its facts: [wake] asks for one more look [delayMs] from now (a delayed,
+ * cancel-aware [OpenCodeAutoUpdater.changed], so a retry waiting for its time depends on no other state change), and
+ * [onRead] is called once for every read of the server (the per-minute counter).
+ */
+public class UpdaterHooks(
+    public val wake: (delayMs: Long) -> Unit = {},
+    public val onRead: () -> Unit = {},
+)
