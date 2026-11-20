@@ -144,7 +144,7 @@ class ChatsViewModelTest {
     fun `SCREENS-NAV-27 rows open their chat, New conversation slides up, the gear opens Settings only when it can`() {
         val nav = RecordingNavigator()
         val closed = Door(available = false)
-        // Only a row the feed lists, and that can be reopened, opens (a ref the list never showed stays shut; one it shows but cannot verify yet opens, its page waits).
+        // A row the feed lists opens, verified or not (its page waits); a ref the list never showed stays shut.
         val feed = Feed().apply {
             snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1"), item("gone").copy(canReopen = false)))
         }

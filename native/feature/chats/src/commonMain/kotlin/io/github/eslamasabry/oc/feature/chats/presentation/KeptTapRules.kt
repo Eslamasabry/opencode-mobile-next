@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 
-/** The kept taps that remain: All conversations' saved rows and New conversation (the Home row tap is answered at once). */
+/** The kept taps that remain: All conversations' saved rows and New conversation (a Home row opens at once). */
 public object KeptTapRules {
     /** How long a kept tap waits for its source with nothing in progress: the conversation page's own limit. */
     public const val LIMIT_MS: Long = 90_000L

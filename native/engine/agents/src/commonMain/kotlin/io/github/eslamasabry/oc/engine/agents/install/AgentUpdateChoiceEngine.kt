@@ -51,8 +51,6 @@ public class AgentUpdateChoiceEngine(
      */
     private val reads = Mutex()
 
-    private suspend fun fetch(): AgentUpdateInventory = reads.withLock { host.inventory() }
-
     private fun apply(fresh: AgentUpdateInventory): AgentUpdateOffer? {
         inventory = fresh
         state.value = decisions.offer(inventory, reviewing)
@@ -60,26 +58,20 @@ public class AgentUpdateChoiceEngine(
     }
 
     public suspend fun refresh() {
-        val fresh = fetch()
+        val fresh = reads.withLock { host.inventory() }
         lane.withLock {
             val snapshot = apply(fresh)
             val pending = snapshot?.items.orEmpty().filter { it.choice == AgentUpdateChoice.Remove }
             if (pending.isNotEmpty() && !host.busy()) {
                 // Only a confirmed decide can write Remove. Revalidate the disk row and consume before dispatch.
                 host.removeChosen(pending, decisions)
-                apply(fetch())
+                apply(reads.withLock { host.inventory() })
             }
         }
     }
 
-    /** Applies the inventory the engine already holds again (an answer changed what the offer says about it). */
-    private fun read(): AgentUpdateOffer? {
-        state.value = decisions.offer(inventory, reviewing)
-        return state.value
-    }
-
     override suspend fun review(raise: Boolean): Outcome<Unit> {
-        val fresh = fetch()
+        val fresh = reads.withLock { host.inventory() }
         return lane.withLock {
             if (raise) reviewing = true
             apply(fresh)
@@ -96,7 +88,7 @@ public class AgentUpdateChoiceEngine(
         val presented = state.value?.items.orEmpty().associateBy { it.id }
         // The answer is checked against the picture the sheet shows (the open sheet re-reads it by itself every 30 s):
         // reading the phone's versions again here held the "Update 4 agents" button spinning for 6.4 s (F14).
-        val snapshot = read() ?: return@withLock stale()
+        val snapshot = apply(inventory) ?: return@withLock stale()
         val selected = snapshot.items.filter { it.id in choices }.map { it.copy(choice = choices[it.id]) }
         val staleRow = selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }
         if (selected.size != choices.size || staleRow) return@withLock stale()
@@ -107,7 +99,7 @@ public class AgentUpdateChoiceEngine(
         val removals = selected.filter { it.choice == AgentUpdateChoice.Remove }
         val refused = host.removeChosen(removals, decisions)
         // Removals change the disk: that one picture is read again (it is the only read an answer makes).
-        if (removals.isNotEmpty()) apply(fetch())
+        if (removals.isNotEmpty()) apply(reads.withLock { host.inventory() })
         AgentUpdateStarted(
             selected.ids(AgentUpdateChoice.Update), removals.map { it.id }.filterNot { it in refused },
             selected.ids(AgentUpdateChoice.Keep), refused,

@@ -48,7 +48,8 @@ class HomeStatusSteadyTest {
                 }
             }
             mainClock.advanceTimeBy(1_000)
-            fun top(): Float = onNode(hasContentDescriptionContaining("Write the notes")).fetchSemanticsNode().boundsInRoot.top
+            fun top(): Float =
+                onNode(hasContentDescriptionContaining("Write the notes")).fetchSemanticsNode().boundsInRoot.top
             val before = top()
             state =
                 state.copy(download = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(10)))

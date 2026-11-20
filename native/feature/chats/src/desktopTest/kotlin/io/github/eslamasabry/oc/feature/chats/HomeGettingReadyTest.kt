@@ -196,7 +196,8 @@ class HomeGettingReadyTest {
         runDesktopComposeUiTest(360, 900) {
             val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating)))
             assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
-            assertTrue(spoken("kit-recent-row").none { "Getting ready" in it || "Updating" in it }, "rows: ${spoken("kit-recent-row")}")
+            val rows = spoken("kit-recent-row")
+            assertTrue(rows.none { "Getting ready" in it || "Updating" in it }, "rows: $rows")
             show(ui(phoneSource(), agentsSource(unreachable = true)))
             assertTrue(spoken("kit-recent-row").none { "Getting ready" in it }, "rows: ${spoken("kit-recent-row")}")
             assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
@@ -213,7 +214,8 @@ class HomeGettingReadyTest {
             show(ui(phoneSource(), agentsSource(unreachable = true)))
             assertEquals(1, texts().count { said in it }, "texts: ${texts()}")
             assertTrue(texts().any { it == "Try again" }, "texts: ${texts()}")
-            assertTrue(spoken("kit-recent-row").none { "Getting ready" in it || "Not answering" in it }, "rows: ${spoken("kit-recent-row")}")
+            val rows = spoken("kit-recent-row")
+            assertTrue(rows.none { "Getting ready" in it || "Not answering" in it }, "rows: $rows")
         }
 
     private companion object {

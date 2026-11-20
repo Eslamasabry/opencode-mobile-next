@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
-/** The agents' source stops being "starting" when it is listed; the clock is only the bound for a listing that never comes. */
+/** The agents' source stops "starting" when it is listed; the clock only bounds a listing that never comes. */
 class HelperSettleRulesTest {
     @Test
     fun `B-HOME-228 the helper's settling ends when its source is listed, not on the clock`() {

@@ -47,17 +47,31 @@ class AgentsStartHomeRenders {
     private fun state() = run {
         val titles =
             listOf(
-                "Hi test" to "antigravity", "Tidy the docs demo README" to "antigravity", "Refactor the sync worker" to "claude",
-                "Explain the build files" to "codex", "Plan the release notes" to "claude",
+                "Hi test" to "antigravity",
+                "Tidy the docs demo README" to "antigravity",
+                "Refactor the sync worker" to "claude",
+                "Explain the build files" to "codex",
+                "Plan the release notes" to "claude",
             )
         val items =
             titles.mapIndexed { i, (title, agent) ->
                 item("a$i", at = S10_NOW - (12L + i * 9) * 60_000L, title = title)
-                    .copy(agentId = agent, profileId = agents, sourceId = "paseo:${agents.raw}", directory = "/work/Lottie", projectName = "Lottie")
+                    .copy(
+                        agentId = agent,
+                        profileId = agents,
+                        sourceId = "paseo:${agents.raw}",
+                        directory = "/work/Lottie",
+                        projectName = "Lottie",
+                    )
             }
         val base =
             ChatsState.build(
-                ChatFeedSnapshot(items.toImmutableList()), ReturnBrief.None, ChatsFilters(), S10_NOW - 12 * 3_600_000L, true, nowMs = S10_NOW,
+                ChatFeedSnapshot(items.toImmutableList()),
+                ReturnBrief.None,
+                ChatsFilters(),
+                S10_NOW - 12 * 3_600_000L,
+                true,
+                nowMs = S10_NOW,
             )
         base.copy(
             home =
@@ -65,8 +79,13 @@ class AgentsStartHomeRenders {
                     stage = HomeStage.Helper,
                     sources =
                         kotlinx.collections.immutable.persistentListOf(
-                            ChatsListSourceUi(phone, "This phone", shown = true, main = true, onThisPhone = true, unreachable = false),
-                            ChatsListSourceUi(agents, "Agents on this phone", shown = true, main = false, onThisPhone = true, unreachable = false, agents = true, starting = AppStart.Agents),
+                            ChatsListSourceUi(
+                                phone, "This phone", shown = true, main = true, onThisPhone = true, unreachable = false,
+                            ),
+                            ChatsListSourceUi(
+                                agents, "Agents on this phone", shown = true, main = false, onThisPhone = true,
+                                unreachable = false, agents = true, starting = AppStart.Agents,
+                            ),
                         ),
                 ),
         )
@@ -79,12 +98,15 @@ class AgentsStartHomeRenders {
                 CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
                     ChatEnvironment {
                         KitTheme(
-                            appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off, style = style),
+                            appearance =
+                                KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off, style = style),
                             platform = DesktopKitPlatform(),
                             localeTag = "en",
                             stillFrame = true,
                         ) {
-                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { ChatsScreen(state(), RecordingChatsActions()) }
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                ChatsScreen(state(), RecordingChatsActions())
+                            }
                         }
                     }
                 }
@@ -99,6 +121,9 @@ class AgentsStartHomeRenders {
     @Test
     fun `renders of Home while the agents start`() {
         for (style in listOf(Style.Solid, Style.Glass))
-            for (scale in listOf(1f, 1.3f)) shoot("agents-start-${style.name.lowercase()}-${if (scale == 1f) "1.0" else "1.3"}-light", style, scale)
+            for (scale in listOf(1f, 1.3f)) {
+                val size = if (scale == 1f) "1.0" else "1.3"
+                shoot("agents-start-${style.name.lowercase()}-$size-light", style, scale)
+            }
     }
 }
