@@ -7,7 +7,6 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeFootBarRules
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -63,7 +63,7 @@ class HomeFootBarTest {
         }
     }
 
-    private fun shows(what: String, state: ChatsUi, rows: List<String>) = runComposeUiTest {
+    private fun shows(what: String, state: ChatsUi, rows: List<String>) = kitUiTest {
         val actions = RecordingChatsActions()
         setContent { Themed { ChatsScreen(state, actions) } }
         plusInTheBar(what, rows)

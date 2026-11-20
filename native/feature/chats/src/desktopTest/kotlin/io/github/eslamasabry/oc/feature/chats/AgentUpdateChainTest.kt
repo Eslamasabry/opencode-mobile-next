@@ -13,7 +13,6 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.lifecycle.viewModelScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
@@ -33,6 +32,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeWithAgentUpdates
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import kotlin.test.AfterTest
@@ -85,7 +85,7 @@ class AgentUpdateChainTest {
     }
 
     @Test
-    fun `B-UPD-001 a due offer reaches the Home sheet through the bound port`() = runComposeUiTest {
+    fun `B-UPD-001 a due offer reaches the Home sheet through the bound port`() = kitUiTest {
         val port = FakeAgentUpdateChoices(null)
         val vm = home(port)
         setContent { Home(vm) }
@@ -96,7 +96,7 @@ class AgentUpdateChainTest {
     }
 
     @Test
-    fun `B-UPD-002 Not now leaves a Review action on Home across a restart`() = runComposeUiTest {
+    fun `B-UPD-002 Not now leaves a Review action on Home across a restart`() = kitUiTest {
         val port = FakeAgentUpdateChoices()
         var vm by mutableStateOf(home(port))
         setContent { key(vm) { Home(vm) } }
@@ -173,7 +173,7 @@ class AgentUpdateChainTest {
     }
 
     @Test
-    fun `B-UPD-005 the update button explains low space and enables when the reading fits`() = runComposeUiTest {
+    fun `B-UPD-005 the update button explains low space and enables when the reading fits`() = kitUiTest {
         val free = 40 * FakeAgentUpdateChoices.MIB
         val port = FakeAgentUpdateChoices(FakeAgentUpdateChoices.dueOffer().copy(freeBytes = free))
         val vm = home(port)

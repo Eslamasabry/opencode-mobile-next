@@ -11,7 +11,6 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -65,7 +65,7 @@ class S10HomeGoldensTest {
         val failures = variants.mapNotNull { variant ->
             Locale.setDefault(Locale.forLanguageTag(variant.locale))
             var failure: String? = null
-            runDesktopComposeUiTest(360, 1000) {
+            kitUiTest(360, 1000) {
                 setContent {
                     CompositionLocalProvider(LocalDensity provides Density(1f, variant.fontScale)) {
                         ChatEnvironment {

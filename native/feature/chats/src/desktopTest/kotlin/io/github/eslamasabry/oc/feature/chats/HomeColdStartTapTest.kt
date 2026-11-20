@@ -21,9 +21,8 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
-import androidx.compose.ui.test.v2.runSkikoComposeUiTest
-import androidx.compose.ui.geometry.Size
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiOptions
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.time.Duration.Companion.minutes
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.Failure
@@ -255,7 +254,7 @@ class HomeColdStartTapTest {
 
     /** Taps from [fromMs] until [untilMs], one per frame, each in its own cold start. */
     private fun tapsFrom(fromMs: Long, untilMs: Long) =
-        runSkikoComposeUiTest(Size(360f, 780f), testTimeout = 10.minutes) {
+        kitUiTest(360, 780, options = KitUiOptions(timeout = 10.minutes)) {
             val missed = mutableListOf<Long>()
             val twice = mutableListOf<Long>()
             val noPlus = mutableListOf<Long>()
@@ -286,7 +285,7 @@ class HomeColdStartTapTest {
 
     @Test
     fun `COLD-TAP-011 a tap kept while the server opens says New conversation is on its way until it opens`() =
-        runDesktopComposeUiTest(360, 780) {
+        kitUiTest(360, 780) {
             val start = Start()
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {

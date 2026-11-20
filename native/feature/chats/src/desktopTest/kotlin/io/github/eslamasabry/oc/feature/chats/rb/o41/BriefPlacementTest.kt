@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
@@ -26,7 +26,7 @@ private fun WithRedactor(content: @Composable () -> Unit) =
 
 @OptIn(ExperimentalTestApi::class)
 class BriefPlacementTest {
-    @Test fun `B15 a brief request retains the feed's in-flight answer guard`() = runComposeUiTest {
+    @Test fun `B15 a brief request retains the feed's in-flight answer guard`() = kitUiTest {
         val answers = mutableListOf<Boolean>()
         val actions = object : ChatsActions by RecordingChatsActions() {
             override fun answerPermission(row: ConversationRowUi, allow: Boolean) { answers += allow }
@@ -47,7 +47,7 @@ class BriefPlacementTest {
         assertEquals(emptyList(), answers)
     }
 
-    @Test fun aConversationInTheReturnBriefIsSaidOnce() = runComposeUiTest {
+    @Test fun aConversationInTheReturnBriefIsSaidOnce() = kitUiTest {
         val row = ConversationRowUi("login", ConversationRef(ProfileId("p"), SessionId("s")), RowTitle.Text("Fix login"), "alpha", RowStatus.NeedsYou, RelativeAge.Minutes(2))
         val state = ChatsUi(phase = ChatsPhase.List, rightNow = persistentListOf(row), brief = BriefUi(persistentListOf(row), 0, false))
         setContent { ChatEnvironment { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, RecordingChatsActions()) } } }

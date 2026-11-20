@@ -9,9 +9,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.assertIsDisplayed
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationProject
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.assertEquals
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -55,7 +55,7 @@ class NewConversationHostChipTest {
 
     @Test
     fun `I147-FIRST-RUN the project chip names the connection and the sheet offers the other saved connection`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val a = ProfileId("a")
             val b = ProfileId("b")
             val dir = "/root/projects/my-app"

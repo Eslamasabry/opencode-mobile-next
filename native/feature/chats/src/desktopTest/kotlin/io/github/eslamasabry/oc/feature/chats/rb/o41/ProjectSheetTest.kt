@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.rb.o41
 
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlinx.collections.immutable.persistentMapOf
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.feature.chats.ui.projectKindGlyph
@@ -11,7 +12,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import io.github.eslamasabry.oc.engine.agents.feed.ProjectSummary
 import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class ProjectSheetTest {
-    @Test fun `B03 selected choice puts its check after the title and accent action uses the theme ink`() = runComposeUiTest {
+    @Test fun `B03 selected choice puts its check after the title and accent action uses the theme ink`() = kitUiTest {
         var accent = Color.Unspecified
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
@@ -50,7 +50,7 @@ class ProjectSheetTest {
         assertEquals(accent, layouts.single().layoutInput.style.color)
     }
 
-    @Test fun `B03 choosing a project dispatches its real directory`() = runComposeUiTest {
+    @Test fun `B03 choosing a project dispatches its real directory`() = kitUiTest {
         val actions = RecordingChatsActions()
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
@@ -64,7 +64,7 @@ class ProjectSheetTest {
         assertEquals(listOf("project /work/alpha"), actions.calls)
     }
 
-    @Test fun `G4 a git project shows the Git pill before its check, a plain one neither`() = runComposeUiTest {
+    @Test fun `G4 a git project shows the Git pill before its check, a plain one neither`() = kitUiTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
                 KitSheetHost {

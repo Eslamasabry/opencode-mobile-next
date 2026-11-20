@@ -7,7 +7,6 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -28,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewModel
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -172,7 +172,7 @@ class NewConversationWordsKeptTest {
     private val server = listOf(NewConversationServer(phone, "OpenCode", connected = true))
 
     @Test
-    fun `RC1-NEW-004 a server that could not be read says so once and never claims a failed start`() = runComposeUiTest {
+    fun `RC1-NEW-004 a server that could not be read says so once and never claims a failed start`() = kitUiTest {
         val failed =
             NewConversationUi(servers = server, profile = phone, failure = Failure.Network(NetworkWhy.Unknown), text = "hi")
         setContent { Themed { NewConversationScreen(failed, Actions) } }
@@ -184,7 +184,7 @@ class NewConversationWordsKeptTest {
     }
 
     @Test
-    fun `RC1-NEW-005 the field takes typing while the page gets ready`() = runComposeUiTest {
+    fun `RC1-NEW-005 the field takes typing while the page gets ready`() = kitUiTest {
         setContent { Themed { NewConversationScreen(NewConversationUi(servers = server, profile = phone, busy = true), Actions) } }
         onNode(hasSetTextAction()).assertIsEnabled()
     }

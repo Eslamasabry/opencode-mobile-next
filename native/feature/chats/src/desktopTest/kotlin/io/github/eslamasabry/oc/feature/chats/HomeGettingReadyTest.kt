@@ -14,7 +14,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -33,6 +32,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -150,7 +150,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `HOME-READY-001 replay install - agent rows show the working mark alone, then their times once ready`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val show = home(starting)
             // Agent rows (the kept tap too): the mark alone in the time's place, no "Connecting", no time; a screen
             // reader hears the title, then "Getting ready…".
@@ -172,7 +172,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `HOME-READY-002 guard - This phone's OpenCode opening or starting keeps its rows' times, no mark`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             // This phone is the main server and still opening: the pill carries that wait; its rows keep their times.
             val opening =
                 starting.let {
@@ -196,7 +196,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `HOME-READY-003 guard - an agent update keeps its word, and a source that failed shows times`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating), keptTap = true))
             assertTrue("Updating…" in rowsOf("Tidy the docs demo README").single())
             assertTrue("40 min ago" in rowsOf("Refactor the sync worker").single())

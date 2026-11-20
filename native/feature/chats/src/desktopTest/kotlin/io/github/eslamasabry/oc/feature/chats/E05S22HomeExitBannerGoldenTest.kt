@@ -12,7 +12,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -30,6 +29,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.homeAppNoticeStatus
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -100,7 +100,7 @@ class E05S22HomeExitBannerGoldenTest {
     fun `E05-S22 the home app-closed line shows its restart glyph and Keep it running`() {
         for (variant in variants) {
             Locale.setDefault(Locale.forLanguageTag(variant.locale))
-            runDesktopComposeUiTest(412, 915) {
+            kitUiTest(412, 915) {
                 setContent {
                     CompositionLocalProvider(LocalDensity provides Density(1f)) {
                         ChatEnvironment {

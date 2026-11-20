@@ -15,7 +15,6 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
@@ -26,6 +25,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -76,7 +76,7 @@ class HomeFooterTest {
 
     @Test
     fun `the list ends above the foot bar and its last row is whole at the end`() =
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             home(mixed(extra = 12))
             toTheEnd()
             val foot = onNodeWithTag("kit-screen-bottom").getBoundsInRoot()
@@ -91,7 +91,7 @@ class HomeFooterTest {
 
     @Test
     fun `All conversations and the plus are one bar from margin to margin`() =
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             home(mixed(extra = 12))
             toTheEnd()
             val foot = onNodeWithTag("kit-screen-bottom").getBoundsInRoot()
@@ -106,7 +106,7 @@ class HomeFooterTest {
 
     @Test
     fun `while the server opens the plus keeps its place beside the link`() =
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             // Device pass RC1: the plus vanished while "This phone" was opening and came back a moment later, so the
             // bar jumped. It stays where it is in every state of the home.
             val ui = mixed(extra = 12)

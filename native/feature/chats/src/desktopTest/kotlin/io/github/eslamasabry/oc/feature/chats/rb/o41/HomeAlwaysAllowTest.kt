@@ -5,7 +5,6 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.FeedPermission
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.item
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -78,7 +78,7 @@ class HomeAlwaysAllowTest {
         }
     }
 
-    @Test fun `PARITY-B-224 the row offers Allow once, Reject and Always allow, each its own answer`() = runComposeUiTest {
+    @Test fun `PARITY-B-224 the row offers Allow once, Reject and Always allow, each its own answer`() = kitUiTest {
         val actions = Actions()
         show(asking(always = true), actions)
         onNodeWithText("Allow once").performClick()
@@ -87,7 +87,7 @@ class HomeAlwaysAllowTest {
         assertEquals(listOf("once", "reject", "askAlways"), actions.calls)
     }
 
-    @Test fun `PARITY-B-224 Always allow asks first, naming the command and the project`() = runComposeUiTest {
+    @Test fun `PARITY-B-224 Always allow asks first, naming the command and the project`() = kitUiTest {
         val actions = Actions()
         val state = asking(always = true)
         show(state.copy(confirmAlways = (state.rightNow + state.recent).single()), actions)
@@ -96,7 +96,7 @@ class HomeAlwaysAllowTest {
         assertEquals(listOf("always"), actions.calls)
     }
 
-    @Test fun `PARITY-B-224 where the server keeps no grants the row offers no Always allow`() = runComposeUiTest {
+    @Test fun `PARITY-B-224 where the server keeps no grants the row offers no Always allow`() = kitUiTest {
         show(asking(always = false), Actions())
         onNodeWithText("Always allow", substring = true).assertDoesNotExist()
         onNodeWithText("Allow once").assertExists()

@@ -15,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -31,6 +30,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.UNDO_WINDOW_MS
@@ -58,7 +58,7 @@ class HomeArchiveUndoPlaceTest {
 
     @Test
     fun `P18 P20 the archive Undo stands the kit's whole window and the New button never moves into its place`() =
-        runComposeUiTest {
+        kitUiTest {
             var ui by mutableStateOf(ChatsUi(phase = ChatsPhase.List, recent = persistentListOf(row)))
             val acts = mutableListOf<String>()
             val actions =
@@ -104,7 +104,7 @@ class HomeArchiveUndoPlaceTest {
         }
 
     @Test
-    fun `P19 a swipe toward the line's end archives, the other way does not move the row or act`() = runComposeUiTest {
+    fun `P19 a swipe toward the line's end archives, the other way does not move the row or act`() = kitUiTest {
         val acts = mutableListOf<String>()
         val actions =
             object : ChatsActions by RecordingChatsActions() {

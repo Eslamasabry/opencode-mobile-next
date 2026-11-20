@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
@@ -27,7 +27,7 @@ private fun ComposeUiTest.setChatContent(content: @Composable () -> Unit) = setC
 
 @OptIn(ExperimentalTestApi::class)
 class PermissionListCardTest {
-    @Test fun `B02 list answers are neutral and dispatch only the displayed choice`() = runComposeUiTest {
+    @Test fun `B02 list answers are neutral and dispatch only the displayed choice`() = kitUiTest {
         var allows = 0
         var rejects = 0
         var fill = Color.Unspecified
@@ -50,7 +50,7 @@ class PermissionListCardTest {
         assertEquals(0, rejects)
     }
 
-    @Test fun `B02 narrow list answers stack Allow before Reject and explain their disabled state`() = runComposeUiTest {
+    @Test fun `B02 narrow list answers stack Allow before Reject and explain their disabled state`() = kitUiTest {
         var calls = 0
         setChatContent {
             KitTheme(platform = DesktopKitPlatform()) {

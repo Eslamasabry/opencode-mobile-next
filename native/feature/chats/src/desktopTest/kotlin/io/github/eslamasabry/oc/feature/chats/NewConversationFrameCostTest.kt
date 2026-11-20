@@ -5,7 +5,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -24,6 +23,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.gate.FrameCost
 import io.github.eslamasabry.oc.ui.gate.FrameMeter
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.gate.summary
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -114,7 +114,7 @@ class NewConversationFrameCostTest {
     ): Triple<Int, List<FrameCost>, List<FrameCost>> {
         Locale.setDefault(Locale.forLanguageTag("en"))
         lateinit var out: Triple<Int, List<FrameCost>, List<FrameCost>>
-        runDesktopComposeUiTest(W / shrink, H / shrink) {
+        kitUiTest(W / shrink, H / shrink) {
             mainClock.autoAdvance = false
             val meter = FrameMeter.attach(this)
             val vm = NewConversationViewModel(ChatsRoute.New(phone), ReadyHost(), Nav(), Clock.System, ListenedReports())

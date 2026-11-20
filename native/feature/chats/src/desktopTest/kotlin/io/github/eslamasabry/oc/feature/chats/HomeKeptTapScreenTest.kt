@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -43,7 +43,7 @@ class HomeKeptTapScreenTest {
 
     private fun spoken(waiting: Boolean, actions: RecordingChatsActions = RecordingChatsActions()): List<String> {
         var words: List<String> = emptyList()
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             Locale.setDefault(Locale.ENGLISH)
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
