@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">Su questo telefono</string>
+    <string name="agentsHubOnComputers">Sui tuoi computer</string>
+    <string name="agentsHubComputersEmpty">Nessun computer ancora aggiunto. Aggiungine uno che esegue Paseo per usare Claude Code o Pi da questo telefono.</string>
+    <string name="agentsHubAddComputer">Aggiungi un computer</string>
+    <string name="agentsHubCheck">Verifica la connessione</string>
+    <string name="agentsHubCheckAgents">Verifica agenti</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">Usa un indirizzo ws:// su questo dispositivo o sulla tua rete privata, oppure un indirizzo wss://.</string>
+    <string name="agentsHubInvalidFolder">Inserisci la cartella del progetto come percorso completo, ad esempio /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">Questa password non può essere usata. Usa lettere, numeri e simboli senza spazi.</string>
+    <string name="agentsHubAdded">Salvato. Le sue conversazioni appaiono in Conversazioni.</string>
+    <string name="agentsHubAddFailed">Impossibile salvare questo computer. Controlla i dettagli e riprova.</string>
+    <string name="agentsHubAgentsFailed">Impossibile leggere gli agenti di quel computer. Controlla che Paseo sia in esecuzione lì.</string>
+    <string name="agentsHubStartFailed">Impossibile avviare una conversazione lì. Il computer resta salvato.</string>
+    <string name="agentsHubSignInFailed">Quel computer non ha accettato la password.</string>
+    <string name="agentsHubPasswordNeeded">Questo computer richiede una password. Inserisci la sua password del daemon, poi verifica di nuovo.</string>
+    <string name="agentsHubNotAnswering">Quel computer non ha risposto. Controlla che Paseo sia in esecuzione e che questo telefono possa raggiungerlo.</string>
+    <string name="agentsHubNotConnected">Non connesso</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

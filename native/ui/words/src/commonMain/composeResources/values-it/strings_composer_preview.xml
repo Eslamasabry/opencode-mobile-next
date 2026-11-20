@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">Modello</string>
+    <string name="composerPreviewModelDefault">Predefinito del server</string>
+    <string name="composerPreviewModelDefaultHint">Il modello predefinito del server</string>
+    <string name="composerPreviewModelsTitle">Scegli un modello</string>
+    <string name="composerPreviewModelsLoading">Caricamento modelli…</string>
+    <string name="composerPreviewModelsEmpty">Nessun modello disponibile al momento.</string>
+    <string name="composerPreviewModelsFailed">Impossibile caricare l'elenco dei modelli.</string>
+    <string name="composerPreviewModelsRetry">Riprova</string>
+    <string name="composerPreviewModelsClose">Chiudi</string>
+    <string name="composerPreviewAttachFile">Allega file</string>
+    <string name="composerPreviewAttachNoPicker">Questo dispositivo non può allegare file qui.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">Questo modello non accetta file. Scegline uno che li accetta.</string>
+    <string name="composerPreviewAttachmentRemove">Rimuovi</string>
+    <string name="composerPreviewAttachmentFailed">Impossibile allegare il file.</string>
+    <string name="composerPreviewAttachmentTooLarge">Questo file è troppo grande per essere allegato.</string>
+    <string name="composerPreviewAttachmentUnsupported">Questo tipo di file non può essere allegato.</string>
+    <string name="composerPreviewAttachmentStorage">Impossibile salvare il file su questo dispositivo.</string>
+    <string name="composerPreviewAttachmentDismiss">Ignora</string>
+    <string name="composerPreviewAttachmentRetry">Riprova</string>
+</resources>

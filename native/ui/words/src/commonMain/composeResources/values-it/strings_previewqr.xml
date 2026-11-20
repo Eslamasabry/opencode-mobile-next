@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="previewQrLeaveTitle">Aprire questo link nel browser?</string>
+    <string name="previewQrPortLabel">Numero di porta</string>
+    <string name="previewQrPortHelp">Oppure digita il numero di porta di un'app in esecuzione.</string>
+    <string name="previewQrPortInvalid">Inserisci una porta compresa tra 1 e 65535.</string>
+    <string name="previewQrPortOpen">Apri porta</string>
+    <string name="previewQrPairFilled">Compilato dal codice di accoppiamento. Verificalo, poi salva.</string>
+    <string name="previewQrLinkFilled">Indirizzo compilato dal link. Aggiungi la password, poi salva.</string>
+    <string name="previewQrScanRejected">Questo codice QR non è un codice di accoppiamento. Punta la fotocamera sul codice che stampa opencode2 pair.</string>
+    <string name="previewQrPairingCodeLabel">Codice di accoppiamento</string>
+</resources>

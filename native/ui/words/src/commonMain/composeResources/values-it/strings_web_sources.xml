@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">Questo URL è già nell'elenco delle fonti da esaminare.</string>
+    <string name="webSourcesFullNative">Puoi esaminare fino a 10 fonti. Rimuovine una prima di aggiungerne un'altra.</string>
+    <string name="webSourcesChooseNative">Scegli almeno una fonte esaminata.</string>
+</resources>

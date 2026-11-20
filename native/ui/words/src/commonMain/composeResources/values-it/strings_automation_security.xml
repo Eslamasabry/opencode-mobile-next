@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">Cosa avviene in automatico</string>
+    <string name="secAutomationDetail">Scegli cosa questo server può fare automaticamente. Una scelta consente il lavoro esistente, ma non lo avvia.</string>
+    <string name="secAutomationReconnect">Riconnetti</string>
+    <string name="secAutomationRetryIntake">Riprovare il lavoro in arrivo</string>
+    <string name="secAutomationReconcileQueuedSends">Riconciliare gli invii in coda</string>
+    <string name="secAutomationRetryProviderErrors">Riprovare gli errori del provider</string>
+    <string name="secAutomationRestartPhoneServer">Riavviare il server del telefono</string>
+    <string name="secAutomationResumeSetup">Riprendere la configurazione</string>
+    <string name="secAutomationRecheckEnvironment">Riverificare l'ambiente</string>
+    <string name="secAutomationPollRestartHealth">Verificare lo stato dopo il riavvio</string>
+    <string name="secAutomationThermalRecovery">Recuperare dopo il surriscaldamento</string>
+    <string name="secAutomationReduceEffects">Ridurre gli effetti</string>
+    <string name="secAutomationChooseDefaults">Scegliere le impostazioni predefinite</string>
+    <string name="secAutomationDetectInstallations">Rilevare le installazioni</string>
+    <string name="secAutomationPreserveDrafts">Conservare le bozze</string>
+    <string name="secAutomationFollowOutput">Seguire l'output</string>
+    <string name="secAutomationPollOpenPages">Aggiornare le pagine aperte</string>
+    <string name="secAutomationBoundedPaging">Caricare altri risultati</string>
+    <string name="secAutomationRouteReadyWork">Instradare il lavoro pronto</string>
+    <string name="secAutomationWakeStalledPool">Riattivare i worker in stallo</string>
+    <string name="secAutomationRestartWorkers">Riavviare i worker</string>
+    <string name="secAutomationRecycleWorkers">Riciclare i worker</string>
+    <string name="secAutomationHoldAtProviderLimit">Attendere ai limiti del provider</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Riprovare le risposte non confermate</string>
+    <string name="secAutomationRetryTransientTask">Riprovare gli errori temporanei</string>
+    <string name="secAutomationFallBackToDirectTask">Usare il fallback su un'attività diretta</string>
+    <string name="secAutomationApplyCodePush">Applicare gli aggiornamenti del codice</string>
+    <string name="secAutomationRestartDevServices">Riavviare i servizi di sviluppo</string>
+    <string name="secAutomationStopIdleHelpers">Interrompere gli helper inattivi</string>
+    <string name="secAutomationCleanCaches">Pulire le cache</string>
+    <string name="secAutomationUpdateWhenIdle">Aggiornare quando inattivo</string>
+    <string name="secAutomationMonitorOtherServers">Monitorare altri server</string>
+    <string name="secAutomationMonitorQuota">Monitorare la quota</string>
+</resources>

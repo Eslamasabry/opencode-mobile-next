@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="desktopSettingsMenu">Impostazioni</string>
+    <string name="desktopReleaseCurrent">Questa è la build pubblicata più recente.</string>
+    <string name="desktopUpdatesBuildAvailable">La build %1$s è disponibile.</string>
+    <string name="desktopReleaseFailed">Impossibile verificare gli aggiornamenti. Riprova quando sei online.</string>
+    <string name="desktopReleaseLimit">Gli aggiornamenti si aprono su GitHub. Scarica e installa tu stesso la versione desktop.</string>
+    <string name="desktopReleaseOpenQuestion">Aprire la release su GitHub?</string>
+    <string name="desktopReleaseOpenFailed">Impossibile aprire il browser. Riprova.</string>
+</resources>

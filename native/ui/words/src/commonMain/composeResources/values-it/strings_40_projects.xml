@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">Conversazioni correlate</string>
+    <string name="r40RelationsRefresh">Aggiorna le conversazioni correlate</string>
+    <string name="r40RelationsStale">La posizione di questa conversazione è cambiata. Torna indietro e riapri le conversazioni correlate.</string>
+    <string name="r40RelationsFailure">Operazione non completata. Riprova, oppure torna indietro e riapri le conversazioni correlate.</string>
+    <string name="r40RelationsParent">Avviata da</string>
+    <string name="r40RelationsEmpty">Ancora nessuna conversazione di sottoagente</string>
+    <string name="r40RelationsEmptyBody">Il lavoro delegato appare qui senza mescolarsi alla tua conversazione.</string>
+    <string name="r40RelationsChildren">Conversazioni dei sottoagenti · %1$s</string>
+    <string name="r40RelationsUntitled">Conversazione senza titolo</string>
+    <string name="r40RelationsNeedsYou">Richiede il tuo intervento · Disponibile a rispondere</string>
+    <string name="r40RelationsWorking">Al lavoro</string>
+    <string name="r40RelationsIdle">Inattivo</string>
+    <string name="r40RelationsDone">Finito</string>
+    <string name="r40RelationsCurrent">Questa conversazione</string>
+    <string name="r40RelationsPinned">In evidenza</string>
+    <string name="r40RelationsActions">Azioni</string>
+    <string name="r40RelationsOpening">Al lavoro…</string>
+    <string name="r40RelationsOpen">Apri conversazione</string>
+    <string name="r40RelationsResume">Continua sul computer</string>
+    <string name="r40RelationsPin">Fissa conversazione</string>
+    <string name="r40RelationsUnpin">Sblocca conversazione</string>
+    <string name="r40RelationsStop">Ferma sottoagente</string>
+    <string name="r40RelationsStopTitle">Ferma %1$s?</string>
+    <string name="r40RelationsStopBody">Interrompe il lavoro in corso. La conversazione e il lavoro completato restano.</string>
+    <string name="r40RelationsKeepRunning">Continua a eseguire</string>
+    <string name="r40RelationsResumeBody">Esegui questo comando sul computer che ospita questo server, nello stesso progetto. La copia non invia nulla.</string>
+    <string name="r40RelationsCopy">Copia comando</string>
+    <string name="r40RelationsJustNow">Proprio ora</string>
+    <string name="r40RelationsMinutes">%1$s min fa</string>
+    <string name="r40RelationsHours">%1$s h fa</string>
+    <string name="r40RelationsDays">%1$s g fa</string>
+</resources>

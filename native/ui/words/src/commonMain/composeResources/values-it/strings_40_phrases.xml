@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phraseSuggestionsInsert">Inserisci: %1$s</string>
+    <string name="phraseSuggestionsOptions">Opzioni per %1$s</string>
+    <string name="phraseSuggestionsChangeFailed">Impossibile nascondere la frase. Riprova dal suo menu.</string>
+</resources>

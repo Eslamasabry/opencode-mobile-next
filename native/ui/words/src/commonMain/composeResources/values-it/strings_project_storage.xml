@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="projectStorageMeasureFailed">Misurazione dei file archiviati non riuscita. Riprova.</string>
+    <string name="projectStorageDeleteFailed">Android non è riuscito a cancellare i dati dell'app. Riprova.</string>
+</resources>

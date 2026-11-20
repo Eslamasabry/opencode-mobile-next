@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">Modello recente precedente</string>
+    <string name="chatCycleNext">Modello recente successivo</string>
+    <string name="chatHomeAllow">Consenti una volta</string>
+    <string name="chatHomeReject">Rifiuta</string>
+    <string name="chatHomeAnswerFailed">Impossibile inviare la risposta. Apri la conversazione per verificarla.</string>
+    <string name="chatHomeRunning">In esecuzione</string>
+    <string name="chatHomeMinutes">%1$s min</string>
+    <string name="chatQueueMoveTitle">Sposta un prompt in coda</string>
+    <string name="chatQueueMoveEmpty">Nessun prompt in coda da inviare in questa conversazione.</string>
+    <string name="chatQueueMoveChoosePrompt">Scegli un prompt</string>
+    <string name="chatQueueMoveChooseServer">Scegli il server di destinazione</string>
+    <string name="chatQueueMoveChooseDestination">Sposta in una conversazione</string>
+    <string name="chatQueueMoveFailure">Impossibile spostare il prompt. Nulla è stato inviato.</string>
+    <string name="chatQueueMoveMore">Altre conversazioni</string>
+    <string name="chatQueueMoveSelectionNote">Il prompt resta in coda. Un modello o un agente non disponibile nella destinazione viene rimosso.</string>
+    <string name="chatPhraseHide">Nascondi %1$s</string>
+    <string name="chatHomeSeconds">%1$s s</string>
+</resources>

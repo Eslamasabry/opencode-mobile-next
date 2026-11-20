@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="one">Aggiunto %1$d file su %2$d. %3$s</item>
+        <item quantity="many">Aggiunti %1$d file su %2$d. %3$s</item>
+        <item quantity="other">Aggiunti %1$d file su %2$d. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">Una bozza contiene fino a 5 file e 20 MB.</string>
+    <string name="shareInReasonTooLarge">I restanti sono troppo grandi da allegare (10 MB ciascuno).</string>
+    <string name="shareInReasonUnsupported">I restanti sono un tipo di file che non si può allegare.</string>
+    <string name="shareInReasonUnreadable">I restanti non sono stati letti. Prova a condividerli di nuovo.</string>
+    <string name="shareInNoneTooLarge">Nessun file aggiunto. È troppo grande da allegare (10 MB ciascuno, 20 MB in totale).</string>
+    <string name="shareInNoneUnsupported">Nessun file aggiunto. Questo tipo di file non si può allegare.</string>
+    <string name="shareInNoneUnreadable">Nessun file aggiunto. Il file non è stato letto. Prova a condividerlo di nuovo.</string>
+    <string name="shareInGotIt">Ho capito</string>
+</resources>

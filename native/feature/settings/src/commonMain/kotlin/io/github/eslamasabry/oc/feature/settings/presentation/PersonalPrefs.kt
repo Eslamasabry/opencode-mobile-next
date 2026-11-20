@@ -111,4 +111,5 @@ public enum class AppLanguage(public val tag: String?) {
     Indonesian("id"),
     French("fr"),
     Chinese("zh"),
+    Italian("it"),
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">Cerca nelle conversazioni</string>
+    <string name="p12SearchField">Cerca nelle conversazioni</string>
+    <string name="p12SearchServer">Server</string>
+    <string name="p12SearchRecent">Ricerche recenti</string>
+    <string name="p12SearchRecentEmpty">Le tue ricerche su questo telefono appaiono qui.</string>
+    <string name="p12SearchRecentClear">Cancella le ricerche recenti</string>
+    <string name="p12SearchRecentRemove">Rimuovi %1$s</string>
+    <string name="p12SearchRecentFailed">Impossibile aggiornare le ricerche recenti. La ricerca funziona comunque.</string>
+    <string name="p12SearchInside">Cerca anche dentro le conversazioni recenti</string>
+    <string name="p12SearchInsideHelp">Legge i messaggi più recenti delle tue 20 conversazioni più recenti su questo server.</string>
+    <string name="p12SearchTitles">Titoli</string>
+    <string name="p12SearchInsideSection">Dentro le conversazioni</string>
+    <string name="p12SearchInsideReading">Lettura delle conversazioni recenti…</string>
+    <string name="p12SearchInsideFailed">Impossibile leggere le conversazioni recenti. I risultati dei titoli restano visibili.</string>
+    <string name="p12SearchFromYou">Tu: %1$s</string>
+    <string name="p12SearchFromAgent">Risposta: %1$s</string>
+    <string name="p12SearchOneProject">Viene cercato solo il progetto attuale di questo server.</string>
+    <string name="p12SearchSearching">Ricerca…</string>
+    <string name="p12SearchFailed">Impossibile cercare nelle conversazioni.</string>
+    <string name="p12SearchTryAgain">Riprova</string>
+    <string name="p12SearchNoServerTitle">Nessun server connesso</string>
+    <string name="p12SearchNoServerBody">Connetti un server per cercare nelle sue conversazioni.</string>
+    <string name="p12SearchOpenServers">Apri Server</string>
+    <string name="p12SearchConversationsWhat">conversazioni</string>
+    <string name="p12UsageCost">Costo stimato</string>
+    <string name="p12UsageRange">Intervallo di date</string>
+    <string name="p12UsageActivity">Attività per giorno</string>
+    <string name="p12UsageDay">%1$s · %2$s passaggi</string>
+    <string name="p12UsageProjectsFailed">Impossibile elencare i progetti. La funzione Tutti i progetti funziona comunque.</string>
+    <string name="p12UsageNoServerBody">Connetti un server per vederne utilizzo e costo.</string>
+    <string name="p12UsageFailed">Impossibile caricare l'utilizzo.</string>
+    <string name="p12UsageTryAgain">Riprova</string>
+    <string name="p12UsageCounts">Attività</string>
+    <string name="p12UsageServer">Server</string>
+</resources>

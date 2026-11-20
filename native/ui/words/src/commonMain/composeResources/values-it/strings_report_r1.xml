@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Facoltativo</string>
+    <string name="reportR1Included">Cosa è incluso</string>
+    <string name="reportR1IncludedLine">Dettagli sull'app e sul telefono. Password, chiavi e indirizzi dei server vengono rimossi.</string>
+    <string name="reportR1IncludedCrash">Dettagli sull'app e sul telefono e il crash avvenuto alle %1$s. Password, chiavi e indirizzi dei server vengono rimossi.</string>
+    <string name="reportR1IncludedFreeze">Dettagli sull'app e sul telefono e il blocco avvenuto alle %1$s. Password, chiavi e indirizzi dei server vengono rimossi.</string>
+    <string name="reportR1IncludedClose">Dettagli sull'app e sul telefono e la chiusura avvenuta alle %1$s. Password, chiavi e indirizzi dei server vengono rimossi.</string>
+    <string name="reportR1IncludedOpen">Mostra cosa è incluso</string>
+    <string name="reportR1Send">Invia segnalazione</string>
+    <string name="reportR1CopyText">Copia testo</string>
+    <string name="reportR1PostGitHub">Pubblica su GitHub</string>
+    <string name="reportR1NoSend">Questa versione non può inviare segnalazioni dall'app. Copia il testo per condividerlo in un messaggio o rendilo pubblico su GitHub.</string>
+    <string name="reportR1SheetSubtitle">Questo è esattamente ciò che viene inviato.</string>
+    <string name="reportR1Words">Le tue parole</string>
+    <string name="reportR1NoWords">Nessun testo scritto</string>
+    <string name="reportR1LastClose">Ultima chiusura dell'app</string>
+    <string name="reportR1Crashed">Chiusa inaspettatamente · %1$s</string>
+    <string name="reportR1Froze">Ha smesso di rispondere · %1$s</string>
+    <string name="reportR1ClosedForMemory">Chiusa da Android per liberare memoria · %1$s</string>
+    <string name="reportR1App">App</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Telefono</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">%1$s GB di memoria</string>
+    <string name="reportR1Connection">Connessione</string>
+    <string name="reportR1AddressOut">%1$s · indirizzo rimosso</string>
+    <string name="reportR1NotConnected">Non connesso</string>
+    <string name="reportR1Problems">Problemi recenti</string>
+    <string name="reportR1NoProblems">Nessuno</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Mai inviati: le tue conversazioni, i tuoi file, le password, le chiavi e gli indirizzi dei server.</string>
+    <string name="reportR1SentBody">Grazie. Se ci scrivi per questo problema, indica questo codice così possiamo trovare la tua segnalazione.</string>
+    <string name="reportR1PublicTitle">Rendere pubblica questa segnalazione?</string>
+    <string name="reportR1PublicBody">Chiunque può leggere le issue di GitHub. Il modulo si apre con le tue parole e i dettagli dell'app, e nulla viene pubblicato finché non lo invii lì.</string>
+    <string name="reportR1PublicConfirm">Apri GitHub</string>
+    <string name="reportR1GitHubFailed">Impossibile aprire GitHub. Riprova.</string>
+    <string name="reportR1KindTimeout">Timeout</string>
+    <string name="reportR1KindAuth">Accesso rifiutato</string>
+    <string name="reportR1KindTls">Certificato non attendibile</string>
+    <string name="reportR1KindServer">Errore del server</string>
+    <string name="reportR1KindProtocol">Risposta inattesa del server</string>
+    <string name="reportR1KindDns">Indirizzo non trovato</string>
+    <string name="reportR1KindRefused">Connessione rifiutata</string>
+    <string name="reportR1KindOffline">Nessuna rete</string>
+    <string name="reportR1KindTooLarge">Messaggio troppo grande</string>
+    <string name="reportR1KindRejected">Messaggio rifiutato</string>
+    <string name="reportR1KindOther">Altro problema</string>
+    <string name="reportKeptCopyErrors">Copia log degli errori</string>
+    <string name="reportKeptClearErrors">Cancella errori</string>
+    <string name="reportKeptErrorsNote">Errori notati automaticamente dall'app. Restano su questo telefono e non vengono aggiunti alla segnalazione. Copiali se aiutano a spiegare cosa è successo.</string>
+</resources>

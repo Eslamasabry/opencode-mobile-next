@@ -85,5 +85,6 @@ internal fun languageWords(language: AppLanguage): String =
             AppLanguage.Indonesian -> Res.string.e7LocaleUiIndonesian
             AppLanguage.French -> Res.string.e7LocaleUiFrench
             AppLanguage.Chinese -> Res.string.e7LocaleUiChinese
+            AppLanguage.Italian -> Res.string.e7LocaleUiItalian
         }
     )

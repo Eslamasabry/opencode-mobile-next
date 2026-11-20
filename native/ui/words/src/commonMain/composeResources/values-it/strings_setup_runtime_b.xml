@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupRbStatusUnreadable">Impossibile leggere la configurazione salvata. Prova “Continua configurazione”.</string>
+    <string name="setupRbToolsUncheckable">Impossibile verificare gli strumenti installati. Riprova.</string>
+</resources>

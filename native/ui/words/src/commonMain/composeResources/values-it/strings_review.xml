@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Modifiche in questo turno</string>
+    <string name="reviewOneFileUnavailable">L'annullamento di un file alla volta non è ancora disponibile: questo server può annullare solo da un prompt. Usa Annulla tutto, oppure Annulla da qui su un prompt.</string>
+    <string name="reviewNoDiff">Il server non ha riportato le righe modificate in questo file.</string>
+    <string name="reviewFileGone">Questo file non è più tra queste modifiche.</string>
+    <string name="reviewIncomplete">Impossibile leggere i messaggi precedenti, quindi questo elenco potrebbe non includere tutti i file.</string>
+    <string name="reviewNoChangesBody">L'agente non ha segnalato modifiche ai file qui.</string>
+    <string name="reviewWaiting">Un annullamento è in attesa della tua revisione. I messaggi successivi al suo prompt sono nascosti finché non scegli.</string>
+    <string name="reviewUndoUnknown">Annulla tutto richiede il prompt da cui sono partite queste modifiche, che però non è stato possibile leggere.</string>
+    <string name="reviewUndoUnavailable">Questo server non può annullare da un prompt.</string>
+    <string name="reviewToolEvidence">Solo ciò che l'agente di questa conversazione ha modificato con i suoi strumenti. I file creati da comandi, i nuovi file non ancora tracciati e le modifiche di altre conversazioni non sono elencati. Uncommitted mostra ciò che Git vede nella cartella.</string>
+    <string name="reviewSendBackFailed">Impossibile inserire la tua nota nel messaggio. Riprova.</string>
+    <string name="reviewProjectNotGitTitle">Non è un progetto Git</string>
+    <string name="reviewProjectNotGitBody">Le modifiche si possono elencare solo per un progetto sotto Git. Inizia a tracciarlo dalla pagina Git del progetto per vederle qui.</string>
+    <string name="reviewProjectOpenGit">Apri la pagina Git</string>
+</resources>

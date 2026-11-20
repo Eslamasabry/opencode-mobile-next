@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Leggi i limiti dei piani</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Lettura attiva. Tocca per disattivarla e cancellare questi numeri.</string>
+    <string name="plansCollectorDisabled">Leggi dal collector installato su questo server</string>
+    <string name="plansCollectorQuestion">Leggere i limiti di %1$s da questo server?</string>
+    <string name="plansCollectorAllow">Autorizza il collector e leggi</string>
+    <string name="plansCollectorTrust">Continua solo se ti fidi del quota collector installato su %1$s. Riceve la credenziale di accesso salvata di questo server a un indirizzo quota fisso. Le richieste non seguono i reindirizzamenti. Puoi disattivare la lettura qui. La modifica dell'indirizzo o dell'accesso richiede di nuovo l'autorizzazione.</string>
+    <string name="plansCollectorFailed">Impossibile salvare questa scelta. Riconnettiti al server e riprova.</string>
+    <string name="plansPaseoDisabled">Leggi l'utilizzo da questo server Paseo</string>
+    <string name="plansPaseoQuestion">Leggere l'utilizzo del piano da Paseo?</string>
+    <string name="plansPaseoTrust">Leggi i limiti dei piani segnalati da %1$s mentre l'app è visibile. Disattivandolo, i numeri del widget salvati vengono cancellati. Nessun lettore in background viene avviato.</string>
+    <string name="plansBuiltinReader">Lettore di utilizzo sul telefono</string>
+    <string name="plansBuiltinDisabled">Configura il lettore di utilizzo dentro l'Ubuntu di questo telefono</string>
+    <string name="plansBuiltinQuestion">Leggere i limiti dei piani su questo telefono?</string>
+    <string name="plansBuiltinTrust">Installa il lettore di utilizzo incluso in %1$s e leggi gli accessi al provider salvati lì. Il suo token di lettura resta nell'archivio sicuro e nei file privati. La raccolta di Claude resta non disponibile. Disattivandolo, il suo servizio si ferma e i suoi numeri del widget vengono cancellati.</string>
+</resources>

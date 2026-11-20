@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chat_model_favorite_add">Aggiungi ai preferiti</string>
+    <string name="chat_model_favorite_remove">Rimuovi dai preferiti</string>
+    <string name="chat_model_favorites">Preferiti</string>
+    <string name="chat_model_favorites_empty">Metti una stella a un modello per tenerlo qui.</string>
+    <string name="chat_model_loading">Caricamento dei modelli…</string>
+    <string name="chat_model_updating">Aggiornamento…</string>
+</resources>

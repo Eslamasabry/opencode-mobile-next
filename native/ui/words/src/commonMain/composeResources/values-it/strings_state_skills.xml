@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">Skill</string>
+    <string name="stateSkillsUse">Usa in questa conversazione</string>
+    <string name="stateSkillsDone">Skill aggiunta a questa conversazione.</string>
+    <string name="stateSkillsChanged">La conversazione o la cartella è cambiata. Apri di nuovo l'elenco.</string>
+    <string name="stateSkillsBusy">Una skill è già in fase di aggiunta. Attendi che termini.</string>
+    <string name="stateSkillsStaged">Completa o annulla l'annullamento in sospeso prima di aggiungere una skill.</string>
+    <string name="stateSkillsUnsupported">Questo server non può aggiungere skill alle conversazioni.</string>
+    <string name="stateSkillsUncertain">Impossibile confermare l'esito. Aggiorna prima di riprovare.</string>
+</resources>

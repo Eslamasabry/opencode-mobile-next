@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansWidgetSettings">Widget dell'utilizzo</string>
+    <string name="plansWidgetSetupRows">Mostra i piani da configurare</string>
+    <string name="plansWidgetBoth">Mostra entrambe le finestre</string>
+    <string name="plansWidgetFiveHour">Mostra la finestra di cinque ore</string>
+    <string name="plansWidgetWeekly">Mostra la finestra settimanale</string>
+    <string name="plansWidgetSelected">Selezionato</string>
+    <string name="plansWidgetVisible">Mostra questo piano nel widget</string>
+</resources>

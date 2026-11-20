@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="editor40Edit">Modifica server</string>
+    <string name="editor40Loading">Lettura del server salvato…</string>
+    <string name="editor40Kind">Cosa viene eseguito sul tuo computer?</string>
+    <string name="editor40Folder">Cartella del progetto</string>
+    <string name="editor40Token">Token o password</string>
+    <string name="editor40More">Altre opzioni</string>
+    <string name="editor40OtherCommands">Mostra altri comandi</string>
+    <string name="editor40Check">Verifica connessione</string>
+    <string name="editor40CancelCheck">Annulla verifica</string>
+    <string name="editor40Slow">Il server sta mettendo tempo. Puoi annullare questa verifica e continuare a modificare.</string>
+    <string name="editor40SaveConnect">Salva e connetti</string>
+    <string name="editor40SaveAnyway">Salva comunque</string>
+    <string name="editor40SavedFailed">Il server è salvato, ma non si è connesso. Controlla indirizzo e dati di accesso, poi riprova.</string>
+    <string name="editor40Checked">Connessione verificata · %1$s</string>
+    <string name="editor40Ready">Il tuo server è connesso. Le tue conversazioni restano sul server.</string>
+    <string name="editor40Open">Apri conversazioni</string>
+    <string name="editor40DiscardTitle">Scartare queste modifiche?</string>
+    <string name="editor40Discard">Scarta modifiche</string>
+    <string name="editor40DiscardBody">Le modifiche che hai scritto non sono state salvate.</string>
+    <string name="editor40HttpTitle">Usare una connessione non criptata?</string>
+    <string name="editor40UseAddress">Usa questo indirizzo</string>
+    <string name="editor40HttpBody">La tua password e le tue conversazioni possono essere lette da altri su questa rete. Preferisci HTTPS o una rete privata Tailscale. Questa scelta vale solo per questo indirizzo esatto.</string>
+    <string name="editor40Inspect">Ispeziona certificato</string>
+    <string name="editor40Pinned">Un certificato è salvato per questo indirizzo. Un certificato cambiato interrompe la connessione.</string>
+    <string name="editor40CertificateTitle">Ti fidi di questo certificato?</string>
+    <string name="editor40TrustCertificate">Considera attendibile</string>
+    <string name="editor40CertificateBody">Confronta questa impronta SHA-256 con il proprietario del server tramite un altro canale attendibile. Un certificato diverso interromperà la connessione.</string>
+    <string name="editor40CertificateDates">Valido dal %1$s al %2$s (UTC)</string>
+    <string name="editor40TailscaleBody">Collega entrambi i dispositivi alla stessa rete Tailscale. Usa l'indirizzo 100.x del computer o il suo nome .ts.net. Mantieni la password del server: Tailscale non la sostituisce.</string>
+    <string name="editor40EnterAddress">Inserisci l'indirizzo del computer</string>
+    <string name="permissions40Title">Azioni sempre consentite</string>
+    <string name="permissions40Intro">Azioni che l'agente può eseguire in questo progetto senza chiedere. Revoca un'azione per far sì che chieda di nuovo la prossima volta.</string>
+    <string name="permissions40RevokeTitle">Revocare questa azione sempre consentita?</string>
+    <string name="permissions40Revoke">Revoca accesso</string>
+    <string name="permissions40RevokeBody">L'agente chiederà prima di eseguire di nuovo questa azione. Un'azione in corso non viene interrotta.</string>
+    <string name="permissions40AllResources">Tutte le risorse corrispondenti</string>
+    <string name="permissions40Loading">Lettura delle azioni consentite…</string>
+    <string name="permissions40Failed">Impossibile leggere o modificare le azioni consentite. Controlla la connessione e riprova.</string>
+    <string name="permissions40Empty">Nessuna azione sempre consentita in questo progetto. L'agente chiederà quando avrà bisogno di un'autorizzazione.</string>
+    <string name="permissions40Revoked">Revocata: %1$s. L'agente chiederà la prossima volta.</string>
+    <string name="permissions40Dismiss">Ignora</string>
+    <string name="permissions40Refresh">Aggiorna azioni consentite</string>
+    <string name="editor40TailscaleInstalled">Tailscale è installato. Aprilo, accedi e attiva la sua VPN. Questa app non può verificare l'accesso alla tua VPN.</string>
+    <string name="editor40TailscaleMissing">Installa prima l'app ufficiale Tailscale su questo telefono.</string>
+    <string name="editor40TailscaleUnknown">Impossibile verificare l'app Tailscale. Ricontrolla quando sarà disponibile.</string>
+    <string name="editor40TailscaleOpen">Apri Tailscale</string>
+    <string name="editor40TailscaleInstall">Ottieni Tailscale</string>
+    <string name="editor40TailscaleRefresh">Ricontrolla Tailscale</string>
+    <plurals name="rows40Waiting">
+        <item quantity="one">1 richiede la tua attenzione</item>
+        <item quantity="many">%1$d richiedono la tua attenzione</item>
+        <item quantity="other">%1$d richiedono la tua attenzione</item>
+    </plurals>
+    <string name="rows40Working">%1$d in esecuzione</string>
+    <string name="rows40Secret">Inserisci di nuovo le credenziali salvate</string>
+    <plurals name="rows40Queued">
+        <item quantity="one">1 prompt in attesa</item>
+        <item quantity="many">%1$d prompt in attesa</item>
+        <item quantity="other">%1$d prompt in attesa</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="one">Sposta 1 prompt in attesa su %2$s</item>
+        <item quantity="many">Sposta %1$d prompt in attesa su %2$s</item>
+        <item quantity="other">Sposta %1$d prompt in attesa su %2$s</item>
+    </plurals>
+    <string name="rows40Schedules">Prompt pianificati</string>
+    <string name="queue40Title">Sposta prompt in attesa</string>
+    <string name="queue40Loading">Lettura dei prompt in attesa e delle conversazioni di destinazione…</string>
+    <string name="queue40Failed">Nessun prompt è stato spostato. La connessione o i prompt in attesa sono cambiati, oppure l'archiviazione ha rifiutato la modifica. Aggiorna e riesamina di nuovo la selezione.</string>
+    <string name="queue40Intro">Sposta i prompt in attesa da %1$s a %2$s. Qui non viene inviato nulla. Password e chiavi nelle loro parole sono nascoste prima dello spostamento.</string>
+    <string name="queue40Empty">Nessun prompt in attesa su questo server.</string>
+    <string name="queue40Attachment">Prompt con un allegato</string>
+    <string name="queue40Uncertain">Potrebbe essere già stato inviato. Verificalo sul suo server originale.</string>
+    <string name="queue40ServerFile">Questo allegato può essere aperto solo sul server originale.</string>
+    <string name="queue40Mentions">Nascondere un segreto cambierebbe le menzioni dell'agente di questo prompt. Modificalo prima sul server originale.</string>
+    <string name="queue40Sending">Questo prompt è in fase di invio. Attendi il suo risultato.</string>
+    <string name="queue40CannotMove">Questo prompt deve restare sul suo server originale.</string>
+    <string name="queue40Destination">Conversazione di destinazione</string>
+    <string name="queue40NewConversation">Avvia una nuova conversazione</string>
+    <string name="queue40Untitled">Conversazione senza titolo</string>
+    <plurals name="queue40Move">
+        <item quantity="one">Sposta 1 prompt su %2$s</item>
+        <item quantity="many">Sposta %1$d prompt su %2$s</item>
+        <item quantity="other">Sposta %1$d prompt su %2$s</item>
+    </plurals>
+    <string name="queue40Select">Scegli almeno un prompt spostabile.</string>
+    <plurals name="queue40Moved">
+        <item quantity="one">Spostato 1 prompt. Rimasti sul server originale: %2$d. Con la scelta di modello o agente della destinazione: %3$d. Non è stato inviato nulla.</item>
+        <item quantity="many">Spostati %1$d prompt. Rimasti sul server originale: %2$d. Con la scelta di modello o agente della destinazione: %3$d. Non è stato inviato nulla.</item>
+        <item quantity="other">Spostati %1$d prompt. Rimasti sul server originale: %2$d. Con la scelta di modello o agente della destinazione: %3$d. Non è stato inviato nulla.</item>
+    </plurals>
+    <string name="queue40Undo">Annulla spostamento</string>
+    <string name="queue40Open">Apri conversazione di destinazione</string>
+    <plurals name="queue40Undone">
+        <item quantity="one">1 prompt che era ancora in attesa è tornato. I prompt già in invio sono rimasti dove si trovavano.</item>
+        <item quantity="many">%1$d prompt che erano ancora in attesa sono tornati. I prompt già in invio sono rimasti dove si trovavano.</item>
+        <item quantity="other">%1$d prompt che erano ancora in attesa sono tornati. I prompt già in invio sono rimasti dove si trovavano.</item>
+    </plurals>
+    <string name="queue40Refresh">Aggiorna prompt in attesa</string>
+    <string name="remove40Title">Rimuovi questo server</string>
+    <string name="remove40ConfirmTitle">Rimuovere %1$s?</string>
+    <string name="remove40Body">Rimuove la connessione salvata e i dati locali di questa app. Non elimina le conversazioni dal server.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="one">1 prompt in attesa sarà eliminato da questo telefono.</item>
+        <item quantity="many">%1$d prompt in attesa saranno eliminati da questo telefono.</item>
+        <item quantity="other">%1$d prompt in attesa saranno eliminati da questo telefono.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="one">1 prompt in attesa sarà conservato in Prompt salvati.</item>
+        <item quantity="many">%1$d prompt in attesa saranno conservati in Prompt salvati.</item>
+        <item quantity="other">%1$d prompt in attesa saranno conservati in Prompt salvati.</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="one">1 di essi potrebbe essere già stato inviato; sarà eliminato anche da questo telefono.</item>
+        <item quantity="many">%1$d di essi potrebbero essere già stati inviati; saranno eliminati anche da questo telefono.</item>
+        <item quantity="other">%1$d di essi potrebbero essere già stati inviati; saranno eliminati anche da questo telefono.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="one">1 bozza di conversazione salvata sarà rimossa.</item>
+        <item quantity="many">%1$d bozze di conversazione salvate saranno rimosse.</item>
+        <item quantity="other">%1$d bozze di conversazione salvate saranno rimosse.</item>
+    </plurals>
+    <string name="remove40Active">La connessione attuale si chiuderà. Tornerai ai tuoi server salvati.</string>
+    <string name="remove40ServerKeeps">Il server conserva le sue conversazioni e i suoi file.</string>
+    <string name="remove40Loading">Verifica di ciò che questo telefono conserva per il server…</string>
+    <string name="remove40Failed">Impossibile completare la rimozione di questo server. Potrebbe essere disconnesso e una parte della pulizia locale potrebbe essere stata completata. Il tuo server salvato resta disponibile finché una pulizia o una verifica di consegna necessaria non è finita.</string>
+    <string name="remove40DeleteQueue">Elimina anche i prompt in attesa</string>
+    <string name="remove40DeleteQueueHelp">Lascialo disattivato per conservare le loro parole e gli allegati in Prompt salvati.</string>
+    <string name="remove40Refresh">Riesamina di nuovo i dati salvati</string>
+    <string name="queue40UndoFailed">Impossibile annullare lo spostamento. Riesamina la conversazione di destinazione prima di riprovare; i prompt il cui invio è già iniziato restano lì.</string>
+    <string name="editor40SaveChanges">Salva modifiche</string>
+    <string name="editor40Stale">Questo server salvato o le sue credenziali di accesso sono cambiati. Chiudi questa pagina e apri di nuovo il server prima di riprovare.</string>
+    <string name="editor40Deleted">Questo server è stato rimosso. Chiudi questa pagina per tornare ai tuoi server salvati.</string>
+</resources>
