@@ -297,7 +297,7 @@ class LampListControllerTest {
     }
 
     @Test
-    fun `B-LAMP-M1 the panel remembers a fold while it lives and folds a block that finished`() = runTest(UnconfinedTestDispatcher()) {
+    fun `B-LAMP-M1 the panel remembers a fold and folds a block that finished`() = runTest(UnconfinedTestDispatcher()) {
         val w = world(lrow("p", Working, kids = listOf(kid("a", Working), kid("b", Working))))
         assertEquals(false, w.lamp.ui.value.row("p").tree!!.folded)
         w.lamp.setFolded(lref("p"), true)

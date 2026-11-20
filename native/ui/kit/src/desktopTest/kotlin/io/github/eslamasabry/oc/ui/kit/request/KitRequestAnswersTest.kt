@@ -64,7 +64,7 @@ class KitRequestAnswersTest {
         }
 
     @Test
-    fun `B-LAMP-016 Allow once and Deny stack full width, Allow once on top, when a label would wrap, so no label is ever broken`() {
+    fun `B-LAMP-016 Allow once and Deny stack full width when a label would wrap, so none is broken`() {
         for ((scale, stacked) in listOf(1f to false, 1.3f to true)) {
             runDesktopComposeUiTest(360, 500) {
                 k2Host(fontScale = scale, widthDp = 360, heightDp = 500) {
@@ -74,11 +74,15 @@ class KitRequestAnswersTest {
                     )
                 }
                 waitForIdle()
-                val allow = onNodeWithContentDescription("Allow once: create a file notes.txt", useUnmergedTree = true).getUnclippedBoundsInRoot()
-                val deny = onNodeWithContentDescription("Deny: create a file notes.txt", useUnmergedTree = true).getUnclippedBoundsInRoot()
+                fun bounds(label: String) =
+                    onNodeWithContentDescription(label, useUnmergedTree = true).getUnclippedBoundsInRoot()
+                val allow = bounds("Allow once: create a file notes.txt")
+                val deny = bounds("Deny: create a file notes.txt")
                 val what = "text $scale"
-                assertTrue(abs((allow.right - allow.left).value - (deny.right - deny.left).value) < 1f, "$what: the two answers are the same width")
-                assertTrue(abs((allow.bottom - allow.top).value - (deny.bottom - deny.top).value) < 1f, "$what: the two answers are the same height, so no label is broken over two lines")
+                val sameWidth = abs((allow.right - allow.left).value - (deny.right - deny.left).value) < 1f
+                assertTrue(sameWidth, "$what: the two answers are the same width")
+                val sameHeight = abs((allow.bottom - allow.top).value - (deny.bottom - deny.top).value) < 1f
+                assertTrue(sameHeight, "$what: the same height, so no label is broken over two lines")
                 if (stacked) {
                     assertTrue(deny.top >= allow.bottom, "$what: Deny is under Allow once")
                     assertTrue((allow.right - allow.left).value > 250f, "$what: each takes the full row")

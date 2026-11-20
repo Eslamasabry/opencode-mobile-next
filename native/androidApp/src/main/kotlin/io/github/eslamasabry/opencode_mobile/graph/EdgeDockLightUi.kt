@@ -206,7 +206,7 @@ private fun rememberFirstUseTip(
     // that opens later does not bring it back or count it twice.
     val shownOnce = remember { mutableStateOf(false) }
     val calm = !requestOnPage && kitTipsOnScreen() == 0
-    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing, calm)
+    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open || placing, calm)
     LaunchedEffect(canShow) {
         if (canShow && !showing.value && !shownOnce.value) {
             shownOnce.value = true

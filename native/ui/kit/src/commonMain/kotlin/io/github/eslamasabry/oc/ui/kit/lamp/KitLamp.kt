@@ -160,7 +160,7 @@ public data class KitLampFace(val count: Int = 0, val marks: List<KitLampMark> =
     public val quiet: Boolean get() = !open && count <= 0 && marks.isEmpty()
 }
 
-/** The side inset (a cutout or bar) on the light's edge, in dp: the light's touch box reaches to the content past it. */
+/** The side inset (a cutout or bar) on the light's edge: its touch box reaches to the content past it. */
 public val LocalKitLampSideInset: androidx.compose.runtime.ProvidableCompositionLocal<Dp> =
     androidx.compose.runtime.staticCompositionLocalOf { 0.dp }
 
@@ -302,7 +302,9 @@ public fun KitLamp(
                             val x = if (left) 0f else size.width - fw
                             val y = (size.height - fh) / 2f
                             val reach = (if (travels) 1f + (MotionTokens.LIGHT_HALO_DP - 1f) * t else 1f).dp.toPx()
-                            drawHalo(x, y, fw, fh, reach, KitLampDims.HALO_STROKE.dp.toPx(), KitLampDims.CORNER.dp.toPx(), left, attention.copy(alpha = attention.alpha * (1f - t)))
+                            val ring = attention.copy(alpha = attention.alpha * (1f - t))
+                            val corner = KitLampDims.CORNER.dp.toPx()
+                            drawHalo(x, y, fw, fh, reach, KitLampDims.HALO_STROKE.dp.toPx(), corner, left, ring)
                         }
                         this@drawWithContent.drawContent()
                     }

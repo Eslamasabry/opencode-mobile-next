@@ -204,10 +204,11 @@ internal object EdgeLightRules {
 
     /**
      * True when the one-time tip beside the closed light may appear: prefs are loaded (no cold-start flash for people
-     * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, and neither panel nor move is open.
+     * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, neither panel nor move is open
+     * ([away]), and the page is [calm] (no request card, no other tip).
      */
-    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, open: Boolean, placing: Boolean, calm: Boolean = true): Boolean =
-        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !open && !placing && calm
+    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, away: Boolean, calm: Boolean = true): Boolean =
+        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !away && calm
 
     fun counts(model: DockListModel, page: ConversationRef?): EdgeLightCounts {
         val others = model.rows.filter { !it.isOpen && it.ref != page }

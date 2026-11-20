@@ -280,17 +280,21 @@ class KitLampTest {
         val (locale, side, inset) = Triple(spec.locale, spec.side, spec.inset)
         setContent {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, spec.fontScale)) {
-                val appearance = KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Full)
+                val dark = AppearanceMode.Dark
+                val appearance = KitAppearance(mode = dark, style = Style.Solid, motion = MotionLevel.Full)
                 KitTheme(appearance, FakeKitPlatform(), locale) {
                     val rtl = locale == "ar"
                     val left = KitLampRules.onLeft(side, rtl)
                     // Physical edges: Start is the right edge in Arabic.
                     val edge = if (left != rtl) Alignment.CenterStart else Alignment.CenterEnd
                     Box(Modifier.size(W.dp, H.dp)) {
-                        // The content begins at the gutter: its edge button ends 16 dp (plus the inset) in from the edge.
+                        // The content begins at the gutter: its edge button ends 16 dp (and the inset) in.
                         Box(
                             Modifier.size(48.dp).align(edge)
-                                .absolutePadding(left = if (left) 16.dp + inset else 0.dp, right = if (left) 0.dp else 16.dp + inset)
+                                .absolutePadding(
+                                    left = if (left) 16.dp + inset else 0.dp,
+                                    right = if (left) 0.dp else 16.dp + inset,
+                                )
                                 .clickable { behind.button++ },
                         )
                         CompositionLocalProvider(LocalKitLampSideInset provides inset) {
@@ -307,12 +311,12 @@ class KitLampTest {
     }
 
     @Test
-    fun `B-LAMP-009 a button flush at the content edge, beside the light, gets its taps and the light takes none of them`() =
+    fun `B-LAMP-009 a button flush at the content edge gets its taps and the light takes none of them`() =
         runDesktopComposeUiTest(W, H) {
             val behind = Behind()
             hostBehind(behind)
             waitForIdle()
-            // The button's ink spans 40..? left of the gutter: its right end is at W - 16; tap just inside it, and at its middle.
+            // The button ends at W - 16: tap just inside it, in its middle, and near its top.
             tapAt(W - 17f, H / 2f)
             tapAt(W - 40f, H / 2f)
             tapAt(W - 17f, H / 2f - 20f)
@@ -380,19 +384,27 @@ class KitLampTest {
     fun `B-LAMP-010 the widest mark, 9+ at text 1_3, stays inside the gutter`() =
         runDesktopComposeUiTest(W, H) {
             val behind = Behind()
-            val many = KitLampFace(12, listOf(KitLampMark("n", KitLampMarkKind.NeedsYou), KitLampMark("f", KitLampMarkKind.Failed), KitLampMark("w", KitLampMarkKind.Working, 0.4f)))
+            val marks =
+                listOf(
+                    KitLampMark("n", KitLampMarkKind.NeedsYou),
+                    KitLampMark("f", KitLampMarkKind.Failed),
+                    KitLampMark("w", KitLampMarkKind.Working, 0.4f),
+                )
+            val many = KitLampFace(12, marks)
             hostBehind(behind, Spec(fontScale = 1.3f, face = many))
             waitForIdle()
             val t = touch()
             val f = face()
             near(16f, t.w(), "the box is the gutter")
             assertTrue(f.w() <= 16.5f, "the mark (${f.w()} dp) is not wider than the gutter")
-            assertTrue(f.left.value >= t.left.value - 0.5f && f.right.value <= t.right.value + 0.5f, "the mark is inside the box")
+            val inside = f.left.value >= t.left.value - 0.5f && f.right.value <= t.right.value + 0.5f
+            assertTrue(inside, "the mark is inside the box")
             val nine = onAllNodesWithText("9", substring = true, useUnmergedTree = true).fetchSemanticsNodes()
             assertTrue(nine.isNotEmpty(), "the number is drawn")
             for (n in nine) {
                 val b = n.boundsInRoot
-                assertTrue(b.left >= f.left.value + 2f && b.right <= f.right.value - 2f, "the number $b keeps 2 dp clear of both sides of the mark")
+                val clear = b.left >= f.left.value + 2f && b.right <= f.right.value - 2f
+                assertTrue(clear, "the number $b keeps 2 dp clear of both sides of the mark")
             }
         }
 

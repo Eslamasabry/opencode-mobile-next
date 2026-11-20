@@ -57,7 +57,7 @@ public sealed interface LampAnswerUi {
     /** A question or a form: "Answer…" opens the conversation at the request. */
     public data object Answer : LampAnswerUi
 
-    /** The reply is in its undo window ("Allowed · Undo") or, [sent], on its way: "Allowed" until the request leaves. */
+    /** In its undo window ("Allowed · Undo") or, [sent], on its way: "Allowed" until the request leaves. */
     public data class Held(val reply: HomeHeldReply, val sent: Boolean = false) : LampAnswerUi
 }
 

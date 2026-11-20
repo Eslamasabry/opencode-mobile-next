@@ -156,7 +156,8 @@ class KitLampRulesTest {
         val tipH = 60
         // Footer buttons 48 dp square, flush at the content's edge, level with the light (a reply's copy and more).
         for (lightTop in listOf(100, 300, 500, 700, 800)) {
-            val (x, y) = TipRules.besideEdge(windowW - gutter, lightTop, windowW, lightTop + 48, windowW, 860, tipW, tipH, 8)
+            val light = intArrayOf(windowW - gutter, lightTop, windowW, lightTop + 48)
+            val (x, y) = TipRules.besideEdge(light[0], light[1], light[2], light[3], windowW, 860, tipW, tipH, 8)
             val tip = intArrayOf(x, y, x + tipW, y + tipH)
             val edge = windowW - gutter
             val copy = intArrayOf(edge - 48, lightTop, edge, lightTop + 48)

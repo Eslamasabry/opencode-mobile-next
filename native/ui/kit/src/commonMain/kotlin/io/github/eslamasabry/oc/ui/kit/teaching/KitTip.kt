@@ -103,9 +103,11 @@ public object TipRules {
      */
     public fun besideEdge(anchorLeft: Int, anchorTop: Int, anchorRight: Int, anchorBottom: Int, windowWidth: Int, windowHeight: Int, tipWidth: Int, tipHeight: Int, gapPx: Int): Pair<Int, Int> {
         val onRight = (anchorLeft + anchorRight) / 2 > windowWidth / 2
-        val x = (if (onRight) anchorLeft - tipWidth else anchorRight).coerceIn(0, (windowWidth - tipWidth).coerceAtLeast(0))
+        val maxX = (windowWidth - tipWidth).coerceAtLeast(0)
+        val x = (if (onRight) anchorLeft - tipWidth else anchorRight).coerceIn(0, maxX)
         val above = anchorTop - gapPx - tipHeight
-        val y = (if (above >= 0) above else anchorBottom + gapPx).coerceIn(0, (windowHeight - tipHeight).coerceAtLeast(0))
+        val maxY = (windowHeight - tipHeight).coerceAtLeast(0)
+        val y = (if (above >= 0) above else anchorBottom + gapPx).coerceIn(0, maxY)
         return x to y
     }
 
@@ -208,11 +210,7 @@ public fun KitTip(
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val shown = remember { MutableTransitionState(false) }
-    // One rule for every tip (F-005): a tip is never drawn over an open sheet or dialog. It waits, and shows once the
-    // modal has gone (its hold starts then, so the person gets the whole of it).
-    val host = LocalKitSheetHost.current
-    val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
-    val show = TipRules.mayShow(visible, modalOpen, beside, kitTipsOnScreen())
+    val show = rememberTipMayShow(visible, beside)
     shown.targetState = show
     LaunchedEffect(show, holdMs) {
         if (show) {
@@ -223,12 +221,7 @@ public fun KitTip(
     // The anchor's place while the tip shows, for the layer that draws it (read only when the tip is placed).
     var shownAt by remember { mutableStateOf(Rect.Zero) }
     val showing = shown.currentState || shown.targetState
-    val counts = showing && !beside
-    val presence = LocalKitTipPresence.current
-    DisposableEffect(counts, presence) {
-        if (counts) presence?.enter()
-        onDispose { if (counts) presence?.leave() }
-    }
+    TipCounts(showing && !beside)
     Box(
         modifier.onGloballyPositioned {
             val at = it.boundsInWindow()
@@ -255,7 +248,10 @@ public fun KitTip(
                         })
                 val exit: ExitTransition = if (motion.reduced) ExitTransition.None else fadeOut(specs.tipFade())
                 AnimatedVisibility(shown, enter = enter, exit = exit, label = "kit.tip") {
-                    KitTipBubble(message, if (beside) Modifier else Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } })
+                    KitTipBubble(
+                        message,
+                        if (beside) Modifier else Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } },
+                    )
                 }
             }
             // In the window's own layer where there is one (every app screen): a tip that opened a window of its own as
@@ -266,6 +262,28 @@ public fun KitTip(
             if (layer != null) TipInLayer(layer, place, { shownAt.takeIf { it != Rect.Zero } ?: bounds[0] }, bubble)
             else Popup(popupPositionProvider = place, onDismissRequest = { dismiss() }, properties = PopupProperties(focusable = false, dismissOnClickOutside = true)) { bubble() }
         }
+    }
+}
+
+/**
+ * One rule for every tip (F-005): a tip is never drawn over an open sheet or dialog. It waits, and shows once the
+ * modal has gone (its hold starts then, so the person gets the whole of it). A tip by the edge also waits for any
+ * other tip on screen.
+ */
+@Composable
+private fun rememberTipMayShow(visible: Boolean, yieldsToOthers: Boolean): Boolean {
+    val host = LocalKitSheetHost.current
+    val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
+    return TipRules.mayShow(visible, modalOpen, yieldsToOthers, kitTipsOnScreen())
+}
+
+/** Counts this tip in its root while it is on screen, so a tip that yields can wait for it. */
+@Composable
+private fun TipCounts(counts: Boolean) {
+    val presence = LocalKitTipPresence.current
+    DisposableEffect(counts, presence) {
+        if (counts) presence?.enter()
+        onDispose { if (counts) presence?.leave() }
     }
 }
 
