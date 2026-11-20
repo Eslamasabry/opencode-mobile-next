@@ -66,6 +66,8 @@
     <string name="widget_status_linux">Linux</string>
     <string name="widget_status_running">running</string>
     <string name="widget_status_stopped">stopped</string>
+    <string name="widget_status_set_up">set up</string>
+    <string name="widget_status_not_set_up">not set up</string>
     <string name="widget_status_tasks">Tasks</string>
     <string name="widget_status_tasks_none">none</string>
     <string name="widget_status_tasks_running">%1$s running</string>

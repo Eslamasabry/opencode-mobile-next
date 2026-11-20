@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.agents.install
 
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -38,6 +39,7 @@ public class AgentUpdateChoiceEngine(
     private val decisions = ChoiceDecisions(appKey, prefs)
     private var inventory = AgentUpdateInventory(emptyList(), AgentUpdateNetwork.Unknown, null)
     private val lane = Mutex()
+    private val log = AppLog.tagged("AgentUpdateChoice")
     private val state = MutableStateFlow<AgentUpdateOffer?>(null)
     override val offer: StateFlow<AgentUpdateOffer?> = state.asStateFlow()
     private var reviewing = false
@@ -101,23 +103,47 @@ public class AgentUpdateChoiceEngine(
         snapshot.answered && snapshot.items.any { it.id == id && it.choice == AgentUpdateChoice.Update }
     } == true
 
+    /** OpenCode waits for the shared parts (Node.js, the helper) that the sheet's offer still lists. */
+    public val openCodeNeedsShared: Boolean
+        get() = state.value?.items.orEmpty().any { it.neededWhen != null }
+
     public suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean = lane.withLock {
-        val needsShared = id == AgentId.OPENCODE && state.value?.items.orEmpty().any { it.neededWhen != null }
-        allowed(id) && !needsShared && !host.busy() && start()
+        val refusal = startRefusal(allowed(id), id == AgentId.OPENCODE && openCodeNeedsShared) { host.busy() }
+        val started = refusal == null && start()
+        // Says which condition refused ("busy" alone hid it on a device): ids and the reason, nothing else.
+        val said = refusal ?: StartRefusal.StartRefused.takeIf { !started }
+        if (said != null) log.i { "start of ${id.raw} not made: $said" }
+        started
     }
 
     /** A shared-only job can run without touching an agent payload. Agent jobs already bring these parts. */
-    public suspend fun startShared(meteredAllowed: Boolean, start: suspend () -> Boolean): Boolean = lane.withLock {
+    public suspend fun startShared(
+        meteredAllowed: Boolean,
+        alongsideAgents: Boolean = false,
+        start: suspend () -> Boolean,
+    ): Boolean = lane.withLock {
         val current = state.value ?: return@withLock false
         val updates = current.items.filter { it.choice == AgentUpdateChoice.Update }
         val sharedOnly = current.neededGoesAhead || (updates.any { it.id == AgentId.OPENCODE } &&
             current.items.any { it.neededWhen == AgentNeedRule.WithAnyUpdate })
         val canDownload = current.network == AgentUpdateNetwork.Unmetered || meteredAllowed
         val targets = current.items.filter { it.neededWhen != null }.map { it.id to it.fromVersion }
-        val eligible = sharedOnly && updates.none { it.id != AgentId.OPENCODE } && canDownload
+        // Agent jobs bring the shared parts too, so they go alone; a yes for OpenCode releases only them.
+        val eligible = sharedOnly && (alongsideAgents || updates.none { it.id != AgentId.OPENCODE }) && canDownload
         (eligible && targets != sharedAttempt && !host.busy() && start()).also { if (it) sharedAttempt = targets }
     }
 }
+
+/** Why an update did not start when it was asked to; the first condition that says no. */
+internal enum class StartRefusal { NotChosen, NeedsSharedParts, WorkRunning, StartRefused }
+
+internal suspend fun startRefusal(allowed: Boolean, needsShared: Boolean, busy: suspend () -> Boolean): StartRefusal? =
+    when {
+        !allowed -> StartRefusal.NotChosen
+        needsShared -> StartRefusal.NeedsSharedParts
+        busy() -> StartRefusal.WorkRunning
+        else -> null
+    }
 
 private class ChoiceDecisions(private val appKey: String, private val prefs: AgentPrefs) {
     fun offer(inventory: AgentUpdateInventory, reviewing: Boolean): AgentUpdateOffer? {

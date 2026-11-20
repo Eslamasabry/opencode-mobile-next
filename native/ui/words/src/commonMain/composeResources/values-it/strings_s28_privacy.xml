@@ -18,7 +18,7 @@
     <string name="collectConnect">Se la connessione a un server è riuscita, il tipo di errore e quanto tempo ha richiesto, e quando scegli di connettere un computer</string>
     <string name="collectDrop">Perché una connessione si è interrotta e se è tornata</string>
     <string name="collectSend">Se l'invio di un messaggio è riuscito o ha atteso in coda, come l'hai fatto (digitato, parlato o allegato), quale agente e quanto tempo prima è arrivata la prima risposta</string>
-    <string name="collectStall">Fase, durata e causa di una lunga attesa: pensiero silenzioso confermato, uno strumento in esecuzione, un nuovo tentativo, una connessione mancata o interrotta, una connessione silenziosa non confermata, o sconosciuta</string>
+    <string name="collectStall">Fase, durata e causa (cause) di una lunga attesa: pensiero silenzioso confermato, uno strumento in esecuzione, un nuovo tentativo, una connessione mancata o interrotta, una connessione silenziosa non confermata, o sconosciuta</string>
     <string name="collectQueue">Quanti messaggi in coda sono stati inviati o non riusciti</string>
     <string name="collectPhoneSetup">Quanto è progredita la configurazione su questo telefono, quanto tempo ha richiesto ogni passaggio, il tipo di errore e se l'hai lasciata a metà e sei tornato</string>
     <string name="collectAgents">Se un agente è stato avviato, e il tipo di errore</string>

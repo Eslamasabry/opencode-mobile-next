@@ -68,3 +68,4 @@ allow	Git
 allow	git
 allow	Conversations
 allow	min
+allow	Version

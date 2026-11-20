@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.analytics.health.healthKeyWords
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiField
 import io.github.eslamasabry.oc.feature.settings.presentation.CollectGroup
 import io.github.eslamasabry.oc.feature.settings.presentation.CollectItem
 import io.github.eslamasabry.oc.feature.settings.presentation.HealthAnswers
@@ -112,7 +113,9 @@ class S28HealthConsentTest {
         val sendable =
             productSchema.keys +
                 healthPropertyWords.keys + healthPropertyPatterns.keys +
-                healthKeyWords.keys + healthKeyPatterns.keys
+                healthKeyWords.keys + healthKeyPatterns.keys +
+                // The fields only our own server gets, from the code's one field list (umami-rich-301).
+                UmamiField.wires
         val listed = HealthContract.contractEvents.values.flatten().toSet()
         assertEquals(emptySet(), sendable - listed)
         // And nothing listed that the code cannot send (the three crash-side lines are not events).

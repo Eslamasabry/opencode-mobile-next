@@ -179,7 +179,7 @@ class TwoWidgetsRenderTest {
         val v = status(TwoFixtures.statusOk(), true, TwoFixtures.plans(62), "status-ok")
         val lines = lines(v)
         assertEquals(
-            listOf("Laptop|online", "This phone|online", "Linux|running", "Tasks|2 running"),
+            listOf("Laptop|online", "This phone|online", "Linux|set up", "Tasks|2 running"),
             lines,
         )
         assertEquals("Claude · 5 h", text(v, R.id.st_plan_name))

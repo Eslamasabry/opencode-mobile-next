@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -401,11 +400,18 @@ public fun KitScreen(
             // includes that fade, so at rest the last line sits above it (and the first under the bar's 12 dp one).
             val faded = !edgesFade && !kitChromeIsGlass()
             val floatChrome = floating && edgesFade
-            // Three-button navigation (the bottom tappable-element inset is not zero; it is zero with gestures): the
-            // page's content fades out over the bar's height plus the usual short fade, so the buttons sit over clean
-            // ground or the live background, with no scrim and no edge. Whole pixels. Gesture mode is unchanged.
-            val tappableBottomPx = WindowInsets.tappableElement.getBottom(density)
-            val flowFadePx = with(density) { FLOW_FADE_DP.dp.roundToPx() } + tappableBottomPx
+            // The foot of a floating chat (B-CHAT-EDGE-025): the content passes behind the message box
+            // and fades out over the short fade, reaching nothing at the box's foot (the bottom block's
+            // own padding above the strip at the screen's foot: the gesture area or the three-button
+            // bar), and stays cleared from there down, so no word shows under the box nor under the
+            // gesture handle or the buttons. A clearing of the content (kitScrollEdges), never a plate:
+            // the ground or the live background shows through. Whole pixels at every density: the inset
+            // is an Int of px and the padding and the fade are rounded to px, so the mask's edges (the
+            // box's whole-px height minus these) never fall inside a pixel. The bottom inset (it holds the
+            // keyboard, which moves every frame while it opens) is read only where the fade is drawn, never
+            // here: the page is not composed again while the keyboard travels.
+            val s2Px = with(density) { Space.S2.dp.roundToPx() }
+            val flowFadePx = with(density) { FLOW_FADE_DP.dp.roundToPx() }
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
             // over what scrolls behind them; a null face keeps today's ground.
             // Joined glass (KitLiquidJoin.kt): a menu from the bar's controls, or the jump pill on the message box, is one
@@ -587,7 +593,9 @@ public fun KitScreen(
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
                                         fadeFromBottom =
                                             if (bottomPart == null) null
-                                            else if (floatChrome) ({ flowFadePx.toFloat() })
+                                            else if (floatChrome) {
+                                                { (insets.getBottom(density) + s2Px + flowFadePx).toFloat() }
+                                            }
                                             else ({ bottomPx + fadeBottomPx }),
                                         bottomReach = if (floatChrome) FLOW_FADE_DP.dp else COMPOSER_FADE_DP.dp,
                                         bottomReachPx = if (floatChrome) ({ flowFadePx.toFloat() }) else null,

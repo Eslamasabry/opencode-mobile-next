@@ -7958,7 +7958,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	8e7c076520
+nativeBundledPrivacy	0bc79f580a
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -8842,8 +8842,13 @@ permissions40RevokeBody	403477c2f0
 permissions40RevokeTitle	9bafc26017
 permissions40Revoked	887fb6afb7
 permissions40Title	fd2c9592c7
+phoneDownloadAgentsMore	5966575682
+phoneDownloadAgentsMore__eq1	386f254774
+phoneDownloadAgentsOnly	39d4a00f99
+phoneDownloadAgentsOnly__eq1	c1d96749e3
 phoneDownloadAskBodyHelper	94a20e0342
 phoneDownloadAskBodyOpenCode	8ed517fe36
+phoneDownloadAskBodyOpenCodeHelper	f29a081036
 phoneDownloadAskNow	97ebd603ee
 phoneDownloadAskTitle	be5ad4c7e7
 phoneDownloadAskWait	f042122837
@@ -8857,6 +8862,7 @@ phoneDownloadRunningOpenCode	ff260fea86
 phoneDownloadRunningPercent	fa1eaf2d6a
 phoneDownloadWaitingHelper	588b12d517
 phoneDownloadWaitingOpenCode	64149ff7e6
+phoneDownloadWaitingOpenCodeHelper	724ff7671b
 phoneFileFindBody	b39bda7a88
 phoneFileFindTitle	a82e1c755c
 phoneFileInstallAction	4767f59a0a
@@ -14562,6 +14568,7 @@ widgets:widget_reply_for	56fe00c4bb
 widgets:widget_status_connecting	d25c9e6790
 widgets:widget_status_left	9fbc28a7f3
 widgets:widget_status_linux	a5bc91f0e5
+widgets:widget_status_not_set_up	5b1b9e6744
 widgets:widget_status_offline	09e097b43e
 widgets:widget_status_offline_for	7c453cfe0a
 widgets:widget_status_online	475a52fbf2
@@ -14569,6 +14576,7 @@ widgets:widget_status_plan	8773b54278
 widgets:widget_status_replace	cd79744de2
 widgets:widget_status_running	a5052b92d0
 widgets:widget_status_server	d08e37cc54
+widgets:widget_status_set_up	8921f36c95
 widgets:widget_status_span_day	9136117d97
 widgets:widget_status_stopped	e8f47af3a7
 widgets:widget_status_tasks	8a57ae3a6c

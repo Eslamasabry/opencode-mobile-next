@@ -71,8 +71,16 @@ class PhoneAgentAutoUpdate(
      * The person chose Download now on mobile data (Home's ask): the pending install runs on this network, once, and
      * is looked at now rather than at the next 30 s look.
      */
-    fun allowMeteredOnce() {
+    fun allowMeteredOnce(sharedOnly: Boolean = false) {
         val updater = updaterRef ?: return
+        if (sharedOnly) {
+            // OpenCode's yes covers the shared parts it waits for (Node.js, the helper) and nothing else: the
+            // agents the person chose keep waiting for Wi-Fi.
+            appScope.launch(dispatchers.io) {
+                safely { choices.updateShared(meteredAllowed = true, alongsideAgents = true) }
+            }
+            return
+        }
         if (choices.offer.value?.neededGoesAhead == true) {
             appScope.launch(dispatchers.io) { safely { choices.updateShared(meteredAllowed = true) } }
         }

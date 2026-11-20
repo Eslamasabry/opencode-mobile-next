@@ -375,18 +375,21 @@ class ChatFloatingEdgesTest {
         kotlin.math.abs(a.red - b.red) <= tol && kotlin.math.abs(a.green - b.green) <= tol && kotlin.math.abs(a.blue - b.blue) <= tol
 
     @Test
-    fun `B-CHAT-EDGE-024 the status area shows the ground only, down to the capsule, with the phone's real insets`() {
+    fun `B-CHAT-EDGE-024 the status bar shows the ground only, with the phone's real insets`() {
         for (scene in phone.filter { it.style != Style.Soft }) run(scene.copy(white = false)) {
             val image = scrolled().toPixelMap()
             val capsule = bounds("kit-header-capsule")
             val d = scene.density
             val ground = image[2, 2]
-            // From the top of the window to the capsule's top edge, the whole width: one colour, the page's ground.
+            // Owner 2026-11-18 (babce01eb1): the page flows behind the capsule; only a 12 dp fade under the status bar
+            // is left. The status bar itself, the whole width, is one colour: the page's ground. The capsule stays below it.
+            val statusFoot = (scene.statusDp * d).toInt()
+            assertTrue(capsule.top >= statusFoot, "the capsule starts under the status bar: ${capsule.top} vs $statusFoot")
             var y = 0
-            while (y < capsule.top.toInt() - 1) {
+            while (y < statusFoot) {
                 var x = 0
                 while (x < (W * d).toInt()) {
-                    assertTrue(same(image[x, y], ground), "words show above the capsule at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground; capsule top ${capsule.top}")
+                    assertTrue(same(image[x, y], ground), "words show in the status bar at ($x,$y), ${scene.style} dark=${scene.dark}: ${image[x, y]} vs $ground; status foot $statusFoot")
                     x += 3
                 }
                 y += 1

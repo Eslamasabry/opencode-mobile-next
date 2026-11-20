@@ -84,4 +84,6 @@
     <string name="widget_allow_for">Autoriser une fois\u00A0: %1$s</string>
     <string name="widget_reply_for">Répondre à %1$s</string>
     <string name="widget_step_for">%1$s\u00A0: %2$s</string>
+    <string name="widget_status_set_up">configuré</string>
+    <string name="widget_status_not_set_up">non configuré</string>
 </resources>

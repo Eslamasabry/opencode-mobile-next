@@ -120,9 +120,15 @@ class ReleaseScriptContractTest {
             "kept_classes_check.sh", "identity_gate.sh",
         )
         gates.forEach { assertTrue(script.contains(it), "the script must run $it") }
-        val tag = script.indexOf("git tag -a")
-        val push = script.indexOf("git push \"\$REMOTE\"")
-        assertTrue(tag > script.indexOf("identity_gate.sh") && push > tag, "tag and push come after every gate")
+        // The commands the script runs, not the lines it only prints (the tag-only dry run says "would run git tag -a").
+        val commands = script.lines().withIndex().filterNot { it.value.trimStart().startsWith("say ") }
+        fun lineOf(text: String): List<Int> = commands.filter { text in it.value }.map { it.index }
+        val tags = lineOf("git tag -a")
+        val pushes = lineOf("git push \"\$REMOTE\"")
+        val gate = lineOf("identity_gate.sh").last()
+        assertEquals(1, tags.size, "the script tags in one place")
+        assertTrue(pushes.isNotEmpty() && tags.single() > gate && pushes.all { it > tags.single() }, "tag and push come after every gate")
+        assertEquals("if \$GO; then", script.lines()[tags.single() - 1].trim(), "only --go reaches the tag")
         assertTrue(script.contains("set -euo pipefail"))
         assertTrue(script.contains("readonly RELEASE_BRANCH=\"master\""))
         assertTrue(script.contains("git status --porcelain=v1 --untracked-files=all"))

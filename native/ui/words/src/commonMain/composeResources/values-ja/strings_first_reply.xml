@@ -19,5 +19,5 @@
     <string name="chatStalledOnTool">%1$sを待機中です。</string>
     <string name="chatStalledStop">停止</string>
     <string name="setupStepClock">このステップ · %1$s</string>
-    <string name="setupAgentUserStep">エージェント用の Linux ユーザー</string>
+    <string name="setupAgentUserStep">エージェント用のLinuxユーザー</string>
 </resources>

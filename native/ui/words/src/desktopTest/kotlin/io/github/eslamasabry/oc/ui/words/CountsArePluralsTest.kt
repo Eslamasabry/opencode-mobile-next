@@ -88,6 +88,7 @@ class CountsArePluralsTest {
         "native_widget_hours" to UNIT, "native_widget_minutes" to UNIT, "notifStatusHours" to UNIT,
         "notifStatusMinutes" to UNIT, "perfTraceStatLine" to UNIT,
         "phoneDownloadAskTitle" to UNIT, "phoneDownloadWaitingHelper" to UNIT, "phoneDownloadWaitingOpenCode" to UNIT,
+        "phoneDownloadWaitingOpenCodeHelper" to UNIT,
         "runningDetailElapsed" to UNIT,
         "runningDetailMemory" to UNIT, "teamPhoneRemoveFrees" to UNIT, "teamProjectElapsedHours" to UNIT,
         "teamProjectElapsedMinutes" to UNIT, "teamProjectElapsedSeconds" to UNIT,
