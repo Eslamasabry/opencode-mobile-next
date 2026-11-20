@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.ui.BackNoteTip
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -27,7 +27,7 @@ import kotlin.test.assertTrue
 class BackNoteTipTest {
     @Test
     fun `B-LAMP-013 the back tip is never drawn without its title, arriving or leaving`() =
-        runComposeUiTest {
+        kitUiTest {
             var title by mutableStateOf<String?>(null)
             mainClock.autoAdvance = false
             setContent {
