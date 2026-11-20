@@ -18,7 +18,7 @@ class HomeConnectionTest {
         ChatsListSourceUi(ProfileId(name), name, shown = true, main = main, onThisPhone = false, unreachable = unreachable)
 
     @Test
-    fun `B-HOME-214 the person's stop is the pill's Stopped; a failure by itself stays Not answering`() {
+    fun `B-HOME-214 the person's stop is the pill's Stopped, a failure by itself stays Not answering`() {
         val stopped = source("This phone", main = true).copy(onThisPhone = true, stoppedByPerson = true)
         val failed = source("This phone", main = true, unreachable = true).copy(onThisPhone = true)
         fun opening(off: Boolean) =
