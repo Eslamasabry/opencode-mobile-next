@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
+import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
@@ -68,34 +69,44 @@ data class EdgeLightTaught(val backNotes: Int = 0, val tips: Int = 0)
  */
 internal class EdgeLightPrefs(private val store: AttentionKeyStore) {
     /**
-     * The choice shown on this device. The saved choice wins. Without one, the dock's old switch decides: "false" is
-     * [OtherConversationsMode.Hidden], anything else [OtherConversationsMode.Rings]. When the old switch is there it is
-     * moved once: the new key is written, and only after that write is acknowledged is the old key removed (a refused
-     * write keeps the old key and tries again next start).
+     * The choice shown on this device. `"hidden"` stays [OtherConversationsMode.Hidden]; `"edge-light"`, retired
+     * `"rings"`, absent and legacy `"true"` become [OtherConversationsMode.EdgeLight]; legacy `"false"` stays
+     * [OtherConversationsMode.Hidden]. Non-destructive: old keys (`oc.dockShown`) are never deleted, and re-reading
+     * gives the same answer.
      */
     suspend fun loadMode(): OtherConversationsMode {
         val saved = store.read(EdgeLightKeys.MODE)
         val legacy = store.read(EdgeLightKeys.LEGACY_SHOWN)
         val mode = OtherConversationsMode.migrate(saved, legacy)
-        if (legacy != null) {
-            val moved = OtherConversationsMode.fromStored(saved) != null || store.write(EdgeLightKeys.MODE, mode.stored)
-            if (moved) store.remove(EdgeLightKeys.LEGACY_SHOWN)
+        if (saved == "rings" || (saved == null && legacy != null)) {
+            store.write(EdgeLightKeys.MODE, mode.stored)
         }
         return mode
     }
 
-    suspend fun saveMode(mode: OtherConversationsMode): Boolean {
-        val ok = store.write(EdgeLightKeys.MODE, mode.stored)
-        // The old switch must not come back after the choice was made (it would win on a failed new write).
-        if (ok) store.remove(EdgeLightKeys.LEGACY_SHOWN)
-        return ok
-    }
+    suspend fun saveMode(mode: OtherConversationsMode): Boolean =
+        store.write(EdgeLightKeys.MODE, mode.stored)
 
-    suspend fun loadPlace(): EdgeLightPlace =
-        EdgeLightPlace(
-            side = if (store.read(EdgeLightKeys.SIDE) == "start") KitLampSide.Start else KitLampSide.End,
+    /**
+     * Where the light sits. If the light's own side was never saved and the retired dock was placed on `"start"`,
+     * carry `"start"` across once without deleting `oc.dockSide`.
+     */
+    suspend fun loadPlace(): EdgeLightPlace {
+        val savedSide = store.read(EdgeLightKeys.SIDE)
+        val side =
+            when {
+                savedSide == "start" -> KitLampSide.Start
+                savedSide == null && store.read(DockKeys.SIDE) == "start" -> {
+                    store.write(EdgeLightKeys.SIDE, "start")
+                    KitLampSide.Start
+                }
+                else -> KitLampSide.End
+            }
+        return EdgeLightPlace(
+            side = side,
             height = EdgeLightHeight.fromStored(store.read(EdgeLightKeys.HEIGHT)),
         )
+    }
 
     suspend fun savePlace(place: EdgeLightPlace): Boolean =
         store.write(EdgeLightKeys.SIDE, if (place.side == KitLampSide.Start) "start" else "end") &&
@@ -124,11 +135,11 @@ internal data class EdgeLightCounts(val needs: Int, val failed: Int, val working
 /** The light's pure rules: which parts mount, where, when it hides and what its face says. */
 internal object EdgeLightRules {
     /**
-     * Rings (and Hidden, which is the rings' own "draw nothing") mount the dock host exactly as before the light
-     * existed. Only the Edge light choice leaves the dock host out and mounts the light.
+     * The Rings dock is never mounted in any mode. Only the Edge light mounts, and only when
+     * [OtherConversationsMode.EdgeLight] is chosen.
      */
     fun mounts(mode: OtherConversationsMode): EdgeMounts =
-        EdgeMounts(rings = mode != OtherConversationsMode.EdgeLight, light = mode == OtherConversationsMode.EdgeLight)
+        EdgeMounts(rings = false, light = mode == OtherConversationsMode.EdgeLight)
 
     /**
      * The conversation whose page [route] is, for the pages that carry the light: a conversation, its Files, its

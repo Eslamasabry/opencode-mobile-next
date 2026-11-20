@@ -4,10 +4,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Settings › Conversations › Other conversations: what the app draws on the edge of a conversation for switching to
- * another one. [Rings] is the edge dock (the default), [EdgeLight] the small light that opens one list, [Hidden] none.
+ * another one. [EdgeLight] is the small light that opens one list (the default), [Hidden] draws nothing.
  */
 public enum class OtherConversationsMode(public val stored: String) {
-    Rings("rings"),
     EdgeLight("edge-light"),
     Hidden("hidden"),
     ;
@@ -17,12 +16,17 @@ public enum class OtherConversationsMode(public val stored: String) {
         public fun fromStored(value: String?): OtherConversationsMode? = entries.firstOrNull { it.stored == value }
 
         /**
-         * What a device that has the new choice saved, or only the dock's old on/off switch (`oc.dockShown`), shows.
-         * The saved choice wins. Otherwise "false" (the person turned the dock off) is [Hidden] and anything else,
-         * including nothing saved, is [Rings].
+         * What a device with a saved choice, a retired `"rings"` value, or only the dock's old on/off switch
+         * (`oc.dockShown`) shows. `"hidden"` stays [Hidden]; `"edge-light"` and `"rings"` become [EdgeLight];
+         * otherwise `"false"` on the old switch stays [Hidden] and anything else (including nothing saved) is
+         * [EdgeLight].
          */
         public fun migrate(saved: String?, legacyShown: String?): OtherConversationsMode =
-            fromStored(saved) ?: if (legacyShown == "false") Hidden else Rings
+            when (saved) {
+                Hidden.stored -> Hidden
+                EdgeLight.stored, "rings" -> EdgeLight
+                else -> if (legacyShown == "false") Hidden else EdgeLight
+            }
     }
 }
 

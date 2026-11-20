@@ -69,28 +69,28 @@ class EdgeLightWiringTest {
     // ---- the choice and its migration -----------------------------------------------------------------------------
 
     @Test
-    fun `settings_default_isRings nothing saved shows Rings and writes nothing`() = runTest {
+    fun `settings_default_isEdgeLight nothing saved shows EdgeLight and writes nothing`() = runTest {
         val store = MapStore()
-        assertEquals(OtherConversationsMode.Rings, EdgeLightPrefs(store).loadMode())
+        assertEquals(OtherConversationsMode.EdgeLight, EdgeLightPrefs(store).loadMode())
         assertTrue(store.data.isEmpty())
     }
 
     @Test
-    fun `migration_dockShownFalse_isHidden and the old key is gone after the move`() = runTest {
+    fun `migration_dockShownFalse_isHidden and keeps the old key non-destructively`() = runTest {
         val store = MapStore(mutableMapOf(EdgeLightKeys.LEGACY_SHOWN to "false"))
         assertEquals(OtherConversationsMode.Hidden, EdgeLightPrefs(store).loadMode())
         assertEquals("hidden", store.data[EdgeLightKeys.MODE])
-        assertFalse(EdgeLightKeys.LEGACY_SHOWN in store.data)
-        // Second start: nothing to move, same answer.
+        assertEquals("false", store.data[EdgeLightKeys.LEGACY_SHOWN])
+        // Second start: same answer.
         assertEquals(OtherConversationsMode.Hidden, EdgeLightPrefs(store).loadMode())
     }
 
     @Test
-    fun `migration_dockShownTrue_isRings`() = runTest {
+    fun `migration_dockShownTrue_isEdgeLight and keeps the old key`() = runTest {
         val store = MapStore(mutableMapOf(EdgeLightKeys.LEGACY_SHOWN to "true"))
-        assertEquals(OtherConversationsMode.Rings, EdgeLightPrefs(store).loadMode())
-        assertEquals("rings", store.data[EdgeLightKeys.MODE])
-        assertFalse(EdgeLightKeys.LEGACY_SHOWN in store.data)
+        assertEquals(OtherConversationsMode.EdgeLight, EdgeLightPrefs(store).loadMode())
+        assertEquals("edge-light", store.data[EdgeLightKeys.MODE])
+        assertEquals("true", store.data[EdgeLightKeys.LEGACY_SHOWN])
     }
 
     @Test
@@ -104,12 +104,12 @@ class EdgeLightWiringTest {
     }
 
     @Test
-    fun `a saved choice survives a restart and wins over a stale old switch`() = runTest {
+    fun `a saved choice survives a restart and wins over a stale old switch without deleting it`() = runTest {
         val store = MapStore()
         assertTrue(EdgeLightPrefs(store).saveMode(OtherConversationsMode.EdgeLight))
         store.data[EdgeLightKeys.LEGACY_SHOWN] = "false"
         assertEquals(OtherConversationsMode.EdgeLight, EdgeLightPrefs(store).loadMode())
-        assertFalse(EdgeLightKeys.LEGACY_SHOWN in store.data)
+        assertEquals("false", store.data[EdgeLightKeys.LEGACY_SHOWN])
     }
 
     // ---- device-scoped keys -----------------------------------------------------------------------------------------
@@ -149,10 +149,8 @@ class EdgeLightWiringTest {
     // ---- what is mounted --------------------------------------------------------------------------------------------
 
     @Test
-    fun `ringsMode_samePartsMountedAsBefore the rings host stays and no light is added`() {
-        assertEquals(EdgeMounts(rings = true, light = false), EdgeLightRules.mounts(OtherConversationsMode.Rings))
-        // Hidden keeps the rings' own host (which draws nothing), as the old off switch did.
-        assertEquals(EdgeMounts(rings = true, light = false), EdgeLightRules.mounts(OtherConversationsMode.Hidden))
+    fun `hiddenMode_neitherRingsNorLightIsMounted`() {
+        assertEquals(EdgeMounts(rings = false, light = false), EdgeLightRules.mounts(OtherConversationsMode.Hidden))
     }
 
     @Test
