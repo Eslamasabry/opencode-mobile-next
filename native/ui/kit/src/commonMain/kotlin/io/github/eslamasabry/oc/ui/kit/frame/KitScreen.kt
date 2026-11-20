@@ -400,11 +400,13 @@ public fun KitScreen(
             // includes that fade, so at rest the last line sits above it (and the first under the bar's 12 dp one).
             val faded = !edgesFade && !kitChromeIsGlass()
             val floatChrome = floating && edgesFade
-            // The strip at the screen's foot (the gesture area, or the three-button bar): a floating chat's content fades
-            // out over the usual short fade ABOVE it, reaching nothing at the strip's top, and stays cleared down to the
-            // screen's foot, so neither the gesture handle nor the buttons ever sit over words (B-CHAT-EDGE-025). It is a
-            // clearing of the content (kitScrollEdges), never a plate: the ground or the live background shows through.
-            // Whole pixels.
+            // The strip at the screen's foot (the gesture area, or the three-button bar): a floating
+            // chat's content fades out over the short fade ABOVE it, reaching nothing at the strip's
+            // top, and stays cleared down to the screen's foot, so neither the gesture handle nor the
+            // buttons sit over words (B-CHAT-EDGE-025). A clearing of the content (kitScrollEdges),
+            // never a plate: the ground or the live background shows through. Whole pixels at every
+            // density: the inset is an Int of px and the fade is rounded to px, so the mask's edges
+            // (the box's whole-px height minus these) never fall inside a pixel.
             val footStripPx = insets.getBottom(density)
             val flowFadePx = with(density) { FLOW_FADE_DP.dp.roundToPx() }
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
