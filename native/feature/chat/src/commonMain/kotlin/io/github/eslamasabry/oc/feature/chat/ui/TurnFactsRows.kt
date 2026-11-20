@@ -663,6 +663,25 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): Kit
     )
 }
 
+/**
+ * B-CHAT-117: why a step the run ended on did not finish, only when the app knows it: the person was shown its request
+ * and did not answer, or the server had started it. A step that is plainly stopped says no reason.
+ */
+@Composable
+private fun endedReason(step: TurnStep): String? {
+    val marks = step.output.metadata?.keys.orEmpty()
+    val ended = step.state == StepState.Stopped || step.state == StepState.NotRun
+    return when {
+        !ended -> null
+        io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY in marks ->
+            stringResource(Res.string.kitToolUnanswered)
+        step.state == StepState.Stopped &&
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.STOPPED_EARLY_KEY in marks ->
+            stringResource(Res.string.kitCommandStoppedEarly)
+        else -> null
+    }
+}
+
 @Composable
 private fun OneStep(
     step: TurnStep,
@@ -700,16 +719,7 @@ private fun OneStep(
                 if (f.kind == ToolKind.Shell && f.shell != null) null
                 else stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput) ?: stepSubjectWords(f),
             // A step the run ended on before the person answered says why it did not run, under its one name.
-            detail =
-                declinedWith
-                    ?: (if (
-                            (step.state == StepState.Stopped || step.state == StepState.NotRun) &&
-                                out.metadata?.containsKey(
-                                    io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY
-                                ) == true
-                        )
-                        stringResource(Res.string.kitToolUnanswered)
-                    else stepDetailWords(f)),
+            detail = declinedWith ?: endedReason(step) ?: stepDetailWords(f),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
             status =
                 if (waitingForYou) KitToolStatus.WaitingForYou
