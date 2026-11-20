@@ -75,7 +75,7 @@ public class ChatsViewModel(
         when (shown.phase) {
             HomeDownloadPhase.Waiting -> downloadAskFor.value = shown.kind
             HomeDownloadPhase.Failed -> if (!downloads.tryAgain(shown.kind)) downloadAskFor.value = shown.kind
-            is HomeDownloadPhase.Running, is HomeDownloadPhase.Held -> Unit
+            is HomeDownloadPhase.Running, is HomeDownloadPhase.Held, is HomeDownloadPhase.AgentsWaiting -> Unit
         }
     }
 

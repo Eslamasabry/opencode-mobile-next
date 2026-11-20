@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -57,6 +58,59 @@ class HomeDownloadLineTest {
         onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
         onNodeWithText("Download on mobile data").performClick()
         assertEquals(listOf("act"), actions.calls)
+    }
+
+    @Test
+    fun `B-DL-405 a waiting OpenCode update with agents held says both in the same row`() = runComposeUiTest {
+        val agents = HomeHeldAgents(3, 660)
+        val fact = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, moreAgents = agents)
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        // The status line announces its message and supporting line as one node.
+        onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB", substring = true).assertExists()
+        onNodeWithText("3 more agent updates wait for Wi-Fi · about 660 MB", substring = true).assertExists()
+        onNodeWithText("Download on mobile data").performClick()
+        assertEquals(listOf("act"), actions.calls)
+    }
+
+    @Test
+    fun `B-DL-425 OpenCode and its helper are one line with one total`() = runComposeUiTest {
+        val fact =
+            HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, megabytes = 460, withHelper = true)
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("OpenCode update and Agent helper waiting for Wi-Fi · about 460 MB").assertExists()
+    }
+
+    @Test
+    fun `B-DL-427 the ask for OpenCode with its helper names both and the one total`() = runComposeUiTest {
+        val fact =
+            HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, megabytes = 460, withHelper = true)
+        setContent { Home(home(fact, ask = HomeDownloadKind.OpenCode)) }
+        waitForIdle()
+        onNodeWithText("Download about 460 MB on mobile data?").assertExists()
+        onNodeWithText(
+            "This is the OpenCode update and the Agent helper it needs. It counts against your data plan. " +
+                "Waiting for Wi-Fi keeps it for later.",
+        ).assertExists()
+    }
+
+    @Test
+    fun `B-DL-406 one more agent update reads in the singular`() = runComposeUiTest {
+        val agents = HomeHeldAgents(1, 360)
+        val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting, moreAgents = agents)
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("1 more agent update waits for Wi-Fi · about 360 MB", substring = true).assertExists()
+    }
+
+    @Test
+    fun `B-DL-407 only agents held is its own line with no mobile-data action`() = runComposeUiTest {
+        val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 660)))
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("3 agent updates waiting for Wi-Fi · about 660 MB").assertExists()
+        assertEquals(0, onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().size)
     }
 
     @Test
