@@ -231,6 +231,9 @@ public class GatePresenter(
         /** 01 §9.7: after 8 s the waiting screens offer Try again. */
         public const val SLOW_MS: Long = 8_000
 
+        private const val BYTES_PER_MB = 1_000_000.0
+        private const val MB_PER_GB = 1_000.0
+
         /** Plan 05 §8.1 "Way out", in drawing order; Restore only while it is allowed (§9.4). */
         public fun rowsFor(
             reason: GateBlockReason,
@@ -261,11 +264,11 @@ public class GatePresenter(
 
         /** The needed space in the person's terms ("120 MB", "1.5 GB"); never a raw byte count. */
         public fun formatBytes(bytes: Long): String {
-            val mb = bytes / (1024.0 * 1024.0)
-            return if (mb < 1024) {
+            val mb = bytes / BYTES_PER_MB
+            return if (mb < MB_PER_GB) {
                 "${kotlin.math.ceil(mb).toLong().coerceAtLeast(1)} MB"
             } else {
-                val gbTenths = kotlin.math.ceil(mb / 1024.0 * 10).toLong()
+                val gbTenths = kotlin.math.ceil(mb / MB_PER_GB * 10).toLong()
                 "${gbTenths / 10}.${gbTenths % 10} GB"
             }
         }

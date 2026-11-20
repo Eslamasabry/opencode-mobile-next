@@ -75,7 +75,7 @@ class SettingsParityUiTest {
             tap("This app")
             tap("Language")
             onNodeWithText("Use system language").assertExists()
-            onNodeWithText("English").assertExists()
+            languageRow("English").assertExists()
             tap("العربية")
             assertEquals(AppLanguage.Arabic, choices.value.value.language)
         }

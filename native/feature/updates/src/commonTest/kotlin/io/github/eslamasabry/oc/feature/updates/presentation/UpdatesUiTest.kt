@@ -55,7 +55,7 @@ class UpdatesUiTest {
         val ui = updatesUi(available, now)
         assertEquals(UpdatesLine.Available, ui.line)
         assertEquals("2.2.0", ui.releaseVersion)
-        assertEquals(39L, ui.sizeMb)
+        assertEquals(40L, ui.sizeMb)
         assertEquals(UpdatesAction.Update, ui.action)
         assertEquals(RELEASE.notes, ui.notes)
         assertTrue(ui.checkNowEnabled)

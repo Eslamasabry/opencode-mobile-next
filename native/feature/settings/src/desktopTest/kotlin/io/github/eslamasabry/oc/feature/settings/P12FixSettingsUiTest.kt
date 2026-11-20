@@ -76,9 +76,9 @@ class P12FixSettingsUiTest {
             onNodeWithText("Use system language").performScrollTo().assertExists()
             names.forEach { (tag, name) ->
                 if (tag in io.github.eslamasabry.oc.ui.words.LanguageCoverage.offered) {
-                    onNodeWithText(name).performScrollTo().assertExists()
+                    languageRow(name).performScrollTo().assertExists()
                 } else {
-                    onNodeWithText(name).assertDoesNotExist()
+                    languageRow(name).assertDoesNotExist()
                 }
             }
             tap("Use system language")

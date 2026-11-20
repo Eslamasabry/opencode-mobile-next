@@ -101,7 +101,7 @@ class GateScreenDesktopTest {
     fun `B-MIGR-010 low space names the space it needs and offers storage settings`() = runComposeUiTest {
         Locale.setDefault(Locale.ENGLISH)
         val rows = GatePresenter.rowsFor(GateBlockReason.LowSpace, restoreAvailable = false)
-        setContent(ui { Gate(GateUi.Failed(GateFailureScreen.LowSpace, rows, neededBytes = 120L * 1024 * 1024)) })
+        setContent(ui { Gate(GateUi.Failed(GateFailureScreen.LowSpace, rows, neededBytes = 120L * 1_000_000)) })
         onNodeWithText("Your phone is almost full").assertExists()
         onNodeWithText(
             "The update needs 120 MB of free space to keep a safety copy of your data. Free up space, then try again.",
