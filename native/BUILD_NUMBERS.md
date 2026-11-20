@@ -139,3 +139,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10113 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: everything merged since 10112 (root-file-chip-r4, update-line-names-phase-r2 and the last small branches) on top of 10112 (source bdd527f260) |
 | 10114 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: test build of 260f1c827e (flicker fixes, Edge light only, notification Stop) |
 | 10115 | build | 2026-11-21 | test build: line 85c4ecce69 + helper start cache (test branch, not the candidate) |
+| 10116 | build | 2026-11-21 | test 10116: line + helper start cache, the owner's phone |
