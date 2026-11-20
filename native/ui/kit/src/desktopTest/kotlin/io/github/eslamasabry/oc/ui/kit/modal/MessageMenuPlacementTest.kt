@@ -57,6 +57,13 @@ class MessageMenuPlacementTest {
     }
 
     @Test
+    fun `B-KIT-MENU-010 the dim is the style's own, Glass a light tint and every other style its scrim`() {
+        assertEquals(0.58f, MenuDimRules.alpha(glass = false, scrimAlpha = 0.58f), "Solid and the others: the kit's scrim")
+        val glass = MenuDimRules.alpha(glass = true, scrimAlpha = 0.10f)
+        assertTrue(glass > 0.10f && glass < 0.5f, "Glass: stronger than its sheet scrim, so the held face reads, and a tint the background shows through ($glass)")
+    }
+
+    @Test
     fun `B-KIT-MENU-009 a narrow bubble at the start keeps the menu inside the gutters`() {
         val short = IntRect(48, 1500, 200, 1600)
         val at = placed(short)

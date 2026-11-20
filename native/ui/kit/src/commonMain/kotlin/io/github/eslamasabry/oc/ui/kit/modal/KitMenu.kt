@@ -462,13 +462,27 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
 }
 
 /**
+ * How strongly a message menu dims the page around the held face (F4, option C), owned by the style: the kit's scrim
+ * as it is (Solid and the others, as a dialog or a sheet dims), and on Glass the style's own light shade at the kit's
+ * "dim most" ([MotionTokens.DIM_MOST], as the edge light's list dims on Glass). Glass's sheet scrim (a tenth of its
+ * shade on a light page) left the held bubble no brighter than the page around it; at a third the face reads as held
+ * and the live background still shows through: a tint, never a plate.
+ */
+public object MenuDimRules {
+    public fun alpha(glass: Boolean, scrimAlpha: Float): Float =
+        if (glass) io.github.eslamasabry.oc.ui.design.motion.MotionTokens.DIM_MOST else scrimAlpha
+}
+
+/**
  * The page's dim under a message menu with a hole in the held face's [shape] at [hole] (host px), so only that face
- * stays bright (F4, option C). The kit's scrim, which each style owns; [shown] is the panel's fade. Picture only: the
+ * stays bright (F4, option C). The style's dim ([MenuDimRules]); [shown] is the panel's fade. Picture only: the
  * layer's own catcher takes the touch.
  */
 @Composable
 private fun MenuDim(hole: IntRect, shape: androidx.compose.ui.graphics.Shape, shown: () -> Float) {
-    val scrim = LocalKitColors.current.scrim
+    val colors = LocalKitColors.current
+    val glass = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass
+    val scrim = colors.scrim.copy(alpha = MenuDimRules.alpha(glass, colors.scrim.alpha))
     Box(
         Modifier.fillMaxSize().testTag(MENU_DIM_TAG).drawBehind {
             val share = shown().coerceIn(0f, 1f)
