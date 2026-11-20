@@ -254,7 +254,7 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     private fun build(offer: AgentUpdateOffer?, now: Local): AgentUpdateHomeUi {
         // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer
         // and the sheet opens again, even when this page outlived the answer.
-        val due = offer != null && offer.sheetDue && offer != now.closedAt
+        val due = offer != null && offer.sheetDue && !sameQuestion(offer, now.closedAt)
         val sheet =
             AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty())
                 .copy(
@@ -349,7 +349,8 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun review(reread: Boolean = false) {
         val engine = choices ?: return
         if (!reread) local.update { it.copy(closedAt = null, failure = null) }
-        scope.launch { engine.review() }
+        // The timer's reading never raises the sheet; only a person's Review does.
+        scope.launch { engine.review(raise = !reread) }
     }
 
     private companion object {
@@ -407,7 +408,7 @@ public object NoAgentUpdateChoices : AgentUpdateChoices {
     override fun removalFacts(id: AgentId): AgentRemovalFacts =
         AgentRemovalFacts(null, keepsSignIn = true, keepsConversations = true)
 
-    override suspend fun review(): Outcome<Unit> = Outcome.Ok(Unit)
+    override suspend fun review(raise: Boolean): Outcome<Unit> = Outcome.Ok(Unit)
 }
 
 /**
@@ -462,3 +463,13 @@ internal class AgentUpdateChainLog {
             }
     }
 }
+
+/**
+ * Closed for the question answered: the same build, agents, versions and answer state; only room and network may
+ * move (a Review or an answer still makes a different offer and opens it again).
+ */
+private fun sameQuestion(offer: AgentUpdateOffer, closed: AgentUpdateOffer?): Boolean =
+    closed != null && closed.appUpdateKey == offer.appUpdateKey && closed.sheetDue == offer.sheetDue &&
+        closed.answered == offer.answered &&
+        closed.items.map { Triple(it.id, it.fromVersion, it.toVersion) } ==
+        offer.items.map { Triple(it.id, it.fromVersion, it.toVersion) }

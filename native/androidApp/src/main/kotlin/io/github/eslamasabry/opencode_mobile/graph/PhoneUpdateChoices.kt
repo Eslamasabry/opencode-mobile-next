@@ -72,7 +72,7 @@ class PhoneUpdateChoices(
     )
     override val offer = engine.offer
     override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>) = command { engine.decide(choices) }
-    override suspend fun review() = command { engine.review() }
+    override suspend fun review(raise: Boolean) = command { engine.review(raise) }
     override suspend fun notNow() = command { engine.notNow() }
     override fun removalFacts(id: AgentId) = engine.removalFacts(id)
 

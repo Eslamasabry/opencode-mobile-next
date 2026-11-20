@@ -81,5 +81,5 @@ private object NoUpdateChoicesHere : AgentUpdateChoices {
     override fun removalFacts(id: AgentId): AgentRemovalFacts =
         AgentRemovalFacts(null, keepsSignIn = true, keepsConversations = true)
 
-    override suspend fun review(): Outcome<Unit> = Outcome.Ok(Unit)
+    override suspend fun review(raise: Boolean): Outcome<Unit> = Outcome.Ok(Unit)
 }

@@ -59,8 +59,8 @@ public class AgentUpdateChoiceEngine(
         return state.value
     }
 
-    override suspend fun review(): Outcome<Unit> = lane.withLock {
-        reviewing = true
+    override suspend fun review(raise: Boolean): Outcome<Unit> = lane.withLock {
+        if (raise) reviewing = true
         read()
         Unit.ok()
     }
