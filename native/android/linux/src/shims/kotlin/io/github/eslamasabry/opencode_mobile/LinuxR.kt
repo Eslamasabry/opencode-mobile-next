@@ -15,6 +15,8 @@ internal object LinuxR {
         val native_phone_server_body: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_body
         val native_phone_server_channel: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_channel
         val native_phone_server_description: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_description
+        val native_phone_server_title: Int
+            get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_title
         val native_setup_channel: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_setup_channel
         val native_status_action_new_chat: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_new_chat
         val native_status_action_open: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_open

@@ -12,6 +12,7 @@
     <string name="native_phone_server_body">你使用其他应用时，智能体仍在继续工作。</string>
     <string name="native_phone_server_channel">这部手机上的 OpenCode</string>
     <string name="native_phone_server_description">手机服务器或项目引擎运行时显示</string>
+    <string name="native_phone_server_title">OpenCode 正在这部手机上运行</string>
     <string name="native_setup_channel">设置</string>
     <string name="native_status_action_new_chat">新对话</string>
     <string name="native_status_action_open">打开</string>
