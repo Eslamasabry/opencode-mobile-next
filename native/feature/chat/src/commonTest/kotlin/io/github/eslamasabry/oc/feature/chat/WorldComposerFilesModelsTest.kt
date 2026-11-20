@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptAccessors
 import io.github.eslamasabry.oc.engine.transcript.TranscriptEngine
+import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
@@ -502,7 +503,7 @@ class WorldComposerFilesModelsTest {
             io.github.eslamasabry.oc.feature.chat.presentation
                 .ChatPresenter(world, RecordingNavigator(), Immediate)
                 .current()
-        return ui.rows.filterIsInstance<io.github.eslamasabry.oc.engine.transcript.state.PromptRow>().map { it.text } +
+        return ui.rows.filterIsInstance<PromptRow>().map { it.text } +
             ui.pending.map { it.text }
     }
 
@@ -526,7 +527,13 @@ class WorldComposerFilesModelsTest {
             f.base.events.emit(
                 GatewayEvent.PartUpserted(Part("t1", "u1", ref.sessionId.raw, PartType.Text, "text", "hello d8"))
             )
+            // The transcript publishes the server's row; the send's answer is still held.
+            advanceTimeBy(60)
             runCurrent()
+            assertTrue(
+                f.world.transcript.value.rows.any { it is PromptRow && it.text == "hello d8" },
+                "the server's row is on the page",
+            )
             assertEquals(
                 listOf("hello d8"),
                 drawnPrompts(f.world),
