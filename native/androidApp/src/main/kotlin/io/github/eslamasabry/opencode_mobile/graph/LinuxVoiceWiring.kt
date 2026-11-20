@@ -1332,6 +1332,14 @@ internal constructor(
                 null
             }
         facts.update { it.copy(probe = answer, installedVersion = liveVersion ?: it.installedVersion) }
+        saveLiveVersion()
+    }
+
+    /** The stored record follows the running server, so This phone and Home stop showing an older saved number. */
+    private suspend fun saveLiveVersion() {
+        val live = liveVersion ?: return
+        val loaded = ownerId()?.let { profiles.profile(it) } ?: return
+        if (loaded.profile.serverVersion != live) profiles.upsert(loaded.profile.copy(serverVersion = live))
     }
 
     /** The version the running phone server reported at the last refresh; null while it is not running or unread. */
