@@ -68,4 +68,182 @@ internal object SetupStepRetry {
      */
     fun compatibility(exitCode: Int?, alreadyCompatible: Boolean, cancelled: Boolean): Boolean =
         !cancelled && !alreadyCompatible && exitCode == SEGFAULT_EXIT
+
+    /** Effective proot compatibility mode: explicit request or persisted rootfs marker (issue #151). */
+    fun effectiveCompat(requestedCompat: Boolean, markerPresent: Boolean): Boolean =
+        requestedCompat || markerPresent
+}
+
+/**
+ * One bounded liveness probe through proot (issue #151): runs a trivial command in normal mode; if it hangs or fails,
+ * kills that exact PID, persists the `proot-compat` marker, and probes once in compatibility mode. An existing marker
+ * skips the normal-mode probe.
+ */
+internal object LinuxProotProbe {
+    const val TIMEOUT_MS: Long = 20_000L
+    const val TOKEN: String = "OC-PROOT-OK"
+    const val COMMAND: String = "/bin/sh -c \"printf '%s\\n' '$TOKEN'\""
+    const val STAGE_FALLBACK: String = "Checking Linux on this phone…"
+    const val FAILURE_DETAIL: String = "Linux did not answer in normal or compatibility mode"
+
+    enum class Mode(val label: String) {
+        NORMAL("normal"),
+        COMPAT("compat"),
+    }
+
+    sealed interface Attempt {
+        data object Answered : Attempt
+
+        data class Exited(val exitCode: Int) : Attempt
+
+        data class Hung(val pid: Int?) : Attempt
+
+        data object Cancelled : Attempt
+    }
+
+    sealed interface Result {
+        data class Ready(
+            val mode: Mode,
+            val switchedToCompat: Boolean,
+            val skippedNormal: Boolean,
+            val detailLine: String,
+        ) : Result
+
+        data object Cancelled : Result
+
+        data class Failed(
+            val detailLine: String,
+            val failure: String,
+        ) : Result
+    }
+
+    interface Runner {
+        fun hasCompatMarker(): Boolean
+
+        fun writeCompatMarker()
+
+        fun clearCompatMarker()
+
+        fun runOnce(mode: Mode, timeoutMs: Long, killPid: (Int) -> Unit): Attempt
+    }
+
+    fun matchedOutput(exitCode: Int, output: String): Boolean =
+        exitCode == 0 && output.lineSequence().any { it.trim() == TOKEN }
+
+    /**
+     * Signals only the verified exact [pid] ([sendTerm], brief wait, then [sendKill] if still the same process).
+     * Never signals a reused PID.
+     */
+    fun stopExactProcess(
+        pid: Int,
+        isSameProcess: (Int) -> Boolean,
+        waitExited: () -> Boolean,
+        sendTerm: (Int) -> Unit,
+        sendKill: (Int) -> Unit,
+    ): Boolean {
+        if (!isSameProcess(pid)) return false
+        sendTerm(pid)
+        if (waitExited()) return true
+        if (isSameProcess(pid)) sendKill(pid)
+        return true
+    }
+
+    fun run(
+        runner: Runner,
+        timeoutMs: Long = TIMEOUT_MS,
+        onStage: (compatRetry: Boolean) -> Unit = {},
+        killPid: (Int) -> Unit = {},
+    ): Result =
+        if (runner.hasCompatMarker()) runWithExistingMarker(runner, timeoutMs, onStage, killPid)
+        else runFromNormal(runner, timeoutMs, onStage, killPid)
+
+    private fun runWithExistingMarker(
+        runner: Runner,
+        timeoutMs: Long,
+        onStage: (compatRetry: Boolean) -> Unit,
+        killPid: (Int) -> Unit,
+    ): Result {
+        onStage(false)
+        return when (val attempt = runner.runOnce(Mode.COMPAT, timeoutMs, killPid)) {
+            Attempt.Answered ->
+                Result.Ready(
+                    mode = Mode.COMPAT,
+                    switchedToCompat = false,
+                    skippedNormal = true,
+                    detailLine = "[oc] Linux probe ok (mode=compat, marker present)",
+                )
+            Attempt.Cancelled -> Result.Cancelled
+            is Attempt.Hung ->
+                Result.Failed(
+                    detailLine = "[oc] Linux probe failed (mode=compat, marker present, compat=timeout)",
+                    failure = FAILURE_DETAIL,
+                )
+            is Attempt.Exited ->
+                Result.Failed(
+                    detailLine =
+                        "[oc] Linux probe failed (mode=compat, marker present, compat=exit ${attempt.exitCode})",
+                    failure = FAILURE_DETAIL,
+                )
+        }
+    }
+
+    private fun runFromNormal(
+        runner: Runner,
+        timeoutMs: Long,
+        onStage: (compatRetry: Boolean) -> Unit,
+        killPid: (Int) -> Unit,
+    ): Result {
+        onStage(false)
+        val first = runner.runOnce(Mode.NORMAL, timeoutMs, killPid)
+        return when (first) {
+            Attempt.Answered ->
+                Result.Ready(
+                    mode = Mode.NORMAL,
+                    switchedToCompat = false,
+                    skippedNormal = false,
+                    detailLine = "[oc] Linux probe ok (mode=normal)",
+                )
+            Attempt.Cancelled -> Result.Cancelled
+            is Attempt.Hung -> retryInCompat(runner, timeoutMs, "timeout", onStage, killPid)
+            is Attempt.Exited -> retryInCompat(runner, timeoutMs, "exit ${first.exitCode}", onStage, killPid)
+        }
+    }
+
+    private fun retryInCompat(
+        runner: Runner,
+        timeoutMs: Long,
+        firstReason: String,
+        onStage: (compatRetry: Boolean) -> Unit,
+        killPid: (Int) -> Unit,
+    ): Result {
+        runner.writeCompatMarker()
+        onStage(true)
+        return when (val second = runner.runOnce(Mode.COMPAT, timeoutMs, killPid)) {
+            Attempt.Answered ->
+                Result.Ready(
+                    mode = Mode.COMPAT,
+                    switchedToCompat = true,
+                    skippedNormal = false,
+                    detailLine = "[oc] Linux probe ok (mode=compat, after normal $firstReason)",
+                )
+            Attempt.Cancelled -> {
+                runner.clearCompatMarker()
+                Result.Cancelled
+            }
+            is Attempt.Hung -> {
+                runner.clearCompatMarker()
+                Result.Failed(
+                    detailLine = "[oc] Linux probe failed (normal=$firstReason, compat=timeout)",
+                    failure = FAILURE_DETAIL,
+                )
+            }
+            is Attempt.Exited -> {
+                runner.clearCompatMarker()
+                Result.Failed(
+                    detailLine = "[oc] Linux probe failed (normal=$firstReason, compat=exit ${second.exitCode})",
+                    failure = FAILURE_DETAIL,
+                )
+            }
+        }
+    }
 }

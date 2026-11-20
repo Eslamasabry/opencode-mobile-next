@@ -84,6 +84,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupNotificationTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupOpenCodeWhy
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageDownloadingLinux
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageCheckingLinux
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageCompat
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageRetrying
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageStarting
@@ -180,6 +181,8 @@ class PhoneSetup(
         val downloading = getString(Res.string.phoneSetupStageDownloadingLinux)
         val unpacking = getString(Res.string.phoneSetupStageUnpackingLinux)
         val title = getString(Res.string.phoneSetupNotificationTitle)
+        val stageCompat = getString(Res.string.phoneSetupStageCompat)
+        val stageCheckingLinux = getString(Res.string.phoneSetupStageCheckingLinux)
         val words =
             SetupWords(
                 notificationChannel = getString(Res.string.phoneSetupNotificationChannel),
@@ -191,10 +194,11 @@ class PhoneSetup(
                 stageDownloadingLinux = downloading,
                 stageUnpackingLinux = unpacking,
                 stageRetrying = getString(Res.string.phoneSetupStageRetrying),
-                stageCompat = getString(Res.string.phoneSetupStageCompat),
+                stageCompat = stageCompat,
                 // Adding tools to an existing setup is not offered here (non-goal): the plain title stands.
                 addingTitle = { title },
             )
+        val probeLabels = mapOf("probe" to stageCheckingLinux, "compat" to stageCompat)
         val registry =
             PhoneSetupRegistry(
                 PhoneSetupRegistryWords(
@@ -212,7 +216,7 @@ class PhoneSetup(
         val engine =
             withContext(lane) {
                 SetupEngine(
-                    host = NativeSetupHost(app, dispatchers),
+                    host = NativeSetupHost(app, dispatchers, probeLabels),
                     registryPort = registry,
                     words = words,
                     scope = scope,
@@ -244,7 +248,11 @@ class PhoneSetup(
 }
 
 /** SetupJobHost over :android:linux (the Flutter MainActivity's `startSetup`/`setupStatus`/`run` channel calls). */
-internal class NativeSetupHost(private val app: Application, private val dispatchers: AppDispatchers) : SetupJobHost {
+internal class NativeSetupHost(
+    private val app: Application,
+    private val dispatchers: AppDispatchers,
+    private val probeLabels: Map<String, String> = emptyMap(),
+) : SetupJobHost {
     private val linux: BuiltinLinux get() = BuiltinLinux.get(app)
     private val runner: SetupRunner get() = SetupRunner.get(app)
 
@@ -264,13 +272,19 @@ internal class NativeSetupHost(private val app: Application, private val dispatc
     override suspend fun setupStatus(): Outcome<String?> = blocking { runner.status() }
 
     override suspend fun runCheck(script: String, agentUser: Boolean): Outcome<SetupCheckRun> =
-        blocking { linux.run(script, CHECK_TIMEOUT_SECONDS, agentUser = agentUser).let { SetupCheckRun(it.exitCode, it.output) } }
+        blocking {
+            runChecked({ linux.ensureProotLiveness() }) {
+                linux.run(script, CHECK_TIMEOUT_SECONDS, agentUser = agentUser).let {
+                    SetupCheckRun(it.exitCode, it.output)
+                }
+            }
+        }
 
     override suspend fun startSetup(job: SetupJobStart): Outcome<Unit> =
         blocking {
             runner.start(
                 job.jobId,
-                job.components.map(::spec),
+                job.components.map { spec(it, probeLabels) },
                 JSONObject(job.params),
                 SetupRunner.Texts(
                     channel = job.texts.channel,
@@ -291,8 +305,12 @@ internal class NativeSetupHost(private val app: Application, private val dispatc
         /** The engine's combined check: two minutes, as the Flutter channel call. */
         const val CHECK_TIMEOUT_SECONDS = 120L
 
+        /** Runs the combined check only when the bounded proot liveness probe answered (issue #151). */
+        fun runChecked(probeReady: () -> Boolean, runCheck: () -> SetupCheckRun): SetupCheckRun =
+            if (probeReady()) runCheck() else SetupCheckRun(-1, "")
+
         /** One engine step as SetupRunner takes it (Flutter `MainActivityBuiltinSupport.setupSpec`). */
-        fun spec(spec: SetupStepSpec): SetupRunner.Spec =
+        fun spec(spec: SetupStepSpec, extraLabels: Map<String, String> = emptyMap()): SetupRunner.Spec =
             SetupRunner.Spec(
                 id = spec.id,
                 script = spec.script,
@@ -302,7 +320,7 @@ internal class NativeSetupHost(private val app: Application, private val dispatc
                 skipped = spec.skipped,
                 version = spec.version,
                 stage = spec.stage,
-                labels = spec.labels,
+                labels = if (extraLabels.isEmpty()) spec.labels else extraLabels + spec.labels,
                 data = spec.data,
                 agentUser = spec.agentUser,
             )

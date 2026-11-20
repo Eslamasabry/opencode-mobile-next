@@ -945,4 +945,5 @@
     <string name="phoneDownloadWaitingOpenCodeHelper">Mise à jour d’OpenCode et de l’assistant des agents en attente de Wi-Fi · environ %1$d Mo</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">C’est la mise à jour d’OpenCode et de l’assistant des agents dont il a besoin. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
     <string name="phoneStoppedByYou">Vous avez arrêté OpenCode sur ce téléphone</string>
+    <string name="phoneSetupStageCheckingLinux">Vérification de Linux sur ce téléphone…</string>
 </resources>

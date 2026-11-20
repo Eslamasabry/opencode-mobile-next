@@ -143,9 +143,8 @@ class LinuxProotProbeTest {
             pid = 7731,
             isSameProcess = { it == 7731 },
             waitExited = { false },
-            signal = { pid, sig -> sent += pid to sig },
-            sigTerm = 15,
-            sigKill = 9,
+            sendTerm = { sent += it to 15 },
+            sendKill = { sent += it to 9 },
         )
         assertTrue(stopped)
         assertEquals(listOf(7731 to 15, 7731 to 9), sent)
@@ -155,9 +154,8 @@ class LinuxProotProbeTest {
             pid = 7731,
             isSameProcess = { false },
             waitExited = { false },
-            signal = { pid, sig -> reused += pid to sig },
-            sigTerm = 15,
-            sigKill = 9,
+            sendTerm = { reused += it to 15 },
+            sendKill = { reused += it to 9 },
         )
         assertFalse(skipped)
         assertTrue("must never signal a reused pid: $reused", reused.isEmpty())
