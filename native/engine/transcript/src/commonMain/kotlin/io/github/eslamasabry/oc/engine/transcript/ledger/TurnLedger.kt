@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.transcript.ledger
 import io.github.eslamasabry.oc.core.domain.events.DeltaField
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
+import io.github.eslamasabry.oc.core.model.transcript.MsgTime
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.Part
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -163,8 +164,9 @@ public class TurnLedger(private val sessionId: String) {
         if (entry == null) {
             messages[info.id] = Entry(info, version + 1)
         } else {
-            if (entry.info == info) return false
-            entry.info = info
+            val next = entry.info.keepingKnownTimes(info)
+            if (entry.info == next) return false
+            entry.info = next
             entry.stamp = version + 1
         }
         return changed()
@@ -221,4 +223,20 @@ public class TurnLedger(private val sessionId: String) {
             return out
         }
     }
+}
+
+/**
+ * A message's own times are not moved by a later report of it (B-CHAT-FOOT-004): an agent's stream that replays an old
+ * timeline item with no timestamp stamps it with now, and a finished message seen again must not read as finishing now.
+ * Its creation never moves later; a completion already known stays.
+ */
+private fun MessageInfo.keepingKnownTimes(next: MessageInfo): MessageInfo {
+    val old = time
+    val incoming = next.time
+    if (old == null || incoming == null) return next
+    val knownStart = old.createdMs
+    val newStart = incoming.createdMs
+    val created = if (knownStart != null && (newStart == null || newStart > knownStart)) knownStart else newStart
+    val kept = MsgTime(created, old.completedMs ?: incoming.completedMs)
+    return if (kept == incoming) next else next.copy(time = kept)
 }
