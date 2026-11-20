@@ -1245,7 +1245,6 @@
     <string name="stageStartingLinux">Memulai Linux…</string>
     <string name="stageStartingOpenCode">Memulai OpenCode…</string>
     <string name="stageStartingHelper">Memulai pembantu agen…</string>
-    <string name="stageStartingAgents">Memulai agen…</string>
     <string name="stageStartingAgent">Memulai %1$s…</string>
     <string name="stageOpeningConversation">Membuka percakapan…</string>
     <string name="kitTurnLiveStillThinking">Masih berpikir</string>

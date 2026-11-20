@@ -130,7 +130,13 @@ public enum class HomeStage {
     Helper,
 
     /** The helper answers; the agents themselves are warming up. */
-    Agents,
+    Agents;
+
+    /**
+     * The name a person reads for this stage. The helper starting and its agents warming up are one wait to them, so
+     * they carry one name: the line beside "Recent" never swaps between two wordings for one thing.
+     */
+    public fun named(): HomeStage = if (this == Agents) Helper else this
 }
 
 public enum class ChatsMonitorStatus {

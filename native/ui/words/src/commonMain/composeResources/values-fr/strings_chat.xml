@@ -1369,7 +1369,6 @@
     <string name="stageStartingLinux">Démarrage de Linux…</string>
     <string name="stageStartingOpenCode">Démarrage d’OpenCode…</string>
     <string name="stageStartingHelper">Démarrage de l’assistant des agents…</string>
-    <string name="stageStartingAgents">Démarrage des agents…</string>
     <string name="stageStartingAgent">Démarrage de %1$s…</string>
     <string name="stageOpeningConversation">Ouverture de la conversation…</string>
     <string name="kitTurnLiveStillThinking">Réfléchit encore</string>

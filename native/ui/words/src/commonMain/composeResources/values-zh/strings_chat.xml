@@ -1155,7 +1155,6 @@
     <string name="stageStartingLinux">正在启动 Linux…</string>
     <string name="stageStartingOpenCode">正在启动 OpenCode…</string>
     <string name="stageStartingHelper">正在启动智能体的辅助程序…</string>
-    <string name="stageStartingAgents">正在启动智能体…</string>
     <string name="stageStartingAgent">正在启动 %1$s…</string>
     <string name="stageOpeningConversation">正在打开对话…</string>
     <string name="chatLoadFailedAgentBody">没有丢失任何内容。%1$s 恢复响应后请重试。</string>

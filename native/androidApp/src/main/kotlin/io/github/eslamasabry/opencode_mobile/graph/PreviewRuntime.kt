@@ -406,6 +406,9 @@ class PreviewRuntime(
     /** Every list source whose list has been read in this run (the server in use and the ones that joined it). */
     internal fun loadedSourceIds(): Set<ProfileId> = loadedSources.value
 
+    /** The same, as a flow: Home reads again the moment a source is listed. */
+    internal val loadedSourceFlow: StateFlow<Set<ProfileId>> get() = loadedSources
+
     internal suspend fun synchronizeListSources(): Outcome<Unit> = command {
         var failed: Outcome.Failed? = null
         for (profile in profiles.profiles.value) {
@@ -832,15 +835,12 @@ class PreviewRuntime(
                             }
                         }
                         launch {
-                            graph.session.readState.state.collect { reads ->
+                            // One truth for "Done": publishReadState reads the device's saved marks. The engine's own
+                            // in-memory read state does not know them yet at launch, so it used to say "Done" for a
+                            // moment and the saved marks then took it back (a word that appears and vanishes).
+                            graph.session.readState.state.collect {
                                 if (registry.live.value[id] === graph) {
-                                    listings[id]?.let { listing ->
-                                        listing.value =
-                                            listing.value.copy(
-                                                finishedUnseen =
-                                                    reads.filterValues { it.finishedUnseen }.keys
-                                            )
-                                    }
+                                    order.withLock { listings[id]?.let { publishReadState(id, it) } }
                                 }
                             }
                         }
@@ -1378,10 +1378,8 @@ class PreviewRuntime(
                                     .toMap()
                             else if (forms == null) emptyMap() else listing.value.forms,
                         needsYou = pending.values.toSet(),
-                        finishedUnseen =
-                            graph.session.readState.state.value
-                                .filterValues { it.finishedUnseen }
-                                .keys,
+                        // The listing's "Done" marks are published once, by publishReadState below.
+                        finishedUnseen = listing.value.finishedUnseen,
                         // B1: more pages on the server is not "couldn't load".
                         complete = page.value.complete,
                         failed =
