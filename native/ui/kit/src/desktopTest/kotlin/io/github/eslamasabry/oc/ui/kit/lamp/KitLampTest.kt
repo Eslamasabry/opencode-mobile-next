@@ -268,29 +268,34 @@ class KitLampTest {
         var light = 0
     }
 
-    private fun ComposeUiTest.hostBehind(
-        behind: Behind,
-        locale: String = "en",
-        side: KitLampSide = KitLampSide.End,
-        inset: Dp = 0.dp,
-        fontScale: Float = 1f,
-        face: KitLampFace = KitLampFace(),
-    ) {
+    private class Spec(
+        val locale: String = "en",
+        val side: KitLampSide = KitLampSide.End,
+        val inset: Dp = 0.dp,
+        val fontScale: Float = 1f,
+        val face: KitLampFace = KitLampFace(),
+    )
+
+    private fun ComposeUiTest.hostBehind(behind: Behind, spec: Spec = Spec()) {
+        val (locale, side, inset) = Triple(spec.locale, spec.side, spec.inset)
         setContent {
-            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
-                KitTheme(KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Full), FakeKitPlatform(), locale) {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, spec.fontScale)) {
+                val appearance = KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Full)
+                KitTheme(appearance, FakeKitPlatform(), locale) {
                     val rtl = locale == "ar"
                     val left = KitLampRules.onLeft(side, rtl)
                     // Physical edges: Start is the right edge in Arabic.
                     val edge = if (left != rtl) Alignment.CenterStart else Alignment.CenterEnd
                     Box(Modifier.size(W.dp, H.dp)) {
-                        // The page's content begins at the gutter: its edge button ends 16 dp (plus the inset) in from the window's edge.
+                        // The content begins at the gutter: its edge button ends 16 dp (plus the inset) in from the edge.
                         Box(
                             Modifier.size(48.dp).align(edge)
                                 .absolutePadding(left = if (left) 16.dp + inset else 0.dp, right = if (left) 0.dp else 16.dp + inset)
                                 .clickable { behind.button++ },
                         )
-                        KitLamp(face, LABEL, { behind.light++ }, Modifier.align(edge), side = side, sideInset = inset)
+                        CompositionLocalProvider(LocalKitLampSideInset provides inset) {
+                            KitLamp(spec.face, LABEL, { behind.light++ }, Modifier.align(edge), side = side)
+                        }
                     }
                 }
             }
@@ -334,7 +339,7 @@ class KitLampTest {
     fun `B-LAMP-010 right to left the box mirrors to the left edge`() =
         runDesktopComposeUiTest(W, H) {
             val behind = Behind()
-            hostBehind(behind, locale = "ar")
+            hostBehind(behind, Spec(locale = "ar"))
             waitForIdle()
             tapAt(8f, H / 2f)
             tapAt(14f, H / 2f - 22f)
@@ -350,7 +355,7 @@ class KitLampTest {
     fun `B-LAMP-010 the box follows the side the light is moved to`() =
         runDesktopComposeUiTest(W, H) {
             val behind = Behind()
-            hostBehind(behind, side = KitLampSide.Start)
+            hostBehind(behind, Spec(side = KitLampSide.Start))
             waitForIdle()
             tapAt(8f, H / 2f)
             assertEquals(1, behind.light, "moved to the other side, the box is on that side")
@@ -362,7 +367,7 @@ class KitLampTest {
     fun `B-LAMP-010 a side inset widens the box to the content edge and no further`() =
         runDesktopComposeUiTest(W, H) {
             val behind = Behind()
-            hostBehind(behind, inset = 10.dp)
+            hostBehind(behind, Spec(inset = 10.dp))
             waitForIdle()
             tapAt(W - 24f, H / 2f)
             assertEquals(1, behind.light, "inside gutter plus inset (26 dp) opens it")
@@ -376,7 +381,7 @@ class KitLampTest {
         runDesktopComposeUiTest(W, H) {
             val behind = Behind()
             val many = KitLampFace(12, listOf(KitLampMark("n", KitLampMarkKind.NeedsYou), KitLampMark("f", KitLampMarkKind.Failed), KitLampMark("w", KitLampMarkKind.Working, 0.4f)))
-            hostBehind(behind, fontScale = 1.3f, face = many)
+            hostBehind(behind, Spec(fontScale = 1.3f, face = many))
             waitForIdle()
             val t = touch()
             val f = face()

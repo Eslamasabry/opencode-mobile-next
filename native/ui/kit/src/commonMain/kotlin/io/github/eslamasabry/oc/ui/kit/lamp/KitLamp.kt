@@ -93,7 +93,7 @@ import kotlinx.coroutines.launch
 public object KitLampDims {
     /**
      * The touch box is 48 dp tall, centred on the mark (never shorter than the mark). Its width is the page's side
-     * gutter from the physical edge (see [KitLamp]'s `sideInset`), so it never lies over content.
+     * gutter from the physical edge (see [LocalKitLampSideInset]), so it never lies over content.
      */
     public const val TOUCH_H: Int = Space.S6 * 2
 
@@ -160,6 +160,10 @@ public data class KitLampFace(val count: Int = 0, val marks: List<KitLampMark> =
     public val quiet: Boolean get() = !open && count <= 0 && marks.isEmpty()
 }
 
+/** The side inset (a cutout or bar) on the light's edge, in dp: the light's touch box reaches to the content past it. */
+public val LocalKitLampSideInset: androidx.compose.runtime.ProvidableCompositionLocal<Dp> =
+    androidx.compose.runtime.staticCompositionLocalOf { 0.dp }
+
 /** Which edge the light sits on, in reading order: [End] is the right edge in English and the left in Arabic. */
 public enum class KitLampSide { Start, End }
 
@@ -223,7 +227,7 @@ public object KitLampRules {
  * other conversations stand. The [face] number counts needs you + failed (amber when anyone needs the person); under it
  * up to three marks (needs you, then failed, then runs by progress). With nothing to say it is the quiet "‹" tab; while
  * [KitLampFace.open] it is the list's close tab (×). The touch box is the page's side gutter wide (16 dp from the
- * physical edge, plus [sideInset] for a cutout or bar on that side) and 48 dp tall, centred on the mark: content never
+ * physical edge, plus [LocalKitLampSideInset] for a cutout or bar on that side) and 48 dp tall, centred on the mark: content never
  * enters the gutter, so the box never lies over a button. The mark stays inside it, at any text size (a sideways swipe
  * stays the system's Back; the layer passes drags through).
  *
@@ -252,16 +256,13 @@ public fun KitLamp(
     modifier: Modifier = Modifier,
     side: KitLampSide = KitLampSide.End,
     visible: Boolean = true,
-    sideInset: Dp = 0.dp,
 ) {
     val specs = KitMotion.specs
-    val motion = KitMotion.state
     val left = KitLampRules.onLeft(side, LocalLayoutDirection.current == LayoutDirection.Rtl)
     val targetH = KitLampRules.faceHeightDp(face).toFloat()
     val targetW = KitLampRules.faceWidthDp(face).toFloat()
-    val fitPlain = KitLampRules.numberCompact(face)
-    // The touch box is the page's side gutter: from the physical edge, through any side inset, to where content begins.
-    val touchWidth = LocalKitTokens.current.gutter.dp + sideInset
+    // The touch box is the page's side gutter plus any side inset the caller publishes.
+    val touchWidth = LocalKitTokens.current.gutter.dp + LocalKitLampSideInset.current
     val height = remember { Animatable(targetH) }
     val width = remember { Animatable(targetW) }
     LaunchedEffect(targetH) { if (height.targetValue != targetH) height.animateTo(targetH, specs.spatialFast()) }
@@ -280,12 +281,10 @@ public fun KitLamp(
                 .semantics { contentDescription = label }
                 .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick)
         } else Modifier.clearAndSetSemantics {}
-    val haloStroke = KitLampDims.HALO_STROKE.dp
-    val haloReach = MotionTokens.LIGHT_HALO_DP.dp
-    val travels = motion.travels
+    val travels = KitMotion.state.travels
     val attention = LocalKitColors.current.attention
     Layout(
-        content = { LampFace(face, left, interactions, settled[0], fitPlain) },
+        content = { LampFace(face, left, interactions, settled[0]) },
         modifier =
             modifier
                 .graphicsLayer { alpha = shown.value }
@@ -302,8 +301,8 @@ public fun KitLamp(
                             val fh = height.value.dp.toPx()
                             val x = if (left) 0f else size.width - fw
                             val y = (size.height - fh) / 2f
-                            val reach = (if (travels) 1f + (haloReach.value - 1f) * t else 1f).dp.toPx()
-                            drawHalo(x, y, fw, fh, reach, haloStroke.toPx(), KitLampDims.CORNER.dp.toPx(), left, attention.copy(alpha = attention.alpha * (1f - t)))
+                            val reach = (if (travels) 1f + (MotionTokens.LIGHT_HALO_DP - 1f) * t else 1f).dp.toPx()
+                            drawHalo(x, y, fw, fh, reach, KitLampDims.HALO_STROKE.dp.toPx(), KitLampDims.CORNER.dp.toPx(), left, attention.copy(alpha = attention.alpha * (1f - t)))
                         }
                         this@drawWithContent.drawContent()
                     }
@@ -385,7 +384,7 @@ private enum class FaceMode { Quiet, Counted, Open }
 
 /** The face: the style's floating face by role (Glass's by its roles), the press inside it, then quiet, marks or ×. */
 @Composable
-private fun LampFace(face: KitLampFace, left: Boolean, interactions: MutableInteractionSource, settled: Boolean, fitPlain: Boolean) {
+private fun LampFace(face: KitLampFace, left: Boolean, interactions: MutableInteractionSource, settled: Boolean) {
     val colors = LocalKitColors.current
     val style = LocalKitStyle.current.style
     val specs = KitMotion.specs
@@ -439,7 +438,7 @@ private fun LampFace(face: KitLampFace, left: Boolean, interactions: MutableInte
                         Canvas(Modifier.size(KitLampDims.GLYPH.dp)) { drawChevron(left, chevron) }
                     }
                 }
-                FaceMode.Counted -> LampMarks(face, settled, fitPlain)
+                FaceMode.Counted -> LampMarks(face, settled)
             }
         }
     }
@@ -447,7 +446,7 @@ private fun LampFace(face: KitLampFace, left: Boolean, interactions: MutableInte
 
 /** The number on top, then up to three marks, one per 15 dp row. */
 @Composable
-private fun LampMarks(face: KitLampFace, settled: Boolean, fitPlain: Boolean) {
+private fun LampMarks(face: KitLampFace, settled: Boolean) {
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterVertically),
@@ -463,7 +462,7 @@ private fun LampMarks(face: KitLampFace, settled: Boolean, fitPlain: Boolean) {
                         tone = KitLampRules.numberTone(face),
                     )
                 }
-                if (fitPlain) {
+                if (KitLampRules.numberCompact(face)) {
                     // "9+" would touch both sides of the gutter-wide face: written at a fixed small size, 2 dp or more clear.
                     CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, KitLampDims.NUMBER_COMPACT_SCALE), content = number)
                 } else {

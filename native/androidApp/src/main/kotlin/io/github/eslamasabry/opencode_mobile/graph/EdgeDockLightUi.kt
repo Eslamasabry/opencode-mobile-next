@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitModalOpen
 import io.github.eslamasabry.oc.ui.kit.modal.KitOwnModalLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLamp
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
+import io.github.eslamasabry.oc.ui.kit.lamp.LocalKitLampSideInset
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceWords
@@ -117,12 +119,12 @@ internal fun EdgeLightMount(
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     val insets = WindowInsets.safeDrawing
-    val sideInset =
-        with(density) {
-            (if (KitLampRules.onLeft(place.side, direction == LayoutDirection.Rtl)) insets.getLeft(density, direction) else insets.getRight(density, direction)).toDp()
-        }
+    val rtl = direction == LayoutDirection.Rtl
+    val physicalLeft = KitLampRules.onLeft(place.side, rtl)
+    val sidePx = if (physicalLeft) insets.getLeft(density, direction) else insets.getRight(density, direction)
+    val sideInset = with(density) { sidePx.toDp() }
     val mountOverlay = rememberOverlayMounted(open, placing)
-    val tipState = rememberFirstUseTip(port, lightVisible, open, placing, EdgeLightRules.requestOnPage(list, page))
+    val tipState = rememberFirstUseTip(port, lightVisible, open, placing, edgeLightRequestOnPage(list, page))
     AnnounceNewNeeds(face, label, open)
     Box(modifier.fillMaxSize()) {
         // Closed light stays cheap: list controller, state and panel strings mount only when opened or moving.
@@ -150,8 +152,8 @@ internal fun EdgeLightMount(
                 onDismissed = { tipState.value = false },
                 modifier = Modifier.align(edgeAlign).padding(bottom = offset),
                 placement = KitTipPlacement.BesideEdge,
-                yieldsToOthers = true,
             ) {
+                CompositionLocalProvider(LocalKitLampSideInset provides sideInset) {
                 KitLamp(
                     face = face.copy(open = open),
                     label = if (open) stringResource(Res.string.edgeLightFaceClose) else label,
@@ -166,8 +168,8 @@ internal fun EdgeLightMount(
                             .sharePointerInputWithSiblings(),
                     side = place.side,
                     visible = lightVisible,
-                    sideInset = sideInset,
                 )
+                }
             }
         }
     }
@@ -203,7 +205,8 @@ private fun rememberFirstUseTip(
     // Waits for a calm moment (no keyboard, no request card on the page) and then shows; once per mount, so a keyboard
     // that opens later does not bring it back or count it twice.
     val shownOnce = remember { mutableStateOf(false) }
-    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing, requestOnPage, kitTipsOnScreen() > 0)
+    val calm = !requestOnPage && kitTipsOnScreen() == 0
+    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing, calm)
     LaunchedEffect(canShow) {
         if (canShow && !showing.value && !shownOnce.value) {
             shownOnce.value = true
@@ -212,7 +215,8 @@ private fun rememberFirstUseTip(
         }
     }
     LaunchedEffect(open, placing, lightVisible, requestOnPage) {
-        if (open || placing || !lightVisible || requestOnPage) showing.value = false
+        val away = open || placing
+        if (away || !lightVisible || requestOnPage) showing.value = false
     }
     return showing
 }

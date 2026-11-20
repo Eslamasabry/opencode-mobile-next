@@ -17,7 +17,10 @@ import kotlinx.serialization.json.JsonPrimitive
 public data class DockRequestWords(
     val kind: DockRequestKind,
     val id: String,
-    /** A permission's action token: `run`, `edit`, `read`, `folder`, `fetch`, `search` or `tool`; empty when the ask names none or for a question or form. */
+    /**
+     * A permission's action token: `run`, `edit`, `read`, `folder`, `fetch`, `search` or `tool`; empty when the ask
+     * names none or for a question or form.
+     */
     val action: String,
     /** A permission's short target (a command head or a file name); empty when none. */
     val target: String,
@@ -142,18 +145,21 @@ public class DockFacts(private val now: () -> Long) {
         if (ask.action.isEmpty()) {
             // Not a command and not a file: a web fetch, a web search or another tool. The person still sees what it
             // touches, in their words and masked like the chat card, never a bare "asks for permission".
-            otherWords(request, metadata)?.let { (action, target) -> return DockRequestWords(DockRequestKind.Permission, request.id.raw, action, target, "") }
+            otherWords(request, metadata)?.let { (action, target) ->
+                return DockRequestWords(DockRequestKind.Permission, request.id.raw, action, target, "")
+            }
         }
         return DockRequestWords(DockRequestKind.Permission, request.id.raw, ask.action, ask.target, "")
     }
 
     private fun otherWords(request: PermissionRequest, metadata: Map<String, String>): Pair<String, String>? {
         val tool = request.permission.trim()
-        val pattern = request.patterns.map { it.trim() }.firstOrNull { it.isNotEmpty() && it != "*" }
+        val pattern = request.patterns.map { it.trim() }.firstOrNull { it.isNotEmpty() && it != "*" }.orEmpty()
+        fun meta(key: String): String = metadata[key]?.trim().orEmpty().ifEmpty { pattern }
         val (action, target) =
             when (tool.lowercase()) {
-                "webfetch" -> ACTION_FETCH to hostOf(metadata["url"]?.trim()?.takeIf { it.isNotEmpty() } ?: pattern.orEmpty())
-                "websearch" -> ACTION_SEARCH to (metadata["query"]?.trim()?.takeIf { it.isNotEmpty() } ?: pattern.orEmpty())
+                "webfetch" -> ACTION_FETCH to hostOf(meta("url"))
+                "websearch" -> ACTION_SEARCH to meta("query")
                 "" -> return null
                 else -> ACTION_TOOL to tool
             }

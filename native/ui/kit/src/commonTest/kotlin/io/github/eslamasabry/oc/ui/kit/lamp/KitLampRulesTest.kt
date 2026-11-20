@@ -149,32 +149,34 @@ class KitLampRulesTest {
     }
 
     @Test
-    fun `B-LAMP-014 the light's tip never covers a footer button flush at the content edge, at any height of the light`() {
+    fun `B-LAMP-014 the light's tip never covers a footer button flush at the content edge`() {
         val windowW = 412
-        val windowH = 860
         val gutter = 16
         val tipW = 280
         val tipH = 60
         // Footer buttons 48 dp square, flush at the content's edge, level with the light (a reply's copy and more).
         for (lightTop in listOf(100, 300, 500, 700, 800)) {
-            val (x, y) = TipRules.besideEdge(windowW - gutter, lightTop, windowW, lightTop + 48, windowW, windowH, tipW, tipH, 8)
+            val (x, y) = TipRules.besideEdge(windowW - gutter, lightTop, windowW, lightTop + 48, windowW, 860, tipW, tipH, 8)
             val tip = intArrayOf(x, y, x + tipW, y + tipH)
-            val copy = intArrayOf(windowW - gutter - 48, lightTop, windowW - gutter, lightTop + 48)
-            val more = intArrayOf(windowW - gutter - 96, lightTop, windowW - gutter - 48, lightTop + 48)
+            val edge = windowW - gutter
+            val copy = intArrayOf(edge - 48, lightTop, edge, lightTop + 48)
+            val more = intArrayOf(edge - 96, lightTop, edge - 48, lightTop + 48)
             for (button in listOf(copy, more)) {
                 val overlaps = tip[0] < button[2] && button[0] < tip[2] && tip[1] < button[3] && button[1] < tip[3]
-                assertTrue(!overlaps, "light at $lightTop: the tip ${tip.toList()} covers a footer button ${button.toList()}")
+                assertTrue(!overlaps, "light at $lightTop: the tip ${tip.toList()} covers ${button.toList()}")
             }
         }
     }
 
     @Test
     fun `B-LAMP-015 a tip that yields waits while any other tip is on screen, and never over a modal`() {
-        assertTrue(TipRules.mayShow(visible = true, modalOpen = false, yieldsToOthers = true, othersShowing = 0))
-        assertTrue(!TipRules.mayShow(visible = true, modalOpen = false, yieldsToOthers = true, othersShowing = 1), "another tip is up: wait")
-        assertTrue(TipRules.mayShow(visible = true, modalOpen = false, yieldsToOthers = false, othersShowing = 2), "a plain tip is as before")
-        assertTrue(!TipRules.mayShow(visible = true, modalOpen = true, yieldsToOthers = true, othersShowing = 0))
-        assertTrue(!TipRules.mayShow(visible = false, modalOpen = false, yieldsToOthers = true, othersShowing = 0))
+        fun may(modal: Boolean = false, yields: Boolean = true, others: Int = 0, visible: Boolean = true) =
+            TipRules.mayShow(visible, modal, yields, others)
+        assertTrue(may())
+        assertTrue(!may(others = 1), "another tip is up: wait")
+        assertTrue(may(yields = false, others = 2), "a plain tip is as before")
+        assertTrue(!may(modal = true))
+        assertTrue(!may(visible = false))
     }
 
     @Test

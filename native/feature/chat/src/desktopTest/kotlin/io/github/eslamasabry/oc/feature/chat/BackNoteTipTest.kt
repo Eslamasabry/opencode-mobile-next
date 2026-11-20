@@ -26,12 +26,13 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class BackNoteTipTest {
     @Test
-    fun `B-LAMP-013 the back tip is never drawn without its title, arriving or leaving, and keeps it through the fade`() =
+    fun `B-LAMP-013 the back tip is never drawn without its title, arriving or leaving`() =
         runComposeUiTest {
             var title by mutableStateOf<String?>(null)
             mainClock.autoAdvance = false
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Full), localeTag = "en") {
+                val appearance = KitAppearance(motion = MotionLevel.Full)
+                KitTheme(platform = DesktopKitPlatform(), appearance = appearance, localeTag = "en") {
                     BackNoteTip(title, { title = null }) { Box(Modifier.size(200.dp, 56.dp)) }
                 }
             }

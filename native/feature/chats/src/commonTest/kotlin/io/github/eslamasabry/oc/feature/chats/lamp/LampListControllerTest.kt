@@ -136,7 +136,8 @@ class LampListControllerTest {
             runCurrent()
             assertEquals(1, w.sent.size, "sent once")
             // The server's list still holds the request: the row must not ask again.
-            assertTrue(w.lamp.ui.value.row("a").request!!.answer is LampAnswerUi.Held, "still the receipt, not the buttons")
+            val answer = w.lamp.ui.value.row("a").request!!.answer
+            assertTrue(answer is LampAnswerUi.Held, "still the receipt, not the buttons")
             advanceTimeBy(5_000)
             assertTrue(w.lamp.ui.value.row("a").request!!.answer is LampAnswerUi.Held, "still the receipt 8 s on")
             // A send that never settles gives the buttons back in the end: waiting is bounded.

@@ -111,7 +111,7 @@ public object TipRules {
 
     /**
      * Whether a tip may be drawn now: asked for, no sheet or dialog over the page, and, for a tip that yields
-     * ([KitTip]'s `yieldsToOthers`), no other tip on screen. A yielding tip waits; it never stacks over another.
+     * ([KitTipPlacement.BesideEdge]), no other tip on screen. A yielding tip waits; it never stacks over another.
      */
     public fun mayShow(visible: Boolean, modalOpen: Boolean, yieldsToOthers: Boolean, othersShowing: Int): Boolean =
         visible && !modalOpen && !(yieldsToOthers && othersShowing > 0)
@@ -121,7 +121,7 @@ public object TipRules {
 }
 
 /**
- * How many tips that do not yield are drawn in one page root, so a tip that yields ([KitTip]'s `yieldsToOthers`) can
+ * How many tips that do not yield are drawn in one page root, so a tip that yields ([KitTipPlacement.BesideEdge]) can
  * wait for a calm moment instead of lying over them (owner, look 10114: two tips stacked over a reply's footer). One
  * is held by each kit theme root and passed down by [LocalKitTipPresence], so a page counts its own tips only; with
  * none provided there is no other tip.
@@ -190,7 +190,6 @@ public fun KitTip(
     modifier: Modifier = Modifier,
     holdMs: Long = TipRules.HOLD_MS,
     placement: KitTipPlacement = KitTipPlacement.Auto,
-    yieldsToOthers: Boolean = false,
     anchor: @Composable () -> Unit,
 ) {
     kitAssert(message.isNotBlank()) { "KitTip: a tip is one sentence" }
@@ -213,7 +212,7 @@ public fun KitTip(
     // modal has gone (its hold starts then, so the person gets the whole of it).
     val host = LocalKitSheetHost.current
     val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
-    val show = TipRules.mayShow(visible, modalOpen, yieldsToOthers, kitTipsOnScreen())
+    val show = TipRules.mayShow(visible, modalOpen, beside, kitTipsOnScreen())
     shown.targetState = show
     LaunchedEffect(show, holdMs) {
         if (show) {
@@ -224,7 +223,7 @@ public fun KitTip(
     // The anchor's place while the tip shows, for the layer that draws it (read only when the tip is placed).
     var shownAt by remember { mutableStateOf(Rect.Zero) }
     val showing = shown.currentState || shown.targetState
-    val counts = showing && !yieldsToOthers
+    val counts = showing && !beside
     val presence = LocalKitTipPresence.current
     DisposableEffect(counts, presence) {
         if (counts) presence?.enter()

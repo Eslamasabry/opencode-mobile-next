@@ -97,5 +97,5 @@ public class HeldAnswers(
     }
 }
 
-/** The longest a sent answer's receipt stays while the server still lists the request (a failed send gives the buttons back). */
+/** The longest a sent answer's receipt stays while the server lists the request (a failed send gives buttons back). */
 public const val SENT_CONFIRM_MS: Long = 10_000L

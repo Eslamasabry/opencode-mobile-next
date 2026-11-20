@@ -244,7 +244,7 @@ class DockListTest {
         )
 
     @Test
-    fun `B-LAMP-008 the Needs-you row shows what the request allows, for a fetch (its host), a search (its words) and any other tool (its name)`() {
+    fun `B-LAMP-008 the Needs-you row names what a fetch, a search or another tool asks`() {
         val secret = "sk-" + "abcdefghijkl1234"
         fun words(request: PermissionRequest): DockRequestWords {
             val f = DockFacts { clock }
@@ -254,13 +254,14 @@ class DockListTest {
         val fetch = words(ask("webfetch", listOf("*"), "url" to "https://user:pw@example.org/docs?token=$secret"))
         assertEquals("fetch" to "example.org", fetch.action to fetch.target, "a fetch names its host only")
         assertFalse(secret in fetch.target)
-        assertEquals("search" to "fox tales", words(ask("websearch", listOf("*"), "query" to "fox tales")).let { it.action to it.target })
-        assertEquals("tool" to "task", words(ask("task", emptyList(), "description" to "write the tests")).let { it.action to it.target })
-        assertEquals("tool" to "skill", words(ask("skill", listOf("src/**"))).let { it.action to it.target })
+        fun pair(r: PermissionRequest) = words(r).let { it.action to it.target }
+        assertEquals("search" to "fox tales", pair(ask("websearch", listOf("*"), "query" to "fox tales")))
+        assertEquals("tool" to "task", pair(ask("task", emptyList(), "description" to "write the tests")))
+        assertEquals("tool" to "skill", pair(ask("skill", listOf("src/**"))))
         val leaked = words(ask("websearch", listOf("*"), "query" to "my key is $secret"))
         assertFalse(secret in leaked.target, "a search is masked like the chat card")
         // A command and a file are still worded as before.
-        assertEquals("run" to "git push", words(ask("bash", emptyList(), "command" to "git push")).let { it.action to it.target })
+        assertEquals("run" to "git push", pair(ask("bash", emptyList(), "command" to "git push")))
         // Nothing to name at all stays the plain "asks for permission", never a made-up target.
         assertEquals("", words(ask("webfetch", listOf("*"))).target)
         assertEquals("", words(ask("", emptyList())).target)

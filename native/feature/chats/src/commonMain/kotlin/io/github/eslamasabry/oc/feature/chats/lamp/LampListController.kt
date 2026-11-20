@@ -42,7 +42,9 @@ public class LampListController(
 
     public val ui: StateFlow<LampUi> =
         combine(
-                combine(list, held.held, held.sent, stops.phases) { model, answers, sent, phases -> Triple(model, answers to sent, phases) },
+                combine(list, held.held, held.sent, stops.phases) { model, answers, sent, phases ->
+                    Triple(model, answers to sent, phases)
+                },
                 combine(editing, place, notice, foldTick) { e, p, n, _ -> Triple(e, p, n) },
             ) { (model, answered, phases), (isEditing, where, told) ->
                 val (answers, sent) = answered
