@@ -157,13 +157,16 @@ public class OpenCodeAutoUpdater(
      * call [changed] again, so an unspaced read here is a loop of requests (thousands of sockets a minute, then the
      * heap): at most one read in [REFRESH_SPACING_MS], whatever triggered the look. No clock (0): no spacing.
      */
-    private suspend fun refreshSpaced() {
+    private suspend fun refreshSpaced(force: Boolean = false) {
         val now = nowMs()
-        if (now != 0L && lastRefreshAt != 0L && now - lastRefreshAt < REFRESH_SPACING_MS) return
+        if (!force && tooSoon(now)) return
         lastRefreshAt = now
         hooks.onRead()
         withTimeoutOrNull(READ_LIMIT) { host.refresh() }
     }
+
+    private fun tooSoon(now: Long): Boolean =
+        now != 0L && lastRefreshAt != 0L && now - lastRefreshAt < REFRESH_SPACING_MS
 
     private fun belowPin(): Boolean {
         val installed = host.installedVersion?.trim()?.removePrefix("v")
@@ -182,7 +185,8 @@ public class OpenCodeAutoUpdater(
         }
         if (!sawRunning && nowMs() - awaitingSince < START_GRACE_MS) return
         awaiting = null
-        refreshSpaced()
+        // Once per job, so never spaced: a job shorter than the spacing must still judge the version AFTER it ended.
+        refreshSpaced(force = true)
         if (!belowPin()) {
             short.value = false
             shortfalls.remove(key)

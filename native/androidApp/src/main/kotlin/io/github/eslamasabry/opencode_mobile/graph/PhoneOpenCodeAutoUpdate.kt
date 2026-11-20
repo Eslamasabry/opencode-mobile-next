@@ -45,11 +45,11 @@ class PhoneOpenCodeAutoUpdate(
     private val leases: NativeChatLeases,
     private val appScope: AppCoroutineScope,
     private val downloads: PhoneDownloads,
-    private val visibility: AppVisibility,
-    private val choices: PhoneUpdateChoices,
+    private val gates: UpdaterGates,
 ) {
     private var started = false
     @Volatile private var updaterRef: OpenCodeAutoUpdater? = null
+    private val choices get() = gates.choices
     private val wakeLock = Any()
     private var wakeJob: kotlinx.coroutines.Job? = null
 
@@ -143,7 +143,7 @@ class PhoneOpenCodeAutoUpdate(
                 val reading = idle.get()
                 // Not in front: the restart that ends the update needs the foreground service admission only a
                 // visible app has, so the try is kept (with the backoff) and the next look in front runs it.
-                settle.busy(reading.idle) || visibility.state.value != Visibility.Foreground
+                settle.busy(reading.idle) || gates.visibility.state.value != Visibility.Foreground
             }
         updaterRef = updater
         downloads.openCode = this
@@ -182,7 +182,7 @@ class PhoneOpenCodeAutoUpdate(
                     decisionFacts(runtime.serverFacts),
                     setup.progress,
                     leases.busy,
-                    visibility.state,
+                    gates.visibility.state,
                 ) { _, _, _, _ -> },
                 settled,
                 reads,
