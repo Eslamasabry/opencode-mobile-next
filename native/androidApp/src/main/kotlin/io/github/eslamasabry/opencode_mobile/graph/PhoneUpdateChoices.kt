@@ -98,8 +98,12 @@ class PhoneUpdateChoices(
             engine.startIfChosen(id, start)
         }
 
-    internal suspend fun updateShared(meteredAllowed: Boolean): Boolean = withContext(dispatchers.io) {
-        engine.startShared(meteredAllowed) {
+    /** OpenCode's update waits for the shared parts (Node.js, the helper) the offer still lists. */
+    internal val openCodeNeedsShared: Boolean get() = engine.openCodeNeedsShared
+
+    internal suspend fun updateShared(meteredAllowed: Boolean, alongsideAgents: Boolean = false): Boolean =
+        withContext(dispatchers.io) {
+        engine.startShared(meteredAllowed, alongsideAgents) {
             disk.sharedAnchor?.let { phones.startSharedUpdate(it) } == true
         }
     }
