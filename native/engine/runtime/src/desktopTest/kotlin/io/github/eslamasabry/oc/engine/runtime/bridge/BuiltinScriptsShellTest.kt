@@ -100,7 +100,8 @@ class BuiltinScriptsShellTest {
         assertEquals(3014, BuiltinScriptTexts.UBUNTU_SETUP.length)
         // One comparison of every hash, so a deliberate change shows all the new values at once.
         // The composed install script carries OC_REQUESTED_VERSION: its hash moves with each OpenCode pin
-        // (2.2.5 -> 2.2.6 93fcf4049, 2.2.6 -> 2.3.2 8a9d7393b6); the texts that hold its logic do not.
+        // (2.2.5 -> 2.2.6 93fcf4049, 2.2.6 -> 2.3.2 8a9d7393b6); FAST_PREREQUISITES carries the Node pin
+        // (v24.22.2 -> v24.22.3 c1cc690966); the texts that hold the install's logic do not change.
         // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the server script stays the Flutter script byte
         // for byte; only the port differs on native, whose default is 4098 (abf07acb1) and follows the flavor's choice.
         // The Node safe-mode exports (#117, Flutter fix/117-adapt) are outside the hashed 2.1.4 text.
@@ -109,8 +110,8 @@ class BuiltinScriptsShellTest {
                 "UBUNTU_SETUP" to "c777eea3f666671ba72c4a130dfec804dd2766ce3336056771fa776eee541b10",
                 "HISTORY_COPY" to "b14970782f0daaaeccb46365605ca14abdced821b839ba33da960a58163cd1c1",
                 "PHONE_CONTEXT" to "8e06d46d604a993e196664dae531f06af56050e08d2de2a1c2beeebad2888352",
-                "FAST_PREREQUISITES" to "fad8df7c51078b08a12187889227cd83184c15afea9905f1d761b44740114f15",
-                "install" to "f9e90fceeffdfea5e11b766cc19e52e4d8e74f339b98fd850163c6d8a59c1a72",
+                "FAST_PREREQUISITES" to "5b780438a67fa837488586fe67dabbb96bcb442adf9fdccf3a004ce1cd5ec8ac",
+                "install" to "a3c68aeae6002340d8a39d4882703189cf654ba61ba4eedb9e7c0533c4ee96f9",
                 "server" to "deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda",
             )
         val actual =
