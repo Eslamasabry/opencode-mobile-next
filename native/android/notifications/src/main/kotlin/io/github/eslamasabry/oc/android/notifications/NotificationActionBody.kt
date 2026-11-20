@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -40,6 +41,9 @@ public class NotificationActionBody(
     /** The person swiped the status row away (S11-9): reply watch ends for that run only. */
     private val onRowDismissed: (run: ReplyRun) -> Unit = {},
 ) {
+    /** Told when a Stop is tapped and when its call ends, so the row can say "Stopping…" and settle. */
+    public var onStop: StopObserver = StopObserver.None
+
     private data class AnswerClaim(
         val profile: String,
         val session: String,
@@ -117,15 +121,26 @@ public class NotificationActionBody(
         // Stop needs the phone unlocked, as Allow once does: Android 12+ asks through the action's
         // setAuthenticationRequired; below that nothing is stopped while locked (the row stays, its tap opens the chat).
         if (lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()) return ShadeOutcome.Ignored
-        val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
+        // Show the answer to the tap first: the person sees "Stopping…" while the call is made.
+        onStop.requested(conversation)
+        val outcome =
+            try {
+                withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                onStop.settled(conversation, ShadeOutcome.StopFailed)
+                throw e
+            }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
-        return if (
-            outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound
-        ) {
-            ShadeOutcome.StopSent
-        } else {
-            ShadeOutcome.StopFailed
-        }
+        val result =
+            if (
+                outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound
+            ) {
+                ShadeOutcome.StopSent
+            } else {
+                ShadeOutcome.StopFailed
+            }
+        onStop.settled(conversation, result)
+        return result
     }
 
     private fun replyOf(tap: ShadeTap): ShadeReply? =
@@ -149,5 +164,18 @@ public class NotificationActionBody(
 
     private fun release(request: AnswerClaim) {
         synchronized(inFlight) { inFlight.remove(request) }
+    }
+}
+
+/** The status row's side of a Stop tap: [requested] fires before the stop call, [settled] after it. */
+public interface StopObserver {
+    public fun requested(conversation: ConversationRef)
+
+    public fun settled(conversation: ConversationRef, outcome: ShadeOutcome)
+
+    public object None : StopObserver {
+        override fun requested(conversation: ConversationRef): Unit = Unit
+
+        override fun settled(conversation: ConversationRef, outcome: ShadeOutcome): Unit = Unit
     }
 }

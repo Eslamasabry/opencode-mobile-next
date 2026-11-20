@@ -55,6 +55,12 @@ public interface DockOutsideWords {
     public fun onServer(server: String): String
     public fun openNamed(name: String): String
     public fun stopNamed(name: String): String
+
+    /** "Open", for a row whose title already names the conversation the button opens. */
+    public fun open(): String
+
+    /** "Stop", for a row whose title already names the conversation the button stops. */
+    public fun stop(): String
 }
 
 /** What the dock does not know and the app does. All keyed by conversation; names inside are masked again here. */
@@ -204,6 +210,13 @@ public object DockOutside {
                     )
                     .value
         val stopEntry = working.singleOrNull()?.takeIf { needs.none { n -> n.ref == it.ref } }
+        // The conversation the title names, if it names exactly one. A button that acts on that very conversation
+        // says only "Open" / "Stop"; one that acts on another conversation, or a row that speaks for several, names it.
+        val titled = needs.singleOrNull() ?: working.singleOrNull()?.takeIf { needs.isEmpty() }
+
+        val openLabel = if (titled?.ref == openEntry.ref) words.open() else words.openNamed(entryName(openEntry))
+        val stopLabel =
+            stopEntry?.let { if (titled?.ref == it.ref) words.stop() else words.stopNamed(entryName(it)) }.orEmpty()
 
         val only = if (needs.isEmpty() && working.size == 1) working.single() else null
         val progress =
@@ -229,8 +242,8 @@ public object DockOutside {
             workingCount = working.size,
             progress = progress,
             subText = server?.let { words.onServer(NotificationText.redact(it, MAX_NAME)) }.orEmpty(),
-            open = OutsideAction(openEntry.ref, words.openNamed(entryName(openEntry))),
-            stop = stopEntry?.let { OutsideAction(it.ref, words.stopNamed(entryName(it))) },
+            open = OutsideAction(openEntry.ref, openLabel),
+            stop = stopEntry?.let { OutsideAction(it.ref, stopLabel) },
             // Live facts only: quiet recent rings (the dock is always available) come and go without new alerts.
             pulses = entries.filter { it.state != DockState.Idle }.sumOf { e -> e.pulse + e.children.sumOf { it.pulse } },
         )

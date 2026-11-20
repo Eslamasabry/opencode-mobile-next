@@ -41,6 +41,8 @@ class DockOutsideTest {
             override fun onServer(server: String) = "on $server"
             override fun openNamed(name: String) = "Open $name"
             override fun stopNamed(name: String) = "Stop $name"
+            override fun open() = "Open"
+            override fun stop() = "Stop"
         }
 
     private fun entry(
@@ -186,10 +188,27 @@ class DockOutsideTest {
     }
 
     @Test
+    fun `B-ANDR-091 buttons say only Open and Stop when the title names that conversation, else they name it`() {
+        // "Working on Chat a": the title names the one conversation, so its buttons need not.
+        val one = build(ui(entry("a", working)))!!
+        assertEquals("Open", one.open.label)
+        assertEquals("Stop", one.stop!!.label)
+        // "Chat b needs you": Open opens b (the title's), Stop stops a (not the title's), so Stop names it.
+        val mixed = build(ui(entry("a", working), entry("b", DockState.NeedsYou)))!!
+        assertEquals("Open", mixed.open.label)
+        assertEquals("Stop Chat a", mixed.stop!!.label)
+        // One notification for several conversations: the named form stays.
+        val several = build(ui(entry("a", working), entry("b", working)))!!
+        assertEquals("Open Chat a", several.open.label)
+        val severalNeed = build(ui(entry("a", DockState.NeedsYou), entry("b", DockState.NeedsYou)))!!
+        assertEquals("Open Chat a", severalNeed.open.label)
+    }
+
+    @Test
     fun `Stop is offered only with exactly one working conversation that does not need you`() {
         val one = build(ui(entry("a", working)))!!
         assertEquals(ref("a"), one.stop!!.ref)
-        assertEquals("Stop Chat a", one.stop!!.label)
+        assertEquals("Stop", one.stop!!.label)
         assertNull(build(ui(entry("a", working), entry("b", working)))!!.stop)
         assertNull(build(ui(entry("a", DockState.NeedsYou)))!!.stop)
         // One working beside one that needs you: Open names the second, Stop names the first, never mixed up.

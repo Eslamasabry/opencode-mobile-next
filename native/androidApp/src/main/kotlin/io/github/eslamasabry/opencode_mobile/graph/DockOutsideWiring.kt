@@ -32,6 +32,8 @@ internal class AndroidDockWords(private val words: NotifyWords) : DockOutsideWor
     override fun onServer(server: String) = words.text(NotifyR.string.notify_status_on_server, server)
     override fun openNamed(name: String) = words.text(NotifyR.string.notify_status_action_open_named, name)
     override fun stopNamed(name: String) = words.text(NotifyR.string.notify_status_action_stop_named, name)
+    override fun open() = words.text(NotifyR.string.notify_status_action_open)
+    override fun stop() = words.text(NotifyR.string.notify_status_action_stop)
 }
 
 /**
