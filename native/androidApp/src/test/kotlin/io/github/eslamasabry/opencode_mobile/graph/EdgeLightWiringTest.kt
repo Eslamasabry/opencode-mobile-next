@@ -371,7 +371,7 @@ class EdgeLightWiringTest {
             vis: Boolean = true,
             open: Boolean = false,
             placing: Boolean = false,
-        ) = EdgeLightRules.showTip(loaded, tips, vis, open, placing)
+        ) = EdgeLightRules.showTip(loaded, tips, vis, open || placing)
 
         assertFalse(tip(loaded = false))
         assertTrue(tip())
@@ -379,5 +379,21 @@ class EdgeLightWiringTest {
         assertFalse(tip(vis = false))
         assertFalse(tip(open = true))
         assertFalse(tip(placing = true))
+    }
+
+    @Test
+    fun `B-LAMP-015 the tip waits while a request card or another tip is on screen, and shows when calm`() {
+        val asking = model(row("here", DockListState.NeedsYou, open = true), row("other", DockListState.Working))
+        assertTrue(edgeLightRequestOnPage(asking, ref("here")), "the page's own request card is on screen")
+        val cardUp = edgeLightRequestOnPage(asking, ref("here"))
+        assertFalse(EdgeLightRules.showTip(true, 0, true, false, calm = !cardUp), "no tip over a request card")
+        val calm = model(row("here", DockListState.Working, open = true), row("other", DockListState.NeedsYou))
+        val otherCard = edgeLightRequestOnPage(calm, ref("here"))
+        assertFalse(otherCard, "another conversation's request is not on this page")
+        assertTrue(EdgeLightRules.showTip(true, 0, true, false, calm = !otherCard))
+        // Another tip on screen: this one waits, never stacked over it.
+        assertFalse(EdgeLightRules.showTip(true, 0, true, false, calm = false))
+        // The keyboard hides the light, and the tip waits for it as well.
+        assertFalse(EdgeLightRules.showTip(true, 0, EdgeLightRules.visible(keyboardUp = true), false))
     }
 }

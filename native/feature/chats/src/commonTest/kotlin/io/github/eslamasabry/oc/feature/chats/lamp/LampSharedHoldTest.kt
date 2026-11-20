@@ -125,7 +125,8 @@ class LampSharedHoldTest {
         runCurrent()
         assertEquals(listOf("req1 Once"), answers.sent)
         assertEquals(emptyMap(), vm.state.value.held)
-        assertTrue(lamp.ui.value.row("ask").request!!.answer is LampAnswerUi.AllowDeny)
+        val kept = LampAnswerUi.Held(HomeHeldReply.Allowed, sent = true)
+        assertEquals(kept, lamp.ui.value.row("ask").request!!.answer, "the receipt stays while the request is listed")
     }
 
     @Test
