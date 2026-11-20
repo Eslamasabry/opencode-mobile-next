@@ -481,4 +481,6 @@
     <string name="reviewUndoBody">يخفي هذا الرسائل من حيث بدأت هذه التغييرات، ويعيد ملفاتك كما كانت. يمكنك استعادة كل شيء إلى أن تحذف الرسائل المخفية.</string>
     <string name="reviewDone">تمّ</string>
     <string name="reviewRevertNoSnapshot">هذا ليس مشروع Git، لذا لا يمكن إعادة الملفات. يخفي التراجع الرسائل فقط.</string>
+    <string name="reviewRevertRestoreConfirmBodyNoFiles">تعود الرسائل المخفية. يمكنك التراجع من رسالة أخرى لاحقًا.</string>
+    <string name="reviewRevertRestoredBodyNoFiles">عادت الرسائل كما كانت.</string>
 </resources>

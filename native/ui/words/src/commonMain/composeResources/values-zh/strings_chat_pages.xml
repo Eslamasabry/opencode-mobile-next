@@ -426,4 +426,6 @@
     <string name="reviewUndoBody">这会隐藏从这些更改开始之后的消息，并把你的文件恢复原样。在你删除已隐藏的消息之前，都可以全部恢复。</string>
     <string name="reviewDone">完成</string>
     <string name="reviewRevertNoSnapshot">这不是 Git 项目，无法恢复文件。撤销只会隐藏消息。</string>
+    <string name="reviewRevertRestoreConfirmBodyNoFiles">隐藏的消息会恢复。之后你仍可以从某条提示开始再次撤销。</string>
+    <string name="reviewRevertRestoredBodyNoFiles">消息已恢复原状。</string>
 </resources>
