@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatsHomeRightNow">In questo momento</string>
+    <string name="chatsHomeRecent">Recenti</string>
+    <string name="chatsHomeAsksToRun">Chiede di eseguire: %1$s</string>
+    <string name="chatsHomeAsksToEdit">Chiede di modificare: %1$s</string>
+    <string name="chatsHomeAsksToRead">Chiede di leggere: %1$s</string>
+    <string name="chatsHomeAsksOther">Chiede un'autorizzazione: %1$s</string>
+</resources>

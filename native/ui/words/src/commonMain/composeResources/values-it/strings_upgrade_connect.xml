@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeConnectScanTitle">Scansiona il codice dal computer</string>
+    <string name="upgradeConnectScanBody">Esegui il comando qui sotto sul tuo computer. Mostra un codice. Scansionalo e sarai connesso.</string>
+    <string name="upgradeConnectPasteBody">Esegui il comando qui sotto sul tuo computer, poi incolla il codice che stampa.</string>
+    <string name="upgradeConnectCommandTitle">Esegui questo sul tuo computer</string>
+    <string name="upgradeConnectOtherWays">Altri modi per connettersi</string>
+    <string name="upgradeConnectTailscaleBody">Raggiungi il tuo computer tramite la tua rete privata.</string>
+    <string name="upgradeConnectManualBody">Digita l'indirizzo, poi la password.</string>
+    <string name="upgradeConnectNameLine">Verrà salvato come %1$s. Puoi rinominarlo qui sotto.</string>
+    <string name="upgradeConnectNameFallback">Il mio computer</string>
+    <string name="upgradeReadyTitle">Connesso a %1$s</string>
+    <string name="upgradeReadyVersion">Versione %1$s</string>
+    <string name="upgradeReadyStart">Avvia una conversazione</string>
+</resources>

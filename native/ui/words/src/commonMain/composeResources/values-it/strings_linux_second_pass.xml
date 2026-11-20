@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">Il processo che lo ha avviato si è fermato</string>
+    <string name="runningOrphanCpuWithoutOwner">Attivo senza una conversazione in attesa</string>
+    <string name="linuxStorageScanRunning">Misurazione di %1$s</string>
+    <string name="linuxStorageScanDone">Archiviazione misurata</string>
+    <string name="linuxStorageScanIdle">Nessuna scansione in corso</string>
+    <string name="linuxStorageScanLog">Scansione archiviazione</string>
+</resources>

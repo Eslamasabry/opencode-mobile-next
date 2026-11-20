@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">Sfoglia i progetti del telefono</string>
+    <string name="linuxLocalProjectsDetail">Sfoglia le cartelle mentre il server è fermo, inclusi i progetti conservati dopo la rimozione di Linux.</string>
+    <string name="linuxLocalParent">Cartella superiore</string>
+    <string name="linuxLocalClose">Chiudi cartelle</string>
+    <string name="linuxLocalGit">Progetto Git</string>
+    <string name="linuxLocalFolder">Cartella</string>
+    <string name="linuxLocalReading">Lettura delle cartelle…</string>
+    <string name="linuxLocalFolderFailed">Questa cartella non è leggibile. Potrebbe essere stata spostata, rimossa o essere un link.</string>
+    <string name="linuxLocalEmpty">Nessuna cartella qui.</string>
+    <string name="linuxLocalMeasure">Valuta le opzioni di rimozione di Linux</string>
+    <string name="linuxLocalRemoveKeep">Rimuovi Linux, conserva i progetti</string>
+    <string name="linuxLocalRemoveAll">Rimuovi Linux e i progetti</string>
+    <string name="linuxLocalFreed">Libera %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">Rimuovere Linux e conservare i progetti?</string>
+    <string name="linuxLocalRemoveAllQuestion">Rimuovere Linux e tutti i progetti del telefono?</string>
+    <string name="linuxLocalRemoveKeepBody">Ferma i programmi del telefono e rimuove Linux, gli strumenti installati, gli accessi e la cronologia del server locale. I file dei tuoi progetti restano consultabili. Libera %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Ferma i programmi del telefono e rimuove Linux, gli strumenti installati, gli accessi, la cronologia del server locale e tutti i file dei progetti del telefono conservati. L'operazione non si può annullare. Libera %1$s.</string>
+    <string name="linuxLocalStorageFailed">Il telefono non ha potuto completare la lettura o la rimozione dell'archivio Linux. Chiudi le attività del telefono e riprova.</string>
+    <string name="linuxLocalRemoved">Archivio Linux rimosso.</string>
+    <string name="linuxLocalCreate">Crea un progetto sul telefono</string>
+    <string name="linuxLocalCreatePath">Percorso assoluto della cartella del progetto</string>
+    <string name="linuxLocalInvalidPath">Inserisci un percorso di cartella assoluto, senza risalita verso la directory padre né interruzioni di riga.</string>
+</resources>

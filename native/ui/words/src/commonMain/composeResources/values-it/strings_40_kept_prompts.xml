@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Prompt conservati</string>
+    <string name="keptPromptsBody">Prompt conservati quando un server è stato rimosso. Ripristinane uno in una conversazione per ricontrollarlo prima dell'invio.</string>
+    <string name="keptPromptsEmpty">Nessun prompt conservato</string>
+    <string name="keptPromptsChoose">Scegli una conversazione</string>
+    <string name="keptPromptsChooseBody">Scegli la conversazione di un server connesso. Questa azione compila solo la sua bozza.</string>
+    <string name="keptPromptsNoTargets">Nessuna conversazione connessa</string>
+    <string name="keptPromptsNoTargetsBody">Connetti un server salvato o apri una conversazione, poi riprova.</string>
+    <string name="keptPromptsConnect">Connetti un server</string>
+    <string name="keptPromptsUncertain">Questo prompt potrebbe essere già stato inviato. Controlla la conversazione originale prima di inviarlo di nuovo.</string>
+    <string name="keptPromptsFailed">Impossibile leggere o modificare i prompt conservati. Riprova.</string>
+    <string name="keptPromptsKeptFrom">Conservato da un server rimosso</string>
+    <string name="keptPromptsRestoreFailed">Il prompt salvato o la conversazione è cambiata. Riapri i prompt salvati nella conversazione e riprova.</string>
+    <string name="keptConversation">Conversazione</string>
+</resources>

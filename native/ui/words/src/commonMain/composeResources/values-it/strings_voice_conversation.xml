@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Quando una registrazione termina, le sue parole vengono inviate a questa conversazione. Tocca Ascolta per il turno successivo. Le risposte vengono pronunciate solo quando attivi questa opzione.</string>
+    <string name="voiceConversationNativeTourSpeak">Parla, poi tocca Invia per mandare quello che hai detto. Ascolta avvia il turno successivo.</string>
+    <string name="voiceConversationNativeTourReplies">"Leggi le risposte ad alta voce" richiede il tuo consenso e una voce del telefono. Puoi interrompere la lettura in qualsiasi momento.</string>
+    <string name="voiceConversationNativeTourLeave">L'uscita dalla modalità voce interrompe l'ascolto e la lettura automatica. Un invio incerto non viene mai inviato di nuovo automaticamente.</string>
+    <string name="voiceConversationNativeTourDone">Ho capito</string>
+    <string name="voiceConversationNativeTourNext">Avanti</string>
+    <string name="voiceConversationNativeTourReset">Mostra di nuovo i suggerimenti</string>
+    <string name="voiceConversationNativeTourResetFailed">Impossibile reimpostare i suggerimenti. Riprova.</string>
+    <string name="voiceConversationNativeTourReplay">Fammi vedere</string>
+    <string name="voiceConversationNativeTourLoadFailed">Impossibile aprire i suggerimenti. Riprova.</string>
+</resources>

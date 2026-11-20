@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">Conversazioni collegate</string>
+    <string name="stateHandoffWorking">In corso…</string>
+    <string name="stateHandoffFailed">Impossibile aprire le conversazioni collegate. Riprova.</string>
+    <string name="stateHandoffTransferFailed">Trasferimento non confermato. Chiudi questo pannello e controlla le tue conversazioni prima di avviare un altro trasferimento.</string>
+    <string name="stateHandoffReviewNote">Rivedi questa trascrizione mascherata della conversazione e il primo prompt prima di continuare. I contenuti degli allegati e il ragionamento privato sono esclusi.</string>
+    <string name="stateHandoffRecord">Registro della conversazione</string>
+    <string name="stateHandoffPrompt">Primo prompt</string>
+    <string name="stateHandoffRetryLink">Salva di nuovo il collegamento</string>
+    <string name="stateHandoffContinue">Avvia conversazione collegata</string>
+    <string name="stateHandoffLinked">Conversazioni collegate</string>
+    <string name="stateHandoffNoLinks">Questa conversazione non ha collegamenti salvati.</string>
+    <string name="stateHandoffNew">Continua in una nuova conversazione</string>
+    <string name="stateHandoffNewNote">Scegli un modello su questa connessione. Il tuo progetto resta lo stesso e rivedi il passaggio di consegne prima che venga inviato qualcosa.</string>
+</resources>

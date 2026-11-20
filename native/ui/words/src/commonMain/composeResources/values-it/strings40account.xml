@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Account Codex</string>
+    <string name="account40ScopeLost">Questo server è cambiato. Torna a Server e apri l'account del server connesso.</string>
+    <string name="account40Refresh">Aggiorna account</string>
+    <string name="account40Loading">Verifica dell'account host in corso</string>
+    <string name="account40Unavailable">Pannello account non disponibile</string>
+    <string name="account40ReadFailed">Impossibile leggere l'account</string>
+    <string name="account40Disconnected">Connessione interrotta</string>
+    <string name="account40Connected">Accesso eseguito sull'host</string>
+    <string name="account40SignedOut">Pronto per l'accesso</string>
+    <string name="account40InProgress">Accesso in corso</string>
+    <string name="account40NeedsAttention">L'accesso richiede attenzione</string>
+    <string name="account40NoAuth">L'host non richiede l'accesso</string>
+    <string name="account40ApiKey">Chiave API</string>
+    <string name="account40HostAuth">Autenticazione dell'host</string>
+    <string name="account40HostNote">Il runtime ufficiale mantiene l'accesso. Le modifiche all'account riguardano tutti i server salvati connessi a questo host.</string>
+    <string name="account40UnsupportedDetail">Questo pannello è verificato con Codex 0.153.4. Il runtime connesso potrebbe non supportare questi metodi di account.</string>
+    <string name="account40ReconnectDetail">I dati dell'account e il codice di accesso sono stati cancellati. Riconnettiti per aggiornare. L'accesso non verrà riavviato automaticamente.</string>
+    <string name="account40SignIn">Accedi con ChatGPT</string>
+    <string name="account40SignInNote">Accedi con il tuo account ChatGPT. Concludi nel browser; questa app non vede mai la tua password.</string>
+    <string name="account40Limits">Limiti di frequenza</string>
+    <string name="account40LimitsUnavailable">I limiti di frequenza non sono disponibili per questo account o host.</string>
+    <string name="account40Usage">Uso dei token</string>
+    <string name="account40UsageUnavailable">L'uso dei token non è disponibile per questo account o host.</string>
+    <string name="account40LifetimeTokens">Token totali</string>
+    <string name="account40PeakTokens">Token giornalieri di picco</string>
+    <string name="account40UsageNote">I valori sono riportati dall'host. I valori mancanti sono sconosciuti, non zero. I conteggi dei token non sono una fattura né un numero di messaggi rimanenti.</string>
+    <string name="account40Updated">Ultimo controllo: %1$s</string>
+    <string name="account40Starting">Richiesta del codice di accesso</string>
+    <string name="account40Waiting">Completa l'accesso nel tuo browser</string>
+    <string name="account40Cancelling">Annullamento dell'accesso</string>
+    <string name="account40Cancelled">Accesso annullato</string>
+    <string name="account40LoginFailed">L'accesso non è stato completato. Controlla l'host e riprova.</string>
+    <string name="account40LoginUncertain">L'host non ha potuto confermare l'accesso o l'annullamento. Potrebbe essere ancora in attesa. Controlla il runtime ufficiale dell'host prima di riprovare.</string>
+    <string name="account40LoginCompleted">Accesso completato. Verifica dell'account.</string>
+    <string name="account40CodeHint">Inserisci questo codice monouso nella pagina di accesso ufficiale. Tienilo privato.</string>
+    <string name="account40OpenSignIn">Apri l'accesso ufficiale</string>
+    <string name="account40Cancel">Annulla accesso</string>
+    <string name="account40Allowance">Quota dichiarata</string>
+    <string name="account40PercentUsed">%1$d% usato</string>
+    <string name="account40WindowUnknown">Durata della finestra non disponibile</string>
+    <string name="account40WindowMinutes">Finestra di %1$d minuti</string>
+    <string name="account40WindowHours">Finestra di %1$d ore</string>
+    <string name="account40WindowDays">Finestra di %1$d giorni</string>
+    <string name="account40ResetUnknown">Ora di azzeramento non disponibile</string>
+    <string name="account40ScopeLostTitle">Questo server è cambiato</string>
+    <string name="account40BackToServers">Torna a Server</string>
+    <string name="account40NotConnected">Connettiti a questo server per vedere il suo account Codex.</string>
+    <string name="account40SignInMethod">Accesso eseguito con</string>
+    <string name="account40PlanTitle">Piano</string>
+    <string name="account40CopyCode">Copia codice di accesso</string>
+    <string name="account40LimitReached">Hai raggiunto un limite di Codex. %1$s</string>
+    <string name="account40ResetDue">Si azzera a breve</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">Si azzera tra 1 giorno</item>
+        <item quantity="many">Si azzera tra %1$d giorni</item>
+        <item quantity="other">Si azzera tra %1$d giorni</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">Si azzera tra 1 ora</item>
+        <item quantity="many">Si azzera tra %1$d ore</item>
+        <item quantity="other">Si azzera tra %1$d ore</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">Si azzera tra 1 minuto</item>
+        <item quantity="many">Si azzera tra %1$d minuti</item>
+        <item quantity="other">Si azzera tra %1$d minuti</item>
+    </plurals>
+    <string name="account40Back">Indietro</string>
+    <string name="account40Details">Dettagli</string>
+    <string name="account40CopyDetails">Copia dettagli</string>
+    <string name="account40Copied">Codice copiato</string>
+    <string name="account40OpenQuestion">Aprire la pagina di accesso ufficiale su %1$s?</string>
+    <string name="account40OpenPage">Apri pagina di accesso</string>
+    <string name="account40OpenFailed">Impossibile aprire la pagina di accesso o gli appunti.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

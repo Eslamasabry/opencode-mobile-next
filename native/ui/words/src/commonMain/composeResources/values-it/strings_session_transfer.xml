@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">Strumenti per la conversazione</string>
+    <string name="sessionTransferWait">Azione in corso di completamento…</string>
+    <string name="sessionTransferExport">Salva una copia completa</string>
+    <string name="sessionTransferRedact">Nascondi i valori privati</string>
+    <string name="sessionTransferRedactBody">Il server sostituisce i valori sensibili nella copia esportata.</string>
+    <string name="sessionTransferSave">Salva file JSON</string>
+    <string name="sessionTransferImport">Importa una conversazione</string>
+    <string name="sessionTransferChoose">Scegli file JSON</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="one">1 record di messaggi</item>
+        <item quantity="many">%1$d record di messaggi</item>
+        <item quantity="other">%1$d record di messaggi</item>
+    </plurals>
+    <string name="sessionTransferRedacted">Questa copia contiene valori nascosti. L'importazione mantiene quei segnaposto.</string>
+    <string name="sessionTransferDestination">Importa in questa cartella del server</string>
+    <string name="sessionTransferDestinationRequired">Scegli prima una cartella di destinazione.</string>
+    <string name="sessionTransferImportAction">Importa la conversazione esaminata</string>
+    <string name="sessionTransferNote">Nota della conversazione</string>
+    <string name="sessionTransferLoadNote">Leggi la nota attuale</string>
+    <string name="sessionTransferSaveNote">Salva nota</string>
+    <string name="sessionTransferRemoveNote">Rimuovi nota</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="one">La nota deve rientrare in 1 byte codificato. Accorciala e riprova.</item>
+        <item quantity="many">La nota deve rientrare in %1$d byte codificati. Accorciala e riprova.</item>
+        <item quantity="other">La nota deve rientrare in %1$d byte codificati. Accorciala e riprova.</item>
+    </plurals>
+    <string name="sessionTransferSaved">Conversazione salvata.</string>
+    <string name="sessionTransferImported">Conversazione importata.</string>
+    <string name="sessionTransferNoteSaved">Nota salvata.</string>
+    <string name="sessionTransferNoteRemoved">Nota rimossa.</string>
+    <string name="sessionTransferInvalid">Scegli un'esportazione JSON di OpenCode valida.</string>
+    <string name="sessionTransferLarge">Scegli un'esportazione inferiore a 128 MiB.</string>
+    <string name="sessionTransferChanged">La connessione al server è cambiata. Apri di nuovo questi strumenti prima di continuare.</string>
+    <string name="sessionTransferSignIn">Il server ha negato l'accesso. Controlla le credenziali di accesso al server e riprova.</string>
+    <string name="sessionTransferConflict">Esiste già una conversazione con questa identità. Scegli un'altra destinazione oppure esaminala sul server.</string>
+    <string name="sessionTransferUnsupported">Questo server non offre il trasferimento delle conversazioni.</string>
+    <string name="sessionTransferFailed">Impossibile completare questa azione. Controlla la connessione e riprova.</string>
+    <string name="sessionTransferReference">Fai riferimento a una cartella del server</string>
+    <string name="sessionTransferReferencePath">Percorso completo della cartella su questo server</string>
+    <string name="sessionTransferReferenceBody">Aggiunge un riferimento alla cartella al tuo prossimo prompt. La cartella resta sul server.</string>
+    <string name="sessionTransferReferenceAdd">Aggiungi riferimento alla cartella</string>
+    <string name="sessionTransferReferenceRequired">Inserisci prima il percorso della cartella del server.</string>
+    <string name="sessionTransferReferenceAdded">Riferimento alla cartella aggiunto alla tua bozza.</string>
+    <string name="sessionTransferReferenceInvalid">Inserisci un percorso assoluto di cartella sul server.</string>
+</resources>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Provider e strumenti</string>
+    <string name="intBack">Indietro</string>
+    <string name="intRefresh">Aggiorna</string>
+    <string name="intServers">Server</string>
+    <string name="intNoServer">Collegati prima a un server</string>
+    <string name="intProviders">Provider</string>
+    <string name="intConnected">Accesso effettuato</string>
+    <string name="intNotConnected">Accesso non effettuato</string>
+    <string name="intKey">Chiave API</string>
+    <string name="intSaveKey">Salva la chiave sul server</string>
+    <string name="intKeyPage">Ottieni una chiave API</string>
+    <string name="intOpenSignIn">Apri la pagina di accesso</string>
+    <string name="intCode">Codice o URL di callback</string>
+    <string name="intCompleteSignIn">Completa l'accesso</string>
+    <string name="intSignInHelp">Completa nel tuo browser, poi incolla qui il suo codice o URL di callback.</string>
+    <string name="intConnectors">Connettori</string>
+    <string name="intConnectorConnected">Connesso</string>
+    <string name="intConnectorNotConnected">Richiede attenzione</string>
+    <string name="intConnectorName">Nome del connettore</string>
+    <string name="intConnectorUrl">Indirizzo HTTPS</string>
+    <string name="intHeaderName">Nome dell'header (opzionale)</string>
+    <string name="intHeaderValue">Valore dell'header</string>
+    <string name="intSaveConnector">Aggiungi connettore</string>
+    <string name="intHeaderHelp">I valori degli header sono segreti. Vengono inviati solo a questo server e non sono mai mostrati nelle diagnostiche.</string>
+    <string name="intSkills">Scrivi una skill</string>
+    <string name="intRequirements">Cosa dovrebbe fare la skill?</string>
+    <string name="intDraftHelp">L'agente redigerà una bozza di SKILL.md in una nuova conversazione per la revisione. Non gli verrà chiesto di installarla o di modificare file.</string>
+    <string name="intAskDraft">Chiedi una bozza all'agente</string>
+    <string name="intOpenDraft">Apri la conversazione della bozza</string>
+    <string name="intSaved">Salvato sul server.</string>
+    <string name="intFailed">L'operazione non è stata completata. Aggiorna prima di riprovare.</string>
+    <string name="intUnsupported">Questo server non supporta questa azione.</string>
+    <string name="intChanged">La connessione è cambiata. Apri di nuovo questa pagina.</string>
+    <string name="intInvalid">Controlla i campi obbligatori e riprova.</string>
+    <string name="intDraftSent">La richiesta di bozza è stata inviata. Apri la conversazione per seguirla.</string>
+    <string name="intDraftUncertain">La richiesta potrebbe essere arrivata. Controlla la conversazione prima di inviare di nuovo.</string>
+    <string name="intOpenQuestion">Aprire questa pagina?</string>
+    <string name="intOpen">Apri la pagina</string>
+    <string name="intInsecure">Questo indirizzo non è cifrato.</string>
+    <string name="intConnectorReady">Connesso per il prossimo messaggio.</string>
+    <string name="intConnectorUnknown">Connesso. Il rilevamento degli strumenti non è stato confermato.</string>
+    <string name="intConnectorAuth">Questo connettore richiede il tuo accesso.</string>
+    <string name="intConnecting">Connessione</string>
+    <string name="intConnectorSignIn">Accedi a questo connettore</string>
+    <string name="intConnectorCancelSignIn">Annulla l'accesso</string>
+</resources>

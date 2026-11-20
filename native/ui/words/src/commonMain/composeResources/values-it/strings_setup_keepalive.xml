@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupKilled">Il telefono ha chiuso OpenCode durante la configurazione. I passaggi completati restano. Continua per riprendere da dove si era interrotta.</string>
+    <string name="setupKilledMemory">La memoria del telefono si è esaurita e OpenCode è stato chiuso durante la configurazione. I passaggi completati restano. Continua per riprendere da dove si era interrotta.</string>
+    <string name="setupBatteryTitle">Lascia che OpenCode continui a funzionare</string>
+    <string name="setupBatteryBody">Alcuni telefoni chiudono le app per risparmiare batteria. Modifica queste impostazioni per evitare che la configurazione venga interrotta.</string>
+    <string name="setupBatteryStepUnrestricted">Apri l'impostazione Batteria dell'app e scegli “Senza restrizioni” (su alcuni telefoni è “Nessuna restrizione”).</string>
+    <string name="setupBatteryStepAutostart">Attiva Autostart per OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">Aggiungi OpenCode alle app “Never sleeping”.</string>
+    <string name="setupBatteryOpenApp">Apri impostazioni app</string>
+    <string name="setupBatteryOpenAutostart">Apri Autostart</string>
+    <string name="setupBatteryOpenSamsung">Apri Batteria</string>
+    <string name="setupBatteryOpenFailed">Questo telefono non ha aperto quella schermata. Segui i passaggi nelle Impostazioni manualmente.</string>
+</resources>

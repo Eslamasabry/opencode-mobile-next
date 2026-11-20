@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Azzera gli accessi salvati</string>
+    <string name="agentsResetSavedSignInsBody">Disconnettere tutti i server e rimuovere da questa app le password dei server e le chiavi di accesso all'helper salvate? I tuoi profili, le conversazioni, i progetti e gli accessi propri degli agenti restano. Riavvia l'app dopo.</string>
+    <string name="agentsResetSavedSignInsFailed">Non tutti gli accessi salvati sono stati azzerati. Riprova, poi riavvia l'app.</string>
+    <string name="agentsRestartAfterReset">Riavvia l'app prima di connetterti o usare di nuovo gli agenti del telefono.</string>
+    <string name="agentsHelperStopped">L'helper degli agenti si è interrotto in modo imprevisto. Controlla la configurazione del telefono prima di avviare un'altra conversazione.</string>
+    <string name="agentsHelperMayHaveStopped">L'helper degli agenti si è fermato. Android potrebbe averlo interrotto per liberare memoria o limitare i processi in background.</string>
+    <string name="agentsHelperStartAgain">Avvia l'helper degli agenti</string>
+    <string name="agentsPhoneHelperProfile">Agenti del telefono</string>
+    <string name="agentsPreviousVersion">Usa una versione precedente di %1$s</string>
+    <string name="agentsPreviousVersionBody">Passare alla versione precedente verificata conservata su questo telefono? L'helper si fermerà prima, poi gli agenti del telefono si riconnetteranno. Accessi e conversazioni restano salvati.</string>
+    <string name="agentsPreviousVersionFailed">Impossibile ripristinare la versione precedente. Completa il lavoro in corso, poi riprova.</string>
+    <string name="agentsPreviousVersionRestored">La versione precedente è stata ripristinata.</string>
+</resources>

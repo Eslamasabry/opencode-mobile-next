@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">Avvisi</string>
+    <string name="m40UsageWidget">Widget della schermata Home</string>
+    <string name="m40UsageReadFrom">Leggi l'utilizzo</string>
+    <string name="m40UsageAdd">Aggiungi un abbonamento</string>
+    <string name="m40UsageSaveFailed">Impossibile salvare la modifica. Riprova.</string>
+    <string name="m40UsageAlertsWatch">Tieni d'occhio i miei piani</string>
+    <string name="m40UsageAlertsEvery">Tieni d'occhio ogni abbonamento con limiti leggibili.</string>
+    <string name="m40UsageTellMe">Avvisami quando</string>
+    <string name="m40UsageReset">Un piano esaurito è di nuovo disponibile</string>
+    <string name="m40UsageDifferent">Diverso per questi piani</string>
+    <string name="m40UsageWhen">Quando avvisarmi</string>
+    <string name="m40UsageQuiet">Ore di silenzio</string>
+    <string name="m40UsageQuietShared">Le stesse ore di silenzio delle altre notifiche.</string>
+    <string name="m40UsageQuietStart">Inizio</string>
+    <string name="m40UsageQuietEnd">Fine</string>
+    <string name="m40UsageQuietAllDay">Con questi orari gli avvisi sono silenziati tutto il giorno.</string>
+    <string name="m40UsageWifi">Solo Wi-Fi</string>
+    <string name="m40UsageNothingToWatch">Ancora nessun piano leggibile da tenere d'occhio.</string>
+    <string name="m40UsageDownTo">Quando un piano arriva a</string>
+    <string name="m40UsageSameAsOthers">Come gli altri: %1$d% rimanenti</string>
+    <string name="m40UsageWidgetPlans">Piani sul widget</string>
+    <string name="m40UsageWidgetSetup">Mostra i piani che richiedono configurazione</string>
+    <string name="m40UsageWidgetWindows">Finestre da mostrare</string>
+    <string name="m40UsageBoth">5 ore e questa settimana</string>
+    <string name="m40UsageReaderGone">Questa connessione salvata non è più disponibile.</string>
+    <string name="m40UsageReadPhoneBody">Configura un lettore in In-app Ubuntu per leggere i limiti dei piani con accesso effettuato. Le chiavi dei provider restano sull'host.</string>
+    <string name="m40UsageReadComputerBody">Consenti un breve controllo in sola lettura tramite questo server quando l'utilizzo viene aggiornato. Cerca i limiti dei piani con accesso effettuato su questo computer. Puoi disattivarlo qui.</string>
+    <string name="m40UsageWhatRuns">Cosa viene eseguito sul computer</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">Il controllo legge gli accessi ai provider in locale e restituisce solo i limiti di piano e un riferimento opaco all'account. Chiavi e token non tornano mai all'app.</string>
+    <string name="m40UsageCopying">Copia del lettore</string>
+    <string name="m40UsageCheckingSignIns">Verifica degli accessi</string>
+    <string name="m40UsageStarting">Avvio del lettore</string>
+    <string name="m40UsageReading">Lettura dei limiti di piano</string>
+    <string name="m40UsageChecking">Verifica della connessione</string>
+    <string name="m40UsageNeedsNode">Questo computer richiede Node 20 o superiore per leggere i limiti di piano.</string>
+    <string name="m40UsageLinuxNotReady">Configura prima In-app Ubuntu, poi riprova.</string>
+    <string name="m40UsageServerTooOld">Aggiorna questo server per leggere l'utilizzo tramite un terminale di comandi.</string>
+    <string name="m40UsagePrepareFailed">Impossibile preparare il lettore. Riprova.</string>
+    <string name="m40UsageStartFailed">Il lettore non si è avviato. Riprova.</string>
+    <string name="m40UsageRemoveFailed">Impossibile rimuovere il lettore. Riprova.</string>
+    <string name="m40UsageUnreachable">Impossibile raggiungere questo computer. Verifica la connessione e riprova.</string>
+    <string name="m40UsageNoAnswer">Il controllo non ha restituito una risposta leggibile. Riprova.</string>
+    <string name="m40UsageFoundNone">Il controllo non ha trovato piani con accesso effettuato i cui limiti siano leggibili.</string>
+    <string name="m40UsageFound">Trovati: %1$s</string>
+    <string name="m40UsageReadNow">Leggi ora</string>
+    <string name="m40UsageTurnOn">Attiva la lettura</string>
+    <string name="m40UsageTurnOff">Disattiva la lettura</string>
+    <string name="m40UsageThreshold">Livello di avviso per questo piano</string>
+    <string name="m40UsageResetHelp">Avvisami quando questo piano è di nuovo disponibile.</string>
+    <string name="m40UsageReadOff">Disattiva la lettura da %1$s</string>
+    <string name="m40UsageChooseSignIn">Scegli dove effettuare l'accesso</string>
+</resources>

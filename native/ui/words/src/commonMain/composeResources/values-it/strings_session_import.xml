@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="importNativePaste">Oppure incolla un'esportazione JSON</string>
+    <string name="importNativeReview">Verifica il JSON incollato</string>
+    <string name="importNativeWorkspaceOptional">Facoltativo. Lascia vuoto per una cartella di progetto.</string>
+    <string name="importNativeAttemptDone">Chiudi e riapri l'importazione per esaminare un altro tentativo. Se il risultato non è stato confermato, controlla prima Tutte le conversazioni.</string>
+</resources>

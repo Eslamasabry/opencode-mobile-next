@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">Servizi</string>
+    <string name="keptSvcFailed">I servizi non hanno potuto completare l'operazione</string>
+    <string name="keptSvcFailedBody">Verifica che Linux sia configurato, poi riprova. Le scelte dei servizi salvate restano invariate.</string>
+    <string name="keptSvcAdd">Aggiungi un servizio</string>
+    <string name="keptSvcKeepsRunning">Un servizio che avvii continua a girare dopo un arresto anomalo o alla riapertura dell'app, finché non lo fermi.</string>
+    <string name="keptSvcEmpty">Nessun servizio per ora. Aggiungi un tuo comando per tenerlo in esecuzione.</string>
+    <string name="keptSvcScreenOff">I servizi possono mettersi in pausa con lo schermo spento, a meno che il telefono non sia in carica.</string>
+    <string name="keptSvcStartNamed">Avvia %1$s</string>
+    <string name="keptSvcStopNamed">Ferma %1$s</string>
+    <string name="keptSvcRestartNamed">Riavvia %1$s</string>
+    <string name="keptSvcOpenNamed">Apri %1$s</string>
+    <string name="keptSvcRemoveNamed">Rimuovi %1$s</string>
+    <string name="keptSvcWorking">Completamento dell'operazione sul servizio…</string>
+    <string name="keptSvcCopyLog">Copia log</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="one">Tornato attivo dopo 1 riavvio</item>
+        <item quantity="many">Tornato attivo dopo %1$d riavvii</item>
+        <item quantity="other">Tornato attivo dopo %1$d riavvii</item>
+    </plurals>
+    <string name="keptSvcLogTitle">Log del servizio</string>
+    <string name="keptSvcSearchLog">Cerca nel log</string>
+    <string name="keptSvcLogEmpty">Nessun output per ora.</string>
+    <string name="keptSvcRemoveQuestion">Rimuovere %1$s?</string>
+    <string name="keptSvcRemoveBody">Il servizio viene fermato prima che la sua definizione salvata e i log vengano rimossi.</string>
+    <string name="keptSvcRemoveGoes">Vengono rimossi il comando, la scelta acceso/spento e i log.</string>
+    <string name="keptSvcRemoveStays">Gli strumenti installati e i file del progetto restano.</string>
+    <string name="keptSvcSaveStart">Salva e avvia servizio</string>
+    <string name="keptSvcName">Nome</string>
+    <string name="keptSvcNameHint">2–24 lettere minuscole, numeri o trattini; inizia con una lettera.</string>
+    <string name="keptSvcCommand">Comando</string>
+    <string name="keptSvcDirectory">Cartella dentro Linux</string>
+    <string name="keptSvcPort">Porta (facoltativa)</string>
+    <string name="keptSvcPortHint">Una porta libera da 1024 a 65535. Lascia vuoto se non ha una pagina web.</string>
+    <string name="keptSvcBadName">Scegli un nome diverso nel formato indicato sopra. I nomi dei servizi dell'app sono riservati.</string>
+    <string name="keptSvcBadCommand">Inserisci una riga di comando, fino a 4096 caratteri.</string>
+    <string name="keptSvcBadDirectory">Usa una cartella Linux assoluta, senza segmenti (..) verso la directory padre.</string>
+    <string name="keptSvcBadPort">Scegli una porta non usata da 1024 a 65535, fuori dalle porte riservate dell'app.</string>
+    <string name="keptSvcRestart">Riavvio dopo un arresto anomalo</string>
+    <string name="keptSvcRestartBody">Riprova dopo un errore; fermati dopo ripetuti arresti anomali rapidi.</string>
+    <string name="keptSvcLimit">Ci sono già 16 servizi. Rimuovine uno prima di aggiungerne un altro.</string>
+    <string name="keptSvcPaused">In pausa perché il telefono è caldo</string>
+    <string name="keptSvcOff">Spento</string>
+    <string name="keptSvcStarting">Avvio…</string>
+    <string name="keptSvcRunning">In esecuzione</string>
+    <string name="keptSvcRunningFor">In esecuzione da %1$d min</string>
+    <string name="keptSvcStopping">Arresto…</string>
+    <string name="keptSvcRetrying">Arresto anomalo (codice %1$d). Nuovo tentativo tra %2$d s</string>
+    <string name="keptSvcPortBusy">La porta %1$d è occupata. Nuovo tentativo a breve.</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="one">Fermato dopo ripetuti arresti anomali (1 riavvio)</item>
+        <item quantity="many">Fermato dopo ripetuti arresti anomali (%1$d riavvii)</item>
+        <item quantity="other">Fermato dopo ripetuti arresti anomali (%1$d riavvii)</item>
+    </plurals>
+    <string name="keptSvcExited">Terminato (codice %1$d)</string>
+    <string name="keptSvcPortNumber">Porta %1$d</string>
+    <string name="keptSvcLogStarted">Avviato</string>
+    <string name="keptSvcLogExit">Terminato (codice %1$d)</string>
+    <string name="keptSvcLogRetry">Nuovo tentativo tra %1$d s</string>
+    <string name="keptSvcLogGaveUp">Fermato dopo ripetuti arresti anomali</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Cambia modello</string>
+    <string name="b169UsedUp">%1$s è esaurito per ora</string>
+    <string name="b169UsedUpNoName">Questo modello è esaurito per ora</string>
+    <string name="b169ConnectProvider">Collega un provider…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="one">La risposta interrotta ha già eseguito %1$d passaggio. Inviare di nuovo con %2$s?</item>
+        <item quantity="many">La risposta interrotta ha già eseguito %1$d passaggi. Inviare di nuovo con %2$s?</item>
+        <item quantity="other">La risposta interrotta ha già eseguito %1$d passaggi. Inviare di nuovo con %2$s?</item>
+    </plurals>
+    <string name="b169AskSend">Invia</string>
+    <string name="b169AttachAgain">Allega di nuovo %1$s per inviare</string>
+    <string name="b169Free">Gratis · può usare i tuoi prompt</string>
+    <string name="b169TooLong">Troppo lungo per questo modello</string>
+    <string name="b169Suggested">Consigliati</string>
+    <string name="b169Offline">Il cambio modello torna disponibile quando il server è di nuovo attivo.</string>
+</resources>
