@@ -16,29 +16,46 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** B-LAMP-013: the "Back returns to" tip never draws a placeholder where the title was, as it arrives or leaves. */
 @OptIn(ExperimentalTestApi::class)
 class BackNoteTipTest {
     @Test
-    fun `B-LAMP-013 the back tip keeps its title while it fades out and never says a dot`() =
+    fun `B-LAMP-013 the back tip is never drawn without its title, arriving or leaving, and keeps it through the fade`() =
         runComposeUiTest {
-            var title by mutableStateOf<String?>("Deploy checks")
+            var title by mutableStateOf<String?>(null)
             mainClock.autoAdvance = false
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Full), localeTag = "en") {
                     BackNoteTip(title, { title = null }) { Box(Modifier.size(200.dp, 56.dp)) }
                 }
             }
-            mainClock.advanceTimeBy(400)
-            fun count(words: String) = onAllNodesWithText(words, substring = true, useUnmergedTree = true).fetchSemanticsNodes().size
-            assertEquals(1, count("Back returns to Deploy checks"), "the tip names where Back goes")
+            fun drawn(): List<String> =
+                onAllNodesWithText("Back returns to", substring = true, useUnmergedTree = true).fetchSemanticsNodes()
+                    .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty().map { t -> t.text } }
+            fun assertEveryDrawnFrameHasTheTitle(what: String) {
+                for (t in drawn()) assertTrue("Deploy checks" in t, "$what: the tip is drawn without its title: \"$t\"")
+            }
+            // No title yet: nothing is drawn, not even a sentence with a hole.
+            repeat(10) { mainClock.advanceTimeByFrame() }
+            assertEquals(emptyList(), drawn(), "no title: no tip")
+            // The title arrives: every frame of the fade-in names it.
+            title = "Deploy checks"
+            repeat(30) {
+                mainClock.advanceTimeByFrame()
+                assertEveryDrawnFrameHasTheTitle("arriving, frame $it")
+            }
+            assertTrue(drawn().isNotEmpty(), "the tip is drawn and names where Back goes")
+            // It leaves: every frame of the fade-out still names it.
             title = null
             repeat(30) {
                 mainClock.advanceTimeByFrame()
-                assertEquals(0, count("Back returns to ·"), "frame $it: a placeholder where the title was")
-                assertEquals(0, count("Back returns to ,"), "frame $it: a cut sentence")
+                assertEveryDrawnFrameHasTheTitle("leaving, frame $it")
             }
         }
 }
