@@ -865,6 +865,41 @@ class PlatformHub(
         }
     }
 
+    private fun profileMoved(profile: ProfileId, saved: List<LoadedProfile>): Boolean =
+        !stores.lanes.forProfile(profile).isAdmitting ||
+            stores.profiles.profiles.value != saved ||
+            stores.profiles.activeId.value != profile
+
+    private fun feedMoved(
+        profile: ProfileId,
+        waiting: List<Waiting>,
+        latest: List<Waiting>,
+        base: WidgetModel,
+    ): Boolean = latest != waiting || widgetModelNow(runtime.snapshot.value, latest, profile) != base
+
+    private fun connectionMoved(
+        profile: ProfileId,
+        graph: ConnectionGraph?,
+        location: io.github.eslamasabry.oc.core.model.ServerLocation,
+        connects: Int,
+    ): Boolean =
+        registry.live.value[profile] !== graph ||
+            registry.live.value[profile]?.session?.server?.location?.value != location ||
+            (registry.live.value[profile]?.session?.server?.events?.connects?.value ?: 0) != connects
+
+    private fun widgetModelNow(feed: ChatFeedSnapshot, waiting: List<Waiting>, profile: ProfileId) =
+        PlatformRules.widgetModel(
+            feed,
+            waiting,
+            profile,
+            WidgetNames(stores.profiles.profiles.value.associate { it.id to it.profile.name }, helperIds()),
+            registry.live.value.keys,
+        )
+
+    /** The Servers page's own rule ([isPhoneHelper], PreviewRuntime.publishServers): one filter for both lists. */
+    private fun helperIds(): Set<ProfileId> =
+        stores.profiles.profiles.value.filter { stores.isPhoneHelper(it) }.map { it.id }.toSet()
+
     private fun publishTile(waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
         if (!registry.live.value.containsKey(profile)) return
@@ -916,9 +951,7 @@ class PlatformHub(
         )
             return
         val savedProfiles = stores.profiles.profiles.value
-        val names = savedProfiles.associate { it.id to it.profile.name }
-        val base =
-            PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
+        val base = widgetModelNow(feed, waiting, profile)
         val loaded = stores.profiles.profile(profile) ?: return
         if (!stores.lanes.forProfile(profile).isAdmitting) return
         val location =
@@ -1069,13 +1102,7 @@ class PlatformHub(
             }
         if (freshWaiting != waiting || stores.profiles.profiles.value != savedProfiles) return
         val current =
-            PlatformRules.widgetModel(
-                runtime.snapshot.value,
-                freshWaiting,
-                profile,
-                stores.profiles.profiles.value.associate { it.id to it.profile.name },
-                registry.live.value.keys,
-            )
+            widgetModelNow(runtime.snapshot.value, freshWaiting, profile)
         if (
             current != base ||
                 stores.profiles.activeId.value != profile ||
@@ -1197,21 +1224,9 @@ class PlatformHub(
                 }
             }
         if (
-            !stores.lanes.forProfile(profile).isAdmitting ||
-                stores.profiles.profiles.value != savedProfiles ||
-                stores.profiles.activeId.value != profile ||
-                registry.live.value[profile] !== scopeOwner.first ||
-                registry.live.value[profile]?.session?.server?.location?.value != location ||
-                (registry.live.value[profile]?.session?.server?.events?.connects?.value ?: 0) !=
-                    scopeOwner.third ||
-                latestWaiting != waiting ||
-                PlatformRules.widgetModel(
-                    runtime.snapshot.value,
-                    latestWaiting,
-                    profile,
-                    stores.profiles.profiles.value.associate { it.id to it.profile.name },
-                    registry.live.value.keys,
-                ) != base
+            profileMoved(profile, savedProfiles) ||
+                connectionMoved(profile, scopeOwner.first, location, scopeOwner.third) ||
+                feedMoved(profile, waiting, latestWaiting, base)
         )
             return
         if (
@@ -1821,6 +1836,9 @@ internal data class WidgetRow(
     val preview: String = "",
 )
 
+/** Every saved server's name for the rows, and the phone agents' helpers: they name rows but are no server to list. */
+internal data class WidgetNames(val byProfile: Map<ProfileId, String>, val notListed: Set<ProfileId> = emptySet())
+
 internal data class WidgetServer(val name: String, val online: Boolean, val id: String = name)
 
 /** What the widgets show, without clock stamps: equal models are never republished (B-ANDR-117). */
@@ -1844,7 +1862,7 @@ internal object PlatformRules {
         feed: ChatFeedSnapshot,
         waiting: List<Waiting>,
         active: ProfileId,
-        names: Map<ProfileId, String>,
+        names: WidgetNames,
         online: Set<ProfileId>,
     ): WidgetModel {
         val rows =
@@ -1875,7 +1893,7 @@ internal object PlatformRules {
                         profile = item.profileId.raw,
                         title = widgetText(item.title),
                         project = item.directory.orEmpty(),
-                        server = widgetText(names[item.profileId]),
+                        server = widgetText(names.byProfile[item.profileId]),
                         busy = item.status == ChatStatus.Running,
                         needsYou = item.status == ChatStatus.NeedsYou || request != null,
                         requestId = if (own) request?.request?.id?.raw.orEmpty() else "",
@@ -1890,7 +1908,9 @@ internal object PlatformRules {
             pending = waiting.size,
             rows = rows,
             servers =
-                names.map { (id, name) -> WidgetServer(widgetText(name), id in online, id.raw) },
+                names.byProfile
+                    .filterKeys { it !in names.notListed }
+                    .map { (id, name) -> WidgetServer(widgetText(name), id in online, id.raw) },
         )
     }
 
