@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.shell.ShellNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -196,12 +197,14 @@ class AppHomeEdgeDock : HomeEdgeDock {
 /** The switcher in a conversation: Edge light only (Rings are never mounted), clear of the chat's chrome. */
 @ContributesIntoSet(AppScope::class, binding = binding<ChatEdgeDock>())
 @Inject
-class AppChatEdgeDock(private val port: AppEdgeDockPort) : ChatEdgeDock {
+class AppChatEdgeDock(private val port: AppEdgeDockPort, private val shell: ShellNavigator) : ChatEdgeDock {
     @Composable
     override fun Content(chrome: PaddingValues, @Suppress("UNUSED_PARAMETER") onBottomRoom: (Int) -> Unit) {
         val mode by port.mode.collectAsStateWithLifecycle()
         val onScreen by port.onScreen.collectAsStateWithLifecycle()
-        if (!EdgeLightRules.mounts(mode).light) return
+        // Big screens: the list beside the conversation already shows every conversation.
+        val listShown by shell.listShown.collectAsStateWithLifecycle()
+        if (!EdgeLightRules.lightShows(mode, listShown)) return
         EdgeLightMount(
             port = port,
             page = onScreen,
