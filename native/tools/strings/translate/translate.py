@@ -253,6 +253,21 @@ def entry_xml(key, typ, val, kind, ind="    "):
     return '%s<plurals name="%s">\n%s%s</plurals>\n' % (ind, key, items, ind)
 
 
+_TOKEN = re.compile(r"%\d+\$[ds]")
+
+
+def android_percent(val):
+    """The plain text of a composeResources line as an Android value: in a line with format arguments every literal %
+    is written %% (as AndroidStrings.encodePercent does), or Android's formatter fails on it at run time."""
+    if isinstance(val, dict): return {q: android_percent(v) for q, v in val.items()}
+    if not isinstance(val, str) or not _TOKEN.search(val): return val
+    parts, last = [], 0
+    for m in _TOKEN.finditer(val):
+        parts.append(val[last:m.start()].replace("%", "%%")); parts.append(m.group(0)); last = m.end()
+    parts.append(val[last:].replace("%", "%%"))
+    return "".join(parts)
+
+
 def put(path, entries, kind, loc):
     """Insert or replace entries [(key, typ, val)] in the XML file at [path], leaving everything else byte for byte."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -321,7 +336,8 @@ def _apply(a):
         put(target, entries, kind, loc)
         # strings_os.xml of the words root is mirrored into the generated Android res copy.
         if root == "words" and doc["file"] == "strings_os.xml":
-            put(os.path.join(NATIVE, "ui/words/android-res", folder("android", loc), "strings_os.xml"), entries, "android", loc)
+            mirrored = [(k, t, android_percent(v)) for k, t, v in entries]
+            put(os.path.join(NATIVE, "ui/words/android-res", folder("android", loc), "strings_os.xml"), mirrored, "android", loc)
         write_state(loc, st)
         print("%s: wrote %d into %s" % (os.path.basename(path), len(entries), os.path.relpath(target, NATIVE)))
 
