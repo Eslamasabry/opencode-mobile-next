@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.text.style.TextAlign
+import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.setup.*
@@ -650,68 +651,150 @@ private fun Job(
                 "\u2066$total\u2069",
             )
         } else null
-    if (wide) {
-        val trail =
-            rows.mapIndexed { index, step ->
-                when {
-                    finished(step) -> KitTrailMark.Done
-                    index == current && !checking -> KitTrailMark.Current
-                    else -> KitTrailMark.Waiting
+    val ringBody: @Composable () -> Unit = {
+        val topGap = if (wide) Space.S5.dp else Space.S6.dp
+        Column(
+            Modifier.fillMaxWidth()
+                .testTag("setup-progress-body")
+                .then(if (wide) Modifier else Modifier.padding(horizontal = Space.S5.dp, vertical = Space.S6.dp)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            KitProgressRing(
+                title,
+                stringResource(Res.string.setupProgressViewOverallLabel),
+                value = measured,
+                done = done,
+                of = rows.size,
+                finished = progress.state == SetupState.Done,
+                halted = halted,
+                caption = caption,
+                trail =
+                    rows.mapIndexed { index, step ->
+                        when {
+                            finished(step) -> KitTrailMark.Done
+                            index == current && !checking -> KitTrailMark.Current
+                            else -> KitTrailMark.Waiting
+                        }
+                    },
+            )
+            val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
+            val costParts =
+                if (!running) emptyList()
+                else
+                    SetupRingCost.parts(
+                        eta,
+                        lastStep = rows.none { it.state == ComponentState.Pending },
+                        downloading = caption != null,
+                        transport = state.transport,
+                    )
+            if (costParts.isNotEmpty()) {
+                Spacer(Modifier.height(topGap))
+                // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
+                val cost =
+                    costParts
+                        .map { part ->
+                            when (part) {
+                                RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
+                                is RingCostPart.Minutes ->
+                                    org.jetbrains.compose.resources.pluralStringResource(
+                                        Res.plurals.phoneSetupRingMinutesLeft,
+                                        part.minutes,
+                                        part.minutes,
+                                    )
+                                RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
+                                RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
+                            }
+                        }
+                        .joinToString(" · ")
+                KitText(
+                    cost,
+                    Modifier.testTag("phone-setup-progress-cost"),
+                    role = TypeRole.RowTitle,
+                    tone = TextTone.Secondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            val clock = progress.stepElapsedSeconds
+            if (running && clock != null) {
+                // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
+                Spacer(Modifier.height(if (costParts.isEmpty()) topGap else Space.S2.dp))
+                val doing = progress.activity?.let { activityWords(it) }
+                // The clock is the current step's own: the words say so.
+                val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
+                KitText(
+                    if (doing != null) {
+                        stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
+                    } else {
+                        stepClock
+                    },
+                    Modifier.testTag("phone-setup-progress-heartbeat"),
+                    role = TypeRole.RowTitle,
+                    tone = TextTone.Secondary,
+                    textAlign = TextAlign.Center,
+                )
+                if ((progress.quietSeconds ?: 0) >= 30) {
+                    Spacer(Modifier.height(Space.S1.dp))
+                    KitText(
+                        stringResource(Res.string.setupHeartbeatQuiet),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Tertiary,
+                        textAlign = TextAlign.Center,
+                    )
                 }
             }
-        val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
-        val costParts =
-            if (!running) emptyList()
-            else
-                SetupRingCost.parts(
-                    eta,
-                    lastStep = rows.none { it.state == ComponentState.Pending },
-                    downloading = caption != null,
-                    transport = state.transport,
+            if (note != null) {
+                Spacer(Modifier.height(if (costParts.isEmpty() && clock == null) topGap else Space.S2.dp))
+                KitText(
+                    note,
+                    if (wide) Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp) else Modifier.widthIn(max = 320.dp),
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Tertiary,
+                    textAlign = TextAlign.Center,
+                ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
+            }
+            if (!wide) {
+                Spacer(Modifier.height(Space.S3.dp))
+                KitButton(
+                    stringResource(Res.string.kitDetails),
+                    { detailsOpen = true },
+                    role = KitButtonRole.Tertiary,
                 )
-        val costLine =
-            if (costParts.isEmpty()) null
-            else
-                costParts
-                    .map { part ->
-                        when (part) {
-                            RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
-                            is RingCostPart.Minutes ->
-                                org.jetbrains.compose.resources.pluralStringResource(
-                                    Res.plurals.phoneSetupRingMinutesLeft,
-                                    part.minutes,
-                                    part.minutes,
-                                )
-                            RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
-                            RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
-                        }
-                    }
-                    .joinToString(" · ")
-        val clock = progress.stepElapsedSeconds
-        val heartbeatLine =
-            if (running && clock != null) {
-                val doing = progress.activity?.let { activityWords(it) }
-                val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
-                if (doing != null) stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
-                else stepClock
-            } else null
-        val showQuietNote = running && clock != null && (progress.quietSeconds ?: 0) >= 30
-        SetupJourneyWideJob(
+            }
+            BatteryCardNotice(state, actions)
+            if (
+                state.failure != null &&
+                    state.confirmStop == null &&
+                    !state.confirmRemoveVoice
+            ) {
+                if (wide) Spacer(Modifier.height(Space.S3.dp))
+                KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
+            }
+            if (wide) {
+                Box(Modifier.padding(top = Space.S5.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
+                    JobAction(state, actions)
+                }
+            }
+        }
+    }
+    if (wide) {
+        val gutter = LocalKitTokens.current.gutter.dp
+        WideTwoColumnFrame(
             pageTitle = pageTitle,
-            state = state,
-            rows = rows,
-            done = done,
-            title = title,
-            measured = measured,
-            halted = halted,
-            caption = caption,
-            trail = trail,
-            costLine = costLine,
-            heartbeatLine = heartbeatLine,
-            showQuietNote = showQuietNote,
-            note = note,
-            batteryNotice = { BatteryCardNotice(state, actions) },
-            actionFoot = { JobAction(state, actions) },
+            verticalAlignment = Alignment.CenterVertically,
+            viewportModifier = Modifier.padding(horizontal = gutter).testTag("setup-progress-viewport"),
+            start = ringBody,
+            end = {
+                WidePartsPanel(
+                    items = wideJourneyParts(state, rows),
+                    showDoneCount = true,
+                    showStoppedNote =
+                        progress.canContinue &&
+                            progress.state == SetupState.Failed &&
+                            state.systemKill == null &&
+                            !nodeCannotRun(progress),
+                    details = state.details,
+                )
+            },
         )
         return
     }
@@ -732,120 +815,7 @@ private fun Job(
                         -.3f,
                     ), // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:384
             ) {
-                Column(
-                    Modifier.fillMaxWidth()
-                        .testTag("setup-progress-body")
-                        .padding(horizontal = Space.S5.dp, vertical = Space.S6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    KitProgressRing(
-                        title,
-                        stringResource(Res.string.setupProgressViewOverallLabel),
-                        value = measured,
-                        done = done,
-                        of = rows.size,
-                        finished = progress.state == SetupState.Done,
-                        halted = halted,
-                        caption = caption,
-                        trail =
-                            rows.mapIndexed { index, step ->
-                                when {
-                                    finished(step) -> KitTrailMark.Done
-                                    index == current && !checking -> KitTrailMark.Current
-                                    else -> KitTrailMark.Waiting
-                                }
-                            },
-                    )
-                    val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
-                    val costParts =
-                        if (!running) emptyList()
-                        else
-                            SetupRingCost.parts(
-                                eta,
-                                lastStep = rows.none { it.state == ComponentState.Pending },
-                                downloading = caption != null,
-                                transport = state.transport,
-                            )
-                    if (costParts.isNotEmpty()) {
-                        Spacer(Modifier.height(Space.S6.dp))
-                        // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
-                        val cost =
-                            costParts
-                                .map { part ->
-                                    when (part) {
-                                        RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
-                                        is RingCostPart.Minutes ->
-                                            org.jetbrains.compose.resources.pluralStringResource(
-                                                Res.plurals.phoneSetupRingMinutesLeft,
-                                                part.minutes,
-                                                part.minutes,
-                                            )
-                                        RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
-                                        RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
-                                    }
-                                }
-                                .joinToString(" · ")
-                        KitText(
-                            cost,
-                            Modifier.testTag("phone-setup-progress-cost"),
-                            role = TypeRole.RowTitle,
-                            tone = TextTone.Secondary,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                    val clock = progress.stepElapsedSeconds
-                    if (running && clock != null) {
-                        // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
-                        Spacer(Modifier.height(if (costParts.isEmpty()) Space.S6.dp else Space.S2.dp))
-                        val doing = progress.activity?.let { activityWords(it) }
-                        // The clock is the current step's own: the words say so.
-                        val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
-                        KitText(
-                            if (doing != null) {
-                                stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
-                            } else {
-                                stepClock
-                            },
-                            Modifier.testTag("phone-setup-progress-heartbeat"),
-                            role = TypeRole.RowTitle,
-                            tone = TextTone.Secondary,
-                            textAlign = TextAlign.Center,
-                        )
-                        if ((progress.quietSeconds ?: 0) >= 30) {
-                            Spacer(Modifier.height(Space.S1.dp))
-                            KitText(
-                                stringResource(Res.string.setupHeartbeatQuiet),
-                                role = TypeRole.Secondary,
-                                tone = TextTone.Tertiary,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
-                    if (note != null) {
-                        Spacer(Modifier.height(if (costParts.isEmpty() && clock == null) Space.S6.dp else Space.S2.dp))
-                        KitText(
-                            note,
-                            Modifier.widthIn(max = 320.dp),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Tertiary,
-                            textAlign = TextAlign.Center,
-                        ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
-                    }
-                    Spacer(Modifier.height(Space.S3.dp))
-                    KitButton(
-                        stringResource(Res.string.kitDetails),
-                        { detailsOpen = true },
-                        role = KitButtonRole.Tertiary,
-                    )
-                    BatteryCardNotice(state, actions)
-                    if (
-                        state.failure != null &&
-                            state.confirmStop == null &&
-                            !state.confirmRemoveVoice
-                    ) {
-                        KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
-                    }
-                }
+                ringBody()
             }
         }
     }
@@ -929,6 +899,42 @@ private fun Job(
         }
     }
 }
+
+@Composable
+private fun wideJourneyParts(
+    state: SetupJourneyUi,
+    rows: List<ComponentProgress>,
+): List<WidePartItem> =
+    rows.map { component ->
+        val fallback =
+            state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id
+        val total = component.bytesTotal
+        val done = component.bytesDone
+        val pct = component.percent?.takeIf { component.state == ComponentState.Running }
+        val progressNote =
+            when {
+                total != null && total > 0 && done != null -> {
+                    val (received, whole) = SetupProgressRules.formatBytePair(done, total)
+                    stringResource(Res.string.setupProgressViewBytes, received, whole)
+                }
+                pct != null ->
+                    stringResource(
+                        Res.string.setupProgressViewPercent,
+                        pct.coerceIn(0.0, JOURNEY_PERCENT_MAX).roundToInt(),
+                    )
+                else -> null
+            }
+        val status =
+            when (component.state) {
+                ComponentState.Done, ComponentState.Skipped -> WidePartStatus.Done
+                ComponentState.Running, ComponentState.Checking -> WidePartStatus.Working
+                ComponentState.Failed -> WidePartStatus.Failed
+                ComponentState.Pending -> WidePartStatus.Waiting
+            }
+        WidePartItem(component.id, itemTitle(component.id, fallback), status, progressNote)
+    }
+
+private const val JOURNEY_PERCENT_MAX = 100.0
 
 @Composable
 private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {

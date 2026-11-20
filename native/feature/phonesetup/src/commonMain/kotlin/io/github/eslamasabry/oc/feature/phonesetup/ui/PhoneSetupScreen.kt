@@ -3,14 +3,21 @@ package io.github.eslamasabry.oc.feature.phonesetup.ui
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.linuxsetup.ComponentProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentState
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupPreflightResult
@@ -21,7 +28,10 @@ import io.github.eslamasabry.oc.engine.runtime.messages.SetupMessages
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneSetupActions
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneSetupUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -38,6 +48,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
+import io.github.eslamasabry.oc.ui.kit.setup.KitSetupPhoneMood
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
@@ -91,6 +102,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupProgressStopMessage
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProgressStopTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProgressTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupReadyTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingSafeToLeaveQuiet
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartChecking
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartGigabytes
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartHeadline
@@ -102,6 +114,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartReadyBody
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartSetUp
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartTitle
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewBytes
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewCancel
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewCancelled
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewContinue
@@ -110,6 +123,7 @@ import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedUnknown
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewInterrupted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewPercent
 import io.github.eslamasabry.oc.ui.words.res.voiceComponentTitle
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
@@ -123,35 +137,53 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
-    if (LocalKitWindow.current.cls.isWide) {
-        PhoneSetupWideScreen(state, actions)
-        return
-    }
     val progress = state.progress
+    val wide = LocalKitWindow.current.cls.isWide
+    val pageTitle =
+        stringResource(
+            if (progress == null) Res.string.phoneSetupStartScreenTitle
+            else Res.string.phoneSetupProgressTitle
+        )
     KitScreen(
         topBar = {
             KitTopBar(
-                title =
-                    stringResource(
-                        if (progress == null) Res.string.phoneSetupStartScreenTitle
-                        else Res.string.phoneSetupProgressTitle
-                    ),
+                title = if (wide) "" else pageTitle,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
             )
         },
-        width = KitScreenWidth.Reading,
+        width = if (wide) KitScreenWidth.Full else KitScreenWidth.Reading,
         loading = state.checking,
-        edges = KitScreenEdges.Bleed,
+        edges = if (wide) KitScreenEdges.Gutter else KitScreenEdges.Bleed,
     ) {
-        Column(
-            Modifier.fillMaxWidth()
-                .verticalScroll(kitPageScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            if (progress == null) Start(state, actions) else Job(progress, state, actions)
+        if (wide) {
+            WideTwoColumnFrame(
+                pageTitle = pageTitle,
+                verticalAlignment = Alignment.Top,
+                start = {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
+                        if (progress == null) Start(state, actions, wide = true)
+                        else Job(progress, state, actions, wide = true)
+                    }
+                },
+                end = {
+                    WidePartsPanel(
+                        items = wideSetupParts(state, progress),
+                        showDoneCount = progress != null,
+                        showStoppedNote = progress != null && progress.canContinue,
+                    )
+                },
+            )
+        } else {
+            Column(
+                Modifier.fillMaxWidth()
+                    .verticalScroll(kitPageScrollState())
+                    .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            ) {
+                if (progress == null) Start(state, actions) else Job(progress, state, actions)
+            }
         }
     }
     KitConfirm(
@@ -173,17 +205,41 @@ public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
 }
 
 @Composable
-private fun Start(state: PhoneSetupUi, actions: PhoneSetupActions) {
-    KitText(stringResource(Res.string.phoneSetupStartHeadline))
-    if (state.checking) {
-        KitText(stringResource(Res.string.phoneSetupStartChecking))
-        return
+private fun Start(state: PhoneSetupUi, actions: PhoneSetupActions, wide: Boolean = false) {
+    if (wide) {
+        WideArtworkBay(
+            when {
+                state.preflight?.supported == false -> KitSetupPhoneMood.Stopped
+                state.starting -> KitSetupPhoneMood.Starting
+                else -> KitSetupPhoneMood.Fresh
+            }
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            KitText(stringResource(Res.string.phoneSetupStartHeadline), role = TypeRole.Title)
+            KitText(
+                when {
+                    state.checking -> stringResource(Res.string.phoneSetupStartChecking)
+                    state.downloadBytes > 0 ->
+                        stringResource(Res.string.phoneSetupStartPromise, sizeWords(state.downloadBytes))
+                    else -> stringResource(Res.string.phoneSetupStartPromiseNoSize)
+                },
+                tone = TextTone.Secondary,
+            )
+        }
+        if (state.checking) return
+        if (state.preflight?.supported != false) WideStartStepList()
+    } else {
+        KitText(stringResource(Res.string.phoneSetupStartHeadline))
+        if (state.checking) {
+            KitText(stringResource(Res.string.phoneSetupStartChecking))
+            return
+        }
+        val size = sizeWords(state.downloadBytes)
+        KitText(
+            if (state.downloadBytes > 0) stringResource(Res.string.phoneSetupStartPromise, size)
+            else stringResource(Res.string.phoneSetupStartPromiseNoSize)
+        )
     }
-    val size = sizeWords(state.downloadBytes)
-    KitText(
-        if (state.downloadBytes > 0) stringResource(Res.string.phoneSetupStartPromise, size)
-        else stringResource(Res.string.phoneSetupStartPromiseNoSize)
-    )
     when (val preflight = state.preflight) {
         is SetupPreflightResult.UnsupportedAbi ->
             KitNotice(
@@ -232,70 +288,158 @@ private fun Start(state: PhoneSetupUi, actions: PhoneSetupActions) {
             )
         else -> Unit
     }
-    for (item in state.items) KitRow(title = itemTitle(item.id, item.title))
+    if (!wide) {
+        for (item in state.items) KitRow(title = itemTitle(item.id, item.title))
+    }
     if (state.preflight?.supported != false) {
-        KitButton(
-            stringResource(Res.string.phoneSetupStartSetUp),
-            actions::setUp,
-            working = state.starting,
-        )
+        if (wide) {
+            Box(Modifier.padding(top = Space.S4.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
+                KitButton(
+                    stringResource(Res.string.phoneSetupStartSetUp),
+                    actions::setUp,
+                    working = state.starting,
+                    fullWidth = true,
+                    hero = true,
+                )
+            }
+        } else {
+            KitButton(
+                stringResource(Res.string.phoneSetupStartSetUp),
+                actions::setUp,
+                working = state.starting,
+            )
+        }
     }
 }
 
 @Composable
-private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetupActions) {
+private fun Job(
+    progress: SetupProgress,
+    state: PhoneSetupUi,
+    actions: PhoneSetupActions,
+    wide: Boolean = false,
+) {
     val current = progress.components.firstOrNull { it.id == progress.current }
     val stage =
         current?.stage
             ?: if (progress.state == SetupState.Running)
                 stringResource(Res.string.setupProgressViewGettingStarted)
             else null
+    val pct = (progress.overall * PERCENT_MAX).roundToInt().coerceIn(0, PERCENT_MAX)
     val bar =
         KitProgress.Known(
             value = progress.overall.toFloat().coerceIn(0f, 1f),
             eta = progress.etaSeconds?.seconds,
         )
-    KitProgressView(
-        bar,
-        semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
-        tone =
+    val tone =
+        when (progress.state) {
+            SetupState.Failed -> KitProgressTone.Failed
+            SetupState.Running,
+            SetupState.Done -> KitProgressTone.Moving
+            else -> KitProgressTone.Stopped
+        }
+    if (wide) {
+        WideArtworkBay(
             when (progress.state) {
-                SetupState.Failed -> KitProgressTone.Failed
-                SetupState.Running,
-                SetupState.Done -> KitProgressTone.Moving
-                else -> KitProgressTone.Stopped
-            },
-    )
-    KitText("${(progress.overall * 100).roundToInt().coerceIn(0, 100)}%")
-    stage?.let { KitText(setupMessageWords(it)) }
-    when (progress.state) {
-        SetupState.Running -> {
-            for (component in progress.components) {
-                KitRow(
-                    title =
-                        itemTitle(
-                            component.id,
-                            state.items.firstOrNull { it.id == component.id }?.title
-                                ?: component.id,
-                        ),
-                    state = rowState(component.state),
-                )
+                SetupState.Running -> KitSetupPhoneMood.Starting
+                SetupState.Done -> KitSetupPhoneMood.Celebration
+                else -> KitSetupPhoneMood.Stopped
             }
-            KitButton(
-                stringResource(Res.string.setupProgressViewCancel),
-                actions::askStop,
-                role = KitButtonRole.Secondary,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            val headline =
+                stage?.let { setupMessageWords(it) }
+                    ?: if (progress.state == SetupState.Done) stringResource(Res.string.phoneSetupReadyTitle) else null
+            val pctRole = if (progress.state == SetupState.Running) TypeRole.Title else TypeRole.Headline
+            val pctTone =
+                if (progress.state == SetupState.Running || progress.state == SetupState.Done) {
+                    TextTone.Primary
+                } else {
+                    TextTone.Secondary
+                }
+            if (headline != null) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    KitText(headline, Modifier.weight(1f), role = TypeRole.Title)
+                    KitText("$pct%", role = pctRole, tone = pctTone)
+                }
+            } else {
+                KitText("$pct%", role = pctRole, tone = pctTone)
+            }
+            KitProgressView(
+                bar,
+                semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
+                tone = tone,
             )
         }
+    } else {
+        KitProgressView(
+            bar,
+            semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
+            tone = tone,
+        )
+        KitText("$pct%")
+        stage?.let { KitText(setupMessageWords(it)) }
+    }
+    when (progress.state) {
+        SetupState.Running -> {
+            if (wide) {
+                KitText(
+                    stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet),
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
+                Box(Modifier.padding(top = Space.S4.dp)) {
+                    KitButton(
+                        stringResource(Res.string.setupProgressViewCancel),
+                        actions::askStop,
+                        role = KitButtonRole.Secondary,
+                        expand = false,
+                    )
+                }
+            } else {
+                for (component in progress.components) {
+                    KitRow(
+                        title =
+                            itemTitle(
+                                component.id,
+                                state.items.firstOrNull { it.id == component.id }?.title
+                                    ?: component.id,
+                            ),
+                        state = rowState(component.state),
+                    )
+                }
+                KitButton(
+                    stringResource(Res.string.setupProgressViewCancel),
+                    actions::askStop,
+                    role = KitButtonRole.Secondary,
+                )
+            }
+        }
         SetupState.Done -> {
-            KitNotice(
-                title = stringResource(Res.string.phoneSetupReadyTitle),
-                message = stringResource(Res.string.phoneSetupStartReadyBody),
-                tone = StatusTone.Ok,
-            )
-            // B-109: the screen's one next step is the kit's action block (full width on a phone, at the end from
-            // medium up), never a narrow button left at the start edge.
-            KitActionBlock(primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::done))
+            if (wide) {
+                KitText(stringResource(Res.string.phoneSetupStartReadyBody), tone = TextTone.Secondary)
+                Box(Modifier.padding(top = Space.S4.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
+                    KitButton(
+                        stringResource(Res.string.chatsHomeNewChat),
+                        actions::done,
+                        fullWidth = true,
+                        hero = true,
+                    )
+                }
+            } else {
+                KitNotice(
+                    title = stringResource(Res.string.phoneSetupReadyTitle),
+                    message = stringResource(Res.string.phoneSetupStartReadyBody),
+                    tone = StatusTone.Ok,
+                )
+                // B-109: the screen's one next step is the kit's action block (full width on a phone, at the end from
+                // medium up), never a narrow button left at the start edge.
+                KitActionBlock(primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::done))
+            }
         }
         SetupState.Failed,
         SetupState.Interrupted,
@@ -320,36 +464,94 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
             // Node.js cannot run on this phone (#117): Continue would only fail again; a computer is the way on.
             val cannotRun =
                 progress.state == SetupState.Failed && progress.error == SetupProblem.NodeCannotRun
-            KitReveal(cannotRun) {
-                KitActionBlock(
-                    primary =
-                        KitAction(
-                            stringResource(Res.string.phoneSetupNodeConnectComputer),
-                            actions::connectComputer,
-                        ),
-                    secondary =
-                        KitAction(
-                            stringResource(Res.string.phoneSetupNodeReportFailure),
-                            actions::reportFailure,
-                        ),
-                )
-            }
-            if (!cannotRun) KitActionBlock(
-                primary =
+            val primary =
+                if (cannotRun) {
+                    KitAction(stringResource(Res.string.phoneSetupNodeConnectComputer), actions::connectComputer)
+                } else {
                     KitAction(
                         stringResource(Res.string.setupProgressViewContinue),
                         actions::continueSetup,
                         working = state.starting,
-                    ),
-                secondary =
-                    if (progress.state == SetupState.Failed)
+                    )
+                }
+            val secondary =
+                when {
+                    cannotRun ->
+                        KitAction(stringResource(Res.string.phoneSetupNodeReportFailure), actions::reportFailure)
+                    progress.state == SetupState.Failed ->
                         KitAction(stringResource(Res.string.kitReportProblem), actions::reportFailure)
-                    else null,
-            )
+                    else -> null
+                }
+            KitReveal(cannotRun) {
+                FailedActionRow(primary = primary, secondary = secondary, wide = wide)
+            }
+            if (!cannotRun) FailedActionRow(primary = primary, secondary = secondary, wide = wide)
         }
         SetupState.Idle -> Unit
     }
 }
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FailedActionRow(primary: KitAction, secondary: KitAction?, wide: Boolean) {
+    if (wide) {
+        FlowRow(
+            Modifier.padding(top = Space.S4.dp),
+            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        ) {
+            KitButton(primary, role = KitButtonRole.Primary, expand = false)
+            secondary?.let { KitButton(it, role = KitButtonRole.Secondary, expand = false) }
+        }
+    } else {
+        KitActionBlock(primary = primary, secondary = secondary)
+    }
+}
+
+@Composable
+private fun wideSetupParts(state: PhoneSetupUi, progress: SetupProgress?): List<WidePartItem> {
+    if (progress == null) {
+        return state.items.map { WidePartItem(it.id, itemTitle(it.id, it.title), WidePartStatus.Start) }
+    }
+    val byId = progress.components.associateBy { it.id }
+    val fallbackState = if (progress.state == SetupState.Done) ComponentState.Done else ComponentState.Pending
+    val seen = mutableSetOf<String>()
+    val entries = buildList {
+        for (item in state.items) {
+            seen += item.id
+            add(item.title to (byId[item.id] ?: ComponentProgress(item.id, fallbackState)))
+        }
+        for (component in progress.components) {
+            if (seen.add(component.id)) add(component.id to component)
+        }
+    }
+    return entries.map { (fallback, comp) ->
+        val total = comp.bytesTotal
+        val done = comp.bytesDone
+        val pct = comp.percent?.takeIf { comp.state == ComponentState.Running }
+        val progressNote =
+            when {
+                total != null && total > 0 && done != null ->
+                    stringResource(Res.string.setupProgressViewBytes, sizeWords(done), sizeWords(total))
+                pct != null ->
+                    stringResource(
+                        Res.string.setupProgressViewPercent,
+                        pct.coerceIn(0.0, PERCENT_MAX.toDouble()).roundToInt(),
+                    )
+                else -> null
+            }
+        val status =
+            when (comp.state) {
+                ComponentState.Done, ComponentState.Skipped -> WidePartStatus.Done
+                ComponentState.Running, ComponentState.Checking -> WidePartStatus.Working
+                ComponentState.Failed -> WidePartStatus.Failed
+                ComponentState.Pending -> WidePartStatus.Waiting
+            }
+        WidePartItem(comp.id, itemTitle(comp.id, fallback), status, progressNote)
+    }
+}
+
+private const val PERCENT_MAX = 100
 
 /** The kit row state (word and tone mark), never a stand-in character. */
 @Composable
