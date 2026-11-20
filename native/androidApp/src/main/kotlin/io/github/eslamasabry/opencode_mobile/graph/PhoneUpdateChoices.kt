@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
@@ -16,6 +17,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentChoiceHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoiceEngine
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoices
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalResult
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
@@ -64,10 +66,15 @@ class PhoneUpdateChoices(
     override suspend fun notNow() = command { engine.notNow() }
     override fun removalFacts(id: AgentId) = engine.removalFacts(id)
 
-    internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh() }
-    internal fun allowed(id: AgentId): Boolean = engine.allowed(id)
+    /** True once one inventory has been read: before it, nothing is known to be unasked. */
+    @Volatile private var inventoried = false
+
+    internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh().also { inventoried = true } }
+    private val holds = UnaskedHolds { offer.value }
+
+    internal fun allowed(id: AgentId): Boolean = holds.unasked(id, inventoried) || engine.allowed(id)
     internal suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean =
-        withContext(dispatchers.io) { engine.startIfChosen(id, start) }
+        withContext(dispatchers.io) { if (holds.unasked(id, inventoried)) start() else engine.startIfChosen(id, start) }
 
     internal suspend fun updateShared(meteredAllowed: Boolean): Boolean = withContext(dispatchers.io) {
         engine.startShared(meteredAllowed) {
@@ -91,3 +98,17 @@ class PhoneUpdateChoices(
 }
 
 private const val BYTES_PER_MB = 1_000_000L
+
+/** An agent that is not a row of the current offer cannot be asked about, so it is never held for a choice. */
+private class UnaskedHolds(private val current: () -> AgentUpdateOffer?) {
+    private val log = AppLog.tagged("UpdateChoices")
+    private val logged = mutableSetOf<AgentId>()
+
+    fun unasked(id: AgentId, inventoried: Boolean): Boolean {
+        val missing = inventoried && current()?.items?.none { it.id == id } != false
+        if (missing && synchronized(logged) { logged.add(id) }) {
+            log.i { "hold has no offer row: ${id.raw} is not asked about, so it is not held" }
+        }
+        return missing
+    }
+}
