@@ -1314,7 +1314,15 @@ internal class GraphChatWorld(
                             keepLastKnown(handle)
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
-                            readHistory(gateway, handle, bridge)
+                            // A made-permanent undo removed messages on the server. A read only adds what it
+                            // finds, so the removed ones would stay on screen: the conversation is opened again
+                            // from scratch, as after Delete message and Undo from here. Done from a coroutine of
+                            // its own: reopening ends the collector this code runs in.
+                            if (event.kind == io.github.eslamasabry.oc.core.domain.events.RevertKind.Committed)
+                                scope.launch(registry.mainContext) {
+                                    if (currentAttached()?.graph === graph) bind(graph)
+                                }
+                            else readHistory(gateway, handle, bridge)
                         }
                     }
                 },

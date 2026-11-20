@@ -143,6 +143,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
+import io.github.eslamasabry.oc.ui.words.res.revertResolveBeforeSending
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.revertStaged
 import io.github.eslamasabry.oc.ui.words.res.undoneStatus
@@ -2220,10 +2221,11 @@ private fun rememberSendFailureWords(onThisPhone: Boolean): (Failure) -> String 
     val folderMissing = stringResource(Res.string.chatSendFolderMissing)
     val phoneFolder = stringResource(Res.string.chatSendPhoneFolder)
     val noPlanMode = stringResource(Res.string.chatSendNoPlanMode)
+    val undoWaiting = stringResource(Res.string.revertResolveBeforeSending)
     val phoneHelper = stringResource(Res.string.chatSendPhoneHelperNoAnswer)
     val signInAgainWords = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
     val agentFallback = stringResource(Res.string.chatSendFailureAgentFallback)
-    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder, noPlanMode, phoneHelper, signInAgainWords, agentFallback, onThisPhone) {
+    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder, noPlanMode, undoWaiting, phoneHelper, signInAgainWords, agentFallback, onThisPhone) {
         { failure ->
             when {
                 // The helper that answered with the agent's own words for a sign-in that ran out is not "can't reach".
@@ -2243,6 +2245,8 @@ private fun rememberSendFailureWords(onThisPhone: Boolean): (Failure) -> String 
                 failure is Failure.Unavailable &&
                     failure.feature.name == "schedulePhoneCheckFailed" -> phoneCheckFailed
                 failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed
+                // An undo waits for the person: the staged-undo line above says so, and the draft is kept.
+                failure is Failure.Refused && failure.reason == RefusalReason.UndoUnresolved -> undoWaiting
                 else -> authored(failure)
             }
         }
