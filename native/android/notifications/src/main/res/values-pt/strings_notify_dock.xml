@@ -28,4 +28,5 @@
     <string name="notify_status_action_stop_named">Parar %1$s</string>
     <string name="notify_status_action_stop">Parar</string>
     <string name="notify_status_stopping">Parando…</string>
+    <string name="notify_status_stop_failed">Não foi possível parar. Abra o app para tentar de novo.</string>
 </resources>
