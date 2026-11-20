@@ -369,42 +369,67 @@ class KitLampPanelTest {
             all = 3,
         )
 
-    /** No item of the list straddles the list's top edge: each is fully in view or fully out of it. */
-    private fun ComposeUiTest.assertNoItemCutAtTop(what: String) {
+    /** No section label straddles the list's top edge: each is fully in view or fully out of it. */
+    private fun ComposeUiTest.assertNoLabelCutAtTop(what: String) {
         val top = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot().top.value
-        val items = onAllNodesWithTag(LAMP_PANEL_ITEM_TAG, useUnmergedTree = true).fetchSemanticsNodes()
-        assertTrue(items.isNotEmpty(), "$what: items found")
+        val labels = onAllNodesWithTag(LAMP_PANEL_HEADING_TAG, useUnmergedTree = true).fetchSemanticsNodes()
+        assertTrue(labels.isNotEmpty(), "$what: labels found")
         // The unclipped place and size: a node's boundsInRoot is already cut to the scroll viewport.
-        for (n in items) {
+        for (n in labels) {
             val from = n.positionInRoot.y
             val to = from + n.size.height
-            assertTrue(to <= top + 0.5f || from >= top - 0.5f, "$what: an item ($from..$to) is cut by the list's top $top")
+            assertTrue(to <= top + 0.5f || from >= top - 0.5f, "$what: a label ($from..$to) is cut by the list's top $top")
         }
     }
 
     @Test
     fun `B-LAMP-K2-071 at 360 dp and text 1_3 with one request the section label is never half under the header`() {
-        for (height in 380..560 step 20) {
+        for (height in 380..560 step 10) {
             runDesktopComposeUiTest(360, height) {
                 panel(Scene(askingModel(1)), width = 360, height = height, fontScale = 1.3f)
                 waitForIdle()
-                assertNoItemCutAtTop("window $height dp")
+                assertNoLabelCutAtTop("window $height dp")
             }
         }
     }
 
     @Test
-    fun `B-LAMP-K2-072 with three requests the resting scroll lands on an item edge`() {
+    fun `B-LAMP-K2-072 with three requests the resting scroll never leaves a label half in view`() {
         runDesktopComposeUiTest(360, 520) {
             panel(Scene(askingModel(3)), width = 360, height = 520, fontScale = 1.3f)
             waitForIdle()
-            assertNoItemCutAtTop("opening")
-            onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 90f, durationMillis = 180) }
-            waitForIdle()
-            assertNoItemCutAtTop("after a swipe")
-            onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeDown(startY = top + 90f, endY = bottom - 4f, durationMillis = 180) }
-            waitForIdle()
-            assertNoItemCutAtTop("after a swipe back")
+            assertNoLabelCutAtTop("opening")
+            for (step in 1..4) {
+                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeDown(startY = top + 40f * step, endY = bottom - 4f, durationMillis = 180) }
+                waitForIdle()
+                assertNoLabelCutAtTop("after a swipe down $step")
+                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 40f * step, durationMillis = 180) }
+                waitForIdle()
+                assertNoLabelCutAtTop("after a swipe up $step")
+            }
         }
     }
+
+    @Test
+    fun `B-LAMP-K2-073 three requests at 1_3 grow the panel to the room it is given before the list scrolls`() {
+        for (height in listOf(560, 640)) {
+            runDesktopComposeUiTest(360, height) {
+                panel(Scene(askingModel(3)), width = 360, height = height, fontScale = 1.3f)
+                waitForIdle()
+                val panelH = onNodeWithTag(LAMP_PANEL_TAG).getUnclippedBoundsInRoot().h()
+                assertTrue(panelH >= height - 1f, "window $height dp: the panel takes the room ($panelH dp), not a part of it")
+            }
+        }
+    }
+
+    @Test
+    fun `B-LAMP-K2-074 requests that fit in the room are all in view and the list is not scrolled`() =
+        runDesktopComposeUiTest(412, 800) {
+            panel(Scene(askingModel(2)), width = 412, height = 800)
+            waitForIdle()
+            onNodeWithText("Needs you").assertIsDisplayed()
+            onAllNodesWithText("Allow once").assertCountEquals(2)
+            onAllNodesWithText("Allow once")[0].assertIsDisplayed()
+            onAllNodesWithText("Allow once")[1].assertIsDisplayed()
+        }
 }

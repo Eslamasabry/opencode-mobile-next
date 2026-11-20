@@ -261,6 +261,17 @@ public object KitLampPanelRules {
         return if (kept >= room * KitLampPanelDims.CUT_MIN_SHARE) kept else room
     }
 
+    /**
+     * The list's height [h] of [total], bottom-aligned, trimmed when its top edge would fall inside a section label (a
+     * `top..bottom` span from the list's top): the label is then fully out, never half in view.
+     */
+    internal fun clearOfLabels(h: Int, total: Int, labels: List<IntRange>): Int {
+        if (h >= total) return h
+        val cut = total - h
+        val hit = labels.firstOrNull { cut > it.first && cut < it.last } ?: return h
+        return total - hit.last
+    }
+
     /** The scrim's strength behind the open panel, by style (LAMP-CRAFT §6). */
     public fun scrimAlpha(style: Style, dark: Boolean): Float =
         when (style) {
@@ -340,13 +351,15 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
     val heights = remember { mutableStateMapOf<Int, Int>() }
     val bases = model.sections.runningFold(1) { at, section -> at + 1 + section.rows.size }
     val parts = bases.last()
+    // A resting list never has a section label half in view: after a scroll it settles with the label whole or gone.
     LaunchedEffect(scroll) {
         snapshotFlow { scroll.isScrollInProgress }.collect { moving ->
             if (moving) return@collect
-            val tops = (0 until parts).runningFold(0) { at, i -> at + (heights[i] ?: 0) }.dropLast(1)
-            val edges = tops.map { scroll.maxValue - it }.filter { it in 0..scroll.maxValue } + 0
-            val target = edges.minByOrNull { abs(it - scroll.value) } ?: return@collect
-            if (target != scroll.value) scroll.animateScrollTo(target)
+            val labels = labelSpans(heights, bases)
+            val viewTop = scroll.maxValue - scroll.value
+            val cut = labels.firstOrNull { viewTop > it.first && viewTop < it.last } ?: return@collect
+            val target = if (viewTop - cut.first < cut.last - viewTop) cut.first else cut.last
+            scroll.animateScrollTo(scroll.maxValue - target)
         }
     }
     val fade = KitLampPanelDims.FADE.dp
@@ -356,8 +369,11 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
             .testTag(LAMP_PANEL_LIST_TAG)
             .layout { m, c ->
                 val known = (0 until parts).map { heights[it] ?: 0 }
+                val groups = listOf(known[0]) + model.sections.indices.map { known.subList(bases[it], bases.getOrElse(it + 1) { parts }).sum() }
                 val room = if (c.hasBoundedHeight) c.maxHeight else Constraints.Infinity
-                val h = if (room == Constraints.Infinity) known.sum() else KitLampPanelRules.viewport(known, room).coerceAtMost(room)
+                val h =
+                    if (room == Constraints.Infinity) known.sum()
+                    else KitLampPanelRules.clearOfLabels(KitLampPanelRules.viewport(groups, room).coerceAtMost(room), known.sum(), labelSpans(heights, bases))
                 val p = m.measure(c.copy(minHeight = h, maxHeight = h))
                 layout(p.width, h) { p.place(0, 0) }
             }
@@ -395,6 +411,13 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
     }
 }
 
+/** Where each section label lies in the list (px from its top), as `top..bottom`; the label sits at its section's first item. */
+private fun labelSpans(heights: Map<Int, Int>, bases: List<Int>): List<IntRange> =
+    bases.dropLast(1).map { base ->
+        val top = (0 until base).sumOf { heights[it] ?: 0 }
+        top..top + (heights[base] ?: 0)
+    }
+
 @Composable
 private fun Section(
     section: KitLampSection,
@@ -405,7 +428,7 @@ private fun Section(
 ) {
     KitText(
         section.title,
-        Modifier.onSizeChanged { onItemHeight(0, it.height) }.testTag(LAMP_PANEL_ITEM_TAG).padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp).testTag(LAMP_PANEL_HEADING_TAG),
+        Modifier.onSizeChanged { onItemHeight(0, it.height) }.padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp).testTag(LAMP_PANEL_HEADING_TAG),
         role = TypeRole.Label,
         tone = if (section.group == KitLampGroup.NeedsYou) TextTone.Attention else TextTone.Secondary,
         kind = KitTextKind.Frame,
@@ -420,7 +443,7 @@ private fun Section(
             onMove = actions.onReorderPinned,
             words = words.reorder,
         ) { row, handle ->
-            Column(Modifier.onSizeChanged { onItemHeight(1 + section.rows.indexOf(row), it.height) }.testTag(LAMP_PANEL_ITEM_TAG)) {
+            Column(Modifier.onSizeChanged { onItemHeight(1 + section.rows.indexOf(row), it.height) }) {
                 LampBlock(row, editing = true, words, actions, handle)
                 if (row != section.rows.last()) RowDivider()
             }
@@ -428,7 +451,7 @@ private fun Section(
     } else {
         section.rows.forEachIndexed { i, row ->
             androidx.compose.runtime.key(row.key) {
-                Column(Modifier.onSizeChanged { onItemHeight(1 + i, it.height) }.testTag(LAMP_PANEL_ITEM_TAG)) {
+                Column(Modifier.onSizeChanged { onItemHeight(1 + i, it.height) }) {
                     LampBlock(row, editing, words, actions, null)
                     if (i < section.rows.size - 1) RowDivider()
                 }
@@ -728,7 +751,6 @@ private const val SCRIM_BACK_SHARE: Float = 0.35f // NV: LAMP-CRAFT §3, the scr
 public const val LAMP_PANEL_TAG: String = "kit-lamp-panel"
 public const val LAMP_PANEL_LIST_TAG: String = "kit-lamp-panel-list"
 public const val LAMP_PANEL_HEADING_TAG: String = "kit-lamp-panel-heading"
-public const val LAMP_PANEL_ITEM_TAG: String = "kit-lamp-panel-item"
 public const val LAMP_PANEL_EDIT_TAG: String = "kit-lamp-panel-edit"
 public const val LAMP_PANEL_ALL_TAG: String = "kit-lamp-panel-all"
 public const val LAMP_PANEL_ALL_SHORT_TAG: String = "kit-lamp-panel-all-short"
