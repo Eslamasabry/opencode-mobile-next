@@ -145,7 +145,9 @@ internal class InlineScan(
                 }
                 val spans = ArrayList<InlineSpan>()
                 spans += InlineSpan(0, code.length, SpanKind.Code)
-                if (PathChipScanner.looksLikeFilePath(code)) {
+                // A bare name (`notes.txt`) is a candidate too: the engine confirms it only against the files at the
+                // conversation's top level (a name with no slash never passed the path rule, so it stayed plain).
+                if (PathChipScanner.looksLikeChatFile(code)) {
                     val (path, number) = PathChipScanner.stripLineSuffix(code)
                     spans += InlineSpan(0, code.length, SpanKind.PathCandidate(path, number))
                 }
