@@ -457,11 +457,30 @@ class SetupRunner private constructor(private val context: Context) {
     private fun runInstallerProcess(spec: Spec, component: SetupComponentStatus, script: String, compatible: Boolean):
         String? {
         val completion = SetupScriptCompletion()
-        val started = linux.startInstaller(
-            completion.wrap(script), NativeInstallerOwnership.targetsForComponent(spec.id),
-            InstallerOperation.INSTALL, InstallerOptions(agentUser = spec.agentUser, compat = compatible))
+        val started = startWhenSlotFree {
+            linux.startInstaller(
+                completion.wrap(script), NativeInstallerOwnership.targetsForComponent(spec.id),
+                InstallerOperation.INSTALL, InstallerOptions(agentUser = spec.agentUser, compat = compatible))
+        }
         return try { runInstallerScript(spec, component, started, completion) }
         finally { linux.finishInstaller(started) }
+    }
+
+    /**
+     * The one installer slot is shared with the phone's reads: a read that holds it when a component starts is
+     * WAITED for (bounded), never a failure of the component (the job died at agent-node with "IllegalStateException"
+     * because a version read held the slot for a moment).
+     */
+    private fun startWhenSlotFree(start: () -> Process): Process {
+        val deadline = System.currentTimeMillis() + SLOT_WAIT_MS
+        while (true) {
+            try {
+                return start()
+            } catch (e: IllegalStateException) {
+                if (!linux.installerSlotBusy() || System.currentTimeMillis() >= deadline) throw e
+                Thread.sleep(SLOT_POLL_MS)
+            }
+        }
     }
 
     private fun runInstallerScript(spec: Spec, component: SetupComponentStatus, started: Process,
@@ -720,6 +739,8 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     companion object {
+        private const val SLOT_WAIT_MS = 90_000L
+        private const val SLOT_POLL_MS = 250L
         private val PASEO_CHECK_STAGES = setOf(
             "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
         )

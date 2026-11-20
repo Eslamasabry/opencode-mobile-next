@@ -69,7 +69,11 @@ class PhoneUpdateChoices(
     /** True once one inventory has been read: before it, nothing is known to be unasked. */
     @Volatile private var inventoried = false
 
-    internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh().also { inventoried = true } }
+    internal suspend fun refresh() = withContext(dispatchers.io) {
+        // The inventory runs scripts in the phone's Linux, which share ONE installer slot with every install: never
+        // while an install job runs (the picture it holds stays), or a read at a component's start fails the job.
+        if (!phones.choiceInstallBusy()) engine.refresh().also { inventoried = true }
+    }
     private val holds = UnaskedHolds { offer.value }
 
     /** OpenCode's version at the launch path as the last inventory read it; null when not read or none. */
