@@ -59,4 +59,5 @@
     <string name="agentUpdatesFailed">لم تبدأ التحديثات.</string>
     <string name="agentUpdatesNotRemoved">لم تتم إزالة %1$s.</string>
     <string name="agentUpdatesNoSpace">لا توجد مساحة كافية في هذا الهاتف لهذه التحديثات. أبقِ وكيلًا أو أزله، أو حرّر مساحة.</string>
+    <string name="agentUpdatesReviewAction">راجع التحديثات</string>
 </resources>
