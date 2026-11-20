@@ -66,7 +66,7 @@ internal fun WaitPen.plane(scope: DrawScope, phase: Float, still: Boolean) {
         paperPlane(scope, FLIGHT * gone - LEAN_BACK * lean * (1f - gone), 1f - gone)
     }
     if (t > NEXT_FROM) {
-        val come = spring(seg(t, NEXT_FROM, NEXT_BY))
+        val come = settle(seg(t, NEXT_FROM, NEXT_BY))
         paperPlane(scope, NEXT_BEHIND * (come - 1f), NEXT_SMALL + (1f - NEXT_SMALL) * come.coerceAtMost(1f))
     }
     // In the still the air is whole: a plane with air behind it is a plane in flight.
@@ -149,7 +149,7 @@ internal fun WaitPen.dart(scope: DrawScope, phase: Float, still: Boolean) {
         paperDart(scope, DART_FLIGHT * gone - DART_DRAW_BACK * drawnBack, 1f - gone)
     }
     if (t > DART_NEXT_FROM) {
-        val come = spring(seg(t, DART_NEXT_FROM, DART_NEXT_BY))
+        val come = settle(seg(t, DART_NEXT_FROM, DART_NEXT_BY))
         val size = DART_NEXT_SMALL + (1f - DART_NEXT_SMALL) * come.coerceAtMost(1f)
         paperDart(scope, DART_NEXT_BEHIND * (come - 1f), size)
     }

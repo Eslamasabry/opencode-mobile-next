@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -20,10 +19,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -46,21 +50,25 @@ public sealed interface KitLanguageMark {
 @Composable
 public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
-    val ring = if (selected) Modifier.border(2.dp, colors.accent, CircleShape) else Modifier
+    val ring = if (selected) Modifier.kitHairlineBorder(RING_WIDTH, colors.accent, CircleShape) else Modifier
     when (mark) {
         is KitLanguageMark.Flag ->
             if (KitFlagShapes.flags.containsKey(mark.country)) KitCircleFlag(mark.country, modifier.then(ring))
             else Letters(mark.fallback, selected, modifier)
         is KitLanguageMark.Glyph ->
-            Box(
-                modifier.size(MARK_SIZE).clip(CircleShape).background(colors.surface3).then(ring),
-                contentAlignment = Alignment.Center,
+            KitSurface(
+                modifier.size(MARK_SIZE).then(ring),
+                level = SurfaceLevel.Surface3,
+                shape = KitShapeId.Circle,
+                padding = KitSurfacePadding.None,
             ) {
-                KitIcon(
-                    mark.icon,
-                    size = KitIconSize.Large,
-                    tone = if (selected) TextTone.Accent else TextTone.Secondary,
-                )
+                Box(Modifier.size(MARK_SIZE), contentAlignment = Alignment.Center) {
+                    KitIcon(
+                        mark.icon,
+                        size = KitIconSize.Large,
+                        tone = if (selected) TextTone.Accent else TextTone.Secondary,
+                    )
+                }
             }
     }
 }
@@ -102,6 +110,8 @@ public fun KitCircleFlag(country: String, modifier: Modifier = Modifier, size: D
 }
 
 private val MARK_SIZE = 40.dp
+/** The chosen mark's accent ring, drawn by the kit's own edge helper. */
+private val RING_WIDTH = 2.dp
 private const val OPAQUE = "FF"
 private const val HEX = 16
 private const val FLAG_CANVAS = 512f

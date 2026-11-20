@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chats.presentation
 
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
@@ -454,12 +455,7 @@ internal class AgentUpdateChainLog {
                     "started updating=${outcome.value.updating.size} removing=${outcome.value.removing.size} " +
                         "kept=${outcome.value.kept.size} refused=${outcome.value.refused.size}"
                 is Outcome.Failed ->
-                    "refused " +
-                        when (val f = outcome.failure) {
-                            is Failure.Media -> f.problem.name
-                            is Failure.Runtime -> f.problem.name
-                            else -> f::class.simpleName.orEmpty()
-                        }
+                    "refused " + outcome.failure.label()
             }
     }
 }

@@ -62,7 +62,7 @@ internal fun WaitPen.sunrise(scope: DrawScope, phase: Float, still: Boolean) {
             dot(SUN_X, y, SUN_R)
             repeat(RAYS) { i ->
                 val from = RAYS_FROM + i * RAY_STAGGER
-                val length = RAY_LENGTH * spring(seg(t, from, from + RAY_TAKES)) * raysIn
+                val length = RAY_LENGTH * settle(seg(t, from, from + RAY_TAKES)) * raysIn
                 if (length >= RAY_SHORTEST) ray(this, y, (FIRST_RAY_DEGREES + i * RAY_APART_DEGREES) * DEGREES, length)
             }
         }
@@ -110,7 +110,7 @@ internal fun WaitPen.columns(scope: DrawScope, phase: Float, still: Boolean) {
     val sunk = 1f - easeInOut(seg(t, SINK_FROM, SINK_TO))
     with(scope) {
         repeat(COLUMNS) { i ->
-            val up = spring(seg(t, i * STAGGER, i * STAGGER + RISE)) * sunk
+            val up = settle(seg(t, i * STAGGER, i * STAGGER + RISE)) * sunk
             val height = WIDTH + (FIRST_HEIGHT + i * HEIGHT_STEP - WIDTH) * up
             val x = FIRST_X + i * PITCH
             // The last and tallest column is the thing being waited for.

@@ -47,7 +47,7 @@ internal fun WaitPen.downloading(scope: DrawScope, phase: Float, fraction: Float
     val t = if (still) LEAD else turn(phase + LEAD)
     val y = LINE_Y + if (landed) 0f else GIVE * bump(seg(t, GIVE_FROM, GIVE_TO))
     val floor = LINE_Y - ARRIVED_WIDTH * stroke / 2f - CLEARANCE
-    val grown = if (landed) 1f else spring(seg(turn(t + NEXT_EARLY), 0f, GROWS_BY))
+    val grown = if (landed) 1f else settle(seg(turn(t + NEXT_EARLY), 0f, GROWS_BY))
     val sunk = if (landed || t >= 1f - NEXT_EARLY) 0f else SINK_DEPTH * easeIn(seg(t, SINK_FROM, SINK_TO))
     val point = if (landed) floor else STEM_TOP + (POINT_REST - STEM_TOP) * grown + sunk
     val stemTop = if (landed) floor - (POINT_REST - STEM_TOP) else STEM_TOP + sunk
