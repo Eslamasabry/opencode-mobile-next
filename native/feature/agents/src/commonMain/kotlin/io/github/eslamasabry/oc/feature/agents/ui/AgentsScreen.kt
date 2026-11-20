@@ -434,6 +434,15 @@ private fun PhoneTab(
     enabled: KitEnabled,
     gutter: Modifier,
 ) {
+    // The second door to the agents' update sheet: while an offer waits for a decision (also after Not now).
+    if (state.updatesReady) {
+        KitNotice(
+            stringResource(Res.string.agentUpdatesReady),
+            gutter,
+            actions =
+                listOf(KitLineAction(stringResource(Res.string.nativePendingReview), actions::reviewAgentUpdates)),
+        )
+    }
     if (state.phone.needsRestart) {
         KitNotice(stringResource(Res.string.agentsRestartAfterReset), gutter)
     }

@@ -226,8 +226,8 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val toConfirm: List<AgentRemovalAskUi> = emptyList(),
         val working: Boolean = false,
         val failure: Failure? = null,
-        /** The offer key answered here: the sheet stays closed for it until Review, whatever the engine says first. */
-        val closedKey: String? = null,
+        /** The offer answered here: the sheet stays closed for it until a new offer (a Review) comes. */
+        val closedAt: AgentUpdateOffer? = null,
         /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
         val refused: List<AgentRefusalUi> = emptyList(),
     )
@@ -244,7 +244,9 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun current(): AgentUpdateHomeUi = build(offers.value, local.value)
 
     private fun build(offer: AgentUpdateOffer?, now: Local): AgentUpdateHomeUi {
-        val due = offer != null && offer.sheetDue && offer.appUpdateKey != now.closedKey
+        // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer
+        // and the sheet opens again, even when this page outlived the answer.
+        val due = offer != null && offer.sheetDue && offer != now.closedAt
         val sheet =
             AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty())
                 .copy(asking = now.toConfirm.firstOrNull(), working = now.working, failure = now.failure)
@@ -301,12 +303,12 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
             when (outcome) {
                 is Outcome.Ok -> {
                     val refused = AgentUpdateSheetRules.refused(offer, decision, outcome.value)
-                    local.update { it.copy(working = false, closedKey = offer.appUpdateKey, refused = refused) }
+                    local.update { it.copy(working = false, closedAt = offer, refused = refused) }
                 }
                 is Outcome.Failed ->
                     // Busy is waiting, not failing: the choice is kept and applied when the phone is free.
                     if ((outcome.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy) {
-                        local.update { it.copy(working = false, closedKey = offer.appUpdateKey) }
+                        local.update { it.copy(working = false, closedAt = offer) }
                     } else {
                         local.update { it.copy(working = false, failure = outcome.failure) }
                     }
@@ -318,7 +320,7 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun notNow() {
         val offer = offers.value
         if (choices == null || offer == null || local.value.working) return
-        local.update { it.copy(closedKey = offer.appUpdateKey, toConfirm = emptyList(), failure = null) }
+        local.update { it.copy(closedAt = offer, toConfirm = emptyList(), failure = null) }
         log.i { "update sheet: not now" }
         scope.launch { choices.notNow() }
     }
@@ -326,7 +328,7 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     /** Home's Review: the sheet shows again for the current offer. */
     public fun review() {
         val engine = choices ?: return
-        local.update { it.copy(closedKey = null, failure = null) }
+        local.update { it.copy(closedAt = null, failure = null) }
         scope.launch { engine.review() }
     }
 
@@ -394,7 +396,7 @@ public object NoAgentUpdateChoices : AgentUpdateChoices {
  */
 internal class AgentUpdateChainLog {
     private var offerLine: String? = null
-    private var row = false
+    private var rowLine: String? = null
     private var open = false
 
     fun told(offer: AgentUpdateOffer?, home: AgentUpdateHomeUi, bound: Boolean) {
@@ -405,9 +407,18 @@ internal class AgentUpdateChainLog {
             offerLine = line
             log.i { line }
         }
-        val rowNow = home.pending && !home.sheet.visible
-        if (rowNow && !row) log.i { "home: review row shown" }
-        row = rowNow
+        // The Review line's decision, said on every launch and on every change.
+        val row =
+            when {
+                home.pending && !home.sheet.visible -> "home: review row shown"
+                home.sheet.visible -> "home: review row hidden (sheet open)"
+                offer == null -> "home: review row hidden (no offer)"
+                else -> "home: review row hidden (every agent decided)"
+            }
+        if (row != rowLine) {
+            rowLine = row
+            log.i { row }
+        }
         if (home.sheet.visible && !open) log.i { "update sheet: opened" }
         open = home.sheet.visible
     }
