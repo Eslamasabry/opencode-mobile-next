@@ -10,9 +10,6 @@ import kotlin.math.min
  * return. Findings of one rule that start on the same frame are one finding (a block of lines that leaves together).
  */
 public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
-    /** One rule's hit before grouping: the list position it starts at, the node, and how it reads. */
-    private data class Hit(val rule: FlickerRule, val at: Int, val node: FrameNode, val what: String)
-
     /**
      * Every finding in [frames]. When the run is not [final] (more frames will follow) a pattern that needs a frame
      * after the last one is left for the next read.
@@ -42,21 +39,6 @@ public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
             Finding(FlickerRule.FIRST, a.label, first.index, "\"${a.label.take(SHOWN)}\" $what")
         }
     }
-
-    private fun unique(frame: RecordedFrame): Map<String, FrameNode> =
-        frame.nodes
-            .groupBy { n -> n.tag?.let { "#$it" } ?: n.label }
-            .filterValues { it.size == 1 }
-            .mapValues { it.value.single() }
-
-    /** True when one of [scrollers] changed its scroll position anywhere in frames [from]..[to]. */
-    private fun scrolled(frames: List<RecordedFrame>, from: Int, to: Int, scrollers: List<Int>): Boolean {
-        val range = max(from, 0)..min(to, frames.lastIndex)
-        return scrollers.any { s -> range.mapNotNull { frames[it].picture.scrolls[s] }.distinct().size > 1 }
-    }
-
-    /** The positions after [k] a pattern starting at [k] may take to end, at most [span] frames on. */
-    private fun after(frames: List<RecordedFrame>, k: Int, span: Int): IntRange = k + 1..min(k + span, frames.lastIndex)
 
     private fun blinks(frames: List<RecordedFrame>): List<Hit> =
         (1 until frames.size).flatMap { k ->
@@ -118,62 +100,87 @@ public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
             frames[k].nodes.mapNotNull { away ->
                 before[away.id]
                     ?.takeIf { it.box.edgeMove(away.box) > limits.abaDp }
-                    ?.let { was -> moveBack(frames, k, was, away) }
+                    ?.let { was -> moveBack(frames, k, was, away, limits) }
             }
         }
-
-    private fun moveBack(frames: List<RecordedFrame>, k: Int, was: FrameNode, away: FrameNode): Hit? {
-        // The first frame on which the node is back where it was, or gone (then it did not come back).
-        val end =
-            after(frames, k, limits.returnFrames).firstOrNull { i ->
-                frames[i].picture.byId[was.id]?.let { it.box.edgeMove(was.box) <= limits.stillDp } ?: true
-            }
-        val back =
-            end?.takeIf { frames[it].picture.byId[was.id] != null && !scrolled(frames, k - 1, it, was.scrollers) }
-        return back?.let {
-            val path = "moved from ${was.box} to ${away.box} at ${frames[k]} and back at ${frames[it]}"
-            Hit(FlickerRule.ABA, k, was, path)
-        }
-    }
 
     private fun jumps(frames: List<RecordedFrame>, final: Boolean): List<Hit> =
         (1 until frames.size).filter { final || it < frames.lastIndex }.flatMap { k ->
             val before = frames[k - 1].picture.byId
             frames[k].nodes.mapNotNull { now ->
-                before[now.id]?.takeIf { isJump(frames, k, it, now) }?.let { was ->
+                before[now.id]?.takeIf { isJump(frames, k, it, now, limits) }?.let { was ->
                     Hit(FlickerRule.JUMP, k, now, "moved from ${was.box} to ${now.box} in one frame (${frames[k]})")
                 }
             }
         }
+}
 
-    /** A step over the jump distance between k-1 and k, the node still on the frames around it, nothing scrolled. */
-    private fun isJump(frames: List<RecordedFrame>, k: Int, was: FrameNode, now: FrameNode): Boolean =
-        now.box.placeMove(was.box) > limits.jumpDp &&
-            stillAround(frames, k, now.id) &&
-            !scrolled(frames, k - 2, k + 1, now.scrollers)
+/** One rule's hit before grouping: the list position it starts at, the node, and how it reads. */
+private data class Hit(val rule: FlickerRule, val at: Int, val node: FrameNode, val what: String)
 
-    /** The node did not move from k-2 to k-1 nor from k to k+1 (a missing frame, or one without it, is still). */
-    private fun stillAround(frames: List<RecordedFrame>, k: Int, id: Int): Boolean =
-        still(frames, k - 2, k - 1, id) && still(frames, k, k + 1, id)
+private const val SHOWN = 60
+private const val MORE = 3
+private const val MIN_DOUBLE = 2
 
-    private fun still(frames: List<RecordedFrame>, a: Int, b: Int, id: Int): Boolean {
-        val x = frames.getOrNull(a)?.picture?.byId?.get(id)
-        val y = frames.getOrNull(b)?.picture?.byId?.get(id)
-        return x == null || y == null || y.box.placeMove(x.box) <= limits.stillDp
-    }
+private fun unique(frame: RecordedFrame): Map<String, FrameNode> =
+    frame.nodes
+        .groupBy { n -> n.tag?.let { "#$it" } ?: n.label }
+        .filterValues { it.size == 1 }
+        .mapValues { it.value.single() }
 
-    private fun grouped(frames: List<RecordedFrame>, hits: List<Hit>): List<Finding> =
-        hits.groupBy { it.rule to it.at }.map { (_, group) ->
-            val hit = group.first()
-            val others = group.drop(1).take(MORE).joinToString { "\"${it.node.label.take(SHOWN)}\"" }
-            val more = if (group.size > 1) " (+${group.size - 1} more: $others)" else ""
-            val detail = "\"${hit.node.label.take(SHOWN)}\" ${hit.what}$more"
-            Finding(hit.rule, hit.node.label, frames[hit.at].index, detail)
+/** True when one of [scrollers] changed its scroll position anywhere in frames [from]..[to]. */
+private fun scrolled(frames: List<RecordedFrame>, from: Int, to: Int, scrollers: List<Int>): Boolean {
+    val range = max(from, 0)..min(to, frames.lastIndex)
+    return scrollers.any { s -> range.mapNotNull { frames[it].picture.scrolls[s] }.distinct().size > 1 }
+}
+
+/** The positions after [k] a pattern starting at [k] may take to end, at most [span] frames on. */
+private fun after(frames: List<RecordedFrame>, k: Int, span: Int): IntRange = k + 1..min(k + span, frames.lastIndex)
+
+private fun moveBack(
+    frames: List<RecordedFrame>,
+    k: Int,
+    was: FrameNode,
+    away: FrameNode,
+    limits: FlickerLimits,
+): Hit? {
+    // The first frame on which the node is back where it was, or gone (then it did not come back).
+    val end =
+        after(frames, k, limits.returnFrames).firstOrNull { i ->
+            frames[i].picture.byId[was.id]?.let { it.box.edgeMove(was.box) <= limits.stillDp } ?: true
         }
-
-    private companion object {
-        const val SHOWN = 60
-        const val MORE = 3
-        const val MIN_DOUBLE = 2
+    val back =
+        end?.takeIf { frames[it].picture.byId[was.id] != null && !scrolled(frames, k - 1, it, was.scrollers) }
+    return back?.let {
+        val path = "moved from ${was.box} to ${away.box} at ${frames[k]} and back at ${frames[it]}"
+        Hit(FlickerRule.ABA, k, was, path)
     }
 }
+
+/** A step over the jump distance between k-1 and k, the node still on the frames around it, nothing scrolled. */
+private fun isJump(
+    frames: List<RecordedFrame>,
+    k: Int,
+    was: FrameNode,
+    now: FrameNode,
+    limits: FlickerLimits,
+): Boolean =
+    now.box.placeMove(was.box) > limits.jumpDp &&
+        still(frames, k - 2, k - 1, now.id, limits) &&
+        still(frames, k, k + 1, now.id, limits) &&
+        !scrolled(frames, k - 2, k + 1, now.scrollers)
+
+private fun still(frames: List<RecordedFrame>, a: Int, b: Int, id: Int, limits: FlickerLimits): Boolean {
+    val x = frames.getOrNull(a)?.picture?.byId?.get(id)
+    val y = frames.getOrNull(b)?.picture?.byId?.get(id)
+    return x == null || y == null || y.box.placeMove(x.box) <= limits.stillDp
+}
+
+private fun grouped(frames: List<RecordedFrame>, hits: List<Hit>): List<Finding> =
+    hits.groupBy { it.rule to it.at }.map { (_, group) ->
+        val hit = group.first()
+        val others = group.drop(1).take(MORE).joinToString { "\"${it.node.label.take(SHOWN)}\"" }
+        val more = if (group.size > 1) " (+${group.size - 1} more: $others)" else ""
+        val detail = "\"${hit.node.label.take(SHOWN)}\" ${hit.what}$more"
+        Finding(hit.rule, hit.node.label, frames[hit.at].index, detail)
+    }

@@ -68,7 +68,7 @@ internal object FlickerVerdict {
 
     /** `<Class>.<test method>` of the test that called [kitUiTest]: the nearest caller annotated as a test. */
     fun callingTest(): String {
-        val call = Throwable().stackTrace.firstOrNull(::isTest)
+        val call = Thread.currentThread().stackTrace.firstOrNull(::isTest)
         val type = call?.className?.substringAfterLast('.')?.substringBefore('$')
         return call?.let { "$type.${it.methodName}" } ?: UNKNOWN_TEST
     }

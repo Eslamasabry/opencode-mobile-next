@@ -53,7 +53,7 @@ public fun kitUiTest(
     val mode = FlickerVerdict.mode(options.mode)
     val test = KitUiTest(width, height, options, mode)
     test.runTest { test.recording(block) }
-    val found = test.findings()
+    val found = test.findings
     FlickerVerdict.judge(name, found, allow, mode)
 }
 
@@ -118,9 +118,9 @@ public class KitUiTest internal constructor(
      * check (a chat frame that recomposes on every frame of the keyboard's travel), for any step.
      */
     public fun expectRecompositions(atMost: Int, step: () -> Unit) {
-        val before = recomposer().changeCount
+        val before = liveRecomposer.changeCount
         step()
-        val n = recomposer().changeCount - before
+        val n = liveRecomposer.changeCount - before
         if (n > atMost) {
             throw AssertionError("RECOMPOSE: the step recomposed $n times, the ceiling is $atMost")
         }
@@ -134,7 +134,7 @@ public class KitUiTest internal constructor(
         val rec = FrameRecorder(options.limits)
         recorder = rec
         val observer = Snapshot.registerApplyObserver { _, _ -> dirty.set(true) }
-        val scope = CoroutineScope(dispatcher() + Job() + CoroutineExceptionHandler { _, e -> fault = e })
+        val scope = CoroutineScope(dispatcher + Job() + CoroutineExceptionHandler { _, e -> fault = e })
         // Beside the test's own render loop, on the same clock: it samples each frame right after the frame is drawn.
         scope.launch {
             while (isActive) {
@@ -151,20 +151,27 @@ public class KitUiTest internal constructor(
         fault?.let { throw AssertionError("the frame recorder failed", it) }
     }
 
-    internal fun findings(): List<Finding> = recorder?.finish(options.recompositionsPerStep).orEmpty()
+    internal val findings: List<Finding>
+        get() = recorder?.finish(options.recompositionsPerStep).orEmpty()
 
     /** One frame: read again when anything was applied or recomposed since the last (and on the frame after that). */
     private fun sample(rec: FrameRecorder) {
-        val changes = recomposer().changeCount
+        val changes = liveRecomposer.changeCount
         val changed = dirty.getAndSet(false) || changes != lastChanges
-        val fresh = if (changed || echo) runOnUiThread { FrameRecorder.read(rootNodes()) } else null
+        val fresh =
+            if (changed || echo) {
+                runOnUiThread {
+                    val nodes: List<SemanticsNode> =
+                        runWithoutImplicitWait { roots().fetchSemanticsNodes(atLeastOneRootRequired = false) }
+                    FrameRecorder.read(nodes)
+                }
+            } else {
+                null
+            }
         echo = changed
         lastChanges = changes
         rec.add(mainClock.currentTime, changes, fresh)
     }
-
-    private fun rootNodes(): List<SemanticsNode> =
-        runWithoutImplicitWait { roots().fetchSemanticsNodes(atLeastOneRootRequired = false) }
 
     /** The roots, asked without marking a step (the recorder's own look is not one of the test's). */
     private fun roots(): SemanticsNodeInteractionCollection = super.onAllNodes(isRoot(), true)
@@ -173,18 +180,17 @@ public class KitUiTest internal constructor(
         (field("frameRecomposer") as FrameRecomposer).compositionContext as Recomposer
     }
 
-    private fun recomposer(): Recomposer = liveRecomposer
-
-    private fun dispatcher(): TestDispatcher = field("compositionCoroutineDispatcher") as TestDispatcher
-
-    private fun field(name: String): Any =
-        SkikoComposeUiTest::class.java.getDeclaredField(name).let {
-            it.isAccessible = true
-            it.get(this)
-        }
+    private val dispatcher: TestDispatcher
+        get() = field("compositionCoroutineDispatcher") as TestDispatcher
 
     private companion object {
         /** The test clock's frame (SkikoComposeUiTest's FRAME_DELAY_MILLIS). */
         const val FRAME_MS = 16L
     }
 }
+
+private fun SkikoComposeUiTest.field(name: String): Any =
+    SkikoComposeUiTest::class.java.getDeclaredField(name).let {
+        it.isAccessible = true
+        it.get(this)
+    }
