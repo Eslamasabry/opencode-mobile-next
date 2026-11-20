@@ -25,4 +25,5 @@
     <string name="filesReasonNotShowableBody">Ce n’est ni du texte ni une image. Ouvrez-le sur l’ordinateur où il se trouve.</string>
     <string name="filesReasonNotShowablePhoneBody">Ce n’est ni du texte ni une image. Il est sur ce téléphone, une autre application peut donc l’ouvrir\u00A0: choisissez Ouvrir avec.</string>
     <string name="filesShowingSaved">Affichage de ce qui a été enregistré. Le serveur est injoignable pour le moment.</string>
+    <string name="filesReasonOutside">Ce fichier est en dehors du projet et ne peut pas être ouvert ici.</string>
 </resources>

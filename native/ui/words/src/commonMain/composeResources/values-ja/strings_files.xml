@@ -25,4 +25,5 @@
     <string name="filesReasonNotShowableBody">テキストまたは画像ではありません。保存されているパソコンで開いてください。</string>
     <string name="filesReasonNotShowablePhoneBody">テキストまたは画像ではありません。このスマートフォン上にあるため、他のアプリで開けます。「別のアプリで開く」を選んでください。</string>
     <string name="filesShowingSaved">保存済みの内容を表示しています。現在サーバーに接続できません。</string>
+    <string name="filesReasonOutside">このファイルはプロジェクトの外にあるため、ここでは開けません。</string>
 </resources>

@@ -25,4 +25,5 @@
     <string name="filesReasonNotShowableBody">它不是文本或图片。请在文件所在的电脑上打开。</string>
     <string name="filesReasonNotShowablePhoneBody">它不是文本或图片。它在这部手机上，所以其他应用可以打开它：请选择“打开方式”。</string>
     <string name="filesShowingSaved">显示的是已保存的内容。目前无法连接到服务器。</string>
+    <string name="filesReasonOutside">此文件在项目之外，无法在这里打开。</string>
 </resources>

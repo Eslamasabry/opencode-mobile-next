@@ -21,6 +21,7 @@
     <string name="filesReasonMissingBody">It may have been moved or deleted.</string>
     <string name="filesReasonDenied">This app isn't allowed to read that file.</string>
     <string name="filesReasonDeniedBody">Check who can read the folder, then try again.</string>
+    <string name="filesReasonOutside">This file is outside the project and can't be opened here.</string>
     <string name="filesReasonNotShowable">This kind of file can't be shown here.</string>
     <string name="filesReasonNotShowableBody">It isn't text or a picture. Open it on the computer where it lives.</string>
     <string name="filesReasonNotShowablePhoneBody">It isn't text or a picture. It is on this phone, so another app can open it: choose Open with.</string>

@@ -25,4 +25,5 @@
     <string name="filesReasonNotShowableBody">Это не текст и не картинка. Откройте его на компьютере, где он лежит.</string>
     <string name="filesReasonNotShowablePhoneBody">Это не текст и не картинка. Файл на этом телефоне, поэтому его может открыть другое приложение: выберите «Открыть с помощью».</string>
     <string name="filesShowingSaved">Показаны сохранённые данные. Сейчас не удаётся подключиться к серверу.</string>
+    <string name="filesReasonOutside">Этот файл находится вне проекта, и его нельзя открыть здесь.</string>
 </resources>

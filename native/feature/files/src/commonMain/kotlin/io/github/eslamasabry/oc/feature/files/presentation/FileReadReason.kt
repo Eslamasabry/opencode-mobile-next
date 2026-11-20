@@ -18,6 +18,9 @@ public enum class FileReadReason {
     /** The server or this phone would not let the app read it. */
     Denied,
 
+    /** A path outside the project: the viewer reads only inside it, so no second try can change that. */
+    Outside,
+
     /** A kind the viewer cannot show (binary). */
     NotShowable;
 
@@ -25,13 +28,16 @@ public enum class FileReadReason {
     public val retryHelps: Boolean get() = this == Denied
 
     public companion object {
-        public fun of(failure: Failure?): FileReadReason? =
+        private fun refusal(path: String?): FileReadReason = if (path?.startsWith("/") == true) Outside else Denied
+
+        /** [path] still starting with a slash lies outside the project: a refusal there is [Outside]. */
+        public fun of(failure: Failure?, path: String? = null): FileReadReason? =
             when (failure) {
                 is Failure.Media ->
                     when (failure.problem) {
                         MediaProblem.FileTooBig -> TooBig
                         MediaProblem.FileMissing -> Missing
-                        MediaProblem.FileDenied -> Denied
+                        MediaProblem.FileDenied -> refusal(path)
                         MediaProblem.FileNotShowable -> NotShowable
                         else -> null
                     }
