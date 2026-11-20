@@ -200,19 +200,7 @@ public class ChatsViewModel(
     private val shownFeed =
         combine(feed.snapshot, home.snapshot, pinTick) { snapshot, extra, _ -> HomeCachedRows.merge(snapshot, extra.opening) }
 
-    /**
-     * B-333: a row tapped while it cannot open yet (its server still opening, or its list not verified yet): it opens
-     * by itself the moment it can, and the row says it is waiting. Any other tap or a move to another page drops it,
-     * so a conversation the person walked away from never opens. [waitingFrom] is the page the tap was made on.
-     */
-    private val waitingOpen = MutableStateFlow<ConversationRef?>(null)
-
-    /** The row tapped while it could not open, which did not open within the wait's limit: it says Not answering. */
-    private val keptGaveUp = MutableStateFlow<ConversationRef?>(null)
-    private var keptTimer: kotlinx.coroutines.Job? = null
-    private var waitingFrom: io.github.eslamasabry.oc.ui.routes.AppRoute? = null
-
-    /** How many times a row was actually opened (tests: a kept tap opens once, however often the feed moves). */
+    /** How many times a row was actually opened (tests: one tap opens once). */
     internal var openAttempts: Int = 0
         private set
 
@@ -260,8 +248,6 @@ public class ChatsViewModel(
                     confirmWatched = extra.monitoring.requests.firstOrNull { it.key == selected },
                 )
             }
-            .combine(waitingOpen) { base, waiting -> base.copy(waitingOpen = waiting) }
-            .combine(keptGaveUp) { base, gaveUp -> base.copy(keptGaveUp = gaveUp) }
             .combine(renaming) { base, rename ->
                 base.copy(
                     renamable = editable(feed.snapshot.value),
@@ -409,35 +395,6 @@ public class ChatsViewModel(
                         KeptNewTap.Refuse -> {
                             endNewKept()
                             newRefused.value = true
-                        }
-                    }
-                }
-        }
-        // B-333: the kept tap opens its row once the row can open, while the person is still on the page they tapped.
-        // The decision is reduced to one value and acted on only when it changes, and acting never re-enters the tap
-        // path, so a feed or home that emits while the row still waits does no work and writes no state.
-        viewModelScope.launch {
-            combine(waitingOpen, home.snapshot, feed.snapshot, nav.top, connections.servers) { ref, extra, snapshot, top, live ->
-                    KeptTapRules.decide(
-                        ref,
-                        top == waitingFrom,
-                        extra.opening == null,
-                        snapshot.items,
-                        live.mapTo(HashSet()) { it.profile },
-                    )
-                }
-                .distinctUntilChanged()
-                .collect { decision ->
-                    when (decision) {
-                        KeptTap.Wait -> Unit
-                        KeptTap.Drop -> endKept()
-                        is KeptTap.Open -> {
-                            endKept()
-                            openNow(decision.item)
-                        }
-                        is KeptTap.OpenRef -> {
-                            endKept()
-                            openRef(decision.ref)
                         }
                     }
                 }
@@ -651,9 +608,7 @@ public class ChatsViewModel(
     override fun openConversation(ref: ConversationRef) {
         val items = feed.snapshot.value.items
         val openable = items.firstOrNull { it.ref == ref && it.canReopen }
-        keptGaveUp.value = null
         endNewKept()
-        endKept()
         if (home.snapshot.value.opening == null && openable != null) {
             openNow(openable)
             return
@@ -669,21 +624,7 @@ public class ChatsViewModel(
         }
     }
 
-    private fun endKept() {
-        keptTimer?.cancel()
-        keptTimer = null
-        waitingOpen.value = null
-    }
-
-    /** Opens a conversation by its ref: its source is connected and its list read, but the list does not show it. */
-    private fun openRef(ref: ConversationRef) {
-        openAttempts++
-        sheet.value = null
-        feed.prefetch(ref)
-        nav.openChat(ref)
-    }
-
-    /** Opens a row that can open now. Never keeps a tap: the kept-tap path calls it once, with the row it checked. */
+    /** Opens a row that can open now.  */
     private fun openNow(item: io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem) {
         val ref = item.ref
         openAttempts++
@@ -695,7 +636,6 @@ public class ChatsViewModel(
     }
 
     override fun rowAct(row: ConversationRowUi, act: RowAct) {
-        waitingOpen.value = null
         // P14 (F: session_menu.dart:42-48, Details does not need the conversation): the row's facts in a sheet over the
         // home; Back closes it and the person is still on the list.
         if (act == RowAct.Details) {
@@ -713,7 +653,6 @@ public class ChatsViewModel(
     }
 
     override fun archive(row: ConversationRowUi) {
-        waitingOpen.value = null
         if (row.key !in state.value.archivable) return
         // One offer at a time: a new archive sends the earlier one first.
         commitArchive()
@@ -861,7 +800,6 @@ public class ChatsViewModel(
     }
 
     override fun newConversation() {
-        waitingOpen.value = null
         val opening = home.snapshot.value.opening
         when {
             opening == null -> {

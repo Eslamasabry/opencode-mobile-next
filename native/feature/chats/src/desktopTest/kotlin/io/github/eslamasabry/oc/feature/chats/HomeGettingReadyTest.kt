@@ -90,7 +90,7 @@ class HomeGettingReadyTest {
             starting = starting,
         )
 
-    private fun ui(vararg sources: ChatsListSourceUi, keptTap: Boolean = false): ChatsUi {
+    private fun ui(vararg sources: ChatsListSourceUi): ChatsUi {
         val base =
             ChatsState.build(
                 ChatFeedSnapshot(items.toImmutableList()),
@@ -100,12 +100,11 @@ class HomeGettingReadyTest {
                 settingsAvailable = true,
                 nowMs = NOW,
             )
-        val withSources = base.copy(home = base.home.copy(sources = persistentListOf(*sources)))
-        return if (keptTap) withSources.copy(waitingOpen = items.first().ref) else withSources
+        return base.copy(home = base.home.copy(sources = persistentListOf(*sources)))
     }
 
     /** The app has just been installed: the phone's OpenCode answers, the agents' helper is still starting. */
-    private val starting get() = ui(phoneSource(), agentsSource(starting = AppStart.Agents), keptTap = true)
+    private val starting get() = ui(phoneSource(), agentsSource(starting = AppStart.Agents))
 
     private val ready get() = ui(phoneSource(), agentsSource())
 
@@ -149,14 +148,14 @@ class HomeGettingReadyTest {
             .map { node -> node.config[SemanticsProperties.Text].joinToString(" ", transform = AnnotatedString::text) }
 
     @Test
-    fun `HOME-READY-001 replay install - only a row with its own wait rings, the others keep their times`() =
+    fun `HOME-READY-001 replay install - no row rings while the agents start, every row keeps its time`() =
         runDesktopComposeUiTest(360, 900) {
             val show = home(starting)
-            // OW2: the wait is named ONCE, in Home's status line; a row rings only for its OWN wait (a kept tap).
-            val own = rowsOf("Tidy the docs demo README").single()
-            assertTrue(own.startsWith("Tidy the docs demo README") && "Getting ready…" in own, "row: $own")
-            val other = rowsOf("Refactor the sync worker").single()
-            assertTrue("40 min ago" in other && "Getting ready" !in other, "row: $other")
+            // OW2: the wait is named ONCE, in Home's status line; no row rings or says anything of its own.
+            for (title in listOf("Tidy the docs demo README", "Refactor the sync worker")) {
+                val row = rowsOf(title).single()
+                assertTrue("Getting ready" !in row && "min ago" in row, "row: $row")
+            }
             // This phone's own OpenCode is up: its row keeps its time.
             val oc = rowsOf("Explain this project").single()
             assertTrue("55 min ago" in oc && "Getting ready" !in oc, "row: $oc")
@@ -175,7 +174,6 @@ class HomeGettingReadyTest {
             val opening =
                 starting.let {
                     it.copy(
-                        waitingOpen = null,
                         home =
                             it.home.copy(
                                 sources = persistentListOf(phoneSource(), agentsSource()),
@@ -193,11 +191,11 @@ class HomeGettingReadyTest {
         }
 
     @Test
-    fun `HOME-READY-003 guard - an agent update keeps its word, and a source that failed shows times`() =
+    fun `HOME-READY-003 guard - an agent update puts no word or ring on the rows, and a failed source shows times`() =
         runDesktopComposeUiTest(360, 900) {
-            val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating), keptTap = true))
-            assertTrue("Updating…" in rowsOf("Tidy the docs demo README").single())
-            assertTrue("40 min ago" in rowsOf("Refactor the sync worker").single())
+            val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating)))
+            assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
+            assertTrue(spoken("kit-recent-row").none { "Getting ready" in it || "Updating" in it }, "rows: ${spoken("kit-recent-row")}")
             show(ui(phoneSource(), agentsSource(unreachable = true)))
             assertTrue(spoken("kit-recent-row").none { "Getting ready" in it }, "rows: ${spoken("kit-recent-row")}")
             assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())

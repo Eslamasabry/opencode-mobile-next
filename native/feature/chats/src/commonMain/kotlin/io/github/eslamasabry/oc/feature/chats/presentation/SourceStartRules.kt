@@ -70,16 +70,6 @@ public object SourceStartRules {
     /** A saved row takes a tap (kept until its source connects) only when the app is starting that source. */
     public fun takesTap(appStart: AppStart?): Boolean = savedLine(appStart) != SavedRowLine.MustConnect
 
-    /**
-     * A row shows the working mark alone in the time's place only for its OWN wait: its kept tap ([waiting]) waits
-     * for its source; an agent update keeps its own word ("Updating…"). While the phone's agents start, the ONE named
-     * stage in Home's status line says so ("Starting the agents' helper…"); a row never repeats it as a ring of its
-     * own (owner, build 10114: five rows, five rings, none naming anything, and still turning after the
-     * conversation had worked).
-     */
-    public fun rowGettingReady(appStart: AppStart?, waiting: Boolean): Boolean =
-        waiting && appStart != AppStart.AgentsUpdating
-
     /** What a row waiting for its source (a kept tap) says: updating while the agents update, else connecting. */
     public fun waitingWord(appStart: AppStart?): WaitingWord =
         if (appStart == AppStart.AgentsUpdating) WaitingWord.Updating else WaitingWord.Connecting

@@ -485,7 +485,6 @@ class ChatsViewModelTest {
         val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
         vm.openConversation(ref)
         assertEquals(listOf("openChat s1"), nav.calls, "the tap is answered at once; the page waits inside")
-        assertNull(vm.state.value.waitingOpen, "nothing is kept on the row")
     }
 
     @Test
@@ -507,18 +506,6 @@ class ChatsViewModelTest {
         val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
         vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("nobody")))
         assertEquals(emptyList(), nav.calls)
-    }
-
-    @Test
-    fun `B-333 the kept-tap decision opens only a row that can open, on the page it was tapped on`() {
-        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
-        val shut = listOf(item("s1").copy(canReopen = false))
-        val open = listOf(item("s1"))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Wait, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(null, true, true, open))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Drop, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, false, true, open))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Wait, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, true, false, open))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Wait, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, true, true, shut))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Open(open.single()), io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, true, true, open))
     }
 
     @Test

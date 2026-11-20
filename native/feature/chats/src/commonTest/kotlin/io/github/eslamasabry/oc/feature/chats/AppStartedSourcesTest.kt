@@ -23,7 +23,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ServerName
 import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
 import io.github.eslamasabry.oc.feature.chats.presentation.SourcesChipLabel
 import io.github.eslamasabry.oc.feature.chats.presentation.WaitingWord
-import io.github.eslamasabry.oc.feature.chats.presentation.KeptTap
 import io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -79,14 +78,6 @@ class AppStartedSourcesTest {
     }
 
     @Test
-    fun `B-HOME-225 while the agents start no row rings by itself and only an own wait rings`() {
-        assertFalse(SourceStartRules.rowGettingReady(AppStart.Agents, waiting = false))
-        assertFalse(SourceStartRules.rowGettingReady(null, waiting = false))
-        assertTrue(SourceStartRules.rowGettingReady(AppStart.Agents, waiting = true))
-        assertFalse(SourceStartRules.rowGettingReady(AppStart.AgentsUpdating, waiting = true))
-    }
-
-    @Test
     fun `APPSTART-002 a saved row of a source the app starts says starting and takes a tap, a computer's says connect`() {
         assertEquals(SavedRowLine.MustConnect, SourceStartRules.savedLine(null))
         assertEquals(SavedRowLine.PhoneStarting, SourceStartRules.savedLine(AppStart.Phone))
@@ -111,18 +102,6 @@ class AppStartedSourcesTest {
         assertEquals(WaitingWord.Updating, SourceStartRules.waitingWord(AppStart.AgentsUpdating))
         assertEquals(WaitingWord.Connecting, SourceStartRules.waitingWord(AppStart.Agents))
         assertEquals(WaitingWord.Connecting, SourceStartRules.waitingWord(null))
-    }
-
-    @Test
-    fun `APPSTART-006 a kept tap whose source is connected opens by ref when the fresh list no longer shows it`() {
-        val kept = ConversationRef(agents, SessionId("old"))
-        val fresh = listOf(item("new").copy(profileId = agents))
-        // Connected and its list read, but the row is gone from it: open by ref (its page says if it is gone).
-        assertEquals(KeptTap.OpenRef(kept), KeptTapRules.decide(kept, true, true, fresh, setOf(agents)))
-        // Still reading its list (rows not verified): wait.
-        assertEquals(KeptTap.Wait, KeptTapRules.decide(kept, true, true, fresh.map { it.copy(canReopen = false) }, setOf(agents)))
-        // Not connected: wait.
-        assertEquals(KeptTap.Wait, KeptTapRules.decide(kept, true, true, fresh, emptySet()))
     }
 
     private class Nav : AppNavigator {
