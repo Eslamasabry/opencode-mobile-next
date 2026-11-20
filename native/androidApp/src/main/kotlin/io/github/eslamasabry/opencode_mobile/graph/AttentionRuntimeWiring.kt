@@ -184,10 +184,24 @@ class AttentionRuntime(
     /** Conversations whose Stop was tapped and has not settled, with the tap's elapsed-realtime; main thread only. */
     private val stopping = mutableMapOf<ConversationRef, Long>()
 
+    /** Conversations whose last Stop could not be sent: the row says so until its run changes or the app opens. */
+    private val stopFailed = mutableSetOf<ConversationRef>()
+
+    /** The app came to the front: the person has seen the app, so the failed-stop words go. */
+    fun onAppOpened() {
+        scope.launch {
+            if (stopFailed.isEmpty()) return@launch
+            stopFailed.clear()
+            throttle.reset()
+            refresh()
+        }
+    }
+
     /** A Stop was tapped on the row: say "Stopping…" at once (the row posts now, not at the next throttle gap). */
     fun onStopRequested(ref: ConversationRef) {
         scope.launch {
             stopping[ref] = android.os.SystemClock.elapsedRealtime()
+            stopFailed.remove(ref)
             throttle.reset()
             refresh()
         }
@@ -198,6 +212,7 @@ class AttentionRuntime(
         if (sent) return
         scope.launch {
             stopping.remove(ref)
+            stopFailed.add(ref)
             throttle.reset()
             refresh()
         }
@@ -535,8 +550,15 @@ class AttentionRuntime(
         val stopRef = outside?.stop?.ref
         val nowMs = android.os.SystemClock.elapsedRealtime()
         stopping.entries.removeAll { (ref, at) -> ref != stopRef || nowMs - at > STOPPING_MAX_MS }
+        // "Couldn't stop it" lasts until the run's row changes (another run, or none) or the app opens.
+        stopFailed.retainAll { it == stopRef }
         val conversations =
-            outside?.toStatusContent()?.let { it.copy(stopping = stopRef != null && stopRef in stopping) }
+            outside?.toStatusContent()?.let {
+                it.copy(
+                    stopping = stopRef != null && stopRef in stopping,
+                    stopFailed = stopRef != null && stopRef in stopFailed,
+                )
+            }
         latest = conversations ?: StatusModel.build(input, statusWords, clock.now(), ::formatTime)
         mutableConversationsRow.value = conversations
         mutableRow.value = latest
