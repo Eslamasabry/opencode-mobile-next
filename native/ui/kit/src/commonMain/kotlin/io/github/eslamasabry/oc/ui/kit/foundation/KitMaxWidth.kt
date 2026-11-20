@@ -28,13 +28,13 @@ import io.github.eslamasabry.oc.ui.design.layout.CapRole
  */
 public fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Modifier {
     val capDp = role.capDp ?: return this
-    // A reading column centred by default moves to the start inside a pane beside a list (LocalKitCapsAtStart).
-    return this then KitMaxWidthElement(capDp.dp, align, atStartBeside = align == CapAlign.Center && role in CapsAtStartRoles)
+    return kitMaxWidth(capDp.dp, align)
 }
 
 /** Any width cap, at [align] in a wider slot (Dart `KitMaxWidth.cap`; default alignment: the middle). */
 public fun Modifier.kitMaxWidth(maxWidth: Dp, align: CapAlign = CapAlign.Center): Modifier =
-    this then KitMaxWidthElement(maxWidth, align)
+    // A centred page column moves to the start inside a pane beside a list (LocalKitCapsAtStart).
+    this then KitMaxWidthElement(maxWidth, align, atStartBeside = CapsAtStart.follows(maxWidth, align))
 
 public object KitMaxWidth {
     /**

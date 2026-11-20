@@ -79,6 +79,8 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitCapsAtStart
+import io.github.eslamasabry.oc.ui.routes.LocalRestingBeside
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -222,7 +224,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
             else -> null
         }
-    KitBackGuard(enabled = state.sheet == null && state.profile != null, onBack = actions::back)
+    // Big screens: beside the conversation list this page sits at the pane's start; resting there (nothing chosen in the
+    // list) it is not on the back stack, so it has nothing to close to and Back leaves as Home does.
+    val beside = LocalKitCapsAtStart.current
+    val resting = LocalRestingBeside.current
+    KitBackGuard(enabled = !resting && state.sheet == null && state.profile != null, onBack = actions::back)
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
             topBar = {
@@ -241,13 +247,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 )
                             }
                         },
-                    centred = true,
-                    exit = KitTopBarExit.Close,
+                    // Beside the list the title starts where the box starts.
+                    centred = !beside,
+                    exit = if (resting) KitTopBarExit.None else KitTopBarExit.Close,
                     exitLabel = stringResource(Res.string.kitSheetClose),
                     onExit = actions::back,
                 )
             },
-            width = KitScreenWidth.Reading,
+            width = if (beside) KitScreenWidth.List else KitScreenWidth.Reading,
             loading = state.busy,
             loadingLabel = if (preparing) gettingReady else working,
             bottom = {

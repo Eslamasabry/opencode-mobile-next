@@ -46,7 +46,11 @@ import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
+import io.github.eslamasabry.oc.ui.routes.LocalRestingBeside
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -163,7 +167,7 @@ class ListPaneHomeRenders {
                             localeTag = "en",
                             stillFrame = true,
                         ) {
-                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { ChatEnvironment(content) }
                         }
                     }
                 }
@@ -188,19 +192,48 @@ class ListPaneHomeRenders {
             }
         }
 
-    /** The list pane with nothing open beside it (New conversation rests there): no row chosen. */
+    /** The list pane with New conversation resting beside it: no row chosen, no second +. */
     @Test
     fun homeListPaneNothingOpen() =
-        shoot("home-pane-rest-360x800", 360, 800) { KitPaneWindow(Modifier.fillMaxSize()) { ChatsScreen(homeState(), RecordingChatsActions()) } }
+        shoot("home-pane-rest-360x800", 360, 800) {
+            KitPaneWindow(Modifier.fillMaxSize()) {
+                CompositionLocalProvider(LocalOpenBeside provides ChatsRoute.New(profile = null)) { ChatsScreen(homeState(), RecordingChatsActions()) }
+            }
+        }
 
-    /** The pages pane at rest: New conversation in 920 dp, its column at the pane's start. */
+    /** No conversations yet, New conversation resting beside the list (the tablet emulator's first screen). */
+    @Test
+    fun emptyListPane() =
+        shoot("home-empty-pane-360x800", 360, 800) {
+            KitPaneWindow(Modifier.fillMaxSize()) {
+                CompositionLocalProvider(LocalOpenBeside provides ChatsRoute.New(profile = null)) {
+                    ChatsScreen(ChatsUi(phase = ChatsPhase.Empty), RecordingChatsActions())
+                }
+            }
+        }
+
+    /** The pages pane at rest: New conversation in 920 dp, at the pane's start, no Close. */
     @Test
     fun newConversationPane() =
         shoot("new-pane-920x800", 920, 800) {
             KitPaneWindow(Modifier.fillMaxSize()) {
-                CompositionLocalProvider(LocalKitCapsAtStart provides true) { NewConversationScreen(newUi, NewActions) }
+                CompositionLocalProvider(LocalKitCapsAtStart provides true, LocalRestingBeside provides true) {
+                    NewConversationScreen(newUi.copy(text = ""), NewActions)
+                }
             }
         }
+
+    /** The phone, unchanged (before and after must not differ by a pixel): Home, empty Home, New conversation. */
+    @Test
+    fun phone() {
+        shoot("phone-home-360x780", 360, 780) { ChatsScreen(homeState(), RecordingChatsActions()) }
+        shoot("phone-empty-360x780", 360, 780) { ChatsScreen(ChatsUi(phase = ChatsPhase.Empty), RecordingChatsActions()) }
+        shoot("phone-new-360x780", 360, 780) { NewConversationScreen(newUi, NewActions) }
+    }
+
+    /** Before: today's empty Home over the whole 1280 x 800 window. */
+    @Test
+    fun emptyBefore() = shoot("before-home-empty-1280x800", 1280, 800) { ChatsScreen(ChatsUi(phase = ChatsPhase.Empty), RecordingChatsActions()) }
 
     /** Before: today's Home over the whole 1280 x 800 window. */
     @Test

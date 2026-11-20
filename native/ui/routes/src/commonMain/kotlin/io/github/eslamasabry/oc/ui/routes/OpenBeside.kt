@@ -10,3 +10,10 @@ import androidx.navigation3.runtime.NavKey
  * one (Home: the open conversation's row). Null on a phone and wherever the list stands alone: nothing is chosen.
  */
 public val LocalOpenBeside: ProvidableCompositionLocal<NavKey?> = compositionLocalOf { null }
+
+/**
+ * True for the page that rests beside a list while nothing from the list is open (big screens: Home's New
+ * conversation). It is not on the back stack: it has nothing to close to, so it shows no Close and does not take Back
+ * (Back leaves, as Home does). False everywhere else, including the same page opened over a conversation.
+ */
+public val LocalRestingBeside: ProvidableCompositionLocal<Boolean> = compositionLocalOf { false }

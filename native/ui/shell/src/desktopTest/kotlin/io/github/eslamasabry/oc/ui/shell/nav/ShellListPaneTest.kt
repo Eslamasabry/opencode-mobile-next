@@ -395,7 +395,7 @@ class ShellListPaneTest {
     @Test
     fun `B-NAV-219 the list knows which conversation is open beside it`() {
         at(1280, 800) { p ->
-            assertEquals(null, p.openSeen, "nothing chosen while the new conversation rests beside the list")
+            assertTrue(p.openSeen is ChatsRoute.New, "the resting new conversation is what is open beside the list")
             open(3)
             assertEquals(ChatRoute(ref(3)), p.openSeen)
             open(4)

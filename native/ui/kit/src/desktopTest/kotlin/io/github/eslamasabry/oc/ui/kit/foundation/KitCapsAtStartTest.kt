@@ -42,11 +42,13 @@ class KitCapsAtStartTest {
                         Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.Reading).height(10.dp).testTag("reading"))
                         Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.State).height(10.dp).testTag("state"))
                         Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.Dialog).height(10.dp).testTag("dialog"))
+                        // The chat's pane: the conversation's cap with its gutters, as a plain width.
+                        Box(Modifier.fillMaxWidth().kitMaxWidth(732.dp).height(10.dp).testTag("chat"))
                     }
                 }
             }
             out =
-                listOf("conversation", "reading", "state", "dialog").associateWith {
+                listOf("conversation", "reading", "state", "dialog", "chat").associateWith {
                     val b = onNodeWithTag(it).getBoundsInRoot()
                     b.left.value to b.right.value
                 }
@@ -61,10 +63,12 @@ class KitCapsAtStartTest {
         assertEquals(0f to 720f, beside["reading"])
         assertEquals(280f to 720f, beside["state"], "a state stays centred")
         assertEquals(260f to 740f, beside["dialog"], "a dialog stays centred")
+        assertEquals(0f to 732f, beside["chat"], "the chat's transcript column starts at the pane's start")
         val rtl = bounds(atStart = true, rtl = true)
         assertEquals(300f to 1000f, rtl["conversation"], "right to left: the start is the right side")
         val phone = bounds(atStart = false)
         assertEquals(150f to 850f, phone["conversation"], "one page (a phone, a window without panes): centred as before")
         assertEquals(140f to 860f, phone["reading"])
+        assertEquals(134f to 866f, phone["chat"])
     }
 }

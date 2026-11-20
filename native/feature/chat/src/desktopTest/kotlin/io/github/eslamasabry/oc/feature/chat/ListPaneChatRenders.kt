@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
@@ -38,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitPaneWindow
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -129,7 +131,9 @@ class ListPaneChatRenders {
                             localeTag = "en",
                             stillFrame = true,
                         ) {
-                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                CompositionLocalProvider(LocalKitRedactor provides Redactor()) { content() }
+                            }
                         }
                     }
                 }

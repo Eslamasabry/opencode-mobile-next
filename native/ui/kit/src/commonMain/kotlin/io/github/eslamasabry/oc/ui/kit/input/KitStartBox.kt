@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitCapsAtStart
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -169,7 +170,8 @@ public fun KitStartBox(
         modifier
             .offset { androidx.compose.ui.unit.IntOffset((nudge.value * NUDGE_DP.dp.toPx()).toInt(), 0) }
             .padding(top = haloRoom)
-            .kitMaxWidth(CapRole.Conversation)
+            // Beside a list (big screens) the box fills its pane between the gutters, up to the widest frame cap.
+            .kitMaxWidth(if (LocalKitCapsAtStart.current) CapRole.List else CapRole.Conversation)
             .fillMaxWidth()
             .heightIn(min = START_BOX_MIN_HEIGHT.dp)
             .then(halo)

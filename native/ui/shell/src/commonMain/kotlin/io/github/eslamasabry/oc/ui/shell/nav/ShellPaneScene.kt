@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
+import io.github.eslamasabry.oc.ui.routes.LocalRestingBeside
 
 /*
  * Big screens, slice 3 (BS-LIST-PANE): on a window 840 dp wide or more that is not short, a list stays as the start pane
@@ -168,20 +169,21 @@ private fun PanesRow(list: NavEntry<NavKey>, detail: NavEntry<NavKey>?, rest: Na
     // or a third of the window).
     val scaled = Layout.sidebarWidth(LocalDensity.current.fontScale, LocalKitWindow.current.widthDp)
     val listWidth = maxOf(ShellPanes.LIST_WIDTH_DP.toFloat(), scaled)
-    val open = detail?.metadata?.get(ShellPanes.ROUTE_KEY) as? NavKey
+    val page = detail ?: rest
+    val open = page?.metadata?.get(ShellPanes.ROUTE_KEY) as? NavKey
     CompositionLocalProvider(LocalShellInPane provides true) {
         Row(Modifier.fillMaxSize().typingLandsBeside(detailFocus)) {
             KitPaneWindow(Modifier.width(listWidth.dp).fillMaxHeight()) {
                 Box {
-                    // The list shows the open page's row as the chosen one.
+                    // The list shows the open page's row as the chosen one (and, with the resting page open, no second
+                    // way to it).
                     CompositionLocalProvider(LocalOpenBeside provides open) { list.Content() }
                     KitDivider(Modifier.align(Alignment.CenterEnd).fillMaxHeight(), vertical = true)
                 }
             }
             KitPaneWindow(Modifier.weight(1f).fillMaxHeight().focusRequester(detailFocus).focusGroup()) {
                 // Beside the list, the page's reading column starts at the pane's start (decision (a)).
-                CompositionLocalProvider(LocalKitCapsAtStart provides true) {
-                    val page = detail ?: rest
+                CompositionLocalProvider(LocalKitCapsAtStart provides true, LocalRestingBeside provides (detail == null)) {
                     if (page != null) key(page.contentKey) { page.Content() }
                 }
             }

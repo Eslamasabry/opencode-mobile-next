@@ -108,6 +108,9 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
 import io.github.eslamasabry.oc.ui.kit.row.kitChosenRow
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.row.KitRowPanel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
@@ -296,6 +299,10 @@ public fun ChatsScreen(
     // skeleton or a filter that matched nothing had no way to start at all). A + tapped before the server is open is
     // answered by the home's "still opening" notice, so it never has to hide.
     val footBar = HomeFootBarRules.shown(state.phase)
+    // Big screens: the page open beside this list. With New conversation itself beside it, the + is not shown a second
+    // time (one name, one place); beside any page the empty state is one quiet line, the page beside already invites.
+    val openBeside = LocalOpenBeside.current
+    val newBeside = openBeside is ChatsRoute.New
     // Under Glass the floating + is liquid glass over the list (the kit records it only then).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
@@ -376,6 +383,7 @@ public fun ChatsScreen(
                     fabLabel = stringResource(Res.string.chatsHomeNewChat),
                     fabIcon = KitIcons.add,
                     onFab = actions::newConversation,
+                    fabVisible = !newBeside,
                     // The light runs round the + only while a New conversation tap is kept for a server that is still
                     // opening (the notice above names the wait, the same condition): the conversation is being
                     // prepared and opens by itself. It fades out the moment that ends: opened, cancelled, refused or
@@ -546,6 +554,18 @@ public fun ChatsScreen(
                 ChatsPhase.Opening ->
                     if (state.home.opening?.phase != ChatsOpeningPhase.Failed) item(key = "opening", contentType = "opening") { KitSkeletonRows() }
                 ChatsPhase.Empty ->
+                    if (openBeside != null)
+                        item(key = "empty", contentType = "empty") {
+                            QuietEmpty(
+                                stringResource(Res.string.chatsHomeEmptyTitle),
+                                // New conversation beside it is the way to start; beside a conversation the button stays.
+                                if (newBeside) null
+                                else KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+                                if (state.hasComputer) null
+                                else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
+                            )
+                        }
+                    else
                     item(key = "empty", contentType = "empty") {
                         // A person with no computer saved may have come for one: the quiet second way in, only then.
                         CalmPage(
@@ -701,6 +721,23 @@ private fun LazyItemScope.calmRoom(list: LazyListState, key: String): Modifier {
     }
     val px = room ?: return Modifier.fillParentMaxSize()
     return Modifier.fillParentMaxWidth().height(maxOf(with(LocalDensity.current) { px.toDp() }, CALM_MIN_ROOM_DP.dp))
+}
+
+/**
+ * The empty list beside a page (big screens): one quiet line at the list's gutter, and the quiet way to a computer when
+ * none is saved. The page beside (New conversation) already invites typing, so the calm page's title, body and button
+ * would only say it twice.
+ */
+@Composable
+private fun QuietEmpty(line: String, primary: KitAction?, tertiary: KitAction?) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S4.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        KitText(line, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        primary?.let { KitButton(it, fullWidth = true) }
+        tertiary?.let { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
+    }
 }
 
 @Composable
