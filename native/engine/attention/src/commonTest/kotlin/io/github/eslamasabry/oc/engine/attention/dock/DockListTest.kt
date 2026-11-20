@@ -219,4 +219,51 @@ class DockListTest {
         assertEquals(2, model.rows.size)
         assertEquals(2, model.more)
     }
+
+    @Test
+    fun `B-LAMP-001 idle parent with working sub-agent has ownStateRunning false while working parent has true`() {
+        val child = ConversationRef(p, SessionId("child"))
+        val idleParent =
+            DockModel.empty(cap = 20)
+                .reduce(DockEvent.Meta(child, "Explore", "explore", a.sessionId))
+                .reduce(DockEvent.RunStarted(child))
+        val idleRow = build(idleParent).rows.single()
+        assertEquals(DockListState.Working, idleRow.state)
+        assertFalse(idleRow.ownStateRunning)
+
+        val runningParent = idleParent.reduce(DockEvent.RunStarted(a))
+        val runningRow = build(runningParent).rows.single()
+        assertEquals(DockListState.Working, runningRow.state)
+        assertTrue(runningRow.ownStateRunning)
+    }
+
+    private fun ask(kind: String, patterns: List<String>, vararg meta: Pair<String, String>) =
+        PermissionRequest(
+            RequestId("rx"), b.sessionId, kind, patterns.let { persistentListOf(*it.toTypedArray()) },
+            JsonObject(meta.associate { it.first to JsonPrimitive(it.second) }), persistentListOf(), null, false, null,
+        )
+
+    @Test
+    fun `B-LAMP-008 the Needs-you row names what a fetch, a search or another tool asks`() {
+        val secret = "sk-" + "abcdefghijkl1234"
+        fun words(request: PermissionRequest): DockRequestWords {
+            val f = DockFacts { clock }
+            f.feed(p, GatewayEvent.PermissionAsked(request))
+            return f.requestWords(b, DockRequestRef(DockRequestKind.Permission, "rx"))!!
+        }
+        val fetch = words(ask("webfetch", listOf("*"), "url" to "https://user:pw@example.org/docs?token=$secret"))
+        assertEquals("fetch" to "example.org", fetch.action to fetch.target, "a fetch names its host only")
+        assertFalse(secret in fetch.target)
+        fun pair(r: PermissionRequest) = words(r).let { it.action to it.target }
+        assertEquals("search" to "fox tales", pair(ask("websearch", listOf("*"), "query" to "fox tales")))
+        assertEquals("tool" to "task", pair(ask("task", emptyList(), "description" to "write the tests")))
+        assertEquals("tool" to "skill", pair(ask("skill", listOf("src/**"))))
+        val leaked = words(ask("websearch", listOf("*"), "query" to "my key is $secret"))
+        assertFalse(secret in leaked.target, "a search is masked like the chat card")
+        // A command and a file are still worded as before.
+        assertEquals("run" to "git push", pair(ask("bash", emptyList(), "command" to "git push")))
+        // Nothing to name at all stays the plain "asks for permission", never a made-up target.
+        assertEquals("", words(ask("webfetch", listOf("*"))).target)
+        assertEquals("", words(ask("", emptyList())).target)
+    }
 }

@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMessageFace
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
@@ -154,6 +155,8 @@ public fun KitPromptBubble(
                 // (kit_message.dart:629-641).
                 (if (attachments.isEmpty()) Modifier else Modifier.fillMaxWidth())
                     .testTag(PROMPT_BUBBLE_TAG)
+                    // F4, option C: inside a message's actions the bubble is the face its menu opens on.
+                    .kitMessageFace(dressed?.shape ?: shape)
                     .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(kitPromptBubbleFill(colors), shape).border(kitHairline(), colors.hairline, shape))
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
             ) {

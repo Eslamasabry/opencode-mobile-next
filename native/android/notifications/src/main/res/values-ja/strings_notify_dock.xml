@@ -23,4 +23,7 @@
     </plurals>
     <string name="notify_status_action_open_named">%1$sを開く</string>
     <string name="notify_status_action_stop_named">%1$sを停止</string>
+    <string name="notify_status_action_stop">停止</string>
+    <string name="notify_status_stopping">停止しています…</string>
+    <string name="notify_status_stop_failed">停止できませんでした。アプリを開いてもう一度お試しください。</string>
 </resources>

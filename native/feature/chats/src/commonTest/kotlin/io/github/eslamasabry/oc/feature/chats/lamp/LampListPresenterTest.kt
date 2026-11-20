@@ -1,11 +1,15 @@
 package io.github.eslamasabry.oc.feature.chats.lamp
 
+import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
+import io.github.eslamasabry.oc.engine.attention.dock.DockFacts
+import io.github.eslamasabry.oc.engine.attention.dock.DockList
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState.Done
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState.Failed
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState.Idle
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState.NeedsYou
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState.Working
 import io.github.eslamasabry.oc.engine.attention.dock.DockListHidden
+import io.github.eslamasabry.oc.engine.attention.dock.DockModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockProgress
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
@@ -336,5 +340,21 @@ class LampListPresenterTest {
         assertNull(ui.row("a").title)
         assertEquals("Laptop", ui.row("a").server)
         assertEquals(1, ui.row("b").tree!!.count)
+    }
+
+    @Test
+    fun `B-LAMP-001 idle parent with working sub-agent gets no Stop while its sub-agent keeps Stop`() {
+        val parent = lref("p")
+        val child = lref("c")
+        val dock =
+            DockModel.empty(cap = 20)
+                .reduce(DockEvent.Meta(child, "Explore", "explore", parent.sessionId))
+                .reduce(DockEvent.RunStarted(child))
+        val list = DockList.build(dock.ui, DockFacts { 10_000L })
+        val ui = present(list, LampInputs(nowMs = 10_000L))
+        val row = ui.row("p")
+        assertEquals(LampState.Working, row.state)
+        assertNull(row.stop, "an idle parent whose sub-agent works must not offer Stop")
+        assertEquals(LampStopUi.Button, row.tree!!.children.single().stop, "the working sub-agent keeps Stop")
     }
 }

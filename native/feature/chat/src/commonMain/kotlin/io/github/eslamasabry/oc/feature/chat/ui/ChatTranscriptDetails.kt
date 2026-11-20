@@ -378,7 +378,7 @@ internal fun TurnMetadata(
                 },
         )
     if (words.isNotEmpty())
-        KitQuietLine(words.joinToString(" · "), Modifier.testTag("chat-turn-metadata"))
+        KitQuietLine(words.joinReplyMetadata(" · "), Modifier.testTag("chat-turn-metadata"))
 }
 
 @Composable

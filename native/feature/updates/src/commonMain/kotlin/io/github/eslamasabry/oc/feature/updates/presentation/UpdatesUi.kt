@@ -94,7 +94,7 @@ public data class UpdatesUi(
     val notes: String? = null,
 )
 
-private const val MEGABYTE = 1_048_576.0
+private const val MEGABYTE = 1_000_000.0
 
 /** The page's state from the engine's [state] at [now] (Flutter `_UpdatesBody.build`). Pure. */
 public fun updatesUi(state: AppUpdateState, now: Instant): UpdatesUi {

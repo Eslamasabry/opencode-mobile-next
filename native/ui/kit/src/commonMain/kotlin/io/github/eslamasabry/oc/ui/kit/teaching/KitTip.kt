@@ -71,6 +71,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotionSpecs
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.pace
@@ -96,20 +97,55 @@ public object TipRules {
     public fun inside(anchorHeightPx: Float, windowHeightPx: Float): Boolean = anchorHeightPx > windowHeightPx / 2f
 
     /**
-     * Beside an edge part ([KitTipPlacement.BesideEdge]): the tip stands on the page side of the anchor, [gapPx] away,
-     * centred on it vertically and kept in the window, so it points at a 16 dp light and never lies over it. Returns
-     * the tip's top-left (px).
+     * By an edge part ([KitTipPlacement.BesideEdge]): the tip stands on the page side of the anchor's gutter box, its
+     * end edge on the box's inner edge, and ABOVE the mark by [gapPx] (below it only where there is no room above),
+     * kept in the window. The row beside the light is where a reply's buttons stand, so the tip is never level with
+     * it. Returns the tip's top-left (px).
      */
     public fun besideEdge(anchorLeft: Int, anchorTop: Int, anchorRight: Int, anchorBottom: Int, windowWidth: Int, windowHeight: Int, tipWidth: Int, tipHeight: Int, gapPx: Int): Pair<Int, Int> {
         val onRight = (anchorLeft + anchorRight) / 2 > windowWidth / 2
-        val x = (if (onRight) anchorLeft - gapPx - tipWidth else anchorRight + gapPx).coerceIn(0, (windowWidth - tipWidth).coerceAtLeast(0))
-        val y = ((anchorTop + anchorBottom) / 2 - tipHeight / 2).coerceIn(0, (windowHeight - tipHeight).coerceAtLeast(0))
+        val maxX = (windowWidth - tipWidth).coerceAtLeast(0)
+        val x = (if (onRight) anchorLeft - tipWidth else anchorRight).coerceIn(0, maxX)
+        val above = anchorTop - gapPx - tipHeight
+        val maxY = (windowHeight - tipHeight).coerceAtLeast(0)
+        val y = (if (above >= 0) above else anchorBottom + gapPx).coerceIn(0, maxY)
         return x to y
     }
+
+    /**
+     * Whether a tip may be drawn now: asked for, no sheet or dialog over the page, and, for a tip that yields
+     * ([KitTipPlacement.BesideEdge]), no other tip on screen. A yielding tip waits; it never stacks over another.
+     */
+    public fun mayShow(visible: Boolean, modalOpen: Boolean, yieldsToOthers: Boolean, othersShowing: Int): Boolean =
+        visible && !modalOpen && !(yieldsToOthers && othersShowing > 0)
 
     /** How far the tip rises toward its anchor as it appears: Full only. */
     public fun riseDp(state: KitMotionState): Int = if (state.travels) MotionTokens.TIP_RISE_DP else 0
 }
+
+/**
+ * How many tips that do not yield are drawn in one page root, so a tip that yields ([KitTipPlacement.BesideEdge]) can
+ * wait for a calm moment instead of lying over them (owner, look 10114: two tips stacked over a reply's footer). One
+ * is held by each kit theme root and passed down by [LocalKitTipPresence], so a page counts its own tips only; with
+ * none provided there is no other tip.
+ */
+public class KitTipPresence {
+    private val shown = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** The tips on screen in this root (a snapshot read: a composable that reads it recomposes when it changes). */
+    public val others: Int get() = shown.intValue
+
+    internal fun enter() { shown.intValue += 1 }
+
+    internal fun leave() { shown.intValue = (shown.intValue - 1).coerceAtLeast(0) }
+}
+
+/** The page root's [KitTipPresence]; null where none is provided (then no other tip is counted). */
+public val LocalKitTipPresence: ProvidableCompositionLocal<KitTipPresence?> = staticCompositionLocalOf { null }
+
+/** How many other tips this root shows right now (0 when the root keeps no count). */
+@Composable
+public fun kitTipsOnScreen(): Int = LocalKitTipPresence.current?.others ?: 0
 
 /**
  * A part whose words a tip must never cover (owner, look 10100: "Hold Send…" lay over a shared link in the message
@@ -129,8 +165,9 @@ public enum class KitTipPlacement {
     Auto,
 
     /**
-     * Beside a thin part on the screen edge (the edge light, 16 dp): on the page side of it, centred on it, moving
-     * sideways toward it as it appears. Above or below would cover the reply's buttons that line up with the light.
+     * By a thin part on the screen edge (the edge light): on the page side of its gutter box and above its mark, moving
+     * sideways toward it as it appears. Level with it would cover the reply's buttons that line up with the light; the
+     * bubble takes no touch there, so a button under it still answers.
      */
     BesideEdge,
 }
@@ -174,11 +211,7 @@ public fun KitTip(
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val shown = remember { MutableTransitionState(false) }
-    // One rule for every tip (F-005): a tip is never drawn over an open sheet or dialog. It waits, and shows once the
-    // modal has gone (its hold starts then, so the person gets the whole of it).
-    val host = LocalKitSheetHost.current
-    val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
-    val show = visible && !modalOpen
+    val show = rememberTipMayShow(visible, beside)
     shown.targetState = show
     LaunchedEffect(show, holdMs) {
         if (show) {
@@ -189,6 +222,7 @@ public fun KitTip(
     // The anchor's place while the tip shows, for the layer that draws it (read only when the tip is placed).
     var shownAt by remember { mutableStateOf(Rect.Zero) }
     val showing = shown.currentState || shown.targetState
+    TipCounts(showing && !beside)
     Box(
         modifier.onGloballyPositioned {
             val at = it.boundsInWindow()
@@ -204,18 +238,13 @@ public fun KitTip(
             // Never over the words of the part around the anchor (the message box): above or below all of it.
             val place = rememberTipPosition(above, gap, beside, clearance)
             val bubble: @Composable () -> Unit = {
-                val enter: EnterTransition =
-                    if (motion.reduced) EnterTransition.None
-                    else fadeIn(specs.tipFade()) +
-                        (when {
-                            rise == 0 -> EnterTransition.None
-                            // Toward the light: from the page side, whichever physical edge it sits on.
-                            beside -> slideInHorizontally(specs.pace<IntOffset>(KitPace.Standard)) { if (anchorOnRight) -rise else rise }
-                            else -> slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { if (above) -rise else rise }
-                        })
+                val enter = tipEnter(specs, motion.reduced, rise, if (beside) anchorOnRight else null, above)
                 val exit: ExitTransition = if (motion.reduced) ExitTransition.None else fadeOut(specs.tipFade())
                 AnimatedVisibility(shown, enter = enter, exit = exit, label = "kit.tip") {
-                    KitTipBubble(message, Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } })
+                    KitTipBubble(
+                        message,
+                        if (beside) Modifier else Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } },
+                    )
                 }
             }
             // In the window's own layer where there is one (every app screen): a tip that opened a window of its own as
@@ -226,6 +255,50 @@ public fun KitTip(
             if (layer != null) TipInLayer(layer, place, { shownAt.takeIf { it != Rect.Zero } ?: bounds[0] }, bubble)
             else Popup(popupPositionProvider = place, onDismissRequest = { dismiss() }, properties = PopupProperties(focusable = false, dismissOnClickOutside = true)) { bubble() }
         }
+    }
+}
+
+/**
+ * How the tip comes in: a fade and, at Full, a small rise toward its anchor. [sideOnRight] is set for a tip by an
+ * edge part (it comes in sideways, from the page side, whichever physical edge the part sits on); null for the rest.
+ */
+private fun tipEnter(
+    specs: KitMotionSpecs,
+    reduced: Boolean,
+    rise: Int,
+    sideOnRight: Boolean?,
+    above: Boolean,
+): EnterTransition {
+    if (reduced) return EnterTransition.None
+    val pace = specs.pace<IntOffset>(KitPace.Standard)
+    val slide: EnterTransition =
+        when {
+            rise == 0 -> EnterTransition.None
+            sideOnRight != null -> slideInHorizontally(pace) { if (sideOnRight) -rise else rise }
+            else -> slideInVertically(pace) { if (above) -rise else rise }
+        }
+    return fadeIn(specs.tipFade()) + slide
+}
+
+/**
+ * One rule for every tip (F-005): a tip is never drawn over an open sheet or dialog. It waits, and shows once the
+ * modal has gone (its hold starts then, so the person gets the whole of it). A tip by the edge also waits for any
+ * other tip on screen.
+ */
+@Composable
+private fun rememberTipMayShow(visible: Boolean, yieldsToOthers: Boolean): Boolean {
+    val host = LocalKitSheetHost.current
+    val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
+    return TipRules.mayShow(visible, modalOpen, yieldsToOthers, kitTipsOnScreen())
+}
+
+/** Counts this tip in its root while it is on screen, so a tip that yields can wait for it. */
+@Composable
+private fun TipCounts(counts: Boolean) {
+    val presence = LocalKitTipPresence.current
+    DisposableEffect(counts, presence) {
+        if (counts) presence?.enter()
+        onDispose { if (counts) presence?.leave() }
     }
 }
 

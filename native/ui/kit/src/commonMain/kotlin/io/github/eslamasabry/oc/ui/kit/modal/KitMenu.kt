@@ -72,6 +72,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -231,11 +234,14 @@ public fun KitMenu(
     if (open) {
         last.items = items
         last.title = title
+        // F4, option C: a held message's menu opens on its face and dims the page around it.
+        last.focus = pressed?.focus
+        last.point = pressed?.point
     }
     Box(modifier.onGloballyPositioned { own = it.menuAnchorBox() }) {
         anchor()
         if (MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty()) {
-            if (open) last.at = MenuPlacement.anchorFor(own, pressed, band)
+            if (open) last.at = last.focus?.bounds ?: MenuPlacement.anchorFor(own, pressed, band)
             // Smoothness round 2: in the window's own menu layer (KitSheetHost), never a popup window of its own (a new
             // window per open cost 11-13 % late frames in every style). Outside a host, the popup as before.
             val layer = LocalKitMenuLayer.current
@@ -264,6 +270,35 @@ private class MenuShown {
     var items: List<KitMenuItem> by mutableStateOf(emptyList())
     var title: String? by mutableStateOf(null)
     var at: IntRect = IntRect.Zero
+
+    /** The held message's face this menu opens on (window px), or null: an ordinary menu. */
+    var focus: io.github.eslamasabry.oc.ui.kit.foundation.KitFocusFace? = null
+
+    /** Where the finger held the message (window px), for a face too tall to open beside. */
+    var point: IntOffset? = null
+
+    /** The open menu's fade, 0..1, read in the draw phase: a message menu's dim follows its panel exactly. */
+    var shown: () -> Float = { 0f }
+}
+
+/**
+ * A message menu's face in its host's px ([MenuPlacement.faceBox]): the held face, where the finger was, the finger's
+ * band for a face too tall to open beside, and the step kept between the face and the panel.
+ */
+@Immutable
+internal data class MenuFace(val bounds: IntRect, val point: IntOffset?, val band: Int, val gap: Int) {
+    fun box(window: MenuWindow): IntRect = MenuPlacement.faceBox(bounds, point, band, gap, window)
+}
+
+/** [last]'s face in a host whose top-left corner lies at [origin] in the window; null for an ordinary menu. */
+@Composable
+private fun menuFace(last: MenuShown, origin: IntOffset): MenuFace? {
+    val focus = last.focus ?: return null
+    val density = LocalDensity.current
+    val band = with(density) { MenuPlacement.HOLD_BAND_DP.dp.roundToPx() }
+    val gap = with(density) { Space.S2.dp.roundToPx() }
+    val b = focus.bounds
+    return MenuFace(IntRect(b.left - origin.x, b.top - origin.y, b.right - origin.x, b.bottom - origin.y), last.point?.minus(origin), band, gap)
 }
 
 /**
@@ -376,6 +411,12 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
         )
     val at = last.at
     val anchor = IntRect(at.left - origin.x, at.top - origin.y, at.right - origin.x, at.bottom - origin.y)
+    val face = menuFace(last, origin)
+    val focus = last.focus
+    // F4, option C: a message menu dims the page and leaves the held face bright, in this layer under the panel. The
+    // style owns the dim (its scrim: Glass's is its own light shade, so its live background still reads through); it
+    // fades with the panel's own fade, in the same frames (Off: at once).
+    if (face != null && focus != null) MenuDim(face.bounds, focus.shape) { last.shown() }
     Box(
         Modifier.fillMaxSize()
             .onSizeChanged { layerSize = it }
@@ -403,7 +444,7 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
                 if (shown.targetState) Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }
                 else Modifier.modalInert()
             ) {
-                MenuContent(shown, last, onDismissRequest, anchor, room, joins = true)
+                MenuContent(shown, last, onDismissRequest, anchor, room, joins = true, face = face)
             }
         },
     ) { measurables, constraints ->
@@ -411,12 +452,55 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
         val placeables = measurables.map { it.measure(loose) }
         layout(constraints.maxWidth, constraints.maxHeight) {
             val window = room.window(constraints.maxWidth, constraints.maxHeight)
+            val rtl = layoutDirection == LayoutDirection.Rtl
             placeables.forEach { p ->
-                p.place(MenuPlacement.offset(anchor, IntSize(p.width, p.height), layoutDirection == LayoutDirection.Rtl, window))
+                val size = IntSize(p.width, p.height)
+                p.place(if (face != null) MenuPlacement.faceOffset(face.box(window), size, rtl, window) else MenuPlacement.offset(anchor, size, rtl, window))
             }
         }
     }
 }
+
+/**
+ * How strongly a message menu dims the page around the held face (F4, option C), owned by the style: the kit's scrim
+ * as it is (Solid and the others, as a dialog or a sheet dims), and on Glass the style's own light shade at the kit's
+ * "dim most" ([MotionTokens.DIM_MOST], as the edge light's list dims on Glass). Glass's sheet scrim (a tenth of its
+ * shade on a light page) left the held bubble no brighter than the page around it; at a third the face reads as held
+ * and the live background still shows through: a tint, never a plate.
+ */
+public object MenuDimRules {
+    public fun alpha(glass: Boolean, scrimAlpha: Float): Float =
+        if (glass) io.github.eslamasabry.oc.ui.design.motion.MotionTokens.DIM_MOST else scrimAlpha
+}
+
+/**
+ * The page's dim under a message menu with a hole in the held face's [shape] at [hole] (host px), so only that face
+ * stays bright (F4, option C). The style's dim ([MenuDimRules]); [shown] is the panel's fade. Picture only: the
+ * layer's own catcher takes the touch.
+ */
+@Composable
+private fun MenuDim(hole: IntRect, shape: androidx.compose.ui.graphics.Shape, shown: () -> Float) {
+    val colors = LocalKitColors.current
+    val glass = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass
+    val scrim = colors.scrim.copy(alpha = MenuDimRules.alpha(glass, colors.scrim.alpha))
+    Box(
+        Modifier.fillMaxSize().testTag(MENU_DIM_TAG).drawBehind {
+            val share = shown().coerceIn(0f, 1f)
+            if (share <= 0f) return@drawBehind
+            val faceSize = androidx.compose.ui.geometry.Size(hole.width.toFloat(), hole.height.toFloat())
+            val outline = androidx.compose.ui.graphics.Path().apply {
+                addOutline(shape.createOutline(faceSize, layoutDirection, this@drawBehind))
+                translate(Offset(hole.left.toFloat(), hole.top.toFloat()))
+            }
+            clipPath(outline, androidx.compose.ui.graphics.ClipOp.Difference) {
+                drawRect(scrim.copy(alpha = scrim.alpha * share))
+            }
+        }
+    )
+}
+
+/** The test tag of a message menu's dim. */
+internal const val MENU_DIM_TAG: String = "kit-menu-dim"
 
 /**
  * A menu taller than the room it has scrolls; its rows past an edge melt away over [MenuScrollRules.FADE_DP] so a cut
@@ -480,14 +564,15 @@ private fun MenuPopup(
     val anchor = last.at
     val override = anchor.takeIf { it != own }
     val room = menuRoom(windowTop = 0, windowBottomGap = 0)
-    val provider = remember(room, override) { MenuPosition(room, override) }
+    val face = menuFace(last, IntOffset.Zero)
+    val provider = remember(room, override, face) { MenuPosition(room, override, face) }
     Popup(
         popupPositionProvider = provider,
         // A menu already fading out does not ask to close again.
         onDismissRequest = { if (shown.targetState) onDismissRequest() },
         properties = PopupProperties(focusable = true),
     ) {
-        MenuContent(shown, last, onDismissRequest, anchor, room)
+        MenuContent(shown, last, onDismissRequest, anchor, room, face = face)
     }
 }
 
@@ -505,6 +590,8 @@ private fun MenuContent(
     room: MenuRoom,
     /** In the window's menu layer, where its glass may join the glass it opened from; a popup's window never does. */
     joins: Boolean = false,
+    /** A held message's face (host px): the panel opens on it, a step clear, never over it (F4, option C). */
+    face: MenuFace? = null,
 ) {
     val items = last.items
     val title = last.title
@@ -552,6 +639,12 @@ private fun MenuContent(
                 },
                 label = "kit.menu.scale",
             ) { if (it == EnterExitState.Visible || !motion.travels || joinable) 1f else MENU_FROM_SCALE }
+            // The message menu's dim fades with this panel, on the same transition (MenuDim reads it in draw).
+            val dim by transition.animateFloat(
+                transitionSpec = { if (targetState == EnterExitState.Visible) specs.quick() else specs.exit() },
+                label = "kit.menu.dim",
+            ) { if (it == EnterExitState.Visible) 1f else 0f }
+            last.shown = { dim }
             val leaving = transition.targetState == EnterExitState.PostExit
             val placed = remember { mutableStateOf(Rect.Zero) }
             val waited = remember { mutableStateOf(false) }
@@ -589,9 +682,15 @@ private fun MenuContent(
                             return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                         }
                         val window = room.window(constraints.maxWidth, constraints.maxHeight)
-                        val tall = MenuPlacement.room(anchorTop, anchorBottom, window)
+                        // A message menu keeps a step clear of its face, and prefers to open above it.
+                        val box = face?.box(window)
+                        val top = box?.top ?: anchorTop
+                        val bottom = box?.bottom ?: anchorBottom
+                        val tall = MenuPlacement.room(top, bottom, window)
                         val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = tall))
-                        opensAbove.value = MenuPlacement.opensAbove(anchorTop, anchorBottom, placeable.height, window)
+                        opensAbove.value =
+                            if (box != null) MenuPlacement.faceOpensAbove(top, bottom, placeable.height, window)
+                            else MenuPlacement.opensAbove(anchorTop, anchorBottom, placeable.height, window)
                         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                     },
                 items = items,
@@ -895,6 +994,51 @@ public object MenuPlacement {
     public const val HOLD_BAND_DP: Int = 96
 
     /**
+     * The box a message menu keeps clear (F4, option C): the held [face] with [gap] (the kit's step) above and below
+     * it. A face so tall that neither side leaves the window's least room (a long message filling the screen) keeps
+     * clear only a [band] around the finger [point] instead, the face's width, so the menu still opens beside the
+     * finger, over the rest of that message.
+     */
+    public fun faceBox(face: IntRect, point: IntOffset?, band: Int, gap: Int, window: MenuWindow): IntRect {
+        val kept = IntRect(face.left, face.top - gap, face.right, face.bottom + gap)
+        if (maxOf(below(kept.bottom, window), above(kept.top, window)) >= window.minRoom) return kept
+        val y = point?.y ?: face.center.y
+        val top = (y - band / 2).coerceIn(face.top, maxOf(face.top, face.bottom - band))
+        return IntRect(face.left, top - gap, face.right, top + band + gap)
+    }
+
+    /**
+     * True when a message menu [height] tall opens above its face box ([faceBox]): above whenever it fits under the
+     * safe top (the menu reads down to the message it acts on), below when the face is near the top, else the roomier
+     * side, where it is held to that side's room and scrolls.
+     */
+    public fun faceOpensAbove(top: Int, bottom: Int, height: Int, window: MenuWindow): Boolean {
+        val below = below(bottom, window)
+        val above = above(top, window)
+        return when {
+            height <= above -> true
+            height <= below -> false
+            else -> above >= below
+        }
+    }
+
+    /**
+     * A message menu's top-left corner beside its face box ([faceBox]): its end edge on the face's end edge (the left
+     * edge right to left), held inside the window's gutters, and above or below the box ([faceOpensAbove]), so it
+     * never lies over the face.
+     */
+    public fun faceOffset(box: IntRect, content: IntSize, rtl: Boolean, window: MenuWindow): IntOffset {
+        val minX = window.left
+        val maxX = maxOf(window.left, window.width - content.width - window.right)
+        val x = (if (rtl) box.left else box.right - content.width).coerceIn(minX, maxX)
+        val lowest = maxOf(window.top, window.floor - content.height)
+        val y =
+            if (faceOpensAbove(box.top, box.bottom, content.height, window)) box.top.coerceIn(window.top, window.floor) - content.height
+            else box.bottom.coerceIn(window.top, window.floor)
+        return IntOffset(x, y.coerceIn(window.top, lowest))
+    }
+
+    /**
      * The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room (the safe
      * area). An anchor that lies partly under a system bar counts only from the safe area's edge, so the room never
      * reaches under the bar (cut audit 1: the message menu's first row was drawn under the clock).
@@ -950,6 +1094,7 @@ public object MenuPlacement {
 private class MenuPosition(
     private val room: MenuRoom,
     private val override: IntRect? = null,
+    private val face: MenuFace? = null,
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -958,7 +1103,9 @@ private class MenuPosition(
         popupContentSize: IntSize,
     ): IntOffset {
         val window = room.window(windowSize.width, windowSize.height)
-        return MenuPlacement.offset(override ?: anchorBounds, popupContentSize, layoutDirection == LayoutDirection.Rtl, window)
+        val rtl = layoutDirection == LayoutDirection.Rtl
+        if (face != null) return MenuPlacement.faceOffset(face.box(window), popupContentSize, rtl, window)
+        return MenuPlacement.offset(override ?: anchorBounds, popupContentSize, rtl, window)
     }
 }
 

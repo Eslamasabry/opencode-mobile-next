@@ -2,10 +2,12 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
+import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampDims
+import io.github.eslamasabry.oc.ui.kit.lamp.KitLampRules
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMark
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
@@ -68,34 +70,44 @@ data class EdgeLightTaught(val backNotes: Int = 0, val tips: Int = 0)
  */
 internal class EdgeLightPrefs(private val store: AttentionKeyStore) {
     /**
-     * The choice shown on this device. The saved choice wins. Without one, the dock's old switch decides: "false" is
-     * [OtherConversationsMode.Hidden], anything else [OtherConversationsMode.Rings]. When the old switch is there it is
-     * moved once: the new key is written, and only after that write is acknowledged is the old key removed (a refused
-     * write keeps the old key and tries again next start).
+     * The choice shown on this device. `"hidden"` stays [OtherConversationsMode.Hidden]; `"edge-light"`, retired
+     * `"rings"`, absent and legacy `"true"` become [OtherConversationsMode.EdgeLight]; legacy `"false"` stays
+     * [OtherConversationsMode.Hidden]. Non-destructive: old keys (`oc.dockShown`) are never deleted, and re-reading
+     * gives the same answer.
      */
     suspend fun loadMode(): OtherConversationsMode {
         val saved = store.read(EdgeLightKeys.MODE)
         val legacy = store.read(EdgeLightKeys.LEGACY_SHOWN)
         val mode = OtherConversationsMode.migrate(saved, legacy)
-        if (legacy != null) {
-            val moved = OtherConversationsMode.fromStored(saved) != null || store.write(EdgeLightKeys.MODE, mode.stored)
-            if (moved) store.remove(EdgeLightKeys.LEGACY_SHOWN)
+        if (saved == "rings" || (saved == null && legacy != null)) {
+            store.write(EdgeLightKeys.MODE, mode.stored)
         }
         return mode
     }
 
-    suspend fun saveMode(mode: OtherConversationsMode): Boolean {
-        val ok = store.write(EdgeLightKeys.MODE, mode.stored)
-        // The old switch must not come back after the choice was made (it would win on a failed new write).
-        if (ok) store.remove(EdgeLightKeys.LEGACY_SHOWN)
-        return ok
-    }
+    suspend fun saveMode(mode: OtherConversationsMode): Boolean =
+        store.write(EdgeLightKeys.MODE, mode.stored)
 
-    suspend fun loadPlace(): EdgeLightPlace =
-        EdgeLightPlace(
-            side = if (store.read(EdgeLightKeys.SIDE) == "start") KitLampSide.Start else KitLampSide.End,
+    /**
+     * Where the light sits. If the light's own side was never saved and the retired dock was placed on `"start"`,
+     * carry `"start"` across once without deleting `oc.dockSide`.
+     */
+    suspend fun loadPlace(): EdgeLightPlace {
+        val savedSide = store.read(EdgeLightKeys.SIDE)
+        val side =
+            when {
+                savedSide == "start" -> KitLampSide.Start
+                savedSide == null && store.read(DockKeys.SIDE) == "start" -> {
+                    store.write(EdgeLightKeys.SIDE, "start")
+                    KitLampSide.Start
+                }
+                else -> KitLampSide.End
+            }
+        return EdgeLightPlace(
+            side = side,
             height = EdgeLightHeight.fromStored(store.read(EdgeLightKeys.HEIGHT)),
         )
+    }
 
     suspend fun savePlace(place: EdgeLightPlace): Boolean =
         store.write(EdgeLightKeys.SIDE, if (place.side == KitLampSide.Start) "start" else "end") &&
@@ -124,11 +136,11 @@ internal data class EdgeLightCounts(val needs: Int, val failed: Int, val working
 /** The light's pure rules: which parts mount, where, when it hides and what its face says. */
 internal object EdgeLightRules {
     /**
-     * Rings (and Hidden, which is the rings' own "draw nothing") mount the dock host exactly as before the light
-     * existed. Only the Edge light choice leaves the dock host out and mounts the light.
+     * The Rings dock is never mounted in any mode. Only the Edge light mounts, and only when
+     * [OtherConversationsMode.EdgeLight] is chosen.
      */
     fun mounts(mode: OtherConversationsMode): EdgeMounts =
-        EdgeMounts(rings = mode != OtherConversationsMode.EdgeLight, light = mode == OtherConversationsMode.EdgeLight)
+        EdgeMounts(rings = false, light = mode == OtherConversationsMode.EdgeLight)
 
     /**
      * The conversation whose page [route] is, for the pages that carry the light: a conversation, its Files, its
@@ -156,9 +168,9 @@ internal object EdgeLightRules {
     fun visible(keyboardUp: Boolean, modalOpen: Boolean = false): Boolean = !keyboardUp && !modalOpen
 
     /**
-     * The face for [model]: a mark per other conversation that needs the person, failed or is working, and the number
-     * needs + failed. The conversation on screen and [page] (the conversation a Files, Changes or Git page belongs to)
-     * are left out: it is "other conversations". A finished conversation shows no mark in this version.
+     * The face for [model]: a mark per other conversation that needs the person, failed, is working or finished, and
+     * the number needs + failed. The conversation on screen and [page] (the conversation a Files, Changes or Git page
+     * belongs to) are left out: it is "other conversations".
      */
     fun face(model: DockListModel, page: ConversationRef?): KitLampFace {
         val others = model.rows.filter { !it.isOpen && it.ref != page }
@@ -174,11 +186,29 @@ internal object EdgeLightRules {
                             KitLampMarkKind.Working,
                             row.progress?.takeIf { it.total > 0 }?.let { (it.done.toFloat() / it.total).coerceIn(0f, 1f) },
                         )
-                    DockListState.Done, DockListState.Idle -> null
+                    DockListState.Done -> KitLampMark(row.ref, KitLampMarkKind.Finished)
+                    DockListState.Idle -> null
                 }
             }
         return KitLampFace(count = counts(model, page).number, marks = marks)
     }
+
+    /** First-use tips shown per device: one short tip beside the closed light, tracked in `oc.edgeLight.tips`. */
+    const val FIRST_USE_TIPS: Int = 1
+
+    /** Keep the panel overlay briefly after close so its fold and hide-Undo bar finish, then unmount it. */
+    const val PANEL_LINGER_MS: Long = 8_500L
+
+    /** True while the list panel or place picker needs the list controller, list state and panel strings. */
+    fun mountOverlay(open: Boolean, placing: Boolean, lingering: Boolean): Boolean = open || placing || lingering
+
+    /**
+     * True when the one-time tip beside the closed light may appear: prefs are loaded (no cold-start flash for people
+     * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, neither panel nor move is open
+     * ([away]), and the page is [calm] (no request card, no other tip).
+     */
+    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, away: Boolean, calm: Boolean = true): Boolean =
+        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !away && calm
 
     fun counts(model: DockListModel, page: ConversationRef?): EdgeLightCounts {
         val others = model.rows.filter { !it.isOpen && it.ref != page }
@@ -208,7 +238,7 @@ internal object EdgeLightRules {
      * tallest touch box never leaves the page.
      */
     fun bottomFromPageDp(height: EdgeLightHeight, pageDp: Float, chromeDp: Float, lowDp: Float): Float {
-        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val touchMax = KitLampRules.touchHeightDp(KitLampDims.MAX_H).toFloat()
         val low = chromeDp + lowDp
         val top = maxOf(low, pageDp - touchMax)
         return when (height) {
@@ -224,7 +254,7 @@ internal object EdgeLightRules {
      * never above the area (a short window, a landscape phone, puts all three where it fits).
      */
     fun bottomOffsetDp(height: EdgeLightHeight, areaDp: Float, lowDp: Float): Float {
-        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val touchMax = KitLampRules.touchHeightDp(KitLampDims.MAX_H).toFloat()
         val top = maxOf(lowDp, areaDp - touchMax)
         return when (height) {
             EdgeLightHeight.Low -> minOf(lowDp, top)
@@ -233,3 +263,7 @@ internal object EdgeLightRules {
         }
     }
 }
+
+/** True while the conversation on screen waits for the person's answer: its request card is on the page. */
+internal fun edgeLightRequestOnPage(model: DockListModel, page: ConversationRef?): Boolean =
+    model.rows.any { (it.isOpen || it.ref == page) && it.state == DockListState.NeedsYou }

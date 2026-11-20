@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
+import io.github.eslamasabry.oc.feature.settings.languageRow
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.RecordingActions
@@ -97,7 +98,7 @@ class SettingsGroupTest {
                 )
             setContent { SettingsThemed { SettingsScreen(state, actions) } }
             onNodeWithText("Language").performClick()
-            onNodeWithText("English").performClick()
+            languageRow("English").performClick()
             assertEquals(listOf(AppLanguage.English), calls)
             assertEquals(emptyList(), recorder.calls)
             onNodeWithTag("language-choices").assertDoesNotExist()

@@ -49,6 +49,9 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatLastKnown
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatPhoneServer
 import io.github.eslamasabry.oc.feature.chat.world.ChatRestart
+import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
+import io.github.eslamasabry.oc.feature.chat.world.LaunchStage
+import io.github.eslamasabry.oc.feature.chat.world.PhoneServerWait
 import io.github.eslamasabry.oc.feature.chat.world.GraphChatWorld
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -61,7 +64,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 
 /**
@@ -224,6 +231,119 @@ class OldAgentConversationTest {
         assertEquals(ChatLoad.Live, world.load.value)
         assertNull(world.readOnly.value, "a resumed conversation keeps its message box")
         assertFalse(world.transcript.value.rows.isEmpty())
+        world.detach()
+    }
+
+    /** The agents helper while the app itself starts it: a stage, a wait, and an agent it does not hold yet. */
+    private class StartingHelper(var needsNew: Boolean?) : ChatPhoneServer {
+        val stages = MutableStateFlow<LaunchStage?>(LaunchStage.Helper)
+        val waits = MutableStateFlow(PhoneServerWait.Starting)
+
+        override fun runsHere(profile: ProfileId): Boolean = false
+
+        override fun isAgentHelper(profile: ProfileId): Boolean = true
+
+        override suspend fun restart(profile: ProfileId): Outcome<Unit> = Outcome.Ok(Unit)
+
+        override fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> = waits
+
+        override fun stage(profile: ProfileId): StateFlow<LaunchStage?> = stages
+
+        override fun needsNewSession(ref: ConversationRef): Boolean? = needsNew
+
+        fun up() {
+            stages.value = null
+            waits.value = PhoneServerWait.None
+        }
+    }
+
+    /** The history read: not answering while the helper starts, then loading the agent and answering. */
+    private class StartingHistory(val base: FakeServerGateway, val messages: List<MessageWithParts>?, val helper: StartingHelper) :
+        ServerGateway by base {
+        override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> =
+            when {
+                helper.stages.value != null -> Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+                messages == null -> Outcome.Failed(Failure.Unavailable(FeatureId("agentTimeline")))
+                else -> {
+                    helper.needsNew = false
+                    Outcome.Ok(ServerPage(messages.toImmutableList(), null))
+                }
+            }
+    }
+
+    @Test
+    fun `B-CHAT-304 an old agent conversation opened while agents start waits instead of refusing`() = runTest {
+        val helper = StartingHelper(needsNew = true)
+        val f = Fixture(this) { StartingHistory(it, conversation, helper) }
+        f.connect(this)
+        val world = GraphChatWorld(ref, f.registry, phoneServer = helper, lastKnown = f.kept)
+        val seen = mutableListOf<io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat?>()
+        backgroundScope.launch { world.readOnly.collect { seen += it } }
+        world.attach()
+        runCurrent()
+        advanceTimeBy(5_000)
+        // Helper still starting: the page says the real stage, offers no refusal and no Continue.
+        assertNull(world.readOnly.value, "no notice while the helper starts")
+        assertTrue(world.load.value !is ChatLoad.Live)
+        assertEquals(ChatServerWait.StartingHelper, world.serverWait.value)
+        // The helper comes up and the read loads the agent: the box appears.
+        helper.up()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(ChatLoad.Live, world.load.value)
+        assertNull(world.readOnly.value)
+        assertTrue(seen.none { it?.restart != null }, "the notice never appeared, not even for a moment")
+        world.detach()
+    }
+
+    @Test
+    fun `B-CHAT-305 an old agent conversation the running helper truly refuses shows the notice and keeps it`() = runTest {
+        val helper = StartingHelper(needsNew = true)
+        helper.up()
+        val f = Fixture(this) { StartingHistory(it, null, helper) }
+        f.kept.page = KeptTranscript.fit("Build the habit tracker", conversation, 512 * 1024)
+        f.connect(this)
+        val world = GraphChatWorld(ref, f.registry, phoneServer = helper, lastKnown = f.kept)
+        world.attach()
+        runCurrent()
+        advanceTimeBy(10_000)
+        assertEquals(
+            ChatRestart("antigravity", "/root/projects/habits", "Antigravity"),
+            world.readOnly.value?.restart,
+        )
+        advanceTimeBy(60_000)
+        assertTrue(world.readOnly.value?.restart != null, "it stays")
+        world.detach()
+    }
+
+    @Test
+    fun `B-CHAT-306 an old agent conversation opened at the very start of the helper start holds through every stage`() = runTest {
+        // Opened at once: the helper is starting and does not list the agent yet.
+        val helper = StartingHelper(needsNew = null)
+        val f = Fixture(this) { StartingHistory(it, conversation, helper) }
+        f.connect(this)
+        val world = GraphChatWorld(ref, f.registry, phoneServer = helper, lastKnown = f.kept)
+        val seen = mutableListOf<io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat?>()
+        backgroundScope.launch { world.readOnly.collect { seen += it } }
+        world.attach()
+        runCurrent()
+        advanceTimeBy(3_000)
+        assertEquals(ChatServerWait.StartingHelper, world.serverWait.value)
+        assertNull(world.readOnly.value)
+        // The helper answers and lists the agent, which it does not hold yet: the agent is still starting.
+        helper.needsNew = true
+        helper.stages.value = LaunchStage.Agent
+        advanceTimeBy(5_000)
+        assertEquals(ChatServerWait.StartingAgent, world.serverWait.value)
+        assertNull(world.readOnly.value, "listed but not live is not a refusal while the agent starts")
+        assertTrue(world.load.value !is ChatLoad.Live)
+        // Everything is up and the read loads the agent.
+        helper.up()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(ChatLoad.Live, world.load.value)
+        assertNull(world.readOnly.value)
+        assertTrue(seen.none { it?.restart != null }, "the notice never appeared")
         world.detach()
     }
 }
