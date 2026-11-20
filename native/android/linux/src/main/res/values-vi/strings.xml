@@ -12,6 +12,7 @@
     <string name="native_phone_server_body">Tác nhân của bạn vẫn tiếp tục làm việc khi bạn dùng ứng dụng khác.</string>
     <string name="native_phone_server_channel">OpenCode trên điện thoại này</string>
     <string name="native_phone_server_description">Hiện khi máy chủ trên điện thoại hoặc công cụ dự án đang chạy</string>
+    <string name="native_phone_server_title">OpenCode đang chạy trên điện thoại này</string>
     <string name="native_setup_channel">Thiết lập</string>
     <string name="native_status_action_new_chat">Cuộc trò chuyện mới</string>
     <string name="native_status_action_open">Mở</string>

@@ -18,6 +18,7 @@
     <string name="native_phone_server_body">Ваш агент продолжает работать, пока вы пользуетесь другими приложениями.</string>
     <string name="native_phone_server_channel">OpenCode на этом телефоне</string>
     <string name="native_phone_server_description">Показывается, пока работает сервер на телефоне или движок проекта</string>
+    <string name="native_phone_server_title">OpenCode работает на этом телефоне</string>
     <string name="native_setup_channel">Настройка</string>
     <string name="native_status_action_new_chat">Новый чат</string>
     <string name="native_status_action_open">Открыть</string>

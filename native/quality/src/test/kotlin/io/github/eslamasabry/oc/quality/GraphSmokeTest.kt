@@ -6,11 +6,15 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.createGraphFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.Channel
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
+import io.github.eslamasabry.oc.core.common.pace.Pacer
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
@@ -35,6 +39,7 @@ import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.shell.ShellDependencies
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -65,6 +70,9 @@ class GraphSmokeTest {
         val shell: ShellDependencies
 
         @Provides fun platformCapabilities(): PlatformCapabilities = PlatformCapabilities.desktop()
+
+        @Provides @SingleIn(AppScope::class)
+        fun pacer(): Pacer = DefaultPacer(MutableStateFlow(Visibility.Foreground))
 
         @Provides @IntoSet fun fakeBackend(): GatewayFactory = fake
 

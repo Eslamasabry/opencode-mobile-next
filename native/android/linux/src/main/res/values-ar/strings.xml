@@ -23,6 +23,7 @@
     <string name="native_phone_server_body">يواصل وكيلك العمل بينما تستخدم تطبيقات أخرى.</string>
     <string name="native_phone_server_channel">OpenCode على هذا الهاتف</string>
     <string name="native_phone_server_description">يظهر أثناء تشغيل خادم الهاتف أو محرّك المشاريع</string>
+    <string name="native_phone_server_title">OpenCode يعمل على هذا الهاتف</string>
     <string name="native_setup_channel">إعداد الهاتف</string>
     <string name="native_status_action_new_chat">محادثة جديدة</string>
     <string name="native_status_action_open">فتح</string>
