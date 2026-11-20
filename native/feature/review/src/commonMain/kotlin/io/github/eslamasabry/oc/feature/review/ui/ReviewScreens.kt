@@ -179,12 +179,14 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPromptLabel
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConfirmBody
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConfirmBodyNoFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPutBackQuestion
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceMessages
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceUnknownFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoredBody
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoredBodyNoFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoredTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenIntro
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenIntroCount
@@ -1182,7 +1184,11 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                 KitStateView(
                     KitStateKind.Finished,
                     stringResource(Res.string.reviewRevertRestoredTitle),
-                    body = stringResource(Res.string.reviewRevertRestoredBody),
+                    body =
+                        stringResource(
+                            if (state.noFileCopies) Res.string.reviewRevertRestoredBodyNoFiles
+                            else Res.string.reviewRevertRestoredBody
+                        ),
                     primary = back,
                 )
             StagedPhase.Stale ->
@@ -1310,13 +1316,18 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                     // Files go back to the saved snapshot: edits made since are replaced, so that
                     // is the error tone.
                     kind =
-                        if (files == null || files.isNotEmpty()) KitConfirmKind.Destructive
+                        if (!state.noFileCopies && (files == null || files.isNotEmpty())) KitConfirmKind.Destructive
                         else KitConfirmKind.Neutral,
-                    body = stringResource(Res.string.reviewRevertRestoreConfirmBody),
+                    body =
+                        stringResource(
+                            if (state.noFileCopies) Res.string.reviewRevertRestoreConfirmBodyNoFiles
+                            else Res.string.reviewRevertRestoreConfirmBody
+                        ),
                     consequences =
                         listOfNotNull(
                             stringResource(Res.string.reviewRevertRestoreConsequenceMessages),
                             when {
+                                state.noFileCopies -> null
                                 files == null ->
                                     stringResource(
                                         Res.string.reviewRevertRestoreConsequenceUnknownFiles

@@ -251,6 +251,7 @@
     <string name="reviewRevertRestoreConfirmTitle">Restore “%1$s”?</string>
     <string name="reviewRevertPutBackQuestion">Put everything back from “%1$s”?</string>
     <string name="reviewRevertRestoreConfirmBody">The hidden messages come back, and the files in this undo return to how they were when you set it up. You can undo from a prompt again later.</string>
+    <string name="reviewRevertRestoreConfirmBodyNoFiles">The hidden messages come back. You can undo from a prompt again later.</string>
     <string name="reviewRevertRestoreConsequenceMessages">The hidden messages come back</string>
     <plurals name="reviewRevertRestoreConsequenceFiles">
         <item quantity="one">1 file is replaced, with any edits made since</item>
@@ -266,6 +267,7 @@
     <string name="reviewRevertKeptBody">The hidden messages are deleted. Files stay as they are.</string>
     <string name="reviewRevertRestoredTitle">Everything is back</string>
     <string name="reviewRevertRestoredBody">The messages and files are back as they were.</string>
+    <string name="reviewRevertRestoredBodyNoFiles">The messages are back as they were.</string>
     <string name="reviewRevertFailed">That didn't finish. Check the conversation, then try again.</string>
     <string name="sessionDestinationWarpTitle">Move to the cloud</string>
     <string name="sessionDestinationSeparateCopy">Separate copy</string>
