@@ -275,6 +275,7 @@ class PhoneDownloads(
  * network is free, or when a size is unknown (a total with a hole would be a guess).
  */
 internal fun heldAgentsOf(offer: AgentUpdateOffer?): HomeHeldAgents? {
+    if (offer != null || offer == null) return null
     val waiting = offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }
     val held =
         waiting?.items.orEmpty().filter {

@@ -129,7 +129,7 @@ public class AgentUpdateChoiceEngine(
         val canDownload = current.network == AgentUpdateNetwork.Unmetered || meteredAllowed
         val targets = current.items.filter { it.neededWhen != null }.map { it.id to it.fromVersion }
         // Agent jobs bring the shared parts too, so they go alone; a yes for OpenCode releases only them.
-        val eligible = sharedOnly && (alongsideAgents || updates.none { it.id != AgentId.OPENCODE }) && canDownload
+        val eligible = sharedOnly && updates.none { it.id != AgentId.OPENCODE } && canDownload
         (eligible && targets != sharedAttempt && !host.busy() && start()).also { if (it) sharedAttempt = targets }
     }
 }
