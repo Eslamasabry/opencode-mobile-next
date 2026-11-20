@@ -18,7 +18,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.PermissionRequest
@@ -35,6 +34,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedReque
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -122,7 +122,7 @@ class PermissionAnswersScreenTest {
     }
 
     @Test
-    fun `B-CHAT-REV3-001 the card answers with Allow once and Deny`() = runComposeUiTest {
+    fun `B-CHAT-REV3-001 the card answers with Allow once and Deny`() = kitUiTest {
         setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
         onNodeWithText("Allow once").assertIsDisplayed()
         onNodeWithText("Deny").assertIsDisplayed()
@@ -130,7 +130,7 @@ class PermissionAnswersScreenTest {
 
     @Test
     fun `B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Counting()
             setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false)), actions) }
             onAllNodesWithText("Details").onFirst().performClick()
@@ -144,7 +144,7 @@ class PermissionAnswersScreenTest {
         }
 
     @Test
-    fun `B-CHAT-REV3-009 no answer anywhere says a bare Allow, on the card or in Details`() = runComposeUiTest {
+    fun `B-CHAT-REV3-009 no answer anywhere says a bare Allow, on the card or in Details`() = kitUiTest {
         setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
         assertEquals(0, onAllNodesWithText("Allow", useUnmergedTree = true).fetchSemanticsNodes().size, "card")
         onAllNodesWithText("Details").onFirst().performClick()
@@ -154,7 +154,7 @@ class PermissionAnswersScreenTest {
 
     @Test
     fun `B-CHAT-REV3-002 with no Always offered the sheet does not talk about Always nor show a bare pattern`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
             onAllNodesWithText("Details").onFirst().performClick()
             waitForIdle()
@@ -172,7 +172,7 @@ class PermissionAnswersScreenTest {
 
     @Test
     fun `B-CHAT-REV3-003 where Always is offered the sheet says its scope in words and keeps the pattern under it`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = true))) }
             onAllNodesWithText("Details").onFirst().performClick()
             waitForIdle()
@@ -180,7 +180,7 @@ class PermissionAnswersScreenTest {
         }
 
     @Test
-    fun `B-CHAT-REV3-004 the confirm says the scope in words, never a bare star`() = runComposeUiTest {
+    fun `B-CHAT-REV3-004 the confirm says the scope in words, never a bare star`() = kitUiTest {
         val edit = card("edit", listOf("e9.txt"), always = true)
         setContent {
             Slot(RequestSlotUi(cards = persistentListOf(edit), confirmAlways = AlwaysConfirmUi(edit.id, edit.ask.always, edit.captured)))
@@ -189,7 +189,7 @@ class PermissionAnswersScreenTest {
     }
 
     @Test
-    fun `B-CHAT-REV3-005 the note says it is sent only with Deny`() = runComposeUiTest {
+    fun `B-CHAT-REV3-005 the note says it is sent only with Deny`() = kitUiTest {
         setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
         onAllNodesWithText("Details").onFirst().performClick()
         waitForIdle()
@@ -198,7 +198,7 @@ class PermissionAnswersScreenTest {
 
     @Test
     fun `B-CHAT-REV3-006 a command's sheet has one copy, named Copy command, and no copy row for the facts`() =
-        runComposeUiTest {
+        kitUiTest {
             val run = card("bash", listOf("npm test"), always = false, metadata = mapOf("command" to "npm test", "cwd" to "/w"))
             setContent { Slot(RequestSlotUi(run)) }
             onAllNodesWithText("Details").onFirst().performClick()
@@ -213,7 +213,7 @@ class PermissionAnswersScreenTest {
         }
 
     @Test
-    fun `B-CHAT-REV3-007 the waiting card says it needs a decision once`() = runComposeUiTest {
+    fun `B-CHAT-REV3-007 the waiting card says it needs a decision once`() = kitUiTest {
         setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
         val cues =
             onAllNodes(reads("Needs your decision") or hasContentDescription("Needs your decision", substring = true))
@@ -222,7 +222,7 @@ class PermissionAnswersScreenTest {
     }
 
     @Test
-    fun `B-CHAT-REV3-010 the Sending row sits on the page's edge, not the window's`() = runComposeUiTest {
+    fun `B-CHAT-REV3-010 the Sending row sits on the page's edge, not the window's`() = kitUiTest {
         val sending = card("edit", listOf("e9.txt"), always = false).copy(state = CardState.Sending(AnswerWords.Allowed))
         setContent { Slot(RequestSlotUi(sending)) }
         val words = onNode(reads("Allowed"), useUnmergedTree = true).getUnclippedBoundsInRoot()
@@ -230,7 +230,7 @@ class PermissionAnswersScreenTest {
     }
 
     @Test
-    fun `B-CHAT-REV3-011 a Deny with a note quotes the person's words`() = runComposeUiTest {
+    fun `B-CHAT-REV3-011 a Deny with a note quotes the person's words`() = kitUiTest {
         val denied =
             card("edit", listOf("e9.txt"), always = false).copy(state = CardState.Sending(AnswerWords.RejectedWith("use b.txt")))
         setContent { Slot(RequestSlotUi(denied)) }
@@ -238,7 +238,7 @@ class PermissionAnswersScreenTest {
     }
 
     @Test
-    fun `RC1-CARD-002 an edit names its file in the question as a creation does`() = runComposeUiTest {
+    fun `RC1-CARD-002 an edit names its file in the question as a creation does`() = kitUiTest {
         setContent { Slot(RequestSlotUi(card("edit", listOf("rc1.txt"), always = false))) }
         onNode(reads("Edit rc1.txt?"), useUnmergedTree = true).assertExists()
         assertTrue(onAllNodes(reads("Edit this file?"), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
@@ -246,7 +246,7 @@ class PermissionAnswersScreenTest {
 
     @Test
     fun `B-CHAT-REV3-012 a card retired by Stop never says the run stopped while it may still be stopping`() =
-        runComposeUiTest {
+        kitUiTest {
             val retired = card("edit", listOf("e9.txt"), always = false).copy(state = CardState.NoLongerNeeded)
             setContent { Slot(RequestSlotUi(retired)) }
             onNode(reads("The run is ending, so nothing was sent."), useUnmergedTree = true).assertExists()

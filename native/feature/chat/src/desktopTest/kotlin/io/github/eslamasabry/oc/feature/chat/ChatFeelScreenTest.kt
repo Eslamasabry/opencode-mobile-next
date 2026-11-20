@@ -18,7 +18,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.Origin
 import io.github.eslamasabry.oc.engine.transcript.state.RowKind
@@ -31,6 +30,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -103,7 +103,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-CHAT-064 a reply draws its Markdown, not its marks, and a link asks before it opens`() =
-        runComposeUiTest {
+        kitUiTest {
             val outside = Outside()
             val p = setUp(FakeChatWorld(), outside)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -124,7 +124,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-CHAT-056 a code block shows its code without fences and Copy copies the source verbatim`() =
-        runComposeUiTest {
+        kitUiTest {
             val outside = Outside()
             val p = setUp(FakeChatWorld(), outside)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -141,7 +141,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-KIT-051 a long-press on a prompt opens its actions, and Edit and resend fills the composer`() =
-        runComposeUiTest {
+        kitUiTest {
             val outside = Outside()
             val p = setUp(FakeChatWorld(), outside)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -163,7 +163,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `09-6_6 Select text shows the whole message in a sheet, closed by Done`() =
-        runComposeUiTest {
+        kitUiTest {
             val outside = Outside()
             val p = setUp(FakeChatWorld(), outside)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -194,7 +194,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-SEC-094 B-CHAT-056 a code block's Copy copies what it shows, a key masked`() =
-        runComposeUiTest {
+        kitUiTest {
             val (p, outside) = screen(prompt("u1", "go"), code(0, "```sh\ncurl -H 'Authorization: Bearer $bearerTail' x\n```"), footer("u1"))
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
             val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
@@ -210,7 +210,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `09-9_1 a table longer than one chunk stays one table`() =
-        runComposeUiTest {
+        kitUiTest {
             fun chunk(start: Int, text: String, continued: Boolean, continues: Boolean) =
                 BlockRow("b:a1/p:$start", "u1", RowKind.Prose, "p", start, text, false, false, Origin.Loaded, continued, continues)
             val head = "| Name | Size |\n| --- | --- |\n" + (1..14).joinToString("\n") { "| f$it | $it |" }
@@ -250,7 +250,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-169-040 a daily limit reads plainly and offers Switch model, a per-minute one does not`() =
-        runComposeUiTest {
+        kitUiTest {
             val live = io.github.eslamasabry.oc.feature.chat.world.ChatLink.Live
             val p = limited("Rate limit exceeded: free-models-per-day (429)", live)
             val states = p.states(CoroutineScope(SupervisorJob() + Dispatchers.Unconfined), Dispatchers.Unconfined, SharingStarted.Eagerly)
@@ -265,7 +265,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-169-041 a per-minute limit keeps today's fixes, and offline Switch model is disabled`() =
-        runComposeUiTest {
+        kitUiTest {
             val minute = limited("Rate limit exceeded: free-models-per-min (429)", io.github.eslamasabry.oc.feature.chat.world.ChatLink.Live)
             val day = limited("Daily limit reached", io.github.eslamasabry.oc.feature.chat.world.ChatLink.Offline)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -286,7 +286,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `09-6_6 a failed reply still opens its message actions`() =
-        runComposeUiTest {
+        kitUiTest {
             val (p, _) =
                 screen(
                     prompt("u1", "go"),
@@ -309,7 +309,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-SEC-014 B-SEC-133 a failed reply's Details never show a key or an Authorization header`() =
-        runComposeUiTest {
+        kitUiTest {
             // Codex chat-bugs 1: an OC2 failed step with credentials in its error text reached Details unmasked.
             val secret = "FIX4Pk6BearerSecret" + "9Z8Y7X6W5V"
             val (p, _) =
@@ -336,7 +336,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-AGENT-024 a reply that lost its provider connection says so and offers Continue, which sends only Continue`() =
-        runComposeUiTest {
+        kitUiTest {
             val world = FakeChatWorld()
             world.draft.value = world.draft.value.copy(text = "my unsent draft")
             world.transcript.value =
@@ -363,7 +363,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-AGENT-189 a lapsed Claude Code sign-in says sign in again and opens its sign-in page`() =
-        runComposeUiTest {
+        kitUiTest {
             val (p, _) =
                 screen(
                     prompt("u1", "go"),
@@ -396,7 +396,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-AGENT-189 the lapsed sign-in line stays plain when the agent is not on this phone`() =
-        runComposeUiTest {
+        kitUiTest {
             val (p, _) =
                 screen(
                     prompt("u1", "go"),
@@ -418,7 +418,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-AGENT-024 no credit reads as no credit, not busy, and offers no Continue`() =
-        runComposeUiTest {
+        kitUiTest {
             val (p, _) =
                 screen(
                     prompt("u1", "go"),
@@ -440,7 +440,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-CHAT-064 a path the server has opens its file from the reply`() =
-        runComposeUiTest {
+        kitUiTest {
             val world = FakeChatWorld()
             world.serverFiles += "lib/main.dart"
             world.transcript.value = stateOf(prompt("u1", "where"), block("u1", "a1", "p", 0, "See `lib/main.dart:12` and `lib/gone.dart`."), footer("u1"))
@@ -459,7 +459,7 @@ class ChatFeelScreenTest {
 
     @Test
     fun `B-CHAT-059 a server picture inside a sentence reads its words`() =
-        runComposeUiTest {
+        kitUiTest {
             val (p, _) = screen(prompt("u1", "show"), block("u1", "a1", "p", 0, "See ![Screenshot](/tmp/result.png) here"), footer("u1"))
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
             val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)

@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -17,7 +18,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.WireTag
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -368,7 +368,7 @@ class TurnFactsTest {
     // Owner 2026-11-14 (after D1): a finished turn's work is one row ("Ran 1 command · read 1 file · edited 1 file") that
     // opens in place to its plain-word steps with their durations.
     fun `B-CHAT-063 B-CHAT-111 B-CHAT-109 a finished turn's work is one row that opens to its plain-word steps with durations`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             onAllNodesWithText("Ran tests").assertCountEquals(0)
@@ -381,7 +381,7 @@ class TurnFactsTest {
 
     @Test
     fun `E20-S25 the turn's steps hang off the rail with no chevron of their own`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             waitForIdle()
@@ -399,7 +399,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-CHAT-068 B-CHAT-101 the turn's work line names the changed file and the command, said once`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             // N-45: a turn with a work line says what it edited and ran there; no second "Edited … · ran …" row.
@@ -412,7 +412,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-CHAT-019 B-CHAT-102 the context reading opens the context sheet with cache activity`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             onNodeWithTag("chat-context-open").assertIsDisplayed().performClick()
@@ -424,7 +424,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-CHAT-016 the retry folds into the live line in plain words`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val facts =
                 TurnFactsUi(live = LiveNoticeUi.Retry(io.github.eslamasabry.oc.engine.transcript.turnfacts.RetryBannerFacts(true, 2, 42)))
@@ -434,7 +434,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-CHAT-110 a task step opens the conversation its sub-agent ran in`() =
-        runComposeUiTest {
+        kitUiTest {
             val k = keeper()
             val task =
                 tool(
@@ -459,7 +459,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-SEC-094 a finished turn's command and a running step's label never show a bearer token`() =
-        runComposeUiTest {
+        kitUiTest {
             val command = "curl -H 'Authorization: Bearer $bearerTail' https://example.test"
             val k = keeper()
             k.history(
@@ -485,7 +485,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-SEC-094 the folded running work line names the command redacted`() =
-        runComposeUiTest {
+        kitUiTest {
             val command = "curl -H 'Authorization: Bearer $bearerTail' https://example.test"
             val k = keeper()
             k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000), tool("t1", "m2", "bash", ToolStatus.Running, mapOf("command" to command), 2_000))))
@@ -501,7 +501,7 @@ class TurnFactsTest {
 
     @Test
     fun `B-CHAT-114 a file a step produced is a visible action that opens it`() =
-        runComposeUiTest {
+        kitUiTest {
             val k = keeper()
             val write =
                 tool(

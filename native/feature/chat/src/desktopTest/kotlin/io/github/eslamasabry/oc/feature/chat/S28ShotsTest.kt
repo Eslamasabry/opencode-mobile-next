@@ -19,7 +19,6 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -42,6 +41,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -69,7 +69,7 @@ class S28ShotsTest {
         dir.mkdirs()
         Locale.setDefault(Locale.forLanguageTag("en"))
         for (dark in listOf(false, true)) {
-            runDesktopComposeUiTest(1081, height) {
+            kitUiTest(1081, height) {
                 setContent {
                     CompositionLocalProvider(LocalDensity provides Density(2.625f)) {
                         KitTheme(

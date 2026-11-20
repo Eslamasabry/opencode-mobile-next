@@ -11,7 +11,6 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.FindJump
 import io.github.eslamasabry.oc.feature.chat.ui.rememberTranscriptFolds
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -72,7 +72,7 @@ class ChatPlaceKeptTest {
 
     @Test
     fun `PLACE-1 rows that arrive below while the person is away do not move what they were reading`() =
-        runComposeUiTest {
+        kitUiTest {
             var shown by mutableStateOf(true)
             var rows by mutableStateOf(turns(60))
             lateinit var list: TranscriptListState
@@ -111,7 +111,7 @@ class ChatPlaceKeptTest {
 
     @Test
     fun `PLACE-1 a person who was at the bottom still follows the newest message on return when nothing arrived`() =
-        runComposeUiTest {
+        kitUiTest {
             var shown by mutableStateOf(true)
             val rows = turns(60)
             lateinit var list: TranscriptListState
@@ -143,7 +143,7 @@ class ChatPlaceKeptTest {
 
     @Test
     fun `PLACE-2 coming back with Find open leaves the view, and moving to another hit or changing the query jumps`() =
-        runComposeUiTest {
+        kitUiTest {
             var shown by mutableStateOf(true)
             var found by mutableStateOf(find(50, 0))
             lateinit var list: TranscriptListState
@@ -187,7 +187,7 @@ class ChatPlaceKeptTest {
 
     @Test
     fun `PLACE-3 what the person opened stays open after leaving and coming back, and the saved set is bounded`() =
-        runComposeUiTest {
+        kitUiTest {
             var shown by mutableStateOf(true)
             lateinit var folds: io.github.eslamasabry.oc.feature.chat.ui.TranscriptFolds
             setContent {

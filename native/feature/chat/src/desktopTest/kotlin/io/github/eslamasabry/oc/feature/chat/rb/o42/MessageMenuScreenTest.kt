@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat.rb.o42
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
 import io.github.eslamasabry.oc.feature.chat.Immediate
 import io.github.eslamasabry.oc.feature.chat.RecordingNavigator
@@ -10,6 +9,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.*
 import io.github.eslamasabry.oc.feature.chat.ui.MessageMenu
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -20,7 +20,7 @@ import kotlinx.collections.immutable.persistentListOf
 class MessageMenuScreenTest {
     @Test
     fun `C04 prompt copy remains available without share and keeps its reviewed target`() =
-        runComposeUiTest {
+        kitUiTest {
             val target = MessageTarget("turn", "prompt", TargetKind.Prompt, "message")
             val calls = mutableListOf<Pair<MessageTarget, MessageAction>>()
             var dismissed = 0
@@ -59,7 +59,7 @@ class MessageMenuScreenTest {
         }
 
     @Test
-    fun `C04 reply More omits adjacent copy and unavailable read aloud`() = runComposeUiTest {
+    fun `C04 reply More omits adjacent copy and unavailable read aloud`() = kitUiTest {
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         setContent {
             KitTheme(

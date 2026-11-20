@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -31,6 +30,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -93,7 +93,7 @@ class ChatRootFileChipRenders {
         val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val states = presenter.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
-        runDesktopComposeUiTest(width, HEIGHT) {
+        kitUiTest(width, HEIGHT) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(DENSITY, fontScale)) {
                     KitTheme(

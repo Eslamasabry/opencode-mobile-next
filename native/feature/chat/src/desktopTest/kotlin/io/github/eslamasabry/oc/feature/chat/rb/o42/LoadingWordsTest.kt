@@ -4,13 +4,13 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.E20Scene
 import io.github.eslamasabry.oc.feature.chat.boundsOfTag
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatPane
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -27,7 +27,7 @@ class LoadingWordsTest {
 
     @Test
     fun `LOAD-4 a slow first load says Loading the conversation after a second and not before`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             mainClock.autoAdvance = false
             setContent { E20Scene { scene.Screen(scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())) } }
@@ -43,7 +43,7 @@ class LoadingWordsTest {
 
     @Test
     fun `LOAD-5 while the screen's line says something the slow load adds no second line`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             mainClock.autoAdvance = false
             val offline = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf(), status = ChatStatusUi("offline", ChatStatusKind.Offline))

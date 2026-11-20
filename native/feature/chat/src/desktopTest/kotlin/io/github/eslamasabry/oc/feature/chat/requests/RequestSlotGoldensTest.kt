@@ -15,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -31,6 +30,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -104,7 +104,7 @@ class RequestSlotGoldensTest {
     private fun scene(scene: String, cards: List<RequestCardUi>, check: ComposeUiTest.() -> Unit = {}) {
         for (variant in variants) {
             Locale.setDefault(Locale.forLanguageTag(variant.locale))
-            runDesktopComposeUiTest(412, 2200) {
+            kitUiTest(412, 2200) {
                 setContent { Themed(variant) { ChatRequestSlot(RequestSlotUi(cards.toImmutableList()), NoActions, nowMs = null) } }
                 waitForIdle()
                 mainClock.advanceTimeBy(1_000)
@@ -176,7 +176,7 @@ class RequestSlotGoldensTest {
     @Test
     fun `P-103 a one-line request opens in full on tap and the rest stay one line`() {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(412, 2200) {
+        kitUiTest(412, 2200) {
             setContent {
                 Themed(variants.first()) {
                     ChatRequestSlot(RequestSlotUi(listOf(shell, ask, edit, fetch).toImmutableList()), NoActions, nowMs = null)
@@ -194,7 +194,7 @@ class RequestSlotGoldensTest {
     @Test
     fun `P-103 the card a link opened the chat for is the one in full`() {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(412, 2200) {
+        kitUiTest(412, 2200) {
             setContent {
                 Themed(variants.first()) {
                     ChatRequestSlot(

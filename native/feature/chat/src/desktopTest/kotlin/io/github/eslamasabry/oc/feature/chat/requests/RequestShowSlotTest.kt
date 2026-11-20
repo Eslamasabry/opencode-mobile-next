@@ -10,7 +10,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -27,6 +26,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.ui.RequestShow
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -61,7 +61,7 @@ class RequestShowSlotTest {
     private val cards = (1..10).map { permission("p$it", "npm test $it") }
 
     private fun slot(show: RequestShow?, shown: MutableList<Long>, focused: RequestId? = show?.id, list: List<RequestCardUi> = cards) =
-        runDesktopComposeUiTest(412, 900) {
+        kitUiTest(412, 900) {
             var current by mutableStateOf(show)
             setContent {
                 KitTheme(
@@ -110,7 +110,7 @@ class RequestShowSlotTest {
     @Test
     fun `B-LAMP-C1-003 a request whose card is not in the slot is not consumed`() {
         val shown = mutableListOf<Long>()
-        runDesktopComposeUiTest(412, 900) {
+        kitUiTest(412, 900) {
             setContent {
                 KitTheme(
                     appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off),

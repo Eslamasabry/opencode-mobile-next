@@ -7,7 +7,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerPromptEditor
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -85,7 +85,7 @@ class S24PromptEditorTest {
 
     @Test
     fun `B-CHAT-S24-40 More offers Prompt editor, and the words written there become the draft`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val editor = FakeEditor()
             val chrome = ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false })
@@ -104,7 +104,7 @@ class S24PromptEditorTest {
 
     @Test
     fun `B-CHAT-S24-41 the launcher's editor request opens it once, and no editor means no row`() =
-        runComposeUiTest {
+        kitUiTest {
             val editor = FakeEditor()
             var request: Long? = 7L
             val done = mutableListOf<Long>()
@@ -121,7 +121,7 @@ class S24PromptEditorTest {
         }
 
     @Test
-    fun `B-CHAT-S24-42 without an editor the More list has no Prompt editor row`() = runComposeUiTest {
+    fun `B-CHAT-S24-42 without an editor the More list has no Prompt editor row`() = kitUiTest {
         val chrome = ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false })
         setContent { Theme { BasicComposer(ui(), Actions(), chrome) } }
         onNodeWithContentDescription("Attach and more").performClick()

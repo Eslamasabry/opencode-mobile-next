@@ -10,7 +10,6 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
@@ -33,6 +32,7 @@ import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.feature.chat.ui.TurnEndNote
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -53,7 +53,7 @@ import kotlinx.serialization.json.JsonPrimitive
 @OptIn(ExperimentalTestApi::class)
 class W4DeclinedLineTest {
     @Test
-    fun `W4 the declined closing line says You declined this and offers neither Continue nor Send again`() = runComposeUiTest {
+    fun `W4 the declined closing line says You declined this and offers neither Continue nor Send again`() = kitUiTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {
                 // Both ways on are handed in, as the transcript does: the line itself must not show either.
@@ -68,7 +68,7 @@ class W4DeclinedLineTest {
     }
 
     @Test
-    fun `W4 older - two declined turns each draw the line once and no turn draws a Stopped line`() = runComposeUiTest {
+    fun `W4 older - two declined turns each draw the line once and no turn draws a Stopped line`() = kitUiTest {
         val notes = mapOf("m1" to TurnEndNote.Declined, "m3" to TurnEndNote.Declined)
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {
@@ -98,7 +98,7 @@ class W4DeclinedLineTest {
         }
 
     @Test
-    fun `W4 older gate - through the reading to the chat list, the declined line sits once, under the older turn`() = runComposeUiTest {
+    fun `W4 older gate - through the reading to the chat list, the declined line sits once, under the older turn`() = kitUiTest {
         // The real reading: an older turn that ended on the person's Deny, then a newer turn that finished normally.
         val sid = Ref.sessionId.raw
         val declined =

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +10,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.compareGolden
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ClipKind
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderClip
@@ -48,7 +48,7 @@ class S8CopyKeyHiddenNoteTest {
     }
 
     @Test
-    fun `E15-S06 the note composed beside the screen, as before, never shows`() = runDesktopComposeUiTest(360, 640) {
+    fun `E15-S06 the note composed beside the screen, as before, never shows`() = kitUiTest(360, 640) {
         setContent {
             E20Scene {
                 Chat()
@@ -61,7 +61,7 @@ class S8CopyKeyHiddenNoteTest {
 
     @Test
     fun `E15-S06 a masked message copy shows its note in the screen's status line`() {
-        for (scale in listOf(1f, 1.3f)) runDesktopComposeUiTest(360, 640) {
+        for (scale in listOf(1f, 1.3f)) kitUiTest(360, 640) {
             setContent { E20Scene(scale) { Chat { CopyKeyHiddenNotes(CopiedUi(1, masked = true), null) } } }
             waitForIdle()
             onNodeWithText(masked).assertIsDisplayed()
@@ -71,7 +71,7 @@ class S8CopyKeyHiddenNoteTest {
 
     @Test
     fun `E15-S06 a masked transcript copy shows its own note, and a clean copy shows none`() {
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             setContent {
                 E20Scene {
                     Chat { CopyKeyHiddenNotes(null, HeaderClip(3, "# Chat", ClipKind.Transcript, masked = true)) }
@@ -80,7 +80,7 @@ class S8CopyKeyHiddenNoteTest {
             waitForIdle()
             onNodeWithText(transcriptMasked).assertIsDisplayed()
         }
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             setContent { E20Scene { Chat { CopyKeyHiddenNotes(CopiedUi(2, masked = false), null) } } }
             waitForIdle()
             assertEquals(0, onAllNodesWithText(masked).fetchSemanticsNodes().size)

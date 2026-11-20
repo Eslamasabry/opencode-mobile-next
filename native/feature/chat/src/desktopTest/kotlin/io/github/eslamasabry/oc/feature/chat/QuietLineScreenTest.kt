@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -25,6 +24,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -58,7 +58,7 @@ class QuietLineScreenTest {
             render(locale, scale, motion)
         } finally { Locale.setDefault(beforeLocale) }
     }
-    private fun render(locale: String, scale: Float, motion: MotionLevel): Unit = runDesktopComposeUiTest(360, 800) {
+    private fun render(locale: String, scale: Float, motion: MotionLevel): Unit = kitUiTest(360, 800) {
         val scene = ChatScene()
         val state = scene.live().copy(status = null, rows = persistentListOf(prompt("t", "Explain this carefully")), live = LiveTurnUi(false))
         var facts by mutableStateOf(TurnFactsUi(nowMs = 72_000, runStartedAtMs = 0, live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow)))
@@ -106,7 +106,7 @@ class QuietLineScreenTest {
         val beforeLocale = Locale.getDefault()
         try {
             Locale.setDefault(Locale.forLanguageTag(locale))
-            runDesktopComposeUiTest(1080, 2400) {
+            kitUiTest(1080, 2400) {
                 val scene = ChatScene()
                 val state = scene.live().copy(status = null, rows = persistentListOf(prompt("t", "Explain this carefully")), live = LiveTurnUi(false))
                 var facts by mutableStateOf(TurnFactsUi(nowMs = 72_000, runStartedAtMs = 0, live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow)))

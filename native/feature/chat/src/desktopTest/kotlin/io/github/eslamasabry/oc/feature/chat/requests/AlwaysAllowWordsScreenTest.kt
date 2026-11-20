@@ -8,7 +8,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.PermissionRequest
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -103,7 +103,7 @@ class AlwaysAllowWordsScreenTest {
 
     @Test
     fun `S30-CHAT-001 a command's Always allow names its family as Flutter does, beside Deny Allow and Details`() =
-        runComposeUiTest {
+        kitUiTest {
             val shell = permission("p1", "bash", "npm test")
             val actions = Actions()
             setContent { Slot(RequestSlotUi(shell), actions) }
@@ -117,14 +117,14 @@ class AlwaysAllowWordsScreenTest {
         }
 
     @Test
-    fun `S30-CHAT-001 an edit's Always allow says requests like this as Flutter does`() = runComposeUiTest {
+    fun `S30-CHAT-001 an edit's Always allow says requests like this as Flutter does`() = kitUiTest {
         val edit = permission("p2", "edit", "src/game.js")
         setContent { Slot(RequestSlotUi(edit), Actions()) }
         onNodeWithText("Always allow requests like this").assertIsDisplayed()
     }
 
     @Test
-    fun `S30-CHAT-001 the confirm names what and where and says what it covers`() = runComposeUiTest {
+    fun `S30-CHAT-001 the confirm names what and where and says what it covers`() = kitUiTest {
         val edit = permission("p2", "edit", "src/game.js")
         val state =
             RequestSlotUi(
