@@ -407,8 +407,10 @@ public fun KitScreen(
             // gesture handle or the buttons. A clearing of the content (kitScrollEdges), never a plate:
             // the ground or the live background shows through. Whole pixels at every density: the inset
             // is an Int of px and the padding and the fade are rounded to px, so the mask's edges (the
-            // box's whole-px height minus these) never fall inside a pixel.
-            val boxFootPx = insets.getBottom(density) + with(density) { Space.S2.dp.roundToPx() }
+            // box's whole-px height minus these) never fall inside a pixel. The bottom inset (it holds the
+            // keyboard, which moves every frame while it opens) is read only where the fade is drawn, never
+            // here: the page is not composed again while the keyboard travels.
+            val s2Px = with(density) { Space.S2.dp.roundToPx() }
             val flowFadePx = with(density) { FLOW_FADE_DP.dp.roundToPx() }
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
             // over what scrolls behind them; a null face keeps today's ground.
@@ -591,7 +593,9 @@ public fun KitScreen(
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
                                         fadeFromBottom =
                                             if (bottomPart == null) null
-                                            else if (floatChrome) ({ (boxFootPx + flowFadePx).toFloat() })
+                                            else if (floatChrome) {
+                                                { (insets.getBottom(density) + s2Px + flowFadePx).toFloat() }
+                                            }
                                             else ({ bottomPx + fadeBottomPx }),
                                         bottomReach = if (floatChrome) FLOW_FADE_DP.dp else COMPOSER_FADE_DP.dp,
                                         bottomReachPx = if (floatChrome) ({ flowFadePx.toFloat() }) else null,
