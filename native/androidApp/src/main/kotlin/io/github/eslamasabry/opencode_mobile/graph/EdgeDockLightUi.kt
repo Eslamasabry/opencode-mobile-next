@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceWords
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampRules
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampSide
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
+import io.github.eslamasabry.oc.ui.kit.teaching.KitTipPresence
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTipPlacement
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.shell.ShellPageLight
@@ -149,6 +150,7 @@ internal fun EdgeLightMount(
                 onDismissed = { tipState.value = false },
                 modifier = Modifier.align(edgeAlign).padding(bottom = offset),
                 placement = KitTipPlacement.BesideEdge,
+                yieldsToOthers = true,
             ) {
                 KitLamp(
                     face = face.copy(open = open),
@@ -201,7 +203,7 @@ private fun rememberFirstUseTip(
     // Waits for a calm moment (no keyboard, no request card on the page) and then shows; once per mount, so a keyboard
     // that opens later does not bring it back or count it twice.
     val shownOnce = remember { mutableStateOf(false) }
-    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing, requestOnPage)
+    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing, requestOnPage, KitTipPresence.others > 0)
     LaunchedEffect(canShow) {
         if (canShow && !showing.value && !shownOnce.value) {
             shownOnce.value = true

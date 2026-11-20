@@ -206,8 +206,8 @@ internal object EdgeLightRules {
      * True when the one-time tip beside the closed light may appear: prefs are loaded (no cold-start flash for people
      * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, and neither panel nor move is open.
      */
-    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, open: Boolean, placing: Boolean, requestOnPage: Boolean = false): Boolean =
-        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !open && !placing && !requestOnPage
+    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, open: Boolean, placing: Boolean, requestOnPage: Boolean = false, otherTipOnScreen: Boolean = false): Boolean =
+        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !open && !placing && !requestOnPage && !otherTipOnScreen
 
     /** True while the conversation on screen waits for the person's answer: its request card is on the page. */
     fun requestOnPage(model: DockListModel, page: ConversationRef?): Boolean =

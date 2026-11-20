@@ -167,4 +167,13 @@ class KitLampRulesTest {
             }
         }
     }
+
+    @Test
+    fun `B-LAMP-015 a tip that yields waits while any other tip is on screen, and never over a modal`() {
+        assertTrue(TipRules.mayShow(visible = true, modalOpen = false, yieldsToOthers = true, othersShowing = 0))
+        assertTrue(!TipRules.mayShow(visible = true, modalOpen = false, yieldsToOthers = true, othersShowing = 1), "another tip is up: wait")
+        assertTrue(TipRules.mayShow(visible = true, modalOpen = false, yieldsToOthers = false, othersShowing = 2), "a plain tip is as before")
+        assertTrue(!TipRules.mayShow(visible = true, modalOpen = true, yieldsToOthers = true, othersShowing = 0))
+        assertTrue(!TipRules.mayShow(visible = false, modalOpen = false, yieldsToOthers = true, othersShowing = 0))
+    }
 }

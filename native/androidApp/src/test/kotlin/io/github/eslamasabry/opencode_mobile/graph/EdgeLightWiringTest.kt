@@ -392,6 +392,9 @@ class EdgeLightWiringTest {
         val calm = model(row("here", DockListState.Working, open = true), row("other", DockListState.NeedsYou))
         assertFalse(EdgeLightRules.requestOnPage(calm, ref("here")), "another conversation's request is not on this page")
         assertTrue(EdgeLightRules.showTip(true, 0, true, false, false, EdgeLightRules.requestOnPage(calm, ref("here"))))
+        // Another tip on screen: this one waits, never stacked over it.
+        assertFalse(EdgeLightRules.showTip(true, 0, true, false, false, false, otherTipOnScreen = true))
+        assertTrue(EdgeLightRules.showTip(true, 0, true, false, false, false, otherTipOnScreen = false))
         // The keyboard hides the light, and the tip waits for it as well.
         assertFalse(EdgeLightRules.showTip(true, 0, EdgeLightRules.visible(keyboardUp = true), false, false, false))
     }
