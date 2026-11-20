@@ -42,7 +42,7 @@ class ChatStagesTest {
             AppTelemetry.install(service)
         }
 
-        val journey = ChatJourney({ now }, HealthFlow(), Once()) { done++ }
+        val journey = ChatJourney({ now }, HealthFlow(), Once(), onReplyDone = { done++ })
 
         fun all(name: String) = vendor.events.filter { it.first == name }.map { it.second }
 

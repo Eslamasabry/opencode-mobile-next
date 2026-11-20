@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
@@ -20,7 +21,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -144,10 +144,10 @@ class SignInTerminalConfirmTest {
             onAllNodesWithText("isn't signed in yet", substring = true).assertCountEquals(0)
             onAllNodesWithText("agentBusy").assertCountEquals(0)
             onNode(hasText("Sign in with Claude Code") and hasClickAction()).assertDoesNotExist()
-            onNode(hasText("Check sign-in again") and hasClickAction()).performScrollTo().performClick()
+            onNode(hasText("Check sign-in again") and hasClickAction()).assertIsDisplayed().performClick()
             assertEquals(1, actions.checked)
             assertEquals(0, actions.restarted)
-            onNodeWithText("Details").performScrollTo().performClick()
+            onNodeWithText("Details").assertIsDisplayed().performClick()
             onNodeWithText("agentBusy", substring = true).assertExists()
         }
 
@@ -178,7 +178,7 @@ class SignInTerminalConfirmTest {
             onNodeWithText("Sign-in code").assertExists()
             onNode(hasText("Send code") and hasClickAction()).assertExists()
             onNode(hasText("Paste code") and hasClickAction()).assertExists()
-            onNodeWithText("Details").performScrollTo().performClick()
+            onNodeWithText("Details").assertIsDisplayed().performClick()
             onNodeWithText(address, substring = true).assertExists()
         }
 
