@@ -382,9 +382,10 @@ class KitLampTest {
             assertTrue(f.w() <= 16.5f, "the mark (${f.w()} dp) is not wider than the gutter")
             assertTrue(f.left.value >= t.left.value - 0.5f && f.right.value <= t.right.value + 0.5f, "the mark is inside the box")
             val nine = onAllNodesWithText("9", substring = true, useUnmergedTree = true).fetchSemanticsNodes()
+            assertTrue(nine.isNotEmpty(), "the number is drawn")
             for (n in nine) {
                 val b = n.boundsInRoot
-                assertTrue(b.left >= f.left.value - 1f && b.right <= f.right.value + 1f, "the number $b is inside the mark")
+                assertTrue(b.left >= f.left.value + 2f && b.right <= f.right.value - 2f, "the number $b keeps 2 dp clear of both sides of the mark")
             }
         }
 

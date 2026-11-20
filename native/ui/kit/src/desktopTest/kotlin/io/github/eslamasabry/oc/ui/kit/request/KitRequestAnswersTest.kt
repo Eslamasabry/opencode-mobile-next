@@ -64,6 +64,32 @@ class KitRequestAnswersTest {
         }
 
     @Test
+    fun `B-LAMP-016 Allow once and Deny stack full width, Allow once on top, when a label would wrap; never a broken label`() {
+        for ((scale, stacked) in listOf(1f to false, 1.3f to true)) {
+            runDesktopComposeUiTest(360, 500) {
+                k2Host(fontScale = scale, widthDp = 360, heightDp = 500) {
+                    KitRequestAnswers(
+                        KitRequest("r", "Asks to fetch: example.org"), "create a file notes.txt", K2.request,
+                        onAllow = {}, onDeny = {}, onAnswer = {}, modifier = Modifier.width(272.dp),
+                    )
+                }
+                waitForIdle()
+                val allow = onNodeWithContentDescription("Allow once: create a file notes.txt", useUnmergedTree = true).getUnclippedBoundsInRoot()
+                val deny = onNodeWithContentDescription("Deny: create a file notes.txt", useUnmergedTree = true).getUnclippedBoundsInRoot()
+                val what = "text $scale"
+                assertTrue(abs((allow.right - allow.left).value - (deny.right - deny.left).value) < 1f, "$what: the two answers are the same width")
+                assertTrue(abs((allow.bottom - allow.top).value - (deny.bottom - deny.top).value) < 1f, "$what: the two answers are the same height, so no label is broken over two lines")
+                if (stacked) {
+                    assertTrue(deny.top >= allow.bottom, "$what: Deny is under Allow once")
+                    assertTrue((allow.right - allow.left).value > 250f, "$what: each takes the full row")
+                } else {
+                    assertTrue(abs(allow.top.value - deny.top.value) < 1f, "$what: side by side")
+                }
+            }
+        }
+    }
+
+    @Test
     fun `B-LAMP-K2-041 a held answer is the draining receipt with Undo, and a question is one Answer`() =
         runDesktopComposeUiTest(412, 400) {
             mainClock.autoAdvance = false
