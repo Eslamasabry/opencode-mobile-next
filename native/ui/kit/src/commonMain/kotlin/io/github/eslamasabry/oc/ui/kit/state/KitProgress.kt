@@ -206,16 +206,22 @@ public fun KitProgressView(
             }
         }
         if (line.isNotEmpty()) {
-            KitText(
-                line,
-                Modifier.clearAndSetSemantics {},
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
-                kind = KitTextKind.Frame,
-                tabular = true,
-            )
+            KitProgressLine(line)
         }
     }
+}
+
+/** The line under a progress bar ("3 of 5"): frame words with equal-width digits, so they do not move as they count. */
+@Composable
+private fun KitProgressLine(line: String) {
+    KitText(
+        line,
+        Modifier.clearAndSetSemantics {},
+        role = TypeRole.Secondary,
+        tone = TextTone.Secondary,
+        kind = KitTextKind.Frame,
+        tabular = true,
+    )
 }
 
 private class ForwardMemory {

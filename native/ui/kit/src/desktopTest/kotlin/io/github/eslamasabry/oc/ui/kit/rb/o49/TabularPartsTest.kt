@@ -29,7 +29,8 @@ import kotlin.test.assertEquals
 class TabularPartsTest {
     private fun ComposeUiTest.assertTabular(text: String) {
         val layout = mutableListOf<TextLayoutResult>()
-        onNodeWithText(text, useUnmergedTree = true).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }
+        onNodeWithText(text, useUnmergedTree = true)
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }
         assertEquals("tnum", layout.first().layoutInput.style.fontFeatureSettings)
     }
 
@@ -42,8 +43,9 @@ class TabularPartsTest {
 
     @Test
     fun `B-KIT-295 KitStatus message and supporting draw equal-width digits`() {
-        check("Copying 3 of 5") { KitStatusLine(KitStatus(KitStatusKind.Info, "Copying 3 of 5", supporting = "12 MB left")) }
-        check("12 MB left") { KitStatusLine(KitStatus(KitStatusKind.Info, "Copying 3 of 5", supporting = "12 MB left")) }
+        val status = KitStatus(KitStatusKind.Info, "Copying 3 of 5", supporting = "12 MB left")
+        check("Copying 3 of 5") { KitStatusLine(status) }
+        check("12 MB left") { KitStatusLine(status) }
     }
 
     @Test

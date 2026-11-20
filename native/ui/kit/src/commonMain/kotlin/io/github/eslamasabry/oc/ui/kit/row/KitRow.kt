@@ -370,7 +370,9 @@ private fun RowBody(
                             Modifier.kitMaxWidth(CapRole.Reading).testTag("kit-row-supporting")
                                 .kitMayTruncate("row-supporting"),
                             style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
-                                color = colors.text2, textDirection = TextDirection.Content, fontFeatureSettings = "tnum",
+                                color = colors.text2,
+                                textDirection = TextDirection.Content,
+                                fontFeatureSettings = "tnum",
                             ),
                             maxLines = kitRowSupportingLines(chosen, supportingMaxLines),
                             overflow = TextOverflow.Ellipsis,
