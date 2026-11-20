@@ -36,7 +36,11 @@ class FooterOwnTimeTest {
     }
 
     private fun reply(id: String, at: Long, done: Long?) =
-        MessageInfo(id, sid, Role.Assistant, providerId = "anthropic", modelId = "m", tokens = Tokens(input = 6_000, output = 100), time = MsgTime(at, done), finish = if (done != null) "stop" else null)
+        MessageInfo(
+            id, sid, Role.Assistant, providerId = "anthropic", modelId = "m",
+            tokens = Tokens(input = 6_000, output = 100), time = MsgTime(at, done),
+            finish = if (done != null) "stop" else null,
+        )
 
     /** The server's own notices ride as assistant-role messages with no model, as the history adapter writes them. */
     private fun noticeMessage(id: String, at: Long, done: Long? = null) =
@@ -50,12 +54,20 @@ class FooterOwnTimeTest {
     private fun step(id: String, mid: String, at: Long, end: Long) =
         Part(
             id, mid, sid, PartType.Tool, "tool", callId = "call-$id", toolName = "read",
-            tool = ToolState(ToolStatus.Completed, input = JsonObject(mapOf("filePath" to JsonPrimitive("/p/a.txt"))), output = "x", startedAtMs = at, completedAtMs = end),
+            tool =
+                ToolState(
+                    ToolStatus.Completed,
+                    input = JsonObject(mapOf("filePath" to JsonPrimitive("/p/a.txt"))),
+                    output = "x",
+                    startedAtMs = at,
+                    completedAtMs = end,
+                ),
         )
 
     private fun msg(info: MessageInfo, vararg parts: Part) = MessageWithParts(info, parts.toList().toImmutableList())
 
-    private val prompt = msg(MessageInfo("m1", sid, Role.User, time = MsgTime(1_000, null)), text("p1", "m1", "base three"))
+    private val prompt =
+        msg(MessageInfo("m1", sid, Role.User, time = MsgTime(1_000, null)), text("p1", "m1", "base three"))
 
     private fun facts(page: List<MessageWithParts>, live: Boolean = false): TurnFactsUi {
         val k = TurnFeedKeeper(sid)
@@ -97,11 +109,13 @@ class FooterOwnTimeTest {
     fun `B-CHAT-FOOT-003 a compaction notice inside a live turn changes no clock and the finished footer ignores it`() {
         val live = reply("m2", 2_000, null)
         val compaction = noticeMessage("m3", 20_000, done = 200_000)
-        val running = listOf(prompt, msg(compaction, notice("n2", "m3", PartType.Compaction, "completed")), msg(live, step("t1", "m2", 21_000, 22_000)))
+        val compacting = msg(compaction, notice("n2", "m3", PartType.Compaction, "completed"))
+        val running = listOf(prompt, compacting, msg(live, step("t1", "m2", 21_000, 22_000)))
         val during = facts(running, live = true)
         assertEquals(1_000L, during.runStartedAtMs, "the live counter starts where the run started")
         assertNull(during.reading.metadata["m1"], "a turn that is still running has no footer yet")
-        val finished = facts(listOf(prompt, msg(compaction, notice("n2", "m3", PartType.Compaction, "completed")), msg(reply("m2", 2_000, 74_000), text("x", "m2", "Done."))))
+        val answered = msg(reply("m2", 2_000, 74_000), text("x", "m2", "Done."))
+        val finished = facts(listOf(prompt, compacting, answered))
         val meta = assertNotNull(finished.reading.metadata["m1"])
         assertEquals(74_000L, meta.endedAtMs, "the compaction finishing later is not the reply ending")
         assertEquals(73_000L, meta.tookMs)
