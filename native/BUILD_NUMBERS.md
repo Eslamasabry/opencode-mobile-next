@@ -135,3 +135,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10109 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: update-sheet-visible, Italian (pr150-italian first part), okhttp-floor-3 and the status_all chore on top of 10108 (source 37cb52cab7) |
 | 10110 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: pr150-italian-2-r2, root-file-chip-r3, injection-fixes-301 up to a6f4f2cea9 (not the Tailscale row) and undo-truth-r3 on top of 10109 (source e3c3b15102) |
 | 10111 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: update-sheet-polish, update-sheet-nospace and claude-update-finishes on top of 10110 (source e992002be5) |
+| 10112 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: undo-row-door, update-line-names-phase and sheet-no-reopen on top of 10111 (source 367e768294) |
