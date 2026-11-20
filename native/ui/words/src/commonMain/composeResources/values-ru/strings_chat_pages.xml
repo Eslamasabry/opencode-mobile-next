@@ -455,6 +455,6 @@
         <item quantity="other">Откатить %1$d изменённого файла?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Откатить 1 изменённый файл?</string>
-    <string name="reviewUndoBody">Ваш проект вернётся к состоянию до начала работы агента. Чат останется.</string>
+    <string name="reviewUndoBody">Сообщения с того места, где начались эти изменения, будут скрыты, а ваши файлы вернутся к прежнему виду. Всё можно вернуть, пока вы не удалите скрытые сообщения.</string>
     <string name="reviewDone">Готово</string>
 </resources>

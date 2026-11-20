@@ -422,6 +422,6 @@
         <item quantity="other">Urungkan %1$d file yang berubah?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Urungkan 1 file yang berubah?</string>
-    <string name="reviewUndoBody">Proyek Anda kembali seperti sebelum agen mulai. Percakapan tetap ada.</string>
+    <string name="reviewUndoBody">Ini menyembunyikan pesan sejak perubahan ini dimulai dan mengembalikan file Anda seperti semula. Anda dapat memulihkan semuanya sampai Anda menghapus pesan yang disembunyikan.</string>
     <string name="reviewDone">Selesai</string>
 </resources>

@@ -444,6 +444,6 @@
         <item quantity="other">Desfazer %1$d arquivos alterados?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Desfazer 1 arquivo alterado?</string>
-    <string name="reviewUndoBody">Seu projeto volta a como estava antes de o agente começar. A conversa continua.</string>
+    <string name="reviewUndoBody">Isso oculta as mensagens desde onde estas alterações começaram e devolve seus arquivos ao que eram. Você pode recuperar tudo até excluir as mensagens ocultas.</string>
     <string name="reviewDone">Concluído</string>
 </resources>

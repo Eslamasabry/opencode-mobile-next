@@ -423,6 +423,6 @@
         <item quantity="other">撤销 %1$d 个已更改的文件？</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">撤销 1 个已更改的文件？</string>
-    <string name="reviewUndoBody">你的项目会恢复到智能体开始之前的样子。对话会保留。</string>
+    <string name="reviewUndoBody">这会隐藏从这些更改开始之后的消息，并把你的文件恢复原样。在你删除已隐藏的消息之前，都可以全部恢复。</string>
     <string name="reviewDone">完成</string>
 </resources>

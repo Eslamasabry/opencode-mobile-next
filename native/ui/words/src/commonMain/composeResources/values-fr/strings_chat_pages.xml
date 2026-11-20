@@ -444,6 +444,6 @@
         <item quantity="other">Annuler %1$d fichiers modifiés\u00A0?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Annuler 1 fichier modifié\u00A0?</string>
-    <string name="reviewUndoBody">Votre projet revient à son état d'avant le début du travail de l'agent. La conversation est conservée.</string>
+    <string name="reviewUndoBody">Cela masque les messages à partir de l’endroit où ces modifications ont commencé et remet vos fichiers comme ils étaient. Vous pouvez tout récupérer tant que vous n’avez pas supprimé les messages masqués.</string>
     <string name="reviewDone">Terminé</string>
 </resources>

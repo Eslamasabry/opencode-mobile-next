@@ -445,6 +445,6 @@
         <item quantity="other">¿Deshacer %1$d archivos modificados?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">¿Deshacer 1 archivo modificado?</string>
-    <string name="reviewUndoBody">Tu proyecto vuelve a como estaba antes de que el agente empezara. La conversación se queda.</string>
+    <string name="reviewUndoBody">Esto oculta los mensajes desde donde empezaron estos cambios y devuelve tus archivos a como estaban. Puedes recuperar todo hasta que elimines los mensajes ocultos.</string>
     <string name="reviewDone">Listo</string>
 </resources>
