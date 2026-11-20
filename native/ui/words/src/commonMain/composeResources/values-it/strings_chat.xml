@@ -1256,7 +1256,6 @@
     <string name="stageStartingLinux">Avvio di Linux…</string>
     <string name="stageStartingOpenCode">Avvio di OpenCode…</string>
     <string name="stageStartingHelper">Avvio dell'helper degli agenti…</string>
-    <string name="stageStartingAgents">Avvio degli agenti…</string>
     <string name="stageStartingAgent">Avvio di %1$s…</string>
     <string name="stageOpeningConversation">Apertura della conversazione…</string>
     <string name="chatLoadFailedAgentBody">Non si è perso nulla. Riprova quando %1$s risponde.</string>
