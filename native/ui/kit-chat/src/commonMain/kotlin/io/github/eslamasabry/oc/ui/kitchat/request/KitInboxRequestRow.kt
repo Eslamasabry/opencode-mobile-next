@@ -39,7 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 internal data class InboxAnswerRoles(val reject: KitButtonRole, val allow: KitButtonRole)
 
 internal fun inboxAnswerRoles(primary: Boolean): InboxAnswerRoles =
-    InboxAnswerRoles(reject = KitButtonRole.Tertiary, allow = if (primary) KitButtonRole.Primary else KitButtonRole.Secondary)
+    InboxAnswerRoles(reject = KitButtonRole.Secondary, allow = if (primary) KitButtonRole.Primary else KitButtonRole.Secondary)
 
 /** The waiting Inbox row (`kit_request_row.dart`): place, question, command and trailing answers. */
 @Composable
