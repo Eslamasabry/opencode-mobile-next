@@ -85,6 +85,7 @@ internal fun ChatQuestionSheet(state: QuestionSheetUi, actions: ChatRequestActio
                         stringResource(Res.string.activityQuestionProgress, index + 1, question.prompts.size),
                         role = TypeRole.Caption,
                         tone = TextTone.Secondary,
+                        tabular = true,
                     )
                     KitText(prompt.title, role = TypeRole.Headline)
                     Spacer(Modifier.height(Space.S1.dp))

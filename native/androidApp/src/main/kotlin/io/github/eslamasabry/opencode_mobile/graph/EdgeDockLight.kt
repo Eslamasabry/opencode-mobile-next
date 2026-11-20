@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampDims
+import io.github.eslamasabry.oc.ui.kit.lamp.KitLampRules
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMark
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
@@ -211,10 +212,11 @@ internal object EdgeLightRules {
 
     /**
      * True when the one-time tip beside the closed light may appear: prefs are loaded (no cold-start flash for people
-     * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, and neither panel nor move is open.
+     * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, neither panel nor move is open
+     * ([away]), and the page is [calm] (no request card, no other tip).
      */
-    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, open: Boolean, placing: Boolean): Boolean =
-        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !open && !placing
+    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, away: Boolean, calm: Boolean = true): Boolean =
+        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !away && calm
 
     fun counts(model: DockListModel, page: ConversationRef?): EdgeLightCounts {
         val others = model.rows.filter { !it.isOpen && it.ref != page }
@@ -244,7 +246,7 @@ internal object EdgeLightRules {
      * tallest touch box never leaves the page.
      */
     fun bottomFromPageDp(height: EdgeLightHeight, pageDp: Float, chromeDp: Float, lowDp: Float): Float {
-        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val touchMax = KitLampRules.touchHeightDp(KitLampDims.MAX_H).toFloat()
         val low = chromeDp + lowDp
         val top = maxOf(low, pageDp - touchMax)
         return when (height) {
@@ -260,7 +262,7 @@ internal object EdgeLightRules {
      * never above the area (a short window, a landscape phone, puts all three where it fits).
      */
     fun bottomOffsetDp(height: EdgeLightHeight, areaDp: Float, lowDp: Float): Float {
-        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val touchMax = KitLampRules.touchHeightDp(KitLampDims.MAX_H).toFloat()
         val top = maxOf(lowDp, areaDp - touchMax)
         return when (height) {
             EdgeLightHeight.Low -> minOf(lowDp, top)
@@ -269,3 +271,7 @@ internal object EdgeLightRules {
         }
     }
 }
+
+/** True while the conversation on screen waits for the person's answer: its request card is on the page. */
+internal fun edgeLightRequestOnPage(model: DockListModel, page: ConversationRef?): Boolean =
+    model.rows.any { (it.isOpen || it.ref == page) && it.state == DockListState.NeedsYou }

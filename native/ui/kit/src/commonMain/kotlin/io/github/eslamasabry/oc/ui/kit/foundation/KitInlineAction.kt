@@ -66,6 +66,7 @@ internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifie
                 tone = if (action.enabled) TextTone.Accent else TextTone.Tertiary,
                 kind = KitTextKind.Frame,
                 maxLines = maxLines,
+                tabular = true,
             )
         }
     }

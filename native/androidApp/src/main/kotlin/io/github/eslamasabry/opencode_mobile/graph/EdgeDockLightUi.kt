@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,9 +28,12 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
@@ -42,11 +46,14 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitModalOpen
 import io.github.eslamasabry.oc.ui.kit.modal.KitOwnModalLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLamp
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
+import io.github.eslamasabry.oc.ui.kit.lamp.LocalKitLampSideInset
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceWords
+import io.github.eslamasabry.oc.ui.kit.lamp.KitLampRules
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampSide
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
+import io.github.eslamasabry.oc.ui.kit.teaching.kitTipsOnScreen
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTipPlacement
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.shell.ShellPageLight
@@ -108,8 +115,16 @@ internal fun EdgeLightMount(
     val modalOpen = KitModalOpen.isOpen
     LaunchedEffect(modalOpen) { if (modalOpen) open = false }
     val lightVisible = EdgeLightRules.visible(keyboardUp, modalOpen)
+    // The touch box is the page gutter plus whatever the cutout or a bar takes on the light's physical side.
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val insets = WindowInsets.safeDrawing
+    val rtl = direction == LayoutDirection.Rtl
+    val physicalLeft = KitLampRules.onLeft(place.side, rtl)
+    val sidePx = if (physicalLeft) insets.getLeft(density, direction) else insets.getRight(density, direction)
+    val sideInset = with(density) { sidePx.toDp() }
     val mountOverlay = rememberOverlayMounted(open, placing)
-    val tipState = rememberFirstUseTip(port, lightVisible, open, placing)
+    val tipState = rememberFirstUseTip(port, lightVisible, open, placing, edgeLightRequestOnPage(list, page))
     AnnounceNewNeeds(face, label, open)
     Box(modifier.fillMaxSize()) {
         // Closed light stays cheap: list controller, state and panel strings mount only when opened or moving.
@@ -138,6 +153,7 @@ internal fun EdgeLightMount(
                 modifier = Modifier.align(edgeAlign).padding(bottom = offset),
                 placement = KitTipPlacement.BesideEdge,
             ) {
+                CompositionLocalProvider(LocalKitLampSideInset provides sideInset) {
                 KitLamp(
                     face = face.copy(open = open),
                     label = if (open) stringResource(Res.string.edgeLightFaceClose) else label,
@@ -153,6 +169,7 @@ internal fun EdgeLightMount(
                     side = place.side,
                     visible = lightVisible,
                 )
+                }
             }
         }
     }
@@ -180,19 +197,26 @@ private fun rememberFirstUseTip(
     lightVisible: Boolean,
     open: Boolean,
     placing: Boolean,
+    requestOnPage: Boolean,
 ): androidx.compose.runtime.MutableState<Boolean> {
     val taught by port.lightTaught.collectAsStateWithLifecycle()
     val prefsLoaded by port.lightPrefsLoaded.collectAsStateWithLifecycle()
     val showing = remember { mutableStateOf(false) }
-    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing)
+    // Waits for a calm moment (no keyboard, no request card on the page) and then shows; once per mount, so a keyboard
+    // that opens later does not bring it back or count it twice.
+    val shownOnce = remember { mutableStateOf(false) }
+    val calm = !requestOnPage && kitTipsOnScreen() == 0
+    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open || placing, calm)
     LaunchedEffect(canShow) {
-        if (canShow && !showing.value) {
+        if (canShow && !showing.value && !shownOnce.value) {
+            shownOnce.value = true
             showing.value = true
             port.recordLightTipShown()
         }
     }
-    LaunchedEffect(open, placing, lightVisible) {
-        if (open || placing || !lightVisible) showing.value = false
+    LaunchedEffect(open, placing, lightVisible, requestOnPage) {
+        val away = open || placing
+        if (away || !lightVisible || requestOnPage) showing.value = false
     }
     return showing
 }

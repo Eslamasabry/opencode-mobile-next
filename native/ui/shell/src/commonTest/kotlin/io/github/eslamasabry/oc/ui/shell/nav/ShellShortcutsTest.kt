@@ -103,10 +103,10 @@ class ShellShortcutsTest {
     }
 
     @Test
-    fun `B-NAV-100 the rail exists from medium only, beside the two destinations`() {
+    fun `B-NAV-100 the rail shows at no size, the two destinations stay known`() {
         assertFalse(ShellRailRules.shows(WindowClass.Compact))
-        assertTrue(ShellRailRules.shows(WindowClass.Medium))
-        assertTrue(ShellRailRules.shows(WindowClass.Large))
+        assertFalse(ShellRailRules.shows(WindowClass.Medium))
+        assertFalse(ShellRailRules.shows(WindowClass.Large))
         assertEquals(ShellDestination.Chats, ShellRailRules.destinationOf(ChatsRoute.Home))
         assertEquals(ShellDestination.Settings, ShellRailRules.destinationOf(SettingsRoute.Home))
         assertNull(ShellRailRules.destinationOf(ChatsRoute.All()))

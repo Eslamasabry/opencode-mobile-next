@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.quality
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -29,7 +30,8 @@ class DesktopShellUiTest {
         // Main.kt wraps App in the graph's chat environment (redactor and the rest); the host does the same.
         setContent { graph.kitChatEnvironment.Provide { App(graph.shell, DesktopKitPlatform(), graph.metroViewModelFactory) } }
 
-        // The home's title.
+        // No rail at any size (BS-RAIL-OFF); the home's title (list pane on wide windows).
+        onNodeWithTag("kit-nav-Chats").assertDoesNotExist()
         onAllNodesWithText("Conversations")[0].assertExists()
         onNodeWithText("New conversation").performClick()
         // The route-keyed (assisted) entry: no server is connected, so it says so and offers to add one.
