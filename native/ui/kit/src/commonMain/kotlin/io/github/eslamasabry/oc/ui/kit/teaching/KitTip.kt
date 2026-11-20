@@ -121,19 +121,28 @@ public object TipRules {
 }
 
 /**
- * How many tips that do not yield are drawn right now, so a tip that yields ([KitTip]'s `yieldsToOthers`) can wait for
- * a calm moment instead of lying over them (owner, look 10114: two tips stacked over a reply's footer).
+ * How many tips that do not yield are drawn in one page root, so a tip that yields ([KitTip]'s `yieldsToOthers`) can
+ * wait for a calm moment instead of lying over them (owner, look 10114: two tips stacked over a reply's footer). One
+ * is held by each kit theme root and passed down by [LocalKitTipPresence], so a page counts its own tips only; with
+ * none provided there is no other tip.
  */
-public object KitTipPresence {
+public class KitTipPresence {
     private val shown = androidx.compose.runtime.mutableIntStateOf(0)
 
-    /** The tips on screen now (a snapshot read: a composable that reads it recomposes when it changes). */
+    /** The tips on screen in this root (a snapshot read: a composable that reads it recomposes when it changes). */
     public val others: Int get() = shown.intValue
 
     internal fun enter() { shown.intValue += 1 }
 
     internal fun leave() { shown.intValue = (shown.intValue - 1).coerceAtLeast(0) }
 }
+
+/** The page root's [KitTipPresence]; null where none is provided (then no other tip is counted). */
+public val LocalKitTipPresence: ProvidableCompositionLocal<KitTipPresence?> = staticCompositionLocalOf { null }
+
+/** How many other tips this root shows right now (0 when the root keeps no count). */
+@Composable
+public fun kitTipsOnScreen(): Int = LocalKitTipPresence.current?.others ?: 0
 
 /**
  * A part whose words a tip must never cover (owner, look 10100: "Hold Send…" lay over a shared link in the message
@@ -204,7 +213,7 @@ public fun KitTip(
     // modal has gone (its hold starts then, so the person gets the whole of it).
     val host = LocalKitSheetHost.current
     val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
-    val show = TipRules.mayShow(visible, modalOpen, yieldsToOthers, KitTipPresence.others)
+    val show = TipRules.mayShow(visible, modalOpen, yieldsToOthers, kitTipsOnScreen())
     shown.targetState = show
     LaunchedEffect(show, holdMs) {
         if (show) {
@@ -216,9 +225,10 @@ public fun KitTip(
     var shownAt by remember { mutableStateOf(Rect.Zero) }
     val showing = shown.currentState || shown.targetState
     val counts = showing && !yieldsToOthers
-    DisposableEffect(counts) {
-        if (counts) KitTipPresence.enter()
-        onDispose { if (counts) KitTipPresence.leave() }
+    val presence = LocalKitTipPresence.current
+    DisposableEffect(counts, presence) {
+        if (counts) presence?.enter()
+        onDispose { if (counts) presence?.leave() }
     }
     Box(
         modifier.onGloballyPositioned {

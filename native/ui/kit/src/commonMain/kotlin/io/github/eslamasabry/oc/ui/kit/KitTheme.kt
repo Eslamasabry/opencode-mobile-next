@@ -186,6 +186,7 @@ public fun KitTheme(
         LocalKitThemeCover provides fade.cover,
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,
+        io.github.eslamasabry.oc.ui.kit.teaching.LocalKitTipPresence provides remember { io.github.eslamasabry.oc.ui.kit.teaching.KitTipPresence() },
         LocalKitMotion provides motion,
         LocalKitWindow provides window,
         LocalLayoutDirection provides direction,
