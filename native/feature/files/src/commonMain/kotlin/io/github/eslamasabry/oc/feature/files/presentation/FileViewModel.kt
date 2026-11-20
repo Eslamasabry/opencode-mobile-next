@@ -257,7 +257,9 @@ public class FileViewModel(
     private val local =
         MutableStateFlow(
             FileUi(
-                FilePaths.normalize(route.path),
+                // A path still starting with a slash lies outside the project: it keeps it, so the page and its
+                // words say so (dropping it made the page name a place that was never meant).
+                if (route.path.startsWith("/")) route.path.trim() else FilePaths.normalize(route.path),
                 route.line,
                 canShare = share.supported,
                 canOpenWith = handoffs.isNotEmpty(),

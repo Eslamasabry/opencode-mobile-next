@@ -1706,10 +1706,28 @@ public class ChatPresenter(
 
     override fun openLink(url: String) {
         val out = outside ?: return
-        out.fileLinkPath(url)?.let {
-            openPath(it, null)
-            return
+        val filePath = out.fileLinkPath(url) ?: LinkTargets.file(url)
+        if (filePath != null) openLinkedFile(filePath) else openWebLink(out, url)
+    }
+
+    /**
+     * A reply's link to a file: a `file:` address or a target with no scheme (`notes.txt`, `src/a.kt`, `/root/p/a.kt`)
+     * opens as a project file by the same rules as a path chip, and never reaches the link policy or the browser. A name
+     * with no slash is a file only if the project root lists it; any other stays the refused link it was.
+     */
+    private fun openLinkedFile(path: String) {
+        if (path.contains('/')) {
+            openPath(path, null)
+        } else {
+            local.update { it.copy(linkRefused = false) }
+            launcher.launch {
+                if ((world.fileExists(path) as? Outcome.Ok)?.value == true) openPath(path, null)
+                else local.update { it.copy(linkRefused = true) }
+            }
         }
+    }
+
+    private fun openWebLink(out: ChatOutside, url: String) {
         local.update { it.copy(linkRefused = false) }
         when (val check = out.checkLink(url)) {
             LinkCheck.Opened -> Unit
@@ -1734,7 +1752,8 @@ public class ChatPresenter(
 
     /**
      * The chat's one copy (E15-S06): every text — the person's own prompt as much as a reply, a code block or a tool's
-     * output — is masked by the app's redactor before it reaches the clipboard, and the copy says whether it hid anything.
+     * output — is masked by the app's redactor before it reaches the clipboard, and the copy says whether it hid
+     * anything.
      */
     private fun copyOut(text: String) {
         if (text.isEmpty()) return
