@@ -15,15 +15,14 @@ class PhoneAgentEsbuildCacheTest {
 
     private val key = "0.16.1-d5317553e538"
 
-    private class Launch(val code: Int, val options: String, val dir: String, val hookSeen: Boolean)
+    private class Launch(val code: Int, val options: String, val ours: String)
 
     private fun launch(home: File, esbuildKey: String?, nodeOptions: String? = null): Launch {
         val helper = folder.newFile().apply {
             writeText(
                 "#!/bin/sh\n" +
-                    "printf '%s\\n' \"${'$'}{NODE_OPTIONS:-unset}\" \"${'$'}{OC_ESBUILD_CACHE_DIR:-unset}\"\n" +
-                    "h=${'$'}{OC_ESBUILD_CACHE_DIR:-/nonexistent}/../hook.cjs\n" +
-                    "if [ -s \"${'$'}h\" ]; then echo hook; else echo nohook; fi\n",
+                    "printf '%s\\n' \"${'$'}{NODE_OPTIONS:-unset}\"\n" +
+                    "env | grep -c '^OC_' || true\n",
             )
             setExecutable(true)
         }
@@ -39,7 +38,7 @@ class PhoneAgentEsbuildCacheTest {
         child.outputStream.use { it.write("fixture\n".toByteArray()) }
         assertTrue(child.waitFor(10, TimeUnit.SECONDS))
         val lines = child.inputStream.bufferedReader().readText().lines()
-        return Launch(child.exitValue(), lines[0], lines[1], lines[2] == "hook")
+        return Launch(child.exitValue(), lines[0], lines[1])
     }
 
     private fun root(home: File) = File(home, ".cache/oc-esbuild")
@@ -50,8 +49,8 @@ class PhoneAgentEsbuildCacheTest {
         val hook = File(root(home), "$key/hook.cjs")
         assertEquals(0, run.code)
         assertEquals("--require \"${hook.absolutePath}\"", run.options)
-        assertEquals(File(root(home), "$key/cache").absolutePath, run.dir)
-        assertTrue(run.hookSeen)
+        assertEquals("the helper gets no variable of ours", "0", run.ours)
+        assertEquals("/home/oc/.local/share/oc-paseo/$key", File(root(home), "$key/pin-root").readText())
         assertEquals(EsbuildCacheHook.SOURCE, hook.readText())
         assertTrue("the shipped hook must not be empty", EsbuildCacheHook.SOURCE.length > 1000)
     }
@@ -82,7 +81,7 @@ class PhoneAgentEsbuildCacheTest {
         val run = launch(home, key, nodeOptions = "--foo")
         assertEquals(0, run.code)
         assertEquals("--foo", run.options)
-        assertEquals("unset", run.dir)
+        assertEquals("0", run.ours)
     }
 
     @Test fun `B-AGENT-455 a hook that cannot be written starts the helper without the preload`() {
@@ -91,7 +90,16 @@ class PhoneAgentEsbuildCacheTest {
         val run = launch(home, key)
         assertEquals(0, run.code)
         assertEquals("unset", run.options)
-        assertEquals("unset", run.dir)
+        assertEquals("0", run.ours)
+    }
+
+    @Test fun `B-AGENT-477 a pin file that cannot be written starts the helper without the preload`() {
+        val home = folder.newFolder("profile")
+        File(root(home), "$key/pin-root.new").mkdirs()
+        val run = launch(home, key)
+        assertEquals(0, run.code)
+        assertEquals("unset", run.options)
+        assertFalse(File(root(home), "$key/hook.cjs").exists())
     }
 
     @Test fun `B-AGENT-456 no pin folder name means no preload and no cache folder`() {
