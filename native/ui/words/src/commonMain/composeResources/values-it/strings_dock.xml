@@ -163,4 +163,7 @@
     <string name="edgeLightRenameFailed">Impossibile rinominare %1$s</string>
     <string name="dockSettingTitle">Dock laterale</string>
     <string name="dockSettingBody">Le conversazioni in esecuzione sul bordo dello schermo. Trascina il bordo superiore per spostarlo sull'altro lato.</string>
+    <string name="edgeLightAsksFetch">Chiede di recuperare: %1$s</string>
+    <string name="edgeLightAsksSearch">Chiede di cercare sul web «%1$s»</string>
+    <string name="edgeLightAsksTool">Chiede di usare lo strumento: %1$s</string>
 </resources>

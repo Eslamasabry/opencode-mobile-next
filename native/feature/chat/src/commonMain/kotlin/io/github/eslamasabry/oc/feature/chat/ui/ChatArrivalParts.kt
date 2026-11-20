@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.compositionLocalOf
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -22,8 +26,11 @@ internal val LocalReplyHint = compositionLocalOf<ReplyHint?> { null }
  */
 @Composable
 internal fun BackNoteTip(leftTitle: String?, onDismissed: () -> Unit, bar: @Composable () -> Unit) {
+    // The tip fades out after the title is cleared: it keeps the last title for that fade, never a placeholder.
+    var shownTitle by remember { mutableStateOf(leftTitle) }
+    if (leftTitle != null && leftTitle != shownTitle) shownTitle = leftTitle
     KitTip(
-        message = stringResource(Res.string.tipBackReturnsTo, leftTitle ?: "·"),
+        message = stringResource(Res.string.tipBackReturnsTo, shownTitle.orEmpty()),
         visible = leftTitle != null,
         onDismissed = onDismissed,
         anchor = bar,

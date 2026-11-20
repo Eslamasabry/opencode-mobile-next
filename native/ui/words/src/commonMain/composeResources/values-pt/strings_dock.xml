@@ -163,4 +163,7 @@
     <string name="edgeLightAgeHours">%1$sh</string>
     <string name="edgeLightAgeDays">%1$sd</string>
     <string name="edgeLightRenameFailed">Não foi possível renomear %1$s</string>
+    <string name="edgeLightAsksFetch">Pede para buscar: %1$s</string>
+    <string name="edgeLightAsksSearch">Pede para pesquisar na web “%1$s”</string>
+    <string name="edgeLightAsksTool">Pede para usar a ferramenta: %1$s</string>
 </resources>

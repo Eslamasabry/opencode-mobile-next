@@ -145,4 +145,7 @@
     <string name="edgeLightAgeHours">%1$s giờ</string>
     <string name="edgeLightAgeDays">%1$s ngày</string>
     <string name="edgeLightRenameFailed">Không thể đổi tên %1$s</string>
+    <string name="edgeLightAsksFetch">Xin tải: %1$s</string>
+    <string name="edgeLightAsksSearch">Xin tìm trên web “%1$s”</string>
+    <string name="edgeLightAsksTool">Xin dùng công cụ: %1$s</string>
 </resources>

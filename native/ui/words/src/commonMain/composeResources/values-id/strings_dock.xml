@@ -145,4 +145,7 @@
     <string name="edgeLightAgeHours">%1$s j</string>
     <string name="edgeLightAgeDays">%1$s h</string>
     <string name="edgeLightRenameFailed">Tidak bisa mengganti nama %1$s</string>
+    <string name="edgeLightAsksFetch">Meminta mengambil: %1$s</string>
+    <string name="edgeLightAsksSearch">Meminta mencari di web “%1$s”</string>
+    <string name="edgeLightAsksTool">Meminta memakai alat: %1$s</string>
 </resources>

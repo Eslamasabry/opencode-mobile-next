@@ -4000,6 +4000,7 @@ edgeLightAllShort	5da1407625
 edgeLightAllowed	6790c65ffa
 edgeLightAnswer	133e35b243
 edgeLightAsksEdit	8fb8274e06
+edgeLightAsksFetch	4500215f4a
 edgeLightAsksFolder	8d57689021
 edgeLightAsksForm	3bad0b2f17
 edgeLightAsksFormBare	05e815337c
@@ -4008,6 +4009,8 @@ edgeLightAsksQuestion	e2dd79ba93
 edgeLightAsksQuestionBare	6ef5ae089e
 edgeLightAsksRead	211f87f725
 edgeLightAsksRun	1e99b16985
+edgeLightAsksSearch	77be8b6622
+edgeLightAsksTool	becfa2f3fe
 edgeLightChildLabel	b928e67d87
 edgeLightChildLabelFact	82fc5a3384
 edgeLightDenied	54d7586401

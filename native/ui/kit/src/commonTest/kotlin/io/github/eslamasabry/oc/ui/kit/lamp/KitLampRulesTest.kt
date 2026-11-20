@@ -48,17 +48,17 @@ class KitLampRulesTest {
         val quiet = KitLampFace()
         assertTrue(quiet.quiet)
         assertEquals(40, KitLampRules.faceHeightDp(quiet))
-        assertEquals(12, KitLampRules.faceWidthDp(quiet, 1f))
+        assertEquals(12, KitLampRules.faceWidthDp(quiet))
         val open = KitLampFace(2, listOf(m("n", KitLampMarkKind.NeedsYou)), open = true)
         assertEquals(48, KitLampRules.faceHeightDp(open))
-        assertEquals(16, KitLampRules.faceWidthDp(open, 1.3f))
+        assertEquals(16, KitLampRules.faceWidthDp(open))
         assertEquals(40, KitLampRules.faceHeightDp(KitLampFace(0, listOf(m("w", KitLampMarkKind.Working)))), "one row stays at the 40 dp least")
         assertEquals(53, KitLampRules.faceHeightDp(KitLampFace(1, listOf(m("n", KitLampMarkKind.NeedsYou), m("w", KitLampMarkKind.Working)))))
         val full = KitLampFace(5, List(6) { m("n$it", KitLampMarkKind.NeedsYou) })
         assertEquals(68, KitLampRules.faceHeightDp(full))
         assertEquals(KitLampDims.MAX_H, 68)
-        assertEquals(84, KitLampRules.touchHeightDp(68), "the touch box is 16 dp taller than the face")
-        assertEquals(24, KitLampDims.TOUCH_W)
+        assertEquals(68, KitLampRules.touchHeightDp(68), "a tall mark is its own touch box")
+        assertEquals(48, KitLampRules.touchHeightDp(40), "a short mark gets the 48 dp box, centred on it")
     }
 
     @Test
@@ -75,9 +75,10 @@ class KitLampRulesTest {
     @Test
     fun `B-LAMP-K1-004 the face widens to 20 dp only for 9+ at the frame text cap`() {
         val many = KitLampFace(12, listOf(m("n", KitLampMarkKind.NeedsYou)))
-        assertEquals(20, KitLampRules.faceWidthDp(many, 1.3f))
-        assertEquals(16, KitLampRules.faceWidthDp(many, 1f))
-        assertEquals(16, KitLampRules.faceWidthDp(many.copy(count = 3), 1.3f))
+        assertEquals(16, KitLampRules.faceWidthDp(many), "never wider than the 16 dp page gutter")
+        assertTrue(KitLampRules.numberCompact(many), "9+ is written small at any text size")
+        assertTrue(KitLampRules.numberCompact(many))
+        assertEquals(16, KitLampRules.faceWidthDp(many.copy(count = 3)))
     }
 
     @Test
@@ -131,16 +132,63 @@ class KitLampRulesTest {
     }
 
     @Test
-    fun `B-LAMP-K1-010 a tip beside an edge part stands on the page side of it, centred, inside the window`() {
-        // A 24 x 84 light on the right edge of a 412 x 860 window; a 200 x 60 tip; 8 px gap.
-        val (x, y) = TipRules.besideEdge(388, 500, 412, 584, 412, 860, 200, 60, 8)
-        assertEquals(388 - 8 - 200, x)
-        assertEquals(542 - 30, y)
+    fun `B-LAMP-K1-010 a tip beside an edge part stands on the page side of it, above its mark, inside the window`() {
+        // A 16 x 48 gutter box on the right edge of a 412 x 860 window; a 200 x 60 tip; 8 px gap.
+        val (x, y) = TipRules.besideEdge(396, 500, 412, 548, 412, 860, 200, 60, 8)
+        assertEquals(396 - 200, x, "its end edge meets the gutter's inner edge")
+        assertEquals(500 - 8 - 60, y, "it stands above the light, never beside it")
         // On the left edge (Arabic): to its right.
-        val (lx, _) = TipRules.besideEdge(0, 500, 24, 584, 412, 860, 200, 60, 8)
-        assertEquals(32, lx)
-        // Near the bottom: kept in the window.
-        val (_, by) = TipRules.besideEdge(388, 820, 412, 860, 412, 860, 200, 60, 8)
-        assertEquals(800, by)
+        val (lx, _) = TipRules.besideEdge(0, 500, 16, 548, 412, 860, 200, 60, 8)
+        assertEquals(16, lx)
+        // No room above: below the light, inside the window.
+        val (_, by) = TipRules.besideEdge(396, 20, 412, 68, 412, 860, 200, 60, 8)
+        assertEquals(76, by)
+        // Near the bottom: above it and kept in the window.
+        val (_, ny) = TipRules.besideEdge(396, 800, 412, 848, 412, 860, 200, 60, 8)
+        assertEquals(800 - 8 - 60, ny)
+    }
+
+    @Test
+    fun `B-LAMP-014 the light's tip never covers a footer button flush at the content edge`() {
+        val windowW = 412
+        val gutter = 16
+        val tipW = 280
+        val tipH = 60
+        // Footer buttons 48 dp square, flush at the content's edge, level with the light (a reply's copy and more).
+        for (lightTop in listOf(100, 300, 500, 700, 800)) {
+            val light = intArrayOf(windowW - gutter, lightTop, windowW, lightTop + 48)
+            val (x, y) = TipRules.besideEdge(light[0], light[1], light[2], light[3], windowW, 860, tipW, tipH, 8)
+            val tip = intArrayOf(x, y, x + tipW, y + tipH)
+            val edge = windowW - gutter
+            val copy = intArrayOf(edge - 48, lightTop, edge, lightTop + 48)
+            val more = intArrayOf(edge - 96, lightTop, edge - 48, lightTop + 48)
+            for (button in listOf(copy, more)) {
+                val overlaps = tip[0] < button[2] && button[0] < tip[2] && tip[1] < button[3] && button[1] < tip[3]
+                assertTrue(!overlaps, "light at $lightTop: the tip ${tip.toList()} covers ${button.toList()}")
+            }
+        }
+    }
+
+    @Test
+    fun `B-LAMP-015 a tip that yields waits while any other tip is on screen, and never over a modal`() {
+        fun may(modal: Boolean = false, yields: Boolean = true, others: Int = 0, visible: Boolean = true) =
+            TipRules.mayShow(visible, modal, yields, others)
+        assertTrue(may())
+        assertTrue(!may(others = 1), "another tip is up: wait")
+        assertTrue(may(yields = false, others = 2), "a plain tip is as before")
+        assertTrue(!may(modal = true))
+        assertTrue(!may(visible = false))
+    }
+
+    @Test
+    fun `B-LAMP-015 each page root counts its own tips, two roots never see each other, and none means no other tip`() {
+        val a = io.github.eslamasabry.oc.ui.kit.teaching.KitTipPresence()
+        val b = io.github.eslamasabry.oc.ui.kit.teaching.KitTipPresence()
+        a.enter()
+        assertEquals(1, a.others)
+        assertEquals(0, b.others, "another root's tip is not this root's")
+        a.leave()
+        a.leave()
+        assertEquals(0, a.others, "never below zero")
     }
 }

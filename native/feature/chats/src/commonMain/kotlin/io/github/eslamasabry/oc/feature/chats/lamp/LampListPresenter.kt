@@ -17,6 +17,8 @@ public data class LampInputs(
     val nowMs: Long,
     /** Permission replies in their undo window, by request id (the shared hold). */
     val held: Map<String, HomeHeldReply> = emptyMap(),
+    /** Answers already sent whose request is still listed: the receipt stays, without Undo. */
+    val sent: Map<String, HomeHeldReply> = emptyMap(),
     val stops: Map<ConversationRef, StopPhase> = emptyMap(),
     /** Blocks the person folded (true) or opened (false); a block not in the map follows its children. */
     val folds: Map<ConversationRef, Boolean> = emptyMap(),
@@ -109,10 +111,11 @@ public object LampListPresenter {
             DockListState.Idle -> LampState.Idle
         }
 
-    private fun requestOf(words: DockRequestWords?, owner: ConversationRef, held: Map<String, HomeHeldReply>): LampRequestUi? {
+    private fun requestOf(words: DockRequestWords?, owner: ConversationRef, input: LampInputs): LampRequestUi? {
         words ?: return null
         val answer =
-            held[words.id]?.let { LampAnswerUi.Held(it) }
+            input.held[words.id]?.let { LampAnswerUi.Held(it) }
+                ?: input.sent[words.id]?.let { LampAnswerUi.Held(it, sent = true) }
                 ?: if (words.kind == DockRequestKind.Permission) LampAnswerUi.AllowDeny else LampAnswerUi.Answer
         return LampRequestUi(words.kind, words.id, words.action, words.target, words.text, owner, answer)
     }
@@ -137,7 +140,7 @@ public object LampListPresenter {
             state = markOf(row.state),
             stateLine = stateLineOf(row, group, age, tree),
             newestLine = row.newestLine,
-            request = if (childRaised) null else requestOf(row.request, row.causedBy ?: row.ref, input.held),
+            request = if (childRaised) null else requestOf(row.request, row.causedBy ?: row.ref, input),
             lastActivityMs = row.lastActivityMs,
             age = age,
             server = row.serverName,
@@ -167,7 +170,7 @@ public object LampListPresenter {
                     else -> null
                 },
             newestLine = null,
-            request = if (child.state == DockListState.NeedsYou) requestOf(child.request, child.ref, input.held) else null,
+            request = if (child.state == DockListState.NeedsYou) requestOf(child.request, child.ref, input) else null,
             lastActivityMs = null,
             age = null,
             server = null,
@@ -234,7 +237,7 @@ public object LampListPresenter {
                     name = c.name,
                     state = state,
                     fact = c.progress?.let { LampFact(it.done, it.total) },
-                    request = if (c.state == DockListState.NeedsYou) requestOf(c.request, c.ref, input.held) else null,
+                    request = if (c.state == DockListState.NeedsYou) requestOf(c.request, c.ref, input) else null,
                     paused = state == LampChildState.NeedsYou,
                     step = i + 1,
                     scrollIntoView = false,
