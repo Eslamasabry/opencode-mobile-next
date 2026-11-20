@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFailed
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNoSpace
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesShortSpace
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBusy
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnconfirmed
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnsupported
@@ -102,10 +103,21 @@ internal fun refusalWords(why: RemovalRefusal): String =
         }
     )
 
-/** Why the answer did not start: no room says so in plain words; anything else is the plain line (Details below it). */
+/**
+ * Why the answer did not start. No room: with the amounts when the sheet knows them ("These updates need about N and
+ * this phone has M free. Keep or remove an agent, or free up space."), else the same without amounts; anything else is
+ * the plain line (Details below it).
+ */
 @Composable
-internal fun failureWords(failure: Failure): String =
-    stringResource(
-        if ((failure as? Failure.Media)?.problem == MediaProblem.DownloadNoSpace) Res.string.agentUpdatesNoSpace
-        else Res.string.agentUpdatesFailed
-    )
+internal fun failureWords(failure: Failure, sheet: AgentUpdateSheetUi): String {
+    val noRoom = (failure as? Failure.Media)?.problem == MediaProblem.DownloadNoSpace
+    val free = sheet.freeBytes
+    return when {
+        noRoom && free != null && sheet.downloadBytes > free -> {
+            val needs = PhoneSizes.text(sheet.downloadBytes)
+            stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(free))
+        }
+        noRoom -> stringResource(Res.string.agentUpdatesNoSpace)
+        else -> stringResource(Res.string.agentUpdatesFailed)
+    }
+}

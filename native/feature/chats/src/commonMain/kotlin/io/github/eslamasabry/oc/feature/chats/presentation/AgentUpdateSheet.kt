@@ -80,6 +80,8 @@ public data class AgentUpdateSheetUi(
     val freesBytes: Long = 0,
     val freesKnown: Boolean = true,
     val short: AgentUpdateShortSpace? = null,
+    /** Free space where agents install, when known: a refusal for room says it with the download's size. */
+    val freeBytes: Long? = null,
     val network: AgentUpdateNetwork = AgentUpdateNetwork.Unmetered,
     val updating: Int = 0,
     val removing: Int = 0,
@@ -126,8 +128,14 @@ public object AgentUpdateSheetRules {
     public fun removals(offer: AgentUpdateOffer, picked: Map<AgentId, AgentUpdateChoice>): List<AgentId> =
         decision(offer, picked).filterValues { it == AgentUpdateChoice.Remove }.keys.toList()
 
-    /** Home's line shows while an offer waits for its answer. */
-    public fun pending(offer: AgentUpdateOffer?): Boolean = offer != null && !offer.answered
+    /**
+     * Home's Review line shows while an offer waits for a real decision: before any answer, and after Not now (the
+     * engine counts Not now as answered, with no choice kept for an Optional agent). On 10110 the line went with
+     * `answered`, so after Not now it vanished and nothing led back to the sheet.
+     */
+    public fun pending(offer: AgentUpdateOffer?): Boolean =
+        offer != null &&
+            (!offer.answered || offer.items.any { it.group == AgentUpdateGroup.Optional && it.choice == null })
 
     /** What the sheet shows for [offer] with the person's [picked] answers (the confirm and progress come after). */
     public fun sheet(
@@ -177,6 +185,7 @@ public object AgentUpdateSheetRules {
             freesBytes = removes.sumOf { it.installedBytes ?: 0L },
             freesKnown = removes.all { it.installedBytes != null },
             short = if (free != null && download > free) AgentUpdateShortSpace(download, free) else null,
+            freeBytes = free,
             network = offer.network,
             updating = updates.size,
             removing = removes.size,
@@ -287,7 +296,9 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         log.i { "update sheet: decided " + decision.entries.joinToString { "${it.key.raw}=${it.value}" } }
         local.update { it.copy(working = true, failure = null) }
         scope.launch {
-            when (val outcome = engine.decide(decision)) {
+            val outcome = engine.decide(decision)
+            AgentUpdateChainLog.log.i { "update sheet: " + AgentUpdateChainLog.outcome(outcome) }
+            when (outcome) {
                 is Outcome.Ok -> {
                     val refused = AgentUpdateSheetRules.refused(offer, decision, outcome.value)
                     local.update { it.copy(working = false, closedKey = offer.appUpdateKey, refused = refused) }
@@ -403,5 +414,20 @@ internal class AgentUpdateChainLog {
 
     companion object {
         val log = AppLog.tagged("AgentUpdates")
+
+        /** What decide() answered, in one line: what started, or the kind of refusal (no text from the failure). */
+        fun outcome(outcome: Outcome<AgentUpdateStarted>): String =
+            when (outcome) {
+                is Outcome.Ok ->
+                    "started updating=${outcome.value.updating.size} removing=${outcome.value.removing.size} " +
+                        "kept=${outcome.value.kept.size} refused=${outcome.value.refused.size}"
+                is Outcome.Failed ->
+                    "refused " +
+                        when (val f = outcome.failure) {
+                            is Failure.Media -> f.problem.name
+                            is Failure.Runtime -> f.problem.name
+                            else -> f::class.simpleName.orEmpty()
+                        }
+            }
     }
 }
