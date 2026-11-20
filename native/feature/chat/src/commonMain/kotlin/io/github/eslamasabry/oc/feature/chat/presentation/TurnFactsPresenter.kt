@@ -174,7 +174,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         val calls = combine(declined, waitingCalls, liveChildren) { d, w, c -> StepCalls(d, w, c) }
         return combine(core, waiting, ticks, calls) { f, w, now, c ->
                 val newest = progress.value
-                liveChildren = c.liveChildren
+                this.liveChildren = c.liveChildren
                 val fed = if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest)
                 present(fed, now, w, c.declined, c.waiting)
             }
