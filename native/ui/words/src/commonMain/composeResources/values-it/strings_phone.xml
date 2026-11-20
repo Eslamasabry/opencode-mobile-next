@@ -944,4 +944,5 @@
     <string name="phoneDownloadAgentsOnly__eq1">1 aggiornamento degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
     <string name="phoneDownloadWaitingOpenCodeHelper">Aggiornamento di OpenCode e dell'helper degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">È l'aggiornamento di OpenCode e dell'helper degli agenti che gli serve. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
+    <string name="phoneStoppedByYou">Hai arrestato OpenCode su questo telefono</string>
 </resources>

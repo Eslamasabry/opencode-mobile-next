@@ -977,6 +977,14 @@ public class ChatPresenter(
         local.update { it.copy(confirm = ChatConfirm.RestartPhoneServer) }
     }
 
+    override fun startPhoneServer() {
+        if (!world.serverOnThisPhone) return
+        launcher.launch {
+            val result = world.startPhoneServer()
+            if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
+        }
+    }
+
     override fun confirmRestartPhoneServer() {
         if (local.value.confirm !is ChatConfirm.RestartPhoneServer) return
         local.update { it.copy(confirm = null) }

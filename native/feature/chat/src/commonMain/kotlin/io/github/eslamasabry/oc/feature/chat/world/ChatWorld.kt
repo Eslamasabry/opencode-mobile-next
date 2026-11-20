@@ -123,6 +123,10 @@ public interface ChatWorld {
     public suspend fun restartPhoneServer(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
 
+    /** "Start OpenCode" on the line that says the person stopped this phone's server. */
+    public suspend fun startPhoneServer(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
     /** True when this conversation's server is the phone agents' helper (Restart agent is offered). */
     public val serverIsAgentHelper: Boolean
         get() = false
@@ -447,6 +451,9 @@ public enum class ChatServerWait {
 
     /** A phone agent needs the person to sign in; the conversation opens after that. */
     AgentNeedsSignIn,
+
+    /** The person stopped this phone's OpenCode: "You stopped OpenCode on this phone" with Start OpenCode. */
+    StoppedByPerson,
 
     /** Stage words ([LaunchStage]): the real current stage of getting this conversation ready. */
     StartingLinux,

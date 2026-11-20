@@ -26,6 +26,9 @@ public enum class HomeNoticeKind(public val actionable: Boolean = true) {
     /** A rename did not happen. */
     RenameFailure,
 
+    /** The person stopped This phone's OpenCode: "You stopped OpenCode on this phone", with Start OpenCode. */
+    PhoneStopped,
+
     /** A connection that did not answer, with Try again. */
     ServerUnreachable,
 
@@ -79,8 +82,18 @@ public object HomeNotices {
      */
     public fun unreachable(state: ChatsUi): List<ChatsListSourceUi> =
         state.home.sources.filter {
-            it.shown && it.unreachable && it.starting == null && it.profile != state.home.opening?.profile &&
+            it.shown && it.unreachable && !it.stoppedByPerson && it.starting == null &&
+                it.profile != state.home.opening?.profile &&
                 !(it.selfRun && !it.main)
+        }
+
+    /**
+     * This phone's own OpenCode that the person stopped, except the one still opening (its card says it): the
+     * person's stop is a state with Start OpenCode, never "isn't answering".
+     */
+    public fun phoneStopped(state: ChatsUi): List<ChatsListSourceUi> =
+        state.home.sources.filter {
+            it.shown && it.stoppedByPerson && it.profile != state.home.opening?.profile
         }
 
     /**
@@ -93,7 +106,9 @@ public object HomeNotices {
         state.incomplete.filterNot { name ->
             unreachable(state).any { it.name == name } ||
                 name == state.home.opening?.serverName ||
-                state.home.sources.any { (it.starting != null || (it.selfRun && it.unreachable)) && it.name == name }
+                state.home.sources.any {
+                    (it.starting != null || it.stoppedByPerson || (it.selfRun && it.unreachable)) && it.name == name
+                }
         }
 
     /** Every kind the home currently has something to say about. */
@@ -109,6 +124,7 @@ public object HomeNotices {
         if (state.answerFailure != null) add(HomeNoticeKind.AnswerFailure)
         if (state.archiveFailure != null) add(HomeNoticeKind.ArchiveFailure)
         if (state.renameFailure != null) add(HomeNoticeKind.RenameFailure)
+        if (phoneStopped(state).isNotEmpty()) add(HomeNoticeKind.PhoneStopped)
         if (unreachable(state).isNotEmpty()) add(HomeNoticeKind.ServerUnreachable)
         if (partial(state).isNotEmpty()) add(if (state.refreshing) HomeNoticeKind.ListLoading else HomeNoticeKind.ListIncomplete)
         if (appCondition) add(HomeNoticeKind.AppCondition)

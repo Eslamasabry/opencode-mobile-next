@@ -582,6 +582,9 @@ public interface ChatActions {
     /** Flutter "Restart OpenCode" on the connection line: asks first ([ChatConfirm.RestartPhoneServer]). */
     public fun restartPhoneServer() {}
 
+    /** "Start OpenCode" on the line that says the person stopped this phone's server: starts it at once. */
+    public fun startPhoneServer() {}
+
     /** Flutter "Restart agent" on the connection line: starts the phone agents' helper, then reconnects. */
     public fun restartAgent() {}
 

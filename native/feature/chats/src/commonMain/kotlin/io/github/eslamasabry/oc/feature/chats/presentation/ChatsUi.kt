@@ -123,6 +123,9 @@ public enum class HomeConnectionState {
     Connected,
     Connecting,
     NotAnswering,
+
+    /** The person stopped This phone's OpenCode: its own state, not a failure. */
+    Stopped,
 }
 
 /** The pill's words: the server new conversations start on, and how it answers now. */
@@ -136,15 +139,22 @@ public data class HomeConnectionUi(val server: String, val state: HomeConnection
             extra.opening?.let { opening ->
                 return HomeConnectionUi(
                     opening.serverName,
-                    if (opening.phase == ChatsOpeningPhase.Failed) HomeConnectionState.NotAnswering
-                    else HomeConnectionState.Connecting,
+                    when {
+                        opening.phase == ChatsOpeningPhase.Failed && opening.phoneOff -> HomeConnectionState.Stopped
+                        opening.phase == ChatsOpeningPhase.Failed -> HomeConnectionState.NotAnswering
+                        else -> HomeConnectionState.Connecting
+                    },
                 )
             }
             val servers = extra.sources.filterNot { it.agents }
             val main = servers.firstOrNull { it.main } ?: servers.firstOrNull() ?: return null
             return HomeConnectionUi(
                 main.name,
-                if (main.unreachable) HomeConnectionState.NotAnswering else HomeConnectionState.Connected,
+                when {
+                    main.stoppedByPerson -> HomeConnectionState.Stopped
+                    main.unreachable -> HomeConnectionState.NotAnswering
+                    else -> HomeConnectionState.Connected
+                },
             )
         }
     }
@@ -536,6 +546,9 @@ public interface ChatsActions {
     ) {}
 
     public fun retrySource(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
+
+    /** "Start OpenCode" on the line that says the person stopped This phone's OpenCode. */
+    public fun startPhoneServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
 
     public fun retryOpening() {}
 

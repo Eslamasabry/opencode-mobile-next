@@ -363,6 +363,10 @@ internal class GraphChatWorld(
         phoneServer?.takeIf { it.isAgentHelper(ref.profileId) }?.startAgentHelper(ref.profileId)
             ?: Outcome.Failed(Failure.Unavailable(FeatureId("startAgentHelper")))
 
+    override suspend fun startPhoneServer(): Outcome<Unit> =
+        phoneServer?.takeIf { it.runsHere(ref.profileId) }?.start(ref.profileId)
+            ?: Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
     override suspend fun restartPhoneServer(): Outcome<Unit> =
         phoneServer?.takeIf { it.runsHere(ref.profileId) }?.restart(ref.profileId)
             ?: Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
@@ -844,6 +848,8 @@ internal class GraphChatWorld(
                         // update stops the server under an open conversation too).
                         val down = waiting || link != ChatLink.Live
                         when {
+                            // The person's own stop: said as it is, never a wait, a failure or a countdown.
+                            down && phone == PhoneServerWait.StoppedByPerson -> ChatServerWait.StoppedByPerson
                             down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
                             down && phone == PhoneServerWait.UpdatingAgents -> ChatServerWait.UpdatingAgents
                             // Only while the page waits: once its wait is spent the helper is what did not answer,

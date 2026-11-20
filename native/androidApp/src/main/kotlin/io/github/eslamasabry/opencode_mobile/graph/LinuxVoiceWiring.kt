@@ -1668,6 +1668,7 @@ internal constructor(
                 id.raw !in closedProfiles &&
                     withContext(io) { runCatchingBlocking { !stoppedByPerson() } ?: false }
             },
+
             onWaiting = { _, waiting ->
                 facts.update {
                     it.copy(starting = waiting, startProblem = if (waiting) null else it.startProblem)
@@ -1681,6 +1682,10 @@ internal constructor(
         )
 
     init {
+        // The person's own stop is a result of its own (no start problem, no failure, no retry), not a timeout.
+        localGate.stoppedByPerson = { id ->
+            id.raw !in closedProfiles && withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: false }
+        }
         gates.gate = { id ->
             if (id != ownerId() || withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready) {
                 LocalServerWait.Ready

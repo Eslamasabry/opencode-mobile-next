@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -237,6 +239,8 @@ import io.github.eslamasabry.oc.ui.words.res.stageStartingLinux
 import io.github.eslamasabry.oc.ui.words.res.stageStartingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStartOpenCode
+import io.github.eslamasabry.oc.ui.words.res.phoneStoppedByYou
 import io.github.eslamasabry.oc.ui.words.res.workServerNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.connectionTryNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiDelegatedSession
@@ -529,8 +533,10 @@ public fun ChatScreen(
     }
     // Every item the transcript draws below the engine's rows (ChatTranscriptList): a jump to a row (a timeline pick, a
     // Find hit, an arrival) counts them, or it lands one row off while background work shows.
+    val signalStyle = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
+    val liveIsRow = state.live != null && LiveSlot.host(state.live, state.pending, signalStyle) == null
     val itemsBelowRows =
-        (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
+        (if (liveIsRow) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
             (if (transcriptFacts.background.isNotEmpty()) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).
@@ -1663,12 +1669,27 @@ private fun connectionLine(
     // Open while starting: the page waits for its server and opens by itself, so the line says what the server is doing
     // and offers no Try again (Details and Change server stay one tap away).
     val wait = line.serverWait
+    // The person's own stop is a state of its own: one sentence and Start OpenCode, no countdown, no Try now.
+    if (wait == ChatServerWait.StoppedByPerson)
+        return KitStatus(
+            KitStatusKind.Connection,
+            stringResource(Res.string.phoneStoppedByYou),
+            id = "chat-status-${line.id}",
+            action =
+                KitLineAction(
+                    stringResource(Res.string.phoneServerCardStartOpenCode),
+                    actions::startPhoneServer,
+                    testTag = "chat-connection-start-phone",
+                ),
+            more = listOf(details, changeServer),
+        )
     if (wait != null) {
         // A wait that ends by itself looks alive: the kit's working mark, and the agent's name when it is known.
         val signIn = wait == io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn
         return KitStatus(
             KitStatusKind.Connection,
             when (wait) {
+                ChatServerWait.StoppedByPerson -> stringResource(Res.string.phoneStoppedByYou)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> stringResource(Res.string.connectUpdatingPhone)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)
