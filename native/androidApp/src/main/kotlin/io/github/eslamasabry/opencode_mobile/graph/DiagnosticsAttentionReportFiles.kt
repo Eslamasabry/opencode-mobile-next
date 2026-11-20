@@ -39,6 +39,11 @@ class AndroidReportFiles(filesDir: File) : ReportFiles {
         }
     }
 
+    /** No `fd.sync()`: a timing's write must not wait for the device (an ANR on the main thread). */
+    override fun writePendingCached(bytes: ByteArray) {
+        FileOutputStream(target(ReportFile.Pending)).use { out -> out.write(bytes) }
+    }
+
     override fun commitPending() {
         Files.move(
             target(ReportFile.Pending).toPath(),
