@@ -3,23 +3,18 @@ package io.github.eslamasabry.oc.feature.servers.ui
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
@@ -40,7 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
@@ -80,67 +74,50 @@ internal fun isServersWide(windowClass: WindowClass, availableWidthDp: Float): B
 
 /**
  * Shared Expanded (>= 840 dp) two-column frame for Servers pages:
- * places the page title (and optional end action) directly above two top-aligned, reading-capped
- * columns in one vertically centred group with no empty bands wider than a gutter.
+ * starts at the top right under the top bar (title lives in the bar beside Back),
+ * lays out two top-aligned, reading-capped columns horizontally centred when wider than two
+ * reading columns, and scrolls vertically when content grows past the viewport.
  */
 @Composable
 internal fun ServersWideFrame(
-    pageTitle: String,
     start: @Composable () -> Unit,
     end: @Composable () -> Unit,
     headerAction: (@Composable () -> Unit)? = null,
     subHeader: (@Composable () -> Unit)? = null,
     scrollState: ScrollState = kitPageScrollState(),
-    showTitle: Boolean = true,
 ) {
     val maxGroupWidth = (Layout.READING_WIDTH * 2 + Space.S6).dp
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val viewportHeight = maxHeight
-        Box(Modifier.fillMaxWidth().verticalScroll(scrollState)) {
-            Box(
-                Modifier.fillMaxWidth()
-                    .heightIn(min = viewportHeight)
-                    .padding(top = Space.S2.dp, bottom = Space.S6.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    Modifier.fillMaxWidth().widthIn(max = maxGroupWidth),
-                    verticalArrangement = Arrangement.spacedBy(if (subHeader != null) Space.S4.dp else Space.S5.dp),
+    Box(
+        Modifier.fillMaxSize().verticalScroll(scrollState),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Column(
+            Modifier.fillMaxWidth()
+                .widthIn(max = maxGroupWidth)
+                .padding(top = Space.S3.dp, bottom = Space.S6.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+        ) {
+            headerAction?.let { action ->
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (showTitle || headerAction != null) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            if (showTitle) {
-                                KitText(
-                                    pageTitle,
-                                    Modifier.weight(1f).semantics { heading() },
-                                    role = TypeRole.LargeTitle,
-                                    kind = KitTextKind.Frame,
-                                    pageTitle = true,
-                                )
-                            } else {
-                                Spacer(Modifier.weight(1f))
-                            }
-                            headerAction?.invoke()
-                        }
-                    }
-                    subHeader?.let { banner ->
-                        Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
-                            banner()
-                        }
-                    }
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { start() }
-                        Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { end() }
-                    }
+                    action()
                 }
+            }
+            subHeader?.let { banner ->
+                Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
+                    banner()
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { start() }
+                Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { end() }
             }
         }
     }
@@ -264,7 +241,7 @@ internal fun WideServerDetailPanel(
                     horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterStart) {
                         Box(Modifier.kitMaxWidth(CapRole.Control, CapAlign.Start)) {
                             KitButton(
                                 label = primaryLabel,

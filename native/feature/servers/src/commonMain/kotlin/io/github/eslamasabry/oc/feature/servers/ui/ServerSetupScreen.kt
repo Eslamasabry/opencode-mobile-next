@@ -140,7 +140,7 @@ public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions) 
         KitScreen(
             topBar = {
                 KitTopBar(
-                    if (wide) "" else pageTitle,
+                    pageTitle,
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = actions::back,
@@ -151,7 +151,6 @@ public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions) 
         ) {
             if (wide) {
                 ServersWideFrame(
-                    pageTitle = pageTitle,
                     start = {
                         Column(
                             Modifier.fillMaxWidth(),

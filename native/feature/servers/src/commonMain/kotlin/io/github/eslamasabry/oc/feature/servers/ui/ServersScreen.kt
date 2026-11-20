@@ -134,8 +134,24 @@ public fun ServersScreen(
                     )
                 else
                     KitTopBar(
-                        title = if (wide) "" else pageTitle,
-                        exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::back,
+                        title = pageTitle,
+                        exit = KitTopBarExit.Back,
+                        exitLabel = stringResource(Res.string.kitTopBarBack),
+                        onExit = actions::back,
+                        actions =
+                            if (wide && !empty) {
+                                listOf(
+                                    KitLineAction(
+                                        label = stringResource(Res.string.e7SetupAddServer),
+                                        onClick = { actions.edit(null) },
+                                        icon = KitIcons.add,
+                                        enabled = enabled.isEnabled,
+                                        disabledReason = enabled.reason,
+                                    )
+                                )
+                            } else {
+                                emptyList()
+                            },
                     )
             },
             loading = state.busy,
@@ -163,10 +179,10 @@ public fun ServersScreen(
                         enabled = enabled,
                     )
                     ServersWideFrame(
-                        pageTitle = stringResource(Res.string.firstRunWhereQuestion),
                         start = {
                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                                 issueBanner(Modifier.fillMaxWidth())
+                                KitText(stringResource(Res.string.firstRunWhereQuestion), role = TypeRole.LargeTitle)
                                 KitButton(primary, fullWidth = true, hero = true)
                                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                                     KitButton(stringResource(Res.string.firstRunJustShowMe), actions::tryOffline, role = KitButtonRole.Tertiary, enabled = enabled)
@@ -200,18 +216,19 @@ public fun ServersScreen(
                     val chosenFacts = state.rows.facts[chosen.id]
                     val hasIssue = state.issue != null && state.issue != ServerIssue.Connected
                     ServersWideFrame(
-                        pageTitle = pageTitle,
-                        showTitle = !root,
-                        headerAction = {
-                            KitButton(
-                                label = stringResource(Res.string.e7SetupAddServer),
-                                onClick = { actions.edit(null) },
-                                role = KitButtonRole.Secondary,
-                                icon = KitIcons.add,
-                                enabled = enabled,
-                                expand = false,
-                            )
-                        },
+                        headerAction =
+                            if (root) {
+                                {
+                                    KitButton(
+                                        label = stringResource(Res.string.e7SetupAddServer),
+                                        onClick = { actions.edit(null) },
+                                        role = KitButtonRole.Secondary,
+                                        icon = KitIcons.add,
+                                        enabled = enabled,
+                                        expand = false,
+                                    )
+                                }
+                            } else null,
                         subHeader = if (hasIssue) ({ issueBanner(Modifier.fillMaxWidth()) }) else null,
                         start = {
                             KitSurface(

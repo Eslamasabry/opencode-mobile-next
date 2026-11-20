@@ -102,6 +102,7 @@ class BigScreenServersRenders {
             Shot("split", 600, 800, 1f, ""),
             Shot("tabp", 800, 1280, 1f, ""),
             Shot("exp840", 840, 800, 1f, ""),
+            Shot("tab1024", 1024, 768, 1f, ""),
             Shot("tabl", 1280, 800, 1f, ""),
             Shot("tabl", 1280, 800, 1.3f, "-t13"),
         )

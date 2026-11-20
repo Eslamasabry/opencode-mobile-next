@@ -368,7 +368,7 @@ public fun ServerEditorScreen(
         KitScreen(
             topBar = {
                 KitTopBar(
-                    title = if (wide) "" else pageTitle,
+                    title = pageTitle,
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = { leave() },
@@ -906,7 +906,6 @@ public fun ServerEditorScreen(
                 when (state.step) {
                     ServerEditorStep.Kind ->
                         ServersWideFrame(
-                            pageTitle = pageTitle,
                             subHeader = progressHeader,
                             scrollState = wideScroll,
                             start = {
@@ -933,7 +932,6 @@ public fun ServerEditorScreen(
                         )
                     ServerEditorStep.Tailscale ->
                         ServersWideFrame(
-                            pageTitle = pageTitle,
                             subHeader = progressHeader,
                             scrollState = wideScroll,
                             start = {
@@ -958,7 +956,6 @@ public fun ServerEditorScreen(
                         val version = (state.checked?.version ?: state.record?.serverVersion)?.takeIf { it.isNotBlank() }
                         val runtimes = state.checked?.runtimes.orEmpty()
                         ServersWideFrame(
-                            pageTitle = pageTitle,
                             subHeader = progressHeader,
                             scrollState = wideScroll,
                             start = {
@@ -997,7 +994,6 @@ public fun ServerEditorScreen(
                     }
                     ServerEditorStep.Connect ->
                         ServersWideFrame(
-                            pageTitle = pageTitle,
                             subHeader = progressHeader,
                             scrollState = wideScroll,
                             start = {
@@ -1110,7 +1106,7 @@ public fun ServerEditorScreen(
                                                     working = state.checking,
                                                     expand = false,
                                                 )
-                                                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterStart) {
                                                     Box(Modifier.kitMaxWidth(CapRole.Control, CapAlign.Start)) {
                                                         primaryBottom?.invoke()
                                                     }
