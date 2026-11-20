@@ -33,7 +33,7 @@ class VerbatimCopyReviewTest {
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.kt" to
                 (1 to "Desktop/test fallback only: payload and explicit mode already chosen by the reviewed caller"),
             "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.android.kt" to
-                (3 to "The sole Android clipboard sink plus native selection forwarding; applies the caller's explicit sensitivity mode without changing text"),
+                (4 to "The sole Android clipboard sink plus native selection forwarding; applies the caller's explicit sensitivity mode without changing text (two policy writers: the AndroidClipboard one text fields need, and the plain fallback; both mark the mode before the write)"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentAccountWiring.kt" to
                 (1 to "a one-time device code for the person to type (1–64 chars, no controls, current profile), flagged sensitive"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentTerminalWiring.kt" to
