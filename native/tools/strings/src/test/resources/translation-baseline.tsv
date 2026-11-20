@@ -6,11 +6,9 @@ english	fr	agentCardChartPoints__eq1
 english	fr	agentCardPhotoName
 english	fr	agentMakerOpenSource
 english	fr	agentsSectionTitle
-english	fr	agentsStepVersion
 english	fr	aiSetupSuggestionsLabel
 english	fr	andrMonitorMinutes
 english	fr	appUpdateBuildLabel
-english	fr	appUpdateCurrentVersion
 english	fr	appearanceAccentViolet
 english	fr	appearanceChipAccent
 english	fr	appearanceChipMode
@@ -32,7 +30,6 @@ english	fr	chatsFilterChatCount__eq1
 english	fr	commandDestination
 english	fr	composerFullAgent
 english	fr	composerTrayPhotos
-english	fr	connectionCheckVersionValue
 english	fr	continueWithFactAgent
 english	fr	crashReportDetailSource
 english	fr	devPreviewPortTitle
@@ -44,12 +41,8 @@ english	fr	e7LocaleUiSpanish
 english	fr	e7ModelUiAgent
 english	fr	e7SettingsDetailUi18
 english	fr	e7SettingsDiagnosticOccurrences
-english	fr	e7SettingsVersion
 english	fr	e7SharedMessages
 english	fr	e7WorkspaceSessionId
-english	fr	edgeLightFace
-english	fr	edgeLightTitle
-english	fr	externalAgentsDetailVersion
 english	fr	fbCaptureNote
 english	fr	fbErrorCode
 english	fr	fbKindDocument
@@ -108,7 +101,6 @@ english	fr	schedule40Conversation
 english	fr	scheduleTarget
 english	fr	searchB1ProjectConversations
 english	fr	secHistoryEntry
-english	fr	serverRowDetailsVersion
 english	fr	servicesPorts
 english	fr	servicesPorts__eq1
 english	fr	sessionExportFormatLabel
@@ -119,7 +111,6 @@ english	fr	setupNativeSuggestions
 english	fr	teamBoardTypeEpic
 english	fr	teamProjectEditorBudget
 english	fr	teamProjectEditorInstructions
-english	fr	teamProjectEditorVersion
 english	fr	teamProjectPlanPhase
 english	fr	teamProjectPlanSummary__phases
 english	fr	teamRefusalCode
@@ -133,7 +124,6 @@ english	fr	teamUiGateFailureClassTest
 english	fr	teamUiHomeGateKindFreeText
 english	fr	teamUiHomeGateLinkAgent
 english	fr	teamUiHomeGateOptions
-english	fr	teamUiLabelVersion
 english	fr	teamUiMergeLineTests
 english	fr	teamUiPolicySupervision
 english	fr	teamUiStartRunSupervisionLabel
@@ -142,9 +132,7 @@ english	fr	teamUiWorkLabelParent
 english	fr	teamUiWorkLabelType
 english	fr	teamUiWorkSheetDescription
 english	fr	teamUiWorkSheetValidation
-english	fr	upgradeFindVersion
 english	fr	upgradeMode
-english	fr	upgradeReadyVersion
 english	fr	usageBudgetTitle
 english	fr	widgetActionMessage
 english	fr	widgetPanelAccent
