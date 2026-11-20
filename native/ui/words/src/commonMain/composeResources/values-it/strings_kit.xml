@@ -213,7 +213,7 @@
     <string name="kitCodeCopyFailedOutput">Impossibile copiare l'output. Riprova.</string>
     <string name="kitCodeEmpty">Vuoto</string>
     <string name="kitTabLabel">%1$s, %2$s</string>
-    <string name="kitLogTitle">Output</string>
+    <string name="kitLogTitle">Risultato</string>
     <string name="kitLogShowOutput">Mostra output</string>
     <string name="kitLogLive">In diretta</string>
     <string name="kitLogQuiet">Ultima riga %1$s fa</string>
@@ -557,7 +557,7 @@
     <string name="liveStyleHalftone">Mezzitoni</string>
     <string name="liveStyleLiquidBlobs">Macchie liquide</string>
     <string name="liveStyleMatrixRain">Pioggia Matrix</string>
-    <string name="liveStyleBlueprint">Blueprint</string>
+    <string name="liveStyleBlueprint">Schema tecnico</string>
     <string name="liveStyleCircuit">Circuito</string>
     <string name="liveStyleOscilloscope">Oscilloscopio</string>
     <string name="liveStyleRadar">Radar</string>
@@ -581,7 +581,7 @@
     <string name="continueWithRecordFile">Salvato come %1$s</string>
     <string name="effectsLookPreviewLabel">Anteprima %1$s. Apre gli stili.</string>
     <string name="effectsLookPreviewOffLabel">Lo sfondo animato è disattivato. Apre gli stili.</string>
-    <string name="effectsLookPreviewOff">Off</string>
+    <string name="effectsLookPreviewOff">Disattivato</string>
     <string name="widgetV2BackgroundLabel">Sfondo</string>
     <string name="widgetV2BackgroundSolid">Tinta unita</string>
     <string name="widgetV2BackgroundTinted">Con tinta</string>

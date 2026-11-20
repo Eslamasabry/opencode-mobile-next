@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="oc_schedule_channel">Prompt programmati</string>
-    <string name="oc_schedule_title">Prompt programmato</string>
-    <string name="oc_schedule_running">Esecuzione del prompt programmato…</string>
+    <string name="oc_schedule_channel">Prompt pianificati</string>
+    <string name="oc_schedule_title">Prompt pianificato</string>
+    <string name="oc_schedule_running">Invio del prompt pianificato in corso…</string>
     <string name="oc_schedule_ran">Inviato. La risposta è nella conversazione.</string>
-    <string name="oc_schedule_finished">Finito. Tocca per leggere la risposta.</string>
-    <string name="oc_schedule_skipped">Saltato questa volta. Tocca per vedere perché.</string>
-    <string name="oc_schedule_failed">Non è terminato. Tocca per vedere perché.</string>
-    <string name="oc_schedule_why_needs_you">Aspetta la tua risposta. Apri la conversazione per continuare.</string>
+    <string name="oc_schedule_finished">Completato. Tocca per leggere la risposta.</string>
+    <string name="oc_schedule_skipped">Saltato questa volta. Tocca per sapere perché.</string>
+    <string name="oc_schedule_failed">Non completato. Tocca per sapere perché.</string>
+    <string name="oc_schedule_why_needs_you">È in attesa della tua risposta. Apri la conversazione per continuare.</string>
     <string name="oc_schedule_why_sign_in">Il server ha chiesto di accedere di nuovo.</string>
-    <string name="oc_schedule_why_agent">L\u0027agente si è fermato con un errore.</string>
+    <string name="oc_schedule_why_agent">L\u0027agente si è interrotto con un errore.</string>
     <string name="oc_schedule_why_timeout">Non è terminato in tempo. Non è stato inviato di nuovo.</string>
-    <string name="oc_schedule_why_unavailable">Impossibile raggiungere il server.</string>
-    <string name="oc_schedule_digest_title">Prompt programmati di questa mattina</string>
-    <string name="oc_schedule_digest_body">%1$d con risposta, %2$d non terminati, %3$d saltati</string>
+    <string name="oc_schedule_why_unavailable">Il server non era raggiungibile.</string>
+    <string name="oc_schedule_digest_title">Prompt pianificati stamattina</string>
+    <string name="oc_schedule_digest_body">%1$d hanno risposto, %2$d non terminati, %3$d saltati</string>
     <string name="oc_schedule_open">Apri</string>
 </resources>

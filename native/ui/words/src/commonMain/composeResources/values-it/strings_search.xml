@@ -17,7 +17,7 @@
     <string name="e7SettingsUi96">Informazioni e note open source</string>
     <string name="e7SettingsDetailUi17">Privacy</string>
     <string name="e7LibraryModelsAndAgents">Modelli e agenti</string>
-    <string name="e7LibrarySearchImportAliases">backup ripristino trasferimento JSON conversazione sessione chat</string>
+    <string name="e7LibrarySearchImportAliases">backup ripristino trasferimento JSON conversazione</string>
     <string name="e7LibrarySearchShortcutsAliases">scorciatoie tastiera guida desktop</string>
     <string name="e7SetupServers">Server</string>
     <string name="settingsHubGroupHelp">Guida</string>
@@ -31,7 +31,7 @@
     <string name="settingsHubSearchExternalAgentsAliases">a2a agenti esterni remoto</string>
     <string name="settingsHubSearchTailscaleAliases">tailscale vpn rete remoto privato</string>
     <string name="settingsHubSearchDisconnectAliases">disconnetti esci dal server</string>
-    <string name="settingsHubSearchModelModeAliases">modello modalità agente variante pensiero predefinito selezionato sessione chat conversazione</string>
+    <string name="settingsHubSearchModelModeAliases">modello modalità agente variante pensiero predefinito selezionato conversazione</string>
     <string name="settingsHubSearchShellAliases">shell terminale bash zsh comando</string>
     <string name="settingsHubSearchPermissionsAliases">permessi approvazioni consenti sempre consentito revoca</string>
     <string name="settingsHubSearchTranscriptAliases">trascrizione visualizzazione pensiero ragionamento timestamp utilizzo</string>
@@ -57,7 +57,7 @@
     <string name="discoverHealthAliases">stato del progetto branch file modificati linguaggio servizi formattatori lsp</string>
     <string name="discoverWorktreesAliases">worktree branch copie isolate git ramo</string>
     <string name="discoverSearchFilesAliases">cerca file trova nome file</string>
-    <string name="discoverAllConversationsAliases">tutte le conversazioni sessioni chat cronologia ogni progetto ricerca</string>
+    <string name="discoverAllConversationsAliases">tutte le conversazioni cronologia ogni progetto ricerca</string>
     <string name="discoverTeamAliases">AI Team agenti esecuzioni richiede il tuo intervento orchestrazione</string>
     <string name="discoverNotifyServersTitle">Notifiche dai server salvati</string>
     <string name="discoverNotifyWhatAliases">esecuzioni completate approvazioni domande check-in avvisi di quota cosa notifica</string>
@@ -93,7 +93,7 @@
     <string name="settingsHubProvidersRow">Provider e account</string>
     <string name="settingsHubSearchToolsAliases">strumenti mcp integrazioni comandi skill riferimenti slash capacità plugin agenti esterni a2a</string>
     <string name="aiSetupEntryDetail">Modelli, strumenti e suggerimenti per questo server</string>
-    <string name="discoverChatsAliases">chat conversazioni sessioni lavoro home recenti in evidenza nuova conversazione posta in arrivo attività richiede il tuo intervento approvazioni permessi domande moduli in attesa in esecuzione completate</string>
+    <string name="discoverChatsAliases">conversazioni lavoro home recenti in evidenza nuova conversazione posta in arrivo attività richiede il tuo intervento approvazioni permessi domande moduli in attesa in esecuzione completate</string>
     <string name="settingsPhraseChipsSupporting">Le tue frasi brevi comuni, sopra la casella del messaggio. Imparate su questo telefono da ciò che invii.</string>
     <string name="settingsHubSearchReasoningAliases">trascrizione visualizzazione pensiero ragionamento</string>
     <string name="tipsHubSubtitle">Gesti nascosti e brevi guide</string>

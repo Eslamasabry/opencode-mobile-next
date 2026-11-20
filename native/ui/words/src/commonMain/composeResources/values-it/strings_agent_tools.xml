@@ -49,7 +49,7 @@
     <string name="agentToolsTerminalInputOff">Il terminale non è connesso. Riconnettiti prima di digitare.</string>
     <string name="agentToolsTerminalInterrupt">Interrompi (Ctrl+C)</string>
     <string name="agentToolsTerminalTab">Tab</string>
-    <string name="agentToolsTerminalEscape">Escape</string>
+    <string name="agentToolsTerminalEscape">Esc</string>
     <string name="agentToolsTerminalReconnect">Riconnetti il terminale</string>
     <string name="agentToolsUsageMonitor">Monitora l'utilizzo di questo server</string>
     <string name="agentToolsUsageMonitorBody">Legge i limiti del provider di questo server e aggiorna i numeri del suo widget. Disattivato finché non lo attivi.</string>

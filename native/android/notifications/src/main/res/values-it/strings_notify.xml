@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="notify_live_channel">Connessione di codifica attiva</string>
-    <string name="notify_live_description">Mostrata mentre OpenCode tiene attiva in background una connessione al server</string>
-    <string name="notify_coding_requests_channel">Richieste di codifica</string>
-    <string name="notify_coding_requests_description">Avvisi quando OpenCode ha bisogno di un permesso o di una risposta</string>
-    <string name="notify_coding_requests_quiet_channel">Richieste di codifica (ore silenziose)</string>
-    <string name="notify_coding_requests_quiet_description">Richieste arrivate nelle ore silenziose, senza suono</string>
-    <string name="notify_coding_status_channel">Aggiornamenti delle conversazioni</string>
-    <string name="notify_coding_status_description">Avvisi quando una conversazione OpenCode in background termina</string>
+    <string name="notify_live_channel">Connessione di coding attiva</string>
+    <string name="notify_live_description">Mostrata mentre OpenCode mantiene attiva una sessione del server in background</string>
+    <string name="notify_coding_requests_channel">Richieste di coding</string>
+    <string name="notify_coding_requests_description">Avvisi quando OpenCode richiede un\u0027autorizzazione o un input</string>
+    <string name="notify_coding_requests_quiet_channel">Richieste di coding (ore di silenzio)</string>
+    <string name="notify_coding_requests_quiet_description">Richieste che arrivano durante le ore di silenzio, senza suono</string>
+    <string name="notify_coding_status_channel">Aggiornamenti della sessione di coding</string>
+    <string name="notify_coding_status_description">Avvisi quando termina una sessione OpenCode in background</string>
     <string name="notify_team_progress_channel">Avanzamento di AI Team</string>
-    <string name="notify_team_progress_description">Una riga discreta mentre AI Team lavora</string>
+    <string name="notify_team_progress_description">Una riga discreta mentre AI Team è al lavoro</string>
     <string name="notify_setup_channel">Configurazione</string>
     <string name="notify_phone_server_channel">OpenCode su questo telefono</string>
-    <string name="notify_phone_server_description">Mostrata mentre il server del telefono o il motore del progetto è in esecuzione</string>
-    <string name="notify_schedule_channel">Prompt programmati</string>
-    <string name="notify_voice_setup">Configurazione vocale</string>
+    <string name="notify_phone_server_description">Mostrata mentre il server del telefono o il motore di progetto è in esecuzione</string>
+    <string name="notify_schedule_channel">Prompt pianificati</string>
+    <string name="notify_voice_setup">Configurazione voce</string>
     <string name="notify_alert_permission_title">Consentire a %1$s di continuare?</string>
     <string name="notify_alert_question_title">%1$s ha una domanda per te</string>
     <string name="notify_alert_complete_title">Completato: %1$s</string>
@@ -27,16 +27,16 @@
     <string name="notify_ask_folder">Lavorare in %1$s?</string>
     <string name="notify_public_needs_you">Una richiesta ha bisogno di te</string>
     <string name="notify_public_finished">Una conversazione è terminata</string>
-    <string name="notify_status_public_stopped">OpenCode · una conversazione interrotta</string>
+    <string name="notify_status_public_stopped">OpenCode · conversazione interrotta</string>
     <string name="notify_test_title">Le notifiche sono attive</string>
-    <string name="notify_test_body">Domande e lavori terminati arriveranno così.</string>
-    <string name="notify_alert_quota_title">L\u0027uso del provider ha raggiunto la tua soglia</string>
-    <string name="notify_alert_quota_body">Apri per controllare l\u0027uso attuale.</string>
+    <string name="notify_test_body">Domande e lavori completati arriveranno così.</string>
+    <string name="notify_alert_quota_title">L\u0027utilizzo del provider ha raggiunto la tua soglia</string>
+    <string name="notify_alert_quota_body">Apri per controllare l\u0027utilizzo attuale.</string>
     <string name="notify_alert_quota_reset_title">%1$s è di nuovo disponibile</string>
-    <string name="notify_alert_quota_reset_generic_title">Un limite di utilizzo è stato azzerato</string>
+    <string name="notify_alert_quota_reset_generic_title">Un limite di utilizzo si è azzerato</string>
     <string name="notify_alert_quota_reset_body">Apri per vedere quanto resta.</string>
-    <string name="notify_alert_checkin_title">%1$s sta ancora lavorando</string>
-    <string name="notify_alert_checkin_body">Apri la conversazione per dare un\u0027occhiata.</string>
+    <string name="notify_alert_checkin_title">%1$s è ancora al lavoro</string>
+    <string name="notify_alert_checkin_body">Apri la conversazione per un aggiornamento.</string>
     <string name="notify_alert_reason_auth">Il provider ha rifiutato la chiave. Accedi di nuovo per continuare.</string>
     <string name="notify_alert_reason_context">La conversazione è troppo lunga per il modello.</string>
     <string name="notify_alert_reason_length">La risposta ha raggiunto il limite di lunghezza.</string>
@@ -49,16 +49,16 @@
     <string name="notify_reject">Nega</string>
     <string name="notify_open">Apri</string>
     <string name="notify_status_action_open">Apri</string>
-    <string name="notify_status_action_stop_reply">Ferma la risposta</string>
+    <string name="notify_status_action_stop_reply">Interrompi la risposta</string>
     <string name="notify_status_action_start">Avvia</string>
     <string name="notify_status_action_new_chat">Nuova conversazione</string>
     <string name="notify_status_action_stop_opencode">Ferma OpenCode</string>
     <string name="notify_status_public_ready">OpenCode · pronto</string>
     <string name="notify_status_public_paused">OpenCode · in pausa</string>
     <plurals name="notify_chip_running">
-        <item quantity="one">%1$s in corso</item>
-        <item quantity="many">%1$s in corso</item>
-        <item quantity="other">%1$s in corso</item>
+        <item quantity="one">%1$s in esecuzione</item>
+        <item quantity="many">%1$s in esecuzione</item>
+        <item quantity="other">%1$s in esecuzione</item>
     </plurals>
     <plurals name="notify_chip_pending">
         <item quantity="one">%1$s ha bisogno di te</item>
@@ -76,6 +76,6 @@
         <item quantity="other">%s conversazioni terminate</item>
     </plurals>
     <string name="notify_answer_in_app">Apri OpenCode per rispondere</string>
-    <string name="notify_reply_watch_title">Sto ancora lavorando alla tua risposta</string>
+    <string name="notify_reply_watch_title">Ancora al lavoro sulla tua risposta</string>
     <string name="notify_status_public_working">OpenCode · al lavoro</string>
 </resources>

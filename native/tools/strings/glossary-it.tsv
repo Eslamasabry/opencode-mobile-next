@@ -30,8 +30,8 @@ term	\b[Cc]onversations?\b	conversazione|conversazioni
 term	\bTry again\b	Riprova|riprovare|Riprovare|riprova|riprovaci|riprovare
 term	\bSettings\b	Impostazioni
 term	\bServers?\b	server
-term	\bProjects?\b	progetto
-term	\b(?<!Claude )Agents?\b	agente
+term	\bProjects?\b	progett[oi]
+term	\b(?<!Claude )Agents?\b	agent[ei]
 term	^Files$	File
 term	^Cancel$	Annulla
 term	^Offline$	Senza connessione|Offline
@@ -42,7 +42,7 @@ term	^Delete$	Elimina
 term	^Search$	Cerca|ricerca
 term	^Refresh$	Aggiorna
 term	^Model$	modello
-forbid	(?s)^(?!.*(?:accedi|accesso|autentic|credenz|connession|disconnession)).*\bsessioni?\b	say conversazione, not sessione (sign-in wording is fine)
+forbid	(?s)^(?!.*(?:accedi|accesso|autentic|credenz|connession|disconnession)).*(?<![\w-])\bsessioni?\b	say conversazione, not sessione (sign-in wording and --session flags are fine)
 forbid	\bchats?\b(?!\.)	say conversazione, not chat
 allow	OK
 allow	Wi-Fi
@@ -89,3 +89,35 @@ allow	Shell
 allow	Workflow
 allow	App
 allow	web
+allow	Skill
+allow	skill
+allow	open
+allow	Open
+allow	source
+allow	Server
+allow	file
+allow	report
+allow	Privacy
+allow	Area
+allow	area
+allow	Account
+allow	account
+allow	Pull
+allow	Push
+allow	Menu
+allow	Provider
+allow	Prompt
+allow	Password
+allow	watchdog
+allow	Backlog
+allow	Demo
+allow	Budget
+allow	Repo
+allow	repo
+allow	Test
+allow	Gate
+allow	Computer
+allow	Formula
+allow	Portugu
+allow	Espa
+allow	Brasil
