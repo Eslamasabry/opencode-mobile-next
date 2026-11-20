@@ -290,18 +290,20 @@ public class SettingsPresenter(
         val insideResults =
             if (l.query.isBlank()) persistentListOf()
             else SettingsSearch.findInside(l.query, l.insideEntries.filter { it.inside in insideSearchable })
-        val group =
-            (l.stack.last() as? SettingsPage.Group)?.let { g ->
-                GroupUi(
+        fun groupUi(g: SettingsPage.Group) =
+            GroupUi(
+                g.id,
+                SettingsStructure.rows(
                     g.id,
-                    SettingsStructure.rows(
-                        g.id,
-                        f,
-                        p.reasoning,
-                        p.timestamps,
-                    ),
-                )
-            }
+                    f,
+                    p.reasoning,
+                    p.timestamps,
+                ),
+            )
+        val group = (l.stack.last() as? SettingsPage.Group)?.let(::groupUi)
+        val listGroup =
+            if (group != null) null
+            else l.stack.lastOrNull { it is SettingsPage.Group }?.let { groupUi(it as SettingsPage.Group) }
         return SettingsUi(
             stack = l.stack,
             hub =
@@ -316,6 +318,7 @@ public class SettingsPresenter(
                     insideSearchable.toImmutableList(),
                 ),
             group = group,
+            listGroup = listGroup,
             appearance =
                 appearance(p, f, l.allPacks)
                     .copy(

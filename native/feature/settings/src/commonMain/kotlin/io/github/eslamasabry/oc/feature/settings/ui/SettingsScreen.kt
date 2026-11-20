@@ -12,6 +12,9 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.design.layout.Layout
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -87,6 +90,7 @@ public fun SettingsScreen(
     }
     // The hub's scroll lives above the page switch, so coming back from a group finds the hub where it was left.
     val hubScroll = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
+    val pageBody: @Composable (Modifier) -> Unit = { modifier ->
     when (val page = state.page) {
         SettingsPage.Hub -> HubPage(state, actions, modifier, onExit, hubScroll)
         is SettingsPage.Group -> GroupPage(state, actions, page, modifier, onExit, hubScroll)
@@ -350,7 +354,24 @@ public fun SettingsScreen(
                 QuietTimeBody(page.start, state.notifications, actions)
             }
     }
+    }
+    // Big screens: a page opened from the hub or a group stands beside the list it came from (the hub's groups, or the
+    // open group's rows with this page's row marked); the page's scroll is kept across the width threshold. Under the
+    // two-pane width the page is the whole window as before.
+    val window = LocalKitWindow.current
+    val page = state.page
+    val beside =
+        page != SettingsPage.Hub && page !is SettingsPage.Group &&
+            Layout.showsDetail(window.cls, window.short, window.widthDp)
+    val pageScroll = rememberSaveable(page, saver = ScrollState.Saver) { ScrollState(0) }
+    CompositionLocalProvider(LocalSettingsPageScroll provides pageScroll) {
+        if (beside) SettingsPagePanes(state, actions, page, onExit, hubScroll) { pageBody(Modifier) }
+        else pageBody(modifier)
+    }
 }
+
+/** The scroll of the open page, held above the width switch so it survives going beside the list and back. */
+internal val LocalSettingsPageScroll = androidx.compose.runtime.compositionLocalOf<ScrollState?> { null }
 
 /**
  * The settings page frame: the bar with Back, the one save-failed note, then a scrolling column of
@@ -371,7 +392,7 @@ internal fun SettingsFrame(
     scroll: ScrollState? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val pageScroll = scroll ?: rememberScrollState()
+    val pageScroll = scroll ?: LocalSettingsPageScroll.current ?: rememberScrollState()
     KitScreen(
         modifier = modifier,
         topBar = {

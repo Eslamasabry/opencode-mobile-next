@@ -181,6 +181,48 @@ private fun SettingsPanes(
     )
 }
 
+/**
+ * Settings on a wide window with an in-module page open (Privacy, Notifications, About, ...): the list the page came
+ * from stands at the start (the open group's rows with this page's row marked, else the groups), the page fills the
+ * rest. Back from the page is the page's own: it returns to the group's two panes.
+ */
+@Composable
+internal fun SettingsPagePanes(
+    state: SettingsUi,
+    actions: SettingsActions,
+    page: SettingsPage,
+    onExit: (() -> Unit)?,
+    listScroll: ScrollState,
+    detail: @Composable () -> Unit,
+) {
+    val listGroup = state.listGroup
+    KitPaneScreen(
+        topBar = {
+            KitTopBar(
+                title = settingsTitle(),
+                exit = if (onExit != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = onExit,
+                backBesideTitle = true,
+            )
+        },
+        list = {
+            Column(
+                Modifier.fillMaxSize()
+                    .testTag("settings-list-pane")
+                    .verticalScroll(listScroll.also { KitReportPageScroll(it) })
+                    .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+            ) {
+                if (listGroup != null)
+                    GroupBody(state.copy(group = listGroup), actions, SettingsPage.Group(listGroup.id), openPage = page)
+                else HubBody(state, actions, selected = state.firstGroup?.id)
+            }
+        },
+        detail = { Box(Modifier.fillMaxSize().testTag("settings-detail-pane")) { detail() } },
+        emptyDetail = {},
+    )
+}
+
 /** Remembers what [rememberSearchEntries] resolved, and for which rows and language. */
 private class SearchEntryCache {
     var rows: List<SettingsRowId>? = null
@@ -405,6 +447,8 @@ private fun ColumnScope.GroupBody(
     state: SettingsUi,
     actions: SettingsActions,
     page: SettingsPage.Group,
+    /** The page open beside this list (big screens): its row is marked. */
+    openPage: SettingsPage? = null,
 ) {
     var languageOpen by rememberSaveable(page.id) { mutableStateOf(false) }
     var otherOpen by rememberSaveable(page.id) { mutableStateOf(false) }
@@ -473,7 +517,7 @@ private fun ColumnScope.GroupBody(
                     KitRow(
                         title = title,
                         modifier = rowModifier,
-                        selected = focused,
+                        selected = focused || (openPage != null && (row.door as? SettingsDoor.Page)?.page == openPage),
                         leading = KitRowLeading.Glyph(rowGlyph(row.id)),
                         trailing =
                             rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
