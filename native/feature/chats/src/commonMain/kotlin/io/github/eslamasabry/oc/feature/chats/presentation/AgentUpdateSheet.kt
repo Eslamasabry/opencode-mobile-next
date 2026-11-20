@@ -274,7 +274,7 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     }
 
     /** The sheet's button: every removal is confirmed first, one by one; then the decision starts. */
-    public fun proceed() {
+    public fun applyChoices() {
         val offer = offers.value ?: return
         val now = local.value
         if (now.working || choices == null) return
