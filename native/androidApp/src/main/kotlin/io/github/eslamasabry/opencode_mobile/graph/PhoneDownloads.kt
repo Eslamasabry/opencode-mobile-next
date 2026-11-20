@@ -206,10 +206,18 @@ class PhoneDownloads(
                         rows.none { it.kind == HomeDownloadKind.Helper }) {
                         rows + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
                     } else rows
+                // The agent that downloads now is not waiting for Wi-Fi, whatever the offer still lists for it.
+                val running =
+                    phones.state.value.installation
+                        ?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }
+                        ?.id
+                        ?.let { AgentId(it) }
+                // Every item the person said yes to is named: OpenCode too, from the offer, not one updater's flag.
+                val named = withChosenOpenCode(withHelper, offer)
                 // Agents chosen on the sheet that wait for Wi-Fi join this row (a second sentence, or the line).
                 HomeDownloadMapping.withHeldAgents(
-                    HomeDownloadMapping.openCodeWithHelper(withHelper, openCodeWithHelperMb(offer)),
-                    heldAgentsOf(offer),
+                    HomeDownloadMapping.openCodeWithHelper(named, openCodeWithHelperMb(offer)),
+                    heldAgentsOf(offer, running),
                 )
             }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
@@ -266,7 +274,7 @@ internal fun heldAgentsOf(offer: AgentUpdateOffer?, running: AgentId? = null): H
     val waiting = offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }
     val held =
         waiting?.items.orEmpty().filter {
-            it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE &&
+            it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE && it.id != running &&
                 it.choice == AgentUpdateChoice.Update
         }
     val bytes = held.map { it.downloadBytes }
@@ -289,17 +297,34 @@ internal fun openCodeWithHelperMb(offer: AgentUpdateOffer?): Int? {
     }
 }
 
-/** Which step of the agents' update Home says: the install job's own "running" beats the updater's reading for the next agent. */
+/** The agents' update step Home says: the install job's own "running" beats the updater's reading for the next one. */
 internal fun helperStepOf(step: AgentUpdateStep, installing: Boolean, networkRead: Boolean): HomeHelperStep =
     when (step) {
-        AgentUpdateStep.WaitingMetered -> if (networkRead) HomeHelperStep.Waiting else HomeHelperStep.None
+        // The install job itself says it runs: the updater reads Waiting/Refused for the NEXT agent while the first
+        // one downloads, and that must never be said as "waiting for Wi-Fi" (10114, journey M1).
+        AgentUpdateStep.WaitingMetered ->
+            when {
+                installing -> HomeHelperStep.Updating
+                networkRead -> HomeHelperStep.Waiting
+                else -> HomeHelperStep.None
+            }
         AgentUpdateStep.Updating -> HomeHelperStep.Updating
         AgentUpdateStep.Failed -> HomeHelperStep.Failed
         else -> if (installing) HomeHelperStep.Updating else HomeHelperStep.None
     }
 
-/** OpenCode, chosen for update on a network that is paid for, is named even when its own updater has not said it waits. */
-internal fun withChosenOpenCode(rows: List<HomeDownloadFact>, offer: AgentUpdateOffer?): List<HomeDownloadFact> = rows
+/** OpenCode, chosen for update on a paid network, is named even before its own updater says it waits. */
+internal fun withChosenOpenCode(rows: List<HomeDownloadFact>, offer: AgentUpdateOffer?): List<HomeDownloadFact> {
+    val chosen =
+        offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }?.items.orEmpty().any {
+            it.id == AgentId.OPENCODE && it.choice == AgentUpdateChoice.Update
+        }
+    return if (!chosen || rows.any { it.kind == HomeDownloadKind.OpenCode }) {
+        rows
+    } else {
+        listOf(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)) + rows
+    }
+}
 
 /** Only an unmetered network is free: mobile data, a network that cannot be told, and no network all count as paid. */
 internal fun downloadNetworkMetered(network: SetupNetwork): Boolean = network != SetupNetwork.Unmetered

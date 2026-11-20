@@ -34,10 +34,11 @@ class DownloadsFollowTest {
     @Test
     fun `B-DL-428 an install that runs is Updating on Home, whatever the updater says for the next agent`() {
         // 10114 23:51:51: the updater read WaitingMetered for the agents left, while the helper downloaded 400 MB.
-        assertEquals(HomeHelperStep.Updating, helperStepOf(AgentUpdateStep.WaitingMetered, installing = true, networkRead = true))
-        assertEquals(HomeHelperStep.Waiting, helperStepOf(AgentUpdateStep.WaitingMetered, installing = false, networkRead = true))
-        assertEquals(HomeHelperStep.None, helperStepOf(AgentUpdateStep.WaitingMetered, installing = false, networkRead = false))
-        assertEquals(HomeHelperStep.Failed, helperStepOf(AgentUpdateStep.Failed, installing = false, networkRead = true))
+        fun say(step: AgentUpdateStep, installing: Boolean, read: Boolean = true) = helperStepOf(step, installing, read)
+        assertEquals(HomeHelperStep.Updating, say(AgentUpdateStep.WaitingMetered, installing = true))
+        assertEquals(HomeHelperStep.Waiting, say(AgentUpdateStep.WaitingMetered, installing = false))
+        assertEquals(HomeHelperStep.None, say(AgentUpdateStep.WaitingMetered, installing = false, read = false))
+        assertEquals(HomeHelperStep.Failed, say(AgentUpdateStep.Failed, installing = false))
     }
 
     @Test
@@ -59,7 +60,10 @@ class DownloadsFollowTest {
         val rows = listOf(item(AgentId.OPENCODE.raw, 130), item("claude", 360))
         val helper = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
         val named = withChosenOpenCode(listOf(helper), offer(rows))
-        assertEquals(listOf(HomeDownloadKind.OpenCode, HomeDownloadKind.Helper), named.map { it.kind }.sortedBy { it.ordinal })
+        assertEquals(
+            listOf(HomeDownloadKind.OpenCode, HomeDownloadKind.Helper),
+            named.map { it.kind }.sortedBy { it.ordinal },
+        )
         // Kept, on Wi-Fi, or with a line of its own already: nothing is added.
         val kept = listOf(item(AgentId.OPENCODE.raw, 130, AgentUpdateChoice.Keep), item("claude", 360))
         assertEquals(listOf(helper), withChosenOpenCode(listOf(helper), offer(kept)))
