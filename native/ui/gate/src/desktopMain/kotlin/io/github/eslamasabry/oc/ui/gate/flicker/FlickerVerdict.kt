@@ -95,8 +95,8 @@ internal object FlickerLog {
     private val entries = LinkedHashMap<String, Entry>()
     private var tests = 0
     private var allowed = 0
-    private const val DETAIL_CHARS = 240
-    private const val JSON_LIMIT = 190_000
+    private const val DETAIL_CHARS = 200
+    private const val PART_LIMIT = 150_000
 
     @Synchronized
     fun add(test: String, open: List<Finding>, allowedNow: Int, mode: FlickerMode) {
@@ -119,7 +119,10 @@ internal object FlickerLog {
         File(dir, "baseline-candidate-$pid.tsv").writeText(entries.keys.joinToString("") { "$it\n" })
         val out = System.getProperty("oc.flicker.out") ?: return
         val module = (System.getProperty("oc.flicker.module") ?: "module").trim(':').replace(':', '-')
-        File(out).apply { mkdirs() }.resolve("flicker-$module-$pid.json").writeText(json(module, mode))
+        // A CI job prints each file into its log only up to 200 KB, so the findings go out in parts.
+        json(module, mode).forEachIndexed { i, part ->
+            File(out).apply { mkdirs() }.resolve("flicker-$module-$pid-$i.json").writeText(part)
+        }
     }
 
     private fun modeName(mode: FlickerMode): String =
@@ -130,18 +133,28 @@ internal object FlickerLog {
             FlickerMode.Fail -> "fail"
         }
 
-    private fun json(module: String, mode: FlickerMode): String {
-        fun body(detail: Boolean) =
-            entries.values.joinToString(",") { e ->
+    private fun json(module: String, mode: FlickerMode): List<String> {
+        val rows =
+            entries.values.map { e ->
                 val f = e.finding
-                val more = if (detail) ",\"detail\":${quote(f.detail.take(DETAIL_CHARS))}" else ""
-                "{\"test\":${quote(e.test)},\"rule\":\"${f.rule}\",\"key\":${quote(f.key)},\"n\":${e.n}$more}"
+                val detail = quote(f.detail.take(DETAIL_CHARS))
+                "{\"test\":${quote(e.test)},\"rule\":\"${f.rule}\",\"key\":${quote(f.key)}," +
+                    "\"n\":${e.n},\"detail\":$detail}"
             }
+        val parts = mutableListOf(mutableListOf<String>())
+        var size = 0
+        rows.forEach { row ->
+            if (size + row.length > PART_LIMIT && parts.last().isNotEmpty()) {
+                parts += mutableListOf<String>()
+                size = 0
+            }
+            parts.last() += row
+            size += row.length + 1
+        }
         val head =
             "{\"module\":${quote(module)},\"mode\":\"${modeName(mode)}\"," +
                 "\"tests\":$tests,\"allowed\":$allowed,\"findings\":["
-        val full = head + body(detail = true) + "]}"
-        return if (full.length <= JSON_LIMIT) full else head + body(detail = false) + "]}"
+        return parts.map { head + it.joinToString(",") + "]}" }
     }
 
     private fun quote(s: String): String {

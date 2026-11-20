@@ -102,10 +102,10 @@ class FlickerRecorderTest {
     fun `B-FLICKER-007 a step that recomposes on every frame is over its ceiling, a step that only redraws is not`() {
         val options = KitUiOptions(mode = FlickerMode.Fail, recompositionsPerStep = 3)
         val n = mutableIntStateOf(0)
-        val recomposing = steps(options) { setContent { BasicText("count ${n.intValue}") } }
+        val recomposing = steps(options, n) { setContent { BasicText("count ${n.intValue}") } }
         assertTrue(recomposing.any { it.rule == FlickerRule.RECOMPOSE }, "20 recompositions were missed: $recomposing")
         val drawing =
-            steps(options) {
+            steps(options, n) {
                 setContent { Box(Modifier.size(40.dp).drawBehind { check(n.intValue >= 0) }) { BasicText("still") } }
             }
         assertTrue(drawing.isEmpty(), "a step that only redraws was reported: $drawing")
@@ -132,9 +132,12 @@ class FlickerRecorderTest {
         assertFailsWith<IllegalArgumentException> { Allow.jump("Row", " ") }
     }
 
-    private fun steps(options: KitUiOptions, script: KitUiTest.() -> Unit): List<Finding> {
-        val n = mutableIntStateOf(0)
-        return try {
+    private fun steps(
+        options: KitUiOptions,
+        n: androidx.compose.runtime.MutableIntState,
+        script: KitUiTest.() -> Unit,
+    ): List<Finding> =
+        try {
             kitUiTest(W, H, options = options) {
                 script()
                 waitForIdle()
@@ -145,7 +148,6 @@ class FlickerRecorderTest {
         } catch (failure: FlickerFailure) {
             failure.findings
         }
-    }
 
     /** Twenty frames, a state write on each. */
     private fun KitUiTest.advance(n: androidx.compose.runtime.MutableIntState) {
