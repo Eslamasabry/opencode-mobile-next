@@ -2,28 +2,59 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.ui.design.layout.CapAlign
+import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
+import io.github.eslamasabry.oc.ui.kitchat.composer.kitComposerSlab
+import io.github.eslamasabry.oc.ui.kitchat.header.KitMoreGlyph
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.approvalModeMenuLabel
+import io.github.eslamasabry.oc.ui.words.res.kitComposerTools
+import io.github.eslamasabry.oc.ui.words.res.kitComposerVoice
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
+import io.github.eslamasabry.oc.ui.words.res.upgradeStartSending
+import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
+import org.jetbrains.compose.resources.stringResource
 
 /** Where the first message is while its conversation is made and the words go out. */
 public enum class KitStartingPhase {
@@ -75,37 +106,86 @@ public fun KitStartingConversation(
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { keyboard?.hide() }
+    val paneWidth = (Layout.CONVERSATION_WIDTH + 2 * LocalKitTokens.current.gutter).dp
+    val target = LocalKitTokens.current.minTarget.dp
     KitScreen(
+        page = true,
+        overlayChrome = true,
+        floating = true,
+        frost = rememberKitFrostState(),
         topBar = {
             KitTopBar(
                 title = io.github.eslamasabry.oc.core.common.text.ConversationTitle.from(text).orEmpty(),
-                subtitle = project,
+                scope = {
+                    // Match the project target's measure before project navigation is available.
+                    Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
+                        KitTopBarScope(project, server = null, projectLabel = project, onProject = null)
+                    }
+                },
+                more = {
+                    val label = stringResource(Res.string.kitTopBarMore)
+                    Box(Modifier.pendingControl(label)) {
+                        KitIconButton(KitMoreGlyph, label, onClick = {})
+                    }
+                },
                 exit = KitTopBarExit.Back,
                 exitLabel = backLabel,
                 onExit = onBack,
+                backBesideTitle = true,
             )
         },
         bottom = {
-            // The choices the message goes out with, read-only: they are never lost on a failure.
-            Row(
-                Modifier.padding(
-                    horizontal = LocalKitTokens.current.gutter.dp,
-                    vertical = Space.S2.dp,
-                ),
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                agent?.takeIf(String::isNotBlank)?.let { KitChip(it, icon = KitIcons.agent) }
-                KitChip(model, icon = KitIcons.model)
-            }
+            KitReportBottomSlab(kitComposerSlab())
+            KitComposerBox(
+                running = false,
+                modifier = Modifier.padding(top = Space.S2.dp),
+                field = {
+                    agent?.takeIf(String::isNotBlank)?.let {
+                        KitField(
+                            state = rememberTextFieldState(),
+                            label = stringResource(Res.string.upgradeComposerAsk, it),
+                            kind = KitFieldKind.Multiline,
+                            multilineLines = 1..5,
+                            labelShown = false,
+                            framed = false,
+                            composer = true,
+                            // The outgoing bubble already announces why input is unavailable.
+                            enabled = KitEnabled.Disabled(""),
+                        )
+                    }
+                },
+                hasLeading = true,
+                leading = {
+                    val label = stringResource(Res.string.kitComposerTools)
+                    Box(Modifier.pendingControl(label)) { KitComposerAdd(label, onClick = {}) }
+                },
+                chips = {
+                    // The shield names the control. Its mode is only known after the handover.
+                    val approval = stringResource(Res.string.approvalModeMenuLabel)
+                    Box(Modifier.pendingControl(approval)) {
+                        KitComposerChip(
+                            approval, onClick = {}, icon = KitIcons.shield, opensPicker = false, wordless = true,
+                        )
+                    }
+                    Box(Modifier.pendingControl(model)) {
+                        KitComposerChip(model, onClick = {}, icon = KitIcons.model, shrinks = true)
+                    }
+                },
+                trailing = {
+                    val label = stringResource(Res.string.kitComposerVoice)
+                    Box(Modifier.pendingControl(label)) { KitComposerMic(label, onClick = {}) }
+                },
+            )
         },
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S4.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            horizontalAlignment = Alignment.End,
+                .kitMaxWidth(paneWidth, CapAlign.Center)
+                .padding(kitScreenChromePadding())
+                .verticalScroll(rememberScrollState(), reverseScrolling = true)
+                .padding(top = Space.S4.dp, bottom = Space.S2.dp),
+            verticalArrangement = Arrangement.Bottom,
         ) {
             KitPromptBubble(text, Modifier.testTag("starting-prompt"))
             KitSwap(phase, pace = KitPace.Quick, alignment = Alignment.TopEnd) { shown ->
@@ -116,7 +196,15 @@ public fun KitStartingConversation(
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     horizontalAlignment = Alignment.End,
                 ) {
-                    KitQuietLine(status)
+                    // The caller also uses Sending for a named agent startup. Preserve its more specific status.
+                    KitQuietLine(
+                        if (
+                            shown == KitStartingPhase.Sending &&
+                                status == stringResource(Res.string.upgradeStartSending)
+                        )
+                            stringResource(Res.string.kitTurnLiveSending)
+                        else status
+                    )
                     if (shown == KitStartingPhase.NotSent) {
                         reason?.takeIf(String::isNotBlank)?.let { KitQuietLine(it) }
                         if (details != null && detailsLabel != null && copyLabel != null)
@@ -130,7 +218,8 @@ public fun KitStartingConversation(
                     // Row follows the layout direction: in Arabic the pair sits on the start edge
                     // of the bubble's own side, mirrored with it. Three ways (an agent's set-up, Check again,
                     // Discard) wrap to a second line on a narrow phone instead of running off it.
-                    FlowRow(
+                    if (shown != KitStartingPhase.Sending) FlowRow(
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
                         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                         itemVerticalAlignment = Alignment.CenterVertically,
@@ -196,3 +285,18 @@ public fun KitStartingConversation(
         }
     }
 }
+
+// The conversation does not yet own these actions. Keep their normal faces and measurements,
+// with no press, keyboard focus or accessibility action until the settled chat takes over.
+private fun Modifier.pendingControl(label: String): Modifier =
+    focusProperties { canFocus = false }
+        .clearAndSetSemantics {
+            contentDescription = label
+            role = Role.Button
+            disabled()
+        }
+        .pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+            }
+        }
