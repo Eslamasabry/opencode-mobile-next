@@ -42,7 +42,7 @@ public data class KitRequest(val key: Any, val words: String, val kind: KitReque
  * only shows its countdown and Undo.
  */
 @Immutable
-public data class KitHeld(val key: Any, val label: String, val allowed: Boolean = true)
+public data class KitHeld(val key: Any, val label: String, val allowed: Boolean = true, val sent: Boolean = false)
 
 /** The answers' words; the `…On` forms name the target for TalkBack ("Allow once: ‹title›"). */
 public class KitRequestWords(
@@ -101,14 +101,19 @@ public fun KitRequestAnswers(
             label = "kit-request-answers",
         ) { shown ->
             if (shown != null) {
-                KitReceipt(
-                    KitReceiptState.Confirmed,
-                    Modifier.fillMaxWidth(),
-                    label = shown.label,
-                    onUndo = onUndo,
-                    countdownMs = MotionTokens.HELD_ANSWER,
-                    onHoldEnd = onHoldEnd,
-                )
+                // Sent: the answer is on its way, so no Undo and no countdown; the words stay until the request leaves.
+                if (shown.sent) {
+                    KitReceipt(KitReceiptState.Confirmed, Modifier.fillMaxWidth(), label = shown.label)
+                } else {
+                    KitReceipt(
+                        KitReceiptState.Confirmed,
+                        Modifier.fillMaxWidth(),
+                        label = shown.label,
+                        onUndo = onUndo,
+                        countdownMs = MotionTokens.HELD_ANSWER,
+                        onHoldEnd = onHoldEnd,
+                    )
+                }
             } else if (request.kind == KitRequestKind.Question) {
                 KitButton(
                     words.answer,

@@ -222,7 +222,7 @@ internal object LampPanelMap {
     fun held(r: LampRequestUi, t: LampTexts): KitHeld? =
         (r.answer as? LampAnswerUi.Held)?.let {
             val allowed = it.reply != HomeHeldReply.Rejected
-            KitHeld(r.requestId, t[if (allowed) LampWord.Allowed else LampWord.Denied], allowed)
+            KitHeld(r.requestId, t[if (allowed) LampWord.Allowed else LampWord.Denied], allowed, it.sent)
         }
 
     fun child(c: LampChildUi, t: LampTexts): KitTreeStep {

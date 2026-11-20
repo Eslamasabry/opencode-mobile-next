@@ -124,7 +124,7 @@ class LampListControllerTest {
         advanceTimeBy(200)
         runCurrent()
         assertEquals(listOf("a/r1/${HomePermissionReply.Once}"), w.sent)
-        assertEquals(LampAnswerUi.AllowDeny, w.lamp.ui.value.row("a").request!!.answer)
+        assertEquals(LampAnswerUi.Held(HomeHeldReply.Allowed, sent = true), w.lamp.ui.value.row("a").request!!.answer)
     }
 
     @Test

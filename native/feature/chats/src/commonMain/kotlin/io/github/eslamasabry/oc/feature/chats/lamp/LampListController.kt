@@ -42,9 +42,10 @@ public class LampListController(
 
     public val ui: StateFlow<LampUi> =
         combine(
-                combine(list, held.held, stops.phases) { model, answers, phases -> Triple(model, answers, phases) },
+                combine(list, held.held, held.sent, stops.phases) { model, answers, sent, phases -> Triple(model, answers to sent, phases) },
                 combine(editing, place, notice, foldTick) { e, p, n, _ -> Triple(e, p, n) },
-            ) { (model, answers, phases), (isEditing, where, told) ->
+            ) { (model, answered, phases), (isEditing, where, told) ->
+                val (answers, sent) = answered
                 latest = model
                 folds.observe(model)
                 LampListPresenter.present(
@@ -52,6 +53,7 @@ public class LampListController(
                     LampInputs(
                         nowMs = clock.now().toEpochMilliseconds(),
                         held = answers,
+                        sent = sent,
                         stops = phases,
                         folds = folds.folds.toMap(),
                         overlapSeen = folds.overlapSeen.toSet(),

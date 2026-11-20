@@ -22,6 +22,15 @@ public class HeldAnswers(
     private val heldState = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
     private val rows = HashMap<String, Pair<ConversationRef, HomePermissionReply>>()
     private val jobs = HashMap<String, kotlinx.coroutines.Job>()
+    private val sentState = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
+    private val sentJobs = HashMap<String, kotlinx.coroutines.Job>()
+
+    /**
+     * The replies already sent whose request the server has not yet taken off its list, by request id. A list that
+     * shows the request still pending (the edge light's) keeps the answer's receipt here instead of falling back to
+     * Allow once / Deny for the round trip; each leaves after [SENT_CONFIRM_MS] at the latest.
+     */
+    public val sent: StateFlow<Map<String, HomeHeldReply>> = sentState.asStateFlow()
 
     /** The replies waiting out the window, by request id, as the rows word them. */
     public val held: StateFlow<Map<String, HomeHeldReply>> = heldState.asStateFlow()
@@ -52,6 +61,17 @@ public class HeldAnswers(
     public fun release(requestId: String) {
         val (ref, reply) = rows.remove(requestId) ?: return
         jobs.remove(requestId)
+        val shown = heldState.value[requestId]
+        // The receipt is on the list before the held entry leaves, so no frame shows the buttons again.
+        if (shown != null) {
+            sentState.update { it + (requestId to shown) }
+            sentJobs[requestId] =
+                scope.launch {
+                    kotlinx.coroutines.delay(SENT_CONFIRM_MS)
+                    sentJobs.remove(requestId)
+                    sentState.update { it - requestId }
+                }
+        }
         send(ref, requestId, reply)
         heldState.update { it - requestId }
     }
@@ -76,3 +96,6 @@ public class HeldAnswers(
         heldState.value = emptyMap()
     }
 }
+
+/** The longest a sent answer's receipt stays while the server still lists the request (a failed send gives the buttons back). */
+public const val SENT_CONFIRM_MS: Long = 10_000L

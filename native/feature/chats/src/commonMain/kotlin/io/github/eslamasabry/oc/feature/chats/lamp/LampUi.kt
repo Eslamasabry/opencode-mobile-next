@@ -57,8 +57,8 @@ public sealed interface LampAnswerUi {
     /** A question or a form: "Answer…" opens the conversation at the request. */
     public data object Answer : LampAnswerUi
 
-    /** The reply is in its undo window: "Allowed · Undo" or "Denied · Undo". */
-    public data class Held(val reply: HomeHeldReply) : LampAnswerUi
+    /** The reply is in its undo window ("Allowed · Undo") or, [sent], on its way: "Allowed" until the request leaves the list. */
+    public data class Held(val reply: HomeHeldReply, val sent: Boolean = false) : LampAnswerUi
 }
 
 /** A waiting request in words the screen composes ("Asks to edit: wait7.txt", "Asks: ‹question›"). Masked, one line. */
