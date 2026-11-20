@@ -72,6 +72,9 @@ class PhoneUpdateChoices(
     internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh().also { inventoried = true } }
     private val holds = UnaskedHolds { offer.value }
 
+    /** OpenCode's version at the launch path as the last inventory read it; null when not read or none. */
+    internal val openCodeOnDisk: String? get() = disk.openCodeOnDisk
+
     internal fun allowed(id: AgentId): Boolean = engine.allowed(id).also { if (!it) holds.unasked(id, inventoried) }
     internal suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean =
         withContext(dispatchers.io) {
