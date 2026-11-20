@@ -7,7 +7,6 @@ import kotlin.math.sin
 // ---- time: every mark is a function of one number, so phase 1 draws what phase 0 draws ----
 
 private const val HALF = 0.5f
-private const val BACK = 1.7f
 
 /** [x] wrapped into 0..1: one whole turn is no turn. */
 internal fun turn(x: Float): Float = x - floor(x)
@@ -29,12 +28,6 @@ internal fun easeInOut(x: Float): Float {
     val d = if (x < HALF) 2f * x else 2f - 2f * x
     val half = d * d * d / 2f
     return if (x < HALF) half else 1f - half
-}
-
-/** [easeOut] that passes 1 by about a tenth and comes back. */
-internal fun overshoot(x: Float): Float {
-    val d = x - 1f
-    return 1f + (BACK + 1f) * d * d * d + BACK * d * d
 }
 
 private const val GLIDE_RAMP = 0.12f

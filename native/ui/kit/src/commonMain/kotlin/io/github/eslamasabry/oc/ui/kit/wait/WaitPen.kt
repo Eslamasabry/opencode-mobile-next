@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.vector.PathParser
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
 import kotlin.math.floor
 
 /** The family's own drawing box: every mark's pen weight is set in units of a box this many units wide. */
@@ -157,7 +158,8 @@ internal fun WaitPen.place(phase: Float): Float {
 }
 
 /** An arrival with weight: it passes its mark a little and settles. A square hand arrives without it. */
-internal fun WaitPen.settle(x: Float): Float = if (square) easeOut(x) else overshoot(x)
+internal fun WaitPen.settle(x: Float): Float =
+    (if (square) KitEasing.WaitArriveSquare else KitEasing.WaitArrive).transform(x)
 
 /** A fixed shape from its path data, in grid units, parsed once. [cut] makes overlapping pieces cut through. */
 internal fun waitShape(data: String, cut: Boolean = false): Path =

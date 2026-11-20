@@ -40,7 +40,23 @@ public object KitEasing {
     public val Pulse: Easing = of(CurveId.Pulse)
     public val PredictiveBack: Easing = of(CurveId.PredictiveBack)
     public val Steady: Easing = LinearEasing
+
+    /** A waiting mark's arrival with weight: it passes its mark by about a tenth, then settles (Penner's back, 1.7). */
+    public val WaitArrive: Easing =
+        Easing { x ->
+            val d = x - 1f
+            1f + (WAIT_BACK + 1f) * d * d * d + WAIT_BACK * d * d
+        }
+
+    /** A waiting mark's arrival for a square hand (Brutal, Paper): fast, then settling, with no overshoot. */
+    public val WaitArriveSquare: Easing =
+        Easing { x ->
+            val d = 1f - x
+            1f - d * d * d
+        }
 }
+
+private const val WAIT_BACK = 1.7f
 
 /**
  * The only place the kit creates tweens and springs (plan 08 §2.7). Off: the next frame is final (MOT-7).
