@@ -44,7 +44,7 @@ internal fun replyActionReach(more: Boolean): Float =
 
 /**
  * How far in from the end edge a reply's Copy and More stand, beyond the turn's own edge, ALWAYS (the edge light is on
- * or off): the light's touch box is [io.github.eslamasabry.oc.ui.kit.lamp.KitLampDims.TOUCH_W] wide at the physical
+ * or off): the light's touch box is the page gutter wide (16 dp) at the physical
  * edge and replies scroll under it, so the buttons' ink ends this much (24 dp = Space.S6) before the turn's edge.
  * Mirrored in Arabic: it is the end side, not the right.
  */

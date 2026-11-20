@@ -43,7 +43,8 @@ internal enum class LampWord {
     Untitled, NewTitle, GroupPinned, GroupNeedsYou, GroupFailed, GroupWorking, GroupDone, GroupRecent,
     TasksDone, For, Thinking, Working, DoneWord, IdleWord, FailedWord, WaitingMixed, WaitingToFinish, PausedAtStep,
     PausedUntilAnswer, SubAgentOf, MoreSubAgents, MoreInside, AsksRun, AsksEdit, AsksRead, AsksFolder, AsksPermission,
-    AsksQuestion, AsksQuestionBare, AsksForm, AsksFormBare, Answer, Allowed, Denied, Stopping, Stopped, Reorder, MoveUp,
+    AsksFetch, AsksSearch, AsksTool, AsksQuestion, AsksQuestionBare, AsksForm, AsksFormBare, Answer, Allowed, Denied,
+    Stopping, Stopped, Reorder, MoveUp,
     MoveDown, YouAreIn, FactOf, ChildLabel, ChildLabelFact, AllowOnce, Deny, ActionOn, NotStarted, ShowSubAgents,
     HideSubAgents, AgeNow, AgeMinutes, AgeHours, AgeDays, EdgeLight, Move, TurnOff, PlaceTitle, PlaceBody,
     Left, Right, High, Middle, Low, OffNotice, RenameFailed, StopFailed, AnswerFailed, HiddenNotice, RenameTitle, Cancel, RenameConfirm,
@@ -195,18 +196,20 @@ internal object LampPanelMap {
             is RelativeAge.Days -> t.fmt(LampWord.AgeDays, t.count(age.count))
         }
 
+    private val PERMISSION_WORDS =
+        mapOf(
+            "run" to LampWord.AsksRun, "edit" to LampWord.AsksEdit, "read" to LampWord.AsksRead,
+            "folder" to LampWord.AsksFolder, "fetch" to LampWord.AsksFetch, "search" to LampWord.AsksSearch,
+            "tool" to LampWord.AsksTool,
+        )
+
     /** What a waiting request says, in the words of its kind. */
     fun requestWords(r: LampRequestUi, t: LampTexts): String =
         when (r.kind) {
-            DockRequestKind.Permission ->
-                when {
-                    r.target.isBlank() -> t[LampWord.AsksPermission]
-                    r.action == "run" -> t.fmt(LampWord.AsksRun, r.target)
-                    r.action == "edit" -> t.fmt(LampWord.AsksEdit, r.target)
-                    r.action == "read" -> t.fmt(LampWord.AsksRead, r.target)
-                    r.action == "folder" -> t.fmt(LampWord.AsksFolder, r.target)
-                    else -> t[LampWord.AsksPermission]
-                }
+            DockRequestKind.Permission -> {
+                val word = PERMISSION_WORDS[r.action]
+                if (r.target.isBlank() || word == null) t[LampWord.AsksPermission] else t.fmt(word, r.target)
+            }
             DockRequestKind.Question -> if (r.text.isBlank()) t[LampWord.AsksQuestionBare] else t.fmt(LampWord.AsksQuestion, r.text)
             DockRequestKind.Form -> if (r.text.isBlank()) t[LampWord.AsksFormBare] else t.fmt(LampWord.AsksForm, r.text)
         }
@@ -221,7 +224,7 @@ internal object LampPanelMap {
     fun held(r: LampRequestUi, t: LampTexts): KitHeld? =
         (r.answer as? LampAnswerUi.Held)?.let {
             val allowed = it.reply != HomeHeldReply.Rejected
-            KitHeld(r.requestId, t[if (allowed) LampWord.Allowed else LampWord.Denied], allowed)
+            KitHeld(r.requestId, t[if (allowed) LampWord.Allowed else LampWord.Denied], allowed, it.sent)
         }
 
     fun child(c: LampChildUi, t: LampTexts): KitTreeStep {

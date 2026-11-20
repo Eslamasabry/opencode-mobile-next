@@ -1,5 +1,12 @@
 package io.github.eslamasabry.oc.ui.kit.lamp
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -17,8 +24,11 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -90,7 +100,7 @@ class KitLampTest {
     }
 
     @Test
-    fun `B-LAMP-K1-020 face_quiet_isControlWithLabel - a 12 x 40 tab in a 24 x 56 touch box, every style, mode and direction`() {
+    fun `B-LAMP-K1-020 face_quiet_isControlWithLabel - a 12 x 40 tab in a gutter-wide (16) x 48 touch box, every style, mode and direction`() {
         for (style in styles) for (dark in listOf(true, false)) for (rtl in listOf(false, true)) {
             runDesktopComposeUiTest(W, H) {
                 val scene = Scene(KitLampFace())
@@ -99,8 +109,8 @@ class KitLampTest {
                 val what = "$style ${if (dark) "dark" else "light"} ${if (rtl) "rtl" else "ltr"}"
                 val t = touch()
                 val f = face()
-                near(24f, t.w(), "$what touch width")
-                near(56f, t.h(), "$what touch height")
+                near(16f, t.w(), "$what touch width: the page gutter")
+                near(48f, t.h(), "$what touch height")
                 near(12f, f.w(), "$what quiet face width")
                 near(40f, f.h(), "$what quiet face height")
                 assertHugsEdge(t, f, rtl, what)
@@ -122,9 +132,9 @@ class KitLampTest {
                 val f = face()
                 near(16f, f.w(), "$what face width")
                 near(68f, f.h(), "$what face height: the number and three marks")
-                near(24f, t.w(), "$what touch width")
-                near(84f, t.h(), "$what touch height")
-                near(t.top.value + 8f, f.top.value, "$what: 8 dp of touch above the face")
+                near(16f, t.w(), "$what touch width: the page gutter")
+                near(68f, t.h(), "$what touch height: the mark's own")
+                near(t.top.value, f.top.value, "$what: the box is the mark's height")
                 assertHugsEdge(t, f, rtl, what)
                 assertTrue(f.right <= W.dp + 0.5.dp && f.left >= (-0.5).dp, "$what: the face stays inside the window")
             }
@@ -251,6 +261,152 @@ class KitLampTest {
             }
         }
     }
+
+    /** A button flush at the content's edge (the gutter, 16 dp, in from the window's edge) beside the light. */
+    private class Behind {
+        var button = 0
+        var light = 0
+    }
+
+    private class Spec(
+        val locale: String = "en",
+        val side: KitLampSide = KitLampSide.End,
+        val inset: Dp = 0.dp,
+        val fontScale: Float = 1f,
+        val face: KitLampFace = KitLampFace(),
+    )
+
+    private fun ComposeUiTest.hostBehind(behind: Behind, spec: Spec = Spec()) {
+        val (locale, side, inset) = Triple(spec.locale, spec.side, spec.inset)
+        setContent {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, spec.fontScale)) {
+                val dark = AppearanceMode.Dark
+                val appearance = KitAppearance(mode = dark, style = Style.Solid, motion = MotionLevel.Full)
+                KitTheme(appearance, FakeKitPlatform(), locale) {
+                    val rtl = locale == "ar"
+                    val left = KitLampRules.onLeft(side, rtl)
+                    // Physical edges: Start is the right edge in Arabic.
+                    val edge = if (left != rtl) Alignment.CenterStart else Alignment.CenterEnd
+                    Box(Modifier.size(W.dp, H.dp)) {
+                        // The content begins at the gutter: its edge button ends 16 dp (and the inset) in.
+                        Box(
+                            Modifier.size(48.dp).align(edge)
+                                .absolutePadding(
+                                    left = if (left) 16.dp + inset else 0.dp,
+                                    right = if (left) 0.dp else 16.dp + inset,
+                                )
+                                .clickable { behind.button++ },
+                        )
+                        CompositionLocalProvider(LocalKitLampSideInset provides inset) {
+                            KitLamp(spec.face, LABEL, { behind.light++ }, Modifier.align(edge), side = side)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun ComposeUiTest.tapAt(xDp: Float, yDp: Float) {
+        onRoot().performTouchInput { click(Offset(xDp * density, yDp * density)) }
+    }
+
+    @Test
+    fun `B-LAMP-009 a button flush at the content edge gets its taps and the light takes none of them`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind)
+            waitForIdle()
+            // The button ends at W - 16: tap just inside it, in its middle, and near its top.
+            tapAt(W - 17f, H / 2f)
+            tapAt(W - 40f, H / 2f)
+            tapAt(W - 17f, H / 2f - 20f)
+            assertEquals(3, behind.button, "the button at the content's edge is tapped")
+            assertEquals(0, behind.light, "the light took no tap that is not in its gutter box")
+        }
+
+    @Test
+    fun `B-LAMP-010 a tap anywhere in the gutter's 48 dp box opens the light, and none outside it`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind)
+            waitForIdle()
+            tapAt(W - 8f, H / 2f)
+            tapAt(W - 2f, H / 2f - 22f)
+            tapAt(W - 14f, H / 2f + 22f)
+            assertEquals(3, behind.light, "inside the 16 x 48 box (the mark is 12 x 40): every tap opens it")
+            tapAt(W - 8f, H / 2f - 27f)
+            assertEquals(3, behind.light, "above the box nothing opens")
+            assertEquals(0, behind.button)
+        }
+
+    @Test
+    fun `B-LAMP-010 right to left the box mirrors to the left edge`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind, Spec(locale = "ar"))
+            waitForIdle()
+            tapAt(8f, H / 2f)
+            tapAt(14f, H / 2f - 22f)
+            assertEquals(2, behind.light)
+            tapAt(W - 8f, H / 2f)
+            assertEquals(2, behind.light, "the right edge is not the light's in Arabic")
+            tapAt(17f, H / 2f)
+            assertEquals(1, behind.button, "the button flush at the content edge keeps its taps")
+            assertEquals(2, behind.light)
+        }
+
+    @Test
+    fun `B-LAMP-010 the box follows the side the light is moved to`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind, Spec(side = KitLampSide.Start))
+            waitForIdle()
+            tapAt(8f, H / 2f)
+            assertEquals(1, behind.light, "moved to the other side, the box is on that side")
+            tapAt(W - 8f, H / 2f)
+            assertEquals(1, behind.light)
+        }
+
+    @Test
+    fun `B-LAMP-010 a side inset widens the box to the content edge and no further`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind, Spec(inset = 10.dp))
+            waitForIdle()
+            tapAt(W - 24f, H / 2f)
+            assertEquals(1, behind.light, "inside gutter plus inset (26 dp) opens it")
+            tapAt(W - 27f, H / 2f)
+            assertEquals(1, behind.button, "the content's edge button (inset 10 + gutter 16 in) takes its tap")
+            assertEquals(1, behind.light)
+        }
+
+    @Test
+    fun `B-LAMP-010 the widest mark, 9+ at text 1_3, stays inside the gutter`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            val marks =
+                listOf(
+                    KitLampMark("n", KitLampMarkKind.NeedsYou),
+                    KitLampMark("f", KitLampMarkKind.Failed),
+                    KitLampMark("w", KitLampMarkKind.Working, 0.4f),
+                )
+            val many = KitLampFace(12, marks)
+            hostBehind(behind, Spec(fontScale = 1.3f, face = many))
+            waitForIdle()
+            val t = touch()
+            val f = face()
+            near(16f, t.w(), "the box is the gutter")
+            assertTrue(f.w() <= 16.5f, "the mark (${f.w()} dp) is not wider than the gutter")
+            val inside = f.left.value >= t.left.value - 0.5f && f.right.value <= t.right.value + 0.5f
+            assertTrue(inside, "the mark is inside the box")
+            val nine = onAllNodesWithText("9", substring = true, useUnmergedTree = true).fetchSemanticsNodes()
+            assertTrue(nine.isNotEmpty(), "the number is drawn")
+            for (n in nine) {
+                val b = n.boundsInRoot
+                val clear = b.left >= f.left.value + 2f && b.right <= f.right.value - 2f
+                assertTrue(clear, "the number $b keeps 2 dp clear of both sides of the mark")
+            }
+        }
 
     private companion object {
         const val W = 200
