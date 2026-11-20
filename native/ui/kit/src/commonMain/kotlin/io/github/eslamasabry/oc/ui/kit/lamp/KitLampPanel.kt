@@ -16,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -84,6 +86,7 @@ import io.github.eslamasabry.oc.ui.kit.status.rememberKitStepTreeState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import kotlin.math.abs
 
 /** The list's groups (LAMP-PLAN §5); the caller orders them top → bottom, Needs you last, by the thumb. */
 public enum class KitLampGroup { Pinned, Recent, Done, Working, Failed, NeedsYou }
@@ -332,8 +335,20 @@ private fun PanelHeader(model: KitLampPanelModel, words: KitLampPanelWords, acti
 @Composable
 private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, actions: KitLampPanelActions, modifier: Modifier) {
     val scroll = rememberScrollState()
+    // One entry per item (index 0 the "more" block, then each section's label and each of its rows), so the viewport
+    // and the resting scroll can both land on an item's edge: a label is never half in view.
     val heights = remember { mutableStateMapOf<Int, Int>() }
-    val parts = 1 + model.sections.size
+    val bases = model.sections.runningFold(1) { at, section -> at + 1 + section.rows.size }
+    val parts = bases.last()
+    LaunchedEffect(scroll) {
+        snapshotFlow { scroll.isScrollInProgress }.collect { moving ->
+            if (moving) return@collect
+            val tops = (0 until parts).runningFold(0) { at, i -> at + (heights[i] ?: 0) }.dropLast(1)
+            val edges = tops.map { scroll.maxValue - it }.filter { it in 0..scroll.maxValue } + 0
+            val target = edges.minByOrNull { abs(it - scroll.value) } ?: return@collect
+            if (target != scroll.value) scroll.animateScrollTo(target)
+        }
+    }
     val fade = KitLampPanelDims.FADE.dp
     Box(
         modifier
@@ -374,19 +389,23 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
                 }
             }
             model.sections.forEachIndexed { i, section ->
-                Column(Modifier.fillMaxWidth().onSizeChanged { heights[i + 1] = it.height }.testTag(LAMP_PANEL_ITEM_TAG)) {
-                    Section(section, model.editing, words, actions)
-                }
+                Section(section, model.editing, words, actions) { item, height -> heights[bases[i] + item] = height }
             }
         }
     }
 }
 
 @Composable
-private fun Section(section: KitLampSection, editing: Boolean, words: KitLampPanelWords, actions: KitLampPanelActions) {
+private fun Section(
+    section: KitLampSection,
+    editing: Boolean,
+    words: KitLampPanelWords,
+    actions: KitLampPanelActions,
+    onItemHeight: (item: Int, height: Int) -> Unit,
+) {
     KitText(
         section.title,
-        Modifier.padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp).testTag(LAMP_PANEL_HEADING_TAG),
+        Modifier.onSizeChanged { onItemHeight(0, it.height) }.testTag(LAMP_PANEL_ITEM_TAG).padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp).testTag(LAMP_PANEL_HEADING_TAG),
         role = TypeRole.Label,
         tone = if (section.group == KitLampGroup.NeedsYou) TextTone.Attention else TextTone.Secondary,
         kind = KitTextKind.Frame,
@@ -401,15 +420,19 @@ private fun Section(section: KitLampSection, editing: Boolean, words: KitLampPan
             onMove = actions.onReorderPinned,
             words = words.reorder,
         ) { row, handle ->
-            Column {
+            Column(Modifier.onSizeChanged { onItemHeight(1 + section.rows.indexOf(row), it.height) }.testTag(LAMP_PANEL_ITEM_TAG)) {
                 LampBlock(row, editing = true, words, actions, handle)
                 if (row != section.rows.last()) RowDivider()
             }
         }
     } else {
         section.rows.forEachIndexed { i, row ->
-            androidx.compose.runtime.key(row.key) { LampBlock(row, editing, words, actions, null) }
-            if (i < section.rows.size - 1) RowDivider()
+            androidx.compose.runtime.key(row.key) {
+                Column(Modifier.onSizeChanged { onItemHeight(1 + i, it.height) }.testTag(LAMP_PANEL_ITEM_TAG)) {
+                    LampBlock(row, editing, words, actions, null)
+                    if (i < section.rows.size - 1) RowDivider()
+                }
+            }
         }
     }
 }
