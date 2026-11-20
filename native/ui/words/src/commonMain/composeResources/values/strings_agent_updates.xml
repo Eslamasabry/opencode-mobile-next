@@ -35,18 +35,18 @@
     <string name="agentUpdatesNetworkUnknown">This network may use mobile data. The updates download over it.</string>
     <!-- The sheet's button: %1$d is how many agents update. -->
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="one">Update %1$d</item>
-        <item quantity="other">Update %1$d</item>
+        <item quantity="one">Update %1$d agent</item>
+        <item quantity="other">Update %1$d agents</item>
     </plurals>
     <!-- The sheet's button: %1$d is how many agents are removed. -->
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="one">Remove %1$d</item>
-        <item quantity="other">Remove %1$d</item>
+        <item quantity="one">Remove %1$d agent</item>
+        <item quantity="other">Remove %1$d agents</item>
     </plurals>
-    <!-- The sheet's button: %1$d agents update and %2$d are removed (the form follows %2$d). -->
+    <!-- The sheet's button: %1$d agents update and %2$d are removed (the form follows %2$d, the noun after it). -->
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="one">Update %1$d and remove %2$d</item>
-        <item quantity="other">Update %1$d and remove %2$d</item>
+        <item quantity="one">Update %1$d and remove %2$d agent</item>
+        <item quantity="other">Update %1$d and remove %2$d agents</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">Keep these versions</string>
     <string name="agentUpdatesAgentsLine">Don't use an agent any more?</string>

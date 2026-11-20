@@ -303,7 +303,12 @@ public fun ChatsScreen(
         if (HomeDownloadRules.agentLineWins(state.download, agentLine != null)) agentLine
         else homeDownloadStatus(state.download, actions)
     val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
-    val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download, agentLine != null)
+    // A download running now is a working line of its own above the lists, with its mark, its share done and Show
+    // progress (the Recent label carries words only: no mark and no share, so there it read as a stray line of Recent).
+    val runningLine = downloadStatus?.takeIf { it.working && downloadInList }
+    val lineWords =
+        if (runningLine != null) HomeDownloadRules.placeWins(state.home.stage, null, false)
+        else HomeDownloadRules.placeWins(state.home.stage, state.download, agentLine != null)
     val statusAction = downloadStatus?.action.takeIf { lineWords == HomeLineWinner.Download }
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
@@ -523,6 +528,11 @@ public fun ChatsScreen(
                             }
                         }
                     }
+                }
+            }
+            runningLine?.let { line ->
+                item(key = "phone-download-running", contentType = "phone-download-running") {
+                    Box(kitItemMotion()) { io.github.eslamasabry.oc.ui.kit.status.KitStatusLine(line) }
                 }
             }
             if (state.phase != ChatsPhase.Opening)

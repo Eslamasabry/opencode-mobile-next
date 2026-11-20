@@ -28,13 +28,13 @@
     <string name="agentUpdatesMetered">モバイルデータ通信を使っています。アップデートはモバイルデータ通信でダウンロードされます。</string>
     <string name="agentUpdatesNetworkUnknown">このネットワークはモバイルデータ通信の可能性があります。アップデートはこのネットワークでダウンロードされます。</string>
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="other">%1$d件をアップデート</item>
+        <item quantity="other">%1$d件のエージェントをアップデート</item>
     </plurals>
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="other">%1$d件を削除</item>
+        <item quantity="other">%1$d件のエージェントを削除</item>
     </plurals>
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="other">%1$d件をアップデート、%2$d件を削除</item>
+        <item quantity="other">%1$d件をアップデート、%2$d件のエージェントを削除</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">このバージョンを維持</string>
     <string name="agentUpdatesAgentsLine">使わなくなったエージェントは？</string>
