@@ -71,8 +71,19 @@ public class FrameRecorder(private val limits: FlickerLimits = FlickerLimits()) 
         findings.forEach { found.putIfAbsent("${it.rule}@${it.frame}", it) }
     }
 
-    /** The steps between marks that recomposed more than [ceiling] times (not yet). */
-    private fun steps(ceiling: Int): List<Finding> = emptyList()
+    /** The steps between marks that recomposed more than [ceiling] times (not counting the first composition). */
+    private fun steps(ceiling: Int): List<Finding> {
+        val points = (listOf(0) + marks + count).distinct().sorted()
+        return points.zipWithNext().filter { (a, b) -> b > a }.mapIndexedNotNull { i, (a, b) ->
+            val n = changeLog[b - 1] - changeLog[maxOf(a - 1, 0)]
+            if (n > ceiling) {
+                val what = "step ${i + 1} (frames $a to ${b - 1}) recomposed $n times, the ceiling is $ceiling"
+                Finding(FlickerRule.RECOMPOSE, "step ${i + 1}", b - 1, what)
+            } else {
+                null
+            }
+        }
+    }
 
     public companion object {
         private const val CAP = 600
