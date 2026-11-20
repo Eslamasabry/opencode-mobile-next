@@ -88,7 +88,8 @@ class OneStatusSlotRenders {
                     setContent {
                         CompositionLocalProvider(LocalDensity provides Density(2.625f, scale)) {
                             KitTheme(
-                                appearance = KitAppearance(mode = AppearanceMode.Dark, style = style, motion = MotionLevel.Full),
+                                appearance =
+                                    KitAppearance(mode = AppearanceMode.Dark, style = style, motion = MotionLevel.Full),
                                 platform = DesktopKitPlatform(),
                                 localeTag = "en",
                                 stillFrame = true,
@@ -125,7 +126,8 @@ class OneStatusSlotRenders {
                     live = LiveTurnUi(stopping = false)
                     shot("2-thinking")
                     pending = persistentListOf()
-                    rows = listOf(prompt("u1", ask), block("u1", "a1", "p1", 0, "The race is in CheckoutBloc.", live = true))
+                    val reply = block("u1", "a1", "p1", 0, "The race is in CheckoutBloc.", live = true)
+                    rows = listOf(prompt("u1", ask), reply)
                     shot("3-reply-starting")
                 }
             }

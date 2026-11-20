@@ -531,8 +531,10 @@ public fun ChatScreen(
     }
     // Every item the transcript draws below the engine's rows (ChatTranscriptList): a jump to a row (a timeline pick, a
     // Find hit, an arrival) counts them, or it lands one row off while background work shows.
+    val signalStyle = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
+    val liveIsRow = state.live != null && LiveSlot.host(state.live, state.pending, signalStyle) == null
     val itemsBelowRows =
-        (if (state.live != null && LiveSlot.host(state.live, state.pending, LocalKitAppearance.current.style == KitSurfaceStyle.Signal) == null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
+        (if (liveIsRow) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
             (if (transcriptFacts.background.isNotEmpty()) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).

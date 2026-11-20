@@ -14,8 +14,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal object LiveSlot {
     /** The pending send whose status line carries the live words, or null when the live line is its own row. */
     fun host(live: LiveTurnUi?, pending: ImmutableList<PendingSend>, signalStyle: Boolean): PendingSend? {
-        if (live == null || live.joinsTurn || signalStyle) return null
-        val first = pending.firstOrNull() ?: return null
-        return first.takeIf { it.state == PendingState.Sending && it.setUp == null && it.signIn == null }
+        val first = if (live == null || live.joinsTurn || signalStyle) null else pending.firstOrNull()
+        return first?.takeIf { it.state == PendingState.Sending && it.setUp == null && it.signIn == null }
     }
 }

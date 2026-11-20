@@ -86,7 +86,11 @@ class OneStatusSlotTest {
         liveNow: () -> LiveTurnUi?,
         rowsNow: () -> List<TranscriptRow>,
     ): @androidx.compose.runtime.Composable () -> Unit = {
-        KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Full), localeTag = "en") {
+        KitTheme(
+            platform = DesktopKitPlatform(),
+            appearance = KitAppearance(motion = MotionLevel.Full),
+            localeTag = "en",
+        ) {
             Box(Modifier.size(412.dp, 800.dp)) {
                 KitStandaloneRedaction {
                     ChatTranscriptList(
@@ -146,10 +150,16 @@ class OneStatusSlotTest {
             assertEquals(1, statusLines(), "one status line while it says Sending")
             mainClock.autoAdvance = false
             live = LiveTurnUi(stopping = false)
-            repeat(14) { frame -> mainClock.advanceTimeByFrame(); assertEquals(1, statusLines(), "frame $frame of the run starting") }
+            repeat(14) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertEquals(1, statusLines(), "frame $frame of the run starting")
+            }
             sent = persistentListOf()
             rows = serverRows
-            repeat(14) { frame -> mainClock.advanceTimeByFrame(); assertEquals(1, statusLines(), "frame $frame of the hand-over") }
+            repeat(14) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertEquals(1, statusLines(), "frame $frame of the hand-over")
+            }
             mainClock.autoAdvance = true
             waitForIdle()
             assertEquals(1, statusLines(), "one status line once the server's row stands")

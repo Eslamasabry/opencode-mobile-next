@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -768,10 +769,10 @@ internal fun ChatTranscriptList(
                                     ?.let { facts.nowMs - it },
                         )
                     else null
+                CompositionLocalProvider(LocalPendingLiveStatus provides status) {
                 PendingBubble(
                     p,
                     listWords,
-                    liveStatus = status,
                     onRetry = { onRetrySend(p.localId) },
                     check = receiptChecks[p.localId],
                     onCheck =
@@ -781,6 +782,7 @@ internal fun ChatTranscriptList(
                     onSetUp = onSetUpAgent,
                     onSignIn = onSignInAgent,
                 )
+                }
               }
             }
         }
@@ -1051,11 +1053,27 @@ internal fun ImmutableList<TranscriptRow>.distinctKeys(): ImmutableList<Transcri
     return filter { kept.add(it.key) }.toImmutableList()
 }
 
+/** The live words a first send's bubble carries in its own status line (F28); null = the bubble says Sending. */
+private val LocalPendingLiveStatus = compositionLocalOf<LiveLineWords?> { null }
+
+/** The bubble's one status line: "Sending", then the live words ("Thinking…") in the same place. */
+@Composable
+private fun PendingStatusLine(sending: String) {
+    val live = LocalPendingLiveStatus.current
+    KitTurnLiveLine(
+        words = live?.words ?: sending,
+        tone = live?.tone ?: KitTurnLiveTone.Quiet,
+        spoken = live?.spoken ?: sending,
+        step = live?.step,
+        modifier =
+            Modifier.padding(horizontal = Space.S4.dp).let { if (live != null) it.testTag("chat-live-line") else it },
+    )
+}
+
 @Composable
 private fun PendingBubble(
     p: PendingSend,
     words: ChatListWords,
-    liveStatus: LiveLineWords? = null,
     onRetry: () -> Unit,
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
@@ -1103,16 +1121,7 @@ private fun PendingBubble(
             )
         } else when (p.state) {
             // One status slot (F28): "Sending" and the live words ("Thinking…") take this same line in turn.
-            PendingState.Sending ->
-                KitTurnLiveLine(
-                    words = liveStatus?.words ?: words.sending,
-                    tone = liveStatus?.tone ?: KitTurnLiveTone.Quiet,
-                    spoken = liveStatus?.spoken ?: words.sending,
-                    step = liveStatus?.step,
-                    modifier =
-                        Modifier.padding(horizontal = Space.S4.dp)
-                            .let { if (liveStatus != null) it.testTag("chat-live-line") else it },
-                )
+            PendingState.Sending -> PendingStatusLine(words.sending)
             // Review opens the waiting-sends page, which lists only sends with a record: without one it would
             // open empty (Paseo fault 2), so the bubble offers Send again itself.
             PendingState.Unconfirmed ->
