@@ -53,6 +53,8 @@ import io.github.eslamasabry.oc.feature.review.presentation.GuideUi
 import io.github.eslamasabry.oc.feature.review.presentation.LineComment
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewGuide
 import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
@@ -106,7 +108,11 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitMarkedConsequences
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -128,6 +134,8 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.defaultReviewScopeNotice
+import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
+import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDiffBinary
@@ -158,25 +166,35 @@ import io.github.eslamasabry.oc.ui.words.res.e7LibraryNoUncommittedChanges
 import io.github.eslamasabry.oc.ui.words.res.reviewNoDiff
 import io.github.eslamasabry.oc.ui.words.res.reviewOneFileUnavailable
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertBackAction
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertCanBringBack
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertCannotUndo
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFailed
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFileLines
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesGoBackUnknown
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesLabel
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesLabelCount
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesStay
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggleHint
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConfirmAction
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConfirmBody
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConfirmTitle
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceCount
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceCount__eq0
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceFiles
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceMessages
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceGone
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteAction
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteActionUnknown
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteTitleUnknown
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeptBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeptTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertMessagesLeave
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertMessagesLeaveUnknown
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertMessagesLeaveZero
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertPreviewFilesLabel
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertPreviewFilesLabelCount
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPromptLabel
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertReplacingNotice
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConfirmBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPutBackQuestion
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceFiles
@@ -190,8 +208,8 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenIntroCount
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenIntroCount__eq0
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetAction
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertShowMoreFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertStageFailed
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertStaleTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewSendBackFailed
@@ -979,7 +997,17 @@ private fun diffFile(diff: FileDiff, fullContext: Boolean = false): DiffFile {
     else DiffModel.fromBeforeAfter(diff.file, diff.before, diff.after, status)
 }
 
-/** "Undo from this prompt?" (Flutter `showStageRevertSheet`), as its own page. */
+private const val GO_BACK_PREVIEW_CAP: Int = 3
+private const val GO_BACK_REVIEW_CAP: Int = 5
+
+/** One file row model for the preview and review lists: server diff counts when known, else path only. */
+private data class GoBackFileItem(
+    val path: String,
+    val additions: Int? = null,
+    val deletions: Int? = null,
+)
+
+/** "Go back to this prompt" preview page: shows messages, files and limits BEFORE any file changes. */
 @Composable
 public fun UndoFromHereScreen(state: UndoFromHereUi, actions: UndoFromHereActions) {
     // The page and its question share one modal layer (the chat's arrangement).
@@ -995,6 +1023,12 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
             null -> null
         }
     val ready = state.load == ReviewLoad.Ready && state.available && !state.promptUnavailable
+    val fileItems =
+        remember(state.previewFiles, state.edited) {
+            state.previewFiles?.map { GoBackFileItem(it.file, it.additions, it.deletions) }
+                ?: state.edited.map { GoBackFileItem(it) }
+        }
+    val filesKnown = state.previewFiles != null || state.edited.isNotEmpty() || !state.staged
     KitScreen(
         topBar = { TopBar(stringResource(Res.string.reviewRevertSheetTitle), actions::back) },
         width = KitScreenWidth.Reading,
@@ -1025,60 +1059,171 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
         if (!state.available) {
             KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewUndoUnavailable))
         } else if (state.load == ReviewLoad.Ready) Page {
-            // No early return out of a composable block: nothing is drawn until the review is ready.
-            val count = state.messagesAfter
-            KitText(
-                when {
-                    state.staged -> stringResource(Res.string.reviewRevertSheetBody)
-                    count == null -> stringResource(Res.string.undoFromHereBodyUnknown)
-                    count == 0 -> stringResource(Res.string.undoFromHereBody__eq0)
-                    else -> pluralStringResource(Res.plurals.undoFromHereBody, count, count)
-                },
-                role = TypeRole.Body,
-                tone = TextTone.Secondary,
-            )
-            PromptGroup(state.prompt, state.promptUnavailable)
-            if (state.staged) {
-                KitRowGroup {
-                    KitSwitchRow(
-                        title = stringResource(Res.string.reviewRevertFilesToggle),
-                        checked = state.applyFiles,
-                        supporting = stringResource(Res.string.reviewRevertFilesToggleHint),
-                        enabled =
-                            if (state.working)
-                                KitEnabled.Disabled(stringResource(Res.string.revertBusy))
-                            else KitEnabled.Enabled,
-                        modifier = Modifier.testTag("undo-files-back"),
-                        onCheckedChange = actions::putFilesBack,
-                    )
-                }
-            } else {
-                KitRowGroup(label = stringResource(Res.string.undoFromHereFilesLabel)) {
-                    if (state.edited.isEmpty()) {
-                        KitRow(title = stringResource(Res.string.undoFromHereNoEdits))
-                    } else {
-                        state.edited.forEach { path ->
-                            val cut = path.lastIndexOfAny(charArrayOf('/', '\\'))
-                            KitRow(
-                                title = if (cut < 0) path else path.substring(cut + 1),
-                                supporting = if (cut <= 0) null else path.substring(0, cut),
-                                titleIsFileName = true,
+            KitEntrance(key = state.load) {
+                Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                    if (state.replacingExisting) {
+                        KitNotice(
+                            stringResource(Res.string.reviewRevertReplacingNotice),
+                            tone = StatusTone.Attention,
+                            icon = KitIcons.undo,
+                            modifier = Modifier.testTag("undo-replacing-notice"),
+                        )
+                    }
+                    PromptGroup(state.prompt, state.promptUnavailable)
+                    val confirmedNoFiles = state.staged && state.previewFiles?.isEmpty() == true
+                    val filesOn = !confirmedNoFiles && (!state.staged || state.applyFiles)
+                    if (state.staged && !confirmedNoFiles) {
+                        KitRowGroup {
+                            KitSwitchRow(
+                                title = stringResource(Res.string.reviewRevertFilesToggle),
+                                checked = state.applyFiles,
+                                supporting = stringResource(Res.string.reviewRevertFilesToggleHint),
+                                enabled =
+                                    if (state.working)
+                                        KitEnabled.Disabled(stringResource(Res.string.revertBusy))
+                                    else KitEnabled.Enabled,
+                                modifier = Modifier.testTag("undo-files-back"),
+                                onCheckedChange = actions::putFilesBack,
                             )
                         }
                     }
+                    KitReveal(visible = filesOn && (fileItems.isNotEmpty() || !filesKnown)) {
+                        GoBackFileGroup(
+                            files = if (fileItems.isEmpty() && !filesKnown) null else fileItems,
+                            cap = GO_BACK_PREVIEW_CAP,
+                            label =
+                                if (fileItems.size > GO_BACK_PREVIEW_CAP)
+                                    stringResource(Res.string.reviewRevertPreviewFilesLabelCount, fileItems.size)
+                                else stringResource(Res.string.reviewRevertPreviewFilesLabel),
+                            emptyText = stringResource(Res.string.reviewRevertNoFiles),
+                            unavailableText = stringResource(Res.string.reviewRevertFilesGoBackUnknown),
+                            groupTag = "undo-preview-files",
+                        )
+                    }
+                    // What changes (and what cannot be undone): crisp scannable facts before anything changes.
+                    val count = state.messagesAfter
+                    val messagesFact =
+                        when (count) {
+                            null -> stringResource(Res.string.reviewRevertMessagesLeaveUnknown)
+                            0 -> stringResource(Res.string.reviewRevertMessagesLeaveZero)
+                            else -> pluralStringResource(Res.plurals.reviewRevertMessagesLeave, count, count)
+                        }
+                    KitSwap(target = filesOn) { puttingFilesBack ->
+                        KitMarkedConsequences(
+                            buildList {
+                                add(KitConsequence(messagesFact, KitConsequenceMark.Lost))
+                                when {
+                                    confirmedNoFiles || (filesKnown && fileItems.isEmpty()) ->
+                                        add(
+                                            KitConsequence(
+                                                stringResource(Res.string.reviewRevertNoFiles),
+                                                KitConsequenceMark.Kept,
+                                            )
+                                        )
+                                    !puttingFilesBack ->
+                                        add(
+                                            KitConsequence(
+                                                stringResource(Res.string.reviewRevertFilesStay),
+                                                KitConsequenceMark.Kept,
+                                            )
+                                        )
+                                    else ->
+                                        add(
+                                            KitConsequence(
+                                                stringResource(Res.string.reviewRevertCannotUndo),
+                                                KitConsequenceMark.Info,
+                                            )
+                                        )
+                                }
+                                if (state.staged) {
+                                    add(
+                                        KitConsequence(
+                                            stringResource(Res.string.reviewRevertCanBringBack),
+                                            KitConsequenceMark.Kept,
+                                        )
+                                    )
+                                }
+                            }
+                        )
+                    }
+                    state.failure?.let {
+                        FailedNotice(
+                            stringResource(
+                                if (state.staged) Res.string.reviewRevertStageFailed
+                                else Res.string.reviewRevertFailed
+                            ),
+                            it,
+                        )
+                    }
                 }
-            }
-            state.failure?.let {
-                FailedNotice(
-                    stringResource(
-                        if (state.staged) Res.string.reviewRevertStageFailed
-                        else Res.string.reviewRevertFailed
-                    ),
-                    it,
-                )
             }
         }
     }
+}
+
+@Composable
+private fun GoBackFileGroup(
+    files: List<GoBackFileItem>?,
+    cap: Int,
+    label: String,
+    emptyText: String,
+    unavailableText: String?,
+    groupTag: String,
+    onOpenFile: ((String) -> Unit)? = null,
+) {
+    var expanded by remember(files) { mutableStateOf(false) }
+    KitRowGroup(label = label, modifier = Modifier.testTag(groupTag)) {
+        when {
+            files == null ->
+                KitRow(title = unavailableText ?: emptyText)
+            files.isEmpty() ->
+                KitRow(title = emptyText)
+            else -> {
+                val head = files.take(cap)
+                val tail = files.drop(cap)
+                head.forEach { file -> GoBackFileRow(file, onOpenFile) }
+                if (tail.isNotEmpty()) {
+                    KitExpandRow(
+                        title = pluralStringResource(Res.plurals.reviewRevertShowMoreFiles, tail.size, tail.size),
+                        expanded = expanded,
+                        modifier = Modifier.testTag("$groupTag-more"),
+                        supporting = null,
+                        onExpandedChange = { expanded = it },
+                        leading = null,
+                        inset = true,
+                        titleMaxLines = 1,
+                        supportingMaxLines = 1,
+                        bare = true,
+                    ) {
+                        tail.forEach { file -> GoBackFileRow(file, onOpenFile) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoBackFileRow(file: GoBackFileItem, onOpenFile: ((String) -> Unit)?) {
+    val cut = file.path.lastIndexOfAny(charArrayOf('/', '\\'))
+    val counts =
+        lines(file.additions, file.deletions)?.let { (a, r) ->
+            stringResource(Res.string.reviewRevertFileLines, a, r)
+        }
+    KitRow(
+        title = if (cut < 0) file.path else file.path.substring(cut + 1),
+        supporting =
+            listOfNotNull(
+                    if (cut <= 0) null else file.path.substring(0, cut),
+                    counts,
+                )
+                .joinToString(" · ")
+                .ifEmpty { null },
+        titleIsFileName = true,
+        trailing = if (onOpenFile != null) KitRowTrailing.Chevron else KitRowTrailing.None,
+        modifier = Modifier.testTag("staged-file-${file.path}"),
+        onClick = onOpenFile?.let { open -> { open(file.path) } },
+    )
 }
 
 @Composable
@@ -1092,13 +1237,13 @@ private fun PromptGroup(prompt: String?, unavailable: Boolean) {
                     prompt.isBlank() -> stringResource(Res.string.revertAttachmentPrompt)
                     else -> prompt.trim()
                 },
-            supportingMaxLines = 4,
+            titleMaxLines = 3,
             modifier = Modifier.testTag("undo-prompt"),
         )
     }
 }
 
-/** "Review the undo" (Flutter `StagedRevertScreen`). */
+/** "Review what went back" (staged go-back inspection, keep or bring everything back). */
 @Composable
 public fun StagedScreen(state: StagedUi, actions: StagedActions) {
     // The page and its question share one modal layer (the chat's arrangement).
@@ -1110,7 +1255,7 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
     val busy =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.revertBusy))
         else KitEnabled.Enabled
-    // Keep and Put back wait for the live read: a kept page never decides anything.
+    // Keep and Bring back wait for the live read: a kept page never decides anything.
     val decide = state.phase == StagedPhase.Review && !state.updating
     KitScreen(
         topBar = { TopBar(stringResource(Res.string.reviewRevertScreenTitle), actions::back) },
@@ -1124,18 +1269,16 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                             Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         primary =
                             KitAction(
+                                stringResource(Res.string.reviewRevertKeepTitle),
+                                actions::askKeep,
+                                enabled = busy,
+                                destructive = true,
+                            ),
+                        secondary =
+                            KitAction(
                                 stringResource(Res.string.reviewRevertRestoreTitle),
                                 actions::askPutBack,
                                 enabled = busy,
-                            ),
-                        tertiary =
-                            listOf(
-                                KitAction(
-                                    stringResource(Res.string.reviewRevertKeepTitle),
-                                    actions::askKeep,
-                                    enabled = busy,
-                                    destructive = true,
-                                )
                             ),
                     )
                 }
@@ -1153,173 +1296,194 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                 onRetry = actions::retry,
                 retryLabel = stringResource(Res.string.kitTryAgain),
             )
-        } else when (state.phase) {
-            StagedPhase.Loading -> Unit
-            StagedPhase.None ->
-                KitStateView(
-                    KitStateKind.Calm,
-                    stringResource(Res.string.reviewRevertNoneTitle),
-                    body = stringResource(Res.string.reviewRevertNoneBody),
-                    primary = back,
-                )
-            StagedPhase.Kept ->
-                KitStateView(
-                    KitStateKind.Finished,
-                    stringResource(Res.string.reviewRevertKeptTitle),
-                    body = stringResource(Res.string.reviewRevertKeptBody),
-                    primary = back,
-                )
-            StagedPhase.Restored ->
-                KitStateView(
-                    KitStateKind.Finished,
-                    stringResource(Res.string.reviewRevertRestoredTitle),
-                    body = stringResource(Res.string.reviewRevertRestoredBody),
-                    primary = back,
-                )
-            StagedPhase.Stale ->
-                Page {
+        } else KitSwap(state.phase, Modifier.fillMaxSize()) { phase ->
+            when (phase) {
+                StagedPhase.Loading -> Unit
+                StagedPhase.None ->
                     KitStateView(
                         KitStateKind.Calm,
-                        stringResource(Res.string.reviewRevertStaleTitle),
-                        body = stringResource(Res.string.revertReviewChanged),
-                        primary =
-                            KitAction(
-                                stringResource(Res.string.revertReviewLatest),
-                                actions::reviewLatest,
-                                enabled = busy,
-                            ),
-                        secondary = back,
+                        stringResource(Res.string.reviewRevertNoneTitle),
+                        body = stringResource(Res.string.reviewRevertNoneBody),
+                        primary = back,
                     )
-                    state.failure?.let {
-                        FailedNotice(stringResource(Res.string.reviewRevertFailed), it)
-                    }
-                }
-            StagedPhase.Review ->
-                Page {
-                    val count = state.messagesAfter
-                    KitText(
-                        when (count) {
-                            null -> stringResource(Res.string.reviewRevertScreenIntro)
-                            0 -> stringResource(Res.string.reviewRevertScreenIntroCount__eq0)
-                            else ->
-                                pluralStringResource(
-                                    Res.plurals.reviewRevertScreenIntroCount,
-                                    count,
-                                    count,
-                                )
-                        },
-                        role = TypeRole.Body,
-                        tone = TextTone.Secondary,
+                StagedPhase.Kept ->
+                    KitStateView(
+                        KitStateKind.Finished,
+                        stringResource(Res.string.reviewRevertKeptTitle),
+                        body = stringResource(Res.string.reviewRevertKeptBody),
+                        primary = back,
                     )
-                    state.failure?.let {
-                        FailedNotice(stringResource(Res.string.reviewRevertFailed), it)
-                    }
-                    PromptGroup(state.prompt, state.promptUnavailable)
-                    val files = state.files
-                    KitRowGroup(
-                        label = stringResource(Res.string.reviewRevertFilesLabel),
-                        modifier = Modifier.testTag("staged-files"),
-                    ) {
-                        when {
-                            files == null ->
-                                KitRow(title = stringResource(Res.string.revertPreviewUnavailable))
-                            files.isEmpty() ->
-                                KitRow(title = stringResource(Res.string.reviewRevertNoFiles))
-                            else ->
-                                files.forEach { file ->
-                                    val cut = file.file.lastIndexOfAny(charArrayOf('/', '\\'))
-                                    val counts =
-                                        lines(file.additions, file.deletions)?.let { (a, r) ->
-                                            stringResource(Res.string.reviewRevertFileLines, a, r)
-                                        }
-                                    KitRow(
-                                        title =
-                                            if (cut < 0) file.file
-                                            else file.file.substring(cut + 1),
-                                        supporting =
-                                            listOfNotNull(
-                                                    if (cut <= 0) null
-                                                    else file.file.substring(0, cut),
-                                                    counts,
-                                                )
-                                                .joinToString(" · ")
-                                                .ifEmpty { null },
-                                        titleIsFileName = true,
-                                        trailing = KitRowTrailing.Chevron,
-                                        modifier = Modifier.testTag("staged-file-${file.file}"),
-                                        onClick = { actions.openFile(file.file) },
-                                    )
-                                }
+                StagedPhase.Restored ->
+                    KitStateView(
+                        KitStateKind.Finished,
+                        stringResource(Res.string.reviewRevertRestoredTitle),
+                        body = stringResource(Res.string.reviewRevertRestoredBody),
+                        primary = back,
+                    )
+                StagedPhase.Stale ->
+                    Page {
+                        KitStateView(
+                            KitStateKind.Calm,
+                            stringResource(Res.string.reviewRevertStaleTitle),
+                            body = stringResource(Res.string.revertReviewChanged),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.revertReviewLatest),
+                                    actions::reviewLatest,
+                                    enabled = busy,
+                                ),
+                            secondary = back,
+                        )
+                        state.failure?.let {
+                            FailedNotice(stringResource(Res.string.reviewRevertFailed), it)
                         }
                     }
-                    KitText(
-                        stringResource(Res.string.reviewOneFileUnavailable),
-                        role = TypeRole.Body,
-                        tone = TextTone.Secondary,
-                    )
-                }
-        }
-    }
-    val title = state.title ?: stringResource(Res.string.commandUntitledChat)
-    val count = state.messagesAfter
-    val files = state.files
-    KitConfirm(
-        when (state.confirm) {
-            StagedConfirm.Keep ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.reviewRevertKeepConfirmTitle, title),
-                    confirmLabel = stringResource(Res.string.reviewRevertKeepConfirmAction),
-                    kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.reviewRevertKeepConfirmBody),
-                    consequences =
-                        listOf(
+                StagedPhase.Review ->
+                    Page {
+                        val count = state.messagesAfter
+                        KitText(
                             when (count) {
-                                null ->
-                                    stringResource(Res.string.reviewRevertKeepConsequenceMessages)
-                                0 ->
-                                    stringResource(Res.string.reviewRevertKeepConsequenceCount__eq0)
+                                null -> stringResource(Res.string.reviewRevertScreenIntro)
+                                0 -> stringResource(Res.string.reviewRevertScreenIntroCount__eq0)
                                 else ->
                                     pluralStringResource(
-                                        Res.plurals.reviewRevertKeepConsequenceCount,
+                                        Res.plurals.reviewRevertScreenIntroCount,
                                         count,
                                         count,
                                     )
                             },
-                            stringResource(Res.string.reviewRevertKeepConsequenceFiles),
-                        ),
-                )
+                            role = TypeRole.Body,
+                            tone = TextTone.Secondary,
+                        )
+                        state.failure?.let {
+                            FailedNotice(stringResource(Res.string.reviewRevertFailed), it)
+                        }
+                        PromptGroup(state.prompt, state.promptUnavailable)
+                        val files = state.files
+                        val fileItems =
+                            remember(files) {
+                                files?.map { GoBackFileItem(it.file, it.additions, it.deletions) }
+                            }
+                        GoBackFileGroup(
+                            files = fileItems,
+                            cap = GO_BACK_REVIEW_CAP,
+                            label =
+                                if (fileItems != null && fileItems.size > GO_BACK_REVIEW_CAP)
+                                    stringResource(Res.string.reviewRevertFilesLabelCount, fileItems.size)
+                                else stringResource(Res.string.reviewRevertFilesLabel),
+                            emptyText = stringResource(Res.string.reviewRevertNoFiles),
+                            unavailableText = stringResource(Res.string.revertPreviewUnavailable),
+                            groupTag = "staged-files",
+                            onOpenFile = actions::openFile,
+                        )
+                        KitText(
+                            stringResource(Res.string.reviewOneFileUnavailable),
+                            role = TypeRole.Body,
+                            tone = TextTone.Secondary,
+                        )
+                    }
+            }
+        }
+    }
+    val title = state.title ?: stringResource(Res.string.commandUntitledChat)
+    val count = state.messagesAfter
+    val totalHidden = count?.let { it + 1 }
+    val files = state.files
+    KitSheet(
+        visible = state.confirm == StagedConfirm.Keep,
+        onDismissRequest = actions::dismissConfirm,
+        title =
+            if (totalHidden != null)
+                pluralStringResource(Res.plurals.reviewRevertKeepDeleteTitle, totalHidden, totalHidden)
+            else stringResource(Res.string.reviewRevertKeepDeleteTitleUnknown),
+        subtitle = title,
+        icon = KitIcons.delete,
+        showClose = false,
+        dismissible = !state.working,
+        primary =
+            KitAction(
+                if (totalHidden != null)
+                    pluralStringResource(Res.plurals.reviewRevertKeepDeleteAction, totalHidden, totalHidden)
+                else stringResource(Res.string.reviewRevertKeepDeleteActionUnknown),
+                actions::confirm,
+                destructive = true,
+                working = state.working,
+                haptic = io.github.eslamasabry.oc.ui.design.motion.KitHaptic.Commit,
+            ),
+        secondary =
+            KitAction(
+                stringResource(Res.string.kitConfirmCancel),
+                actions::dismissConfirm,
+                enabled =
+                    if (state.working) KitEnabled.Disabled(stringResource(Res.string.revertBusy))
+                    else KitEnabled.Enabled,
+            ),
+    ) {
+        KitMarkedConsequences(
+            listOf(
+                KitConsequence(
+                    stringResource(Res.string.reviewRevertKeepConsequenceGone),
+                    KitConsequenceMark.Lost,
+                ),
+                KitConsequence(
+                    stringResource(Res.string.reviewRevertKeepConsequenceFiles),
+                    KitConsequenceMark.Kept,
+                ),
+            )
+        )
+        if (state.confirm == StagedConfirm.Keep && state.failure != null) {
+            KitNotice(
+                stringResource(Res.string.kitConfirmFailed),
+                tone = StatusTone.Failure,
+                actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::confirm)),
+            )
+        }
+    }
+    KitConfirm(
+        when (state.confirm) {
             StagedConfirm.PutBack ->
                 KitConfirmSpec(
                     title = stringResource(Res.string.reviewRevertPutBackQuestion, title),
                     confirmLabel = stringResource(Res.string.reviewRevertRestoreTitle),
                     // Files go back to the saved snapshot: edits made since are replaced, so that
-                    // is the error tone.
+                    // is destructive.
                     kind =
                         if (files == null || files.isNotEmpty()) KitConfirmKind.Destructive
                         else KitConfirmKind.Neutral,
+                    icon = KitIcons.restore,
                     body = stringResource(Res.string.reviewRevertRestoreConfirmBody),
-                    consequences =
+                    consequenceItems =
                         listOfNotNull(
-                            stringResource(Res.string.reviewRevertRestoreConsequenceMessages),
+                            KitConsequence(
+                                stringResource(Res.string.reviewRevertRestoreConsequenceMessages),
+                                KitConsequenceMark.Kept,
+                            ),
                             when {
                                 files == null ->
-                                    stringResource(
-                                        Res.string.reviewRevertRestoreConsequenceUnknownFiles
+                                    KitConsequence(
+                                        stringResource(
+                                            Res.string.reviewRevertRestoreConsequenceUnknownFiles
+                                        ),
+                                        KitConsequenceMark.Lost,
                                     )
                                 files.isNotEmpty() ->
-                                    pluralStringResource(
-                                        Res.plurals.reviewRevertRestoreConsequenceFiles,
-                                        files.size,
-                                        files.size,
+                                    KitConsequence(
+                                        pluralStringResource(
+                                            Res.plurals.reviewRevertRestoreConsequenceFiles,
+                                            files.size,
+                                            files.size,
+                                        ),
+                                        KitConsequenceMark.Lost,
                                     )
                                 else -> null
                             },
                         ),
                 )
+            StagedConfirm.Keep,
             null -> null
         },
         working = state.working,
-        failed = state.confirm != null && state.failure != null,
+        failed = state.confirm == StagedConfirm.PutBack && state.failure != null,
         onConfirm = actions::confirm,
         onCancel = actions::dismissConfirm,
     )

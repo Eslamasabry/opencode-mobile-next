@@ -3120,9 +3120,27 @@ internal class GraphChatWorld(
 
     override suspend fun putBack(): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
-        val graph =
-            currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        val r = (graph as ChatGraphAccessors).chatOperations.restoreSession(sid)
+        val attached = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val graph = attached.graph
+        val staged = attached.gateway.facet<StagedRevertGateway>()
+        val r =
+            if (staged != null) staged.clearSessionRevert(sid)
+            else (graph as ChatGraphAccessors).chatOperations.restoreSession(sid)
+        if (r is Outcome.Ok && registry.graphFor(ref) === graph) {
+            mutableUndone.value = ChatUndone.None
+            bind(graph)
+        }
+        return r
+    }
+
+    override suspend fun keepGoBack(): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
+        val attached = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val graph = attached.graph
+        val staged =
+            attached.gateway.facet<StagedRevertGateway>()
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
+        val r = staged.commitSessionRevert(sid)
         if (r is Outcome.Ok && registry.graphFor(ref) === graph) {
             mutableUndone.value = ChatUndone.None
             bind(graph)

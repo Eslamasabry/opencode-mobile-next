@@ -58,6 +58,7 @@ public data class TipDefinition(
 
 public object TeachingIds {
     public val MessageDetails: TipId = TipId("message-details")
+    public val PromptGoBack: TipId = TipId("prompt-go-back")
     public val TerminalSelection: TipId = TipId("terminal-selection")
     public val StopAfterStep: TipId = TipId("stop-after-step")
     public val SendLater: TipId = TipId("send-later")
@@ -148,6 +149,16 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                         copyKeys = persistentListOf("tipMessageDetailsTitle", "tipMessageDetails"),
                         anchors = persistentListOf("chat-turn-footer"),
                         trigger = "the first completed reply is visible with no keyboard or question; used when message Details opens",
+                        maxCount = 2,
+                    ),
+                    TipDefinition(
+                        id = TeachingIds.PromptGoBack,
+                        kind = TeachingKind.Tip,
+                        titleKey = "tipPromptGoBackTitle",
+                        messageKey = "tipPromptGoBack",
+                        copyKeys = persistentListOf("tipPromptGoBackTitle", "tipPromptGoBack"),
+                        anchors = persistentListOf("prompt-go-back"),
+                        trigger = "a conversation that supports going back has a prompt with no keyboard or question; used when Go back to here opens",
                         maxCount = 2,
                     ),
                     TipDefinition(

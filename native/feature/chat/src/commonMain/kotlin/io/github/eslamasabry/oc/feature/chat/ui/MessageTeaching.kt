@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.tipMessageDetails
+import io.github.eslamasabry.oc.ui.words.res.tipPromptGoBack
 import org.jetbrains.compose.resources.stringResource
 
 /** The same controller as Help › Tips; one visit and one app-wide teaching slot. */
@@ -31,13 +32,14 @@ internal fun MessageTeachingScope(
     source: TeachingSource,
     eligible: Boolean,
     blocked: Boolean,
+    promptGoBackEligible: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     var controller by remember(source) { mutableStateOf<TipController?>(null) }
     val visit = remember { TipVisit() }
     val keyboard = kitKeyboardVisible()
     LaunchedEffect(source) { controller = source.controller() }
-    LaunchedEffect(controller, eligible, blocked, keyboard) {
+    LaunchedEffect(controller, eligible, promptGoBackEligible, blocked, keyboard) {
         val tips = controller ?: return@LaunchedEffect
         if (!eligible || blocked || keyboard) {
             tips.dismiss(TeachingIds.MessageDetails)
@@ -49,13 +51,43 @@ internal fun MessageTeachingScope(
                 moment = TipMoment(questionWaiting = blocked, keyboardOverAnchor = keyboard),
             )
         }
+        if (!promptGoBackEligible || blocked || keyboard) {
+            tips.dismiss(TeachingIds.PromptGoBack)
+        } else {
+            tips.offer(
+                TeachingIds.PromptGoBack,
+                visit = visit,
+                maxCount = 2,
+                moment = TipMoment(questionWaiting = blocked, keyboardOverAnchor = keyboard),
+            )
+        }
     }
     DisposableEffect(controller) {
-        onDispose { controller?.dismiss(TeachingIds.MessageDetails) }
+        onDispose {
+            controller?.dismiss(TeachingIds.MessageDetails)
+            controller?.dismiss(TeachingIds.PromptGoBack)
+        }
     }
     CompositionLocalProvider(
         LocalMessageTeaching provides controller?.let { MessageTeaching(it, visit) },
         content = content,
+    )
+}
+
+/** Only the newest prompt anchors the contextual go-back / prompt-actions tip (shown at most twice). */
+@Composable
+internal fun PromptGoBackTip(eligible: Boolean, content: @Composable () -> Unit) {
+    val teaching = LocalMessageTeaching.current
+    if (teaching == null || !eligible) {
+        content()
+        return
+    }
+    val active by teaching.controller.active.collectAsStateWithLifecycle()
+    KitTip(
+        message = stringResource(Res.string.tipPromptGoBack),
+        visible = active?.id == TeachingIds.PromptGoBack,
+        onDismissed = { teaching.controller.dismiss(TeachingIds.PromptGoBack) },
+        anchor = content,
     )
 }
 

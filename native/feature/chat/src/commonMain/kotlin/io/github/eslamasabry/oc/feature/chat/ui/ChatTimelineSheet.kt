@@ -135,7 +135,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
                                 stringResource(Res.string.chatUiForkFromThisPrompt),
                                 { actions.timelineSelect(entry.messageId, fork = true) },
                                 testTag = "timeline-fork-${entry.messageId}",
-                                icon = KitIcons.branch,
+                                icon = KitIcons.fork,
                             )
                         )
                     else KitRowTrailing.None,

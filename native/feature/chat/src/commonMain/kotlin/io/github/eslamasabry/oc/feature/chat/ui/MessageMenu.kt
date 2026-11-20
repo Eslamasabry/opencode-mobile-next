@@ -73,7 +73,14 @@ internal fun MessageMenu(
                             MessageAction.UndoFromHere -> stringResource(Res.string.revertFromHere)
                             MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
                         },
-                    onSelect = { menu?.let { actions.messageAction(it.target, action) } },
+                    onSelect = {
+                        if (action == MessageAction.UndoFromHere) {
+                            teaching?.controller?.markUsed(
+                                io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds.PromptGoBack
+                            )
+                        }
+                        menu?.let { actions.messageAction(it.target, action) }
+                    },
                     icon =
                         when (action) {
                             MessageAction.Copy -> KitIcons.copy
@@ -85,7 +92,7 @@ internal fun MessageMenu(
                             MessageAction.SendAgain -> KitIcons.send
                             MessageAction.Fork -> KitIcons.fork
                             MessageAction.Changes -> KitIcons.review
-                            MessageAction.UndoFromHere -> KitIcons.history
+                            MessageAction.UndoFromHere -> KitIcons.undo
                             MessageAction.Delete -> KitIcons.delete
                         },
                     destructive = action == MessageAction.Delete,

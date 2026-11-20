@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -31,11 +32,14 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
+import io.github.eslamasabry.oc.feature.chat.presentation.RowIds
 import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
@@ -100,7 +104,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.style.KitRunningFeedLine
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -221,6 +228,10 @@ internal class ChatListWords(
     /** An agent whose own sign-in ran out: "{agent} needs you to sign in again" and its action, "Sign in again". */
     val signInAgain: (String) -> String = { "" },
     val signInAgainAction: String = "",
+    /** Visible "Go back to here" prompt button label, review action for refused sends, and in-list boundary line. */
+    val goBackToHere: String = "",
+    val reviewGoBack: String = "",
+    val stagedBoundary: String = "",
 )
 
 /**
@@ -363,6 +374,9 @@ internal object ListKeys {
     /** "Show earlier messages": the transcript's first row while older history is not loaded. */
     const val EARLIER: String = "earlier"
 
+    /** Quiet in-list boundary marking where a waiting go-back hid later messages. */
+    const val STAGED_BOUNDARY: String = "staged-boundary"
+
     /** P-010: room lent above everything so a row opened in a short conversation stays under the finger. */
     const val HOLD_ROOM: String = "hold-room"
 
@@ -475,6 +489,12 @@ internal fun ChatTranscriptList(
     waitingJump: Int = 0,
     /** Names the conversation so its place is kept for this run (null keeps it only for the entry). */
     placeKey: String? = null,
+    /** Visible one-tap "Go back to here" button beside each prompt (gated on `caps.undo && idle`); null hides it. */
+    onGoBackPrompt: ((String) -> Unit)? = null,
+    /** True while a go-back is waiting: draws one quiet in-list boundary line at the bottom of the visible transcript. */
+    stagedWaiting: Boolean = false,
+    /** Opens "Review what went back" from a send refused because a go-back is waiting. */
+    onReviewGoBack: (() -> Unit)? = null,
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
@@ -528,13 +548,14 @@ internal fun ChatTranscriptList(
     val runningSteps: Boolean? = if (live == null) null else stepsShown
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
-        remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
+        remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null, stagedWaiting) {
             rowFacts.itemKeys(
                 buildList {
                     if (extraBottomPx > 0) add(ListKeys.DOCK_ROOM)
                     if (live != null && listWords != null) add(ListKeys.LIVE)
                     if (facts.background.isNotEmpty() && listWords != null) add(ListKeys.BACKGROUND)
                     if (listWords != null) pending.forEach { add(ListKeys.pending(it.localId)) }
+                    if (stagedWaiting && listWords != null && listWords.stagedBoundary.isNotEmpty()) add(ListKeys.STAGED_BOUNDARY)
                 },
                 unique,
                 buildList {
@@ -751,10 +772,21 @@ internal fun ChatTranscriptList(
                         if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
                         else null,
                     onReview = onReviewPending,
+                    onReviewGoBack = onReviewGoBack,
                     onSetUp = onSetUpAgent,
                     onSignIn = onSignInAgent,
                 )
               }
+            }
+        }
+        if (stagedWaiting && listWords != null && listWords.stagedBoundary.isNotEmpty()) {
+            item(key = ListKeys.STAGED_BOUNDARY, contentType = "staged-boundary") {
+                Box(kitTranscriptItemMotion().padding(vertical = Space.S2.dp)) {
+                    KitQuietLine(
+                        listWords.stagedBoundary,
+                        Modifier.testTag("chat-staged-boundary"),
+                    )
+                }
             }
         }
         itemsIndexed(unique, key = { _, it -> it.key }, contentType = { _, it -> it.kind }) { index, row ->
@@ -840,6 +872,8 @@ internal fun ChatTranscriptList(
                         runningSteps = runningSteps,
                         onHideSteps = { stepsShown = false },
                         stopping = live?.stopping == true,
+                        onGoBackPrompt = onGoBackPrompt,
+                        teachGoBack = row.key == newestPrompt,
                     )
                 }
                 if (display.timestampsVisible) {
@@ -1032,6 +1066,7 @@ private fun PendingBubble(
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
     onReview: (() -> Unit)? = null,
+    onReviewGoBack: (() -> Unit)? = null,
     onSetUp: ((String) -> Unit)? = null,
     onSignIn: ((String) -> Unit)? = null,
 ) {
@@ -1087,16 +1122,23 @@ private fun PendingBubble(
                 )
             PendingState.Failed -> {
                 val failure = p.failure
+                val undoWaiting =
+                    failure is Failure.Refused && failure.reason == RefusalReason.UndoUnresolved
                 KitSendFailed(
                     lines = listOfNotNull(words.notSent, failure?.let(words.sendFailure)),
-                    actionLabel = words.tryAgain,
-                    onAction = onRetry,
+                    actionLabel =
+                        if (undoWaiting && onReviewGoBack != null && words.reviewGoBack.isNotEmpty())
+                            words.reviewGoBack
+                        else words.tryAgain,
+                    onAction = if (undoWaiting && onReviewGoBack != null) onReviewGoBack else onRetry,
                     details =
                         failure
-                            ?.takeIf { words.details.isNotEmpty() }
+                            ?.takeIf { !undoWaiting && words.details.isNotEmpty() }
                             ?.let { KitSendFailedDetails(words.details, words.copyDetails, failureCode(it), it.details) },
                     detailsTag = "chat-send-failure-details",
-                    actionTag = "chat-send-error-try-again",
+                    actionTag =
+                        if (undoWaiting && onReviewGoBack != null) "chat-send-error-review-go-back"
+                        else "chat-send-error-try-again",
                 )
             }
         }
@@ -1220,6 +1262,10 @@ private fun ChatRow(
     onHideSteps: () -> Unit = {},
     /** The person pressed Stop: no step says it waits for them any more. */
     stopping: Boolean = false,
+    /** Direct one-tap "Go back to here" button on the prompt's own row; null hides it. */
+    onGoBackPrompt: ((String) -> Unit)? = null,
+    /** Only the newest prompt anchors the contextual go-back tip. */
+    teachGoBack: Boolean = false,
 ) {
     when (row) {
         is BlockRow -> {
@@ -1250,17 +1296,24 @@ private fun ChatRow(
         }
         is PromptRow ->
             Column {
-                if (onOpenMenu != null && listWords != null) {
-                    // Tap is the visible way to the message's actions; long-press is the familiar
-                    // hidden twin (06 §11.1).
-                    KitMessageActions(
-                        label = listWords.messageActions,
-                        onOpen = { onOpenMenu(row.key) },
-                    ) {
+                val showGoBack =
+                    onGoBackPrompt != null &&
+                        listWords != null &&
+                        listWords.goBackToHere.isNotEmpty() &&
+                        RowIds.messageIdOf(row) != null
+                PromptGoBackTip(eligible = teachGoBack && showGoBack) {
+                    if (onOpenMenu != null && listWords != null) {
+                        // Tap is the visible way to the prompt's own actions (Go back to here is first);
+                        // long-press is the familiar hidden twin (06 §11.1).
+                        KitMessageActions(
+                            label = listWords.messageActions,
+                            onOpen = { onOpenMenu(row.key) },
+                        ) {
+                            SentPromptBubble(row)
+                        }
+                    } else {
                         SentPromptBubble(row)
                     }
-                } else {
-                    SentPromptBubble(row)
                 }
                 // A turn with no assistant row still has an explicit end next to its prompt.
                 if (facts.reading.metadata[row.turnId] == null)

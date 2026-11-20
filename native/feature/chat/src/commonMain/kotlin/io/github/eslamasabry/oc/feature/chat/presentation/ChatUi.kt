@@ -356,11 +356,8 @@ public sealed interface ChatConfirm {
     /** The draft could not be saved on Back (07 §3.4): leave without saving, or keep editing. */
     public data object LeaveUnsaved : ChatConfirm
 
-    /**
-     * "Undo from here?" (Flutter `revertFromHere`, B-CHAT-120): the prompt and everything after it
-     * go.
-     */
-    public data class UndoFrom(val target: MessageTarget) : ChatConfirm
+    /** Confirm "Keep this point?" from the chat's waiting-go-back status menu (deletes hidden messages). */
+    public data object KeepGoBack : ChatConfirm
 
     /**
      * A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to
@@ -653,8 +650,17 @@ public interface ChatActions {
     /** The composer took the "Edit and resend" words. */
     public fun insertDone(id: Long) {}
 
-    /** The person confirmed "Undo from here". */
-    public fun confirmUndo() {}
+    /** Direct "Go back to here" button on a prompt: opens the preview page for [rowKey]'s prompt. */
+    public fun goBackFromPrompt(rowKey: String) {}
+
+    /** Opens "Review what went back" for the waiting go-back in this conversation. */
+    public fun reviewGoBack() {}
+
+    /** Opens the destructive confirm to keep the waiting go-back permanently right from the chat. */
+    public fun askKeepGoBack() {}
+
+    /** The person confirmed "Keep this point?" from the chat. */
+    public fun confirmKeepGoBack() {}
 
     /** A picture tile that names a file on the server: read it and show it in the viewer. */
     public fun openPicture(path: String, name: String) {}

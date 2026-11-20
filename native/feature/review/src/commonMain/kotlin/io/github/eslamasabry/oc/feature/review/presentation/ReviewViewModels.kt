@@ -152,7 +152,7 @@ public class FileDiffViewModel(
     }
 }
 
-/** "Undo from this prompt?". */
+/** "Go back to this prompt". */
 @AssistedInject
 public class UndoFromHereViewModel(@Assisted route: ReviewRoute.UndoFromHere, hub: ReviewHub, nav: AppNavigator) : ViewModel(), UndoFromHereActions {
     private val presenter = UndoFromHerePresenter(hub.review(route.ref), route.messageId, RouteNavigation(nav, route.ref, null), viewModelScope)
@@ -163,6 +163,10 @@ public class UndoFromHereViewModel(@Assisted route: ReviewRoute.UndoFromHere, hu
     override fun putFilesBack(apply: Boolean): Unit = presenter.putFilesBack(apply)
 
     override fun confirm(): Unit = presenter.confirm()
+
+    override fun onCleared() {
+        presenter.cancelPreview()
+    }
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

@@ -64,9 +64,16 @@ public object StatusPick {
             ChatLink.Live -> Unit
         }
         // The newest bubble speaks for the sends; an older failure stays on its own bubble. One whose agent needs
-        // setting up says so on its bubble only: Try again here would only fail again.
+        // setting up says so on its bubble only: Try again here would only fail again. A send refused because a
+        // go-back is waiting leaves the top status line to the waiting go-back (which holds Bring back and Review).
         pending
-            .lastOrNull { it.state == PendingState.Failed && it.setUp == null && it.signIn == null }
+            .lastOrNull {
+                it.state == PendingState.Failed &&
+                    it.setUp == null &&
+                    it.signIn == null &&
+                    !((it.failure as? Failure.Refused)?.reason ==
+                        io.github.eslamasabry.oc.core.common.RefusalReason.UndoUnresolved)
+            }
             ?.let {
                 return ChatStatusUi(
                     "send-${it.localId}",
@@ -227,6 +234,7 @@ public object MessageActions {
     ): ImmutableList<MessageAction> {
         val out = ArrayList<MessageAction>(8)
         val prompt = kind == TargetKind.Prompt
+        if (prompt && caps.undo && messageId != null && !busy) out += MessageAction.UndoFromHere
         if (hasText) out += MessageAction.Copy
         if (feel && hasText) out += MessageAction.Share
         if (feel && hasText) out += MessageAction.SelectText
@@ -236,7 +244,6 @@ public object MessageActions {
         if (prompt && caps.fork && messageId != null) out += MessageAction.Fork
         if (kind == TargetKind.Reply && caps.changes && messageId != null)
             out += MessageAction.Changes
-        if (prompt && caps.undo && messageId != null && !busy) out += MessageAction.UndoFromHere
         if (caps.deleteMessage && messageId != null) out += MessageAction.Delete
         return out.toImmutableList()
     }

@@ -393,7 +393,13 @@ public class ChatViewModel(
 
     override fun insertDone(id: Long): Unit = presenter.insertDone(id)
 
-    override fun confirmUndo(): Unit = presenter.confirmUndo()
+    override fun goBackFromPrompt(rowKey: String): Unit = presenter.goBackFromPrompt(rowKey)
+
+    override fun reviewGoBack(): Unit = presenter.reviewGoBack()
+
+    override fun askKeepGoBack(): Unit = presenter.askKeepGoBack()
+
+    override fun confirmKeepGoBack(): Unit = presenter.confirmKeepGoBack()
 
     override suspend fun readPicture(path: String): ByteArray? = presenter.readPicture(path)
 

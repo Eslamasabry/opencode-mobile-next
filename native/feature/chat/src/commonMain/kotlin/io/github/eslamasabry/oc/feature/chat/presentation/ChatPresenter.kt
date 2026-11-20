@@ -339,17 +339,41 @@ public class ChatPresenter(
             ChatUndone.Applied -> ChatStatusUi(UNDONE_STATUS, ChatStatusKind.Undone)
         }
 
-    /** S28 story 3 (Flutter `_restore`, Put back and `/redo`): a staged undo opens its review page instead. */
+    /** One-tap "Bring back" from the chat (or `/redo`): clears a staged go-back or restores an applied one. */
     override fun putBack() {
         when (world.undone.value) {
             ChatUndone.None -> Unit
-            ChatUndone.Staged -> nav.open(ReviewRoute.Staged(world.ref))
+            ChatUndone.Staged,
             ChatUndone.Applied ->
                 launcher.launch {
                     val r = world.putBack()
                     if (r is Outcome.Failed) local.update { it.copy(actionFailure = r.failure) }
                 }
         }
+    }
+
+    override fun reviewGoBack() {
+        if (world.undone.value == ChatUndone.Staged) nav.open(ReviewRoute.Staged(world.ref))
+    }
+
+    override fun askKeepGoBack() {
+        if (world.undone.value == ChatUndone.Staged)
+            local.update { it.copy(confirm = ChatConfirm.KeepGoBack, actionFailure = null) }
+    }
+
+    override fun confirmKeepGoBack() {
+        if (local.value.confirm != ChatConfirm.KeepGoBack) return
+        local.update { it.copy(confirm = null) }
+        launcher.launch {
+            val r = world.keepGoBack()
+            if (r is Outcome.Failed) local.update { it.copy(actionFailure = r.failure) }
+        }
+    }
+
+    override fun goBackFromPrompt(rowKey: String) {
+        val row = world.transcript.value.rows.firstOrNull { it.key == rowKey } as? PromptRow ?: return
+        val id = RowIds.messageIdOf(row) ?: return
+        nav.open(ReviewRoute.UndoFromHere(world.ref, id))
     }
 
     /** The retry schedule at the clock's present (no countdown without a clock). */
@@ -1688,16 +1712,6 @@ public class ChatPresenter(
         local.update { it.copy(confirm = null) }
         launcher.launch {
             val result = world.deleteMessage(MessageId(id))
-            if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
-        }
-    }
-
-    override fun confirmUndo() {
-        val target = (local.value.confirm as? ChatConfirm.UndoFrom)?.target ?: return
-        val id = target.messageId ?: return
-        local.update { it.copy(confirm = null) }
-        launcher.launch {
-            val result = world.revertFrom(MessageId(id))
             if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
         }
     }

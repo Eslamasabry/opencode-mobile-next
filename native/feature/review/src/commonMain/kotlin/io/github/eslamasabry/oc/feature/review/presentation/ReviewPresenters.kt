@@ -133,7 +133,7 @@ public class ChangesPresenter(
         scope.launch {
             review.state.collect { s ->
                 mutable.update {
-                    it.copy(busy = s.running || s.working, undoAll = undoAll(it.load))
+                    it.copy(busy = s.running || s.working, undoAll = undoAll(it.load, it.scope))
                 }
             }
         }
@@ -216,7 +216,7 @@ public class ChangesPresenter(
                             complete = set.complete,
                             added = rows.sumOrNull { r -> r.added },
                             removed = rows.sumOrNull { r -> r.removed },
-                            undoAll = undoAll(ReviewLoad.Ready),
+                            undoAll = undoAll(ReviewLoad.Ready, chosen),
                             canGuide = guideAsk != null && !working && rows.isNotEmpty(),
                             updating = false,
                         )
@@ -402,10 +402,11 @@ public class ChangesPresenter(
         }
     }
 
-    private fun undoAll(load: ReviewLoad): UndoAllUi =
+    private fun undoAll(load: ReviewLoad, scope: ReviewScope = state.value.scope): UndoAllUi =
         when {
             review.state.value.staged != null -> UndoAllUi.Waiting
             review.shape() != UndoShape.Staged -> UndoAllUi.Unavailable
+            scope != ReviewScope.Conversation -> UndoAllUi.Unavailable
             load != ReviewLoad.Ready || set.undoFrom == null -> UndoAllUi.Unknown
             else -> UndoAllUi.Offered
         }
@@ -480,7 +481,6 @@ public class ChangesPresenter(
             }
             if (result is Outcome.Ok) {
                 nav.back()
-                nav.openStaged()
             }
         }
     }
@@ -797,12 +797,21 @@ public class UndoFromHerePresenter(
      */
     @kotlin.concurrent.Volatile private var basis: Long? = null
 
+    /**
+     * Temporary messages-only preview stage (`files: false`) taken on load so the server reports the exact file
+     * list without changing files on disk; cleared automatically if the person leaves without confirming.
+     */
+    @kotlin.concurrent.Volatile private var previewStage: StagedReview? = null
+
+    @kotlin.concurrent.Volatile private var previewing: Boolean = false
+    @kotlin.concurrent.Volatile private var confirmed: Boolean = false
+
     init {
         scope.launch {
             review.state.collect { s ->
                 mutable.update {
                     it.copy(
-                        block = block(s.running, s.working && !it.working, s.revision, it.block)
+                        block = block(s.running, s.working && !it.working && !previewing, s.revision, it.block)
                     )
                 }
             }
@@ -820,39 +829,73 @@ public class UndoFromHerePresenter(
         when {
             running || othersWorking -> UndoBlock.Busy
             was == UndoBlock.Stale -> UndoBlock.Stale
-            basis.let { it != null && it != revision } && !state.value.working -> UndoBlock.Stale
+            basis.let { it != null && it != revision } && !state.value.working && !previewing -> UndoBlock.Stale
             else -> null
         }
 
     private fun load() {
         scope.launch {
+            var hadStaged = false
             if (shape == UndoShape.Staged) {
                 review
                     .refresh() // the boundary this page is about; a failed read leaves it as it was
+                hadStaged = review.state.value.staged != null
                 basis = review.basis()
             }
-            when (val prompt = review.prompt(promptId)) {
+            val promptOutcome = review.prompt(promptId)
+            val count = (review.messagesAfter(promptId) as? Outcome.Ok)?.value
+            val edited =
+                (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
+            var serverFiles: ImmutableList<FileDiff>? = null
+            if (shape == UndoShape.Staged && !hadStaged && promptOutcome is Outcome.Ok && promptOutcome.value != null) {
+                // Messages-only staging (`files: false`) asks the server for its real preview without touching disk.
+                previewing = true
+                val previewed = review.stage(promptId, applyFiles = false, reviewed = basis)
+                previewing = false
+                if (previewed is Outcome.Ok) {
+                    previewStage = previewed.value
+                    basis = previewed.value.revision
+                    serverFiles = previewed.value.revert.files
+                }
+            }
+            when (promptOutcome) {
                 is Outcome.Failed ->
-                    mutable.update { it.copy(load = ReviewLoad.Ready, promptUnavailable = true) }
+                    mutable.update {
+                        it.copy(
+                            load = ReviewLoad.Ready,
+                            promptUnavailable = true,
+                            messagesAfter = count,
+                            edited = edited,
+                            replacingExisting = hadStaged,
+                        )
+                    }
                 is Outcome.Ok ->
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
-                            prompt = prompt.value,
-                            promptUnavailable = prompt.value == null,
+                            prompt = promptOutcome.value,
+                            promptUnavailable = promptOutcome.value == null,
+                            messagesAfter = count,
+                            edited = edited,
+                            previewFiles = serverFiles,
+                            replacingExisting = hadStaged,
                         )
                     }
-            }
-            if (shape == UndoShape.OneStep) {
-                val count = (review.messagesAfter(promptId) as? Outcome.Ok)?.value
-                val edited =
-                    (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
-                mutable.update { it.copy(messagesAfter = count, edited = edited) }
             }
         }
     }
 
-    override fun back(): Unit = nav.back()
+    /** Clears the temporary `files: false` preview stage if the page leaves without confirming. */
+    public fun cancelPreview() {
+        val pending = previewStage ?: return
+        previewStage = null
+        if (!confirmed) review.clearPreviewAsync(pending)
+    }
+
+    override fun back() {
+        cancelPreview()
+        nav.back()
+    }
 
     override fun putFilesBack(apply: Boolean) {
         if (!state.value.working) mutable.update { it.copy(applyFiles = apply) }
@@ -861,6 +904,14 @@ public class UndoFromHerePresenter(
     override fun confirm() {
         val s = state.value
         if (s.working || s.block != null || !s.available || s.promptUnavailable) return
+        val existingPreview = previewStage
+        if (s.staged && !s.applyFiles && existingPreview != null && review.isCurrent(existingPreview)) {
+            // Messages-only preview is already the exact state the person chose: keep it and return straight to chat.
+            confirmed = true
+            previewStage = null
+            nav.back()
+            return
+        }
         mutable.update { it.copy(working = true, failure = null) }
         scope.launch {
             val result: Outcome<*> =
@@ -877,8 +928,9 @@ public class UndoFromHerePresenter(
                 )
             }
             if (result is Outcome.Ok) {
+                confirmed = true
+                previewStage = null
                 nav.back()
-                if (s.staged) nav.openStaged()
             }
         }
     }

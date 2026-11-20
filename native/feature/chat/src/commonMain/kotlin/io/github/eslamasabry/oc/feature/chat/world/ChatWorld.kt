@@ -376,10 +376,14 @@ public interface ChatWorld {
         get() = NoUndone
 
     /**
-     * S28 story 3 (Flutter `_restore`, `/redo`): brings the undone turns back on a server that undoes at once, then
-     * reads the conversation again. A staged undo is reviewed on its own page instead.
+     * Brings back the messages and files from where the person went back (clears a staged revert or restores a
+     * one-step revert), then reads the conversation again.
      */
     public suspend fun putBack(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
+
+    /** Makes a waiting staged go-back permanent (deletes hidden messages), then reads the conversation again. */
+    public suspend fun keepGoBack(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
 
     /**

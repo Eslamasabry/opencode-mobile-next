@@ -240,7 +240,7 @@ internal fun rememberChatCommandEntries(
         if (HeaderAction.Unshare in menu)
             add(more.entry("unshare", more.unshare, current, KitIcons.unlink, emptyList(), choose(HeaderAction.Unshare)))
         if (HeaderAction.Fork in menu && hasPrompt)
-            add(more.entry("fork", more.fork, current, KitIcons.swap, emptyList(), choose(HeaderAction.Fork)))
+            add(more.entry("fork", more.fork, current, KitIcons.fork, emptyList(), choose(HeaderAction.Fork)))
         if (HeaderAction.CopyTranscript in menu && transcript != null)
             add(more.entry("copy", more.copy, current, KitIcons.copy, emptyList(), transcript.copy))
         if (HeaderAction.ExportTranscript in menu && transcript != null)

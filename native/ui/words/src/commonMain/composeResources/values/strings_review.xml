@@ -1,14 +1,14 @@
 <resources>
     <!-- Change review (unit P12-REVIEW). Copy not in the Flutter catalog; every other review string is reused. -->
     <string name="reviewTurnTitle">Changes in this turn</string>
-    <string name="reviewOneFileUnavailable">Undoing one file at a time isn't available yet: this server can only undo from a prompt. Use Undo all, or Undo from here on a prompt.</string>
+    <string name="reviewOneFileUnavailable">Going back works from a prompt. To discard one file on its own, open it in Git.</string>
     <string name="reviewNoDiff">The server didn't report the lines that changed in this file.</string>
     <string name="reviewFileGone">This file isn't in these changes any more.</string>
     <string name="reviewIncomplete">Older messages couldn't be read, so this list may be missing files.</string>
     <string name="reviewNoChangesBody">The agent reported no file edits here.</string>
-    <string name="reviewWaiting">An undo is waiting for your review. Messages after its prompt are hidden until you choose.</string>
-    <string name="reviewUndoUnknown">Undo all needs the prompt these changes started from, and it couldn't be read.</string>
-    <string name="reviewUndoUnavailable">This server can't undo from a prompt.</string>
+    <string name="reviewWaiting">You went back to an earlier prompt. Messages after it are hidden until you keep this point or bring everything back.</string>
+    <string name="reviewUndoUnknown">Going back needs the prompt these changes started from, and it couldn't be read.</string>
+    <string name="reviewUndoUnavailable">This server can't go back to an earlier prompt.</string>
     <string name="reviewToolEvidence">Only what this conversation's agent changed with its tools. Files made by commands, new files not yet tracked and changes from other conversations aren't listed. Uncommitted lists what Git sees in the folder.</string>
     <string name="reviewSendBackFailed">Couldn't put your note into the message. Try again.</string>
     <string name="reviewProjectNotGitTitle">Not a Git project</string>

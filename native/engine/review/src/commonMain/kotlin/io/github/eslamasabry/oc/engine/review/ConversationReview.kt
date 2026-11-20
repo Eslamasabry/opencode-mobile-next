@@ -94,7 +94,7 @@ public data class ChangeSet(
 public class ConversationReview(
     public val session: SessionId,
     private val gateways: StateFlow<ReviewGateways?>,
-    scope: CoroutineScope,
+    private val reviewScope: CoroutineScope,
     private val pageSize: Int = 100,
     private val maxPages: Int = 20,
 ) {
@@ -110,14 +110,14 @@ public class ConversationReview(
     public val edits: StateFlow<Long> = editCount.asStateFlow()
 
     init {
-        scope.launch {
+        reviewScope.launch {
             // A replaced connection makes every earlier review stale (B-CHAT-104).
             var first = true
             gateways.collect {
                 if (first) first = false else mutable.update { s -> s.copy(revision = s.revision + 1) }
             }
         }
-        scope.launch {
+        reviewScope.launch {
             gateways.flatMapLatest { it?.live?.events?.all ?: emptyFlow() }.collect { envelope ->
                 when (val event = envelope.event) {
                     is GatewayEvent.RevertChanged ->
@@ -349,10 +349,18 @@ public class ConversationReview(
             result
         }
 
-    /** "Put everything back": clears the staged undo [review] (messages and files back). */
+    /** "Bring everything back": clears the staged go-back [review] (messages and files back). */
     public suspend fun putBack(review: StagedReview): Outcome<Unit> = resolve(review, commit = false)
 
-    /** "Delete the hidden messages": makes the staged undo [review] permanent. */
+    /**
+     * Clears a temporary messages-only preview stage ([files = false]) on the review engine's own scope when the
+     * preview page closes without confirming, so leaving the page never leaves a stray preview stage behind.
+     */
+    public fun clearPreviewAsync(review: StagedReview) {
+        reviewScope.launch { putBack(review) }
+    }
+
+    /** "Keep this point": makes the staged go-back [review] permanent (deletes hidden messages). */
     public suspend fun keep(review: StagedReview): Outcome<Unit> = resolve(review, commit = true)
 
     private suspend fun resolve(review: StagedReview, commit: Boolean): Outcome<Unit> =

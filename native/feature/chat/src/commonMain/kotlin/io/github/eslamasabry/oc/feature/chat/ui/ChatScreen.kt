@@ -109,6 +109,8 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -166,9 +168,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
 import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
-import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
-import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
-import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
@@ -306,6 +305,15 @@ import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
+import io.github.eslamasabry.oc.ui.words.res.revertBringBackShort
+import io.github.eslamasabry.oc.ui.words.res.revertFromHere
+import io.github.eslamasabry.oc.ui.words.res.revertTranscriptBoundary
+import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceFiles
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceGone
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteActionUnknown
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteTitleUnknown
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepTitle
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
@@ -452,6 +460,9 @@ public fun ChatScreen(
     val setUpAction = stringResource(Res.string.agentsSetUpAction, "\u0000")
     val signInAgainLine = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
     val signInAgainAction = stringResource(Res.string.agentsSignInAgain)
+    val goBackToHere = stringResource(Res.string.revertFromHere)
+    val reviewGoBack = stringResource(Res.string.revertReview)
+    val stagedBoundary = stringResource(Res.string.revertTranscriptBoundary)
     val listWords =
         remember(
             messageActions,
@@ -471,6 +482,9 @@ public fun ChatScreen(
             setUpAction,
             signInAgainLine,
             signInAgainAction,
+            goBackToHere,
+            reviewGoBack,
+            stagedBoundary,
         ) {
             ChatListWords(
                 messageActions = messageActions,
@@ -490,6 +504,9 @@ public fun ChatScreen(
                 setUpAction = { name -> setUpAction.replace("\u0000", name) },
                 signInAgain = { name -> signInAgainLine.replace("\u0000", name) },
                 signInAgainAction = signInAgainAction,
+                goBackToHere = goBackToHere,
+                reviewGoBack = reviewGoBack,
+                stagedBoundary = stagedBoundary,
             )
         }
     val list = rememberTranscriptListState()
@@ -1274,6 +1291,13 @@ public fun ChatScreen(
                                             older = state.older,
                                             onLoadOlder = actions::loadOlder,
                                             find = state.find,
+                                            onGoBackPrompt =
+                                                if (state.capabilities.undo && state.live == null && !state.canPutBack && !demoMode)
+                                                    actions::goBackFromPrompt
+                                                else null,
+                                            stagedWaiting =
+                                                state.canPutBack || state.status?.kind == ChatStatusKind.StagedUndo,
+                                            onReviewGoBack = actions::reviewGoBack,
                                         )
                                     }
                             }
@@ -1397,23 +1421,57 @@ public fun ChatScreen(
                     loading = modelChoicesLoading,
                 )
                 KitConfirm(
-                    spec = confirmSpec(state.confirm),
+                    spec = confirmSpec(state.confirm, state.title),
                     onConfirm = {
                         when (latest.confirm) {
                             is ChatConfirm.DeleteMessage -> actions.confirmDelete()
                             ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
-                            is ChatConfirm.UndoFrom -> actions.confirmUndo()
                             ChatConfirm.Compact -> actions.confirmCompact()
                             ChatConfirm.RestartPhoneServer -> actions.confirmRestartPhoneServer()
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
                             is ChatConfirm.PhoneFile,
                             is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
                             is ChatConfirm.SendAgainAfterSteps -> actions.confirmSwitch()
+                            ChatConfirm.KeepGoBack,
                             null -> Unit
                         }
                     },
                     onCancel = actions::dismissConfirm,
                 )
+                val keepTitle = state.title?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.commandUntitledChat)
+                KitSheet(
+                    visible = state.confirm == ChatConfirm.KeepGoBack,
+                    onDismissRequest = actions::dismissConfirm,
+                    title = stringResource(Res.string.reviewRevertKeepDeleteTitleUnknown),
+                    subtitle = keepTitle,
+                    icon = KitIcons.delete,
+                    showClose = false,
+                    primary =
+                        KitAction(
+                            stringResource(Res.string.reviewRevertKeepDeleteActionUnknown),
+                            actions::confirmKeepGoBack,
+                            destructive = true,
+                            haptic = io.github.eslamasabry.oc.ui.design.motion.KitHaptic.Commit,
+                        ),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.kitConfirmCancel),
+                            actions::dismissConfirm,
+                        ),
+                ) {
+                    io.github.eslamasabry.oc.ui.kit.modal.KitMarkedConsequences(
+                        listOf(
+                            KitConsequence(
+                                stringResource(Res.string.reviewRevertKeepConsequenceGone),
+                                KitConsequenceMark.Lost,
+                            ),
+                            KitConsequence(
+                                stringResource(Res.string.reviewRevertKeepConsequenceFiles),
+                                KitConsequenceMark.Kept,
+                            ),
+                        )
+                    )
+                }
                 header?.let { ChatHeaderOverlays(it) }
                 // E15-S05: one announcement per copy (Flutter KitCopy.copy), saying when a key was hidden.
                 KitCopyAnnouncement(
@@ -1503,7 +1561,7 @@ private fun PictureSheet(picture: PictureUi?, actions: ChatActions) {
 }
 
 @Composable
-private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
+private fun confirmSpec(confirm: ChatConfirm?, chatTitle: String? = null): KitConfirmSpec? =
     when (confirm) {
         null -> null
         is ChatConfirm.DeleteMessage ->
@@ -1535,13 +1593,7 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 kind = KitConfirmKind.Neutral,
                 body = stringResource(Res.string.chatUiCompactConfirmBody),
             )
-        is ChatConfirm.UndoFrom ->
-            KitConfirmSpec(
-                title = stringResource(Res.string.chatFeelUndoTitle),
-                confirmLabel = stringResource(Res.string.chatFeelUndoAction),
-                kind = KitConfirmKind.Destructive,
-                body = stringResource(Res.string.chatFeelUndoBody),
-            )
+        ChatConfirm.KeepGoBack -> null
         is ChatConfirm.PhoneFile -> {
             val name = confirm.path.substringAfterLast('/')
             if (confirm.install)
@@ -1838,19 +1890,34 @@ private fun statusLine(
                 onDismiss = { actions.dismissStatus(StatusPick.LINK) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
-        // S28 story 3 (Flutter `_stagedRevertStatus`, `_undoneStatus`): the way back sits on the line.
+        // Waiting go-back: one compact status line (no new bar/card level); 1-tap Bring back, Review/Keep in overflow.
         ChatStatusKind.StagedUndo ->
             KitStatus(
                 KitStatusKind.Info,
                 stringResource(Res.string.revertStaged),
                 id = "chat-status-${line.id}",
-                tone = StatusTone.Neutral,
+                tone = StatusTone.Attention,
+                icon = KitIcons.undo,
                 action =
                     KitLineAction(
-                        stringResource(Res.string.revertReview),
+                        stringResource(Res.string.revertBringBackShort),
                         actions::putBack,
-                        testTag = "chat-status-revert-review",
-                        icon = KitIcons.history,
+                        testTag = "chat-status-revert-bring-back",
+                    ),
+                more =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.revertReview),
+                            actions::reviewGoBack,
+                            testTag = "chat-status-revert-review",
+                            icon = KitIcons.review,
+                        ),
+                        KitLineAction(
+                            stringResource(Res.string.reviewRevertKeepTitle),
+                            actions::askKeepGoBack,
+                            testTag = "chat-status-revert-keep",
+                            icon = KitIcons.delete,
+                        ),
                     ),
             )
         // Flutter `_subagentStatus`: this conversation was delegated; the way back to the one that delegated it.

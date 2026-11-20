@@ -238,20 +238,24 @@ public enum class UndoBlock {
     Stale,
 }
 
-/** "Undo from this prompt?" in the shape the server allows. */
+/** "Go back to this prompt" preview in the shape the server allows. */
 public data class UndoFromHereUi(
     val load: ReviewLoad = ReviewLoad.Loading,
     /** True: stage and review (with the files choice). False: one step, files listed. */
     val staged: Boolean = true,
-    /** False when the server cannot undo from a prompt at all. */
+    /** False when the server cannot go back to a prompt at all. */
     val available: Boolean = true,
     /** The prompt's words; "" for an attachment-only prompt; null while loading or [promptUnavailable]. */
     val prompt: String? = null,
     val promptUnavailable: Boolean = false,
     /** Messages after the prompt; null = unknown, never shown as zero (B-CHAT-103). */
     val messagesAfter: Int? = null,
-    /** One step only: the paths the agent reported editing after the prompt. */
+    /** Tool-reported paths edited after the prompt (used on one-step servers or when server preview omits files). */
     val edited: ImmutableList<String> = persistentListOf(),
+    /** Server-reported files from messages-only staging (`files: false`); null when unavailable. */
+    val previewFiles: ImmutableList<FileDiff>? = null,
+    /** True when an earlier go-back is already waiting and confirming here replaces it. */
+    val replacingExisting: Boolean = false,
     val applyFiles: Boolean = true,
     val working: Boolean = false,
     val block: UndoBlock? = null,

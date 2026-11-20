@@ -600,6 +600,10 @@ public class ChatEntries(
                 source = teaching,
                 eligible = state.rows.any { it is BlockRow } && facts.reading.metadata.isNotEmpty(),
                 blocked = slot.card != null || state.live != null || state.menu != null,
+                promptGoBackEligible =
+                    state.capabilities.undo &&
+                        !state.canPutBack &&
+                        state.rows.any { it is io.github.eslamasabry.oc.engine.transcript.state.PromptRow },
             ) {
                 CompositionLocalProvider(LocalChatCards provides cardSlot, LocalChildNeedsYou provides childNeeds) {
                     environment.Provide {
