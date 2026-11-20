@@ -205,8 +205,17 @@ public class AgentAutoUpdater(
      * install starts; a try refused before it started keeps it).
      */
     public fun allowMeteredOnce() {
+        yesCount++
         meteredAllowed = true
+        // A person's yes is a fresh try: an earlier refused try's backoff does not hold it back.
+        busyUntil = 0L
     }
+
+    /** Counts the person's yes: a start spends only a yes that was there when it began, never a later one. */
+    @kotlin.concurrent.Volatile private var yesCount = 0
+
+    /** A call found a look running: that look checks this before it lets go, so the call is never lost. */
+    @kotlin.concurrent.Volatile private var lookAgain = false
 
     private fun metered(): Boolean = host.metered && !meteredAllowed
     private val state = MutableStateFlow(AgentUpdateDecision(AgentUpdateStep.NotLooked))
@@ -214,8 +223,13 @@ public class AgentAutoUpdater(
     public val decision: StateFlow<AgentUpdateDecision> = state.asStateFlow()
 
     public suspend fun changed() {
-        if (!checking.tryLock()) return
+        if (!checking.tryLock()) {
+            lookAgain = true
+            return
+        }
         try {
+            if (lookAgain) log?.invoke("look again: a call came in while a look was running")
+            lookAgain = false
             // Refused for busy (work running, or another install job holds the one gate): the try is kept, and the
             // next look is after the backoff, never at once.
             if (nowMs() < busyUntil) return
@@ -238,13 +252,15 @@ public class AgentAutoUpdater(
             val key = host.pinKey
             if (decide(key, explain = true) == null) return
             host.refresh()
+            val yes = yesCount
             val target = decide(key) ?: return
             // A try refused before the job started is not spent: the next look tries again. A started one is spent for
             // that agent and for the helper (its install brings the helper too); another agent behind is next.
             if (jobs.update(target)) {
                 attempted += "$key/${target.raw}"
                 attempted += "$key/$HELPER"
-                meteredAllowed = false
+                // Spends the yes this start used; a yes that came during the start stays for the next look.
+                if (yes == yesCount) meteredAllowed = false
                 busyStreak = 0
                 publish(AgentUpdateDecision(AgentUpdateStep.Updating, target))
             } else {
@@ -255,6 +271,8 @@ public class AgentAutoUpdater(
             }
         } finally {
             checking.unlock()
+            // A call that found this look running is looked at now, not at the next 30 s look.
+            if (lookAgain) changed()
         }
     }
 
