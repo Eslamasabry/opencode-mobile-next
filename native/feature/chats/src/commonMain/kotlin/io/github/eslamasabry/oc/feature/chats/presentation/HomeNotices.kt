@@ -82,7 +82,8 @@ public object HomeNotices {
      */
     public fun unreachable(state: ChatsUi): List<ChatsListSourceUi> =
         state.home.sources.filter {
-            it.shown && it.unreachable && !it.stoppedByPerson && it.starting == null && it.profile != state.home.opening?.profile &&
+            it.shown && it.unreachable && !it.stoppedByPerson && it.starting == null &&
+                it.profile != state.home.opening?.profile &&
                 !(it.selfRun && !it.main)
         }
 
@@ -105,7 +106,9 @@ public object HomeNotices {
         state.incomplete.filterNot { name ->
             unreachable(state).any { it.name == name } ||
                 name == state.home.opening?.serverName ||
-                state.home.sources.any { (it.starting != null || it.stoppedByPerson || (it.selfRun && it.unreachable)) && it.name == name }
+                state.home.sources.any {
+                    (it.starting != null || it.stoppedByPerson || (it.selfRun && it.unreachable)) && it.name == name
+                }
         }
 
     /** Every kind the home currently has something to say about. */

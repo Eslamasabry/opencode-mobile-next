@@ -156,7 +156,7 @@ class PhoneScreensTest {
         }
 
     @Test
-    fun `B-SET-274 This phone after the person's own stop says it in one sentence, offers Start OpenCode and shows no failure`() =
+    fun `B-SET-274 This phone after the person's stop says so and offers Start OpenCode`() =
         runComposeUiTest {
             val calls = Calls()
             val facts =

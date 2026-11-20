@@ -194,7 +194,7 @@ class OpenWhileStartingTest {
     }
 
     @Test
-    fun `B-CHAT-308 a conversation of this phone after the person's own stop says so, and never fails or counts down`() = runTest {
+    fun `B-CHAT-308 after the person's own stop the chat says so, never fails or counts down`() = runTest {
         val phone = Phone()
         phone.wait.value = PhoneServerWait.StoppedByPerson
         val world = GraphChatWorld(ref, registry(), phoneServer = phone)

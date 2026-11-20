@@ -1666,7 +1666,7 @@ private fun connectionLine(
     // and offers no Try again (Details and Change server stay one tap away).
     val wait = line.serverWait
     // The person's own stop is a state of its own: one sentence and Start OpenCode, no countdown, no Try now.
-    if (wait == io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StoppedByPerson)
+    if (wait == ChatServerWait.StoppedByPerson)
         return KitStatus(
             KitStatusKind.Connection,
             stringResource(Res.string.phoneStoppedByYou),
@@ -1685,7 +1685,7 @@ private fun connectionLine(
         return KitStatus(
             KitStatusKind.Connection,
             when (wait) {
-                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StoppedByPerson -> stringResource(Res.string.phoneStoppedByYou)
+                ChatServerWait.StoppedByPerson -> stringResource(Res.string.phoneStoppedByYou)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> stringResource(Res.string.connectUpdatingPhone)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)

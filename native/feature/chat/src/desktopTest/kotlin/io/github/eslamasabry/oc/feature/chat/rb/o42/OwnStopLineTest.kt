@@ -30,7 +30,7 @@ class OwnStopLineTest {
     }
 
     @Test
-    fun `B-CHAT-309 after the person's stop the line says it, offers Start OpenCode, and shows no failure or countdown`() =
+    fun `B-CHAT-309 after the person's stop the line says it and offers Start OpenCode`() =
         runDesktopComposeUiTest(412, 915) {
             val world = Phone()
             val scene = ChatScene(world = world)
@@ -49,7 +49,8 @@ class OwnStopLineTest {
                         ),
                 )
             setContent { E20Scene { scene.Screen(state) } }
-            fun shown(text: String) = onAllNodesWithText(text, substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+            fun shown(text: String) =
+                onAllNodesWithText(text, substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
             assertTrue(shown("You stopped OpenCode on this phone"))
             assertTrue(shown("Start OpenCode"))
             for (failure in listOf("isn't answering", "trying again", "Try now", "didn't start", "Restart")) {

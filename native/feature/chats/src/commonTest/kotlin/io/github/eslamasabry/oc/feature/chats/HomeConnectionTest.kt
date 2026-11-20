@@ -18,25 +18,19 @@ class HomeConnectionTest {
         ChatsListSourceUi(ProfileId(name), name, shown = true, main = main, onThisPhone = false, unreachable = unreachable)
 
     @Test
-    fun `B-HOME-214 the person's own stop is the pill's Stopped, never Not answering, and a server that failed by itself keeps Not answering`() {
+    fun `B-HOME-214 the person's stop is the pill's Stopped; a failure by itself stays Not answering`() {
         val stopped = source("This phone", main = true).copy(onThisPhone = true, stoppedByPerson = true)
-        assertEquals(
-            HomeConnectionState.Stopped,
-            HomeConnectionUi.of(ChatsHomeExtraState(sources = persistentListOf(stopped)))?.state,
-        )
-        assertEquals(
-            HomeConnectionState.Stopped,
-            HomeConnectionUi.of(ChatsHomeExtraState(opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", onThisPhone = true, phoneOff = true)))?.state,
-        )
+        val failed = source("This phone", main = true, unreachable = true).copy(onThisPhone = true)
+        fun opening(off: Boolean) =
+            ChatsHomeExtraState(
+                opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", onThisPhone = true, phoneOff = off),
+            )
+        fun pill(sources: ChatsHomeExtraState) = HomeConnectionUi.of(sources)?.state
+        assertEquals(HomeConnectionState.Stopped, pill(ChatsHomeExtraState(sources = persistentListOf(stopped))))
+        assertEquals(HomeConnectionState.Stopped, pill(opening(off = true)))
         // It stopped by itself: today's failure path, untouched.
-        assertEquals(
-            HomeConnectionState.NotAnswering,
-            HomeConnectionUi.of(ChatsHomeExtraState(opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", onThisPhone = true)))?.state,
-        )
-        assertEquals(
-            HomeConnectionState.NotAnswering,
-            HomeConnectionUi.of(ChatsHomeExtraState(sources = persistentListOf(source("This phone", main = true, unreachable = true).copy(onThisPhone = true))))?.state,
-        )
+        assertEquals(HomeConnectionState.NotAnswering, pill(opening(off = false)))
+        assertEquals(HomeConnectionState.NotAnswering, pill(ChatsHomeExtraState(sources = persistentListOf(failed))))
     }
 
     @Test

@@ -479,7 +479,13 @@ public fun ChatsScreen(
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
                             message = stringResource(Res.string.phoneStoppedByYou),
-                            actions = listOf(KitLineAction(stringResource(Res.string.phoneServerCardStartOpenCode), { actions.startPhoneServer(source.profile) })),
+                            actions =
+                                listOf(
+                                    KitLineAction(
+                                        stringResource(Res.string.phoneServerCardStartOpenCode),
+                                        { actions.startPhoneServer(source.profile) },
+                                    )
+                                ),
                         )
                     }
                 }

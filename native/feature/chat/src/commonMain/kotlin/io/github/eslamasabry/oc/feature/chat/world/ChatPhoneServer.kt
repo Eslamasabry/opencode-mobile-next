@@ -17,16 +17,12 @@ import kotlinx.coroutines.flow.StateFlow
  * binds it over the phone server's one start path; without a binding (desktop, tests) no
  * conversation's server is on this phone and Restart is never offered.
  */
-public interface ChatPhoneServer {
+public interface ChatPhoneServer : ChatPhoneStart {
     /** True when [profile] is the server this phone runs (the built-in Linux one). */
     public fun runsHere(profile: ProfileId): Boolean
 
     /** Stop then start it again; a person's restart spends no recovery attempt. */
     public suspend fun restart(profile: ProfileId): Outcome<Unit>
-
-    /** Start this phone's OpenCode after the person stopped it ("Start OpenCode"): no question first. */
-    public suspend fun start(profile: ProfileId): Outcome<Unit> =
-        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
 
     /** True when [profile] is the saved "Phone agents" server, whose helper the app starts (Flutter `recoverAgentBackend`). */
     public fun isAgentHelper(profile: ProfileId): Boolean = false
@@ -73,6 +69,12 @@ public interface ChatPhoneServer {
     /** The way forward for [reach]: Android's All files access page, or a new start of the side that can't see it. */
     public suspend fun fixPhoneFolder(ref: ConversationRef, reach: ChatPhoneFolder): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
+}
+
+/** Starting this phone's OpenCode after the person stopped it ("Start OpenCode"): no question first. */
+public interface ChatPhoneStart {
+    public suspend fun start(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
 }
 
 /** Issue 147: a conversation's folder in this phone's storage, as the side that works in it finds it now. */

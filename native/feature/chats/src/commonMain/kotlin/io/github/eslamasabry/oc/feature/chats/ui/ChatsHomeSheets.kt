@@ -592,7 +592,8 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, block
         failure = if (opening.phoneOff) null else opening.failure,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)
-                if (opening.phoneOff) KitAction(stringResource(Res.string.phoneServerCardStartOpenCode), actions::startOpeningPhoneServer)
+                if (opening.phoneOff)
+                    KitAction(stringResource(Res.string.phoneServerCardStartOpenCode), actions::startOpeningPhoneServer)
                 else leadAction
             else null,
         // The way to try again stays one tap away when something else leads (a sign-in is fixed where it is typed).

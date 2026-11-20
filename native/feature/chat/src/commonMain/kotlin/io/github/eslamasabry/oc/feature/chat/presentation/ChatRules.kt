@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.RowKind
+import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
 import io.github.eslamasabry.oc.engine.transcript.state.RunFacts
 import io.github.eslamasabry.oc.engine.transcript.state.RunOutcome
 import io.github.eslamasabry.oc.engine.transcript.state.ThoughtRow
@@ -479,7 +480,7 @@ public data class LinkRetryFacts(
             kind,
             stopped,
             // The person's own stop has no retry and no countdown: it is a state, not a failure.
-            retryInSeconds = secondsLeft.takeUnless { serverWait == io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StoppedByPerson },
+            retryInSeconds = secondsLeft.takeUnless { serverWait == ChatServerWait.StoppedByPerson },
             canRestart = onThisPhone,
             serverWait = serverWait,
         )

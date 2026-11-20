@@ -100,7 +100,8 @@ public object ServerSwitcherRules {
                 val state =
                     when {
                         source.main && opening != null && (opening.profile == null || opening.profile == source.profile) ->
-                            if (opening.phase == ChatsOpeningPhase.Failed && opening.phoneOff) SwitcherServerState.Stopped
+                            if (opening.phase == ChatsOpeningPhase.Failed && opening.phoneOff)
+                                SwitcherServerState.Stopped
                             else if (opening.phase == ChatsOpeningPhase.Failed) SwitcherServerState.NotAnswering
                             else SwitcherServerState.Connecting
                         source.stoppedByPerson -> SwitcherServerState.Stopped

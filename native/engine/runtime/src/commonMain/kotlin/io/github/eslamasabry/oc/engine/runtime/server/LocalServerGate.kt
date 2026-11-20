@@ -26,7 +26,8 @@ public enum class LocalServerWait {
  * Phase 0 (first reply): the first connection to This phone is not attempted until the phone's own server answers a
  * health check, so a connection made seconds after setup or an app start is not "refused" (5 of 35 installs). It
  * polls with backoff for [firstWait]; if the server never answers it restarts it ONCE (via [restart]) and waits
- * [afterRestartWait] more. Nothing else restarts it: a server the person stopped is left alone ([mayWait] false, [stoppedByPerson] true: its own result).
+ * [afterRestartWait] more. Nothing else restarts it: a server the person stopped is left alone ([mayWait] false;
+ * [stoppedByPerson] true makes its own result).
  *
  * [onWaiting] is true while the plain "Starting this phone's server…" state should show, false when the wait ends.
  * Nothing here carries output, a password or a URL; the Details text stays with the failure the caller builds.
@@ -36,8 +37,6 @@ public class LocalServerGate(
     private val restart: suspend (ProfileId) -> Boolean,
     private val clock: Clock,
     private val mayWait: suspend (ProfileId) -> Boolean = { true },
-    /** Why [mayWait] said no: true when the person stopped the server (a stop is a state, not a failure). */
-    private val stoppedByPerson: suspend (ProfileId) -> Boolean = { false },
     private val onWaiting: (ProfileId, Boolean) -> Unit = { _, _ -> },
     private val firstWait: Duration = 30.seconds,
     private val afterRestartWait: Duration = 30.seconds,
@@ -45,10 +44,14 @@ public class LocalServerGate(
     private val maxPoll: Duration = 4.seconds,
     /**
      * How much longer the server process may still be booting ([LaunchStartRules.stillBooting] of its age), zero when
-     * no process runs. A booting server is waited on, never restarted: a cold phone boot can take well over [firstWait].
+     * no process runs. A booting server is waited on, never restarted: a cold phone boot can take well over
+     * [firstWait].
      */
     private val booting: suspend (ProfileId) -> Duration = { Duration.ZERO },
 ) {
+    /** Why [mayWait] said no: true when the person stopped the server (a stop is a state, not a failure). */
+    public var stoppedByPerson: suspend (ProfileId) -> Boolean = { false }
+
     public suspend fun awaitReady(profile: ProfileId): LocalServerWait {
         if (up(profile)) return LocalServerWait.Ready
         if (!mayWait(profile)) return refused(profile)

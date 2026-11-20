@@ -188,14 +188,16 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `B-HOME-215 a stopped phone in the list says You stopped OpenCode on this phone with Start OpenCode, and no failure`() =
+    fun `B-HOME-215 a stopped phone in the list says so with Start OpenCode, no failure`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             val phone =
-                ChatsListSourceUi(ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true, unreachable = false, stoppedByPerson = true)
-            setContent {
-                Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }
-            }
+                ChatsListSourceUi(
+                    ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true,
+                    unreachable = false, stoppedByPerson = true,
+                )
+            val home = ChatsHomeExtraState(sources = persistentListOf(phone))
+            setContent { Themed { ChatsScreen(ui(*rows).copy(home = home), actions) } }
             onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
             onAllNodesWithText("answering", substring = true).assertCountEquals(0)
             onAllNodesWithText("Try again").assertCountEquals(0)
@@ -207,10 +209,11 @@ class ChatsScreenTest {
     fun `B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering`() =
         runComposeUiTest {
             val phone =
-                ChatsListSourceUi(ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true, unreachable = true)
-            setContent {
-                Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), RecordingChatsActions()) }
-            }
+                ChatsListSourceUi(
+                    ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true, unreachable = true,
+                )
+            val home = ChatsHomeExtraState(sources = persistentListOf(phone))
+            setContent { Themed { ChatsScreen(ui(*rows).copy(home = home), RecordingChatsActions()) } }
             onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(0)
             onAllNodesWithText("isn't answering", substring = true).assertCountEquals(1)
             onAllNodesWithText("Try again").assertCountEquals(1)

@@ -118,9 +118,9 @@ class LocalServerGateTest {
             { error("never start what the person stopped") },
             clock(),
             mayWait = { !stopped },
-            stoppedByPerson = { stopped },
             booting = { stopped = true; LaunchStartRules.stillBooting(currentTime.milliseconds) },
         )
+        gate.stoppedByPerson = { stopped }
         assertEquals(LocalServerWait.StoppedByPerson, gate.awaitReady(id))
     }
 
@@ -131,8 +131,8 @@ class LocalServerGateTest {
             { error("never start what the person stopped") },
             clock(),
             mayWait = { false },
-            stoppedByPerson = { true },
         )
+        gate.stoppedByPerson = { true }
         assertEquals(LocalServerWait.StoppedByPerson, gate.awaitReady(id))
         assertEquals(0, currentTime, "no wait, no countdown")
     }
@@ -140,7 +140,7 @@ class LocalServerGateTest {
     @Test
     fun `B-SERVERS-048 a server that stopped by itself keeps the failure path`() = runTest {
         var restarts = 0
-        val gate = LocalServerGate({ ProbeAnswer.NoAnswer }, { restarts++; true }, clock(), stoppedByPerson = { false })
+        val gate = LocalServerGate({ ProbeAnswer.NoAnswer }, { restarts++; true }, clock())
         assertEquals(LocalServerWait.NotAnswering, gate.awaitReady(id))
         assertEquals(1, restarts)
     }
