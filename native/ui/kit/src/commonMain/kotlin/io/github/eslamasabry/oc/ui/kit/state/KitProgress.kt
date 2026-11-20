@@ -206,7 +206,14 @@ public fun KitProgressView(
             }
         }
         if (line.isNotEmpty()) {
-            KitText(line, Modifier.clearAndSetSemantics {}, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+            KitText(
+                line,
+                Modifier.clearAndSetSemantics {},
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+                kind = KitTextKind.Frame,
+                tabular = true,
+            )
         }
     }
 }
