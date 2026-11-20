@@ -174,6 +174,7 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeptBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeptTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoFiles
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoSnapshot
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPromptLabel
@@ -1038,7 +1039,15 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
                 tone = TextTone.Secondary,
             )
             PromptGroup(state.prompt, state.promptUnavailable)
-            if (state.staged) {
+            if (state.staged && state.noFileCopies) {
+                KitRowGroup {
+                    KitRow(
+                        title = stringResource(Res.string.reviewRevertNoSnapshot),
+                        supportingMaxLines = 3,
+                        modifier = Modifier.testTag("undo-no-file-copies"),
+                    )
+                }
+            } else if (state.staged) {
                 KitRowGroup {
                     KitSwitchRow(
                         title = stringResource(Res.string.reviewRevertFilesToggle),
@@ -1224,7 +1233,13 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                             files == null ->
                                 KitRow(title = stringResource(Res.string.revertPreviewUnavailable))
                             files.isEmpty() ->
-                                KitRow(title = stringResource(Res.string.reviewRevertNoFiles))
+                                KitRow(
+                                    title =
+                                        stringResource(
+                                            if (state.noFileCopies) Res.string.reviewRevertNoSnapshot
+                                            else Res.string.reviewRevertNoFiles
+                                        )
+                                )
                             else ->
                                 files.forEach { file ->
                                     val cut = file.file.lastIndexOfAny(charArrayOf('/', '\\'))

@@ -425,4 +425,5 @@
     <string name="reviewUndoTitle__eq1">撤销 1 个已更改的文件？</string>
     <string name="reviewUndoBody">这会隐藏从这些更改开始之后的消息，并把你的文件恢复原样。在你删除已隐藏的消息之前，都可以全部恢复。</string>
     <string name="reviewDone">完成</string>
+    <string name="reviewRevertNoSnapshot">此文件夹不在 Git 管理之下，无法恢复文件。撤销只会隐藏消息。</string>
 </resources>

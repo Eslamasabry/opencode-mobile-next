@@ -457,4 +457,5 @@
     <string name="reviewUndoTitle__eq1">Откатить 1 изменённый файл?</string>
     <string name="reviewUndoBody">Сообщения с того места, где начались эти изменения, будут скрыты, а ваши файлы вернутся к прежнему виду. Всё можно вернуть, пока вы не удалите скрытые сообщения.</string>
     <string name="reviewDone">Готово</string>
+    <string name="reviewRevertNoSnapshot">Эта папка не под Git, поэтому файлы вернуть нельзя. Отмена только скрывает сообщения.</string>
 </resources>

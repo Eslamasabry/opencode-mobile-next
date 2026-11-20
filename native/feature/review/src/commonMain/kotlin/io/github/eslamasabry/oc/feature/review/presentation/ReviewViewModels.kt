@@ -155,7 +155,13 @@ public class FileDiffViewModel(
 /** "Undo from this prompt?". */
 @AssistedInject
 public class UndoFromHereViewModel(@Assisted route: ReviewRoute.UndoFromHere, hub: ReviewHub, nav: AppNavigator) : ViewModel(), UndoFromHereActions {
-    private val presenter = UndoFromHerePresenter(hub.review(route.ref), route.messageId, RouteNavigation(nav, route.ref, null), viewModelScope)
+    private val presenter = UndoFromHerePresenter(
+            hub.review(route.ref),
+            route.messageId,
+            RouteNavigation(nav, route.ref, null),
+            viewModelScope,
+            hub.conversationSetup(route.ref),
+        )
     public val state: StateFlow<UndoFromHereUi> = presenter.state
 
     override fun back(): Unit = presenter.back()
@@ -186,6 +192,7 @@ public class StagedViewModel(
             RouteNavigation(nav, route.ref, null),
             viewModelScope,
             kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
+            hub.conversationSetup(route.ref),
         )
     public val state: StateFlow<StagedUi> = presenter.state
 

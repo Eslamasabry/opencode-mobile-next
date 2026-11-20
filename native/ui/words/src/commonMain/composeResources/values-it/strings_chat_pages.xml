@@ -447,4 +447,5 @@
     <string name="reviewUndoTitle__eq1">Annullare 1 file modificato?</string>
     <string name="reviewUndoBody">Nasconde i messaggi dal punto in cui sono iniziate queste modifiche e rimette i tuoi file com'erano. Puoi ripristinare tutto finché non elimini i messaggi nascosti.</string>
     <string name="reviewDone">Fatto</string>
+    <string name="reviewRevertNoSnapshot">Questa cartella non è sotto Git, quindi i file non si possono ripristinare. L'annullamento nasconde solo i messaggi.</string>
 </resources>

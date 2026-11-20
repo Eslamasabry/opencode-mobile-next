@@ -447,4 +447,5 @@
     <string name="reviewUndoTitle__eq1">¿Deshacer 1 archivo modificado?</string>
     <string name="reviewUndoBody">Esto oculta los mensajes desde donde empezaron estos cambios y devuelve tus archivos a como estaban. Puedes recuperar todo hasta que elimines los mensajes ocultos.</string>
     <string name="reviewDone">Listo</string>
+    <string name="reviewRevertNoSnapshot">Esta carpeta no está bajo Git, así que no se pueden devolver los archivos. Deshacer solo oculta mensajes.</string>
 </resources>
