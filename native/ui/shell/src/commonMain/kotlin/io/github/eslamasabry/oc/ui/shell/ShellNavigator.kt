@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.ui.routes.RequestFocus
 import io.github.eslamasabry.oc.ui.routes.RequestFocusSignal
 import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.nav.GateEvent
+import io.github.eslamasabry.oc.ui.shell.nav.ShellPanes
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,25 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
 
     /** NavShell's row-transform gate listens here (P2): a chat push is TapOpen, an in-app Back is ButtonBack. */
     internal var gateListener: ((GateEvent) -> Unit)? = null
+
+    /**
+     * The window shows a list beside its page (NavShell sets it from the window, `ShellPanes.beside`). A conversation
+     * opened while its list is on screen then takes the open conversation's place instead of going on top of it.
+     */
+    internal var beside: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            publish()
+        }
+
+    private val mutableListShown = MutableStateFlow(false)
+
+    /**
+     * True while a list stands beside its page on screen (two panes): the conversations are in view, so the edge
+     * light, the phone's way between them, stays hidden (big screens, slice 3).
+     */
+    public val listShown: StateFlow<Boolean> = mutableListShown.asStateFlow()
     override val top: StateFlow<AppRoute?> = mutableTop.asStateFlow()
 
     internal fun attach(backStack: MutableList<NavKey>) {
@@ -61,6 +81,7 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
 
     internal fun publish() {
         mutableTop.value = stack?.lastOrNull() as? AppRoute
+        mutableListShown.value = beside && stack?.let { ShellPanes.layoutOf(it) } != null
     }
 
     private fun mutate(change: (MutableList<NavKey>) -> Unit) {
@@ -86,10 +107,10 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
     }
 
     override fun openChat(ref: ConversationRef, focusComposer: Boolean): Unit = mutate { s ->
-        if ((s.lastOrNull() as? ChatRoute)?.ref != ref) {
-            gateListener?.invoke(GateEvent.TapOpen)
-            s.add(ChatRoute(ref, focusComposer))
-        }
+        if ((s.lastOrNull() as? ChatRoute)?.ref == ref) return@mutate
+        if (openBeside(s, ChatRoute(ref, focusComposer))) return@mutate
+        gateListener?.invoke(GateEvent.TapOpen)
+        s.add(ChatRoute(ref, focusComposer))
     }
 
     override fun backToChat(ref: ConversationRef): Unit = mutate { s ->
@@ -115,6 +136,7 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
     override fun switchTo(target: ConversationRef, request: String?) {
         if (request == null) focus.clear() else focus.emit(target, request)
         mutate { s ->
+            if ((s.lastOrNull() as? ChatRoute)?.ref != target && openBeside(s, ChatRoute(target))) return@mutate
             val runStart = s.indexOfLast { it is ChatRoute }
             val run = if (runStart < 0) emptyList() else s.subList(runStart, s.size).toList()
             val keptRun = s.keptRun()
@@ -186,6 +208,17 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
     private fun MutableList<NavKey>.replaceWith(route: AppRoute) {
         add(route)
         while (size > 1) removeAt(0)
+    }
+
+    /**
+     * Beside its list, the opened page replaces the page open beside it (no grow, no gate: nothing moves between
+     * panes). False when the list is not beside its pages now; the caller then opens it as on a phone.
+     */
+    private fun openBeside(s: MutableList<NavKey>, route: ChatRoute): Boolean {
+        if (!beside) return false
+        val next = ShellPanes.openBeside(s, route) ?: return false
+        s.rewrite(next)
+        return true
     }
 
     /** [kept] while it still lies directly under the current run (K.end == R.start), else null. */

@@ -105,6 +105,9 @@ import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
 import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
+import io.github.eslamasabry.oc.ui.kit.row.kitChosenRow
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
 import io.github.eslamasabry.oc.ui.kit.row.KitRowPanel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
@@ -1156,6 +1159,8 @@ private fun ConversationRow(
                 time = time,
                 // B-333: a row that cannot open yet still takes the tap; the home keeps it and opens the row when it can.
                 onClick = { actions.openConversation(row.ref) },
+                // Big screens: the conversation open beside the list is the chosen row.
+                modifier = Modifier.kitChosenRow((LocalOpenBeside.current as? ChatRoute)?.ref == row.ref),
                 preview = preview,
                 meta = meta,
                 project = project,

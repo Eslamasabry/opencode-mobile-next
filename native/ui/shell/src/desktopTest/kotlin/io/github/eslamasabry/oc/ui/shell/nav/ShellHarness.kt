@@ -30,6 +30,8 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -130,14 +132,19 @@ class Harness(scale: Float = 1f, grow: Boolean = true) {
     }
     val deps = ShellDependencies(navigator, setOf(testInstaller), motion)
 
+    /** [window]: a window the kit and the shell see instead of the test window (1024 x 768 dp: a wide one). */
     @Composable
-    fun Content(rtl: Boolean = false) {
+    fun Content(rtl: Boolean = false, window: KitWindowInfo? = null) {
         CompositionLocalProvider(
             LocalKitPlatform provides TestPlatform,
             LocalNavigationEventDispatcherOwner provides owner,
             LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
         ) {
-            KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = TestPlatform, localeTag = "en") { NavShell(start = ChatsRoute.Home, deps = deps, gate = gate) }
+            KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = TestPlatform, localeTag = "en") {
+                CompositionLocalProvider(LocalKitWindow provides (window ?: LocalKitWindow.current)) {
+                    NavShell(start = ChatsRoute.Home, deps = deps, gate = gate)
+                }
+            }
         }
     }
 }

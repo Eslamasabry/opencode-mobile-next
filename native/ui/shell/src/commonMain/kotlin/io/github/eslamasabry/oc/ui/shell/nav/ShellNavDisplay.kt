@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.shell.nav
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
@@ -12,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -31,6 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberDecoratedNavEntries
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.scene.Scene
+import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventTransitionState
@@ -45,6 +54,9 @@ import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.forward
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
 
 /**
+ * [beside]: the window shows a list beside its page (`ShellPanes`, from 840 dp and not short); a stack whose top is a
+ * list-detail pair is then drawn as two panes (`ShellPaneSceneStrategy`), anything else as today's single page.
+ *
  * The container transform runs on tap, on button-back and under a predictive back gesture (motion lead 2026-11-07,
  * replacing option A): the gesture seeks the same transform, so a chat shrinks toward its row with the finger, a cancel
  * grows it back and a commit finishes the flight into the row. Other routes keep the Material predictive preview. The
@@ -59,12 +71,16 @@ public fun ShellNavDisplay(
     onSystemBack: () -> Unit,
     baseDecorators: List<NavEntryDecorator<NavKey>>,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
+    beside: Boolean = false,
 ) {
     // Follow the same resolved policy as kit parts: the person's motion choice, system Remove animations, Saver and
     // heat all apply to navigation too. Calm (and power saver, heat) cross-fades pages; only Off is instant (M-013).
     val effectiveLevel = shellLevel(level, KitMotion.state.level)
     val levelState = rememberUpdatedState(effectiveLevel)
     val signals = remember { GestureSignals() }
+    // How many entries the scene on screen composes once no transition runs: two panes compose the list and its page.
+    val sceneEntries = if (beside && ShellPanes.layoutOf(backStack)?.detail == true) 2 else 1
+    SideEffect { signals.sceneEntries = sceneEntries }
     // Which pages the transition in flight joins: rows pair with a page only when one of them grows from a row.
     val growRoutes = remember { GrowRoutes(backStack.lastOrNull()) }
     growRoutes.onTop(backStack.lastOrNull())
@@ -89,11 +105,11 @@ public fun ShellNavDisplay(
     }
     // One entry composed: the page that left is gone, so the pair it formed with the top page is over.
     LaunchedEffect(growRoutes) {
-        snapshotFlow { signals.composedEntries <= 1 }.collect { settled -> if (settled) growRoutes.settle() }
+        snapshotFlow { signals.settled }.collect { settled -> if (settled) growRoutes.settle() }
     }
     // TransitionSettled: one entry composed means no entry transition is running (the popped or covered one left).
     LaunchedEffect(gate) {
-        snapshotFlow { gate.state to (signals.composedEntries <= 1) }
+        snapshotFlow { gate.state to signals.settled }
             .collect { (state, settled) ->
                 if (settled && state != GateState.Idle && state != GateState.Gesture) gate.on(GateEvent.TransitionSettled)
             }
@@ -104,14 +120,29 @@ public fun ShellNavDisplay(
     val edgeShiftPx = ShellMotion.edgeShiftPx(width, density.density)
     val previewCornerPx = with(density) { ShellMotion.PREVIEW_CORNER_DP.dp.toPx() }
 
+    // Every entry carries its route for the pane strategy (a scene strategy sees entries, not keys) and its motion.
     val withMotion: (NavKey) -> NavEntry<NavKey> = remember(entryProvider) {
         { key ->
             val entry = entryProvider(key)
             val motion = (key as? AppRoute)?.motion
-            if (motion == null) entry
-            else NavEntry(key, entry.contentKey, entry.metadata + (ShellMotion.MOTION_KEY to motion)) { entry.Content() }
+            val metadata = entry.metadata + (ShellPanes.ROUTE_KEY to key)
+            NavEntry(key, entry.contentKey, if (motion == null) metadata else metadata + (ShellMotion.MOTION_KEY to motion)) {
+                entry.Content()
+            }
         }
     }
+    // While only a list is open beside its pages, its resting page (Home: a new conversation) fills the pages side. It is
+    // not on the back stack, so it gets its own saved state and view models here, cleared when it leaves the window.
+    val restKey = if (beside) ShellPanes.layoutOf(backStack)?.takeIf { !it.detail }?.pair?.rest else null
+    val restEntry = remember(restKey, withMotion) { restKey?.let { withMotion.entryOrNull(it) } }
+    val rest =
+        rememberDecoratedNavEntries(
+                listOfNotNull(restEntry),
+                listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
+            )
+            .firstOrNull()
+    val sceneStrategies =
+        remember(beside, rest) { listOf(ShellPaneSceneStrategy(beside, rest), SinglePaneSceneStrategy<NavKey>()) }
 
     // Flutter's fade-forwards paints the page colour under both pages (its backgroundColor): while the covered page has
     // faded and the arriving one is still a quarter width short and half transparent, the ground shows there, never
@@ -123,16 +154,20 @@ public fun ShellNavDisplay(
             NavEntryDecorator<NavKey>(
                 decorate = { entry ->
                     val contentScope = LocalNavAnimatedContentScope.current
+                    // A page beside its list neither grows from a row nor shrinks into one: the list stays in view.
+                    val inPane = LocalShellInPane.current
                     DisposableEffect(Unit) {
                         signals.composedEntries++
                         onDispose { signals.composedEntries-- }
                     }
                     val host =
-                        remember(contentScope) {
-                            sharedScope?.let { ShellGrowHost(it, contentScope, gate, levelState, growRoutes) }
+                        remember(contentScope, inPane) {
+                            if (inPane) null
+                            else sharedScope?.let { ShellGrowHost(it, contentScope, gate, levelState, growRoutes) }
                         }
                     val grows =
-                        transform && (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
+                        transform && !inPane &&
+                            (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
                     Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value, grows)) {
                         CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
                     }
@@ -147,9 +182,14 @@ public fun ShellNavDisplay(
                 onSystemBack()
             },
             entryDecorators = baseDecorators + growDecorator,
+            sceneStrategies = sceneStrategies,
             sharedTransitionScope = sharedScope,
-            transitionSpec = { forward(targetState.motion().withTransform(transform), levelState.value) },
-            popTransitionSpec = { pop(initialState.motion().withTransform(transform), levelState.value) },
+            transitionSpec = {
+                if (relayout()) still() else forward(targetState.motion().withTransform(transform), levelState.value)
+            },
+            popTransitionSpec = {
+                if (relayout()) still() else pop(initialState.motion().withTransform(transform), levelState.value)
+            },
             predictivePopTransitionSpec = { edge ->
                 ShellMotion.predictivePop(
                     edge,
@@ -184,12 +224,33 @@ public fun ShellNavDisplay(
  */
 internal val LocalShellRowTransform: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { true }
 
+/**
+ * The entry for [key], or null when no feature installed one: a shell without the resting page's feature (a test, a
+ * gallery) shows the list with nothing beside it. Nav3's entry provider refuses an unknown key with an
+ * IllegalStateException.
+ */
+private fun ((NavKey) -> NavEntry<NavKey>).entryOrNull(key: NavKey): NavEntry<NavKey>? =
+    try {
+        this(key)
+    } catch (_: IllegalStateException) {
+        null
+    }
+
 /** Without the transform, a page that grows from a row moves like every other page. */
 private fun RouteMotion?.withTransform(transform: Boolean): RouteMotion? =
     if (!transform && this == RouteMotion.GrowFromRow) RouteMotion.SharedAxisX else this
 
 private fun androidx.navigation3.scene.Scene<NavKey>.motion(): RouteMotion? =
     entries.lastOrNull()?.metadata?.get(ShellMotion.MOTION_KEY) as? RouteMotion
+
+/**
+ * The same page on top before and after: only how the stack is drawn changed (a rotation or a fold between one page
+ * and two panes), so nothing moves; the panes are simply drawn the new way.
+ */
+private fun AnimatedContentTransitionScope<Scene<NavKey>>.relayout(): Boolean =
+    initialState.entries.lastOrNull()?.contentKey == targetState.entries.lastOrNull()?.contentKey
+
+private fun still(): ContentTransform = ContentTransform(EnterTransition.None, ExitTransition.None)
 
 /**
  * The pages the navigation in flight joins, for the row ↔ page transform: the top page and, until the transition
@@ -223,6 +284,13 @@ internal class GrowRoutes(top: NavKey?) {
 @Stable
 internal class GestureSignals {
     var composedEntries by mutableIntStateOf(0)
+
+    /** Entries the scene on screen composes by itself: 1, or 2 for a list with its page beside it. */
+    var sceneEntries by mutableIntStateOf(1)
+
+    /** No entry transition runs: only the scene on screen's own entries are composed. */
+    val settled: Boolean
+        get() = composedEntries <= sceneEntries
     var progress by mutableFloatStateOf(0f)
 }
 
