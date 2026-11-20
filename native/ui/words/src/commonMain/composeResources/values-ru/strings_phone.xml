@@ -952,4 +952,20 @@
     <string name="phoneDownloadAskWait">Ждать Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Обновление OpenCode готово · установится, когда не будет идти ответ</string>
     <string name="phoneDownloadReadyPhone">Обновление OpenCode готово · установится, когда сервер телефона будет готов</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="one">Ещё %1$d обновление агента ждёт Wi-Fi · около %2$d МБ</item>
+        <item quantity="few">Ещё %1$d обновления агентов ждут Wi-Fi · около %2$d МБ</item>
+        <item quantity="many">Ещё %1$d обновлений агентов ждут Wi-Fi · около %2$d МБ</item>
+        <item quantity="other">Ещё %1$d обновления агентов ждут Wi-Fi · около %2$d МБ</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">Ещё 1 обновление агента ждёт Wi-Fi · около %1$d МБ</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="one">%1$d обновление агента ждёт Wi-Fi · около %2$d МБ</item>
+        <item quantity="few">%1$d обновления агентов ждут Wi-Fi · около %2$d МБ</item>
+        <item quantity="many">%1$d обновлений агентов ждут Wi-Fi · около %2$d МБ</item>
+        <item quantity="other">%1$d обновления агентов ждут Wi-Fi · около %2$d МБ</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">1 обновление агента ждёт Wi-Fi · около %1$d МБ</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Обновление OpenCode и помощника агентов ждёт Wi-Fi · около %1$d МБ</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">Это обновление OpenCode и помощника агентов, который ему нужен. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
 </resources>

@@ -8840,8 +8840,13 @@ permissions40RevokeBody	403477c2f0
 permissions40RevokeTitle	9bafc26017
 permissions40Revoked	887fb6afb7
 permissions40Title	fd2c9592c7
+phoneDownloadAgentsMore	5966575682
+phoneDownloadAgentsMore__eq1	386f254774
+phoneDownloadAgentsOnly	39d4a00f99
+phoneDownloadAgentsOnly__eq1	c1d96749e3
 phoneDownloadAskBodyHelper	94a20e0342
 phoneDownloadAskBodyOpenCode	8ed517fe36
+phoneDownloadAskBodyOpenCodeHelper	f29a081036
 phoneDownloadAskNow	97ebd603ee
 phoneDownloadAskTitle	be5ad4c7e7
 phoneDownloadAskWait	f042122837
@@ -8855,6 +8860,7 @@ phoneDownloadRunningOpenCode	ff260fea86
 phoneDownloadRunningPercent	fa1eaf2d6a
 phoneDownloadWaitingHelper	588b12d517
 phoneDownloadWaitingOpenCode	64149ff7e6
+phoneDownloadWaitingOpenCodeHelper	724ff7671b
 phoneFileFindBody	b39bda7a88
 phoneFileFindTitle	a82e1c755c
 phoneFileInstallAction	4767f59a0a
