@@ -26,6 +26,16 @@ class LibraryRegistryFactory(
     private val redactor: Redactor,
     private val clock: Clock,
 ) {
+    private val registryClient by lazy {
+        http.create(
+            TransportSpec(
+                ServerOrigin("https", "registry.modelcontextprotocol.io", 443),
+                HostClass.Public,
+                false,
+                readTimeoutMs = 15_000,
+            )
+        )
+    }
     suspend fun open(profile: ProfileId): SetupRegistryStore? {
         if (stores.warm() !is Outcome.Ok || stores.profiles.profile(profile) == null) return null
         val lane = stores.lanes.forProfile(profile)
@@ -59,58 +69,45 @@ class LibraryRegistryFactory(
                     )
                         RegistryHttpReply.Failed
                     else {
-                        val net =
-                            http.create(
-                                TransportSpec(
-                                    ServerOrigin("https", "registry.modelcontextprotocol.io", 443),
-                                    HostClass.Public,
-                                    false,
-                                    readTimeoutMs = 15_000,
-                                )
-                            )
-                        try {
-                            withTimeoutOrNull(20_000) {
-                                val reply =
-                                    net.exchange({
-                                        method = io.ktor.http.HttpMethod.Get
-                                        url(request.url)
-                                        request.query.forEach { (key, value) ->
-                                            url.parameters.append(key, value)
-                                        }
-                                        request.headers.forEach { (key, value) ->
-                                            header(key, value)
-                                        }
-                                    }) { response ->
-                                        val channel = response.bodyAsChannel()
-                                        val out = ByteArrayOutputStream()
-                                        val buffer = ByteArray(8192)
-                                        while (!channel.isClosedForRead) {
-                                            if (cancellation.isCancelled || !current())
-                                                return@exchange RegistryHttpReply.Failed
-                                            val count =
-                                                channel.readAvailable(
-                                                    buffer,
-                                                    0,
-                                                    minOf(
-                                                        buffer.size,
-                                                        request.maxBytes - out.size() + 1,
-                                                    ),
-                                                )
-                                            if (count < 0) break
-                                            if (count > 0) out.write(buffer, 0, count)
-                                            if (out.size() > request.maxBytes)
-                                                return@exchange RegistryHttpReply.TooLarge
-                                        }
-                                        RegistryHttpReply.Body(
-                                            response.status.value,
-                                            out.toByteArray(),
-                                        )
+                        withTimeoutOrNull(20_000) {
+                            val reply =
+                                registryClient.exchange({
+                                    method = io.ktor.http.HttpMethod.Get
+                                    url(request.url)
+                                    request.query.forEach { (key, value) ->
+                                        url.parameters.append(key, value)
                                     }
-                                (reply as? Outcome.Ok)?.value ?: RegistryHttpReply.Failed
-                            } ?: RegistryHttpReply.Failed
-                        } finally {
-                            net.close()
-                        }
+                                    request.headers.forEach { (key, value) ->
+                                        header(key, value)
+                                    }
+                                }) { response ->
+                                    val channel = response.bodyAsChannel()
+                                    val out = ByteArrayOutputStream()
+                                    val buffer = ByteArray(8192)
+                                    while (!channel.isClosedForRead) {
+                                        if (cancellation.isCancelled || !current())
+                                            return@exchange RegistryHttpReply.Failed
+                                        val count =
+                                            channel.readAvailable(
+                                                buffer,
+                                                0,
+                                                minOf(
+                                                    buffer.size,
+                                                    request.maxBytes - out.size() + 1,
+                                                ),
+                                            )
+                                        if (count < 0) break
+                                        if (count > 0) out.write(buffer, 0, count)
+                                        if (out.size() > request.maxBytes)
+                                            return@exchange RegistryHttpReply.TooLarge
+                                    }
+                                    RegistryHttpReply.Body(
+                                        response.status.value,
+                                        out.toByteArray(),
+                                    )
+                                }
+                            (reply as? Outcome.Ok)?.value ?: RegistryHttpReply.Failed
+                        } ?: RegistryHttpReply.Failed
                     }
                 },
                 redactor,

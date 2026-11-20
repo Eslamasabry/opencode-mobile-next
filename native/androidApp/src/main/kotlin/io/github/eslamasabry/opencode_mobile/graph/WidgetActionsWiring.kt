@@ -180,6 +180,7 @@ class NativeWidgetRunner(
                                 transportScope!!,
                                 location,
                                 reconnectAllowed = MutableStateFlow(false),
+                                observeEvents = false,
                             )
                         )
                     owned =

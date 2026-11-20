@@ -487,7 +487,16 @@ private class ReadOnlyMonitorGateway(
         when (
             val connected =
                 withContext(scope.coroutineContext) {
-                    factory.connect(GatewaySpec(profile, secret, scope, location = location))
+                    factory.connect(
+                        GatewaySpec(
+                            profile,
+                            secret,
+                            scope,
+                            location = location,
+                            reconnectAllowed = MutableStateFlow(false),
+                            observeEvents = false,
+                        )
+                    )
                 }
         ) {
             is Outcome.Failed -> connected

@@ -19,8 +19,10 @@ class AndroidCodexSockets(
     private val dispatchers: AppDispatchers,
     private val appScope: AppCoroutineScope,
 ) : CodexSocketFactory {
+    private val client by lazy(::codexFramesClient)
+
     override suspend fun open(endpoint: CodexEndpoint, secret: String): CodexSocket =
-        openCodexFrames(endpoint, secret, dispatchers, appScope)
+        openCodexFrames(endpoint, secret, dispatchers, appScope, sharedClient = client)
 }
 
 /** Only connected runtimes advertising the account facet have a visible Account action. */

@@ -34,43 +34,40 @@ class IntegrationLogos(
     clock: Clock,
 ) {
     private val directory = File(application.cacheDir, "provider_logos")
+    private val logoClient by lazy {
+        val origin = ServerOrigin("https", "models.dev", 443)
+        clients.create(
+            TransportSpec(
+                origin,
+                AddressRules.classify(origin.host),
+                false,
+                readTimeoutMs = 8_000,
+            )
+        )
+    }
     private val store =
         ProviderLogoStore(
             fetch = { address ->
                 if (!address.startsWith("https://models.dev/logos/") || !address.endsWith(".svg"))
                     null
                 else {
-                    val origin = ServerOrigin("https", "models.dev", 443)
-                    val net =
-                        clients.create(
-                            TransportSpec(
-                                origin,
-                                AddressRules.classify(origin.host),
-                                false,
-                                readTimeoutMs = 8_000,
-                            )
-                        )
-                    try {
-                        when (
-                            val result =
-                                net.exchange({ url(address) }) { reply ->
-                                    val bytes =
-                                        reply
-                                            .bodyAsChannel()
-                                            .readRemaining(PROVIDER_LOGO_MAX_BYTES.toLong() + 1)
-                                            .readByteArray()
-                                    ProviderLogoResponse(
-                                        reply.status.value,
-                                        reply.headers["Content-Type"],
-                                        bytes,
-                                    )
-                                }
-                        ) {
-                            is Outcome.Failed -> null
-                            is Outcome.Ok -> result.value
-                        }
-                    } finally {
-                        net.close()
+                    when (
+                        val result =
+                            logoClient.exchange({ url(address) }) { reply ->
+                                val bytes =
+                                    reply
+                                        .bodyAsChannel()
+                                        .readRemaining(PROVIDER_LOGO_MAX_BYTES.toLong() + 1)
+                                        .readByteArray()
+                                ProviderLogoResponse(
+                                    reply.status.value,
+                                    reply.headers["Content-Type"],
+                                    bytes,
+                                )
+                            }
+                    ) {
+                        is Outcome.Failed -> null
+                        is Outcome.Ok -> result.value
                     }
                 }
             },

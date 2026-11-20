@@ -352,6 +352,7 @@ class AppScheduleProfiles(
                     scope,
                     location,
                     reconnectAllowed = MutableStateFlow(false),
+                    observeEvents = false,
                 )
             val readyUntil = minOf(deadlineMs, clock.now().toEpochMilliseconds() + PHONE_READY_MS)
             var pair = factory.connect(spec)

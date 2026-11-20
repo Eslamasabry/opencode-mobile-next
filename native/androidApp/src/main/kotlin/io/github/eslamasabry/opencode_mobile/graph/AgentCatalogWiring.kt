@@ -62,6 +62,18 @@ class AppMcpCatalogHost(
 ) : McpCatalogHost {
     private fun key(profile: String) = "oc.setupRegistry.$profile"
 
+    private val registryClient by lazy {
+        val origin = ServerOrigin("https", "registry.modelcontextprotocol.io", 443)
+        http.create(
+            TransportSpec(
+                origin,
+                AddressRules.classify(origin.host),
+                false,
+                readTimeoutMs = 10_000,
+            )
+        )
+    }
+
     /**
      * The saved server this page was opened for, by value: the live graph and the profile row are
      * rebuilt when the connection refreshes or the list is republished, and a new object for the
@@ -143,53 +155,39 @@ class AppMcpCatalogHost(
             text != null && (text.codePointCount(0, text.length) > 100 || text.any { it.code < 32 })
         )
             return Failure.UnreadableReply().failed()
-        val origin = ServerOrigin("https", "registry.modelcontextprotocol.io", 443)
-        val client =
-            http.create(
-                TransportSpec(
-                    origin,
-                    AddressRules.classify(origin.host),
-                    false,
-                    readTimeoutMs = 10_000,
-                )
-            )
-        return try {
-            withTimeoutOrNull(10_000) {
-                val result =
-                    client.exchange({
-                        method = HttpMethod.Get
-                        url("https://registry.modelcontextprotocol.io/v0.1/servers")
-                        url.parameters.append("limit", "100")
-                        url.parameters.append("version", "latest")
-                        text?.let { url.parameters.append("search", it) }
-                        header(HttpHeaders.Accept, "application/json")
-                    }) { response ->
-                        val channel = response.bodyAsChannel()
-                        val buffer = ByteArray(512 * 1024 + 1)
-                        var count = 0
-                        while (count < buffer.size) {
-                            val read = channel.readAvailable(buffer, count, buffer.size - count)
-                            if (read < 0) break
-                            count += read
-                        }
-                        if (count == buffer.size) null
-                        else buffer.copyOf(count).decodeToString(throwOnInvalidSequence = true)
+        return withTimeoutOrNull(10_000) {
+            val result =
+                registryClient.exchange({
+                    method = HttpMethod.Get
+                    url("https://registry.modelcontextprotocol.io/v0.1/servers")
+                    url.parameters.append("limit", "100")
+                    url.parameters.append("version", "latest")
+                    text?.let { url.parameters.append("search", it) }
+                    header(HttpHeaders.Accept, "application/json")
+                }) { response ->
+                    val channel = response.bodyAsChannel()
+                    val buffer = ByteArray(512 * 1024 + 1)
+                    var count = 0
+                    while (count < buffer.size) {
+                        val read = channel.readAvailable(buffer, count, buffer.size - count)
+                        if (read < 0) break
+                        count += read
                     }
-                when (result) {
-                    is Outcome.Failed -> result
-                    is Outcome.Ok -> {
-                        val body =
-                            result.value
-                                ?: return@withTimeoutOrNull Failure.UnreadableReply().failed()
-                        attempt({ Failure.UnreadableReply() }) {
-                            Json.parseToJsonElement(body) as JsonObject
-                        }
+                    if (count == buffer.size) null
+                    else buffer.copyOf(count).decodeToString(throwOnInvalidSequence = true)
+                }
+            when (result) {
+                is Outcome.Failed -> result
+                is Outcome.Ok -> {
+                    val body =
+                        result.value
+                            ?: return@withTimeoutOrNull Failure.UnreadableReply().failed()
+                    attempt({ Failure.UnreadableReply() }) {
+                        Json.parseToJsonElement(body) as JsonObject
                     }
                 }
-            } ?: Failure.TimedOut().failed()
-        } finally {
-            client.close()
-        }
+            }
+        } ?: Failure.TimedOut().failed()
     }
 
     override suspend fun inventory(

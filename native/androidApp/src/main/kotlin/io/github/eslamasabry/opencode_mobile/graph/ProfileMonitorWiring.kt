@@ -580,6 +580,7 @@ private class OwnedMonitorGateway(
                     owner,
                     location,
                     reconnectAllowed = MutableStateFlow(false),
+                    observeEvents = false,
                 )
             )
         if (result is Outcome.Failed) return@withLock result

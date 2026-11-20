@@ -694,6 +694,7 @@ class AndroidServersSetup(
 ) : ServersSetupSource {
     private val blocked = mutableSetOf<ProfileId>()
     private val sessions = mutableMapOf<ProfileId, MutableSet<ServersSetupSession>>()
+    private val registryHttp by lazy { PublicRegistryHttp(dispatchers) }
 
     init {
         for (prefix in SetupProfileKeys.prefixes) scope.register(
@@ -778,7 +779,7 @@ class AndroidServersSetup(
             SetupRegistryStore(
                 prefs,
                 profile.raw,
-                SetupRegistryClient(PublicRegistryHttp(dispatchers), redactor),
+                SetupRegistryClient(registryHttp, redactor),
                 redactor,
                 clock,
             )

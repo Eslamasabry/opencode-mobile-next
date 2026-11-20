@@ -84,6 +84,7 @@ class AndroidPlansReaders(
     private val pending = HashMap<String, ComputerAnswer>()
     private var idleStop: Job? = null
     private val collectors = HashMap<String, Pair<LoadedProfile, InAppQuotaCollector>>()
+    private val collectorProbeClient by lazy(::quotaCollectorReadinessClient)
 
     init {
         scope.launch {
@@ -909,30 +910,28 @@ class AndroidPlansReaders(
 
     private suspend fun probeCollector(token: String): Boolean =
         withContext(dispatchers.io) {
-            val transport = LoopbackQuotaTransport(dispatchers)
-            try {
-                transport
-                    .fetch(
-                        QuotaRequest(
-                            "GET",
-                            "$IN_APP_QUOTA_ORIGIN$PROVIDER_QUOTA_PATH",
-                            persistentMapOf("Authorization" to "Bearer $token"),
-                            false,
-                            0,
-                            3000,
-                            3000,
-                            12000,
-                        )
-                    )
-                    .body
-                    .collect {}
-                true
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                false
-            } finally {
-                transport.close(true)
+            val call =
+                collectorProbeClient.newCall(
+                    Request.Builder()
+                        .url("$IN_APP_QUOTA_ORIGIN$PROVIDER_QUOTA_PATH")
+                        .header("Authorization", "Bearer $token")
+                        .get()
+                        .build()
+                )
+            suspendCancellableCoroutine { waiting ->
+                waiting.invokeOnCancellation { call.cancel() }
+                call.enqueue(
+                    object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            if (waiting.isActive) waiting.resume(false)
+                        }
+
+                        override fun onResponse(call: Call, response: Response) {
+                            val ok = response.use { quotaCollectorAnswered(it.code) }
+                            if (waiting.isActive) waiting.resume(ok)
+                        }
+                    }
+                )
             }
         }
 

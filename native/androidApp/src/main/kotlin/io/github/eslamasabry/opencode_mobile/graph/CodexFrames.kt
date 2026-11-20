@@ -32,6 +32,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -41,6 +42,79 @@ import okio.Buffer
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 import okio.buffer
+
+/** Shared HTTP/1.1 upgrade client for [openCodexFrames] (no proxy, redirects or retries). */
+internal fun codexFramesClient(): OkHttpClient =
+    OkHttpClient.Builder()
+        .proxy(Proxy.NO_PROXY)
+        .protocols(listOf(Protocol.HTTP_1_1))
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .retryOnConnectionFailure(false)
+        .connectTimeout(8, TimeUnit.SECONDS)
+        .callTimeout(8, TimeUnit.SECONDS)
+        .readTimeout(0, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
+        .build()
+
+private fun codexHttpUrl(endpoint: CodexEndpoint, token: String): HttpUrl {
+    fun invalid(): Nothing = throw CodexException(CodexFailureKind.InvalidEndpoint)
+    if (!CodexProfileRules.tokenAcceptable(token)) invalid()
+    val uri = URI(endpoint.url)
+    val http =
+        endpoint.url
+            .replaceFirst("wss://", "https://")
+            .replaceFirst("ws://", "http://")
+            .toHttpUrlOrNull() ?: invalid()
+    // B-SEC-113: the token goes only to the host the rules checked.
+    if (
+        uri.host?.removeSurrounding("[", "]")?.lowercase() != http.host.lowercase() ||
+            http.host.lowercase() != endpoint.host
+    )
+        invalid()
+    return http
+}
+
+private suspend fun enqueueCodexUpgrade(call: Call): Response =
+    suspendCancellableCoroutine { waiting ->
+        waiting.invokeOnCancellation { call.cancel() }
+        call.enqueue(
+            object : Callback {
+                override fun onFailure(call: Call, error: java.io.IOException) {
+                    if (waiting.isActive)
+                        waiting.resumeWithException(
+                            CodexException(CodexFailureKind.Disconnected)
+                        )
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    if (waiting.isActive) waiting.resume(response)
+                    else {
+                        response.socket?.cancel()
+                        response.close()
+                    }
+                }
+            }
+        )
+    }
+
+private fun verifyCodexUpgrade(response: Response, key: String): okio.Socket {
+    if (response.code == 401 || response.code == 403)
+        throw CodexException(CodexFailureKind.Authentication)
+    val expected = (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encodeUtf8().sha1().base64()
+    val connection = response.headers("Connection").flatMap { it.split(',') }
+    val socket = response.socket
+    val valid =
+        socket != null &&
+            response.code == 101 &&
+            response.header("Upgrade").equals("websocket", true) &&
+            connection.any { it.trim().equals("Upgrade", true) } &&
+            response.headers("Sec-WebSocket-Accept").singleOrNull() == expected &&
+            response.headers("Sec-WebSocket-Extensions").isEmpty() &&
+            response.headers("Sec-WebSocket-Protocol").isEmpty()
+    if (!valid) throw CodexException(CodexFailureKind.InvalidResponse)
+    return socket
+}
 
 /**
  * B-AGENT-062/067: the one Codex app-server socket (every Codex connection, pairing check and
@@ -56,34 +130,12 @@ internal suspend fun openCodexFrames(
     token: String,
     dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
+    sharedClient: OkHttpClient? = null,
 ): CodexSocket =
     withContext(dispatchers.io) {
-        fun invalid(): Nothing = throw CodexException(CodexFailureKind.InvalidEndpoint)
-        if (!CodexProfileRules.tokenAcceptable(token)) invalid()
-        val uri = URI(endpoint.url)
-        val http =
-            endpoint.url
-                .replaceFirst("wss://", "https://")
-                .replaceFirst("ws://", "http://")
-                .toHttpUrlOrNull() ?: invalid()
-        // B-SEC-113: the token goes only to the host the rules checked.
-        if (
-            uri.host?.removeSurrounding("[", "]")?.lowercase() != http.host.lowercase() ||
-                http.host.lowercase() != endpoint.host
-        )
-            invalid()
-        val client =
-            OkHttpClient.Builder()
-                .proxy(Proxy.NO_PROXY)
-                .protocols(listOf(Protocol.HTTP_1_1))
-                .followRedirects(false)
-                .followSslRedirects(false)
-                .retryOnConnectionFailure(false)
-                .connectTimeout(8, TimeUnit.SECONDS)
-                .callTimeout(8, TimeUnit.SECONDS)
-                .readTimeout(0, TimeUnit.SECONDS)
-                .writeTimeout(15, TimeUnit.SECONDS)
-                .build()
+        val http = codexHttpUrl(endpoint, token)
+        val ownsClient = sharedClient == null
+        val client = sharedClient ?: codexFramesClient()
         val random = SecureRandom()
         val key = ByteArray(16).also(random::nextBytes).toByteString().base64()
         val call =
@@ -99,56 +151,25 @@ internal suspend fun openCodexFrames(
             )
         val response =
             try {
-                suspendCancellableCoroutine<Response> { waiting ->
-                    waiting.invokeOnCancellation { call.cancel() }
-                    call.enqueue(
-                        object : Callback {
-                            override fun onFailure(call: Call, error: java.io.IOException) {
-                                if (waiting.isActive)
-                                    waiting.resumeWithException(
-                                        CodexException(CodexFailureKind.Disconnected)
-                                    )
-                            }
-
-                            override fun onResponse(call: Call, response: Response) {
-                                if (waiting.isActive) waiting.resume(response)
-                                else {
-                                    response.socket?.cancel()
-                                    response.close()
-                                }
-                            }
-                        }
-                    )
-                }
+                enqueueCodexUpgrade(call)
             } catch (error: Exception) {
                 call.cancel()
-                client.dispatcher.executorService.shutdown()
-                client.connectionPool.evictAll()
+                if (ownsClient) {
+                    client.dispatcher.executorService.shutdown()
+                    client.connectionPool.evictAll()
+                }
                 throw error
             }
         try {
-            if (response.code == 401 || response.code == 403)
-                throw CodexException(CodexFailureKind.Authentication)
-            val expected =
-                (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encodeUtf8().sha1().base64()
-            val connection = response.headers("Connection").flatMap { it.split(',') }
-            if (
-                response.code != 101 ||
-                    !response.header("Upgrade").equals("websocket", true) ||
-                    connection.none { it.trim().equals("Upgrade", true) } ||
-                    response.headers("Sec-WebSocket-Accept").singleOrNull() != expected ||
-                    response.headers("Sec-WebSocket-Extensions").isNotEmpty() ||
-                    response.headers("Sec-WebSocket-Protocol").isNotEmpty()
-            )
-                throw CodexException(CodexFailureKind.InvalidResponse)
-            val socket =
-                response.socket ?: throw CodexException(CodexFailureKind.InvalidResponse)
-            BoundedCodexFrames(socket, client, dispatchers, appScope, random)
+            val socket = verifyCodexUpgrade(response, key)
+            BoundedCodexFrames(socket, client, ownsClient, dispatchers, appScope, random)
         } catch (error: Exception) {
             response.socket?.cancel()
             response.close()
-            client.dispatcher.executorService.shutdown()
-            client.connectionPool.evictAll()
+            if (ownsClient) {
+                client.dispatcher.executorService.shutdown()
+                client.connectionPool.evictAll()
+            }
             throw error
         }
     }
@@ -156,6 +177,7 @@ internal suspend fun openCodexFrames(
 private class BoundedCodexFrames(
     private val socket: okio.Socket,
     private val client: OkHttpClient,
+    private val ownsClient: Boolean,
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
     private val random: SecureRandom,
@@ -334,8 +356,10 @@ private class BoundedCodexFrames(
         if (!closed.compareAndSet(false, true)) return
         socket.cancel()
         frames.close()
-        client.dispatcher.executorService.shutdown()
-        client.connectionPool.evictAll()
+        if (ownsClient) {
+            client.dispatcher.executorService.shutdown()
+            client.connectionPool.evictAll()
+        }
     }
 
     override suspend fun close(): Unit =

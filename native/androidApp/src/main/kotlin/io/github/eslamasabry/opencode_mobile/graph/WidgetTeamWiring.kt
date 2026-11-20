@@ -52,6 +52,17 @@ class NativeWidgetTeam(
     private val scope =
         CoroutineScope(appScope.coroutineContext + dispatchers.serial("widget-team"))
     private val presentation = WidgetPresentation(application, redactor)
+    private val httpClient by lazy {
+        OkHttpClient.Builder()
+            .proxy(java.net.Proxy.NO_PROXY)
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .retryOnConnectionFailure(false)
+            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
+    }
     private var started = false
 
     fun start() {
@@ -353,17 +364,6 @@ class NativeWidgetTeam(
         val token: String,
         val front: Boolean,
     ) {
-        val client =
-            OkHttpClient.Builder()
-                .proxy(java.net.Proxy.NO_PROXY)
-                .followRedirects(false)
-                .followSslRedirects(false)
-                .retryOnConnectionFailure(false)
-                .connectTimeout(2, TimeUnit.SECONDS)
-                .readTimeout(3, TimeUnit.SECONDS)
-                .callTimeout(4, TimeUnit.SECONDS)
-                .build()
-
         suspend fun credentialCurrent(): Boolean =
             stores.profiles.profile(saved.id) == saved &&
                 stores.lanes.forProfile(saved.id).isAdmitting &&
@@ -389,7 +389,7 @@ class NativeWidgetTeam(
                         else post(body.toString().toRequestBody("application/json".toMediaType()))
                     }
                     .build()
-            val call = client.newCall(request)
+            val call = httpClient.newCall(request)
             return suspendCancellableCoroutine { continuation ->
                 continuation.invokeOnCancellation { call.cancel() }
                 call.enqueue(
@@ -436,11 +436,7 @@ class NativeWidgetTeam(
             }
         }
 
-        fun close() {
-            client.dispatcher.cancelAll()
-            client.connectionPool.evictAll()
-            client.dispatcher.executorService.shutdown()
-        }
+        fun close() = Unit
     }
 
     private fun JSONObject.integer(key: String): Boolean = opt(key) is Int || opt(key) is Long
@@ -460,4 +456,10 @@ class NativeWidgetTeam(
         } catch (_: Exception) {
             0L
         }
+
+    private companion object {
+        const val CONNECT_TIMEOUT_SECONDS = 2L
+        const val READ_TIMEOUT_SECONDS = 3L
+        const val CALL_TIMEOUT_SECONDS = 4L
+    }
 }

@@ -754,6 +754,7 @@ class AndroidPlansSource(
                             connection,
                             location,
                             reconnectAllowed = MutableStateFlow(false),
+                            observeEvents = false,
                         )
                     )
                 when (pair) {

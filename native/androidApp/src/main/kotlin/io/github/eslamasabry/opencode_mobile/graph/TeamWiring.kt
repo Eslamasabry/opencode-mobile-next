@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.security.Redactor
-import io.github.eslamasabry.oc.engine.integrations.quota.QuotaRequest
 import io.github.eslamasabry.oc.engine.profiles.ProfileKeys
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.engine.team.PhoneEngineAddress
@@ -35,9 +34,20 @@ import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.team.TeamLastKnown
 import io.github.eslamasabry.oc.engine.team.TeamWorkspaceJson
-import kotlinx.collections.immutable.persistentMapOf
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.net.Proxy
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.json.JSONObject
 
 /** s23-team: the AI Team engine over the phone engine's loopback API. */
@@ -62,8 +72,9 @@ object TeamBindings {
 
 /**
  * The phone engine as Flutter's `PhoneEngineGateway` reads it: the saved `orchestration` config, the Keystore bearer
- * (`oc.teamEngineAuth.<id>`), `GET /v1/health` for this profile, then `GET /v1/workspace`. Each read owns its client
- * and closes it; closing never stops the daemon. The token is registered with the redactor and never logged.
+ * (`oc.teamEngineAuth.<id>`), `GET /v1/health` for this profile, then `GET /v1/workspace`. One loopback client is
+ * reused across reads and commands; every call cancels on coroutine cancellation and closes its response. The token
+ * is registered with the redactor and never logged.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -74,6 +85,18 @@ class AppTeamHost(
     private val dispatchers: AppDispatchers,
     private val redactor: Redactor,
 ) : TeamHost {
+    private val httpClient by lazy {
+        OkHttpClient.Builder()
+            .proxy(Proxy.NO_PROXY)
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .retryOnConnectionFailure(false)
+            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
+    }
     override suspend fun config(profileId: String): TeamConfig? {
         stores.warm()
         return TeamConfig.parse(stores.profiles.profile(ProfileId(profileId))?.profile?.orchestration?.encoded)
@@ -217,25 +240,20 @@ class AppTeamHost(
 
         override suspend fun probeEngine(): Outcome<SetupHealth> {
             val address = started ?: return Outcome.Failed(Failure.Unexpected())
-            val transport = AndroidQuotaTransport(dispatchers)
-            return try {
-                attempt({ Failure.Unexpected() }) {
-                    val health = health(transport, address.baseUrl.trimEnd('/'), address.token, profileId)
-                    SetupHealth(
-                        boundary = health.boundary,
-                        canExecute = health.canExecute,
-                        boundaryReason =
-                            when {
-                                !health.boundary -> "boundary_unverified"
-                                !health.protocolVerified -> "protocolUnverified"
-                                !health.canExecute -> "notExecutable"
-                                else -> ""
-                            },
-                        boundaryTier = health.boundaryTier,
-                    )
-                }
-            } finally {
-                transport.close(true)
+            return attempt({ Failure.Unexpected() }) {
+                val health = health(address.baseUrl.trimEnd('/'), address.token, profileId)
+                SetupHealth(
+                    boundary = health.boundary,
+                    canExecute = health.canExecute,
+                    boundaryReason =
+                        when {
+                            !health.boundary -> "boundary_unverified"
+                            !health.protocolVerified -> "protocolUnverified"
+                            !health.canExecute -> "notExecutable"
+                            else -> ""
+                        },
+                    boundaryTier = health.boundaryTier,
+                )
             }
         }
 
@@ -279,8 +297,8 @@ class AppTeamHost(
     }
 
     /** `GET /v1/health` answering for [profileId] in schema 1 (Dart `PhoneEngineHealth.fromJson`), or a thrown refusal. */
-    private suspend fun health(transport: AndroidQuotaTransport, base: String, token: String, profileId: String): TeamHealth =
-        checkNotNull(TeamHealth.parse(DartJson.decodeOrNull(get(transport, "$base/v1/health", token, HEALTH_BODY)), profileId))
+    private suspend fun health(base: String, token: String, profileId: String): TeamHealth =
+        checkNotNull(TeamHealth.parse(DartJson.decodeOrNull(get("$base/v1/health", token, HEALTH_BODY)), profileId))
 
     override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamRead> {
         val base = config.loopbackBase ?: return Outcome.Failed(Failure.SecretUnavailable())
@@ -289,14 +307,9 @@ class AppTeamHost(
                 is Outcome.Ok -> t.value
                 is Outcome.Failed -> return t
             }
-        val transport = AndroidQuotaTransport(dispatchers)
-        return try {
-            attempt({ Failure.Unexpected() }) {
-                val health = health(transport, base, token, profileId)
-                TeamRead(health, checkNotNull(TeamWorkspaceJson.decode(get(transport, "$base/v1/workspace", token, WORKSPACE_BODY))))
-            }
-        } finally {
-            transport.close(true)
+        return attempt({ Failure.Unexpected() }) {
+            val health = health(base, token, profileId)
+            TeamRead(health, checkNotNull(TeamWorkspaceJson.decode(get("$base/v1/workspace", token, WORKSPACE_BODY))))
         }
     }
 
@@ -312,15 +325,10 @@ class AppTeamHost(
                 is Outcome.Ok -> t.value
                 is Outcome.Failed -> return t
             }
-        val transport = AndroidQuotaTransport(dispatchers)
         val health =
-            try {
-                when (val h = attempt({ Failure.Unexpected() }) { health(transport, base, token, profileId) }) {
-                    is Outcome.Ok -> h.value
-                    is Outcome.Failed -> return h
-                }
-            } finally {
-                transport.close(true)
+            when (val h = attempt({ Failure.Unexpected() }) { health(base, token, profileId) }) {
+                is Outcome.Ok -> h.value
+                is Outcome.Failed -> return h
             }
         health.refusal(command)?.let { return Outcome.Ok(TeamCommandResult(false, it, command.projectId)) }
         return attempt({ Failure.Unexpected() }) {
@@ -369,57 +377,71 @@ class AppTeamHost(
         }
 
     /** One POST, no redirects, no retry; the body is JSON. */
-    private suspend fun post(url: String, token: String, json: String): String =
-        kotlinx.coroutines.withContext(dispatchers.io) {
-            val client =
-                okhttp3.OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .followSslRedirects(false)
-                    .retryOnConnectionFailure(false)
-                    .connectTimeout(3, java.util.concurrent.TimeUnit.SECONDS)
-                    .callTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-            val request =
-                okhttp3.Request.Builder()
-                    .url(url)
-                    .header("Accept", "application/json")
-                    .header("Authorization", "Bearer $token")
-                    .post(json.toRequestBody(JSON))
-                    .build()
-            client.newCall(request).execute().use { response ->
-                check(response.code == 200)
-                val bytes = response.body.bytes()
-                check(bytes.size <= HEALTH_BODY)
-                bytes.toString(Charsets.UTF_8)
+    private suspend fun post(url: String, token: String, json: String): String {
+        val request =
+            Request.Builder()
+                .url(url)
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer $token")
+                .post(json.toRequestBody(JSON))
+                .build()
+        return exchange(request, HEALTH_BODY)
+    }
+
+    private suspend fun get(url: String, token: String, limit: Int): String {
+        val request =
+            Request.Builder()
+                .url(url)
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer $token")
+                .get()
+                .build()
+        return exchange(request, limit)
+    }
+
+    private suspend fun exchange(request: Request, limit: Int): String {
+        val call = httpClient.newCall(request)
+        val response =
+            suspendCancellableCoroutine<Response> { waiting ->
+                waiting.invokeOnCancellation { call.cancel() }
+                call.enqueue(
+                    object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            if (waiting.isActive) waiting.resumeWithException(e)
+                        }
+
+                        override fun onResponse(call: Call, response: Response) {
+                            if (waiting.isActive) waiting.resume(response) { _, value, _ -> value.close() }
+                            else response.close()
+                        }
+                    }
+                )
+            }
+        return kotlinx.coroutines.withContext(dispatchers.io) {
+            response.use { reply ->
+                check(reply.code == HTTP_OK && !reply.isRedirect)
+                reply.body.byteStream().use { stream ->
+                    val bytes = ByteArrayOutputStream()
+                    val buffer = ByteArray(CHUNK_BYTES)
+                    while (true) {
+                        val count = stream.read(buffer)
+                        if (count < 0) break
+                        check(bytes.size() + count <= limit)
+                        bytes.write(buffer, 0, count)
+                    }
+                    bytes.toString("UTF-8")
+                }
             }
         }
-
-    private suspend fun get(transport: AndroidQuotaTransport, url: String, token: String, limit: Int): String {
-        val answer =
-            transport.fetch(
-                QuotaRequest(
-                    "GET",
-                    url,
-                    persistentMapOf("Accept" to "application/json", "Authorization" to "Bearer $token"),
-                    false,
-                    0,
-                    3_000,
-                    3_000,
-                    15_000,
-                )
-            )
-        check(answer.status == 200 && !answer.isRedirect)
-        val bytes = java.io.ByteArrayOutputStream()
-        answer.body.collect { chunk ->
-            check(bytes.size() + chunk.size <= limit)
-            bytes.write(chunk)
-        }
-        return bytes.toString("UTF-8")
     }
 
     private companion object {
         val JSON = "application/json".toMediaType()
         val CODE = Regex("^[A-Za-z][A-Za-z0-9_]{0,63}$")
+        const val HTTP_OK = 200
+        const val CHUNK_BYTES = 8_192
+        const val CONNECT_TIMEOUT_SECONDS = 3L
+        const val CALL_TIMEOUT_SECONDS = 15L
         const val HEALTH_BODY = 64 * 1024
 
         /** Flutter `TeamProjectController._draftKey` (registered with the profile sweep as deferred team data). */

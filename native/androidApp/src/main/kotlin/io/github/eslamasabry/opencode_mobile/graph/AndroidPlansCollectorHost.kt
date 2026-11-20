@@ -24,15 +24,21 @@ import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.Proxy
 import java.security.SecureRandom
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 
 /**
  * The optional collector belongs to the exact saved built-in server owner. A matching loopback
@@ -52,6 +58,7 @@ class AndroidPlansCollectorHost(
     private val closed = ConcurrentHashMap.newKeySet<ProfileId>()
     private val linux by lazy { BuiltinLinux.get(app) }
     private val secureRandom = SecureRandom()
+    private val readinessClient by lazy(::quotaCollectorReadinessClient)
 
     fun applies(profile: ServerProfile): Boolean =
         profile.id !in closed &&
@@ -138,24 +145,28 @@ class AndroidPlansCollectorHost(
 
     private suspend fun probe(token: String): Boolean =
         withContext(dispatchers.io) {
-            val client = quotaCollectorReadinessClient()
-            try {
-                client
-                    .newCall(
-                        Request.Builder()
-                            .url("http://127.0.0.1:${InAppQuotaCollector.PORT}$PROVIDER_QUOTA_PATH")
-                            .header("Authorization", "Bearer $token")
-                            .get()
-                            .build()
-                    )
-                    .execute()
-                    .use { it.code in 200..599 }
-            } catch (_: java.io.IOException) {
-                false
-            } finally {
-                client.dispatcher.cancelAll()
-                client.connectionPool.evictAll()
-                client.dispatcher.executorService.shutdown()
+            val call =
+                readinessClient.newCall(
+                    Request.Builder()
+                        .url("http://127.0.0.1:${InAppQuotaCollector.PORT}$PROVIDER_QUOTA_PATH")
+                        .header("Authorization", "Bearer $token")
+                        .get()
+                        .build()
+                )
+            suspendCancellableCoroutine { waiting ->
+                waiting.invokeOnCancellation { call.cancel() }
+                call.enqueue(
+                    object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            if (waiting.isActive) waiting.resume(false)
+                        }
+
+                        override fun onResponse(call: Call, response: Response) {
+                            val ok = response.use { quotaCollectorAnswered(it.code) }
+                            if (waiting.isActive) waiting.resume(ok)
+                        }
+                    }
+                )
             }
         }
 
@@ -332,6 +343,12 @@ class QuotaCollectorCleaner(private val host: AndroidPlansCollectorHost) : Profi
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
         host.clear(profileId)
 }
+
+private const val QUOTA_PROBE_STATUS_MIN = 200
+private const val QUOTA_PROBE_STATUS_MAX = 599
+
+internal fun quotaCollectorAnswered(code: Int): Boolean =
+    code in QUOTA_PROBE_STATUS_MIN..QUOTA_PROBE_STATUS_MAX
 
 /** The quota helper's bounded bootstrap probe (closed by its caller). */
 internal fun quotaCollectorReadinessClient(): OkHttpClient =

@@ -49,6 +49,18 @@ class AppProviderLogoHost(
     private val directory: File
         get() = File(application.filesDir, "provider_logos")
 
+    private val logoClient by lazy {
+        val origin = ServerOrigin("https", "models.dev", 443)
+        http.create(
+            TransportSpec(
+                origin,
+                AddressRules.classify(origin.host),
+                false,
+                readTimeoutMs = 5_000,
+            )
+        )
+    }
+
     private fun cacheFile(name: String): File {
         val suffix =
             when {
@@ -118,47 +130,33 @@ class AppProviderLogoHost(
     override suspend fun fetch(url: String): ProviderLogoResponse? {
         val slug = url.removePrefix("https://models.dev/logos/").removeSuffix(".svg")
         if (providerLogoUrl(slug) != url) return null
-        val origin = ServerOrigin("https", "models.dev", 443)
-        val client =
-            http.create(
-                TransportSpec(
-                    origin,
-                    AddressRules.classify(origin.host),
-                    false,
-                    readTimeoutMs = 5_000,
-                )
-            )
-        return try {
-            withTimeoutOrNull(5_000) {
-                val result =
-                    client.exchange({
-                        method = HttpMethod.Get
-                        url(url)
-                        header(HttpHeaders.Accept, "image/svg+xml")
-                    }) { response ->
-                        val channel = response.bodyAsChannel()
-                        val buffer = ByteArray(PROVIDER_LOGO_MAX_BYTES + 1)
-                        var size = 0
-                        while (size < buffer.size) {
-                            val read = channel.readAvailable(buffer, size, buffer.size - size)
-                            if (read < 0) break
-                            size += read
-                        }
-                        if (size > PROVIDER_LOGO_MAX_BYTES) null
-                        else
-                            ProviderLogoResponse(
-                                response.status.value,
-                                response.headers[HttpHeaders.ContentType],
-                                buffer.copyOf(size),
-                            )
+        return withTimeoutOrNull(5_000) {
+            val result =
+                logoClient.exchange({
+                    method = HttpMethod.Get
+                    url(url)
+                    header(HttpHeaders.Accept, "image/svg+xml")
+                }) { response ->
+                    val channel = response.bodyAsChannel()
+                    val buffer = ByteArray(PROVIDER_LOGO_MAX_BYTES + 1)
+                    var size = 0
+                    while (size < buffer.size) {
+                        val read = channel.readAvailable(buffer, size, buffer.size - size)
+                        if (read < 0) break
+                        size += read
                     }
-                when (result) {
-                    is Outcome.Ok -> result.value
-                    is Outcome.Failed -> null
+                    if (size > PROVIDER_LOGO_MAX_BYTES) null
+                    else
+                        ProviderLogoResponse(
+                            response.status.value,
+                            response.headers[HttpHeaders.ContentType],
+                            buffer.copyOf(size),
+                        )
                 }
+            when (result) {
+                is Outcome.Ok -> result.value
+                is Outcome.Failed -> null
             }
-        } finally {
-            client.close()
         }
     }
 }
