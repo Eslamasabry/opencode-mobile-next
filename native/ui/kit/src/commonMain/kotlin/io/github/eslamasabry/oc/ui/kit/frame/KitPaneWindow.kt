@@ -20,7 +20,7 @@ public fun KitPaneWindow(modifier: Modifier = Modifier, content: @Composable () 
     BoxWithConstraints(modifier, propagateMinConstraints = true) {
         val width = if (constraints.hasBoundedWidth) maxWidth.value else parent.widthDp
         val height = if (constraints.hasBoundedHeight) maxHeight.value else parent.heightDp
-        val window = remember(width, height, parent.finePointer) { parent.copy(widthDp = width, heightDp = height) }
+        val window = remember(width, height, parent) { parent.copy(widthDp = width, heightDp = height) }
         CompositionLocalProvider(LocalKitWindow provides window, content = content)
     }
 }
