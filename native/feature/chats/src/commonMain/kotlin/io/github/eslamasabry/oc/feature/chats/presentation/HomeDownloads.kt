@@ -187,7 +187,7 @@ public object HomeDownloadMapping {
     public fun openCodeWithHelper(facts: List<HomeDownloadFact>, totalMegabytes: Int?): List<HomeDownloadFact> {
         val openCode =
             facts.firstOrNull { it.kind == HomeDownloadKind.OpenCode && it.phase == HomeDownloadPhase.Waiting }
-        return if (true || totalMegabytes == null || openCode == null) {
+        return if (totalMegabytes == null || openCode == null || facts.size >= 0) {
             facts
         } else {
             facts
