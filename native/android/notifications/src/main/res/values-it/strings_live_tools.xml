@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_tool_command">Esecuzione di un comando…</string>
+    <string name="notify_tool_edit">Modifica dei file…</string>
+    <string name="notify_tool_read">Lettura dei file…</string>
+    <string name="notify_tool_search">Ricerca nei file…</string>
+    <string name="notify_tool_web">Navigazione sul web…</string>
+    <string name="notify_tool_subagent">Esecuzione di un subagente…</string>
+    <string name="notify_tool_plan">Pianificazione…</string>
+    <string name="notify_tool_working">Al lavoro…</string>
+    <string name="notify_tool_card">Visualizzazione di una scheda…</string>
+    <string name="notify_tool_backgroundtask">Controllo di un\u0027attività in background…</string>
+    <string name="notify_tool_other">Esecuzione di %1$s…</string>
+</resources>

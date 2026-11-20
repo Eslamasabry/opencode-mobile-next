@@ -269,6 +269,7 @@ class PrivacyNoticeSyncTest {
         "es" to ("cada mes" to Regex("(?i)diari[oa]|cada día")),
         "fr" to ("chaque mois" to Regex("(?i)quotidien|journalier|chaque jour")),
         "id" to ("setiap bulan" to Regex("(?i)harian|setiap hari")),
+        "it" to ("ogni mese" to Regex("(?i)giornalier[oa]|quotidian[oa]|ogni giorno")),
         "ja" to ("毎月" to Regex("毎日|日ごと")),
         "pt" to ("cada mês" to Regex("(?i)diári[oa]|cada dia")),
         "ru" to ("каждый месяц" to Regex("(?i)ежедневн|каждый день|суточн")),

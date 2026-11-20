@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_status_working">Al lavoro…</string>
+    <string name="notify_status_still_working">%1$s ancora al lavoro</string>
+    <string name="notify_status_chats_working">%1$s conversazioni al lavoro</string>
+    <string name="notify_status_more">+%1$s altre</string>
+    <string name="notify_status_waiting_count">%1$s in attesa</string>
+    <string name="notify_status_tasks_progress">%1$s attività su %2$s</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+    <string name="notify_status_waiting_provider">In attesa · limite di %1$s</string>
+    <string name="notify_status_waiting_generic">In attesa · il provider è occupato</string>
+    <string name="notify_status_tries_again_at">Riprova alle %1$s</string>
+    <string name="notify_status_tries_again_soon">Riprova a breve</string>
+    <string name="notify_status_paused_android_title">In pausa · limite di Android in background</string>
+    <string name="notify_status_paused_android_body">Android ferma il lavoro in background dopo 6 ore al giorno. Apri OpenCode per continuare.</string>
+    <string name="notify_status_paused_hot_title">In pausa · telefono caldo</string>
+    <string name="notify_status_paused_hot_body">Riprende quando si raffredda</string>
+    <string name="notify_status_paused_idle_title">In pausa · niente in corso</string>
+    <string name="notify_status_paused_idle_body">Tocca per riavviare OpenCode</string>
+    <string name="notify_status_reconnecting_title">Riconnessione a %1$s</string>
+    <string name="notify_status_reconnecting_generic">Riconnessione in corso</string>
+    <string name="notify_status_reconnecting_body">In attesa della connessione</string>
+    <string name="notify_status_ready_title">Pronto · niente in corso</string>
+    <string name="notify_status_ready_body">Pronto quando vuoi</string>
+    <string name="notify_status_last_reply">Ultima risposta %1$s fa</string>
+    <string name="notify_status_last_reply_now">Ultima risposta proprio ora</string>
+    <string name="notify_status_setup_title">Configurazione · %1$s di %2$s</string>
+    <string name="notify_status_on_server">su %1$s</string>
+    <string name="notify_status_on_this_phone">su questo telefono</string>
+    <string name="notify_status_lock_working">%1$s al lavoro</string>
+    <string name="notify_status_lock_waiting">In attesa</string>
+    <string name="notify_status_lock_paused">In pausa</string>
+    <string name="notify_status_lock_reconnecting">Riconnessione</string>
+    <string name="notify_status_lock_ready">Pronto</string>
+    <string name="notify_status_lock_setup">Configurazione</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="one">%1$s ha bisogno di te</item>
+        <item quantity="many">%1$s hanno bisogno di te</item>
+        <item quantity="other">%1$s hanno bisogno di te</item>
+    </plurals>
+</resources>
