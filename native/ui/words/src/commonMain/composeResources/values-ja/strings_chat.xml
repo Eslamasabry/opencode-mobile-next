@@ -703,7 +703,6 @@
     <string name="stageStartingLinux">Linuxを起動中…</string>
     <string name="stageStartingOpenCode">OpenCodeを起動中…</string>
     <string name="stageStartingHelper">エージェントのヘルパーを起動中…</string>
-    <string name="stageStartingAgents">エージェントを起動中…</string>
     <string name="stageStartingAgent">%1$sを起動中…</string>
     <string name="stageOpeningConversation">会話を開いています…</string>
     <string name="chatLoadingConversation">会話を読み込み中</string>

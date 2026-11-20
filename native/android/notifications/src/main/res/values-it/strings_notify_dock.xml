@@ -26,4 +26,7 @@
     </plurals>
     <string name="notify_status_action_open_named">Apri %1$s</string>
     <string name="notify_status_action_stop_named">Ferma %1$s</string>
+    <string name="notify_status_action_stop">Ferma</string>
+    <string name="notify_status_stopping">Interruzione in corso…</string>
+    <string name="notify_status_stop_failed">Impossibile fermarlo. Apri l\u0027app per riprovare.</string>
 </resources>

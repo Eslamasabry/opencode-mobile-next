@@ -67,7 +67,7 @@ class LooksCaptureTest {
     @Test
     fun thisPhone() {
         val ui = ThisPhoneUi(
-            answer = ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running, AnswerLine.Storage(410L * 1024 * 1024)),
+            answer = ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running, AnswerLine.Storage(410L * 1_000_000)),
             serverRows = persistentListOf(ServerRow.Stop, ServerRow.Restart),
             version = VersionRowUi("2.0.28", UpdateRow.Available("2.1.1")),
             running = RunningRowUi(count = 7),

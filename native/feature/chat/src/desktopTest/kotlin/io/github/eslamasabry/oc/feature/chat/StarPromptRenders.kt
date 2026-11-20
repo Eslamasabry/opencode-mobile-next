@@ -149,7 +149,8 @@ class StarPromptRenders {
                                 live = if (running) LiveTurnUi(stopping = false) else null,
                                 starAsk = ask,
                             )
-                        ChatScreen(state, ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate), host)
+                        ChatScreen(state, ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate), host,
+                            facts = if (tag == "ar") completedReplyFacts else TurnFactsUi.Empty)
                     }
                 }
             }

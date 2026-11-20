@@ -176,11 +176,11 @@ class PhoneServerStateTest {
 
     @Test
     fun `plan 11 6-1 running shows the storage it takes and starting is working`() {
-        val facts = PhoneServerFacts(status = running.copy(bytesUsed = 410L * 1024 * 1024), probe = ProbeAnswer.Answered)
+        val facts = PhoneServerFacts(status = running.copy(bytesUsed = 410L * 1_000_000), probe = ProbeAnswer.Answered)
         val answer = ThisPhoneAnswers.of(derive(facts), facts)
         assertEquals(AnswerHeadline.Running, answer.headline)
         assertEquals(AnswerTone.Ok, answer.tone)
-        assertEquals(AnswerLine.Storage(410L * 1024 * 1024), answer.line)
+        assertEquals(AnswerLine.Storage(410L * 1_000_000), answer.line)
         assertEquals(null, answer.primary)
         val starting = PhoneServerFacts(status = installed, starting = true)
         assertEquals(PhoneServerState.Starting, derive(starting))

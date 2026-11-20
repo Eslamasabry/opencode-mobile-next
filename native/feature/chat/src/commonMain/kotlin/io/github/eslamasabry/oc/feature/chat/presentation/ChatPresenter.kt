@@ -510,7 +510,7 @@ public class ChatPresenter(
                             !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
                     )
                 else null,
-            pending = pendingShown(pending),
+            pending = pendingShown(drawnOnce(pending, t, l)),
             find = find,
             menu = l.menu,
             confirm = l.confirm,
@@ -756,6 +756,23 @@ public class ChatPresenter(
             .toImmutableList()
     }
     private var lastReceiptChecks: PersistentMap<Long, ReceiptCheckUi> = persistentMapOf()
+
+    /**
+     * F2 (build 10113: the first message drawn twice for a frame): a bubble whose server row is shown is drawn as that
+     * row only. A failed bubble keeps its own place (its Try again), and a row this chat hides never takes a bubble.
+     */
+    private fun drawnOnce(
+        pending: ImmutableList<PendingSend>,
+        t: TranscriptState,
+        l: ChatLocal,
+    ): ImmutableList<PendingSend> {
+        fun shown(p: PendingSend): Boolean {
+            val key = p.serverRowKey?.takeIf { p.state != PendingState.Failed && it !in l.withdrawn } ?: return false
+            val row = t.indexOf(key).takeIf { it >= 0 }?.let(t.rows::getOrNull) ?: return false
+            return !(l.hiddenStopNote != null && row is PromptRow && row.text.trim() == l.hiddenStopNote)
+        }
+        return if (pending.none(::shown)) pending else pending.filterNot(::shown).toImmutableList()
+    }
 
     /** Newest first; the same instance while the bubbles are equal, so readers of it skip. */
     private fun pendingShown(pending: ImmutableList<PendingSend>): ImmutableList<PendingSend> {

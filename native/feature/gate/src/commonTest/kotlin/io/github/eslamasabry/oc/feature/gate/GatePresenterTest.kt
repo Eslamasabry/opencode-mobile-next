@@ -162,14 +162,14 @@ class GatePresenterTest {
     @Test
     fun `B-MIGR-011 the details line carries the step and class only, and space is said in plain units`() = runTest {
         val blocked =
-            GateInput.Blocked(GateBlockReason.LowSpace, neededBytes = 120L * 1024 * 1024, detail = "S0 · LowSpace")
+            GateInput.Blocked(GateBlockReason.LowSpace, neededBytes = 120L * 1_000_000, detail = "S0 · LowSpace")
         val h = Harness(this, blocked)
         runCurrent()
         val failed = assertIs<GateUi.Failed>(h.ui)
         assertEquals("S0 · LowSpace", failed.detail)
         assertEquals("120 MB", GatePresenter.formatBytes(failed.neededBytes!!))
         assertEquals("1 MB", GatePresenter.formatBytes(10))
-        assertEquals("1.5 GB", GatePresenter.formatBytes(1536L * 1024 * 1024))
+        assertEquals("1.5 GB", GatePresenter.formatBytes(1500L * 1_000_000))
     }
 
     @Test

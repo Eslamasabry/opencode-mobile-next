@@ -810,12 +810,6 @@ public class UndoFromHerePresenter(
         }
         if (shape != UndoShape.Unavailable) load()
         else mutable.update { it.copy(load = ReviewLoad.Ready) }
-        // No copy of files is kept in a folder that is not under Git: the switch would promise what cannot happen.
-        if (shape == UndoShape.Staged)
-            scope.launch {
-                if (setup.setup() == VersionControlSetupState.Absent)
-                    mutable.update { it.copy(noFileCopies = true, applyFiles = false) }
-            }
     }
 
     private fun block(
@@ -838,23 +832,27 @@ public class UndoFromHerePresenter(
                     .refresh() // the boundary this page is about; a failed read leaves it as it was
                 basis = review.basis()
             }
-            when (val prompt = review.prompt(promptId)) {
-                is Outcome.Failed ->
-                    mutable.update { it.copy(load = ReviewLoad.Ready, promptUnavailable = true) }
-                is Outcome.Ok ->
-                    mutable.update {
-                        it.copy(
-                            load = ReviewLoad.Ready,
-                            prompt = prompt.value,
-                            promptUnavailable = prompt.value == null,
-                        )
-                    }
-            }
+            // The page is drawn once, settled: every fact it words itself with is in before it leaves Loading. No copy
+            // of files is kept in a folder that is not under Git, so the switch is not offered there (and never shown
+            // first); the message count and the edited files are read the same way.
+            val noFileCopies = shape == UndoShape.Staged && setup.setup() == VersionControlSetupState.Absent
+            val prompt = review.prompt(promptId)
+            var count: Int? = null
+            var edited: kotlinx.collections.immutable.ImmutableList<String> = persistentListOf()
             if (shape == UndoShape.OneStep) {
-                val count = (review.messagesAfter(promptId) as? Outcome.Ok)?.value
-                val edited =
-                    (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
-                mutable.update { it.copy(messagesAfter = count, edited = edited) }
+                count = (review.messagesAfter(promptId) as? Outcome.Ok)?.value
+                edited = (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
+            }
+            mutable.update {
+                it.copy(
+                    load = ReviewLoad.Ready,
+                    prompt = (prompt as? Outcome.Ok)?.value,
+                    promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
+                    noFileCopies = noFileCopies,
+                    applyFiles = if (noFileCopies) false else it.applyFiles,
+                    messagesAfter = count,
+                    edited = edited,
+                )
             }
         }
     }
@@ -873,6 +871,13 @@ public class UndoFromHerePresenter(
             val result: Outcome<*> =
                 if (s.staged) review.stage(promptId, s.applyFiles, reviewed = basis)
                 else review.undoNow(promptId)
+            if (result is Outcome.Ok) {
+                // The page is leaving: it stays "working" until it is gone, so the server's own move of the boundary
+                // (which this undo caused) is never read as "the conversation changed" for a frame.
+                nav.back()
+                if (s.staged) nav.openStaged()
+                return@launch
+            }
             val stale =
                 ((result as? Outcome.Failed)?.failure as? Failure.Refused)?.reason ==
                     RefusalReason.StaleScope
@@ -882,10 +887,6 @@ public class UndoFromHerePresenter(
                     failure = if (stale) null else (result as? Outcome.Failed)?.failure,
                     block = if (stale) UndoBlock.Stale else it.block,
                 )
-            }
-            if (result is Outcome.Ok) {
-                nav.back()
-                if (s.staged) nav.openStaged()
             }
         }
     }
@@ -930,10 +931,6 @@ public class StagedPresenter(
     private var acting = false
 
     init {
-        // The review says why no files change when the folder is not under Git (no copies of files are kept there).
-        scope.launch {
-            if (setup.setup() == VersionControlSetupState.Absent) mutable.update { it.copy(noFileCopies = true) }
-        }
         if (shelf != null && state.value.phase == StagedPhase.Loading) {
             scope.launch {
                 val was = shelf.read(ReviewShelf.STAGED)?.staged ?: return@launch
@@ -977,26 +974,24 @@ public class StagedPresenter(
             mutable.update { it.copy(phase = StagedPhase.None, files = null, updating = false) }
             return
         }
+        // The review is drawn once, settled: its prompt, its message count and whether the folder keeps file copies
+        // (not under Git: none, and it says so) are read first, so the page never words itself two ways. Until then
+        // it waits (Loading, or the shelf's last picture).
+        val id = current.revert.messageId.raw
+        val prompt = review.prompt(id)
+        val count = (review.messagesAfter(id) as? Outcome.Ok)?.value
+        val noFileCopies = setup.setup() == VersionControlSetupState.Absent
+        if (reviewed != current) return
         mutable.update {
             it.copy(
                 phase = StagedPhase.Review,
                 updating = false,
                 files = current.revert.files,
-                prompt = null,
-                promptUnavailable = false,
-                messagesAfter = null,
-                failure = null,
-            )
-        }
-        val id = current.revert.messageId.raw
-        val prompt = review.prompt(id)
-        val count = (review.messagesAfter(id) as? Outcome.Ok)?.value
-        if (reviewed != current) return
-        mutable.update {
-            it.copy(
                 prompt = (prompt as? Outcome.Ok)?.value,
                 promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
                 messagesAfter = count,
+                noFileCopies = noFileCopies,
+                failure = null,
             )
         }
         shelf?.keep(ReviewShelf.STAGED, KeptReview(staged = KeptStaged.of(state.value)))

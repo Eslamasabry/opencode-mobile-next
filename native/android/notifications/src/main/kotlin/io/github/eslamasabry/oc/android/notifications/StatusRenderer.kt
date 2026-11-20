@@ -29,7 +29,11 @@ public class StatusRenderer(private val context: Context, private val words: Not
             NotificationCompat.Builder(localized, NotifyChannel.LiveConversations.id)
                 .setSmallIcon(R.drawable.notify_ic_status)
                 .setContentTitle(content.title)
-                .setContentText(content.text.ifEmpty { content.lines.firstOrNull().orEmpty() })
+                .setContentText(
+                    if (content.stopping) words.text(R.string.notify_status_stopping)
+                    else if (content.stopFailed) words.text(R.string.notify_status_stop_failed)
+                    else content.text.ifEmpty { content.lines.firstOrNull().orEmpty() }
+                )
                 .setContentIntent(openIntent(CONTENT_REQUEST, null, content))
                 .setOngoing(ongoing)
                 .setAutoCancel(!ongoing)
@@ -63,7 +67,9 @@ public class StatusRenderer(private val context: Context, private val words: Not
         }
         // A bar only when a real fraction is known: never an endless spinner (B-ANDR-042).
         content.progress?.let { builder.setProgress(StatusContent.MAX_PROGRESS, it, false) }
-        content.actions.forEach { builder.addAction(action(it, content)) }
+        content.actions
+            .filterNot { content.stopping && it == StatusAction.StopReply }
+            .forEach { builder.addAction(action(it, content)) }
         if (chip != null && ongoing) {
             builder.setRequestPromotedOngoing(true)
             builder.setShortCriticalText(words.plural(chip.pluralRes, chip.count, chip.count))

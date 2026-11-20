@@ -41,6 +41,10 @@ class StatusActionReceiver : BroadcastReceiver() {
             context.replyWatch.body.onRowDismissed(intent)
         }
         val hub = context.platformHub
+        // The row says "Stopping…" at once and settles when the stop call ends.
+        val attention = context.attentionRuntime
+        hub.onStopRequested = attention::onStopRequested
+        hub.onStopSettled = attention::onStopSettled
         val pending = goAsync()
         hub.scope.launch {
             try {

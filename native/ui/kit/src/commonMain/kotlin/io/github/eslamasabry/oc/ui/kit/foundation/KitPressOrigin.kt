@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import kotlin.math.roundToInt
@@ -64,9 +65,17 @@ public class KitPressOrigin(private val time: TimeSource = TimeSource.Monotonic)
 
 /**
  * One press that may open a menu: the pressed part's [bounds] in the window (px), the finger's [point] in the window
- * when it is known (a hold), and the [owner] that keeps a held face while that menu is open (null: none).
+ * when it is known (a hold), and the [owner] that keeps a held face while that menu is open (null: none). [focus] is
+ * the face of a held message (F4, option C): its menu opens on that face, a step clear of it, and the page dims around
+ * it; null for every other press.
  */
-public data class KitPress(val bounds: IntRect, val point: IntOffset? = null, val owner: Any? = null)
+public data class KitPress(val bounds: IntRect, val point: IntOffset? = null, val owner: Any? = null, val focus: KitFocusFace? = null)
+
+/**
+ * The visible face of a held message, in window px, and its outline (a prompt's bubble, or a reply's own block): its
+ * menu opens on it and the page's dim leaves it bright (F4, option C).
+ */
+public data class KitFocusFace(val bounds: IntRect, val shape: Shape)
 
 /** One record for the app (a press opens at most one menu); a test may provide its own. */
 public val LocalKitPressOrigin: ProvidableCompositionLocal<KitPressOrigin> = staticCompositionLocalOf { KitPressOrigin() }

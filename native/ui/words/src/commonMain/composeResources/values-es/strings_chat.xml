@@ -1370,7 +1370,6 @@
     <string name="stageStartingLinux">Iniciando Linux…</string>
     <string name="stageStartingOpenCode">Iniciando OpenCode…</string>
     <string name="stageStartingHelper">Iniciando el ayudante de los agentes…</string>
-    <string name="stageStartingAgents">Iniciando los agentes…</string>
     <string name="stageStartingAgent">Iniciando %1$s…</string>
     <string name="stageOpeningConversation">Abriendo la conversación…</string>
     <string name="kitTurnLiveStillThinking">Sigue pensando</string>

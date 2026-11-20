@@ -197,7 +197,7 @@ class PhoneGateTest {
                         ThisPhoneAnswer(
                             AnswerTone.Ok,
                             AnswerHeadline.Running,
-                            line = AnswerLine.Storage(700L * 1024 * 1024),
+                            line = AnswerLine.Storage(700L * 1_000_000),
                         ),
                     details =
                         PhoneDetailsUi(

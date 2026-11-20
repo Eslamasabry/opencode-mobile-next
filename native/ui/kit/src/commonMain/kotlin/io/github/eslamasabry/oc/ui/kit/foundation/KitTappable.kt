@@ -213,11 +213,14 @@ internal class PlacedBox {
 
     fun pressed(): IntRect? = coordinates?.takeIf { it.isAttached }?.boundsInWindow()?.toIntRect()
 
-    /** The press a hold records: the part's box, the finger's point in the window, and this part as the held one. */
-    fun held(): KitPress? {
+    /**
+     * The press a hold records: the part's box, the finger's point in the window, and this part as the held one; with
+     * a message's [face], that face too (its menu opens on it and the page dims around it).
+     */
+    fun held(face: KitMessageFace? = null): KitPress? {
         val c = coordinates?.takeIf { it.isAttached } ?: return null
         val point = down?.let { c.localToWindow(it) }?.let { IntOffset(it.x.roundToInt(), it.y.roundToInt()) }
-        return KitPress(c.boundsInWindow().toIntRect(), point, owner = this)
+        return KitPress(c.boundsInWindow().toIntRect(), point, owner = this, focus = face?.face())
     }
 }
 
@@ -248,20 +251,25 @@ internal fun Modifier.kitHeldFace(ink: Color, shape: Shape = RectangleShape, hel
  * finger, instead of from the screen's corner; while that menu is open the content keeps a held face in [shape]
  * behind it, so it is plain which message the menu acts on (cut audit 2, finding 13). The hold plays `LongPress`. No
  * minimum size and no resting surface: the content keeps its natural height.
+ *
+ * With a message's [face] (F4, option C) the press carries that face: the menu opens on it, a step clear, and dims the
+ * page around it, so the face left bright is the mark and no held band is drawn (a menu in a popup window, which
+ * cannot dim the page, keeps the band).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-public fun Modifier.kitMenuHold(label: String, onOpen: () -> Unit, shape: Shape = RectangleShape): Modifier {
+public fun Modifier.kitMenuHold(label: String, onOpen: () -> Unit, shape: Shape = RectangleShape, face: KitMessageFace? = null): Modifier {
     val platform = LocalKitPlatform.current
     val hapticsOn = LocalKitAppearance.current.haptics
     val ink = LocalKitColors.current.tone(TextTone.Primary)
     val origin = LocalKitPressOrigin.current
     val observer = LocalKitTapObserver.current
     val placed = remember { PlacedBox() }
+    val dims = face != null && io.github.eslamasabry.oc.ui.kit.modal.LocalKitMenuLayer.current != null
     return this
         .onPlaced { placed.coordinates = it }
         .kitPressPoint(placed)
-        .kitHeldFace(ink, shape) { origin.holding === placed }
+        .kitHeldFace(ink, shape) { !dims && origin.holding === placed }
         .combinedClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
@@ -269,12 +277,12 @@ public fun Modifier.kitMenuHold(label: String, onOpen: () -> Unit, shape: Shape 
             onLongClickLabel = label,
             hapticFeedbackEnabled = false,
             onClick = {
-                placed.held()?.let(origin::record)
+                placed.held(face)?.let(origin::record)
                 if (observer != null) placed.pressed()?.let(observer::acted)
                 onOpen()
             },
             onLongClick = {
-                placed.held()?.let(origin::record)
+                placed.held(face)?.let(origin::record)
                 if (hapticsOn) platform.haptic(KitHaptic.LongPress)
                 onOpen()
             },
