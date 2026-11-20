@@ -35,7 +35,7 @@ class PhoneUpdateChoices(
     private val dispatchers: AppDispatchers,
     private val runtime: BuiltinRuntime,
 ) : AgentUpdateChoices {
-    private val disk = PhoneChoiceInventory(app, phones)
+    private val disk = PhoneChoiceInventory(app, phones) { runtime.serverFacts.value.installedVersion }
     private val host = object : AgentChoiceHost {
         override suspend fun inventory() = disk.read()
         override suspend fun hasRoom(id: AgentId): Boolean = if (id == AgentId.OPENCODE) {

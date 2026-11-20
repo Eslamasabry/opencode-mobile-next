@@ -441,12 +441,15 @@ class AppPhoneAgents(
         val owner = agentOwner(ownerId())
         if (owner == null || needsRestart || !linux.installed) return@read emptyMap()
         val installing = setupJobs.anySetupRunning() != false
+        // The updater's own facts (the versions its last read kept) stand in for a live read that gave nothing: the
+        // offer must name every agent the updater sees behind, or the updater waits for a decision nobody is asked.
+        val kept = keptFacts(owner)
         buildMap {
             for (agent in phoneCatalog()) {
                 if (stop.isStopped) break
                 val present = PhoneAgentPayloads.present(linux, requireNotNull(agent.recipe).executable)
                 val answer = versionOf(owner, agent, present, installing, stop)
-                val version = answer?.get("foundVersion") as? String
+                val version = (answer?.get("foundVersion") as? String) ?: kept[agent.id.raw]?.found
                 if (version != null) put(agent.id, version)
             }
         }
