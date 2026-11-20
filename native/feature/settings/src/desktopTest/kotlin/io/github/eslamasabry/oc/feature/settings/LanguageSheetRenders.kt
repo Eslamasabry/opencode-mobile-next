@@ -9,7 +9,6 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
-import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.ui.LanguageBody
 import io.github.eslamasabry.oc.feature.settings.ui.LanguageMarkStyle
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -57,7 +56,7 @@ class LanguageSheetRenders {
                             onDismissRequest = {},
                             title = stringResource(Res.string.settingsV3Language),
                         ) {
-                            LanguageBody(chosen, object : SettingsActions {}, marks)
+                            LanguageBody(chosen, RecordingActions(), marks)
                         }
                     }
                 }
