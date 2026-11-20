@@ -37,7 +37,7 @@ public fun KitProgressRow(title: String, value: Float?, modifier: Modifier = Mod
         KitText(title, role = TypeRole.RowTitle)
         if (words.isNotEmpty()) {
             Spacer(Modifier.height(Space.S1.dp))
-            KitText(words, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText(words, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true)
         }
         Spacer(Modifier.height(Space.S2.dp))
         if (amount != null) key(amount) {

@@ -376,10 +376,11 @@ private fun FullLine(
                     else Modifier,
                     role = TypeRole.Body,
                     tone = TextTone.Primary,
+                    tabular = true,
                 )
                 if (shownSupporting != null) {
                     KitSwap(shownSupporting, Modifier.padding(top = Space.S1.dp), alignment = Alignment.TopStart) {
-                        KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = countdown)
+                        KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true)
                     }
                 }
                 KitReveal(visible = next != null) {
