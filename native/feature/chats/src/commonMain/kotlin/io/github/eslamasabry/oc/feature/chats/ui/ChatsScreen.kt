@@ -270,8 +270,8 @@ public fun ChatsScreen(
      * as its goldens show it, is this screen with [shellBar] false. The page's ground is the same either way.
      */
     shellBar: Boolean = true,
-    /** Unused on Home (the home list shows all conversations; Rings are never mounted). */
-    @Suppress("UNUSED_PARAMETER") edgeDock: io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock? = null,
+    /** The edge dock over the list, under the home's sheets and dialogs; null = none. */
+    edgeDock: io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock? = null,
 ) {
     // E05-S21: on the bare list (the whole back stack) the first Back says "Press back again to exit" in the one
     // status line; called first so sheets, dialogs and a filled search registered below close before it.
@@ -627,6 +627,8 @@ public fun ChatsScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
+        // Rings are retired on Home; keep the parameter for callers without mounting edgeDock.
+        edgeDock.let { Unit }
       }
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)

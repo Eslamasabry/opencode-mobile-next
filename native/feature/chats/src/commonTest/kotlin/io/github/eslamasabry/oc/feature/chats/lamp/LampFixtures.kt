@@ -44,7 +44,6 @@ internal fun lrow(
     pinned: Boolean = false,
     last: Long? = null,
     open: Boolean = false,
-    ownStateRunning: Boolean = state == DockListState.Working,
 ) = DockListRow(
     ref = lref(id),
     name = name,
@@ -63,7 +62,6 @@ internal fun lrow(
     lastActivityMs = last,
     isOpen = open,
     pulse = 0,
-    ownStateRunning = ownStateRunning,
 )
 
 internal fun lmodel(vararg rows: DockListRow, more: Int = 0, hidden: List<DockListHidden> = emptyList()) =
