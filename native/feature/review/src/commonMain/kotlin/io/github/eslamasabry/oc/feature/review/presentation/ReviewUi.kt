@@ -256,6 +256,8 @@ public data class UndoFromHereUi(
     val previewFiles: ImmutableList<FileDiff>? = null,
     /** True when an earlier go-back is already waiting and confirming here replaces it. */
     val replacingExisting: Boolean = false,
+    /** True when the conversation's project folder is confirmed not to be a Git repository (no file snapshots). */
+    val notGitRepository: Boolean = false,
     val applyFiles: Boolean = true,
     val working: Boolean = false,
     val block: UndoBlock? = null,

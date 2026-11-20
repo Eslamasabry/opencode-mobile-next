@@ -175,7 +175,6 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesLabel
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesLabelCount
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesStay
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggle
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggleHint
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConsequenceGone
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepDeleteAction
@@ -189,6 +188,7 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertMessagesLeave
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertMessagesLeaveUnknown
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertMessagesLeaveZero
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoFiles
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoGitFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPreviewFilesLabel
@@ -265,6 +265,7 @@ private fun Page(content: @Composable () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
     ) {
         content()
+        androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = Space.S3.dp))
     }
 }
 
@@ -1069,15 +1070,16 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
                             modifier = Modifier.testTag("undo-replacing-notice"),
                         )
                     }
-                    PromptGroup(state.prompt, state.promptUnavailable)
-                    val confirmedNoFiles = state.staged && state.previewFiles?.isEmpty() == true
+                    PromptGroup(state.prompt, state.promptUnavailable, maxLines = 2)
+                    val confirmedNoFiles =
+                        state.notGitRepository || (state.staged && state.previewFiles?.isEmpty() == true)
                     val filesOn = !confirmedNoFiles && (!state.staged || state.applyFiles)
                     if (state.staged && !confirmedNoFiles) {
                         KitRowGroup {
                             KitSwitchRow(
                                 title = stringResource(Res.string.reviewRevertFilesToggle),
                                 checked = state.applyFiles,
-                                supporting = stringResource(Res.string.reviewRevertFilesToggleHint),
+                                supporting = null,
                                 enabled =
                                     if (state.working)
                                         KitEnabled.Disabled(stringResource(Res.string.revertBusy))
@@ -1113,6 +1115,13 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
                             buildList {
                                 add(KitConsequence(messagesFact, KitConsequenceMark.Lost))
                                 when {
+                                    state.notGitRepository ->
+                                        add(
+                                            KitConsequence(
+                                                stringResource(Res.string.reviewRevertNoGitFiles),
+                                                KitConsequenceMark.Info,
+                                            )
+                                        )
                                     confirmedNoFiles || (filesKnown && fileItems.isEmpty()) ->
                                         add(
                                             KitConsequence(
@@ -1227,7 +1236,7 @@ private fun GoBackFileRow(file: GoBackFileItem, onOpenFile: ((String) -> Unit)?)
 }
 
 @Composable
-private fun PromptGroup(prompt: String?, unavailable: Boolean) {
+private fun PromptGroup(prompt: String?, unavailable: Boolean, maxLines: Int = 3) {
     KitRowGroup(label = stringResource(Res.string.reviewRevertPromptLabel)) {
         KitRow(
             title =
@@ -1237,7 +1246,7 @@ private fun PromptGroup(prompt: String?, unavailable: Boolean) {
                     prompt.isBlank() -> stringResource(Res.string.revertAttachmentPrompt)
                     else -> prompt.trim()
                 },
-            titleMaxLines = 3,
+            titleMaxLines = maxLines,
             modifier = Modifier.testTag("undo-prompt"),
         )
     }

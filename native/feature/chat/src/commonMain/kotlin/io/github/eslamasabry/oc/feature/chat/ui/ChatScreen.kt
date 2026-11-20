@@ -306,6 +306,7 @@ import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.revertBringBackShort
+import io.github.eslamasabry.oc.ui.words.res.revertClearAction
 import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.revertTranscriptBoundary
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
@@ -936,6 +937,22 @@ public fun ChatScreen(
                                             testTag = "chat-changes-open",
                                             icon = KitIcons.review,
                                         ),
+                                        if (state.canPutBack || state.status?.kind == ChatStatusKind.StagedUndo)
+                                            KitLineAction(
+                                                stringResource(Res.string.revertReview),
+                                                actions::reviewGoBack,
+                                                testTag = "chat-header-revert-review",
+                                                icon = KitIcons.undo,
+                                            )
+                                        else null,
+                                        if (state.canPutBack || state.status?.kind == ChatStatusKind.StagedUndo)
+                                            KitLineAction(
+                                                stringResource(Res.string.revertClearAction),
+                                                actions::putBack,
+                                                testTag = "chat-header-revert-bring-back",
+                                                icon = KitIcons.restore,
+                                            )
+                                        else null,
                                         prompts?.let {
                                             KitLineAction(
                                                 stringResource(Res.string.promptStashTitle),

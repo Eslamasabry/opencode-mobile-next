@@ -236,6 +236,23 @@ class UndoRedesignReviewRenders {
         )
     }
 
+    @Test
+    fun `render 09 preview no git`() = shoot("09-preview-no-git", solidVariants) {
+        UndoFromHereScreen(
+            state = UndoFromHereUi(
+                load = ReviewLoad.Ready,
+                staged = true,
+                available = true,
+                prompt = LONG_PROMPT,
+                messagesAfter = 3,
+                previewFiles = persistentListOf(),
+                notGitRepository = true,
+                applyFiles = false,
+            ),
+            actions = undoActions,
+        )
+    }
+
     private companion object {
         const val LONG_PROMPT =
             "Wait for the settled cart state in CheckoutBloc instead of sleeping 200 ms, then update the coupon retry test and verify all checkout assertions pass."

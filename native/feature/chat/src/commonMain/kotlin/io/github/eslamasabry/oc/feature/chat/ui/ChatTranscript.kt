@@ -517,6 +517,10 @@ internal fun ChatTranscriptList(
     val unique = listFacts.unique
     val tables = listFacts.tables
     val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
+    // Anchor the go-back teaching tip to the topmost prompt on short conversations so it sits in clear space
+    // above the first prompt rather than covering an earlier reply's last line.
+    val tipPrompt =
+        unique.lastOrNull { it is PromptRow }?.takeIf { unique.size <= 10 }?.key ?: newestPrompt
     // B8: the newest turn's footer carries "Send again" when its reply was cut off before any words.
     val newestFooter =
         unique.firstOrNull { it is PromptRow || it is FooterRow }?.takeIf { it is FooterRow }?.key
@@ -873,7 +877,7 @@ internal fun ChatTranscriptList(
                         onHideSteps = { stepsShown = false },
                         stopping = live?.stopping == true,
                         onGoBackPrompt = onGoBackPrompt,
-                        teachGoBack = row.key == newestPrompt,
+                        teachGoBack = row.key == tipPrompt,
                     )
                 }
                 if (display.timestampsVisible) {

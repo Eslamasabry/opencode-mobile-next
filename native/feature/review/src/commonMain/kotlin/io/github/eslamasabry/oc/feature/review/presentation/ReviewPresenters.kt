@@ -781,6 +781,7 @@ public class UndoFromHerePresenter(
     private val promptId: String,
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
+    private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
 ) : UndoFromHereActions {
     private val shape = review.shape()
     private val mutable =
@@ -844,10 +845,12 @@ public class UndoFromHerePresenter(
             }
             val promptOutcome = review.prompt(promptId)
             val count = (review.messagesAfter(promptId) as? Outcome.Ok)?.value
+            val notGit = setup.setup() == VersionControlSetupState.Absent
             val edited =
-                (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
+                if (notGit) persistentListOf()
+                else (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
             var serverFiles: ImmutableList<FileDiff>? = null
-            if (shape == UndoShape.Staged && !hadStaged && promptOutcome is Outcome.Ok && promptOutcome.value != null) {
+            if (shape == UndoShape.Staged && !hadStaged && !notGit && promptOutcome is Outcome.Ok && promptOutcome.value != null) {
                 // Messages-only staging (`files: false`) asks the server for its real preview without touching disk.
                 previewing = true
                 val previewed = review.stage(promptId, applyFiles = false, reviewed = basis)
@@ -867,6 +870,8 @@ public class UndoFromHerePresenter(
                             messagesAfter = count,
                             edited = edited,
                             replacingExisting = hadStaged,
+                            notGitRepository = notGit,
+                            applyFiles = if (notGit) false else it.applyFiles,
                         )
                     }
                 is Outcome.Ok ->
@@ -879,6 +884,8 @@ public class UndoFromHerePresenter(
                             edited = edited,
                             previewFiles = serverFiles,
                             replacingExisting = hadStaged,
+                            notGitRepository = notGit,
+                            applyFiles = if (notGit) false else it.applyFiles,
                         )
                     }
             }

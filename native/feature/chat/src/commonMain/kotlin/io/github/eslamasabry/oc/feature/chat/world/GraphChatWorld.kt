@@ -2889,6 +2889,19 @@ internal class GraphChatWorld(
 
     private fun fail(localId: Long, failure: Failure): Outcome<Unit> {
         setPending(localId) { it.copy(state = PendingState.Failed, failure = failure) }
+        if ((failure as? Failure.Refused)?.reason == RefusalReason.UndoUnresolved) {
+            val attached = currentAttached()
+            if (attached != null && attached.gateway.facet<StagedRevertGateway>() != null) {
+                // The server refused the send because a staged go-back is still active: keep the waiting line
+                // visible immediately and reconcile the stage directly from the server.
+                mutableUndone.value = ChatUndone.Staged
+                attached.graph.scope.launch(registry.mainContext) {
+                    (attached.gateway.session(sid) as? Outcome.Ok)?.value?.let {
+                        adoptUndone(attached.gateway, it)
+                    }
+                }
+            }
+        }
         return Outcome.Failed(failure)
     }
 

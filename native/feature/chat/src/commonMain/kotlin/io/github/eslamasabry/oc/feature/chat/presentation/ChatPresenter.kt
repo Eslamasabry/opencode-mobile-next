@@ -339,9 +339,19 @@ public class ChatPresenter(
             ChatUndone.Applied -> ChatStatusUi(UNDONE_STATUS, ChatStatusKind.Undone)
         }
 
+    private fun undoneNow(pending: List<PendingSend>): ChatUndone =
+        if (
+            world.undone.value == ChatUndone.None &&
+                pending.any {
+                    it.state == PendingState.Failed &&
+                        (it.failure as? Failure.Refused)?.reason == RefusalReason.UndoUnresolved
+                }
+        ) ChatUndone.Staged
+        else world.undone.value
+
     /** One-tap "Bring back" from the chat (or `/redo`): clears a staged go-back or restores an applied one. */
     override fun putBack() {
-        when (world.undone.value) {
+        when (undoneNow(world.pending.value)) {
             ChatUndone.None -> Unit
             ChatUndone.Staged,
             ChatUndone.Applied ->
@@ -353,11 +363,11 @@ public class ChatPresenter(
     }
 
     override fun reviewGoBack() {
-        if (world.undone.value == ChatUndone.Staged) nav.open(ReviewRoute.Staged(world.ref))
+        if (undoneNow(world.pending.value) == ChatUndone.Staged) nav.open(ReviewRoute.Staged(world.ref))
     }
 
     override fun askKeepGoBack() {
-        if (world.undone.value == ChatUndone.Staged)
+        if (undoneNow(world.pending.value) == ChatUndone.Staged)
             local.update { it.copy(confirm = ChatConfirm.KeepGoBack, actionFailure = null) }
     }
 
@@ -478,7 +488,7 @@ public class ChatPresenter(
                             receiptResult = it,
                         )
                     }
-                    ?: undoneLine(world.undone.value)
+                    ?: undoneLine(undoneNow(pending))
                     ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
                 l,
               ),
@@ -503,7 +513,7 @@ public class ChatPresenter(
                         }
                         .toImmutableList(),
             newestRowKey = t.newestKey,
-            canPutBack = world.undone.value != ChatUndone.None,
+            canPutBack = undoneNow(pending) != ChatUndone.None,
             canBackground = canBackground(t.run.busy, l),
             live =
                 if (t.run.busy)

@@ -245,21 +245,22 @@
         <item quantity="other">Show %1$d more files</item>
     </plurals>
     <string name="reviewRevertNoFiles">No project files changed after this prompt.</string>
+    <string name="reviewRevertNoGitFiles">Files can't be put back here because this project isn't a Git repository.</string>
     <string name="reviewRevertReplacingNotice">You already went back to an earlier prompt. Going back here replaces that point.</string>
-    <string name="reviewRevertCannotUndo">Commands already run and files outside this project stay as they are.</string>
-    <string name="reviewRevertCanBringBack">Bring everything back from chat until you keep this point.</string>
-    <string name="reviewRevertFilesStay">Project files stay as they are.</string>
+    <string name="reviewRevertCannotUndo">Commands already run and outside files won't be undone.</string>
+    <string name="reviewRevertCanBringBack">You can bring everything back from chat until you keep this point.</string>
+    <string name="reviewRevertFilesStay">Project files will stay as they are.</string>
     <plurals name="reviewRevertFilesGoBackCount">
-        <item quantity="one">1 project file goes back.</item>
-        <item quantity="other">%1$d project files go back.</item>
+        <item quantity="one">1 project file will go back.</item>
+        <item quantity="other">%1$d project files will go back.</item>
     </plurals>
-    <string name="reviewRevertFilesGoBackUnknown">Project files go back to before this prompt.</string>
+    <string name="reviewRevertFilesGoBackUnknown">Project files will go back to before this prompt.</string>
     <plurals name="reviewRevertMessagesLeave">
-        <item quantity="one">This prompt and 1 later message are hidden.</item>
-        <item quantity="other">This prompt and %1$d later messages are hidden.</item>
+        <item quantity="one">This prompt and 1 later message will be hidden.</item>
+        <item quantity="other">This prompt and %1$d later messages will be hidden.</item>
     </plurals>
-    <string name="reviewRevertMessagesLeaveZero">This prompt is hidden.</string>
-    <string name="reviewRevertMessagesLeaveUnknown">This prompt and later messages are hidden.</string>
+    <string name="reviewRevertMessagesLeaveZero">This prompt will be hidden.</string>
+    <string name="reviewRevertMessagesLeaveUnknown">This prompt and later messages will be hidden.</string>
     <string name="reviewRevertFileLines">+%1$d −%2$d</string>
     <string name="reviewRevertFileSupporting">%1$s · %2$s</string>
     <string name="reviewRevertRestoreTitle">Bring everything back</string>
