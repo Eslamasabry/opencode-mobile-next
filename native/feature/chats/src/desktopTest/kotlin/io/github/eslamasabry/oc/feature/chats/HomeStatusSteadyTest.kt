@@ -52,15 +52,17 @@ class HomeStatusSteadyTest {
             val before = top()
             state =
                 state.copy(download = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(10)))
-            mainClock.advanceTimeBy(16)
-            val firstFrame = top()
-            mainClock.advanceTimeBy(1_500)
-            val settled = top()
-            assertTrue(settled > before + 10f, "the line took room: $before -> $settled")
-            assertTrue(
-                firstFrame - before < (settled - before) * 0.6f,
-                "the list moved $before -> $firstFrame in one frame of a $before -> $settled drop",
-            )
+            // Frame by frame from the moment the line appears: no row may move more than a few px in one frame.
+            var last = before
+            var worst = 0f
+            repeat(60) {
+                mainClock.advanceTimeBy(16)
+                val now = top()
+                worst = maxOf(worst, kotlin.math.abs(now - last))
+                last = now
+            }
+            assertTrue(last > before + 10f, "the line took room: $before -> $last")
+            assertTrue(worst <= 8f, "a row moved $worst px in a single frame (list $before -> $last)")
         }
 
     @Test
