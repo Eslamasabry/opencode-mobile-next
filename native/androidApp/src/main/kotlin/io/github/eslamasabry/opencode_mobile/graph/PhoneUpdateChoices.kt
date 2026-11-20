@@ -72,9 +72,14 @@ class PhoneUpdateChoices(
     internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh().also { inventoried = true } }
     private val holds = UnaskedHolds { offer.value }
 
-    internal fun allowed(id: AgentId): Boolean = holds.unasked(id, inventoried) || engine.allowed(id)
+    internal fun allowed(id: AgentId): Boolean = engine.allowed(id).also { if (!it) holds.unasked(id, inventoried) }
     internal suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean =
-        withContext(dispatchers.io) { if (holds.unasked(id, inventoried)) start() else engine.startIfChosen(id, start) }
+        withContext(dispatchers.io) {
+            // An agent with no offer row is neither held nor updated: its inventory is read again (the row, and so
+            // the question, follows) and nothing downloads without a decision.
+            if (holds.unasked(id, inventoried)) refresh()
+            engine.startIfChosen(id, start)
+        }
 
     internal suspend fun updateShared(meteredAllowed: Boolean): Boolean = withContext(dispatchers.io) {
         engine.startShared(meteredAllowed) {
@@ -99,7 +104,7 @@ class PhoneUpdateChoices(
 
 private const val BYTES_PER_MB = 1_000_000L
 
-/** An agent that is not a row of the current offer cannot be asked about, so it is never held for a choice. */
+/** Says (once) that an agent has no row in the current offer: it is not updated, the caller reads again. */
 private class UnaskedHolds(private val current: () -> AgentUpdateOffer?) {
     private val log = AppLog.tagged("UpdateChoices")
     private val logged = mutableSetOf<AgentId>()
@@ -107,7 +112,7 @@ private class UnaskedHolds(private val current: () -> AgentUpdateOffer?) {
     fun unasked(id: AgentId, inventoried: Boolean): Boolean {
         val missing = inventoried && current()?.items?.none { it.id == id } != false
         if (missing && synchronized(logged) { logged.add(id) }) {
-            log.i { "hold has no offer row: ${id.raw} is not asked about, so it is not held" }
+            log.i { "hold has no offer row: ${id.raw}; the inventory is read again, nothing is updated unasked" }
         }
         return missing
     }
