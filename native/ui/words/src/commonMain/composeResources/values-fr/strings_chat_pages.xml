@@ -446,4 +446,5 @@
     <string name="reviewUndoTitle__eq1">Annuler 1 fichier modifié\u00A0?</string>
     <string name="reviewUndoBody">Cela masque les messages à partir de l’endroit où ces modifications ont commencé et remet vos fichiers comme ils étaient. Vous pouvez tout récupérer tant que vous n’avez pas supprimé les messages masqués.</string>
     <string name="reviewDone">Terminé</string>
+    <string name="reviewRevertNoSnapshot">Ce projet n’utilise pas Git, donc les fichiers ne peuvent pas être restaurés. L’annulation masque seulement les messages.</string>
 </resources>

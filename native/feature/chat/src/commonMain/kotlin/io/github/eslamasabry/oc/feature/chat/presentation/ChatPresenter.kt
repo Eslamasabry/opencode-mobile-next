@@ -373,6 +373,17 @@ public class ChatPresenter(
     }
 
     /** A connection line on the phone agents' server carries the helper's facts (Restart agent, starting, failed). */
+    /**
+     * A staged undo hides turns until it is reviewed, so its line (Review) stands above every failure: a refused send,
+     * a failed run or a refused link never takes the way back off the screen (the failed bubble sits under it). Only a
+     * lost connection, which the person must know first, comes before it.
+     */
+    private fun stagedFirst(line: ChatStatusUi?): ChatStatusUi? {
+        val staged = undoneLine(world.undone.value)?.takeIf { it.kind == ChatStatusKind.StagedUndo }
+        val connection = line?.kind == ChatStatusKind.Offline || line?.kind == ChatStatusKind.Connecting
+        return if (staged != null && !connection) staged else line
+    }
+
     private fun agentLine(line: ChatStatusUi?, l: ChatLocal): ChatStatusUi? =
         if (line == null || !world.serverIsAgentHelper ||
             (line.kind != ChatStatusKind.Offline && line.kind != ChatStatusKind.Connecting)
@@ -444,6 +455,7 @@ public class ChatPresenter(
             title = i.title ?: lastTitle,
             status =
               agentLine(
+                stagedFirst(
                 // Issue 147: an old phone agent conversation that continues in a new one is not offline; its message
                 // box says what happens instead.
                 (if (kept != null && world.readOnly.value?.restart == null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
@@ -456,6 +468,7 @@ public class ChatPresenter(
                     }
                     ?: undoneLine(world.undone.value)
                     ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
+                ),
                 l,
               ),
             phase =

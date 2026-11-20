@@ -253,6 +253,8 @@ public data class UndoFromHereUi(
     /** One step only: the paths the agent reported editing after the prompt. */
     val edited: ImmutableList<String> = persistentListOf(),
     val applyFiles: Boolean = true,
+    /** The folder is not under Git, so no file copies exist: files cannot be put back, and the page says so. */
+    val noFileCopies: Boolean = false,
     val working: Boolean = false,
     val block: UndoBlock? = null,
     val failure: Failure? = null,
@@ -289,6 +291,8 @@ public data class StagedUi(
     val messagesAfter: Int? = null,
     /** The server's preview; null when it gave none (that says nothing about whether files changed). */
     val files: ImmutableList<FileDiff>? = null,
+    /** The folder is not under Git, so no file copies exist: an empty list says why. */
+    val noFileCopies: Boolean = false,
     val busy: Boolean = false,
     val working: Boolean = false,
     val confirm: StagedConfirm? = null,

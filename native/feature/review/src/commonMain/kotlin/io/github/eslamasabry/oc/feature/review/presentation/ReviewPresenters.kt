@@ -781,6 +781,7 @@ public class UndoFromHerePresenter(
     private val promptId: String,
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
+    private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
 ) : UndoFromHereActions {
     private val shape = review.shape()
     private val mutable =
@@ -809,6 +810,12 @@ public class UndoFromHerePresenter(
         }
         if (shape != UndoShape.Unavailable) load()
         else mutable.update { it.copy(load = ReviewLoad.Ready) }
+        // No copy of files is kept in a folder that is not under Git: the switch would promise what cannot happen.
+        if (shape == UndoShape.Staged)
+            scope.launch {
+                if (setup.setup() == VersionControlSetupState.Absent)
+                    mutable.update { it.copy(noFileCopies = true, applyFiles = false) }
+            }
     }
 
     private fun block(
@@ -915,6 +922,7 @@ public class StagedPresenter(
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
     private val shelf: ReviewShelf? = null,
+    private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
 ) : StagedActions {
     private val mutable = MutableStateFlow(shelf?.peek(ReviewShelf.STAGED)?.staged?.frame() ?: StagedUi())
     public val state: StateFlow<StagedUi> = mutable.asStateFlow()
@@ -922,6 +930,10 @@ public class StagedPresenter(
     private var acting = false
 
     init {
+        // The review says why no files change when the folder is not under Git (no copies of files are kept there).
+        scope.launch {
+            if (setup.setup() == VersionControlSetupState.Absent) mutable.update { it.copy(noFileCopies = true) }
+        }
         if (shelf != null && state.value.phase == StagedPhase.Loading) {
             scope.launch {
                 val was = shelf.read(ReviewShelf.STAGED)?.staged ?: return@launch

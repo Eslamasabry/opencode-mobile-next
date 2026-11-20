@@ -480,4 +480,5 @@
     <string name="reviewUndoTitle__eq1">التراجع عن ملف واحد تغيّر؟</string>
     <string name="reviewUndoBody">يخفي هذا الرسائل من حيث بدأت هذه التغييرات، ويعيد ملفاتك كما كانت. يمكنك استعادة كل شيء إلى أن تحذف الرسائل المخفية.</string>
     <string name="reviewDone">تمّ</string>
+    <string name="reviewRevertNoSnapshot">هذا ليس مشروع Git، لذا لا يمكن إعادة الملفات. يخفي التراجع الرسائل فقط.</string>
 </resources>
