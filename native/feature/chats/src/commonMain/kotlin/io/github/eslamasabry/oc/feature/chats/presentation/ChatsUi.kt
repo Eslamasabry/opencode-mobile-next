@@ -186,8 +186,8 @@ public data class ChatsUi(
     /** A1 "Recent": the [ChatsState.RECENT_ROWS] latest of the rest, newest first. */
     val recent: ImmutableList<ConversationRowUi> = persistentListOf(),
     /**
-     * The rest after [recent], newest first. Shown only where the list stands beside a conversation (big screens), where
-     * the list is the way between conversations and All conversations is not offered a second time.
+     * The rest after [recent], newest first. Shown only where the list stands beside a conversation (big screens),
+     * where the list is the way between conversations and All conversations is not offered a second time.
      */
     val earlier: ImmutableList<ConversationRowUi> = persistentListOf(),
     /** The rows name their project (a dot and its name) only when the shown list spans more than one. */

@@ -76,67 +76,64 @@ class ListPaneHomeRenders {
         minutesAgo: Long,
         preview: String = "",
         dir: String = "/root/projects/oc_app",
-        agent: String = "opencode",
     ): ChatFeedItem =
         item(
             id,
             dir,
             at = NOW - minutesAgo * 60_000L,
             title = title,
-        ).copy(preview = preview, agentId = agent)
+        ).copy(preview = preview, agentId = "opencode")
+
+    private fun demoItems(): List<ChatFeedItem> =
+            listOf(
+            feedItem(
+                "explain",
+                "Explain this project",
+                0,
+                "Reading lib/ui/kit to map how the parts fit together").copy(agentId = "claude")
+                .copy(status = ChatStatus.Running, running = FeedRunning(NOW - 4 * 60_000L)),
+            feedItem(
+                "ask",
+                "Run the tests",
+                5,
+                "Wants to run npm test",
+            ).copy(status = ChatStatus.NeedsYou, permission = FeedPermission("req1", "npm test")),
+            feedItem(
+                "checkout",
+                "Fix flaky checkout test",
+                12,
+                "Made the test wait on the settled state",
+                dir = "/root/projects/shopfront").copy(agentId = "claude"),
+            feedItem(
+                "long",
+                "Rework the reconnect loop so a dropped stream refetches the session list and the open co" +
+                    "nversation instead of replaying the missed events from the last cursor",
+                20,
+                "Refetching now",
+            ),
+            feedItem("hi", "Hi", 60 * 26, "Hi! What would you like to work on today?"),
+            feedItem(
+                "who",
+                "You know who you are and what you do",
+                60 * 27,
+                "I am OpenCode, a coding agent working in your folder",
+                dir = "/root/projects/site",
+            ),
+            feedItem("ready", "Start the release notes", 60 * 30, "Ready when you are.").copy(agentId = "codex"),
+            feedItem("build", "What should we build?", 60 * 50, "Hi there, what should we build?"),
+            feedItem(
+                "help",
+                "Fix the login bug",
+                60 * 52,
+                "The token is read before the profile loads",
+                dir = "/root/projects/site",
+            ),
+            feedItem("o1", "Older one", 60 * 80, "This one is past the five"),
+            feedItem("o2", "Older two", 60 * 90, "So is this one", dir = "/root/projects/docs"),
+        )
 
     private fun homeState(): io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi {
-        val items =
-            listOf(
-                feedItem(
-                    "explain",
-                    "Explain this project",
-                    0,
-                    "Reading lib/ui/kit to map how the parts fit together",
-                    agent = "claude",
-                )
-                    .copy(status = ChatStatus.Running, running = FeedRunning(NOW - 4 * 60_000L)),
-                feedItem(
-                    "ask",
-                    "Run the tests",
-                    5,
-                    "Wants to run npm test",
-                ).copy(status = ChatStatus.NeedsYou, permission = FeedPermission("req1", "npm test")),
-                feedItem(
-                    "checkout",
-                    "Fix flaky checkout test",
-                    12,
-                    "Made the test wait on the settled state",
-                    dir = "/root/projects/shopfront",
-                    agent = "claude",
-                ),
-                feedItem(
-                    "long",
-                    "Rework the reconnect loop so a dropped stream refetches the session list and the open co" +
-                        "nversation instead of replaying the missed events from the last cursor",
-                    20,
-                    "Refetching now",
-                ),
-                feedItem("hi", "Hi", 60 * 26, "Hi! What would you like to work on today?"),
-                feedItem(
-                    "who",
-                    "You know who you are and what you do",
-                    60 * 27,
-                    "I am OpenCode, a coding agent working in your folder",
-                    dir = "/root/projects/site",
-                ),
-                feedItem("ready", "Start the release notes", 60 * 30, "Ready when you are.", agent = "codex"),
-                feedItem("build", "What should we build?", 60 * 50, "Hi there, what should we build?"),
-                feedItem(
-                    "help",
-                    "Fix the login bug",
-                    60 * 52,
-                    "The token is read before the profile loads",
-                    dir = "/root/projects/site",
-                ),
-                feedItem("o1", "Older one", 60 * 80, "This one is past the five"),
-                feedItem("o2", "Older two", 60 * 90, "So is this one", dir = "/root/projects/docs"),
-            )
+        val items = demoItems()
         val base =
             ChatsState.build(
                 ChatFeedSnapshot(items.toImmutableList()),
