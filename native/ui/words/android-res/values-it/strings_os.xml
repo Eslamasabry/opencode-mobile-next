@@ -176,7 +176,7 @@
     <string name="usage_widget_description">Quanto resta su ogni limite del piano e quando si azzera.</string>
     <string name="usage_widget_empty">Nessuna lettura dei limiti. Apri Utilizzo per collegare una fonte.</string>
     <string name="usage_widget_row_title">%1$s · %2$s</string>
-    <string name="usage_widget_left">%1$d% rimasti</string>
+    <string name="usage_widget_left">%1$d%% rimasti</string>
     <string name="usage_widget_resets">Si azzera tra %1$s</string>
     <string name="usage_widget_updated">Aggiornato %1$s fa</string>
     <string name="usage_widget_sign_in">Accedi</string>
@@ -196,7 +196,7 @@
     <string name="usage_widget_provider_codex">Codex</string>
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
-    <string name="usage_widget_column">%1$s %2$d% rimasti</string>
+    <string name="usage_widget_column">%1$s %2$d%% rimasti</string>
     <string name="usage_widget_short_hours">%1$d h</string>
     <string name="usage_widget_short_days">%1$d g</string>
     <string name="usage_widget_short_week">Settimana</string>
@@ -311,7 +311,7 @@
     <string name="widget_status_tasks_running">%1$d in esecuzione</string>
     <string name="widget_status_span_day">%1$d g</string>
     <string name="widget_status_plan">%1$s · %2$s</string>
-    <string name="widget_status_left">%1$d% rimasti</string>
+    <string name="widget_status_left">%1$d%% rimasti</string>
     <string name="widget_status_replace">Sostituisci questo widget: aggiungi Conversazioni o Stato</string>
     <string name="widget_allow_for">Consenti una volta: %1$s</string>
     <string name="widget_reply_for">Rispondi a %1$s</string>
