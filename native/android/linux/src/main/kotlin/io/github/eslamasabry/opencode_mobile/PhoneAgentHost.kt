@@ -198,9 +198,10 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         }
         // The binds this helper (and every agent it starts) gets are exactly the view recorded for it below.
         val view = linux.sharedStorageViewForLaunch()
+        val pin = InstalledHelperVersion.installName(linux.rootfs)
         val started =
             linux.startingWith(view) {
-                linux.startAgentProcess(profile, listOf("/bin/sh", "-c", hostScript(request.port)))
+                linux.startAgentProcess(profile, listOf("/bin/sh", "-c", hostScript(request.port, pin)))
             }
         launched.child = started
         launched.reader = drain(started)
@@ -312,7 +313,7 @@ private fun awaitStartup(started: Process) {
 // lock behind, and the first message then fails with "another Claude
 // Code process is refreshing it". No Claude process of this profile
 // runs now (the helper starts them all), so a lock left is stale.
-internal fun hostScript(port: Int): String {
+internal fun hostScript(port: Int, esbuildKey: String? = null): String {
     return """
             set -eu
             umask 077
@@ -324,6 +325,7 @@ internal fun hostScript(port: Int): String {
             else
                 unset NODE_COMPILE_CACHE
             fi
+            OC_ESBUILD_BLOCK
             IFS= read -r PASEO_PASSWORD
             export PASEO_PASSWORD
             export PASEO_LOG_LEVEL=fatal
@@ -343,4 +345,45 @@ internal fun hostScript(port: Int): String {
         .trimIndent()
         // Node.js the host and its agents start keeps this phone's safe mode (#117).
         .replace("exec /home/oc/.local/bin/paseo", NodeCompatState.SERVER_ENV + "exec /home/oc/.local/bin/paseo")
+        .replace("OC_ESBUILD_BLOCK", esbuildCacheBlock(esbuildKey))
+}
+
+private val ESBUILD_KEY = Regex("^[0-9A-Za-z][0-9A-Za-z._+-]{0,79}$")
+
+/**
+ * The helper's esbuild cache (faster start), as shell text. Every step is optional: when the pin's folder name is
+ * unusable, a folder or the hook file cannot be written, nothing is exported and the helper starts the normal way.
+ * Folders of other pins are removed first, so a pin that moved leaves nothing behind. The hook is written to a
+ * temporary name and renamed, so a launch never leaves a half-written hook for Node to load.
+ */
+internal fun esbuildCacheBlock(key: String?): String {
+    if (key == null || !ESBUILD_KEY.matches(key)) return "# No esbuild cache: no pin folder name."
+    return """
+# The esbuild cache is optional: any failure below starts the helper the normal slow way.
+oc_eb_root="${'$'}HOME/.cache/oc-esbuild"
+oc_eb_dir="${'$'}oc_eb_root/$key"
+oc_eb_hook="${'$'}oc_eb_dir/hook.cjs"
+oc_eb_pin="${'$'}oc_eb_dir/pin-root"
+if mkdir -p "${'$'}oc_eb_root" 2>/dev/null; then
+    for oc_eb_old in "${'$'}oc_eb_root"/*; do
+        if [ -d "${'$'}oc_eb_old" ] && [ "${'$'}oc_eb_old" != "${'$'}oc_eb_dir" ]; then
+            rm -rf "${'$'}oc_eb_old" 2>/dev/null || true
+        fi
+    done
+    if mkdir -p "${'$'}oc_eb_dir/cache" 2>/dev/null; then
+        # The preload reads the pinned install's folder from this file (it has no environment variable), then the
+        # hook itself is written last: a hook is only ever present beside a pin file.
+        if printf '%s' '/home/oc/.local/share/oc-paseo/$key' 2>/dev/null > "${'$'}oc_eb_pin.new" \
+            && mv -f "${'$'}oc_eb_pin.new" "${'$'}oc_eb_pin" 2>/dev/null \
+            && cat 2>/dev/null > "${'$'}oc_eb_hook.new" <<'OC_ESBUILD_HOOK_END'
+${EsbuildCacheHook.SOURCE}OC_ESBUILD_HOOK_END
+        then
+            if mv -f "${'$'}oc_eb_hook.new" "${'$'}oc_eb_hook" 2>/dev/null && [ -s "${'$'}oc_eb_hook" ]; then
+                export NODE_OPTIONS="--require \"${'$'}oc_eb_hook\"${'$'}{NODE_OPTIONS:+ ${'$'}NODE_OPTIONS}"
+            fi
+        fi
+        rm -rf "${'$'}oc_eb_hook.new" "${'$'}oc_eb_pin.new" 2>/dev/null || true
+    fi
+fi
+"""
 }
