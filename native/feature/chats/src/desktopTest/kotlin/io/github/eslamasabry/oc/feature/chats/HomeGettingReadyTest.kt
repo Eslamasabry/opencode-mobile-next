@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.util.Locale
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -199,6 +200,20 @@ class HomeGettingReadyTest {
             show(ui(phoneSource(), agentsSource(unreachable = true)))
             assertTrue(spoken("kit-recent-row").none { "Getting ready" in it }, "rows: ${spoken("kit-recent-row")}")
             assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
+        }
+
+    @Test
+    fun `B-HOME-227 a source that did not start is said once in a notice with Try again, never on the rows`() =
+        runDesktopComposeUiTest(360, 900) {
+            val said = "The agents on this phone didn't start"
+            // Waiting is not failing: while the helper starts the notice is not shown.
+            val show = home(ui(phoneSource(), agentsSource(starting = AppStart.Agents)))
+            assertTrue(texts().none { said in it }, "texts: ${texts()}")
+            // Refused for good: Home says so once, with its way forward, and no row repeats it.
+            show(ui(phoneSource(), agentsSource(unreachable = true)))
+            assertEquals(1, texts().count { said in it }, "texts: ${texts()}")
+            assertTrue(texts().any { it == "Try again" }, "texts: ${texts()}")
+            assertTrue(spoken("kit-recent-row").none { "Getting ready" in it || "Not answering" in it }, "rows: ${spoken("kit-recent-row")}")
         }
 
     private companion object {
