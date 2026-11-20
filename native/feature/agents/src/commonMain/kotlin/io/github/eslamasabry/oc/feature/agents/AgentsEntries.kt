@@ -110,18 +110,29 @@ public class AgentsEntries(
         }
         entry<AgentsRoute.Home> {
             val vm = metroViewModel<AgentsViewModel>()
+            // The agents' update sheet's second door: its own ViewModel, joined to the page's state and actions here.
+            val door = metroViewModel<io.github.eslamasabry.oc.feature.agents.hub.AgentUpdateDoorViewModel>()
+            val updatesReady by door.ready.collectAsStateWithLifecycle()
             LifecycleResumeEffect(vm) {
                 vm.refreshPhone()
                 onPauseOrDispose {}
             }
-            val state by vm.state.collectAsStateWithLifecycle()
+            val pageState by vm.state.collectAsStateWithLifecycle()
+            val state =
+                androidx.compose.runtime.remember(pageState, updatesReady) {
+                    pageState.copy(updatesReady = updatesReady)
+                }
+            val actions =
+                androidx.compose.runtime.remember(vm, door) {
+                    io.github.eslamasabry.oc.feature.agents.hub.AgentsWithUpdateDoor(vm, door)
+                }
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             val arrival by arrivals.active.collectAsStateWithLifecycle()
             DisposableEffect(Unit) { onDispose { arrivals.dismiss(ShowMeTarget.Agents) } }
             environment.Provide {
                 AgentsScreen(
                     state,
-                    vm,
+                    actions,
                     hubState,
                     vm,
                     ownActions = vm,

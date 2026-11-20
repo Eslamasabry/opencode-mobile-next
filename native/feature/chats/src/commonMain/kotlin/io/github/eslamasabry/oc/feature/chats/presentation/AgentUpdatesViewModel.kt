@@ -13,9 +13,14 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoices
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
+import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * "Updates for your agents" on Home (owner 2026-11-19; the engine's update-choice contract). Its own ViewModel so
@@ -29,9 +34,22 @@ import kotlinx.coroutines.flow.stateIn
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 public class AgentUpdatesViewModel(
     private val nav: AppNavigator,
+    pacer: Pacer,
     choices: AgentUpdateChoices = NoAgentUpdateChoices,
 ) : ViewModel(), AgentUpdateActions {
     private val model = AgentUpdateSheetModel(choices, viewModelScope)
+
+    init {
+        // While the sheet asks its question, its reading is renewed on the pacer (at once on coming back to the app).
+        viewModelScope.launch {
+            model.ui
+                .map { it.sheet.visible && it.sheet.refused.isEmpty() }
+                .distinctUntilChanged()
+                .collectLatest { open ->
+                    if (open) pacer.ticks(AgentUpdateTimers.sheetReading).collect { model.review(reread = true) }
+                }
+        }
+    }
 
     public val state: StateFlow<AgentUpdateHomeUi> =
         model.ui.stateIn(viewModelScope, SharingStarted.WhileSubscribed(KEEP_MS), model.current())

@@ -80,6 +80,8 @@ public data class AgentUpdateSheetUi(
     val freesBytes: Long = 0,
     val freesKnown: Boolean = true,
     val short: AgentUpdateShortSpace? = null,
+    /** Free space where agents install, when known: a refusal for room says it with the download's size. */
+    val freeBytes: Long? = null,
     val network: AgentUpdateNetwork = AgentUpdateNetwork.Unmetered,
     val updating: Int = 0,
     val removing: Int = 0,
@@ -126,8 +128,14 @@ public object AgentUpdateSheetRules {
     public fun removals(offer: AgentUpdateOffer, picked: Map<AgentId, AgentUpdateChoice>): List<AgentId> =
         decision(offer, picked).filterValues { it == AgentUpdateChoice.Remove }.keys.toList()
 
-    /** Home's line shows while an offer waits for its answer. */
-    public fun pending(offer: AgentUpdateOffer?): Boolean = offer != null && !offer.answered
+    /**
+     * Home's Review line shows while an offer waits for a real decision: before any answer, and after Not now (the
+     * engine counts Not now as answered, with no choice kept for an Optional agent). On 10110 the line went with
+     * `answered`, so after Not now it vanished and nothing led back to the sheet.
+     */
+    public fun pending(offer: AgentUpdateOffer?): Boolean =
+        offer != null &&
+            (!offer.answered || offer.items.any { it.group == AgentUpdateGroup.Optional && it.choice == null })
 
     /** What the sheet shows for [offer] with the person's [picked] answers (the confirm and progress come after). */
     public fun sheet(
@@ -177,6 +185,7 @@ public object AgentUpdateSheetRules {
             freesBytes = removes.sumOf { it.installedBytes ?: 0L },
             freesKnown = removes.all { it.installedBytes != null },
             short = if (free != null && download > free) AgentUpdateShortSpace(download, free) else null,
+            freeBytes = free,
             network = offer.network,
             updating = updates.size,
             removing = removes.size,
@@ -201,6 +210,12 @@ public object AgentUpdateSheetRules {
                 AgentRefusalUi(name, started.refused[id] ?: RemovalRefusal.Failed)
             }
 
+    /** A refusal for room is old once the engine reads a different free space (the person freed some, or used some). */
+    public fun roomRefusalOld(failure: Failure?, offer: AgentUpdateOffer?, failedAtFree: Long?): Boolean =
+        (failure as? Failure.Media)?.problem == io.github.eslamasabry.oc.core.common.MediaProblem.DownloadNoSpace &&
+            offer != null &&
+            offer.freeBytes != failedAtFree
+
     /** Why Keep is not offered; null when it is. */
     private fun keepBlock(item: AgentUpdateItem): AgentKeepBlock? =
         if (item.keepAllowed) null else item.notKeptReason ?: AgentKeepBlock.NotSupportedAnyMore
@@ -217,8 +232,10 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val toConfirm: List<AgentRemovalAskUi> = emptyList(),
         val working: Boolean = false,
         val failure: Failure? = null,
-        /** The offer key answered here: the sheet stays closed for it until Review, whatever the engine says first. */
-        val closedKey: String? = null,
+        /** The free space the engine reported when it refused for room: a fresh reading makes that refusal old. */
+        val failedAtFree: Long? = null,
+        /** The offer answered here: the sheet stays closed for it until a new offer (a Review) comes. */
+        val closedAt: AgentUpdateOffer? = null,
         /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
         val refused: List<AgentRefusalUi> = emptyList(),
     )
@@ -235,10 +252,17 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun current(): AgentUpdateHomeUi = build(offers.value, local.value)
 
     private fun build(offer: AgentUpdateOffer?, now: Local): AgentUpdateHomeUi {
-        val due = offer != null && offer.sheetDue && offer.appUpdateKey != now.closedKey
+        // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer
+        // and the sheet opens again, even when this page outlived the answer.
+        val due = offer != null && offer.sheetDue && offer != now.closedAt
         val sheet =
             AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty())
-                .copy(asking = now.toConfirm.firstOrNull(), working = now.working, failure = now.failure)
+                .copy(
+                    asking = now.toConfirm.firstOrNull(),
+                    working = now.working,
+                    failure =
+                        now.failure.takeUnless { AgentUpdateSheetRules.roomRefusalOld(it, offer, now.failedAtFree) },
+                )
         return AgentUpdateHomeUi(
             sheet = sheet.copy(visible = due || now.refused.isNotEmpty(), refused = now.refused.toImmutableList()),
             pending = AgentUpdateSheetRules.pending(offer),
@@ -287,17 +311,21 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         log.i { "update sheet: decided " + decision.entries.joinToString { "${it.key.raw}=${it.value}" } }
         local.update { it.copy(working = true, failure = null) }
         scope.launch {
-            when (val outcome = engine.decide(decision)) {
+            val outcome = engine.decide(decision)
+            AgentUpdateChainLog.log.i { "update sheet: " + AgentUpdateChainLog.outcome(outcome) }
+            when (outcome) {
                 is Outcome.Ok -> {
                     val refused = AgentUpdateSheetRules.refused(offer, decision, outcome.value)
-                    local.update { it.copy(working = false, closedKey = offer.appUpdateKey, refused = refused) }
+                    local.update { it.copy(working = false, closedAt = offer, refused = refused) }
                 }
                 is Outcome.Failed ->
                     // Busy is waiting, not failing: the choice is kept and applied when the phone is free.
                     if ((outcome.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy) {
-                        local.update { it.copy(working = false, closedKey = offer.appUpdateKey) }
+                        local.update { it.copy(working = false, closedAt = offer) }
                     } else {
-                        local.update { it.copy(working = false, failure = outcome.failure) }
+                        local.update {
+                            it.copy(working = false, failure = outcome.failure, failedAtFree = offer.freeBytes)
+                        }
                     }
             }
         }
@@ -307,15 +335,20 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun notNow() {
         val offer = offers.value
         if (choices == null || offer == null || local.value.working) return
-        local.update { it.copy(closedKey = offer.appUpdateKey, toConfirm = emptyList(), failure = null) }
+        local.update { it.copy(closedAt = offer, toConfirm = emptyList(), failure = null) }
         log.i { "update sheet: not now" }
         scope.launch { choices.notNow() }
     }
 
     /** Home's Review: the sheet shows again for the current offer. */
-    public fun review() {
+    /**
+     * Home's Review: the sheet shows again for the current offer. [reread] (the open sheet's timer): only the engine's
+     * reading is asked again (free space, versions), so the room line and the button follow by themselves; a refusal
+     * on screen stays until the reading changes.
+     */
+    public fun review(reread: Boolean = false) {
         val engine = choices ?: return
-        local.update { it.copy(closedKey = null, failure = null) }
+        if (!reread) local.update { it.copy(closedAt = null, failure = null) }
         scope.launch { engine.review() }
     }
 
@@ -383,7 +416,7 @@ public object NoAgentUpdateChoices : AgentUpdateChoices {
  */
 internal class AgentUpdateChainLog {
     private var offerLine: String? = null
-    private var row = false
+    private var rowLine: String? = null
     private var open = false
 
     fun told(offer: AgentUpdateOffer?, home: AgentUpdateHomeUi, bound: Boolean) {
@@ -394,14 +427,38 @@ internal class AgentUpdateChainLog {
             offerLine = line
             log.i { line }
         }
-        val rowNow = home.pending && !home.sheet.visible
-        if (rowNow && !row) log.i { "home: review row shown" }
-        row = rowNow
+        // The Review line's decision, said on every launch and on every change.
+        val row =
+            when {
+                home.pending && !home.sheet.visible -> "home: review row shown"
+                home.sheet.visible -> "home: review row hidden (sheet open)"
+                offer == null -> "home: review row hidden (no offer)"
+                else -> "home: review row hidden (every agent decided)"
+            }
+        if (row != rowLine) {
+            rowLine = row
+            log.i { row }
+        }
         if (home.sheet.visible && !open) log.i { "update sheet: opened" }
         open = home.sheet.visible
     }
 
     companion object {
         val log = AppLog.tagged("AgentUpdates")
+
+        /** What decide() answered, in one line: what started, or the kind of refusal (no text from the failure). */
+        fun outcome(outcome: Outcome<AgentUpdateStarted>): String =
+            when (outcome) {
+                is Outcome.Ok ->
+                    "started updating=${outcome.value.updating.size} removing=${outcome.value.removing.size} " +
+                        "kept=${outcome.value.kept.size} refused=${outcome.value.refused.size}"
+                is Outcome.Failed ->
+                    "refused " +
+                        when (val f = outcome.failure) {
+                            is Failure.Media -> f.problem.name
+                            is Failure.Runtime -> f.problem.name
+                            else -> f::class.simpleName.orEmpty()
+                        }
+            }
     }
 }

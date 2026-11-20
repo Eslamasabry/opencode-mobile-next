@@ -50,4 +50,5 @@
     <string name="agentUpdatesFailed">Gli aggiornamenti non sono partiti.</string>
     <string name="agentUpdatesNoSpace">Non c'è abbastanza spazio su questo telefono per questi aggiornamenti. Mantieni o rimuovi un agente, oppure libera spazio.</string>
     <string name="agentUpdatesNotRemoved">%1$s non è stato rimosso.</string>
+    <string name="agentUpdatesReviewAction">Rivedi aggiornamenti</string>
 </resources>

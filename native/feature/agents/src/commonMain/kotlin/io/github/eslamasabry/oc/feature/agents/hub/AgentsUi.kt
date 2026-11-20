@@ -15,6 +15,8 @@ import kotlinx.collections.immutable.persistentMapOf
  */
 public data class AgentsUi(
     val phone: PhoneAgentsState = PhoneAgentsState(),
+    /** The agents' update offer waits for a decision: the phone tab shows "Agent updates ready · Review". */
+    val updatesReady: Boolean = false,
     val computers: ImmutableList<AgentComputer> = persistentListOf(),
     /** Ready agents per computer, once read (a check or the row's "Check agents"). */
     val ready: ImmutableMap<ProfileId, ImmutableList<String>> = persistentMapOf(),
@@ -118,6 +120,9 @@ public enum class AgentsTab {
 
 public interface AgentsActions {
     public fun selectTab(tab: AgentsTab) {}
+
+    /** "Agent updates ready · Review": the update sheet again, on Home. */
+    public fun reviewAgentUpdates() {}
 
     /** Pull to refresh: this phone's agents, and on the computers tab every computer's agents. */
     public fun pullRefresh() {}

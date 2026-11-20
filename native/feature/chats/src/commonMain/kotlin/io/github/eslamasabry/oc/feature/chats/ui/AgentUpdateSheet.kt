@@ -31,8 +31,10 @@ import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -64,7 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.localAgentRowOptional
-import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReviewAction
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -82,6 +84,13 @@ internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateAct
     val shown = if (sheet.visible) sheet else last[0] ?: sheet
     // After the answer, a removal that did not happen is told here with its reason, never left silent.
     val result = shown.refused.isNotEmpty()
+    // What is chosen does not fit: the button is off and says why right at it (pinned, never scrolled away); Keep or
+    // Remove choices that make it fit turn it on again. On 10110 it stayed on and a tap seemed to do nothing.
+    val noRoom =
+        shown.short?.let {
+            val needs = PhoneSizes.text(it.neededBytes)
+            KitEnabled.Disabled(stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes)))
+        }
     KitSheet(
         visible = sheet.visible,
         onDismissRequest = if (result) actions::closeAgentUpdateResult else actions::agentUpdatesNotNow,
@@ -89,7 +98,13 @@ internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateAct
         closeLabel = stringResource(Res.string.kitSheetClose),
         primary =
             if (result) KitAction(stringResource(Res.string.chatsHomeDone), actions::closeAgentUpdateResult)
-            else KitAction(agentUpdatesButton(shown), actions::proceedAgentUpdates, working = shown.working),
+            else
+                KitAction(
+                    agentUpdatesButton(shown),
+                    actions::proceedAgentUpdates,
+                    enabled = noRoom ?: KitEnabled.Enabled,
+                    working = shown.working,
+                ),
         secondary =
             if (result) null else KitAction(stringResource(Res.string.appUpdateNotNow), actions::agentUpdatesNotNow),
     ) {
@@ -103,6 +118,13 @@ internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateAct
 /** The question: the Optional agents with their choices, the Needed parts, the totals and the lines under them. */
 @Composable
 private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
+    // A refusal is said first, at the top, and scrolled into view: under the list it was out of sight, so the button
+    // seemed to do nothing (10110, a refusal for room). The sheet stays open for a new choice.
+    shown.failure?.let { failure ->
+        KitNoticeInView(failure) { ways ->
+            KitErrorNotice(message = failureWords(failure, shown), failure = failure, modifier = ways)
+        }
+    }
     if (shown.optional.isNotEmpty())
         KitRowGroup(label = stringResource(Res.string.localAgentRowOptional)) {
             shown.optional.forEach { row -> OptionalRow(row, actions) }
@@ -119,17 +141,11 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
             shown.needed.forEach { row -> NeededRow(row) }
         }
     Totals(shown)
-    shown.short?.let {
-        val needs = PhoneSizes.text(it.neededBytes)
-        val words = stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes))
-        KitNotice(words, tone = StatusTone.Attention)
-    }
     when (shown.network) {
         AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
         AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
         AgentUpdateNetwork.Unmetered -> Unit
     }
-    shown.failure?.let { KitErrorNotice(message = failureWords(it), failure = it) }
     KitGroupNote(
         stringResource(Res.string.agentUpdatesAgentsLine),
         action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
@@ -244,7 +260,8 @@ internal fun agentUpdateStatus(updates: AgentUpdateHomeUi, actions: AgentUpdateA
             kind = KitStatusKind.Update,
             id = "agent-updates:review",
             message = stringResource(Res.string.agentUpdatesReady),
-            // Nothing is wrong: an answer is waiting. A calm mark.
+            // Nothing is wrong: an answer is waiting. A calm mark: the update glyph, as the running update's line.
             tone = StatusTone.Neutral,
-            action = KitLineAction(stringResource(Res.string.nativePendingReview), actions::reviewAgentUpdates),
+            icon = KitIcons.systemDownload,
+            action = KitLineAction(stringResource(Res.string.agentUpdatesReviewAction), actions::reviewAgentUpdates),
         )
