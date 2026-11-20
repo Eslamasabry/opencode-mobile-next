@@ -1438,6 +1438,14 @@ internal class GraphChatWorld(
      * Cache-first: draws the page kept from the last visit while the live transcript loads (or cannot), with the
      * same reducer and row keys, so the live rows replace it in place.
      */
+    /** F23: the kept page's newest reply had not ended when it was kept (no completed time, no error). */
+    private fun keptMidReply(messages: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>): Boolean {
+        val newest =
+            messages.lastOrNull { it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
+                ?: return false
+        return newest.info.time?.completedMs == null && newest.info.errorText == null
+    }
+
     private fun showKept() {
         val memory = lastKnown ?: return
         if (keptJob != null || lastRows != null) return
@@ -1446,6 +1454,14 @@ internal class GraphChatWorld(
                 val kept = memory.peek(ref) ?: memory.read(ref) ?: return@launch
                 if (historyReconciled || kept.history.isEmpty()) return@launch
                 val messages = kept.messages()
+                // F23 (build 10113): a page kept while its newest reply still ran is behind the server (the reply
+                // went on after the person left). Drawn at once, it was replaced by the finished reply a moment later
+                // and the page jumped. It waits a bounded moment for the live read instead; only a read that has not
+                // come by then (a server away) lets the kept page draw, so the chat is never left empty.
+                if (keptMidReply(messages)) {
+                    delay(KEPT_MID_REPLY_WAIT_MS)
+                    if (historyReconciled || mutableTranscript.value.rows.isNotEmpty()) return@launch
+                }
                 val handle = memory.detached(ref)
                 keptHandle = handle
                 if (mutableTitle.value == null) kept.title?.let { mutableTitle.value = it }
@@ -3417,6 +3433,9 @@ internal class GraphChatWorld(
 
         /** How long a failure page of a server the app starts waits for a read already on its way: over the swap. */
         const val FAILED_SETTLE_MS = 300L
+
+        /** F23: how long a page kept mid-reply waits for the live read before it is drawn anyway. */
+        const val KEPT_MID_REPLY_WAIT_MS = 1_200L
     }
 }
 
