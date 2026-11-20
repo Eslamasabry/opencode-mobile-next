@@ -44,8 +44,7 @@ public class LocalServerGate(
     private val maxPoll: Duration = 4.seconds,
     /**
      * How much longer the server process may still be booting ([LaunchStartRules.stillBooting] of its age), zero when
-     * no process runs. A booting server is waited on, never restarted: a cold phone boot can take well over
-     * [firstWait].
+     * no process runs. A booting server is waited on, never restarted: a cold phone boot can take well over [firstWait].
      */
     private val booting: suspend (ProfileId) -> Duration = { Duration.ZERO },
 ) {
