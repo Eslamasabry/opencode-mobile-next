@@ -60,7 +60,6 @@ import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
@@ -73,7 +72,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitRollingNumber
@@ -132,6 +130,9 @@ public object KitLampDims {
 
     /** Requests that arrive within this window of the last halo share it (one pulse per burst). */
     public const val BURST_MS: Long = 2_000L
+
+    /** The text scale "9+" is written at, whatever the person's text size (two glyphs must fit 16 dp with room). */
+    public const val NUMBER_COMPACT_SCALE: Float = 0.75f
 
     /** The largest number the face writes out; above it, "9+". */
     public const val MAX_COUNT: Int = 9
@@ -204,9 +205,8 @@ public object KitLampRules {
     /** Quiet 12, else 16: the face never grows past the page gutter, at any text size. */
     public fun faceWidthDp(face: KitLampFace): Int = if (face.quiet) KitLampDims.QUIET_W else KitLampDims.FACE_W
 
-    /** "9+" at the frame text cap would pass the 16 dp face: it is written at its plain size there. */
-    public fun numberFitsPlain(face: KitLampFace, textScale: Float): Boolean =
-        numberShown(face) && face.count > KitLampDims.MAX_COUNT && textScale >= TextScalePolicy.FRAME_CAP
+    /** "9+" is two glyphs in a 16 dp face: it is written small, at a fixed scale, so it keeps room on both sides. */
+    public fun numberCompact(face: KitLampFace): Boolean = numberShown(face) && face.count > KitLampDims.MAX_COUNT
 
     /** The touch box's height: 48, centred on the mark, or the mark's own when that is taller. */
     public fun touchHeightDp(faceHeightDp: Int): Int = maxOf(faceHeightDp, KitLampDims.TOUCH_H)
@@ -259,7 +259,7 @@ public fun KitLamp(
     val left = KitLampRules.onLeft(side, LocalLayoutDirection.current == LayoutDirection.Rtl)
     val targetH = KitLampRules.faceHeightDp(face).toFloat()
     val targetW = KitLampRules.faceWidthDp(face).toFloat()
-    val fitPlain = KitLampRules.numberFitsPlain(face, kitTextScale())
+    val fitPlain = KitLampRules.numberCompact(face)
     // The touch box is the page's side gutter: from the physical edge, through any side inset, to where content begins.
     val touchWidth = LocalKitTokens.current.gutter.dp + sideInset
     val height = remember { Animatable(targetH) }
@@ -464,8 +464,8 @@ private fun LampMarks(face: KitLampFace, settled: Boolean, fitPlain: Boolean) {
                     )
                 }
                 if (fitPlain) {
-                    // "9+" at the text cap would pass the gutter-wide face: written at the plain size there.
-                    CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, 1f), content = number)
+                    // "9+" would touch both sides of the gutter-wide face: written at a fixed small size, 2 dp or more clear.
+                    CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, KitLampDims.NUMBER_COMPACT_SCALE), content = number)
                 } else {
                     KitFrameText(number)
                 }

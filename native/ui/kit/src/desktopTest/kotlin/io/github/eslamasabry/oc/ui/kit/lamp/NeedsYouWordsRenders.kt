@@ -23,6 +23,12 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.request.KitRequest
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.edgeLightAsksFetch
+import io.github.eslamasabry.oc.ui.words.res.edgeLightAsksRun
+import io.github.eslamasabry.oc.ui.words.res.edgeLightAsksSearch
+import io.github.eslamasabry.oc.ui.words.res.edgeLightAsksTool
+import org.jetbrains.compose.resources.stringResource
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
@@ -49,15 +55,20 @@ class NeedsYouWordsRenders {
             youAreIn = "You are in “Write a 900 word story about a fox”",
         )
 
+    /** The words the app composes: the real string, filled with what the engine hands it (a host, masked words, a tool). */
+    @androidx.compose.runtime.Composable
+    private fun realWords(name: String): String =
+        when (name) {
+            "fetch" -> stringResource(Res.string.edgeLightAsksFetch, "example.org")
+            "search" -> stringResource(Res.string.edgeLightAsksSearch, "how do foxes keep their tags clear of the river mud in the long, wet spring…")
+            "tool" -> stringResource(Res.string.edgeLightAsksTool, "task")
+            else -> stringResource(Res.string.edgeLightAsksRun, "git push")
+        }
+
     @Test
     fun `needs you words renders`() {
         val out = File("build/edge-fix-renders").also { it.mkdirs() }
-        val cases =
-            listOf(
-                "fetch" to "Asks to use: https://example.org/docs/getting-started/a-very-long-address-that-goes-on-and-on",
-                "run" to "Asks to run: git push",
-            )
-        for (style in listOf(Style.Solid, Style.Glass)) for (scale in listOf(1f, 1.3f)) for ((name, words) in cases) {
+        for (style in listOf(Style.Solid, Style.Glass)) for (scale in listOf(1f, 1.3f)) for (name in listOf("fetch", "search", "tool")) {
             runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
                 k2Host(style, true, false, MotionLevel.Full, fontScale = scale, density = D, widthDp = W, heightDp = H) {
                     Box(Modifier.fillMaxSize()) {
@@ -67,11 +78,11 @@ class NeedsYouWordsRenders {
                             side = KitLampSide.End,
                             onClose = {},
                             modifier = Modifier.padding(top = 200.dp, bottom = 24.dp),
-                        ) { KitLampPanel(model(words), K2.panel, KitLampPanelActions()) }
+                        ) { KitLampPanel(model(realWords(name)), K2.panel, KitLampPanelActions()) }
                     }
                 }
                 waitForIdle()
-                ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "${name}-${style.name.lowercase()}-x${(scale * 10).toInt()}.png"))
+                ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "words-${name}-${style.name.lowercase()}-x${(scale * 10).toInt()}.png"))
             }
         }
     }

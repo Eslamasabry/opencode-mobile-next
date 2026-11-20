@@ -76,8 +76,8 @@ class KitLampRulesTest {
     fun `B-LAMP-K1-004 the face widens to 20 dp only for 9+ at the frame text cap`() {
         val many = KitLampFace(12, listOf(m("n", KitLampMarkKind.NeedsYou)))
         assertEquals(16, KitLampRules.faceWidthDp(many), "never wider than the 16 dp page gutter")
-        assertTrue(KitLampRules.numberFitsPlain(many, 1.3f))
-        assertTrue(!KitLampRules.numberFitsPlain(many, 1f))
+        assertTrue(KitLampRules.numberCompact(many), "9+ is written small at any text size")
+        assertTrue(KitLampRules.numberCompact(many))
         assertEquals(16, KitLampRules.faceWidthDp(many.copy(count = 3)))
     }
 

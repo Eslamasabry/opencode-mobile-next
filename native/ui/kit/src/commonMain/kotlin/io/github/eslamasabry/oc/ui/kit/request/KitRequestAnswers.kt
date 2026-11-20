@@ -7,12 +7,13 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -123,11 +124,11 @@ public fun KitRequestAnswers(
                     semanticsLabel = words.answerOn(target),
                 )
             } else {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(RequestAnswersDims.GAP.dp)) {
+                AnswerButtons {
                     KitButton(
                         words.allowOnce,
                         onAllow,
-                        Modifier.weight(1f).heightIn(min = RequestAnswersDims.BUTTON_H.dp),
+                        Modifier.heightIn(min = RequestAnswersDims.BUTTON_H.dp),
                         role = KitButtonRole.Primary,
                         semanticsLabel = words.allowOn(target),
                         haptic = KitHaptic.Commit,
@@ -135,11 +136,45 @@ public fun KitRequestAnswers(
                     KitButton(
                         words.deny,
                         onDeny,
-                        Modifier.weight(1f).heightIn(min = RequestAnswersDims.BUTTON_H.dp),
+                        Modifier.heightIn(min = RequestAnswersDims.BUTTON_H.dp),
                         role = KitButtonRole.Secondary,
                         semanticsLabel = words.denyOn(target),
                         haptic = KitHaptic.Commit,
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Allow once and Deny: two equal half-width buttons while each label fits on one line in its half; when either would
+ * not (a large text size, a long translation) they stack full width, Allow once on top, so a label is never broken
+ * over two lines and the buttons are never unequal.
+ */
+@Composable
+private fun AnswerButtons(content: @Composable () -> Unit) {
+    Layout(content, Modifier.fillMaxWidth()) { measurables, constraints ->
+        val full = constraints.maxWidth
+        val gap = RequestAnswersDims.GAP.dp.roundToPx()
+        val half = (full - gap) / 2
+        // The natural, one-line width of each button (intrinsics: each child is measured once).
+        val natural = measurables.map { it.maxIntrinsicWidth(full) }
+        val side = natural.all { it <= half }
+        val w = if (side) half else full
+        val h = measurables.maxOf { it.minIntrinsicHeight(w) }
+        val placed = measurables.map { it.measure(Constraints(minWidth = w, maxWidth = w, minHeight = if (side) h else 0)) }
+        if (side) {
+            layout(full, placed.maxOf { it.height }) {
+                placed[0].place(0, 0)
+                placed[1].place(half + gap, 0)
+            }
+        } else {
+            layout(full, placed.sumOf { it.height } + gap * (placed.size - 1)) {
+                var y = 0
+                placed.forEach { p ->
+                    p.place(0, y)
+                    y += p.height + gap
                 }
             }
         }
