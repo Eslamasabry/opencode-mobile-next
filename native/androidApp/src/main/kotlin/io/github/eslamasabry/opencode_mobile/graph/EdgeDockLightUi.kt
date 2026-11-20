@@ -121,7 +121,7 @@ internal fun EdgeLightMount(
             (if (KitLampRules.onLeft(place.side, direction == LayoutDirection.Rtl)) insets.getLeft(density, direction) else insets.getRight(density, direction)).toDp()
         }
     val mountOverlay = rememberOverlayMounted(open, placing)
-    val tipState = rememberFirstUseTip(port, lightVisible, open, placing)
+    val tipState = rememberFirstUseTip(port, lightVisible, open, placing, EdgeLightRules.requestOnPage(list, page))
     AnnounceNewNeeds(face, label, open)
     Box(modifier.fillMaxSize()) {
         // Closed light stays cheap: list controller, state and panel strings mount only when opened or moving.
@@ -193,19 +193,24 @@ private fun rememberFirstUseTip(
     lightVisible: Boolean,
     open: Boolean,
     placing: Boolean,
+    requestOnPage: Boolean,
 ): androidx.compose.runtime.MutableState<Boolean> {
     val taught by port.lightTaught.collectAsStateWithLifecycle()
     val prefsLoaded by port.lightPrefsLoaded.collectAsStateWithLifecycle()
     val showing = remember { mutableStateOf(false) }
-    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing)
+    // Waits for a calm moment (no keyboard, no request card on the page) and then shows; once per mount, so a keyboard
+    // that opens later does not bring it back or count it twice.
+    val shownOnce = remember { mutableStateOf(false) }
+    val canShow = EdgeLightRules.showTip(prefsLoaded, taught.tips, lightVisible, open, placing, requestOnPage)
     LaunchedEffect(canShow) {
-        if (canShow && !showing.value) {
+        if (canShow && !showing.value && !shownOnce.value) {
+            shownOnce.value = true
             showing.value = true
             port.recordLightTipShown()
         }
     }
-    LaunchedEffect(open, placing, lightVisible) {
-        if (open || placing || !lightVisible) showing.value = false
+    LaunchedEffect(open, placing, lightVisible, requestOnPage) {
+        if (open || placing || !lightVisible || requestOnPage) showing.value = false
     }
     return showing
 }

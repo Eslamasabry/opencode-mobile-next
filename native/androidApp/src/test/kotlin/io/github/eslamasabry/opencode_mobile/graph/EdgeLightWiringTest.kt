@@ -380,4 +380,19 @@ class EdgeLightWiringTest {
         assertFalse(tip(open = true))
         assertFalse(tip(placing = true))
     }
+
+    @Test
+    fun `B-LAMP-015 the tip waits while the open conversation shows a request card, and shows when it is gone`() {
+        val asking = model(row("here", DockListState.NeedsYou, open = true), row("other", DockListState.Working))
+        assertTrue(EdgeLightRules.requestOnPage(asking, ref("here")), "the page's own request card is on screen")
+        assertFalse(
+            EdgeLightRules.showTip(true, 0, true, false, false, EdgeLightRules.requestOnPage(asking, ref("here"))),
+            "no tip over a request card",
+        )
+        val calm = model(row("here", DockListState.Working, open = true), row("other", DockListState.NeedsYou))
+        assertFalse(EdgeLightRules.requestOnPage(calm, ref("here")), "another conversation's request is not on this page")
+        assertTrue(EdgeLightRules.showTip(true, 0, true, false, false, EdgeLightRules.requestOnPage(calm, ref("here"))))
+        // The keyboard hides the light, and the tip waits for it as well.
+        assertFalse(EdgeLightRules.showTip(true, 0, EdgeLightRules.visible(keyboardUp = true), false, false, false))
+    }
 }
