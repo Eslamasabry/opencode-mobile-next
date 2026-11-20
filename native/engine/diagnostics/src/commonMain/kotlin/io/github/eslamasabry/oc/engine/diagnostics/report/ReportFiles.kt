@@ -26,6 +26,15 @@ public interface ReportFiles {
     /** Writes [bytes] to [ReportFile.Pending] and flushes them to the device. */
     public fun writePending(bytes: ByteArray)
 
+    /**
+     * Like [writePending] without the flush to the device: on return the bytes are in the system's file cache, so they
+     * outlive this process dying (the reason the writes are synchronous) but not a power loss. For timings, which come
+     * with every finished request, often on the main thread, where a device flush can stall the app.
+     */
+    public fun writePendingCached(bytes: ByteArray) {
+        writePending(bytes)
+    }
+
     /** Atomically replaces [ReportFile.Snapshot] with [ReportFile.Pending]. */
     public fun commitPending()
 

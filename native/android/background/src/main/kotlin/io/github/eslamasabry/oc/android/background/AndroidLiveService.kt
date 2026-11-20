@@ -216,9 +216,10 @@ public class LiveServiceBody(
     }
 
     /**
-     * `onTimeout(startId, fgsType)` (API 35+, the 6 h `dataSync` budget): save the pause before
-     * stopping (neither the engine nor onDestroy is guaranteed afterwards), so an old opt-in never
-     * restarts it, then tell the app.
+     * `onTimeout(startId, fgsType)` (API 35+, the 6 h `dataSync` budget): save the pause, so an old
+     * opt-in never restarts it, then tell the app. The shell has already stopped its service in the
+     * same callback (Android kills an app whose service is still foreground seconds later); this
+     * runs right after on the main scope while the process is still alive.
      */
     public suspend fun onTimeout() {
         receipts.timeout()

@@ -149,16 +149,14 @@ class BackgroundConnectionService : Service() {
         if (replyHeld) replyWatch.body.onTimeout()
         // A reply watch alone saves no live-mode pause: live mode was off.
         if (replyHeld && !liveHere) return
-        hub.launchOnMain {
-            hub.serviceBody.onTimeout()
-            livePromised = false
-            replyWatch.liveOwnerEnded()
-            ServiceCompat.stopForeground(
-                this@BackgroundConnectionService,
-                ServiceCompat.STOP_FOREGROUND_REMOVE,
-            )
-            stopSelf()
-        }
+        // Android allows only a few seconds before it kills the app: give the promise back now, in
+        // this call, and save the pause afterwards. Waiting for the save first (a store lane, a
+        // disk write) or letting it fail before the stop is what crashed.
+        livePromised = false
+        replyWatch.liveOwnerEnded()
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        stopSelf()
+        hub.launchOnMain { hub.serviceBody.onTimeout() }
     }
 
     override fun onTimeout(startId: Int) {

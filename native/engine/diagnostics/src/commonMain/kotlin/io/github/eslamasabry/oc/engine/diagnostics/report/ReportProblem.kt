@@ -207,7 +207,9 @@ public class ReportProblem private constructor(
 
     public fun reportText(): String = PRETTY.encodeToString(JsonObject.serializer(), reportJson())
 
-    private fun record(event: ProblemEvent): Outcome<Unit> = lock.withLock { commit(folded(entries, redacted(event))) }
+    // A timing is written without the device flush (writePendingCached): it still reaches the file in the same call.
+    private fun record(event: ProblemEvent): Outcome<Unit> =
+        lock.withLock { commit(folded(entries, redacted(event)), flush = event.kind != ProblemEventKind.Timing) }
 
     /** [list] with [event] added, or folded into the newest kept event that is the same fault and close in time. */
     private fun folded(list: List<ProblemEvent>, event: ProblemEvent): List<ProblemEvent> {
@@ -253,8 +255,11 @@ public class ReportProblem private constructor(
             },
         ).encodeToByteArray()
 
-    /** Caller holds [lock]. */
-    private fun commit(candidates: List<ProblemEvent>): Outcome<Unit> {
+    /**
+     * Caller holds [lock]. [flush] false leaves the bytes in the system's file cache
+     * ([ReportFiles.writePendingCached]).
+     */
+    private fun commit(candidates: List<ProblemEvent>, flush: Boolean = true): Outcome<Unit> {
         val next = candidates.map(::redacted).toMutableList()
         while (next.size > maxEntries) evictOne(next)
         var bytes = encode(next)
@@ -263,7 +268,7 @@ public class ReportProblem private constructor(
             bytes = encode(next)
         }
         try {
-            files.writePending(bytes)
+            if (flush) files.writePending(bytes) else files.writePendingCached(bytes)
             files.commitPending()
         } catch (_: Exception) {
             return storageFailure()
