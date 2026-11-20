@@ -138,6 +138,19 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private var lastLink: ChatLink? = null
 
     /**
+     * Every tool call this page has shown a request card for (B-CHAT-117): a step the run ended on before the person
+     * answered says so, even after its card left. After the page is rebuilt nothing is known, and the step reads only
+     * what the app can tell.
+     */
+    private val askedCalls = HashSet<String>()
+
+    /**
+     * Raw ids of sub-agents still working or waiting on the person (B-CHAT-117): their delegated steps stay live after
+     * this conversation's turn ends. [states] keeps it current; [present] reads it.
+     */
+    public var liveChildren: Set<String> = emptySet()
+
+    /**
      * [work] is where the facts are worked out (the connection's own context, never the main thread). A streamed text
      * delta moves only [TurnFeed.lastProgressAtMs]; the facts do not read it except to time the stall, which they do
      * at each tick and at each real change, so a delta alone recomputes nothing.
@@ -150,6 +163,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         work: CoroutineContext = EmptyCoroutineContext,
         declined: Flow<Set<String>> = flowOf(emptySet()),
         waitingCalls: Flow<Set<String>> = flowOf(emptySet()),
+        liveChildren: Flow<Set<String>> = flowOf(emptySet()),
     ): StateFlow<TurnFactsUi> {
         val progress = MutableStateFlow<Long?>(null)
         val core =
@@ -157,9 +171,12 @@ public class TurnFactsPresenter(private val clock: Clock) {
                 .onEach { progress.value = it.lastProgressAtMs }
                 .distinctUntilChanged(::sameApartFromProgress)
         val ticks = factTicks(clock, core.map { ticking(it) }, TICK_MS)
-        return combine(core, waiting, ticks, declined, waitingCalls) { f, w, now, d, calls ->
+        val calls = combine(declined, waitingCalls, liveChildren) { d, w, c -> StepCalls(d, w, c) }
+        return combine(core, waiting, ticks, calls) { f, w, now, c ->
                 val newest = progress.value
-                present(if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest), now, w, d, calls)
+                this.liveChildren = c.liveChildren
+                val fed = if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest)
+                present(fed, now, w, c.declined, c.waiting)
             }
             .flowOn(work)
             .stateIn(scope, started, TurnFactsUi.Empty)
@@ -188,6 +205,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         declinedCalls: Set<String> = emptySet(),
         waitingCalls: Set<String> = emptySet(),
     ): TurnFactsUi {
+        askedCalls += waitingCalls
         val snapshot = feed.ledger
         // W4: a run the person's refusal ended is not a stop, nor a server restart (OC2 reports it as "shutdown").
         val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
@@ -215,6 +233,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     waitingForYou = waitingForYou,
                     declinedCalls = declinedCalls,
                     waitingCalls = waitingCalls,
+                    askedCalls = askedCalls.toSet(),
+                    liveChildren = liveChildren,
                 )
                 .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs, feed.waits) }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
@@ -371,3 +391,6 @@ internal fun stepClockStart(startMs: Long, waits: List<Pair<Long, Long>>): Long 
     }
     return startMs + waited
 }
+
+/** What the request cards and the sub-agents tell the steps, read together. */
+private data class StepCalls(val declined: Set<String>, val waiting: Set<String>, val liveChildren: Set<String>)

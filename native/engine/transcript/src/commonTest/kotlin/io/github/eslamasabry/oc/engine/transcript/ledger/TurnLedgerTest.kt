@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolPhrase
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.UNANSWERED_KEY
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -250,5 +251,25 @@ class TurnWorkTest {
         val snapshot = ledger.snapshot()
         assertEquals(listOf("z-user", "x-step", "a-final"), snapshot.messages.map { it.info.id })
         assertEquals(listOf("z-user"), snapshot.turns.map { it.turnId })
+    }
+
+    @Test
+    fun `B-CHAT-117 a delegated step reads running while its sub-agent works after the parent went idle`() {
+        val child = JsonObject(mapOf("sessionId" to JsonPrimitive("child-1")))
+        val task = tool("t1", "m2", "task", ToolStatus.Running, start = 2)
+        val withChild = task.copy(tool = task.tool!!.copy(metadata = child))
+        val s = snapshot(prompt, msg(info("m2", Role.Assistant, 2), withChild))
+        val working = assertNotNull(turnWork(s, busy = false, liveChildren = setOf("child-1"))["m1"])
+        assertEquals(StepState.Running, working.steps.single().state)
+        val ended = assertNotNull(turnWork(s, busy = false)["m1"])
+        assertEquals(StepState.Stopped, ended.steps.single().state)
+    }
+
+    @Test
+    fun `B-CHAT-117 a step asked about earlier keeps its reason after the card left`() {
+        val s = snapshot(prompt, msg(info("m2", Role.Assistant, 2), tool("t1", "m2", "bash", ToolStatus.Running)))
+        val step = assertNotNull(turnWork(s, busy = false, askedCalls = setOf("call-t1"))["m1"]).steps.single()
+        assertEquals(StepState.Stopped, step.state)
+        assertTrue(step.output.metadata?.containsKey(UNANSWERED_KEY) == true)
     }
 }

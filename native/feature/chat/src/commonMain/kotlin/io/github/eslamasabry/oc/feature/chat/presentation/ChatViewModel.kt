@@ -146,6 +146,10 @@ public class ChatViewModel(
                     world.work,
                     reading.map { it.declined }.distinctUntilChanged(),
                     reading.map { it.waitingCalls }.distinctUntilChanged(),
+                    // B-CHAT-117: a delegated step stays live while its sub-agent works or waits on the person.
+                    kotlinx.coroutines.flow.combine(world.childNeedsYou, world.childRunning) { needs, running ->
+                        needs + running
+                    }.distinctUntilChanged(),
                 )
         }
 
