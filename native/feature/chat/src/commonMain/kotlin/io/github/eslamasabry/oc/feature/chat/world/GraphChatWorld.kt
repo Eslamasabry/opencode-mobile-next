@@ -66,7 +66,6 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import io.github.eslamasabry.oc.core.common.holdStages
@@ -261,9 +260,6 @@ internal class GraphChatWorld(
     private var protectedByHistory = false
     private var checkedRestoreRevision: Long? = null
     private var historyReconciled = false
-
-    /** The files at the project's root, listed once per open and again after a turn (null = not read yet). */
-    private var rootListing: CompletableDeferred<Outcome<Set<String>>>? = null
     private val knownUserPrompts = HashSet<String>()
     private val draftSubmissions = HashMap<Long, DraftSubmission>()
     private val draftAcknowledgements = HashMap<Long, () -> Unit>()
@@ -331,7 +327,6 @@ internal class GraphChatWorld(
      * the connection's.
      */
     private var ownDirectory: String? = null
-    private var ownWorkspace: String? = null
 
     override val directory: String?
         get() =
@@ -1037,7 +1032,6 @@ internal class GraphChatWorld(
         voiceLiveUsers.clear()
         unbind()
         ownDirectory = null
-        ownWorkspace = null
         mutableCaps.value = ServerCapabilities()
         // Another server owns another catalog and selection; a stale graph publishes nothing.
         mutableModels.value = ComposerModels()
@@ -1045,7 +1039,6 @@ internal class GraphChatWorld(
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
         historyReconciled = false
-        rootListing = null
         // Cache-first: a reload or a lost server keeps the last rows on screen until newer ones arrive.
         publishShown()
         mutableReadOnly.value = null
@@ -1318,8 +1311,6 @@ internal class GraphChatWorld(
                             reconcilePendingReceipts()
                         bridge.event(event)?.let(handle::submit)
                         if (event is CoreEvent.RunEnded && event.sessionId == sid) {
-                            // A turn may have made or removed files: the root listing is read again when next needed.
-                            rootListing = null
                             keepLastKnown(handle)
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
@@ -1376,7 +1367,6 @@ internal class GraphChatWorld(
                     val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
                     session?.title?.let { mutableTitle.value = it }
                     ownDirectory = session?.directory
-                    ownWorkspace = session?.workspaceId?.raw
                     // Issue 147: a folder in the phone's storage the agent cannot reach is said as the page opens.
                     checkPhoneFolder()
                     refreshReadOnly(gateway, session)
@@ -3152,7 +3142,7 @@ internal class GraphChatWorld(
     @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
     override suspend fun readPicture(path: String): Outcome<ByteArray> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        val read = filesOf(a).fileContent(path)
+        val read = a.gateway.fileContent(path)
         if (currentAttached() !== a) return Outcome.Failed(STALE)
         val file = (read as? Outcome.Ok)?.value ?: return read as Outcome.Failed
         if (file.encoding?.lowercase() != "base64" || file.content.length > MAX_PICTURE_BASE64) {
@@ -3169,77 +3159,18 @@ internal class GraphChatWorld(
         }
     }
 
-    /**
-     * The names of the files (not folders) at the project's root. One request serves every name asked meanwhile,
-     * so a reply naming several files never makes one request per name.
-     */
-    private suspend fun rootFileNames(a: Attached): Outcome<Set<String>> {
-        rootListing?.let { return it.await() }
-        val mine = CompletableDeferred<Outcome<Set<String>>>()
-        rootListing = mine
-        val listed = filesOf(a).listFiles("")
-        val result: Outcome<Set<String>> =
-            when (listed) {
-                is Outcome.Ok -> Outcome.Ok(listed.value.filter { !it.isDir }.map { it.name }.toSet())
-                is Outcome.Failed -> listed
-            }
-        // The one line a look at the build needs: how many files the root listing held and whether it answered.
-        chipLog.i { "chips: root listing n=${(result as? Outcome.Ok)?.value?.size ?: -1}" }
-        // A failed or stale read is not kept: the next ask reads again.
-        if ((result is Outcome.Failed || currentAttached() !== a) && rootListing === mine) rootListing = null
-        mine.complete(result)
-        return result
-    }
-
-    private val chipLog: io.github.eslamasabry.oc.core.common.Log
-        get() = io.github.eslamasabry.oc.core.common.AppLog.tagged("chips")
-
-    /**
-     * The files of THIS conversation's own folder, as the file pages read them. The gateway's shared location is the
-     * server's, which is not the conversation's folder when the server hosts several projects; asking it listed the
-     * wrong folder, so a name the reply's own file card opens was never confirmed.
-     */
-    private fun filesOf(a: Attached): io.github.eslamasabry.oc.core.domain.FileGateway {
-        val folder = ownDirectory?.takeIf { it.isNotBlank() }
-        val located = a.gateway as? io.github.eslamasabry.oc.core.domain.LocatedFileGateway
-        if (folder == null || located == null) return a.gateway
-        return located.filesAt(io.github.eslamasabry.oc.core.model.ServerLocation(folder, ownWorkspace))
-    }
-
     override suspend fun fileExists(path: String): Outcome<Boolean> {
         val slash = path.lastIndexOf('/')
-        if (slash < 0) return rootFileExists(path)
-        val name = path.substring(slash + 1)
+        val name = if (slash >= 0) path.substring(slash + 1) else ""
         if (name.isEmpty()) return Outcome.Ok(false)
         val dir = if (slash == 0) "/" else path.substring(0, slash)
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         if (!a.gateway.capabilities.value.fileBrowsing) return Outcome.Ok(false)
-        val listed = filesOf(a).listFiles(dir)
+        val listed = a.gateway.listFiles(dir)
         if (currentAttached() !== a) return Outcome.Failed(STALE)
         val nodes = (listed as? Outcome.Ok)?.value ?: return listed as Outcome.Failed
         return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
     }
-
-    /** A name with no slash is a file only if it is exactly a file at the project's root. */
-    private suspend fun rootFileExists(name: String): Outcome<Boolean> {
-        val a = currentAttached()
-        return when {
-            name.isEmpty() -> Outcome.Ok(false)
-            a == null -> Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-            !a.gateway.capabilities.value.fileBrowsing -> Outcome.Ok(false)
-            else -> rootFileIn(a, name)
-        }
-    }
-
-    private suspend fun rootFileIn(a: Attached, name: String): Outcome<Boolean> =
-        when (val names = rootFileNames(a)) {
-            is Outcome.Failed -> names
-            is Outcome.Ok -> {
-                val found = name in names.value
-                chipLog.i { "chips: root name matched=$found" }
-                if (currentAttached() === a) Outcome.Ok(found) else Outcome.Failed(STALE)
-            }
-        }
 
     private var acknowledgingRead = false
 
