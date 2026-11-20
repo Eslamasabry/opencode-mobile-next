@@ -494,6 +494,13 @@ public data class PendingSend(
      * could never work. The typed words stay in the bubble and the box. Filled by the presenter, never by the world.
      */
     val signIn: AgentSignInNeed? = null,
+    /**
+     * F2 (one copy through the hand-over): the key of the server's row that is this send, once the world knows it (the
+     * client id the send went out with, or the row with its words that arrived after it was sent). While that row is
+     * shown, the screen draws the row only, so the person's message never stands twice; the bubble itself stays until
+     * it settles, so its state and the draft's protection keep telling the truth.
+     */
+    val serverRowKey: String? = null,
 )
 
 /** The agent whose sign-in ran out: its provider id (the sign-in terminal's) and display name. */

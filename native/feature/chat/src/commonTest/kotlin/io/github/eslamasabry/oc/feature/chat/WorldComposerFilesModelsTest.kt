@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptAccessors
 import io.github.eslamasabry.oc.engine.transcript.TranscriptEngine
+import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
@@ -494,6 +495,122 @@ class WorldComposerFilesModelsTest {
             runCurrent()
             assertEquals(listOf(PendingState.Failed), f.world.pending.value.map { it.state })
             assertEquals(listOf("hello"), f.world.pending.value.map { it.text })
+        }
+
+    /** The person's own words as one frame of the chat draws them: the server's prompt rows and the bubbles. */
+    private fun drawnPrompts(world: ChatWorld): List<String> {
+        val ui =
+            io.github.eslamasabry.oc.feature.chat.presentation
+                .ChatPresenter(world, RecordingNavigator(), Immediate)
+                .current()
+        return ui.rows.filterIsInstance<PromptRow>().map { it.text } +
+            ui.pending.map { it.text }
+    }
+
+    @Test
+    fun `B-CHAT-ONCE-001 the first message is drawn once while the server's copy lands before the send's answer`() =
+        runTest {
+            // D8 (build 10113, frame 75): New conversation sends, the chat opens on the bubble, the run starts, the
+            // server's copy of the message arrives, and the send's answer comes a moment later.
+            val f = Fixture(this)
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.connect()
+            val engine = f.engine()
+            assertIs<Outcome.Ok<*>>(engine.send(SendRequest(ref, "hello d8")))
+            runCurrent()
+            f.world
+            runCurrent()
+            assertEquals(listOf("hello d8"), drawnPrompts(f.world), "the chat opens on the bubble")
+            f.base.events.emit(GatewayEvent.RunStarted(ref.sessionId))
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u1", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t1", "u1", ref.sessionId.raw, PartType.Text, "text", "hello d8"))
+            )
+            // The transcript publishes the server's row; the send's answer is still held.
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(
+                f.world.transcript.value.rows.any { it is PromptRow && it.text == "hello d8" },
+                "the server's row is on the page",
+            )
+            assertEquals(
+                listOf("hello d8"),
+                drawnPrompts(f.world),
+                "the server's copy and the bubble are one message: drawn once while the answer is on its way",
+            )
+            hold.complete(Unit)
+            advanceTimeBy(60)
+            runCurrent()
+            assertEquals(listOf("hello d8"), drawnPrompts(f.world), "and once after it")
+            assertTrue(f.world.pending.value.isEmpty(), "the bubble settled on the server's copy")
+        }
+
+    @Test
+    fun `B-CHAT-ONCE-006 a send in an existing conversation is drawn once while the server's copy lands before the answer`() =
+        runTest {
+            // F22 (build 10113, edge-a-d 90.08 s): a send in a conversation with earlier turns, keyboard up, drew the
+            // new bubble twice for one frame. Same order as D8: the server's copy lands, the send's answer later.
+            val f = Fixture(this)
+            f.open()
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u0", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t0", "u0", ref.sessionId.raw, PartType.Text, "text", "first ask"))
+            )
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("a0", ref.sessionId.raw, Role.Assistant)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("r0", "a0", ref.sessionId.raw, PartType.Text, "text", "first answer"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.world.draftChanged("second ask")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("second ask"))
+            runCurrent()
+            assertEquals(listOf("first ask", "second ask"), drawnPrompts(f.world).sorted(), "the bubble on its way")
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u1", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t1", "u1", ref.sessionId.raw, PartType.Text, "text", "second ask"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(
+                f.world.transcript.value.rows.any { it is PromptRow && it.text == "second ask" },
+                "the server's row is on the page",
+            )
+            assertEquals(
+                1,
+                drawnPrompts(f.world).count { it == "second ask" },
+                "the new message is drawn once while the answer is on its way",
+            )
+            hold.complete(Unit)
+            advanceTimeBy(60)
+            runCurrent()
+            assertEquals(1, drawnPrompts(f.world).count { it == "second ask" }, "and once after it")
+            assertTrue(f.world.pending.value.isEmpty(), "the bubble settled on the server's copy")
+        }
+
+    @Test
+    fun `B-CHAT-ONCE-002 the same words sent before are not taken for the message on its way`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u0", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t0", "u0", ref.sessionId.raw, PartType.Text, "text", "yes"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.world.draftChanged("yes")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("yes"))
+            runCurrent()
+            assertEquals(listOf("yes", "yes"), drawnPrompts(f.world), "the earlier yes and the one on its way")
+            hold.complete(Unit)
+            advanceTimeBy(60)
+            runCurrent()
         }
 
     // ---- Model choices ----

@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.ui.kitchat.request
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -69,7 +68,7 @@ public fun <T> KitRequestStack(
     Column(
         modifier
             .fillMaxWidth()
-            .heightIn(max = stackMaxHeight())
+            .kitMaxHeightAtLayout(stackMaxHeight())
             .edgeFade(scroll)
             .verticalScroll(scroll)
             .testTag("kit-request-stack")
@@ -89,11 +88,13 @@ public fun <T> KitRequestStack(
 }
 
 @Composable
-private fun stackMaxHeight(): Dp {
+private fun stackMaxHeight(): () -> Dp {
     // One card at its cap, plus its caption and the gap under it, is whole in the stack (F-016: a card taller than the stack hid its
-    // answers behind the stack's edge); several cards scroll inside it.
+    // answers behind the stack's edge); several cards scroll inside it. Read at measure, as the card's own cap.
     val card = maxCardHeight()
-    return if (card == Dp.Infinity) Dp.Infinity else card + STACK_EXTRA_DP.dp
+    return androidx.compose.runtime.remember(card) {
+        { card().let { if (it == Dp.Infinity) Dp.Infinity else it + STACK_EXTRA_DP.dp } }
+    }
 }
 
 /** Fades the top and bottom edges where more of the stack lies past them; read in draw, so it follows the scroll. */

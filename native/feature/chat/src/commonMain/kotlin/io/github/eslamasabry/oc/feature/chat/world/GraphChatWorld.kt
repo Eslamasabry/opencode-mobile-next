@@ -963,6 +963,10 @@ internal class GraphChatWorld(
         notReadyJob?.cancel()
         notReadyJob = null
         loadWaiting.value = false
+        // The wait is over (a real answer, or its bound spent): only now may an old agent conversation say it cannot
+        // be picked up again.
+        historyAnswered = true
+        currentAttached()?.gateway?.let { refreshReadOnly(it) }
         // A server the app starts itself: the page holds its waiting state a moment longer than its swap, so a read
         // that succeeds right after crosses over from the waiting state, never Loading → Failed → Live.
         if ((appStartsServer || agentsUpdating()) && !hopeless(failure) && mutableLoad.value is ChatLoad.Loading) {
@@ -1054,6 +1058,7 @@ internal class GraphChatWorld(
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
         historyReconciled = false
+        historyAnswered = false
         rootListing = null
         // Cache-first: a reload or a lost server keeps the last rows on screen until newer ones arrive.
         publishShown()
@@ -1438,6 +1443,14 @@ internal class GraphChatWorld(
      * Cache-first: draws the page kept from the last visit while the live transcript loads (or cannot), with the
      * same reducer and row keys, so the live rows replace it in place.
      */
+    /** F23: the kept page's newest reply had not ended when it was kept (no completed time, no error). */
+    private fun keptMidReply(messages: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>): Boolean {
+        val newest =
+            messages.lastOrNull { it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
+                ?: return false
+        return newest.info.time?.completedMs == null && newest.info.errorText == null
+    }
+
     private fun showKept() {
         val memory = lastKnown ?: return
         if (keptJob != null || lastRows != null) return
@@ -1446,6 +1459,14 @@ internal class GraphChatWorld(
                 val kept = memory.peek(ref) ?: memory.read(ref) ?: return@launch
                 if (historyReconciled || kept.history.isEmpty()) return@launch
                 val messages = kept.messages()
+                // F23 (build 10113): a page kept while its newest reply still ran is behind the server (the reply
+                // went on after the person left). Drawn at once, it was replaced by the finished reply a moment later
+                // and the page jumped. It waits a bounded moment for the live read instead; only a read that has not
+                // come by then (a server away) lets the kept page draw, so the chat is never left empty.
+                if (keptMidReply(messages)) {
+                    delay(KEPT_MID_REPLY_WAIT_MS)
+                    if (historyReconciled || mutableTranscript.value.rows.isNotEmpty()) return@launch
+                }
                 val handle = memory.detached(ref)
                 keptHandle = handle
                 if (mutableTitle.value == null) kept.title?.let { mutableTitle.value = it }
@@ -1515,12 +1536,20 @@ internal class GraphChatWorld(
     /** The conversation as the server last described it (its agent and folder), for [restartOrNull]. */
     private var sessionSeen: Session? = null
 
+    /** The first history read of this page has had a real answer, or the wait for the server has ended. */
+    private var historyAnswered = false
+
     /**
      * Issue 147: a phone agent's old conversation its agent cannot take up again reads as it was (kept or live rows)
      * with the message box replaced by "Continue in a new conversation", never a refusal. Asked again after each
      * history read: reading it loads the agent on the helper where the agent supports that, and then it continues here.
      */
     private fun restartOrNull(): ReadOnlyChat? {
+        // Waiting is not failing: while the app's own helper or its agent is still starting, "not loaded yet" is not
+        // "cannot be loaded". The page says its real stage (serverWait) and waits; the verdict needs the helper up
+        // and the agent's load tried (or the existing wait's bound spent).
+        if (appStartsServer && !(historyAnswered && !phoneBusy() && phoneServer?.stage(ref.profileId)?.value == null))
+            return null
         if (phoneServer?.needsNewSession(ref) != true) return null
         val session = sessionSeen
         val agent =
@@ -1668,6 +1697,7 @@ internal class GraphChatWorld(
                                 .trim()
                         }
                 historyReconciled = true
+                historyAnswered = true
                 closeKept()
                 publishShown()
                 keepLastKnown(handle)
@@ -1682,6 +1712,8 @@ internal class GraphChatWorld(
             is Outcome.Failed -> {
                 // Issue 147: a phone agent's conversation its agent cannot take up again stays readable from the kept
                 // page, and its message box offers to continue in a new conversation.
+                // A read that only says "not ready yet" is no verdict: the agent was not tried yet.
+                if (!notReady(page.failure)) historyAnswered = true
                 if (currentAttached()?.handle === handle) refreshReadOnly(gateway)
                 if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
                     // An older page that fails leaves the loaded conversation as it is; only the first read waits.
@@ -2940,7 +2972,17 @@ internal class GraphChatWorld(
         refreshDraftProtection()
     }
 
-    /** Canonical ids win; the fallback is post-dispatch, admitted and one-to-one. */
+    /** F2: the last settle decision logged for each bubble, so a streaming reply does not repeat the line. */
+    private val settleNotes = HashMap<Long, String>()
+
+    /**
+     * Canonical ids win; the fallback is post-dispatch, admitted and one-to-one.
+     *
+     * F2 (build 10113, the first message drawn twice for a frame): a bubble that cannot settle yet (not admitted,
+     * or its receipt still being looked up) but whose server row is already in the transcript is handed to that row
+     * in the same run ([PendingSend.serverRowKey]); the screen then draws the row only. A known client id names the
+     * row too.
+     */
     private fun settlePending(s: TranscriptState) {
         val prompts = s.rows.filterIsInstance<PromptRow>()
         // A file-only user message has no prompt row (no words): it is matched by its server id.
@@ -2949,42 +2991,65 @@ internal class GraphChatWorld(
             userMessageKeys.filterTo(LinkedHashSet()) { key ->
                 prompts.none { it.key == key && it.text.isNotBlank() }
             }
+        // F2: bubbles that stay for now, with the server row that already shows them (one row per bubble).
+        val shownAs = HashMap<Long, String>()
         for (bubble in mutablePending.value) {
             val id = canonical[bubble.localId]
             if (bubble.state == PendingState.Failed) continue
             val fileOnly = bubble.text.isBlank()
             val present =
                 id != null && (prompts.any { it.key == id } || (fileOnly && id in wordless))
-            if (bubble.localId !in admitted && !present) continue
+            val taken = shownAs.values
             val matchKey =
                 if (fileOnly)
                     if (id != null) id.takeIf { it in wordless && it !in settled }
                     else
                         wordless.firstOrNull {
-                            it !in settled && it !in baselines[bubble.localId].orEmpty()
+                            it !in settled && it !in taken && it !in baselines[bubble.localId].orEmpty()
                         }
                 else
                     prompts
                         .firstOrNull { row ->
                             row.key !in settled &&
+                                row.key !in taken &&
                                 if (id != null) row.key == id
                                 else
                                     row.key !in baselines[bubble.localId].orEmpty() &&
                                         row.text.trim() == bubble.text.trim()
                         }
                         ?.key
-            if (matchKey == null) continue
-            if (
+            val admittedNow = bubble.localId in admitted
+            val receiptFirst =
                 bubble.state == PendingState.Unconfirmed &&
                     bubble.canCheckReceipt &&
                     recoveryIds.any { (_, localId) -> localId == bubble.localId }
-            ) {
+            val settles = matchKey != null && (admittedNow || present) && !receiptFirst
+            // For the log only: a new row with these words, whatever its key (a client id the server did not keep).
+            val wordsRow =
+                if (id == null) matchKey != null
+                else
+                    !fileOnly &&
+                        prompts.any {
+                            it.key !in settled &&
+                                it.key !in baselines[bubble.localId].orEmpty() &&
+                                it.text.trim() == bubble.text.trim()
+                        }
+            noteSettle(bubble.localId, id != null, present, wordsRow, admittedNow, settles, matchKey != null)
+            if (!admittedNow && !present) {
+                // Not settled before the send's answer, but its server row is here: the row stands for it now.
+                if (matchKey != null) shownAs[bubble.localId] = matchKey
+                continue
+            }
+            if (matchKey == null) continue
+            if (receiptFirst) {
                 // Retire the durable marker along with this bubble. A transcript match alone
                 // must not leave a second recovery bubble behind on the next open.
+                shownAs[bubble.localId] = matchKey
                 reconcilePendingReceipts()
                 continue
             }
             settled += matchKey
+            settleNotes.remove(bubble.localId)
             retireFailedTwins(bubble.localId)
             acknowledgedDraft(bubble.localId)
             admitted -= bubble.localId
@@ -3001,6 +3066,46 @@ internal class GraphChatWorld(
                 list.filterNot { it.localId == bubble.localId }.toImmutableList()
             }
         }
+        // In the same run as the transcript: the row that is each bubble, so no frame draws the words twice.
+        val bubbles = mutablePending.value
+        if (bubbles.any { it.serverRowKey != (shownAs[it.localId] ?: canonical[it.localId]) })
+            mutablePending.update { list ->
+                list
+                    .map {
+                        val key = shownAs[it.localId] ?: canonical[it.localId]
+                        if (it.serverRowKey == key) it else it.copy(serverRowKey = key)
+                    }
+                    .toImmutableList()
+            }
+        settleNotes.keys.retainAll { id -> mutablePending.value.any { it.localId == id } }
+    }
+
+    /**
+     * F2: one line per change of a bubble's settle decision. Yes/no facts and a count only, never the words or ids.
+     */
+    private fun noteSettle(
+        localId: Long,
+        idKnown: Boolean,
+        byId: Boolean,
+        byWords: Boolean,
+        admittedNow: Boolean,
+        settles: Boolean,
+        handed: Boolean,
+    ) {
+        fun yn(b: Boolean) = if (b) "yes" else "no"
+        val decision =
+            when {
+                settles -> "settled"
+                handed -> "shown as the server's row"
+                else -> "kept"
+            }
+        val note =
+            "client id ${yn(idKnown)}, row by id ${yn(byId)}, row with its words ${yn(byWords)}, " +
+                "admitted ${yn(admittedNow)} -> $decision"
+        if (settleNotes[localId] == note) return
+        settleNotes[localId] = note
+        val waiting = mutablePending.value.size
+        sendLog.i { "settle: $note (bubbles $waiting)" }
     }
 
     // ---- Commands ----
@@ -3344,6 +3449,9 @@ internal class GraphChatWorld(
 
         /** How long a failure page of a server the app starts waits for a read already on its way: over the swap. */
         const val FAILED_SETTLE_MS = 300L
+
+        /** F23: how long a page kept mid-reply waits for the live read before it is drawn anyway. */
+        const val KEPT_MID_REPLY_WAIT_MS = 1_200L
     }
 }
 

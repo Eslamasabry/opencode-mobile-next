@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
 import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -315,21 +316,24 @@ public fun KitDiffView(
         val gutter = (if (splitOn) numberWidth else numberWidth * 2) + glyphWidth
         val textWidth: Dp?
         val contentWidth: Dp
-        if (lineWrap) {
+        // Two columns always split the window in half and wrap inside their half: a long line never widens a side or
+        // pushes the new side past the edge (the one-column view wraps the same way on a phone).
+        val wraps = lineWrap || splitOn
+        if (wraps) {
             textWidth = null
             contentWidth = width
-        } else if (splitOn) {
-            val half = maxOf((width - kitHairline()) / 2, gutter + longestWidth)
-            textWidth = half - gutter
-            contentWidth = half * 2 + kitHairline()
         } else {
             textWidth = maxOf(width - gutter, longestWidth)
             contentWidth = gutter + textWidth
         }
-        val g = Geometry(numberWidth, glyphWidth, lineWrap, splitOn, textWidth)
+        val g = Geometry(numberWidth, glyphWidth, wraps, splitOn, textWidth)
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             KitMarkdownSelection {
-                val sideways = if (lineWrap) Modifier.fillMaxWidth() else Modifier.horizontalScroll(rememberScrollState()).width(contentWidth)
+                val sideways = if (wraps) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.horizontalScroll(rememberScrollState()).width(contentWidth)
+                }
                 if (full) {
                     LazyColumn(
                         frame.then(if (bounded) Modifier else Modifier.heightIn(max = UNBOUNDED_LINES_MAX)).then(sideways),
@@ -356,7 +360,7 @@ public fun KitDiffView(
                     change = changeOffset + change,
                     changeTotal = changeTotal,
                     wrap = wrapOn,
-                    canWrap = !file.binary && !formatted,
+                    canWrap = !file.binary && !formatted && !splitOn, // two columns always wrap
                     onWrap = { userWrap = !wrapOn },
                     onPrevious = if (change > 0) ({ change-- }) else null,
                     onNext = if (change < file.changeCount - 1) ({ change++ }) else null,
@@ -807,7 +811,7 @@ private class Cells(
     fun Half(line: DiffLine?, old: Boolean, g: Geometry, modifier: Modifier) {
         val n = if (old) line?.oldNo else line?.newNo
         val isSelected = selected?.contains(old, n) == true
-        Row(modifier.fillMaxHeight().background(if (line == null) Color.Transparent else rowColor(line.kind, isSelected)).diffRemovedMark(line?.kind == DiffLineKind.Removed, colors.text2)) {
+        Row(modifier.fillMaxHeight().testTag(if (old) "diff-old-half" else "diff-new-half").background(if (line == null) Color.Transparent else rowColor(line.kind, isSelected)).diffRemovedMark(line?.kind == DiffLineKind.Removed, colors.text2)) {
             Number(n, old)
             Glyph(line?.kind)
             Words(line, g, Modifier.weight(1f))

@@ -623,7 +623,24 @@ public fun KitScreen(
                             }
                             .then(if (edgesFade || barFace != null) Modifier else Modifier.kitChromeGround(FrostRole.ChatHeader, frost, reach = insetTop))
                     ) {
+                        // F18 (build 10113): on a floating page the status line is the capsule's second row, inside the
+                        // same capsule (Solid face, Glass pane), never a capsule of its own under or over the header.
+                        val lineInCapsule = floatChrome && topPart != null && ownsLine
+                        val statusFold: @Composable (Modifier) -> Unit = { surface ->
+                            KitStatusLineFold(
+                                line,
+                                surface.kitStatusRoom().verticalScroll(rememberScrollState()).testTag("kit-screen-status"),
+                            )
+                        }
                         topPart?.let {
+                            val barAndLine: @Composable () -> Unit = {
+                                if (lineInCapsule)
+                                    Column(Modifier.fillMaxWidth()) {
+                                        it()
+                                        statusFold(Modifier)
+                                    }
+                                else it()
+                            }
                             Box(
                                 Modifier.fillMaxWidth()
                                     .kitLiquidTouchWatch(barTouch)
@@ -632,24 +649,18 @@ public fun KitScreen(
                                 CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
                                     if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody), barBody)
                                     else if (frostedFace != null) KitLiquidBarPane(frostedFace)
-                                    if (floatChrome && barFace == null && frostedFace == null) KitHeaderCapsule { it() }
-                                    // Glass and Frosted: the style's own pane is the capsule (it already floats); only the title's one line.
-                                    else if (floatChrome) CompositionLocalProvider(LocalKitHeaderCapsule provides true) { it() }
+                                    if (floatChrome && barFace == null && frostedFace == null) KitHeaderCapsule { barAndLine() }
+                                    // Glass and Frosted: the style's own pane is the capsule (it already floats); the title's
+                                    // line, and the status line under it, inside that pane.
+                                    else if (floatChrome) CompositionLocalProvider(LocalKitHeaderCapsule provides true) { barAndLine() }
                                     else it()
                                 }
                             }
                         }
-                        if (ownsLine)
-                            KitStatusLineFold(
-                                line,
-                                // A floating page lets the body pass behind its parts, so the status row is a part with
-                                // its own surface, the capsule's (Solid face, Glass pane): the transcript never shows
-                                // through its words.
-                                Modifier.then(if (floatChrome) Modifier.kitFloatingPartSurface() else Modifier)
-                                    .kitStatusRoom()
-                                    .verticalScroll(rememberScrollState())
-                                    .testTag("kit-screen-status"),
-                            )
+                        // A floating page with no bar keeps the line as a part with the capsule's surface: the
+                        // transcript never shows through its words.
+                        if (ownsLine && !lineInCapsule)
+                            statusFold(if (floatChrome) Modifier.kitFloatingPartSurface() else Modifier)
                     }
                 }
                 // The one loading line, right under the bar and its status line, over the top of the body (whose content

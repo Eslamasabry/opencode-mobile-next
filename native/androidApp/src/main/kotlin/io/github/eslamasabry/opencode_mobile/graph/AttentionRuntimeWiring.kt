@@ -181,6 +181,43 @@ class AttentionRuntime(
         refresh()
     }
 
+    /** Conversations whose Stop was tapped and has not settled, with the tap's elapsed-realtime; main thread only. */
+    private val stopping = mutableMapOf<ConversationRef, Long>()
+
+    /** Conversations whose last Stop could not be sent: the row says so until its run changes or the app opens. */
+    private val stopFailed = mutableSetOf<ConversationRef>()
+
+    /** The app came to the front: the person has seen the app, so the failed-stop words go. */
+    fun onAppOpened() {
+        scope.launch {
+            if (stopFailed.isEmpty()) return@launch
+            stopFailed.clear()
+            throttle.reset()
+            refresh()
+        }
+    }
+
+    /** A Stop was tapped on the row: say "Stopping…" at once (the row posts now, not at the next throttle gap). */
+    fun onStopRequested(ref: ConversationRef) {
+        scope.launch {
+            stopping[ref] = android.os.SystemClock.elapsedRealtime()
+            stopFailed.remove(ref)
+            throttle.reset()
+            refresh()
+        }
+    }
+
+    /** The stop call ended. A failed one restores the row's Stop; a sent one settles when the run's row changes. */
+    fun onStopSettled(ref: ConversationRef, sent: Boolean) {
+        if (sent) return
+        scope.launch {
+            stopping.remove(ref)
+            stopFailed.add(ref)
+            throttle.reset()
+            refresh()
+        }
+    }
+
     /** The delete intent of the dock row came back: [turnId] carries the pulse count that was dismissed. */
     fun onRowDismissed(turnId: String?) {
         val pulses = dockPulsesOf(turnId) ?: return
@@ -509,10 +546,21 @@ class AttentionRuntime(
             )
         val outside = DockOutside.build(edgeDock.ui.value, facts, dockWords)
         val allowed = gate.allows(outside)
-        latest =
-            if (outside != null) outside.toStatusContent()
-            else StatusModel.build(input, statusWords, clock.now(), ::formatTime)
-        mutableConversationsRow.value = outside?.toStatusContent()
+        // "Stopping…" lasts until the run's row changes (the stop took) or a bounded wait ends.
+        val stopRef = outside?.stop?.ref
+        val nowMs = android.os.SystemClock.elapsedRealtime()
+        stopping.entries.removeAll { (ref, at) -> ref != stopRef || nowMs - at > STOPPING_MAX_MS }
+        // "Couldn't stop it" lasts until the run's row changes (another run, or none) or the app opens.
+        stopFailed.retainAll { it == stopRef }
+        val conversations =
+            outside?.toStatusContent()?.let {
+                it.copy(
+                    stopping = stopRef != null && stopRef in stopping,
+                    stopFailed = stopRef != null && stopRef in stopFailed,
+                )
+            }
+        latest = conversations ?: StatusModel.build(input, statusWords, clock.now(), ::formatTime)
+        mutableConversationsRow.value = conversations
         mutableRow.value = latest
         if (!background.live.value.active) {
             throttle.reset()
@@ -637,3 +685,5 @@ private class AndroidLiveWords(private val words: NotifyWords) : LiveWords {
     override val readyTitle
         get() = words.text(R.string.notify_status_ready_title)
 }
+
+private const val STOPPING_MAX_MS = 15_000L
