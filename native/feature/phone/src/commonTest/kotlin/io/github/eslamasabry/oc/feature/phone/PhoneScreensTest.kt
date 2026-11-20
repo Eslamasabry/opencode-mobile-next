@@ -161,7 +161,8 @@ class PhoneScreensTest {
             val calls = Calls()
             val ui =
                 ThisPhoneUi(
-                    answer = ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running, AnswerLine.Storage(410L * 1024 * 1024)),
+                    answer =
+                        ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running, AnswerLine.Storage(410L * 1_000_000)),
                     serverRows = persistentListOf(ServerRow.Stop, ServerRow.Restart),
                 )
             setContent { Themed { ThisPhoneScreen(ui, calls) } }

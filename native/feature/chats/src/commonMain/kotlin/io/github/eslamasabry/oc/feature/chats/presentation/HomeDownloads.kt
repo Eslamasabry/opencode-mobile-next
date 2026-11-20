@@ -104,6 +104,17 @@ public object HomeDownloadSizes {
             HomeDownloadKind.OpenCode -> OPEN_CODE_MB
             HomeDownloadKind.Helper -> HELPER_MB
         }
+
+    /** The size [of] says, in bytes: the decimal megabyte `PhoneSizes` reads (B-AGENT-SIZE-001). */
+    public fun bytesOf(kind: HomeDownloadKind): Long = of(kind) * BYTES_PER_MB
+
+    /** A size in bytes said in whole megabytes, rounded up (what a download needs). */
+    public fun megabytesUp(bytes: Long): Int = ((bytes + BYTES_PER_MB - 1) / BYTES_PER_MB).toInt()
+
+    /** A size in bytes said in whole megabytes, rounded down (what the phone has). */
+    public fun megabytesDown(bytes: Long): Int = (bytes / BYTES_PER_MB).toInt()
+
+    private const val BYTES_PER_MB: Long = 1_000_000L
 }
 
 /** Whose words the line shows ([HomeDownloadRules.placeWins]). */
