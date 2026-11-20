@@ -86,7 +86,7 @@ class PhoneSetupRegistryTest {
             "node_sha=061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2 ;;"
         assertTrue(node.installScript.contains(arm64Line))
         assertTrue(node.installScript.contains(x64Line))
-        assertTrue(node.installScript.contains("oc_stage 'Downloading Node.js 24.22.2'\n"))
+        assertTrue(node.installScript.contains("oc_stage 'Downloading Node.js 24.22.3'\n"))
         assertTrue(
             node.installScript.contains(
                 "oc_download \"https://nodejs.org/dist/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz\" \\\n" +

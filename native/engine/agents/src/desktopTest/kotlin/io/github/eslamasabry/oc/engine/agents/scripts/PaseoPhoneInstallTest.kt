@@ -321,8 +321,9 @@ sync() {
             assertEquals(previousCode, cli.readText())
         } else {
             assertEquals(0, result.exitCode, result.stderr)
-            assertEquals(previousCode, File("$directory.oc-good/${PaseoPhoneScripts.CLI_RELATIVE_PATH}").readText())
-            assertEquals(previousLink, linkTarget("$launcher.oc-good"))
+            // 21e5e51b54: the same-name backup of the previous generation is removed once the new one has answered
+            // its version from its final place (oc_paseo_prune); it exists only while the update can still roll back.
+            assertFalse(exists("$directory.oc-good"))
         }
         assertEquals(previousLink, linkTarget(launcher))
         assertFalse(exists("$directory.oc-pending"))
@@ -386,6 +387,7 @@ sync() {
             .filter { it.isNotBlank() && '$' !in it && "\"name\"" !in it && "sherpa" !in it && "\"version\"" !in it && "\"private\"" !in it && it.trim() !in setOf("{", "}", "},") && "overrides" !in it }
             .map { it.replace('\u0001', '$') }
         assertTrue(lines.size > 80, "${lines.size}")
-        for (line in lines) assertTrue(line in generated, line)
+        val missing = lines.filter { it !in generated }
+        assertTrue(missing.isEmpty(), "missing from the port:\n" + missing.joinToString("\n"))
     }
 }

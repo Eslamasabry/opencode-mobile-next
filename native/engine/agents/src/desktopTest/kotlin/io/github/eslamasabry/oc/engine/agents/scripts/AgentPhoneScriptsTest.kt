@@ -201,7 +201,9 @@ class AgentPhoneScriptsTest {
         val restored = guest.run(fixture(AgentPhoneScripts.usePreviousVersion(current, "2.1.283")))
         assertEquals(0, restored.exitCode, restored.stderr)
         assertEquals(0, guest.run(AgentPhoneScripts.check(old)).exitCode)
-        assertTrue(File("$agents/claude/2.1.294").isDirectory)
+        // 21e5e51b54: an older-or-other version folder is removed once the launch link points elsewhere; after the
+        // rollback the newer folder is the other one.
+        assertFalse(File("$agents/claude/2.1.294").exists())
         File("$prior/payload/claude").writeText("#!/bin/sh\necho 2.1.283\n")
         assertNotEquals(0, guest.run(fixture(AgentPhoneScripts.previousVersion(current))).exitCode)
         assertNotEquals(0, guest.run(fixture(AgentPhoneScripts.usePreviousVersion(current, "2.1.283"))).exitCode)
@@ -556,8 +558,10 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         assertTrue(seconds < 30, "the check waited ${seconds}s for a process the program left behind")
         assertEquals("$agents/fixture/1.2.3/launch", linkTarget("${guest.bin}/fixture"))
         val recorded = pids.readLines().filter { it.isNotBlank() }
-        assertEquals(1, recorded.size, "$recorded")
-        assertFalse(alive(recorded.single()), "process ${recorded.single()} outlived the version check")
+        // 21e5e51b54: the program answers its version twice, before the switch and again from its final place (the
+        // prune of older versions waits for that second answer); each run's leftover process is gone.
+        assertEquals(2, recorded.size, "$recorded")
+        for (pid in recorded) assertFalse(alive(pid), "process $pid outlived the version check")
     }
 
     /** A live process (a zombie waiting for its parent to read it has already ended). */

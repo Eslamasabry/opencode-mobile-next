@@ -98,29 +98,35 @@ class BuiltinScriptsShellTest {
     @Test
     fun `B-LINUX-024 the shared setup text and the scripts made from it only change on purpose`() {
         assertEquals(3014, BuiltinScriptTexts.UBUNTU_SETUP.length)
-        assertEquals("c777eea3f666671ba72c4a130dfec804dd2766ce3336056771fa776eee541b10", sha256(BuiltinScriptTexts.UBUNTU_SETUP))
-        assertEquals("b14970782f0daaaeccb46365605ca14abdced821b839ba33da960a58163cd1c1", sha256(BuiltinScriptTexts.HISTORY_COPY))
-        assertEquals("8e06d46d604a993e196664dae531f06af56050e08d2de2a1c2beeebad2888352", sha256(BuiltinScriptTexts.PHONE_CONTEXT))
-        assertEquals(
-            "fad8df7c51078b08a12187889227cd83184c15afea9905f1d761b44740114f15",
-            sha256(BuiltinScriptTexts.FAST_PREREQUISITES),
-        )
-        // The composed script carries OC_REQUESTED_VERSION, so this hash moved with the OpenCode pin
-        // 2.2.5 -> 2.2.6 (93fcf4049); the two texts above, which hold all of its logic, are unchanged.
-        assertEquals(
-            "f9e90fceeffdfea5e11b766cc19e52e4d8e74f339b98fd850163c6d8a59c1a72",
-            sha256(BuiltinScripts.installOpenCodeScript().getOrNull()!!),
-        )
-        // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the script stays the Flutter script byte for
-        // byte; only the port differs on native, whose default is 4098 (abf07acb1) and follows the flavor's choice.
+        // One comparison of every hash, so a deliberate change shows all the new values at once.
+        // The composed install script carries OC_REQUESTED_VERSION: its hash moves with each OpenCode pin
+        // (2.2.5 -> 2.2.6 93fcf4049, 2.2.6 -> 2.3.2 8a9d7393b6); the texts that hold its logic do not.
+        // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the server script stays the Flutter script byte
+        // for byte; only the port differs on native, whose default is 4098 (abf07acb1) and follows the flavor's choice.
         // The Node safe-mode exports (#117, Flutter fix/117-adapt) are outside the hashed 2.1.4 text.
-        assertEquals(
-            "deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda",
-            sha256(
-                BuiltinScripts.serverScript(port = 4097).getOrNull()!!
-                    .replace(NodeCompatScripts.SERVER_ENV, "")
-            ),
-        )
+        val expected =
+            mapOf(
+                "UBUNTU_SETUP" to "c777eea3f666671ba72c4a130dfec804dd2766ce3336056771fa776eee541b10",
+                "HISTORY_COPY" to "b14970782f0daaaeccb46365605ca14abdced821b839ba33da960a58163cd1c1",
+                "PHONE_CONTEXT" to "8e06d46d604a993e196664dae531f06af56050e08d2de2a1c2beeebad2888352",
+                "FAST_PREREQUISITES" to "fad8df7c51078b08a12187889227cd83184c15afea9905f1d761b44740114f15",
+                "install" to "f9e90fceeffdfea5e11b766cc19e52e4d8e74f339b98fd850163c6d8a59c1a72",
+                "server" to "deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda",
+            )
+        val actual =
+            mapOf(
+                "UBUNTU_SETUP" to sha256(BuiltinScriptTexts.UBUNTU_SETUP),
+                "HISTORY_COPY" to sha256(BuiltinScriptTexts.HISTORY_COPY),
+                "PHONE_CONTEXT" to sha256(BuiltinScriptTexts.PHONE_CONTEXT),
+                "FAST_PREREQUISITES" to sha256(BuiltinScriptTexts.FAST_PREREQUISITES),
+                "install" to sha256(BuiltinScripts.installOpenCodeScript().getOrNull()!!),
+                "server" to
+                    sha256(
+                        BuiltinScripts.serverScript(port = 4097).getOrNull()!!
+                            .replace(NodeCompatScripts.SERVER_ENV, "")
+                    ),
+            )
+        assertEquals(expected, actual)
         assertEquals(
             BuiltinScripts.serverScript(port = 4097).getOrNull()!!.replace("--port 4097\n", "--port 4098\n"),
             BuiltinScripts.serverScript().getOrNull()!!,
