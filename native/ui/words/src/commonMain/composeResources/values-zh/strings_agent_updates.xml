@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentUpdatesTitle">智能体更新</string>
+    <string name="agentUpdatesReady">智能体更新已就绪</string>
+    <string name="agentUpdatesChoiceUpdate">更新</string>
+    <string name="agentUpdatesChoiceKeep">保留</string>
+    <string name="agentUpdatesChoiceRemove">移除</string>
+    <string name="agentUpdatesChoiceLabel">如何处理%1$s</string>
+    <string name="agentUpdatesVersions">版本 %1$s → %2$s</string>
+    <string name="agentUpdatesVersionNew">新版本 %1$s</string>
+    <string name="agentUpdatesDownloads">下载约 %1$s</string>
+    <string name="agentUpdatesDownloadsUnknown">下载大小未知</string>
+    <string name="agentUpdatesStays">保持 %1$s</string>
+    <string name="agentUpdatesStaysUnknown">保持现有版本</string>
+    <string name="agentUpdatesFrees">释放约 %1$s</string>
+    <string name="agentUpdatesFreesUnknown">释放它占用的空间</string>
+    <string name="agentUpdatesKeepHelperTooNew">此版本无法与新的智能体助手程序配合运行，因此不能保留。</string>
+    <string name="agentUpdatesKeepNotSupported">此版本已不再受支持，因此不能保留。</string>
+    <string name="agentUpdatesNeededLabel">这些更新所需</string>
+    <string name="agentUpdatesNeededWhy">你更新的智能体需要这些才能运行。</string>
+    <string name="agentUpdatesNeededAlways">你的智能体需要这些才能继续运行。</string>
+    <string name="agentUpdatesTotalDownload">下载</string>
+    <string name="agentUpdatesTotalFrees">释放空间</string>
+    <string name="agentUpdatesAbout">约 %1$s</string>
+    <string name="agentUpdatesAtLeast">至少 %1$s</string>
+    <string name="agentUpdatesShortSpace">这些更新需要约 %1$s，而这部手机只剩 %2$s 可用。请保留或移除一个智能体，或腾出空间。</string>
+    <string name="agentUpdatesMetered">你正在使用移动数据。更新将通过移动数据下载。</string>
+    <string name="agentUpdatesNetworkUnknown">此网络可能使用移动数据。更新将通过此网络下载。</string>
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="other">更新 %1$d 个</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="other">移除 %1$d 个</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="other">更新 %1$d 个并移除 %2$d 个</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">保留这些版本</string>
+    <string name="agentUpdatesAgentsLine">不再使用某个智能体？</string>
+    <string name="agentUpdatesAgentsAction">在“智能体”中移除</string>
+    <string name="agentUpdatesLinuxLine">Git 和 Python 来自 Ubuntu。</string>
+    <string name="agentUpdatesLinuxAction">在 Linux › 软件包中更新</string>
+    <string name="agentUpdatesFailed">更新没有开始。</string>
+    <string name="agentUpdatesNotRemoved">%1$s 未被移除。</string>
+    <string name="agentUpdatesNoSpace">这部手机没有足够空间进行这些更新。请保留或移除一个智能体，或腾出空间。</string>
+</resources>

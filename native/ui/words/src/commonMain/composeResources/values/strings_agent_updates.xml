@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home: "Updates for your agents", the sheet after an app update that moves the agents' versions (native/update-choice-ui, 2026-11-19). -->
+<resources>
+    <string name="agentUpdatesTitle">Updates for your agents</string>
+    <string name="agentUpdatesReady">Agent updates ready</string>
+    <!-- One of three answers in a segmented control for one agent: install its new version. Short. -->
+    <string name="agentUpdatesChoiceUpdate">Update</string>
+    <!-- One of three answers for one agent: keep the version it has now. Short. -->
+    <string name="agentUpdatesChoiceKeep">Keep</string>
+    <!-- One of three answers for one agent: remove it from this phone. Short. -->
+    <string name="agentUpdatesChoiceRemove">Remove</string>
+    <!-- Screen-reader name of the three answers; %1$s is the agent's name. -->
+    <string name="agentUpdatesChoiceLabel">What to do with %1$s</string>
+    <!-- The version installed now, then the new one. -->
+    <string name="agentUpdatesVersions">Version %1$s → %2$s</string>
+    <string name="agentUpdatesVersionNew">New version %1$s</string>
+    <string name="agentUpdatesDownloads">Downloads about %1$s</string>
+    <string name="agentUpdatesDownloadsUnknown">Download size not known</string>
+    <string name="agentUpdatesStays">Stays on %1$s</string>
+    <string name="agentUpdatesStaysUnknown">Stays on the version it has</string>
+    <string name="agentUpdatesFrees">Frees about %1$s</string>
+    <string name="agentUpdatesFreesUnknown">Frees the space it uses</string>
+    <string name="agentUpdatesKeepHelperTooNew">Its version can't work with the new agent helper, so it can't be kept.</string>
+    <string name="agentUpdatesKeepNotSupported">Its version isn't supported any more, so it can't be kept.</string>
+    <string name="agentUpdatesNeededLabel">Needed for these updates</string>
+    <string name="agentUpdatesNeededWhy">The agents you update need these to run.</string>
+    <string name="agentUpdatesNeededAlways">Your agents need these to keep working.</string>
+    <!-- A total's name; its amount stands at the row's end. -->
+    <string name="agentUpdatesTotalDownload">Download</string>
+    <string name="agentUpdatesTotalFrees">Space freed</string>
+    <string name="agentUpdatesAbout">About %1$s</string>
+    <string name="agentUpdatesAtLeast">At least %1$s</string>
+    <string name="agentUpdatesShortSpace">These updates need about %1$s and this phone has %2$s free. Keep or remove an agent, or free up space.</string>
+    <string name="agentUpdatesMetered">You're on mobile data. The updates download over it.</string>
+    <string name="agentUpdatesNetworkUnknown">This network may use mobile data. The updates download over it.</string>
+    <!-- The sheet's button: %1$d is how many agents update. -->
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="one">Update %1$d</item>
+        <item quantity="other">Update %1$d</item>
+    </plurals>
+    <!-- The sheet's button: %1$d is how many agents are removed. -->
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="one">Remove %1$d</item>
+        <item quantity="other">Remove %1$d</item>
+    </plurals>
+    <!-- The sheet's button: %1$d agents update and %2$d are removed (the form follows %2$d). -->
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="one">Update %1$d and remove %2$d</item>
+        <item quantity="other">Update %1$d and remove %2$d</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">Keep these versions</string>
+    <string name="agentUpdatesAgentsLine">Don't use an agent any more?</string>
+    <string name="agentUpdatesAgentsAction">Remove it in Agents</string>
+    <string name="agentUpdatesLinuxLine">Git and Python come from Ubuntu.</string>
+    <string name="agentUpdatesLinuxAction">Update them in Linux › Packages</string>
+    <string name="agentUpdatesFailed">The updates didn't start.</string>
+    <string name="agentUpdatesNoSpace">There isn't enough room on this phone for these updates. Keep or remove an agent, or free up space.</string>
+    <!-- Home's line after the person chose to remove an agent and it was not removed; %1$s is its name. -->
+    <string name="agentUpdatesNotRemoved">%1$s wasn't removed.</string>
+</resources>

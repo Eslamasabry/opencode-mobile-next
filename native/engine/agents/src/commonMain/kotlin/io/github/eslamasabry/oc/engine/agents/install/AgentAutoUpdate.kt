@@ -44,6 +44,9 @@ public object AgentAutoUpdateRule {
 
 /** What the auto-updater reads about the phone's agents. */
 public interface AgentUpdateHost {
+    /** Current-build permission, including resumed jobs. An unbound decision source grants none. */
+    public fun updateAllowed(agent: AgentId): Boolean = false
+
     /** Reads the agents again (installed versions); it may be older than the work that just ended. */
     public suspend fun refresh()
 
@@ -324,8 +327,9 @@ public class AgentAutoUpdater(
             }
         val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
         // An update the app was stopped in the middle of runs again first (the install skips what is in place).
-        val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted }
-        val target = resume ?: AgentAutoUpdateRule.target(host.installed, behind, helperBehind)
+        val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted && host.updateAllowed(it) }
+        val eligible = host.installed.filter(host::updateAllowed)
+        val target = resume ?: AgentAutoUpdateRule.target(eligible, behind, helperBehind)
         // Only an install that replaces or restarts the helper waits for the agents to be idle. An agent-only update
         // (the helper already on its pin) replaces that agent's own files and link; another agent's conversation keeps
         // running on its own copy, so it never waits for it.

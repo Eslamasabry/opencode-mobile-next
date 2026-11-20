@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJob
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJobState
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJobs
+import io.github.eslamasabry.oc.engine.agents.scripts.AgentPackageStep
 import io.github.eslamasabry.oc.engine.agents.scripts.AgentPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoLockCodec
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
@@ -30,6 +31,7 @@ import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.opencode_mobile.BuildConfig
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.SetupDiskSpace
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
@@ -83,6 +85,10 @@ class NativeAgentSetupJobs(
                 getString(Res.string.phoneSetupNotificationDone),
                 getString(Res.string.phoneSetupNotificationStopped),
             )
+        val packageNames = mapOf(
+            AgentPackageStep.Essentials to getString(Res.string.phoneSetupEssentialsShort),
+            AgentPackageStep.Python to getString(Res.string.linuxRuntimePythonTitle),
+        )
         // The start phase holds the one install gate (the setup engine's checks hold it too): busy keeps the try.
         if (!payloads.installGate.tryLock()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         try {
@@ -92,7 +98,9 @@ class NativeAgentSetupJobs(
                 val estimate = guard.downloadBytesFor(descriptor) ?: error("unavailable")
                 val installed =
                     descriptor.recipe?.artifacts?.values?.mapNotNull { it.installedBytes }?.maxOrNull()
-                val required = requiredSetupFreeBytes(estimate, installed)
+                val required = if (components.any { it.id == "agent-${agent.raw}" }) {
+                    requiredSetupFreeBytes(estimate, installed)
+                } else SetupDiskSpace.MIN_INSTALL_BYTES
                 check(app.filesDir.usableSpace >= required) { "storage" }
                 val lock =
                     app.assets.open("agents/paseo-package-lock.json").bufferedReader().use {
@@ -120,12 +128,12 @@ class NativeAgentSetupJobs(
                     if (!linux.installed) emptySet()
                     else
                         PhoneAgentRules.satisfiedSteps(
-                            mapOf(
-                                    "agent-node" to PaseoPhoneScripts.nodeCheck,
-                                    "agent-paseo" to PaseoPhoneScripts.check,
-                                    "agent-${agent.raw}" to AgentPhoneScripts.check(descriptor),
-                                )
-                                .filterKeys { id -> components.any { it.id == id } }
+                            buildMap {
+                                AgentPackageStep.entries.forEach { put(it.id, it.check) }
+                                put("agent-node", PaseoPhoneScripts.nodeCheck)
+                                put("agent-paseo", PaseoPhoneScripts.check)
+                                put("agent-${agent.raw}", AgentPhoneScripts.check(descriptor))
+                            }.filterKeys { id -> components.any { it.id == id } }
                         ) { script ->
                             try {
                                 linux.run(script, 120, agentUser = true, logOutput = false).exitCode
@@ -136,11 +144,10 @@ class NativeAgentSetupJobs(
                             }
                         }
                 val specs = components.map { component ->
-                    val script =
+                    val packageStep = AgentPackageStep.entries.firstOrNull { it.id == component.id }
+                    val script = packageStep?.install ?:
                         when (component.id) {
                             "linux" -> null
-                            "essentials" -> NativePhoneSetup.ESSENTIALS_INSTALL
-                            "python" -> NativePhoneSetup.PYTHON_INSTALL
                             "agent-user" -> AgentPhoneScripts.bootstrapUser
                             "agent-node" -> PaseoPhoneScripts.nodeInstall
                             "agent-paseo" -> paseo
@@ -155,9 +162,15 @@ class NativeAgentSetupJobs(
                         weight = 1.0,
                         skipped = (component.id == "linux" && linux.installed) || component.id in inPlace,
                         version = null,
-                        stage = null,
+                        stage = packageNames[packageStep],
                         labels = emptyMap(),
-                        data = mapOf("requiredFreeBytes" to required.toString()),
+                        data = buildMap {
+                            put("requiredFreeBytes", required.toString())
+                            if (packageStep != null) {
+                                val estimateBytes = if (component.id in inPlace) 0L else packageStep.downloadBytes
+                                put("downloadBytes", estimateBytes.toString())
+                            }
+                        },
                         agentUser = component.agentUser,
                     )
                 }

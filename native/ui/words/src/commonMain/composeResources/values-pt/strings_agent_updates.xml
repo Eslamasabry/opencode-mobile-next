@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentUpdatesTitle">Atualizações dos seus agentes</string>
+    <string name="agentUpdatesReady">Atualizações de agentes prontas</string>
+    <string name="agentUpdatesChoiceUpdate">Atualizar</string>
+    <string name="agentUpdatesChoiceKeep">Manter</string>
+    <string name="agentUpdatesChoiceRemove">Remover</string>
+    <string name="agentUpdatesChoiceLabel">O que fazer com %1$s</string>
+    <string name="agentUpdatesVersions">Versão %1$s → %2$s</string>
+    <string name="agentUpdatesVersionNew">Versão nova %1$s</string>
+    <string name="agentUpdatesDownloads">Baixa cerca de %1$s</string>
+    <string name="agentUpdatesDownloadsUnknown">Tamanho do download desconhecido</string>
+    <string name="agentUpdatesStays">Fica na %1$s</string>
+    <string name="agentUpdatesStaysUnknown">Fica na versão que tem</string>
+    <string name="agentUpdatesFrees">Libera cerca de %1$s</string>
+    <string name="agentUpdatesFreesUnknown">Libera o espaço que ocupa</string>
+    <string name="agentUpdatesKeepHelperTooNew">A versão dele não funciona com o novo auxiliar de agentes, então não dá para manter.</string>
+    <string name="agentUpdatesKeepNotSupported">A versão dele não tem mais suporte, então não dá para manter.</string>
+    <string name="agentUpdatesNeededLabel">Necessário para estas atualizações</string>
+    <string name="agentUpdatesNeededWhy">Os agentes que você atualiza precisam deles para funcionar.</string>
+    <string name="agentUpdatesNeededAlways">Seus agentes precisam deles para continuar funcionando.</string>
+    <string name="agentUpdatesTotalDownload">Para baixar</string>
+    <string name="agentUpdatesTotalFrees">Espaço liberado</string>
+    <string name="agentUpdatesAbout">Cerca de %1$s</string>
+    <string name="agentUpdatesAtLeast">Pelo menos %1$s</string>
+    <string name="agentUpdatesShortSpace">Estas atualizações precisam de cerca de %1$s e este celular tem %2$s livres. Mantenha ou remova um agente, ou libere espaço.</string>
+    <string name="agentUpdatesMetered">Você está nos dados móveis. As atualizações são baixadas por eles.</string>
+    <string name="agentUpdatesNetworkUnknown">Esta rede pode usar dados móveis. As atualizações são baixadas por ela.</string>
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="one">Atualizar %1$d</item>
+        <item quantity="many">Atualizar %1$d</item>
+        <item quantity="other">Atualizar %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="one">Remover %1$d</item>
+        <item quantity="many">Remover %1$d</item>
+        <item quantity="other">Remover %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="one">Atualizar %1$d e remover %2$d</item>
+        <item quantity="many">Atualizar %1$d e remover %2$d</item>
+        <item quantity="other">Atualizar %1$d e remover %2$d</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">Manter estas versões</string>
+    <string name="agentUpdatesAgentsLine">Não usa mais um agente?</string>
+    <string name="agentUpdatesAgentsAction">Remova-o em Agentes</string>
+    <string name="agentUpdatesLinuxLine">Git e Python vêm do Ubuntu.</string>
+    <string name="agentUpdatesLinuxAction">Atualize-os em Linux › Pacotes</string>
+    <string name="agentUpdatesFailed">As atualizações não começaram.</string>
+    <string name="agentUpdatesNotRemoved">%1$s não foi removido.</string>
+    <string name="agentUpdatesNoSpace">Não há espaço suficiente neste celular para estas atualizações. Mantenha ou remova um agente, ou libere espaço.</string>
+</resources>
