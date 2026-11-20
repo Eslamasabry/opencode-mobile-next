@@ -19,6 +19,9 @@ public enum class SwitcherServerState {
     /** It was tried and does not answer now. */
     NotAnswering,
 
+    /** This phone's OpenCode, stopped by the person: its own state with Start OpenCode, never a failure. */
+    Stopped,
+
     /** Saved, not in use: tapping it switches to it. */
     Saved,
 }
@@ -97,8 +100,11 @@ public object ServerSwitcherRules {
                 val state =
                     when {
                         source.main && opening != null && (opening.profile == null || opening.profile == source.profile) ->
-                            if (opening.phase == ChatsOpeningPhase.Failed) SwitcherServerState.NotAnswering
+                            if (opening.phase == ChatsOpeningPhase.Failed && opening.phoneOff)
+                                SwitcherServerState.Stopped
+                            else if (opening.phase == ChatsOpeningPhase.Failed) SwitcherServerState.NotAnswering
                             else SwitcherServerState.Connecting
+                        source.stoppedByPerson -> SwitcherServerState.Stopped
                         source.unreachable -> SwitcherServerState.NotAnswering
                         source.main -> SwitcherServerState.Connected
                         else -> SwitcherServerState.Saved

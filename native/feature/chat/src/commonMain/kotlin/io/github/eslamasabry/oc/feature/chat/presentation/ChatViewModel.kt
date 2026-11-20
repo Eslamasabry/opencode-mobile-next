@@ -328,6 +328,8 @@ public class ChatViewModel(
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()
 
+    override fun startPhoneServer(): Unit = presenter.startPhoneServer()
+
     override fun restartAgent(): Unit = presenter.restartAgent()
 
     override fun openParent() {

@@ -56,7 +56,7 @@ class AndroidChatPhoneServer(
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
     /** Starts this phone's OpenCode (the This phone page's own start path), e.g. after the person stopped it. */
-    suspend fun start(profile: ProfileId): Outcome<Unit> =
+    override suspend fun start(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.start()
         else Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
 
@@ -151,6 +151,9 @@ private val NOT_WAITING: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServ
 internal fun waitOf(facts: PhoneServerFacts): PhoneServerWait =
     when {
         facts.updateRunning -> PhoneServerWait.Updating
+        // The person's own Stop, with nothing running or starting: its own state, never a wait or a failure.
+        facts.stoppedByPerson && !facts.starting && facts.status?.serverRunning != true ->
+            PhoneServerWait.StoppedByPerson
         facts.starting || facts.recovery is RecoveryFacts.Waiting || facts.recovery == RecoveryFacts.Restarting ->
             PhoneServerWait.Starting
         else -> PhoneServerWait.None

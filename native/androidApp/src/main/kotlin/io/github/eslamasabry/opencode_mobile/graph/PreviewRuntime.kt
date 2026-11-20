@@ -370,18 +370,25 @@ class PreviewRuntime(
         // The helper's own source connecting is a stage of the start ([LaunchStages]).
         val helper = isPhoneHelper(id)
         if (helper) stages.agentConnecting(id, true)
+        synchronized(personStopped) { personStopped.remove(id) }
         val result =
             try {
                 connectNow(id, recoverDrafts, makeActive, local)
             } finally {
                 if (helper) stages.agentConnecting(id, false)
             }
-        when (result) {
-            is Outcome.Failed -> mutableSourceFailures.update { it + (id to result.failure) }
-            is Outcome.Ok -> mutableSourceFailures.update { it - id }
+        val stopped = result is Outcome.Failed && synchronized(personStopped) { personStopped.remove(id) }
+        when {
+            // The person's own stop is a state (Home says so, with Start OpenCode); it is never a source failure.
+            stopped -> mutableSourceFailures.update { it - id }
+            result is Outcome.Failed -> mutableSourceFailures.update { it + (id to result.failure) }
+            else -> mutableSourceFailures.update { it - id }
         }
         return result
     }
+
+    /** Sources whose last attempt ended because the person had stopped This phone's OpenCode (not a failure). */
+    private val personStopped = mutableSetOf<ProfileId>()
 
     internal fun listSourceShown(id: ProfileId): Boolean =
         id == profiles.activeId.value ||
@@ -756,6 +763,13 @@ class PreviewRuntime(
         ) {
             val gate = localGates.gate
             val waited = local ?: gate?.invoke(id)
+            if (waited == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.StoppedByPerson) {
+                // The person stopped it: nothing to connect to, and not a failure of the source (connectForHome).
+                synchronized(personStopped) { personStopped.add(id) }
+                return Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+                    .failed()
+                    .atStage(ConnectionStage.OpenGateway)
+            }
             if (waited == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.NotAnswering) {
                 return Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
                     .failed()
