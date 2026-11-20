@@ -666,7 +666,7 @@
     <string name="tourMakeItYoursTitle">Personalizzalo</string>
     <string name="tourMakeItYoursOffer">Personalizzalo: chiaro o scuro, colori e stile, in quattro passaggi</string>
     <string name="tourMakeItYoursColours">Inizia da qui: chiaro o scuro, un tema e un colore d'accento. L'anteprima sopra mostra ogni cambiamento all'istante.</string>
-    <string name="tourMakeItYoursStyle">Scegli l'aspetto di card e barre: Solid, Glass, Soft, Brutal, Paper o Signal.</string>
+    <string name="tourMakeItYoursStyle">Scegli l'aspetto di card e barre: Pieno, Vetro, Morbido, Brutal, Carta o Signal.</string>
     <string name="appearanceGroupBackground">Sfondo</string>
     <string name="tourMakeItYoursBackground">Scegli cosa si muove dietro le tue pagine, oppure disattivalo.</string>
     <string name="tourMakeItYoursComfort">Ingrandisci il testo, riduci le animazioni e scegli il bagliore mentre viene scritta una risposta.</string>

@@ -35,15 +35,19 @@ internal object StatusWidgetModel {
         if (snapshot.optBoolean("connected")) null
         else listOf(snapshot.optLong("pausedAt"), snapshot.optLong("lastSeenAt")).firstOrNull { it > 0 }
 
-    fun lines(snapshot: JSONObject, linuxInstalled: Boolean, linuxRunning: Boolean): List<Line> {
+    /**
+     * [linuxPresent]: this phone has (or had) a Linux folder; [linuxReady]: its setup finished.
+     * The server's own state is the server row's, never repeated here.
+     */
+    fun lines(snapshot: JSONObject, linuxPresent: Boolean, linuxReady: Boolean): List<Line> {
         val out = mutableListOf<Line>()
         val servers = snapshot.optJSONArray("servers")
         for (i in 0 until (servers?.length() ?: 0)) {
             servers?.optJSONObject(i)?.let { out += server(it) }
         }
-        if (linuxInstalled) {
-            out += Line(Kind.LINUX, "", if (linuxRunning) "running" else "stopped",
-                if (linuxRunning) Tone.OK else Tone.IDLE)
+        if (linuxPresent) {
+            out += Line(Kind.LINUX, "", if (linuxReady) "setUp" else "notSetUp",
+                if (linuxReady) Tone.OK else Tone.IDLE)
         }
         if (snapshot.has("profileID")) {
             val running = running(snapshot)

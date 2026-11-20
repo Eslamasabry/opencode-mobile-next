@@ -74,4 +74,6 @@
     <string name="widget_allow_for">Cho phép một lần: %1$s</string>
     <string name="widget_reply_for">Trả lời %1$s</string>
     <string name="widget_step_for">%1$s: %2$s</string>
+    <string name="widget_status_set_up">đã thiết lập</string>
+    <string name="widget_status_not_set_up">chưa thiết lập</string>
 </resources>

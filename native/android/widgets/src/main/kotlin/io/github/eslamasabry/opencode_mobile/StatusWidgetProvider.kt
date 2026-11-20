@@ -15,8 +15,6 @@ import java.io.File
 import org.json.JSONObject
 import io.github.eslamasabry.oc.android.widgets.R
 import io.github.eslamasabry.oc.android.widgets.MainActivity
-import io.github.eslamasabry.oc.android.widgets.BuiltinLinux
-import io.github.eslamasabry.oc.android.widgets.BuiltinServerService
 import io.github.eslamasabry.oc.android.widgets.NativeStrings
 
 /**
@@ -59,11 +57,10 @@ open class StatusWidgetProvider : AppWidgetProvider() {
                 UsageWidgetRows.readRows(context)).render(size.second)
         }
 
-        /** Installed, and running in this process. Never starts or creates the Linux runtime. */
+        /** Whether this phone has a Linux folder and whether its setup finished; never starts or reads the server. */
         private fun linuxState(context: Context): StatusWidgetRenderer.Linux {
-            val installed = File(File(context.filesDir, "linux"), "ubuntu.ready").isFile
-            return StatusWidgetRenderer.Linux(installed, installed && (BuiltinLinux.serverRunningIfStarted() ||
-                BuiltinServerService.isForegroundRunning))
+            val home = File(context.filesDir, "linux")
+            return StatusWidgetRenderer.Linux(home.isDirectory, File(home, "ubuntu.ready").isFile)
         }
     }
 }
@@ -80,8 +77,8 @@ internal class StatusWidgetRenderer(
     private val g = WidgetGraphite.of(context, snapshot)
     private val copy = WidgetCopy(context, now)
 
-    /** This phone's Linux: set up at all, and running now. */
-    data class Linux(val installed: Boolean, val running: Boolean)
+    /** This phone's Linux: there at all, and its setup finished. */
+    data class Linux(val present: Boolean, val ready: Boolean)
 
     /** Draws for [heightDp]; the width only changes where the words end. */
     fun render(heightDp: Int): RemoteViews {
@@ -99,7 +96,7 @@ internal class StatusWidgetRenderer(
         v.setOnClickPendingIntent(android.R.id.background, launch(OPEN_APP, ""))
         val fontScale = context.resources.configuration.fontScale.coerceAtLeast(1f)
         val height = (heightDp / fontScale).toInt()
-        val lines = StatusWidgetModel.lines(snapshot, linux.installed, linux.running)
+        val lines = StatusWidgetModel.lines(snapshot, linux.present, linux.ready)
         val plan = StatusWidgetModel.plan(usage, now)
         val count = StatusWidgetModel.lineCount(height, plan != null, lines.size)
         // A few lines sit in the middle of the cell; once they fill it they start at the top.
@@ -148,7 +145,8 @@ internal class StatusWidgetRenderer(
         "running" -> if (line.kind == StatusWidgetModel.Kind.TASKS) {
             s(R.string.widget_status_tasks_running, line.count)
         } else s(R.string.widget_status_running)
-        "stopped" -> s(R.string.widget_status_stopped)
+        "setUp" -> s(R.string.widget_status_set_up)
+        "notSetUp" -> s(R.string.widget_status_not_set_up)
         else -> s(R.string.widget_status_tasks_none)
     }
 

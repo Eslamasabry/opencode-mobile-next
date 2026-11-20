@@ -17,12 +17,12 @@ class StatusWidgetModelTest {
         )))
 
     @Test fun anOfflineServerComesFirstInTheBadTone() {
-        val lines = StatusWidgetModel.lines(snapshot(), linuxInstalled = true, linuxRunning = false)
+        val lines = StatusWidgetModel.lines(snapshot(), linuxPresent = true, linuxReady = false)
         assertEquals("Laptop", lines.first().name)
         assertEquals(Tone.BAD, lines.first().tone)
         assertEquals(listOf(StatusWidgetModel.Kind.SERVER, StatusWidgetModel.Kind.SERVER,
             StatusWidgetModel.Kind.LINUX, StatusWidgetModel.Kind.TASKS), lines.map { it.kind })
-        assertEquals("stopped", lines[2].state)
+        assertEquals("notSetUp", lines[2].state)
     }
 
     @Test fun whenTheAppStoppedWatchingTheHeaderSaysSince() {
@@ -42,8 +42,18 @@ class StatusWidgetModelTest {
         assertEquals(1, tasks.count)
     }
 
-    @Test fun linuxShowsOnlyWhenInstalled() {
-        val lines = StatusWidgetModel.lines(snapshot(), linuxInstalled = false, linuxRunning = false)
+    @Test fun `B-WIDGET-306 the Linux line says set up or not set up, never the server's state`() {
+        fun linux(ready: Boolean) =
+            StatusWidgetModel.lines(snapshot(), linuxPresent = true, linuxReady = ready)
+                .single { it.kind == StatusWidgetModel.Kind.LINUX }
+        val ready = linux(true)
+        assertEquals("setUp", ready.state)
+        assertEquals(Tone.OK, ready.tone)
+        assertEquals("notSetUp", linux(false).state)
+    }
+
+    @Test fun linuxShowsOnlyWhenThePhoneHasALinuxFolder() {
+        val lines = StatusWidgetModel.lines(snapshot(), linuxPresent = false, linuxReady = false)
         assertEquals(0, lines.count { it.kind == StatusWidgetModel.Kind.LINUX })
     }
 

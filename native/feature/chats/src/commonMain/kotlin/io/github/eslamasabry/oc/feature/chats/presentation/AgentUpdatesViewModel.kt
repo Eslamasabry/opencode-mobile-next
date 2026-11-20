@@ -56,7 +56,7 @@ public class AgentUpdatesViewModel(
 
     override fun chooseAgentUpdate(id: AgentId, choice: AgentUpdateChoice): Unit = model.choose(id, choice)
 
-    override fun proceedAgentUpdates(): Unit = model.proceed()
+    override fun proceedAgentUpdates(): Unit = model.applyChoices()
 
     override fun confirmAgentRemoval(): Unit = model.confirmRemoval()
 

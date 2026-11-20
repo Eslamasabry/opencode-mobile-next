@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.github.eslamasabry.oc.android.widgets.WidgetPanelSave
 import io.github.eslamasabry.oc.android.widgets.WidgetPanels
 import io.github.eslamasabry.oc.android.widgets.WidgetTextActions
 import io.github.eslamasabry.oc.core.common.launch.LaunchToken
@@ -79,16 +80,24 @@ open class WidgetOverlayActivity : ComponentActivity() {
                             project = saved.project,
                         ),
                         WidgetPanelPort { state ->
-                            WidgetPanels.save(
-                                app,
-                                widgetId,
-                                saved.copy(
-                                    background = state.background,
-                                    accent = state.accent,
-                                    projects = state.projects,
-                                    project = state.project,
-                                ),
-                            )
+                            when (
+                                WidgetPanels.save(
+                                    app,
+                                    widgetId,
+                                    saved.copy(
+                                        background = state.background,
+                                        accent = state.accent,
+                                        projects = state.projects,
+                                        project = state.project,
+                                    ),
+                                )
+                            ) {
+                                WidgetPanelSave.Saved -> WidgetPanelResult.Saved
+                                WidgetPanelSave.ScopeChanged,
+                                WidgetPanelSave.ProjectGone,
+                                WidgetPanelSave.NotOwned -> WidgetPanelResult.Changed
+                                else -> WidgetPanelResult.Failed
+                            }
                         },
                     )
                 }

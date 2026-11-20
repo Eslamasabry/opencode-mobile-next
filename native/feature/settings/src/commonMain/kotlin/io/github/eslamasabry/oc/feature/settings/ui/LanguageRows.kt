@@ -21,28 +21,27 @@ import io.github.eslamasabry.oc.ui.words.res.languageNameRussian
 import io.github.eslamasabry.oc.ui.words.res.languageNameSpanish
 import io.github.eslamasabry.oc.ui.words.res.languageNameVietnamese
 import io.github.eslamasabry.oc.ui.words.res.languagePickerPartlyTranslated
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** The country whose flag stands for a language, and its two letters (the owner can change either). */
-private data class LanguageFacts(val country: String, val letters: String, val inCurrent: StringResource)
+private data class LanguageFacts(val country: String, val letters: String)
 
 private val FACTS: Map<AppLanguage, LanguageFacts> =
     mapOf(
-        AppLanguage.English to LanguageFacts("US", "Aa", Res.string.languageNameEnglish),
-        AppLanguage.Arabic to LanguageFacts("EG", "أب", Res.string.languageNameArabic),
-        AppLanguage.Spanish to LanguageFacts("ES", "Es", Res.string.languageNameSpanish),
-        AppLanguage.Japanese to LanguageFacts("JP", "あ", Res.string.languageNameJapanese),
-        AppLanguage.Portuguese to LanguageFacts("BR", "Pt", Res.string.languageNamePortuguese),
-        AppLanguage.Russian to LanguageFacts("RU", "Я", Res.string.languageNameRussian),
-        AppLanguage.Vietnamese to LanguageFacts("VN", "Vi", Res.string.languageNameVietnamese),
-        AppLanguage.Indonesian to LanguageFacts("ID", "Id", Res.string.languageNameIndonesian),
-        AppLanguage.French to LanguageFacts("FR", "Fr", Res.string.languageNameFrench),
-        AppLanguage.Chinese to LanguageFacts("CN", "文", Res.string.languageNameChinese),
-        AppLanguage.Italian to LanguageFacts("IT", "It", Res.string.languageNameItalian),
+        AppLanguage.English to LanguageFacts("US", "Aa"),
+        AppLanguage.Arabic to LanguageFacts("EG", "أب"),
+        AppLanguage.Spanish to LanguageFacts("ES", "Es"),
+        AppLanguage.Japanese to LanguageFacts("JP", "あ"),
+        AppLanguage.Portuguese to LanguageFacts("BR", "Pt"),
+        AppLanguage.Russian to LanguageFacts("RU", "Я"),
+        AppLanguage.Vietnamese to LanguageFacts("VN", "Vi"),
+        AppLanguage.Indonesian to LanguageFacts("ID", "Id"),
+        AppLanguage.French to LanguageFacts("FR", "Fr"),
+        AppLanguage.Chinese to LanguageFacts("CN", "文"),
+        AppLanguage.Italian to LanguageFacts("IT", "It"),
     )
 
-/** The language the app resolves "System default" to right now: the one it is drawn in while the choice is System. */
+/** The language the app resolves "System default" to right now: the one it is drawn in while the choice is the system's. */
 private fun resolvedSystem(current: AppLanguage, uiTag: String): AppLanguage? =
     if (current != AppLanguage.System) null
     else AppLanguage.entries.firstOrNull { it.tag != null && it.tag == uiTag.substringBefore('-').lowercase() }
@@ -69,7 +68,7 @@ internal fun languageChoices(current: AppLanguage): List<KitChoice<AppLanguage>>
     return order.map { item ->
         val facts = FACTS[item]
         val own = ownNames.getValue(item)
-        val named = (facts ?: FACTS[system])?.inCurrent?.let { stringResource(it) }?.takeIf { it != own }
+        val named = (if (facts != null) item else system)?.let { nameInCurrent(it) }?.takeIf { it != own }
         val share = partly.getValue(item)?.let { stringResource(Res.string.languagePickerPartlyTranslated, it) }
         KitChoice(
             item,
@@ -79,6 +78,24 @@ internal fun languageChoices(current: AppLanguage): List<KitChoice<AppLanguage>>
         )
     }
 }
+
+/** The language's name in the language the app is drawn in; System has none (its row names the phone's own language). */
+@Composable
+private fun nameInCurrent(language: AppLanguage): String? =
+    when (language) {
+        AppLanguage.System -> null
+        AppLanguage.English -> stringResource(Res.string.languageNameEnglish)
+        AppLanguage.Arabic -> stringResource(Res.string.languageNameArabic)
+        AppLanguage.Spanish -> stringResource(Res.string.languageNameSpanish)
+        AppLanguage.Japanese -> stringResource(Res.string.languageNameJapanese)
+        AppLanguage.Portuguese -> stringResource(Res.string.languageNamePortuguese)
+        AppLanguage.Russian -> stringResource(Res.string.languageNameRussian)
+        AppLanguage.Vietnamese -> stringResource(Res.string.languageNameVietnamese)
+        AppLanguage.Indonesian -> stringResource(Res.string.languageNameIndonesian)
+        AppLanguage.French -> stringResource(Res.string.languageNameFrench)
+        AppLanguage.Chinese -> stringResource(Res.string.languageNameChinese)
+        AppLanguage.Italian -> stringResource(Res.string.languageNameItalian)
+    }
 
 private fun markOf(item: AppLanguage, facts: LanguageFacts?): KitLanguageMark =
     when {
