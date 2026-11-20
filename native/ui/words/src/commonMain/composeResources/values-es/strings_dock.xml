@@ -163,4 +163,5 @@
     <string name="edgeLightAgeHours">%1$s h</string>
     <string name="edgeLightAgeDays">%1$s d</string>
     <string name="edgeLightRenameFailed">No se pudo cambiar el nombre de %1$s</string>
+    <string name="edgeLightAsksOther">Pide usar: %1$s</string>
 </resources>

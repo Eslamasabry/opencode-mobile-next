@@ -172,4 +172,5 @@
     <string name="edgeLightAgeHours">%1$s ч</string>
     <string name="edgeLightAgeDays">%1$s д</string>
     <string name="edgeLightRenameFailed">Не удалось переименовать: %1$s</string>
+    <string name="edgeLightAsksOther">Просит использовать: %1$s</string>
 </resources>

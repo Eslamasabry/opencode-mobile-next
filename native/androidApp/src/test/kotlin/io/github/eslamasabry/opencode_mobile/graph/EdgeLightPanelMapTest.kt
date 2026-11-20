@@ -152,6 +152,14 @@ class EdgeLightPanelMapTest {
     }
 
     @Test
+    fun `B-LAMP-011 a fetch or any other tool asks in words that name it, a nameless one stays plain`() {
+        val fetch = LampRequestUi(DockRequestKind.Permission, "w1", "other", "https://example.org/docs", "", ref("a"), LampAnswerUi.AllowDeny)
+        assertTrue(LampPanelMap.requestWords(fetch, t).startsWith("AsksOther("), LampPanelMap.requestWords(fetch, t))
+        assertTrue("https://example.org/docs" in LampPanelMap.requestWords(fetch, t))
+        assertTrue(LampPanelMap.requestWords(fetch.copy(target = "", action = ""), t).startsWith("AsksPermission("))
+    }
+
+    @Test
     fun `a held answer says Allowed or Denied and the request stays for the receipt`() {
         val allowed = LampPanelMap.row(row("a", LampState.NeedsYou, request = permission(LampAnswerUi.Held(HomeHeldReply.Allowed))), t)
         assertTrue(allowed.held!!.allowed)

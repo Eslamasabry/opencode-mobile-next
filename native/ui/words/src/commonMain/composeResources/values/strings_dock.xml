@@ -89,6 +89,7 @@
     <string name="edgeLightAsksEdit">Asks to edit: %1$s</string>
     <string name="edgeLightAsksRead">Asks to read: %1$s</string>
     <string name="edgeLightAsksFolder">Asks to use a folder: %1$s</string>
+    <string name="edgeLightAsksOther">Asks to use: %1$s</string>
     <string name="edgeLightAsksPermission">Asks for permission</string>
     <string name="edgeLightAsksQuestion">Asks: %1$s</string>
     <string name="edgeLightAsksQuestionBare">Asks you a question</string>

@@ -222,7 +222,8 @@ public object KitLampRules {
  * other conversations stand. The [face] number counts needs you + failed (amber when anyone needs the person); under it
  * up to three marks (needs you, then failed, then runs by progress). With nothing to say it is the quiet "‹" tab; while
  * [KitLampFace.open] it is the list's close tab (×). The touch box is 24 dp wide from the physical edge and 16 dp taller
- * than the face; it takes taps only (a sideways swipe stays the system's Back; the layer passes drags through).
+ * than the face; it holds the halo and the place, but a tap is taken on the face alone, so a button or a bubble beside
+ * the face keeps its own taps (a sideways swipe stays the system's Back; the layer passes drags through).
  *
  * [side] is in reading order and mirrors the whole part (the square side on the edge). [label] is the spoken name the
  * caller words ("Other conversations, 1 needs you, 1 failed, 3 working"; "Close conversations" while open); the face's
@@ -278,12 +279,13 @@ public fun KitLamp(
     val travels = motion.travels
     val attention = LocalKitColors.current.attention
     Layout(
-        content = { LampFace(face, left, interactions, settled[0]) },
+        // The touch is on the mark itself, not on the 24 x (face + 16) box around it: the box is room for the halo and the
+        // layout, never a place that takes a tap away from a button or a bubble beside the face.
+        content = { Box(touch) { LampFace(face, left, interactions, settled[0]) } },
         modifier =
             modifier
                 .graphicsLayer { alpha = shown.value }
                 .testTag(LAMP_TAG)
-                .then(touch)
                 .drawWithContent {
                     // The face is a tab cut by the edge: nothing is drawn past the physical edge, everything else
                     // (the halo on the inner side, a hard shadow below) is.

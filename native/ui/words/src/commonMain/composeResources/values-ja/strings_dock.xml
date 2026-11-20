@@ -145,4 +145,5 @@
     <string name="edgeLightRenameFailed">%1$sの名前を変更できませんでした</string>
     <string name="dockSettingTitle">エッジドック</string>
     <string name="dockSettingBody">画面の端に実行中の会話を表示します。上部をドラッグすると反対側へ移動できます。</string>
+    <string name="edgeLightAsksOther">使用の許可を求めています：%1$s</string>
 </resources>
