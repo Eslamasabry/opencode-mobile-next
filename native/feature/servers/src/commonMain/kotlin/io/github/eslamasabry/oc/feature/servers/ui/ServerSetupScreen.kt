@@ -2,9 +2,11 @@ package io.github.eslamasabry.oc.feature.servers.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -23,10 +25,12 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePanel
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -40,120 +44,169 @@ public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions) 
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
-    KitScreen(
-        topBar = {
-            KitTopBar(
-                stringResource(Res.string.secSetupTitle),
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = actions::back,
-            )
-        },
-        width = KitScreenWidth.Reading,
-        edges = KitScreenEdges.Bleed,
-    ) {
-        Column(
-            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            KitNotice(stringResource(Res.string.secSetupReadOnly))
-            if (state.failed) KitNotice(stringResource(Res.string.secSetupFailed))
-            KitButton(
-                stringResource(Res.string.secSetupRefresh),
-                actions::refresh,
+    val pageTitle = stringResource(Res.string.secSetupTitle)
+    val guidedSection: @Composable () -> Unit = {
+        KitText(stringResource(Res.string.secSetupGuided))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            for (intent in SetupIntent.entries) KitButton(
+                stringResource(intent.word()),
+                { actions.choose(intent) },
+                role =
+                    if (intent == state.intent) KitButtonRole.Secondary
+                    else KitButtonRole.Tertiary,
                 enabled = enabled,
-                working = state.busy,
             )
-            if (state.config.isNotBlank()) {
-                KitText(stringResource(Res.string.secSetupConfig))
-                KitText(state.config)
-            }
-            if (state.available) {
-                KitText(stringResource(Res.string.secSetupGuided))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    for (intent in SetupIntent.entries) KitButton(
-                        stringResource(intent.word()),
-                        { actions.choose(intent) },
-                        role =
-                            if (intent == state.intent) KitButtonRole.Secondary
-                            else KitButtonRole.Tertiary,
-                        enabled = enabled,
-                    )
+        }
+        key(state.intent) {
+            val fields = fields(state.intent)
+            // Values may contain a pasted credential; never save them as instance state,
+            // log or persist them.
+            val input = remember { fields.associateWith { TextFieldState() } }
+            for ((field, value) in input) KitField(
+                value,
+                stringResource(fieldWord(field)),
+                enabled = enabled,
+            )
+            KitButton(
+                stringResource(Res.string.secSetupReview),
+                {
+                    actions.propose(input.mapValues { it.value.text.toString() })
+                    input.values.forEach { value -> value.edit { replace(0, length, "") } }
+                },
+                enabled = enabled,
+            )
+        }
+        when {
+            state.invalid -> KitNotice(stringResource(Res.string.secSetupInvalid))
+            state.guidance == SetupPlannerState.NeedsInput ->
+                KitNotice(stringResource(Res.string.secSetupInputs))
+            state.guidance == SetupPlannerState.Unsupported ->
+                KitNotice(stringResource(Res.string.secSetupUnsupported))
+            state.guidance == SetupPlannerState.Proposed ->
+                KitNotice(stringResource(Res.string.secSetupProposed))
+        }
+        if (state.proposal.isNotEmpty()) KitText(state.proposal)
+    }
+    val registrySection: @Composable () -> Unit = {
+        KitSwitchRow(
+            stringResource(Res.string.secSetupRegistry),
+            supporting = stringResource(Res.string.secSetupRegistryConsent),
+            checked = state.optedIn,
+            enabled = enabled,
+            onCheckedChange = actions::optIn,
+        )
+        val search = remember { TextFieldState() }
+        KitField(search, stringResource(Res.string.secSetupSearch), enabled = enabled)
+        KitButton(
+            stringResource(Res.string.secSetupRegistryRefresh),
+            { actions.refreshRegistry(search.text.toString()) },
+            enabled =
+                if (state.optedIn) enabled
+                else
+                    KitEnabled.Disabled(stringResource(Res.string.secSetupRegistryConsent)),
+        )
+        KitText(
+            stringResource(
+                when (state.registryStatus) {
+                    SetupRegistryStatus.Disabled -> Res.string.secSetupRegistryDisabled
+                    SetupRegistryStatus.Offline -> Res.string.secSetupRegistryOffline
+                    SetupRegistryStatus.Error -> Res.string.secSetupRegistryFailed
+                    SetupRegistryStatus.Empty -> Res.string.secSetupRegistryEmpty
+                    SetupRegistryStatus.Loading -> Res.string.serversWorking
+                    SetupRegistryStatus.Ready -> Res.string.secSetupRegistryReady
                 }
-                key(state.intent) {
-                    val fields = fields(state.intent)
-                    // Values may contain a pasted credential; never save them as instance state,
-                    // log or persist them.
-                    val input = remember { fields.associateWith { TextFieldState() } }
-                    for ((field, value) in input) KitField(
-                        value,
-                        stringResource(fieldWord(field)),
-                        enabled = enabled,
-                    )
-                    KitButton(
-                        stringResource(Res.string.secSetupReview),
-                        {
-                            actions.propose(input.mapValues { it.value.text.toString() })
-                            input.values.forEach { value -> value.edit { replace(0, length, "") } }
-                        },
-                        enabled = enabled,
-                    )
-                }
-                when {
-                    state.invalid -> KitNotice(stringResource(Res.string.secSetupInvalid))
-                    state.guidance == SetupPlannerState.NeedsInput ->
-                        KitNotice(stringResource(Res.string.secSetupInputs))
-                    state.guidance == SetupPlannerState.Unsupported ->
-                        KitNotice(stringResource(Res.string.secSetupUnsupported))
-                    state.guidance == SetupPlannerState.Proposed ->
-                        KitNotice(stringResource(Res.string.secSetupProposed))
-                }
-                if (state.proposal.isNotEmpty()) KitText(state.proposal)
-                KitSwitchRow(
-                    stringResource(Res.string.secSetupRegistry),
-                    supporting = stringResource(Res.string.secSetupRegistryConsent),
-                    checked = state.optedIn,
-                    enabled = enabled,
-                    onCheckedChange = actions::optIn,
+            )
+        )
+        for (entry in state.listings) {
+            KitText(entry.name)
+            if (entry.description.isNotEmpty()) KitText(entry.description)
+            KitText(
+                stringResource(
+                    when (entry.detail) {
+                        SetupListingDetail.Remote -> Res.string.secSetupRegistryRemote
+                        SetupListingDetail.NeedsDetails ->
+                            Res.string.secSetupRegistryDetails
+                        SetupListingDetail.ReviewedCommand ->
+                            Res.string.secSetupRegistryCommand
+                        SetupListingDetail.NoEndpoint ->
+                            Res.string.secSetupRegistryNoEndpoint
+                    }
                 )
-                val search = remember { TextFieldState() }
-                KitField(search, stringResource(Res.string.secSetupSearch), enabled = enabled)
-                KitButton(
-                    stringResource(Res.string.secSetupRegistryRefresh),
-                    { actions.refreshRegistry(search.text.toString()) },
-                    enabled =
-                        if (state.optedIn) enabled
-                        else
-                            KitEnabled.Disabled(stringResource(Res.string.secSetupRegistryConsent)),
+            )
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val wide = isServersWide(LocalKitWindow.current.cls, maxWidth.value)
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    if (wide) "" else pageTitle,
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = actions::back,
                 )
-                KitText(
-                    stringResource(
-                        when (state.registryStatus) {
-                            SetupRegistryStatus.Disabled -> Res.string.secSetupRegistryDisabled
-                            SetupRegistryStatus.Offline -> Res.string.secSetupRegistryOffline
-                            SetupRegistryStatus.Error -> Res.string.secSetupRegistryFailed
-                            SetupRegistryStatus.Empty -> Res.string.secSetupRegistryEmpty
-                            SetupRegistryStatus.Loading -> Res.string.serversWorking
-                            SetupRegistryStatus.Ready -> Res.string.secSetupRegistryReady
+            },
+            width = if (wide) KitScreenWidth.Full else KitScreenWidth.Reading,
+            edges = if (wide) KitScreenEdges.Gutter else KitScreenEdges.Bleed,
+        ) {
+            if (wide) {
+                ServersWideFrame(
+                    pageTitle = pageTitle,
+                    start = {
+                        Column(
+                            Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                        ) {
+                            KitNotice(stringResource(Res.string.secSetupReadOnly))
+                            if (state.failed) KitNotice(stringResource(Res.string.secSetupFailed))
+                            KitButton(
+                                stringResource(Res.string.secSetupRefresh),
+                                actions::refresh,
+                                enabled = enabled,
+                                working = state.busy,
+                            )
+                            if (state.available) guidedSection()
                         }
-                    )
-                )
-                for (entry in state.listings) {
-                    KitText(entry.name)
-                    if (entry.description.isNotEmpty()) KitText(entry.description)
-                    KitText(
-                        stringResource(
-                            when (entry.detail) {
-                                SetupListingDetail.Remote -> Res.string.secSetupRegistryRemote
-                                SetupListingDetail.NeedsDetails ->
-                                    Res.string.secSetupRegistryDetails
-                                SetupListingDetail.ReviewedCommand ->
-                                    Res.string.secSetupRegistryCommand
-                                SetupListingDetail.NoEndpoint ->
-                                    Res.string.secSetupRegistryNoEndpoint
+                    },
+                    end = {
+                        KitSurfacePanel(Modifier.fillMaxWidth()) {
+                            Column(
+                                Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                            ) {
+                                if (state.config.isNotBlank()) {
+                                    KitText(stringResource(Res.string.secSetupConfig))
+                                    KitText(state.config)
+                                }
+                                if (state.available) registrySection()
+                                else if (state.config.isBlank()) {
+                                    KitNotice(stringResource(Res.string.secSetupReadOnly))
+                                }
                             }
-                        )
+                        }
+                    },
+                )
+            } else {
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(Space.S3.dp),
+                    verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                ) {
+                    KitNotice(stringResource(Res.string.secSetupReadOnly))
+                    if (state.failed) KitNotice(stringResource(Res.string.secSetupFailed))
+                    KitButton(
+                        stringResource(Res.string.secSetupRefresh),
+                        actions::refresh,
+                        enabled = enabled,
+                        working = state.busy,
                     )
+                    if (state.config.isNotBlank()) {
+                        KitText(stringResource(Res.string.secSetupConfig))
+                        KitText(state.config)
+                    }
+                    if (state.available) {
+                        guidedSection()
+                        registrySection()
+                    }
                 }
             }
         }

@@ -38,6 +38,8 @@ internal fun ServerSavedRows(
     actions: ServersActions,
     enabled: KitEnabled,
     phoneHost: Boolean = false,
+    selectedId: ProfileId? = null,
+    onSelect: ((ProfileId) -> Unit)? = null,
 ) {
     var detailsFor by remember { mutableStateOf<ProfileId?>(null) }
     val ordered = savedServersByUrgency(state)
@@ -54,23 +56,8 @@ internal fun ServerSavedRows(
                     if (phoneHost) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere,
                 )
             val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
-            val kind =
-                stringResource(
-                    when (facts?.backend) {
-                        BackendKind.Codex -> Res.string.addServerTypeCodex
-                        BackendKind.Paseo -> Res.string.addServerTypePaseo
-                        BackendKind.OpenCode2 -> Res.string.setupRuntimeTwo
-                        null -> Res.string.firstRunAgentOpenCode
-                    }
-                )
-            val secret =
-                if (facts?.needsSecret == true)
-                    stringResource(
-                        if (facts.backend == BackendKind.Codex || facts.backend == BackendKind.Paseo)
-                            Res.string.e7SetupTokenRequired
-                        else Res.string.e7SetupPasswordRequired
-                    )
-                else null
+            val kind = serverRowKindLabel(facts?.backend)
+            val secret = serverRowSecretNote(facts)
             val name = names[server.id] ?: server.name
             val supporting =
                 kitServerSupporting(
@@ -155,16 +142,19 @@ internal fun ServerSavedRows(
                         )
                     else null,
                 state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
-                selected = server.connected,
+                selected = if (onSelect != null) server.id == selectedId else server.connected,
                 enabled = enabled.isEnabled,
                 disabledReason =
                     if (enabled.isEnabled) null
                     else stringResource(Res.string.serversWorking),
                 onClick = {
-                    if (state.newConversation) actions.create(server.id)
+                    if (onSelect != null) onSelect(server.id)
+                    else if (state.newConversation) actions.create(server.id)
                     else actions.settings(server.id)
                 },
-                trailing = KitRowTrailing.Menu(name, items, title = name),
+                trailing =
+                    if (onSelect != null) KitRowTrailing.Chevron
+                    else KitRowTrailing.Menu(name, items, title = name),
             )
         }
     }
@@ -251,3 +241,24 @@ internal fun withoutTrailingSeparator(line: AnnotatedString): AnnotatedString {
     while (end > 0 && (line[end - 1] == ' ' || line[end - 1] == '·' || line[end - 1] == '\u00a0')) end--
     return if (end == line.length) line else line.subSequence(0, end)
 }
+
+@Composable
+internal fun serverRowKindLabel(backend: BackendKind?): String =
+    stringResource(
+        when (backend) {
+            BackendKind.Codex -> Res.string.addServerTypeCodex
+            BackendKind.Paseo -> Res.string.addServerTypePaseo
+            BackendKind.OpenCode2 -> Res.string.setupRuntimeTwo
+            null -> Res.string.firstRunAgentOpenCode
+        }
+    )
+
+@Composable
+internal fun serverRowSecretNote(facts: ServerRowFacts?): String? =
+    if (facts?.needsSecret == true)
+        stringResource(
+            if (facts.backend == BackendKind.Codex || facts.backend == BackendKind.Paseo)
+                Res.string.e7SetupTokenRequired
+            else Res.string.e7SetupPasswordRequired
+        )
+    else null
