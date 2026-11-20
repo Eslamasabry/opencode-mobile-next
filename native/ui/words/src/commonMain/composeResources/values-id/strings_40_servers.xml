@@ -114,4 +114,5 @@
     <string name="editor40SaveChanges">Simpan perubahan</string>
     <string name="editor40Stale">Server tersimpan ini atau data masuknya berubah. Tutup halaman ini dan buka server lagi sebelum mencoba.</string>
     <string name="editor40Deleted">Server ini telah dihapus. Tutup halaman ini untuk kembali ke server tersimpan.</string>
+    <string name="serversEditNamed">Ubah %1$s</string>
 </resources>

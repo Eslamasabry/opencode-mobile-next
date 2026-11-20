@@ -162,4 +162,5 @@
     <string name="editor40SaveChanges">حفظ التغييرات</string>
     <string name="editor40Stale">تغيّر هذا الخادم المحفوظ أو بيانات دخوله. أغلق هذه الصفحة وافتح الخادم مجددًا قبل المحاولة.</string>
     <string name="editor40Deleted">أُزيل هذا الخادم. أغلق هذه الصفحة للعودة إلى الخوادم المحفوظة.</string>
+    <string name="serversEditNamed">تعديل %1$s</string>
 </resources>
