@@ -1,8 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.lamp
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -280,15 +279,18 @@ class KitLampTest {
         setContent {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
                 KitTheme(KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Full), FakeKitPlatform(), locale) {
-                    val left = KitLampRules.onLeft(side, locale == "ar")
+                    val rtl = locale == "ar"
+                    val left = KitLampRules.onLeft(side, rtl)
+                    // Physical edges: Start is the right edge in Arabic.
+                    val edge = if (left != rtl) Alignment.CenterStart else Alignment.CenterEnd
                     Box(Modifier.size(W.dp, H.dp)) {
                         // The page's content begins at the gutter: its edge button ends 16 dp (plus the inset) in from the window's edge.
                         Box(
-                            Modifier.size(48.dp).align(if (left) Alignment.CenterStart else Alignment.CenterEnd)
-                                .padding(if (left) PaddingValues(start = 16.dp + inset) else PaddingValues(end = 16.dp + inset))
+                            Modifier.size(48.dp).align(edge)
+                                .absolutePadding(left = if (left) 16.dp + inset else 0.dp, right = if (left) 0.dp else 16.dp + inset)
                                 .clickable { behind.button++ },
                         )
-                        KitLamp(face, LABEL, { behind.light++ }, Modifier.align(if (left) Alignment.CenterStart else Alignment.CenterEnd), side = side)
+                        KitLamp(face, LABEL, { behind.light++ }, Modifier.align(edge), side = side)
                     }
                 }
             }
