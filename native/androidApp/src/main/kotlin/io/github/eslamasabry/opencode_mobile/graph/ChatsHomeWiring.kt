@@ -108,6 +108,8 @@ class AppChatsHome(
     private val mutable = MutableStateFlow(ChatsHomeExtraState(known = false))
     override val snapshot: StateFlow<ChatsHomeExtraState> = mutable.asStateFlow()
     private val cachedRevisions = mutableMapOf<ProfileId, Pair<String, List<ChatFeedItem>>>()
+    // What the last saved list was built from (read and written on the home lane only).
+    private var savedFrom: InventoryInputs? = null
     // E05-S20: home's wait for this phone's own server, and the quiet retries while it starts.
     private var phoneWatch: Pair<ProfileId, PhoneStartWatch>? = null
     private var quietRetry: Job? = null
@@ -158,7 +160,9 @@ class AppChatsHome(
                     // it runs.
                     combine(
                         monitor.snapshot,
-                        phone.serverFacts,
+                        // Only the phone facts home shows: every status read carries a new uptime and disk figure,
+                        // and re-publishing home on each of them ran it as often as the facts were read.
+                        phone.serverFacts.map { HomePhoneReading.of(it) }.distinctUntilChanged(),
                         runtime.sourceFailureState,
                         agentUpdate.decision,
                         runtime.helperStarting,
@@ -170,7 +174,13 @@ class AppChatsHome(
                 }
                 .collect {
                     publish()
-                    saveCurrentInventory()
+                    // The saved list is built only when what it is made of changed (a failed save is tried again
+                    // at the next change or new preview line, never on every look of home).
+                    val inputs = InventoryInputs(runtime.snapshot.value, runtime.loadedSourceIds(), registry.live.value)
+                    if (inputs != savedFrom) {
+                        savedFrom = inputs
+                        saveCurrentInventory()
+                    }
                 }
         }
     }
@@ -672,4 +682,33 @@ internal object HomeStageRules {
             // The conversation's own read is the chat page's stage, not home's.
             LaunchStage.Conversation, null -> null
         }
+}
+
+/**
+ * The phone server facts home reads ([AppChatsHome]'s phone watch and Stop line). The uptime is read again by the
+ * quiet retries while home waits, so it is not a reason to publish home by itself.
+ */
+private data class HomePhoneReading(
+    val installed: Boolean?,
+    val running: Boolean?,
+    val starting: Boolean,
+    val stoppedByPerson: Boolean,
+) {
+    companion object {
+        fun of(facts: io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts): HomePhoneReading =
+            HomePhoneReading(
+                installed = facts.status?.installed,
+                running = facts.status?.serverRunning,
+                starting = facts.starting,
+                stoppedByPerson = facts.stoppedByPerson,
+            )
+    }
+}
+
+/** What home's saved list is built from: the feed and the live graphs by identity (a new value is a new instance). */
+private class InventoryInputs(private val feed: Any, private val sources: Set<ProfileId>, private val graphs: Any) {
+    override fun equals(other: Any?): Boolean =
+        other is InventoryInputs && other.feed === feed && other.graphs === graphs && other.sources == sources
+
+    override fun hashCode(): Int = System.identityHashCode(feed)
 }
