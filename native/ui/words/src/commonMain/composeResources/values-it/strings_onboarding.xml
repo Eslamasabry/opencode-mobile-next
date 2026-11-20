@@ -303,7 +303,7 @@
     <string name="phoneSetupRingMobileData">Dati mobili</string>
     <string name="phoneSetupRingSafeToLeave">Puoi andartene in sicurezza. Ti avviseremo quando sarà pronto.</string>
     <string name="phoneSetupRingSafeToLeaveQuiet">Puoi andartene in sicurezza. La configurazione prosegue in background.</string>
-    <string name="phoneSetupRingPause">Metti in pausa la configurazione</string>
+    <string name="phoneSetupRingPause">Pausa configurazione</string>
     <string name="phoneSetupRingDetailsTitle">Dettagli della configurazione</string>
     <string name="browserTransportFailure">Il browser non è riuscito a raggiungere il server. Controlla l'indirizzo e che il server sia in esecuzione. Un server su una origine diversa deve consentire l'origine di questa pagina (CORS), e una pagina caricata via https non può usare un server http:// o ws://.</string>
     <string name="browserProbeTimeout">Connessione scaduta. Controlla l'indirizzo e che il server sia raggiungibile da questo browser.</string>

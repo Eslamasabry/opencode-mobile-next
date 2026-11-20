@@ -10,6 +10,6 @@
     <string name="notify_tool_plan">Pianificazione…</string>
     <string name="notify_tool_working">Al lavoro…</string>
     <string name="notify_tool_card">Visualizzazione di una scheda…</string>
-    <string name="notify_tool_backgroundtask">Controllo di un\u0027attività in background…</string>
+    <string name="notify_tool_backgroundtask">Verifica di un\u0027attività in background…</string>
     <string name="notify_tool_other">Esecuzione di %1$s…</string>
 </resources>
