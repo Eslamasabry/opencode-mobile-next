@@ -32,28 +32,8 @@ object NativeStrings {
     private fun supported(context: Context): Set<String> {
         cachedSupported?.let { return it }
         val tags = mutableSetOf(AppLanguageResolver.FALLBACK)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val list = LocaleConfig(context).supportedLocales
-            if (list != null) {
-                for (i in 0 until list.size()) {
-                    tags += list[i].language.lowercase(Locale.ROOT)
-                    tags += list[i].toLanguageTag().substringBefore('-').lowercase(Locale.ROOT)
-                }
-            }
-        }
-        if (tags.size <= 1) {
-            val english =
-                atLocale(context, AppLanguageResolver.FALLBACK)
-                    .getString(LinuxR.string.native_phone_server_body)
-            for (raw in context.resources.assets.locales) {
-                val code = raw.substringBefore('-').substringBefore('_').lowercase(Locale.ROOT)
-                if (code.isNotEmpty() && code != AppLanguageResolver.FALLBACK) {
-                    val translated =
-                        atLocale(context, code).getString(LinuxR.string.native_phone_server_body)
-                    if (translated != english) tags += code
-                }
-            }
-        }
+        addLocaleConfigTags(context, tags)
+        if (tags.size <= 1) addTranslatedResourceTags(context, tags)
         if ("id" in tags || "in" in tags) {
             tags += "id"
             tags += "in"
@@ -61,6 +41,32 @@ object NativeStrings {
         val built = tags.toSet()
         if (built.size > 1) cachedSupported = built
         return built
+    }
+
+    private fun addLocaleConfigTags(context: Context, tags: MutableSet<String>) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val list = LocaleConfig(context).supportedLocales ?: return
+        for (i in 0 until list.size()) {
+            tags += list[i].language.lowercase(Locale.ROOT)
+            tags += list[i].toLanguageTag().substringBefore('-').lowercase(Locale.ROOT)
+        }
+    }
+
+    private fun addTranslatedResourceTags(context: Context, tags: MutableSet<String>) {
+        val english =
+            atLocale(context, AppLanguageResolver.FALLBACK)
+                .getString(LinuxR.string.native_phone_server_body)
+        for (raw in context.resources.assets.locales) {
+            val code = raw.substringBefore('-').substringBefore('_').lowercase(Locale.ROOT)
+            if (
+                code.isNotEmpty() &&
+                    code != AppLanguageResolver.FALLBACK &&
+                    atLocale(context, code).getString(LinuxR.string.native_phone_server_body) !=
+                        english
+            ) {
+                tags += code
+            }
+        }
     }
 
     private fun atLocale(context: Context, language: String): Context {
