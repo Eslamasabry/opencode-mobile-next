@@ -145,5 +145,7 @@
     <string name="edgeLightAgeHours">%1$s 小时</string>
     <string name="edgeLightAgeDays">%1$s 天</string>
     <string name="edgeLightRenameFailed">无法重命名 %1$s</string>
-    <string name="edgeLightAsksOther">请求使用：%1$s</string>
+    <string name="edgeLightAsksFetch">请求获取：%1$s</string>
+    <string name="edgeLightAsksSearch">请求在网上搜索“%1$s”</string>
+    <string name="edgeLightAsksTool">请求使用工具：%1$s</string>
 </resources>

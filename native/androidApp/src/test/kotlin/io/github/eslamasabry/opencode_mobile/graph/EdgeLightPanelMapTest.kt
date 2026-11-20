@@ -152,11 +152,13 @@ class EdgeLightPanelMapTest {
     }
 
     @Test
-    fun `B-LAMP-011 a fetch or any other tool asks in words that name it, a nameless one stays plain`() {
-        val fetch = LampRequestUi(DockRequestKind.Permission, "w1", "other", "https://example.org/docs", "", ref("a"), LampAnswerUi.AllowDeny)
-        assertTrue(LampPanelMap.requestWords(fetch, t).startsWith("AsksOther("), LampPanelMap.requestWords(fetch, t))
-        assertTrue("https://example.org/docs" in LampPanelMap.requestWords(fetch, t))
-        assertTrue(LampPanelMap.requestWords(fetch.copy(target = "", action = ""), t).startsWith("AsksPermission("))
+    fun `B-LAMP-011 a fetch, a search or another tool asks in words that name it, a nameless one stays plain`() {
+        fun ask(action: String, target: String) =
+            LampRequestUi(DockRequestKind.Permission, "w1", action, target, "", ref("a"), LampAnswerUi.AllowDeny)
+        assertTrue(LampPanelMap.requestWords(ask("fetch", "example.org"), t).startsWith("AsksFetch(example.org"))
+        assertTrue(LampPanelMap.requestWords(ask("search", "fox tales"), t).startsWith("AsksSearch(fox tales"))
+        assertTrue(LampPanelMap.requestWords(ask("tool", "task"), t).startsWith("AsksTool(task"))
+        assertTrue(LampPanelMap.requestWords(ask("", ""), t).startsWith("AsksPermission("))
     }
 
     @Test

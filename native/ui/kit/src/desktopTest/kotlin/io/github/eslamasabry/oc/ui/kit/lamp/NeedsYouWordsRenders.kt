@@ -2,7 +2,14 @@
 
 package io.github.eslamasabry.oc.ui.kit.lamp
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
@@ -65,6 +72,27 @@ class NeedsYouWordsRenders {
                 }
                 waitForIdle()
                 ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "${name}-${style.name.lowercase()}-x${(scale * 10).toInt()}.png"))
+            }
+        }
+    }
+
+    @Test
+    fun `closed light beside a bubble renders`() {
+        val out = File("build/edge-fix-renders").also { it.mkdirs() }
+        val faces = listOf("quiet" to KitLampFace(), "busy" to KitLampFace(2, listOf(KitLampMark("n", KitLampMarkKind.NeedsYou), KitLampMark("w", KitLampMarkKind.Working, 0.4f))), "nine" to KitLampFace(12, listOf(KitLampMark("n", KitLampMarkKind.NeedsYou), KitLampMark("f", KitLampMarkKind.Failed), KitLampMark("w", KitLampMarkKind.Working, 0.4f))))
+        for (style in listOf(Style.Solid, Style.Glass)) for (scale in listOf(1f, 1.3f)) for ((name, face) in faces) {
+            runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
+                k2Host(style, true, false, MotionLevel.Full, fontScale = scale, density = D, widthDp = W, heightDp = H) {
+                    Box(Modifier.fillMaxSize()) {
+                        // A bubble flush at the content's edge: 16 dp in from each side.
+                        Box(Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 16.dp).background(LocalKitColors.current.surface2, RoundedCornerShape(16.dp)).padding(16.dp)) {
+                            KitText("Reply with exactly the word: base-one. The light keeps to the gutter beside this bubble.", role = TypeRole.Body)
+                        }
+                        KitLamp(face, "Other conversations", {}, Modifier.align(Alignment.CenterEnd))
+                    }
+                }
+                waitForIdle()
+                ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "light-bubble-${name}-${style.name.lowercase()}-x${(scale * 10).toInt()}.png"))
             }
         }
     }

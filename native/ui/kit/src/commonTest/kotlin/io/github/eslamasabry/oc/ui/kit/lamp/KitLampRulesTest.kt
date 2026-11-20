@@ -48,17 +48,17 @@ class KitLampRulesTest {
         val quiet = KitLampFace()
         assertTrue(quiet.quiet)
         assertEquals(40, KitLampRules.faceHeightDp(quiet))
-        assertEquals(12, KitLampRules.faceWidthDp(quiet, 1f))
+        assertEquals(12, KitLampRules.faceWidthDp(quiet))
         val open = KitLampFace(2, listOf(m("n", KitLampMarkKind.NeedsYou)), open = true)
         assertEquals(48, KitLampRules.faceHeightDp(open))
-        assertEquals(16, KitLampRules.faceWidthDp(open, 1.3f))
+        assertEquals(16, KitLampRules.faceWidthDp(open))
         assertEquals(40, KitLampRules.faceHeightDp(KitLampFace(0, listOf(m("w", KitLampMarkKind.Working)))), "one row stays at the 40 dp least")
         assertEquals(53, KitLampRules.faceHeightDp(KitLampFace(1, listOf(m("n", KitLampMarkKind.NeedsYou), m("w", KitLampMarkKind.Working)))))
         val full = KitLampFace(5, List(6) { m("n$it", KitLampMarkKind.NeedsYou) })
         assertEquals(68, KitLampRules.faceHeightDp(full))
         assertEquals(KitLampDims.MAX_H, 68)
-        assertEquals(84, KitLampRules.touchHeightDp(68), "the touch box is 16 dp taller than the face")
-        assertEquals(24, KitLampDims.TOUCH_W)
+        assertEquals(68, KitLampRules.touchHeightDp(68), "a tall mark is its own touch box")
+        assertEquals(48, KitLampRules.touchHeightDp(40), "a short mark gets the 48 dp box, centred on it")
     }
 
     @Test
@@ -75,9 +75,10 @@ class KitLampRulesTest {
     @Test
     fun `B-LAMP-K1-004 the face widens to 20 dp only for 9+ at the frame text cap`() {
         val many = KitLampFace(12, listOf(m("n", KitLampMarkKind.NeedsYou)))
-        assertEquals(20, KitLampRules.faceWidthDp(many, 1.3f))
-        assertEquals(16, KitLampRules.faceWidthDp(many, 1f))
-        assertEquals(16, KitLampRules.faceWidthDp(many.copy(count = 3), 1.3f))
+        assertEquals(16, KitLampRules.faceWidthDp(many), "never wider than the 16 dp page gutter")
+        assertTrue(KitLampRules.numberFitsPlain(many, 1.3f))
+        assertTrue(!KitLampRules.numberFitsPlain(many, 1f))
+        assertEquals(16, KitLampRules.faceWidthDp(many.copy(count = 3)))
     }
 
     @Test

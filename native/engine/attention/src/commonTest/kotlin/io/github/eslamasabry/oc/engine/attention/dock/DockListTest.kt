@@ -244,23 +244,25 @@ class DockListTest {
         )
 
     @Test
-    fun `B-LAMP-008 the Needs-you row shows what the request allows, for a fetch, a search, a task and any other tool`() {
+    fun `B-LAMP-008 the Needs-you row shows what the request allows, for a fetch (its host), a search (its words) and any other tool (its name)`() {
         val secret = "sk-" + "abcdefghijkl1234"
         fun words(request: PermissionRequest): DockRequestWords {
             val f = DockFacts { clock }
             f.feed(p, GatewayEvent.PermissionAsked(request))
             return f.requestWords(b, DockRequestRef(DockRequestKind.Permission, "rx"))!!
         }
-        val fetch = words(ask("webfetch", listOf("*"), "url" to "https://example.org/docs?token=$secret"))
-        assertTrue(fetch.target.startsWith("https://example.org/docs"), "the page it fetches is named: ${fetch.target}")
-        assertFalse(secret in fetch.target, "masked like the chat's card")
-        assertEquals("other", fetch.action)
-        assertEquals("fox tales", words(ask("websearch", listOf("*"), "query" to "fox tales")).target)
-        assertEquals("write the tests", words(ask("task", emptyList(), "description" to "write the tests")).target)
-        assertEquals("src/** · docs/**", words(ask("skill", listOf("src/**", "docs/**"))).target)
+        val fetch = words(ask("webfetch", listOf("*"), "url" to "https://user:pw@example.org/docs?token=$secret"))
+        assertEquals("fetch" to "example.org", fetch.action to fetch.target, "a fetch names its host only")
+        assertFalse(secret in fetch.target)
+        assertEquals("search" to "fox tales", words(ask("websearch", listOf("*"), "query" to "fox tales")).let { it.action to it.target })
+        assertEquals("tool" to "task", words(ask("task", emptyList(), "description" to "write the tests")).let { it.action to it.target })
+        assertEquals("tool" to "skill", words(ask("skill", listOf("src/**"))).let { it.action to it.target })
+        val leaked = words(ask("websearch", listOf("*"), "query" to "my key is $secret"))
+        assertFalse(secret in leaked.target, "a search is masked like the chat card")
         // A command and a file are still worded as before.
         assertEquals("run" to "git push", words(ask("bash", emptyList(), "command" to "git push")).let { it.action to it.target })
         // Nothing to name at all stays the plain "asks for permission", never a made-up target.
         assertEquals("", words(ask("webfetch", listOf("*"))).target)
+        assertEquals("", words(ask("", emptyList())).target)
     }
 }

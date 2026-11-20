@@ -109,7 +109,9 @@ private fun lampWordKey(word: LampWord): StringResource =
         LampWord.AsksEdit -> Res.string.edgeLightAsksEdit
         LampWord.AsksRead -> Res.string.edgeLightAsksRead
         LampWord.AsksFolder -> Res.string.edgeLightAsksFolder
-        LampWord.AsksOther -> Res.string.edgeLightAsksOther
+        LampWord.AsksFetch -> Res.string.edgeLightAsksFetch
+        LampWord.AsksSearch -> Res.string.edgeLightAsksSearch
+        LampWord.AsksTool -> Res.string.edgeLightAsksTool
         LampWord.AsksPermission -> Res.string.edgeLightAsksPermission
         LampWord.AsksQuestion -> Res.string.edgeLightAsksQuestion
         LampWord.AsksQuestionBare -> Res.string.edgeLightAsksQuestionBare

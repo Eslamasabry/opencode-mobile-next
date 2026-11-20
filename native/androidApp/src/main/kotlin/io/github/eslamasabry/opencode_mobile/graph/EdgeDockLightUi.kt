@@ -27,9 +27,12 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
@@ -45,6 +48,7 @@ import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceWords
+import io.github.eslamasabry.oc.ui.kit.lamp.KitLampRules
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampSide
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTipPlacement
@@ -108,6 +112,14 @@ internal fun EdgeLightMount(
     val modalOpen = KitModalOpen.isOpen
     LaunchedEffect(modalOpen) { if (modalOpen) open = false }
     val lightVisible = EdgeLightRules.visible(keyboardUp, modalOpen)
+    // The touch box is the page gutter plus whatever the cutout or a bar takes on the light's physical side.
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val insets = WindowInsets.safeDrawing
+    val sideInset =
+        with(density) {
+            (if (KitLampRules.onLeft(place.side, direction == LayoutDirection.Rtl)) insets.getLeft(density, direction) else insets.getRight(density, direction)).toDp()
+        }
     val mountOverlay = rememberOverlayMounted(open, placing)
     val tipState = rememberFirstUseTip(port, lightVisible, open, placing)
     AnnounceNewNeeds(face, label, open)
@@ -152,6 +164,7 @@ internal fun EdgeLightMount(
                             .sharePointerInputWithSiblings(),
                     side = place.side,
                     visible = lightVisible,
+                    sideInset = sideInset,
                 )
             }
         }

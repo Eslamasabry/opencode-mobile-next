@@ -17,7 +17,7 @@ import kotlinx.serialization.json.JsonPrimitive
 public data class DockRequestWords(
     val kind: DockRequestKind,
     val id: String,
-    /** A permission's action token: `run`, `edit`, `read`, `folder` or `other`; empty when the ask names none or for a question or form. */
+    /** A permission's action token: `run`, `edit`, `read`, `folder`, `fetch`, `search` or `tool`; empty when the ask names none or for a question or form. */
     val action: String,
     /** A permission's short target (a command head or a file name); empty when none. */
     val target: String,
@@ -140,19 +140,30 @@ public class DockFacts(private val now: () -> Long) {
             }.toMap()
         val ask = NotificationText.permissionAskOf(NotificationText.PermissionAsk(request.permission, metadata, request.patterns.toList()))
         if (ask.action.isEmpty()) {
-            // Not a command and not a file (a web fetch, a search, a sub-agent task, a skill, a tool the app has no verb for):
-            // the person still sees what it touches, masked like the rest, never a bare "asks for permission".
-            val named = otherTarget(request, metadata)
-            if (named.isNotEmpty()) return DockRequestWords(DockRequestKind.Permission, request.id.raw, OTHER_ACTION, named, "")
+            // Not a command and not a file: a web fetch, a web search or another tool. The person still sees what it
+            // touches, in their words and masked like the chat card, never a bare "asks for permission".
+            otherWords(request, metadata)?.let { (action, target) -> return DockRequestWords(DockRequestKind.Permission, request.id.raw, action, target, "") }
         }
         return DockRequestWords(DockRequestKind.Permission, request.id.raw, ask.action, ask.target, "")
     }
 
-    private fun otherTarget(request: PermissionRequest, metadata: Map<String, String>): String {
-        val named = OTHER_KEYS.firstNotNullOfOrNull { key -> metadata[key]?.trim()?.takeIf { it.isNotEmpty() } }
-        val raw = named ?: request.patterns.map { it.trim() }.filter { it.isNotEmpty() && it != "*" }.distinct().joinToString(" · ")
-        return if (raw.isEmpty()) "" else NotificationText.redact(raw, maxLength = OTHER_MAX)
+    private fun otherWords(request: PermissionRequest, metadata: Map<String, String>): Pair<String, String>? {
+        val tool = request.permission.trim()
+        val pattern = request.patterns.map { it.trim() }.firstOrNull { it.isNotEmpty() && it != "*" }
+        val (action, target) =
+            when (tool.lowercase()) {
+                "webfetch" -> ACTION_FETCH to hostOf(metadata["url"]?.trim()?.takeIf { it.isNotEmpty() } ?: pattern.orEmpty())
+                "websearch" -> ACTION_SEARCH to (metadata["query"]?.trim()?.takeIf { it.isNotEmpty() } ?: pattern.orEmpty())
+                "" -> return null
+                else -> ACTION_TOOL to tool
+            }
+        val masked = NotificationText.redact(target, maxLength = TARGET_MAX)
+        return if (masked.isEmpty()) null else action to masked
     }
+
+    /** The host of an address, without its scheme, path, query or credentials ("https://a.b/c?d" is "a.b"). */
+    private fun hostOf(address: String): String =
+        address.substringAfter("://").substringBefore('/').substringBefore('?').substringBefore('#').substringAfter('@')
 
     private fun questionWords(question: PendingQuestion): DockRequestWords {
         val first = question.prompts.firstOrNull()
@@ -167,8 +178,9 @@ public class DockFacts(private val now: () -> Long) {
         const val GLOBAL_FORM = "global"
         const val MAX_CONVERSATIONS = 256
         const val MAX_REQUESTS = 128
-        const val OTHER_ACTION = "other"
-        const val OTHER_MAX = 60
-        val OTHER_KEYS = listOf("url", "query", "pattern", "description", "name")
+        const val ACTION_FETCH = "fetch"
+        const val ACTION_SEARCH = "search"
+        const val ACTION_TOOL = "tool"
+        const val TARGET_MAX = 60
     }
 }

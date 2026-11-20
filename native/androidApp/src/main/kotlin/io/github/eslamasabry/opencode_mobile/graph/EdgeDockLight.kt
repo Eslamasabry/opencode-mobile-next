@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampDims
+import io.github.eslamasabry.oc.ui.kit.lamp.KitLampRules
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMark
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
@@ -236,7 +237,7 @@ internal object EdgeLightRules {
      * tallest touch box never leaves the page.
      */
     fun bottomFromPageDp(height: EdgeLightHeight, pageDp: Float, chromeDp: Float, lowDp: Float): Float {
-        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val touchMax = KitLampRules.touchHeightDp(KitLampDims.MAX_H).toFloat()
         val low = chromeDp + lowDp
         val top = maxOf(low, pageDp - touchMax)
         return when (height) {
@@ -252,7 +253,7 @@ internal object EdgeLightRules {
      * never above the area (a short window, a landscape phone, puts all three where it fits).
      */
     fun bottomOffsetDp(height: EdgeLightHeight, areaDp: Float, lowDp: Float): Float {
-        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val touchMax = KitLampRules.touchHeightDp(KitLampDims.MAX_H).toFloat()
         val top = maxOf(lowDp, areaDp - touchMax)
         return when (height) {
             EdgeLightHeight.Low -> minOf(lowDp, top)

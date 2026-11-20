@@ -42,7 +42,7 @@ internal enum class LampWord {
     Title, Edit, Done, All, AllShort, NewConversation, Hidden, ShowAgain, More, Empty, Pin, Unpin, Rename, Hide, Stop,
     Untitled, NewTitle, GroupPinned, GroupNeedsYou, GroupFailed, GroupWorking, GroupDone, GroupRecent,
     TasksDone, For, Thinking, Working, DoneWord, IdleWord, FailedWord, WaitingMixed, WaitingToFinish, PausedAtStep,
-    PausedUntilAnswer, SubAgentOf, MoreSubAgents, MoreInside, AsksRun, AsksEdit, AsksRead, AsksFolder, AsksOther, AsksPermission,
+    PausedUntilAnswer, SubAgentOf, MoreSubAgents, MoreInside, AsksRun, AsksEdit, AsksRead, AsksFolder, AsksFetch, AsksSearch, AsksTool, AsksPermission,
     AsksQuestion, AsksQuestionBare, AsksForm, AsksFormBare, Answer, Allowed, Denied, Stopping, Stopped, Reorder, MoveUp,
     MoveDown, YouAreIn, FactOf, ChildLabel, ChildLabelFact, AllowOnce, Deny, ActionOn, NotStarted, ShowSubAgents,
     HideSubAgents, AgeNow, AgeMinutes, AgeHours, AgeDays, EdgeLight, Move, TurnOff, PlaceTitle, PlaceBody,
@@ -205,7 +205,9 @@ internal object LampPanelMap {
                     r.action == "edit" -> t.fmt(LampWord.AsksEdit, r.target)
                     r.action == "read" -> t.fmt(LampWord.AsksRead, r.target)
                     r.action == "folder" -> t.fmt(LampWord.AsksFolder, r.target)
-                    r.action == "other" -> t.fmt(LampWord.AsksOther, r.target)
+                    r.action == "fetch" -> t.fmt(LampWord.AsksFetch, r.target)
+                    r.action == "search" -> t.fmt(LampWord.AsksSearch, r.target)
+                    r.action == "tool" -> t.fmt(LampWord.AsksTool, r.target)
                     else -> t[LampWord.AsksPermission]
                 }
             DockRequestKind.Question -> if (r.text.isBlank()) t[LampWord.AsksQuestionBare] else t.fmt(LampWord.AsksQuestion, r.text)
