@@ -14,16 +14,28 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.ui.design.layout.CapAlign
+import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.kitComposerSlab
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
+import org.jetbrains.compose.resources.stringResource
 
 /** Where the first message is while its conversation is made and the words go out. */
 public enum class KitStartingPhase {
@@ -75,7 +87,12 @@ public fun KitStartingConversation(
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { keyboard?.hide() }
+    val paneWidth = (Layout.CONVERSATION_WIDTH + 2 * LocalKitTokens.current.gutter).dp
     KitScreen(
+        page = true,
+        overlayChrome = true,
+        floating = true,
+        frost = rememberKitFrostState(),
         topBar = {
             KitTopBar(
                 title = io.github.eslamasabry.oc.core.common.text.ConversationTitle.from(text).orEmpty(),
@@ -83,29 +100,36 @@ public fun KitStartingConversation(
                 exit = KitTopBarExit.Back,
                 exitLabel = backLabel,
                 onExit = onBack,
+                backBesideTitle = true,
             )
         },
         bottom = {
-            // The choices the message goes out with, read-only: they are never lost on a failure.
-            Row(
-                Modifier.padding(
-                    horizontal = LocalKitTokens.current.gutter.dp,
-                    vertical = Space.S2.dp,
-                ),
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                agent?.takeIf(String::isNotBlank)?.let { KitChip(it, icon = KitIcons.agent) }
-                KitChip(model, icon = KitIcons.model)
-            }
+            KitReportBottomSlab(kitComposerSlab())
+            val target = LocalKitTokens.current.minTarget.dp
+            KitComposerBox(
+                running = false,
+                modifier = Modifier.padding(top = Space.S2.dp),
+                field = {
+                    agent?.takeIf(String::isNotBlank)?.let {
+                        Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
+                            KitText(stringResource(Res.string.upgradeComposerAsk, it), role = TypeRole.Body, tone = TextTone.Tertiary)
+                        }
+                    }
+                },
+                // Keep the composer's two rows while the conversation has no input actions yet.
+                leading = { Spacer(Modifier.size(target)) },
+                chips = { KitChip(model, icon = KitIcons.model, adaptiveModel = true) },
+            )
         },
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S4.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            horizontalAlignment = Alignment.End,
+                .kitMaxWidth(paneWidth, CapAlign.Center)
+                .padding(kitScreenChromePadding())
+                .verticalScroll(rememberScrollState(), reverseScrolling = true)
+                .padding(top = Space.S4.dp, bottom = Space.S2.dp),
+            verticalArrangement = Arrangement.Bottom,
         ) {
             KitPromptBubble(text, Modifier.testTag("starting-prompt"))
             KitSwap(phase, pace = KitPace.Quick, alignment = Alignment.TopEnd) { shown ->
@@ -130,7 +154,8 @@ public fun KitStartingConversation(
                     // Row follows the layout direction: in Arabic the pair sits on the start edge
                     // of the bubble's own side, mirrored with it. Three ways (an agent's set-up, Check again,
                     // Discard) wrap to a second line on a narrow phone instead of running off it.
-                    FlowRow(
+                    if (shown != KitStartingPhase.Sending) FlowRow(
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
                         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                         itemVerticalAlignment = Alignment.CenterVertically,
