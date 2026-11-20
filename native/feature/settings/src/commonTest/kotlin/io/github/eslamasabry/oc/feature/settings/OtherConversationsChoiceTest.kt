@@ -93,4 +93,19 @@ class OtherConversationsChoiceTest {
             p.onRow(SettingsRowId.EdgeDock); scope.runCurrent()
             assertEquals(OtherConversationsMode.Rings, setting.mode.value)
         }
+
+    @Test
+    fun `B-LAMP-003 only EdgeLight and Hidden exist and rings, absent or legacy true migrate to EdgeLight`() {
+        assertEquals(
+            listOf(OtherConversationsMode.EdgeLight, OtherConversationsMode.Hidden),
+            OtherConversationsMode.entries.toList(),
+        )
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = null, legacyShown = null))
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = "rings", legacyShown = null))
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = "rings", legacyShown = "false"))
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = null, legacyShown = "true"))
+        assertEquals(OtherConversationsMode.Hidden, OtherConversationsMode.migrate(saved = null, legacyShown = "false"))
+        assertEquals(OtherConversationsMode.Hidden, OtherConversationsMode.migrate(saved = "hidden", legacyShown = "true"))
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = "edge-light", legacyShown = "false"))
+    }
 }
