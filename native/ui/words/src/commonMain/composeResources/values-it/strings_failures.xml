@@ -97,4 +97,9 @@
     <string name="chatSendFailureNeedsAccount">Questo modello richiede un account %1$s</string>
     <string name="agentErrorFreeTier">I modelli gratuiti di OpenCode hanno bloccato questa risposta.</string>
     <string name="agentErrorFreeTierHint">Nell'offerta gratuita le conversazioni lunghe spesso vengono rifiutate, anche se oggi ne hai usato poco. Accorciarla o iniziarne una nuova di solito aiuta.</string>
+    <string name="chatSendFailureSignedInPast">%1$s aveva bisogno che accedessi di nuovo</string>
+    <string name="agentErrorProviderUnreachableHintPhone">Controlla la connessione a internet di questo telefono, poi riprova.</string>
+    <string name="agentErrorServerDiskFullPhone">Questo telefono ha finito lo spazio di archiviazione.</string>
+    <string name="agentErrorServerDiskFullHintPhone">Libera un po' di spazio su questo telefono, poi riprova.</string>
+    <string name="chatSendPhoneHelperNoAnswer">Gli agenti su questo telefono non hanno risposto. Forse stanno ancora partendo: aspetta un momento, poi riprova.</string>
 </resources>

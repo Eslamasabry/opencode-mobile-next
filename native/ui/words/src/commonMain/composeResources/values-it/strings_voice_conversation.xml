@@ -11,4 +11,5 @@
     <string name="voiceConversationNativeTourResetFailed">Impossibile reimpostare i suggerimenti. Riprova.</string>
     <string name="voiceConversationNativeTourReplay">Fammi vedere</string>
     <string name="voiceConversationNativeTourLoadFailed">Impossibile aprire i suggerimenti. Riprova.</string>
+    <string name="voiceConversationDoorDraft">Prima invia o cancella il messaggio</string>
 </resources>

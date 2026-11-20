@@ -50,7 +50,7 @@
     <string name="nativeSearchPlaceBackgroundChecks">Controlli in background del server</string>
     <string name="nativeSearchAliasesBackgroundChecks">Controlli in background; polling; monitoraggio</string>
     <string name="nativeSearchPlaceAppearance">Aspetto</string>
-    <string name="nativeSearchAliasesAppearance">Tema; colori; stile</string>
+    <string name="nativeSearchAliasesAppearance">Tema; colori; stile; segni di attesa</string>
     <string name="nativeSearchPlaceLanguage">Lingua</string>
     <string name="nativeSearchAliasesLanguage">Arabo; inglese; locale</string>
     <string name="nativeSearchPlaceTips">Suggerimenti</string>

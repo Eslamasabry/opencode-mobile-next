@@ -834,4 +834,8 @@
     <string name="appearancePreviewReply">Fatto. Tre file modificati e tutte le verifiche passano.</string>
     <string name="appearancePreviewAction">Esamina le modifiche</string>
     <string name="appearancePreviewSpoken">Un esempio dell'app con queste scelte</string>
+    <string name="appearanceWaitMarks">Segni di attesa</string>
+    <string name="appearanceWaitMarksInk">Inchiostro</string>
+    <string name="appearanceWaitMarksColour">Colore</string>
+    <string name="appearanceWaitMarksNote">Le piccole immagini in movimento accanto a frasi come “Avvio di OpenCode…”.</string>
 </resources>

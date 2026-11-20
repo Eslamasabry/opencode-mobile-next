@@ -332,4 +332,22 @@
     <string name="chats_back">Indietro</string>
     <string name="chatsReturnBriefMore">e altre %1$d</string>
     <string name="workRunawayStopFailedRetry">Impossibile interrompere %1$s. Riprova.</string>
+    <string name="runningWorkBackgroundUnavailable">Questo server non può spostare in background il lavoro di una risposta in corso.</string>
+    <string name="runningWorkNotReported">Questo server non segnala il lavoro che gira in background.</string>
+    <string name="runningWorkTasksNoStop">Questo server non può fermarli uno alla volta.</string>
+    <string name="runningWorkMenu">Lavoro in corso</string>
+    <string name="runningWorkOpen">Apri il lavoro in corso</string>
+    <string name="chatsNewAgentNoProjects">%1$s lavora solo nei progetti su questo telefono, e non ce n'è ancora nessuno. Tocca qui per creare il tuo primo progetto.</string>
+    <string name="chatsNewPhoneStorage">Memoria del telefono</string>
+    <string name="chatsNewPhoneStorageOff">Permette agli agenti su questo telefono di leggere e modificare i file nella memoria del telefono, come Download e Documenti. Apre la pagina di Android per farlo.</string>
+    <string name="chatsNewPhoneStorageOn">Gli agenti su questo telefono possono leggere e modificare i file in Download, Documenti e nel resto della memoria del telefono.</string>
+    <string name="chatsSourcesUpdating">Aggiornamento di %1$s…</string>
+    <string name="chatsHomeAgentsUnreachable">Gli agenti su questo telefono non sono partiti</string>
+    <string name="chatsNewStartingAgent">Avvio di %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s non offre il modello che hai scelto. Il tuo testo è al sicuro.</string>
+    <string name="chatsNewAgentDidNotStart">%1$s non è partito. Il tuo testo è al sicuro.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s non ha confermato questo messaggio. Aggiorna per ricontrollare, oppure scartalo per ricominciare. Il tuo testo resta salvato qui.</string>
+    <string name="chatsNewRunsOn">Gira su</string>
+    <string name="chatsNewWhereSpoken">Dove gira: %1$s. Apre la scelta di progetto e connessione.</string>
+    <string name="chatsNewAgentChipSpoken">Chi ci lavora: %1$s, %2$s. Apre la scelta di agente e modello.</string>
 </resources>

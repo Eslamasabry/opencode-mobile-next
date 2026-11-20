@@ -241,7 +241,7 @@
     <string name="workServerNotAnswering">%1$s non risponde</string>
     <string name="workServerKeepsTrying">L'app continua a provare in background.</string>
     <string name="connectionRestartAgent">Riavvia Claude Code</string>
-    <string name="connectionAgentStarting">Avvio di Claude Code…</string>
+    <string name="connectionAgentStarting">Avvio degli agenti su questo telefono…</string>
     <string name="connectionAgentStartFailed">Claude Code non si è avviato. Tocca Riavvia Claude Code per riprovare ancora una volta.</string>
     <string name="connectionRestartPhoneServer">Riavvia OpenCode</string>
     <string name="connectStartingBody">Le conversazioni vengono conservate. Può volerci un minuto.</string>

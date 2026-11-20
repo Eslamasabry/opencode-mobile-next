@@ -717,4 +717,9 @@
     <string name="browserEditorInsecureOrigin">Questa pagina è stata aperta via HTTP in chiaro da un indirizzo di rete, quindi il browser non conserverà la password di un server. Lascia vuota la password per un server che non ne ha una, oppure apri l'app via HTTPS o da localhost per salvarne una.</string>
     <string name="browserAgentSocketUnavailable">Le connessioni a Codex e Paseo non sono disponibili nel browser. L'accesso avviene con un'intestazione WebSocket che i browser non possono inviare, e per ora non è supportato nessun accesso da browser. Per loro usa l'app telefono o desktop; i server OpenCode funzionano qui.</string>
     <string name="phoneServerPortBusy">Un altro server OpenCode sta già usando la porta %1$s su questo telefono.</string>
+    <string name="connectUpdatingPhone">Aggiornamento di OpenCode su questo telefono…</string>
+    <string name="connectAgentNeedsSignIn">Il tuo agente ha bisogno che tu acceda. Apri Agenti e tocca Accedi; poi si apre la conversazione.</string>
+    <string name="connectUpdatingAgents">Aggiornamento dei tuoi agenti su questo telefono. La conversazione si apre a fine aggiornamento.</string>
+    <string name="kitChipsMore">Mostra altri filtri</string>
+    <string name="kitChipsFirst">Mostra i primi filtri</string>
 </resources>

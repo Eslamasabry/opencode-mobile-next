@@ -5,6 +5,7 @@
     <string name="chatReplyInHint">Rispondi in %1$s</string>
     <string name="upgradeComposerFree"> · Gratis</string>
     <string name="upgradeComposerVoiceHoldTitle">Parla con l'agente</string>
-    <string name="upgradeComposerVoiceHold">Tieni premuto il microfono e parla; rilascia per mettere le tue parole nella casella. Per una conversazione vocale, apri + e scegli Conversazione vocale.</string>
+    <string name="upgradeComposerVoiceHold">Tieni premuto il microfono e parla; rilascia per mettere le tue parole nella casella. Per una conversazione vocale, tocca il microfono, poi tocca Conversazione vocale.</string>
     <string name="upgradeComposerHoldDictate">Tieni premuto per dettare</string>
+    <string name="chatWaitingForAnswerAbove">In attesa della tua risposta qui sopra</string>
 </resources>

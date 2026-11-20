@@ -59,7 +59,7 @@
     <string name="e7ModelUiDefault">Predefinito</string>
     <string name="e7ModelUiSelectionGone">Questa scelta non è più disponibile. Aggiorna i modelli e riprova.</string>
     <string name="e7VoiceUiLocalInput">Input vocale locale</string>
-    <string name="e7VoiceUiPrivacyDownload">L'audio non lascia mai questo telefono.</string>
+    <string name="e7VoiceUiPrivacyDownload">L'audio non lascia questo telefono. Il parlato viene trasformato in testo sul telefono e poi l'audio non viene conservato. Scaricare il modello vocale richiede internet una sola volta.</string>
     <string name="e7VoiceUiNoBuiltInMic">Android segnala che non c'è un microfono integrato. L'input vocale può comunque funzionare con un microfono cablato o USB.</string>
     <string name="e7VoiceUiLanguage">Lingua di trascrizione</string>
     <string name="e7VoiceUiVerifying">Verifica del modello scaricato</string>
@@ -403,4 +403,6 @@
     <string name="claudeAgentCheckAgain">Ricontrolla</string>
     <string name="claudeAgentCheckAgainLabel">Ricontrolla Claude Agent</string>
     <string name="claudeAgentReady">Claude Agent è pronto. I suoi modelli sono contrassegnati come Prova.</string>
+    <string name="modelPickerModeDefaultName">Predefinito</string>
+    <string name="modelPickerModeAutoName">Auto</string>
 </resources>

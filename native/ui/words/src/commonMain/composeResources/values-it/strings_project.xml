@@ -825,8 +825,8 @@
     <string name="gitBranchRemoteOnly">Su %1$s, non ancora su questo dispositivo</string>
     <string name="gitBranchCurrent">Branch attuale</string>
     <string name="gitNewBranchFrom">Nuovo branch da %1$s</string>
-    <string name="gitCloneRow">Clona un repository</string>
-    <string name="gitCloneRowHint">Copia un repository accanto a questo progetto</string>
+    <string name="gitCloneRow">Copia un progetto dal web</string>
+    <string name="gitCloneRowHint">Porta un progetto da un indirizzo accanto a questo</string>
     <string name="gitCloneAddressLabel">Indirizzo del repository</string>
     <string name="gitCloneFolderLabel">Nome cartella</string>
     <string name="gitCloneInto">Si clona in %1$s</string>
@@ -972,4 +972,7 @@
     <string name="agentIsolatedCancel">Interrompi attesa</string>
     <string name="agentElsewhereCounts">%1$d in attesa · %2$d in esecuzione · %3$d non riuscite</string>
     <string name="agentElsewhereStale">In attesa di un aggiornamento</string>
+    <string name="gitMoreTools">Altri strumenti</string>
+    <string name="gitMoreToolsHint">Dove vengono inviati i salvataggi, copia di un progetto, riparazione di una cronologia danneggiata</string>
+    <string name="devPreviewAskNeedsText">Scrivi prima cosa cambiare.</string>
 </resources>

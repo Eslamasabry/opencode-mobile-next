@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Nessun prompt recente.</string>
     <string name="chatHistoryLoading">Caricamento dei prompt recenti…</string>
     <string name="chatHistoryLoadFailed">Impossibile caricare i prompt recenti. Puoi comunque usare i prompt di questa conversazione.</string>
+    <string name="chatReplyFooterTokensK">%1$sk token</string>
+    <string name="chatReplyFooterTokensM">%1$sM token</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">meno di $0.01</string>
 </resources>

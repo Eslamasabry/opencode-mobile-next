@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="kitDurPair">%1$s %2$s</string>
+    <string name="kitDurLessThanMinute">meno di un minuto</string>
+    <string name="kitRelJustNow">Adesso</string>
+    <string name="kitRelYesterday">Ieri</string>
+    <string name="kitDurTenthsSeconds">%1$ss</string>
+    <plurals name="kitDurSeconds">
+        <item quantity="one">%1$s s</item>
+        <item quantity="many">%1$s s</item>
+        <item quantity="other">%1$s s</item>
+    </plurals>
+    <plurals name="kitDurMinutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="kitDurHours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+    <plurals name="kitDurDays">
+        <item quantity="one">%1$s g</item>
+        <item quantity="many">%1$s g</item>
+        <item quantity="other">%1$s g</item>
+    </plurals>
+    <plurals name="kitDurCompactSeconds">
+        <item quantity="one">%1$ss</item>
+        <item quantity="many">%1$ss</item>
+        <item quantity="other">%1$ss</item>
+    </plurals>
+    <plurals name="kitDurCompactMinutes">
+        <item quantity="one">%1$sm</item>
+        <item quantity="many">%1$sm</item>
+        <item quantity="other">%1$sm</item>
+    </plurals>
+    <plurals name="kitDurCompactHours">
+        <item quantity="one">%1$sh</item>
+        <item quantity="many">%1$sh</item>
+        <item quantity="other">%1$sh</item>
+    </plurals>
+    <plurals name="kitDurCompactDays">
+        <item quantity="one">%1$sg</item>
+        <item quantity="many">%1$sg</item>
+        <item quantity="other">%1$sg</item>
+    </plurals>
+    <plurals name="kitRelMinutesAgo">
+        <item quantity="one">%1$s min fa</item>
+        <item quantity="many">%1$s min fa</item>
+        <item quantity="other">%1$s min fa</item>
+    </plurals>
+    <plurals name="kitRelHoursAgo">
+        <item quantity="one">%1$sh fa</item>
+        <item quantity="many">%1$sh fa</item>
+        <item quantity="other">%1$sh fa</item>
+    </plurals>
+    <plurals name="kitRelDaysAgo">
+        <item quantity="one">%1$sg fa</item>
+        <item quantity="many">%1$sg fa</item>
+        <item quantity="other">%1$sg fa</item>
+    </plurals>
+    <string name="kitResetNow">si azzera adesso</string>
+    <string name="kitResetNowSentence">Si azzera adesso</string>
+    <plurals name="kitResetMinutes">
+        <item quantity="one">Si azzera tra %1$s min</item>
+        <item quantity="many">Si azzera tra %1$s min</item>
+        <item quantity="other">Si azzera tra %1$s min</item>
+    </plurals>
+    <plurals name="kitResetHours">
+        <item quantity="one">Si azzera tra %1$s h</item>
+        <item quantity="many">Si azzera tra %1$s h</item>
+        <item quantity="other">Si azzera tra %1$s h</item>
+    </plurals>
+    <plurals name="kitResetDays">
+        <item quantity="one">Si azzera tra %1$s giorno</item>
+        <item quantity="many">Si azzera tra %1$s giorni</item>
+        <item quantity="other">Si azzera tra %1$s giorni</item>
+    </plurals>
+    <string name="kitResetCompound">Si azzera tra %1$s</string>
+    <plurals name="kitResetLowerMinutes">
+        <item quantity="one">si azzera tra %1$s min</item>
+        <item quantity="many">si azzera tra %1$s min</item>
+        <item quantity="other">si azzera tra %1$s min</item>
+    </plurals>
+    <plurals name="kitResetLowerHours">
+        <item quantity="one">si azzera tra %1$s h</item>
+        <item quantity="many">si azzera tra %1$s h</item>
+        <item quantity="other">si azzera tra %1$s h</item>
+    </plurals>
+    <plurals name="kitResetLowerDays">
+        <item quantity="one">si azzera tra %1$s giorno</item>
+        <item quantity="many">si azzera tra %1$s giorni</item>
+        <item quantity="other">si azzera tra %1$s giorni</item>
+    </plurals>
+    <string name="kitResetLowerCompound">si azzera tra %1$s</string>
+    <plurals name="kitApproxSeconds">
+        <item quantity="one">circa %1$s s</item>
+        <item quantity="many">circa %1$s s</item>
+        <item quantity="other">circa %1$s s</item>
+    </plurals>
+    <plurals name="kitApproxMinutes">
+        <item quantity="one">circa %1$s min</item>
+        <item quantity="many">circa %1$s min</item>
+        <item quantity="other">circa %1$s min</item>
+    </plurals>
+</resources>

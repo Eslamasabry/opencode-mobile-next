@@ -33,4 +33,5 @@
     <string name="approvalAlwaysCoversWords">Consenti sempre coprirebbe anche %1$s.</string>
     <string name="approvalAlwaysPattern">Modello di Consenti sempre</string>
     <string name="approvalNoteDenyOnly">Inviato solo se scegli Nega.</string>
+    <string name="approvalNewFileOf">Nuovo file: %1$s</string>
 </resources>

@@ -445,5 +445,6 @@
         <item quantity="other">Annullare %1$d file modificati?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Annullare 1 file modificato?</string>
-    <string name="reviewUndoBody">Il progetto torna esattamente com'era prima che l'agente partisse. La conversazione rimane.</string>
+    <string name="reviewUndoBody">Nasconde i messaggi dal punto in cui sono iniziate queste modifiche e rimette i tuoi file com'erano. Puoi ripristinare tutto finché non elimini i messaggi nascosti.</string>
+    <string name="reviewDone">Fatto</string>
 </resources>

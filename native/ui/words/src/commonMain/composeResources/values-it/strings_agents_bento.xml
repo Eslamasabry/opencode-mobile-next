@@ -39,4 +39,17 @@
     <string name="agentsChipSetUp">Configura</string>
     <string name="agentsSetUpAction">Configura %1$s</string>
     <string name="agentsSetUpTypeAuth">Digita /auth e segui i passaggi.</string>
+    <string name="agentsUpdateReading">controllo gli aggiornamenti dei tuoi agenti</string>
+    <string name="agentsUpdateWaitingBusy">l'aggiornamento degli agenti aspetta che siano liberi</string>
+    <string name="agentsUpdateWaitingSetup">l'aggiornamento degli agenti aspetta la fine della configurazione del telefono</string>
+    <string name="agentsUpdateWaitingSwitch">l'aggiornamento degli agenti aspetta la fine dello spostamento del server del telefono</string>
+    <string name="agentsUpdateWaitingMetered">l'aggiornamento degli agenti aspetta il Wi-Fi</string>
+    <string name="agentsUpdateUpdating">aggiorno %1$s</string>
+    <string name="agentsUpdateUpdated">%1$s aggiornato</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s ha bisogno che accedi</string>
+    <string name="agentsUpdateReadFailed">l'aggiornamento degli agenti non ha potuto controllare i tuoi agenti, riprova all'apertura dell'app</string>
+    <string name="agentsUpdateRefused">l'aggiornamento degli agenti non è partito, usa Installa sull'agente</string>
+    <string name="agentsStateSignInNotConfirmed">Accesso non confermato</string>
+    <string name="agentsSignInNotConfirmedBody">L'app non ha potuto confermare se %1$s ha effettuato l'accesso. Ricontrollare lo chiede a %1$s adesso.</string>
+    <string name="agentsCheckSignInAgain">Ricontrolla %1$s</string>
 </resources>
