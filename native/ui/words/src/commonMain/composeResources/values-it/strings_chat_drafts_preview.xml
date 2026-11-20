@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">Apertura della bozza salvata…</string>
+    <string name="chatDraftAlreadySent">Questo testo potrebbe essere già stato inviato. Controlla la conversazione prima di inviarlo di nuovo.</string>
+    <string name="chatDraftRepeatTitle">Inviare di nuovo questo testo?</string>
+    <string name="chatDraftRepeatAction">Invia di nuovo</string>
+    <string name="chatDraftRepeatBody">Questo testo è già presente nella conversazione. Inviarlo di nuovo solo se vuoi una nuova risposta.</string>
+    <string name="chatDraftRestoreFailed">Non è stato possibile aprire la bozza salvata. Puoi riprovare.</string>
+</resources>

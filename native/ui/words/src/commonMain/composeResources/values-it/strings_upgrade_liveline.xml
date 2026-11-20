@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="one">Lettura di 1 file</item>
+        <item quantity="many">Lettura di %1$d file</item>
+        <item quantity="other">Lettura di %1$d file</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="one">Ricerca nel progetto</item>
+        <item quantity="many">Ricerca nel progetto, %1$d ricerche</item>
+        <item quantity="other">Ricerca nel progetto, %1$d ricerche</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="one">Esplorazione di 1 cartella</item>
+        <item quantity="many">Esplorazione di %1$d cartelle</item>
+        <item quantity="other">Esplorazione di %1$d cartelle</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="one">Modifica di 1 file</item>
+        <item quantity="many">Modifica di %1$d file</item>
+        <item quantity="other">Modifica di %1$d file</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="one">Recupero di 1 pagina</item>
+        <item quantity="many">Recupero di %1$d pagine</item>
+        <item quantity="other">Recupero di %1$d pagine</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="one">Affidamento di 1 attività</item>
+        <item quantity="many">Affidamento di %1$d attività</item>
+        <item quantity="other">Affidamento di %1$d attività</item>
+    </plurals>
+    <string name="liveStepRunning">Esecuzione di %1$s</string>
+    <string name="liveStepRunningCommand">Esecuzione di un comando</string>
+    <string name="liveFailedStillWorking">L'agente sta ancora lavorando. Per ora non devi fare nulla.</string>
+    <string name="liveFailedStopped">L'agente si è fermato. Invia un messaggio per chiedergli di continuare.</string>
+</resources>

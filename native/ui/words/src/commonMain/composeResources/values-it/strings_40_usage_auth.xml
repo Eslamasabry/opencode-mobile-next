@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Accedi a %1$s</string>
+    <string name="m40AuthBack">Indietro</string>
+    <string name="m40AuthWorking">In corso…</string>
+    <string name="m40AuthPlaces">Dove vuoi effettuare l'accesso?</string>
+    <string name="m40AuthBest">L'utilizzo è pronto per la lettura qui.</string>
+    <string name="m40AuthServer">L'accesso viene salvato su questo server.</string>
+    <string name="m40AuthPhone">Questo telefono</string>
+    <string name="m40AuthMethods">Scegli come accedere</string>
+    <string name="m40AuthNoPlace">Nessun posto dove accedere</string>
+    <string name="m40AuthNoPlaceBody">Aggiungi un server OpenCode o installa l'agente di questo provider su questo telefono.</string>
+    <string name="m40AuthUnavailable">L'accesso non è disponibile qui</string>
+    <string name="m40AuthUnavailableBody">Questa connessione non offre un metodo di accesso supportato per questo provider.</string>
+    <string name="m40AuthKey">Chiave API</string>
+    <string name="m40AuthKeyHelp">La chiave viene inviata a questa connessione e salvata lì.</string>
+    <string name="m40AuthSaveKey">Salva chiave</string>
+    <string name="m40AuthContinue">Continua</string>
+    <string name="m40AuthEnterValue">Inserisci un valore.</string>
+    <string name="m40AuthSelectValue">Scegli un'opzione.</string>
+    <string name="m40AuthOpenPage">Apri la pagina di accesso</string>
+    <string name="m40AuthAskPage">Aprire %1$s nel browser?</string>
+    <string name="m40AuthOpenBrowser">Apri nel browser</string>
+    <string name="m40AuthCheck">Verifica l'accesso</string>
+    <string name="m40AuthWaiting">Completa l'accesso, poi verifica qui.</string>
+    <string name="m40AuthCommandWaiting">La connessione sta eseguendo l'accesso. Verifica qui al termine.</string>
+    <string name="m40AuthCode">Codice di accesso o URL di callback</string>
+    <string name="m40AuthFinish">Completa l'accesso</string>
+    <string name="m40AuthDone">Fatto</string>
+    <string name="m40AuthComplete">Accesso effettuato</string>
+    <string name="m40AuthCompleteBody">L'elenco dei piani è stato aggiornato.</string>
+    <string name="m40AuthFailed">Impossibile completare questo passaggio. Riprova.</string>
+    <string name="m40AuthReenter">Inserisci di nuovo la password di questo server in Server, poi torna qui.</string>
+    <string name="m40AuthDetails">Dettagli</string>
+    <string name="m40AuthCopyDetails">Copia i dettagli</string>
+    <string name="m40AuthDeviceCode">Usa il codice %1$s nella pagina di accesso.</string>
+    <string name="m40AuthCopyCode">Copia il codice</string>
+    <string name="m40AuthCopied">Codice copiato</string>
+    <string name="m40AuthBrowserHint">Questo metodo deve concludersi in un browser sulla macchina che esegue questo server.</string>
+    <string name="m40AuthDeviceHint">Accedi usando il codice dispositivo.</string>
+    <string name="m40AuthAccountHint">Accedi con l'account del provider.</string>
+    <string name="m40AuthCommandHint">La connessione esegue questo accesso; il telefono non esegue alcun comando.</string>
+    <string name="m40AuthPhoneHint">Usa l'agente installato di questo provider su questo telefono.</string>
+</resources>

@@ -42,6 +42,7 @@ CMP_FOLDER = {"id": "id"}
 PLURALS = {
     "en": ["one", "other"], "ar": ["zero", "one", "two", "few", "many", "other"],
     "es": ["one", "many", "other"], "pt": ["one", "many", "other"], "fr": ["one", "many", "other"],
+    "it": ["one", "many", "other"],
     "ru": ["one", "few", "many", "other"], "ja": ["other"], "zh": ["other"], "vi": ["other"], "id": ["other"],
 }
 PH = re.compile(r"%(?:\d+\$)?[sd]|%%")

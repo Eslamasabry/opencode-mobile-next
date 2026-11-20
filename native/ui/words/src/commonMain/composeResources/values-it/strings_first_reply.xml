@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s sta richiedendo molto più tempo del previsto. Riprova, oppure usa un computer.</string>
+    <string name="setupUseComputerInstead">Usa un computer</string>
+    <string name="setupActivityDownloading">Download dei file</string>
+    <string name="setupActivityUnpacking">Estrazione dei file</string>
+    <string name="setupActivityConfiguring">Configurazione in corso</string>
+    <string name="setupActivityChecking">Verifica di ciò che è installato</string>
+    <string name="setupActivityWorking">Al lavoro</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">Siamo ancora al lavoro. I passaggi più lunghi possono richiedere diversi minuti.</string>
+    <string name="chatModelFailRateLimit">Il modello è occupato in questo momento. Cambia modello o riprova tra qualche minuto.</string>
+    <string name="chatModelFailDailyLimit">Il limite giornaliero gratuito per questo modello è esaurito. Cambia modello o riprova domani.</string>
+    <string name="chatModelFailSignIn">Questo modello richiede prima l'accesso. Accedi o cambia modello.</string>
+    <string name="chatModelFailQuota">Il tuo account non ha più credito per questo modello. Aggiungi credito o cambia modello.</string>
+    <string name="chatModelFailGeneric">Il modello non è riuscito a rispondere. Cambia modello o riprova.</string>
+    <string name="chatModelFailSwitch">Cambia modello</string>
+    <string name="chatModelFailSignInAction">Accedi</string>
+    <string name="chatStalledOnTool">Ancora in attesa di %1$s.</string>
+    <string name="chatStalledStop">Interrompi</string>
+    <string name="setupStepClock">Questo passaggio · %1$s</string>
+    <string name="setupAgentUserStep">Utente Linux per gli agenti</string>
+</resources>

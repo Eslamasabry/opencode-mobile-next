@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Alcune bozze o allegati meno recenti non sono stati ancora spostati. Il lavoro salvato è conservato. Libera spazio se necessario, poi riprova.</string>
+    <string name="statePromptFilesUnavailable">Questi file non si sono potuti ripristinare qui: %1$s. Il prompt salvato è conservato.</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryCrashReportsTitle">Invia segnalazioni di arresti anomalo allo sviluppatore (Google Firebase)</string>
+    <string name="telemetryCrashReportsBody">Quando l'app si arresta in modo anomalo o un passaggio non va a buon fine, invia il tipo di problema, la versione dell'app e di Android e un breve elenco di posizioni del codice. Non invia mai i tuoi messaggi, file, indirizzi o chiavi.</string>
+    <string name="telemetryConsentChoose">Scegli cosa condividere</string>
+    <string name="telemetryConsentSave">Salva le mie scelte</string>
+    <string name="sendReportTitle">Invia una segnalazione di problema</string>
+    <string name="sendReportRowDetail">Controlla cosa verrà inviato, poi invialo</string>
+    <string name="sendReportSubtitle">Questo è tutto ciò che contiene la segnalazione. Nulla viene inviato finché non tocchi Invia.</string>
+    <string name="sendReportSend">Invia</string>
+    <string name="sendReportCollecting">Raccolta della segnalazione…</string>
+    <string name="sendReportSentTitle">Segnalazione inviata</string>
+    <string name="sendReportSentBody">Cita questo codice della segnalazione se apri una issue su GitHub, così lo sviluppatore potrà trovare la tua segnalazione.</string>
+    <string name="sendReportFailed">Impossibile inviare la segnalazione. Controlla la connessione e riprova.</string>
+    <string name="sendReportDone">Fatto</string>
+    <string name="reportCodeLabel">Codice segnalazione</string>
+    <string name="reportCodeCopy">Copia il codice segnalazione</string>
+</resources>

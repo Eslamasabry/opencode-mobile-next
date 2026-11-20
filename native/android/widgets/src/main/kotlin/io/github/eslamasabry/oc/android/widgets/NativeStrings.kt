@@ -15,7 +15,7 @@ import java.util.Locale
  * Never mutates the application's configuration or reads any other saved preference.
  */
 object NativeStrings {
-    private val supported = setOf("en", "ar", "es", "fr", "id", "in", "ja", "pt", "ru", "vi", "zh")
+    private val supported = setOf("en", "ar", "es", "fr", "id", "in", "it", "ja", "pt", "ru", "vi", "zh")
     // Keep in step with AppLocaleStore: untranslated app choices fall back to
     // English rather than accidentally reverting to a different system language.
     private val appLanguages = supported

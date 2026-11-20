@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">Archiviazione condivisa</string>
+    <string name="sharedFoldersSelected">A meno che tu non scelga diversamente qui sotto, Linux vede solo le cartelle di progetto che apri e Download › OpenCode, non tutta la tua archiviazione. Per aprire quelle cartelle, Android ti chiede di concedere a questa app l'accesso a tutti i file, il suo unico permesso per i file nell'archiviazione condivisa.</string>
+    <string name="sharedFoldersAll">Permetti a Linux di vedere tutta l'archiviazione condivisa</string>
+    <string name="sharedFoldersAllDetail">Usa l'accesso all'archiviazione precedente invece delle cartelle di progetto selezionate. Le modifiche si applicano al riavvio del server del telefono.</string>
+    <string name="sharedFoldersAllRisk">Gli agenti in esecuzione in Linux potranno leggere e modificare file al di fuori dei tuoi progetti aperti.</string>
+    <string name="sharedFoldersProtection">La protezione mantiene Linux limitato alle cartelle di progetto selezionate.</string>
+    <string name="sharedFoldersRestart">L'accesso alle cartelle è salvato. Riavvia il server del telefono da Questo telefono quando il tuo lavoro è pronto, poi aggiorna File. Nessun server è stato interrotto.</string>
+    <string name="sharedFoldersFailed">Impossibile leggere o salvare l'accesso alle cartelle. Riprova.</string>
+    <string name="sharedFoldersAndroid">Accesso ai file di Android</string>
+    <string name="sharedFoldersAndroidDetail">Non consentito. Consenti l'accesso a tutti i file per aprire i progetti presenti nell'archiviazione condivisa.</string>
+    <string name="sharedFoldersGranted">Consentito: questa app ha l'accesso a tutti i file. Per disattivarlo, apri Impostazioni di Android › Accesso a tutti i file.</string>
+    <string name="sharedFoldersWorking">Aggiornamento dell'accesso alle cartelle…</string>
+</resources>

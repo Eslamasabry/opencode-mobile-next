@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Questa voce di utilizzo è cambiata. Aggiorna i piani per vedere gli account attuali.</string>
+    <string name="hub40ContinueOn">Continuare su %1$s?</string>
+    <string name="hub40ContinueBody">Questa scorciatoia chiede di aprire la connessione salvata per l'accesso del provider. Nulla viene inviato finché non continui.</string>
+    <string name="hub40Continue">Continua</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">Ripara una cronologia del progetto danneggiata</string>
+    <string name="linuxGitRepairWorking">Riparazione della cronologia del progetto…</string>
+    <string name="linuxGitRepairHealthy">La cronologia di questo progetto si legge bene. Non c'era nulla da riparare.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="one">1 file della cronologia ripristinato. Il progetto si legge di nuovo senza problemi.</item>
+        <item quantity="many">%1$d di file della cronologia ripristinati. Il progetto si legge di nuovo senza problemi.</item>
+        <item quantity="other">%1$d file della cronologia ripristinati. Il progetto si legge di nuovo senza problemi.</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">Una parte della cronologia non è stata recuperata. Copia di nuovo il progetto o ripristina un backup.</string>
+    <string name="linuxGitRepairNotProject">Qui si possono riparare solo i progetti nella cartella dei progetti di questo telefono.</string>
+    <string name="linuxGitRepairFailed">Il telefono non è riuscito a completare la riparazione della cronologia. Riprova.</string>
+    <string name="linuxGitRepairDetailLocal">Ripristina i file della cronologia dalle copie presenti in questo progetto. I file del progetto restano invariati.</string>
+</resources>

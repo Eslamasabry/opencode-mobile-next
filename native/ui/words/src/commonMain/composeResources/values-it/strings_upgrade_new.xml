@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeNewStart">Inizia</string>
+    <string name="upgradeAgentReady">Pronto</string>
+    <string name="upgradeMode">Modalità</string>
+    <string name="upgradeModeBuild">Crea</string>
+    <string name="upgradeModePlan">Pianifica</string>
+</resources>

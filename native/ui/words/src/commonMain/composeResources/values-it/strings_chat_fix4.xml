@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">L'account del provider del modello non ha credito per questo modello. Aggiungi credito con quel provider oppure scegli un altro modello.</string>
+    <string name="chatReplyFailedConnectionLost">La connessione al provider del modello si è interrotta, quindi la risposta si è fermata. Chiedi di continuare oppure invia di nuovo.</string>
+</resources>

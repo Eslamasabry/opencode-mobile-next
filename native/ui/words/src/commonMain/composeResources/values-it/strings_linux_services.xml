@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">Programmi di sviluppo</string>
+    <string name="linuxDevProgramsNote">Programmi trovati nel Linux di questo telefono. Seleziona un programma per leggere il suo file di output.</string>
+    <string name="linuxDevScanFailed">Impossibile controllare i programmi di sviluppo</string>
+    <string name="linuxDevProgram">Programma %1$d</string>
+    <string name="linuxDevPorts">Porte: %1$s</string>
+    <string name="linuxDevReadLog">Leggi log</string>
+    <string name="linuxDevNoLog">Nessun file di output leggibile</string>
+    <string name="linuxDevLog">Log del programma</string>
+    <string name="linuxDevLogLoading">Lettura dell'output più recente…</string>
+    <string name="linuxDevLogFailed">Impossibile leggere l'output del programma.</string>
+    <string name="linuxDevLogEmpty">Nessun output per ora.</string>
+    <string name="linuxDevStop">Ferma</string>
+    <string name="linuxDevStopTitle">Fermare questo programma?</string>
+    <string name="linuxDevStopBody">Ferma il processo %1$d su questo telefono. Il suo comando viene verificato di nuovo prima dell'arresto.</string>
+    <string name="linuxSvcTitle">Servizi di sviluppo</string>
+    <string name="linuxSvcFailed">L'azione non è stata completata</string>
+    <string name="linuxSvcUnconfirmed">Impossibile confermare la connessione corrente o la proprietà del comando. Aggiorna prima di riprovare.</string>
+    <string name="linuxSvcCorrupt">Impossibile leggere i comandi salvati. I dati salvati sono stati lasciati invariati.</string>
+    <string name="linuxSvcUnsupported">Questa connessione non può controllare i servizi di sviluppo. Puoi comunque salvare i comandi per dopo.</string>
+    <string name="linuxSvcAdd">Aggiungi comando</string>
+    <string name="linuxSvcRefresh">Aggiorna</string>
+    <string name="linuxSvcSaved">Comandi salvati</string>
+    <string name="linuxSvcSavedNote">Salvare un comando non lo avvia mai. Solo un'esecuzione avviata qui può essere controllata dal relativo comando salvato.</string>
+    <string name="linuxSvcEmpty">Nessun comando salvato in questo progetto.</string>
+    <string name="linuxSvcNotStarted">Non avviato</string>
+    <string name="linuxSvcRunning">In esecuzione</string>
+    <string name="linuxSvcStopped">Fermato</string>
+    <string name="linuxSvcUnknown">Esecuzione non confermata</string>
+    <string name="linuxSvcDetected">Trovato in esecuzione</string>
+    <string name="linuxSvcStart">Avvia</string>
+    <string name="linuxSvcRestart">Riavvia</string>
+    <string name="linuxSvcReport">Rapporto di errore</string>
+    <string name="linuxSvcForget">Dimentica esecuzione</string>
+    <string name="linuxSvcRemove">Rimuovi comando</string>
+    <string name="linuxSvcName">Nome</string>
+    <string name="linuxSvcNext">Avanti</string>
+    <string name="linuxSvcCommand">Comando</string>
+    <string name="linuxSvcSave">Salva comando</string>
+    <string name="linuxSvcInvalidName">Inserisci un nome di 1–80 caratteri.</string>
+    <string name="linuxSvcInvalidCommand">Inserisci un comando di 1–4096 caratteri.</string>
+    <string name="linuxSvcRemoveTitle">Rimuovere questo comando?</string>
+    <string name="linuxSvcForgetTitle">Dimenticare questa esecuzione?</string>
+    <string name="linuxSvcStopBody">Il programma selezionato si fermerà solo dopo la conferma della sua identità corrente.</string>
+    <string name="linuxSvcRemoveBody">Rimuove questo comando salvato e la sua ricevuta locale. Non ferma mai un programma in esecuzione.</string>
+    <string name="linuxSvcForgetBody">Dimentica la ricevuta incerta su questo telefono. Non ferma il programma; controlla l'elenco delle esecuzioni prima di avviarne un'altra copia.</string>
+</resources>

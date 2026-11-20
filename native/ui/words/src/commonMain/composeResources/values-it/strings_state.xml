@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">Fissa la conversazione</string>
+    <string name="stateUnpin">Sblocca la conversazione</string>
+    <string name="statePinFailed">Impossibile salvare l'aggancio. Riprova.</string>
+    <string name="stateContextUsage">Ultimo contesto: %1$d%</string>
+    <string name="stateSavedPreview">Elenco salvato. Connettiti per aprire questa conversazione.</string>
+    <string name="chatsAllSavedGroup">Elenchi salvati da server non connessi</string>
+</resources>

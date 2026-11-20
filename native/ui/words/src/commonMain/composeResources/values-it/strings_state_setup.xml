@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">Cronologia e registro della configurazione</string>
+    <string name="stateSetupNoWrites">Qui puoi esaminare la configurazione. Applica e Annulla non sono disponibili perché questo server non ha un endpoint di ripristino atomico verificato.</string>
+    <string name="stateSetupUnsupported">Collegati a un server che supporta l'ispezione della configurazione per leggerne le sorgenti di configurazione.</string>
+    <string name="stateSetupSaveFailed">Impossibile salvare la modifica. Riprova.</string>
+    <string name="stateSetupReadFailed">Impossibile leggere le informazioni di configurazione. Riprova.</string>
+    <string name="stateSetupOffline">Riconnettiti per aggiornare le informazioni di configurazione.</string>
+    <string name="stateSetupSources">Sorgenti di configurazione</string>
+    <string name="stateSetupMcp">Strumenti collegati</string>
+    <string name="stateSetupRecordReview">Registra che ho esaminato questa configurazione</string>
+    <string name="stateSetupRefresh">Aggiorna configurazione</string>
+    <string name="stateSetupHistory">Cronologia della configurazione</string>
+    <string name="stateSetupHistoryUnavailable">La cronologia salvata non è disponibile. È stata conservata per il ripristino.</string>
+    <string name="stateSetupHistoryEmpty">Ancora nessuna revisione della configurazione salvata</string>
+    <string name="stateSetupRegistryConsent">Sfoglia il registro pubblico degli strumenti</string>
+    <string name="stateSetupRegistryPrivacy">Disattivato per impostazione predefinita. L'aggiornamento invia una singola richiesta pubblica. Le parole di ricerca vanno al registro; le credenziali del tuo server no. Gli elenchi non eseguono né installano mai nulla.</string>
+    <string name="stateSetupRegistrySearch">Cerca nel registro</string>
+    <string name="stateSetupRegistryRefresh">Aggiorna registro</string>
+    <string name="stateSetupRegistrySaved">Mostra gli elenchi salvati</string>
+    <string name="stateSetupRegistryClear">Dimentica consenso al registro ed elenco salvato</string>
+    <string name="stateSetupRegistryOffline">Offline. Mostro l'elenco salvato.</string>
+    <string name="stateSetupRegistryFailed">Impossibile caricare il registro. Il tuo elenco salvato resta conservato.</string>
+    <string name="stateSetupRegistryEmpty">Nessun elenco da mostrare. Aggiorna o prova un'altra ricerca.</string>
+    <string name="stateSetupMcpConnected">Collegato</string>
+    <string name="stateSetupMcpPending">Connessione in corso</string>
+    <string name="stateSetupMcpDisabled">Disattivato</string>
+    <string name="stateSetupMcpFailed">Impossibile connettersi</string>
+    <string name="stateSetupMcpSignIn">Accesso richiesto</string>
+    <string name="stateSetupMcpUnknown">Stato sconosciuto</string>
+    <string name="stateSetupAuditProposed">Modifica proposta</string>
+    <string name="stateSetupAuditPending">Modifica in attesa</string>
+    <string name="stateSetupAuditAccepted">Modifica accettata</string>
+    <string name="stateSetupAuditVerified">Verifica confermata</string>
+    <string name="stateSetupAuditUncertain">Esito incerto</string>
+    <string name="stateSetupAuditRejected">Modifica rifiutata</string>
+    <string name="stateServerSchedules">Prompt pianificati</string>
+</resources>

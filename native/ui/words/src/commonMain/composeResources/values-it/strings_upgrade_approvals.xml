@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">Strumento: %1$s</string>
+    <string name="approvalToolTerminal">Comando terminale</string>
+    <string name="approvalToolEdit">Modifica di file</string>
+    <string name="approvalToolRead">Lettura di file</string>
+    <string name="approvalToolWeb">Richiesta web</string>
+    <string name="approvalToolOutside">Fuori da questo progetto</string>
+    <string name="approvalToolOther">Altro strumento</string>
+    <string name="approvalCopyAsk">Copia ciò che chiede di eseguire</string>
+    <string name="approvalCopied">Copiato</string>
+    <string name="approvalAllow">Consenti</string>
+    <string name="approvalAlwaysAllowExact">Consenti sempre %1$s</string>
+    <string name="approvalDeny">Nega</string>
+    <string name="approvalReplyLabel">Di' cosa deve fare invece</string>
+    <string name="approvalReplySend">Nega e invia</string>
+    <string name="approvalReplyJustDeny">Solo nega</string>
+    <string name="approvalReplyBack">Indietro</string>
+    <string name="approvalReplyEmpty">Scrivi cosa dovrebbe fare invece, oppure scegli Solo nega.</string>
+    <string name="approvalAllowedWhat">Consentito: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Consentito sempre: %1$s</string>
+    <string name="approvalDenied">Negato</string>
+    <string name="approvalDeniedInstead">Negato, con l'indicazione di fare invece: “%1$s”</string>
+    <string name="approvalChangeOf">La modifica a %1$s</string>
+    <string name="approvalChangeMissing">L'agente non ha indicato cosa scriverà.</string>
+    <string name="approvalCopyChange">Copia la modifica</string>
+    <string name="approvalScopeAnyFileChange">qualsiasi modifica a file</string>
+    <string name="approvalScopeFileChangesMatching">qualsiasi modifica a file corrispondente a %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s con qualsiasi argomento</string>
+    <string name="approvalScopeEverything">ogni richiesta come questa</string>
+    <string name="approvalScopeMatching">qualsiasi richiesta corrispondente a %1$s</string>
+    <string name="approvalAlwaysCoversWords">Consenti sempre coprirebbe anche %1$s.</string>
+    <string name="approvalAlwaysPattern">Modello di Consenti sempre</string>
+    <string name="approvalNoteDenyOnly">Inviato solo se scegli Nega.</string>
+    <string name="approvalNewFileOf">Nuovo file: %1$s</string>
+</resources>

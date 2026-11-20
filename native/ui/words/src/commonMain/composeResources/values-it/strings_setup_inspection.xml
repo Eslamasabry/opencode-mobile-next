@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">Esamina configurazione</string>
+    <string name="setupInspectReadOnly">Questa vista legge la configurazione e lo stato degli strumenti. Applica e Annulla non sono disponibili perché questo server non può ripristinare in modo sicuro le modifiche alla configurazione.</string>
+    <string name="setupInspectFailed">Impossibile caricare le informazioni di configurazione. Riconnettiti al server e riprova.</string>
+    <string name="setupInspectRefresh">Aggiorna configurazione</string>
+    <string name="setupInspectLoading">Lettura della configurazione…</string>
+    <string name="setupInspectConfig">Fonti di configurazione</string>
+    <string name="setupInspectNoSources">Nessuna fonte di configurazione segnalata.</string>
+    <string name="setupInspectMcp">Connessioni degli strumenti</string>
+    <string name="setupInspectNoMcp">Nessuna connessione degli strumenti segnalata.</string>
+    <string name="setupMcpConnected">Connesso</string>
+    <string name="setupMcpPending">Connessione in corso</string>
+    <string name="setupMcpDisabled">Disattivato</string>
+    <string name="setupMcpFailed">Connessione non riuscita</string>
+    <string name="setupMcpSignIn">Accesso richiesto</string>
+    <string name="setupMcpUnknown">Stato sconosciuto</string>
+    <string name="setupRegistryTitle">Registro pubblico degli strumenti</string>
+    <string name="setupRegistryConsent">Sfoglia il registro pubblico</string>
+    <string name="setupRegistryPrivacy">Aggiorna contatta il registro MCP pubblico senza credenziali del server. I termini di ricerca vengono inviati al registro e non vengono mai salvati.</string>
+    <string name="setupRegistryDisabled">L'esplorazione è disattivata. Attivala per caricare gli elenchi quando scegli Aggiorna.</string>
+    <string name="setupRegistryLoading">Caricamento degli elenchi pubblici…</string>
+    <string name="setupRegistryOffline">Sei offline. Vengono mostrati gli elenchi salvati.</string>
+    <string name="setupRegistryError">Impossibile caricare il registro pubblico. Vengono mostrati gli elenchi salvati.</string>
+    <string name="setupRegistryEmpty">Nessun elenco caricato. Aggiorna o cerca nel registro.</string>
+    <string name="setupRegistryReadOnly">Gli elenchi sono solo informativi. Configura gli strumenti manualmente sul tuo server; questa pagina non esegue mai comandi del registro né apre i link elencati.</string>
+    <string name="setupRegistrySearch">Cerca negli elenchi</string>
+    <string name="setupRegistryRefresh">Aggiorna gli elenchi</string>
+    <string name="setupRegistrySaved">Mostra gli elenchi salvati</string>
+    <string name="setupInspectUnsupported">L'ispezione della configurazione non è disponibile su questo server.</string>
+    <string name="setupMigrationRequired">Trasferimento delle conversazioni precedenti…</string>
+    <string name="setupMigrationProgress">Trasferimento delle conversazioni precedenti (%1$d di %2$d)…</string>
+    <string name="setupMigrationError">Il server non ha completato il trasferimento delle conversazioni precedenti. I dati originali sono ancora su questo telefono, intatti.</string>
+    <string name="setupMigrationUnavailable">Il server non ha potuto riportare lo stato delle conversazioni precedenti. Aggiorna per riprovare.</string>
+</resources>

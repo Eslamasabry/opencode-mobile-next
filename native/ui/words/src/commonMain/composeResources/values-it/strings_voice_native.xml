@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeDetect">Rileva dal parlato</string>
+    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativePhoneEngine">La digitazione vocale chiede ad Android di riconoscere la voce sul telefono stesso (Android 12 e successivi), preferendo il riconoscimento offline; valgono i termini sulla privacy di Android per quel servizio. I telefoni che non lo hanno non mostrano il microfono. Questa versione non usa ancora i modelli vocali qui sotto.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Richiede il motore vocale offline, che questa versione non include ancora.</string>
+    <string name="voiceNativeSettingsAction">Impostazioni vocali</string>
+    <string name="voiceNativeStoppedAfterPause">Fermato dopo una pausa. Le tue parole sono nel campo.</string>
+    <string name="voiceNativeNoRecognizer">Questo telefono non ha un servizio di riconoscimento vocale. Attivalo nelle impostazioni di Android, poi riprova.</string>
+    <string name="voiceNativeReadAloud">Leggi ad alta voce</string>
+    <string name="voiceNativePartial">Scaricati %1$s di %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Riconoscimento vocale del telefono</string>
+    <string name="kitVoiceDiscard">Scarta la registrazione</string>
+    <string name="kitVoiceUseWords">Metti le parole nella casella del messaggio</string>
+    <string name="kitVoiceSendSpoken">Invia quello che hai detto</string>
+    <string name="kitVoiceListeningFor">In ascolto, %1$s</string>
+</resources>

@@ -838,4 +838,5 @@
     <string name="appearanceWaitMarksInk">Tinta</string>
     <string name="appearanceWaitMarksColour">Cor</string>
     <string name="appearanceWaitMarksNote">Os pequenos desenhos animados ao lado de frases como “Iniciando o OpenCode…”.</string>
+    <string name="e7LocaleUiItalian">Italiano</string>
 </resources>

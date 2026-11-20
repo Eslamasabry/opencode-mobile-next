@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">Arresta il server riavviato</string>
+    <string name="activityUndoing">Arresto del server riavviato…</string>
+    <string name="activityUndone">Riavvio annullato.</string>
+    <string name="activityUndoFailed">Annullamento non riuscito.</string>
+    <string name="activityUndoUnconfirmed">Esito dell'annullamento sconosciuto. Non verrà ripetuto.</string>
+    <string name="activityUndoUnavailable">Annullamento non disponibile.</string>
+</resources>

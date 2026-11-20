@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Lettura dell'utilizzo del piano</string>
+    <string name="plansNativeCollectors">Leggi i limiti del piano</string>
+    <string name="plansNativeCollectorOn">La lettura è attiva</string>
+    <string name="plansNativeCollectorOff">La lettura è disattivata</string>
+    <string name="plansNativeCollectorSetup">Configura la lettura su questo telefono</string>
+    <string name="plansNativeCollectorRemote">Consenti la lettura da questo server</string>
+    <string name="plansNativeCollectorWorking">Aggiornamento della lettura del piano</string>
+    <string name="plansNativeCollectorFailed">Impossibile modificare la lettura del piano. Controlla il server e riprova.</string>
+    <string name="plansNativeAlerts">Avvisi per i limiti del piano</string>
+    <string name="plansNativeAlertsBody">Avvisa quando un piano leggibile raggiunge il livello selezionato. La lettura remota richiede comunque la tua autorizzazione.</string>
+    <string name="plansNativeSetupQuestion">Configurare la lettura del piano su %1$s?</string>
+    <string name="plansNativeRemoteQuestion">Consentire la lettura del piano da %1$s?</string>
+    <string name="plansNativeOffQuestion">Disattivare la lettura del piano su %1$s?</string>
+    <string name="plansNativeSetupBody">L'app installa il suo lettore di piani dentro Ubuntu in-app. Le credenziali del provider restano sul telefono.</string>
+    <string name="plansNativeRemoteBody">Legge i limiti del piano dal raccoglitore già installato su questo server. Questa autorizzazione vale solo per questo server e per gli account del provider che segnala.</string>
+    <string name="plansNativeOffBody">Interrompe la lettura da questa fonte e rimuove la relativa autorizzazione di lettura. Gli accessi ai provider vengono conservati.</string>
+    <string name="plansNativeSetUp">Configura la lettura</string>
+    <string name="plansNativeAllow">Consenti la lettura</string>
+    <string name="plansNativeTurnOff">Disattiva la lettura</string>
+    <string name="plansNativeCancel">Annulla</string>
+</resources>

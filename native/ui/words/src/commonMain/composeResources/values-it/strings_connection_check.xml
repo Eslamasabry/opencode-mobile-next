@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">Verifica connessione</string>
+    <string name="connectionCheckTitle">Verifica della connessione</string>
+    <string name="connectionCheckAgain">Aggiorna</string>
+    <string name="connectionCheckAddress">Indirizzo</string>
+    <string name="connectionCheckSignIn">Accesso</string>
+    <string name="connectionCheckVersion">Versione del server</string>
+    <string name="connectionCheckLive">Aggiornamenti live</string>
+    <string name="connectionCheckSpeed">Tempo di risposta</string>
+    <string name="connectionCheckWaiting">In attesa</string>
+    <string name="connectionCheckRunning">Verifica…</string>
+    <string name="connectionCheckPassed">Superata</string>
+    <string name="connectionCheckVersionValue">Versione %1$s</string>
+    <string name="connectionCheckMillis">%1$s ms</string>
+    <string name="connectionCheckUnreachable">Impossibile raggiungere il server. Controlla l'indirizzo e che il server sia in esecuzione.</string>
+    <string name="connectionCheckNotServer">Questo indirizzo non ha risposto come server supportato. Controlla l'indirizzo.</string>
+    <string name="connectionCheckNeedsPassword">Inserisci di nuovo la password o il token del server salvato, poi riprova.</string>
+    <string name="connectionCheckPasswordRejected">Il server ha rifiutato l'accesso salvato. Aggiorna la password o il token.</string>
+    <string name="connectionCheckUnsupported">Questa versione del server non è supportata. Aggiorna il server.</string>
+    <string name="connectionCheckNotReady">Il server ha risposto ma non è pronto. Attendi un momento e verifica di nuovo.</string>
+    <string name="connectionCheckStreamUnchecked">Connetti questo server per verificare gli aggiornamenti live.</string>
+    <string name="connectionCheckStreamConnecting">La connessione live è ancora in riconnessione. Riverifica tra poco.</string>
+    <string name="connectionCheckStreamDown">La connessione live esistente non è attiva. Riconnetti questo server.</string>
+    <string name="connectionCheckSlow">%1$s ms — il server risponde lentamente. Controlla la rete o il carico del server.</string>
+    <string name="connectionCheckSkipped">Non verificato perché un passaggio precedente richiede attenzione.</string>
+    <string name="connectionCheckTrust">Esamina l'attendibilità della connessione di questo server prima di rifare la verifica.</string>
+    <string name="connectionCheckChanged">Il server salvato è cambiato. Chiudi questa verifica e aprila di nuovo.</string>
+</resources>
