@@ -89,6 +89,7 @@ public fun KitStartingConversation(
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { keyboard?.hide() }
     val paneWidth = (Layout.CONVERSATION_WIDTH + 2 * LocalKitTokens.current.gutter).dp
+    val target = LocalKitTokens.current.minTarget.dp
     KitScreen(
         page = true,
         overlayChrome = true,
@@ -97,7 +98,13 @@ public fun KitStartingConversation(
         topBar = {
             KitTopBar(
                 title = io.github.eslamasabry.oc.core.common.text.ConversationTitle.from(text).orEmpty(),
-                subtitle = project,
+                scope = {
+                    // Match the project target's measure before project navigation is available.
+                    Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
+                        KitTopBarScope(project, server = null, projectLabel = project, onProject = null)
+                    }
+                },
+                more = { Spacer(Modifier.size(target)) },
                 exit = KitTopBarExit.Back,
                 exitLabel = backLabel,
                 onExit = onBack,
@@ -106,7 +113,6 @@ public fun KitStartingConversation(
         },
         bottom = {
             KitReportBottomSlab(kitComposerSlab())
-            val target = LocalKitTokens.current.minTarget.dp
             KitComposerBox(
                 running = false,
                 modifier = Modifier.padding(top = Space.S2.dp),
