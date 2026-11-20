@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.settleStaleLive
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolDurationMs
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolOutputView
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.waitsOnChild
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 
@@ -96,7 +97,9 @@ public data class TurnWork(
  * (a spinner stops once later words of its turn exist or the run ended; background processes keep
  * running), then each turn with at least one step gets its [TurnWork]. [busy]: a run is going;
  * [stopped]: the last run was stopped by the person or server; [waitingForYou]: a request waits for
- * the person (the running line never spins then).
+ * the person (the running line never spins then). [askedCalls]: every call the person was shown a request for (a
+ * step the run ended on before they answered says so); [liveChildren]: raw ids of sub-agents still working or waiting
+ * on the person (their delegated steps stay live after the parent's turn ends).
  */
 public fun turnWork(
     snapshot: LedgerSnapshot,
@@ -105,9 +108,11 @@ public fun turnWork(
     waitingForYou: Boolean = false,
     declinedCalls: Set<String> = emptySet(),
     waitingCalls: Set<String> = emptySet(),
+    askedCalls: Set<String> = waitingCalls,
+    liveChildren: Set<String> = emptySet(),
 ): Map<String, TurnWork> {
     if (snapshot.messages.isEmpty()) return emptyMap()
-    val settled = settleStaleLive(snapshot.messages, busy)
+    val settled = settleStaleLive(snapshot.messages, busy, askedCalls = askedCalls, liveChildren = liveChildren)
     val turns = if (settled === snapshot.messages) snapshot.turns else TurnLedger.group(settled)
     val out = LinkedHashMap<String, TurnWork>()
     for ((index, turn) in turns.withIndex()) {
@@ -119,11 +124,23 @@ public fun turnWork(
                 stopped = stopped && newest,
                 waiting = waitingForYou && (newest || holdsWaitingCall(turn, waitingCalls)),
                 declinedCalls = declinedCalls,
-                waitingCalls = waitingCalls,
+                waitingCalls = waitingCalls + liveChildCalls(turn, liveChildren),
             )
             ?.let { out[turn.turnId] = it }
     }
     return out
+}
+
+/**
+ * The calls of [turn]'s delegated steps whose sub-agent is live: like a call still asking, such a step stays live after
+ * its turn ends (B-CHAT-117), so it reads working or waiting, never stopped.
+ */
+private fun liveChildCalls(turn: LedgerTurn, liveChildren: Set<String>): Set<String> {
+    if (liveChildren.isEmpty()) return emptySet()
+    return turn.messages
+        .flatMap { it.parts }
+        .filter { p -> p.type == PartType.Tool && p.tool?.let { waitsOnChild(it, liveChildren) } == true }
+        .mapNotNullTo(HashSet()) { it.callId }
 }
 
 /** Whether one of [turn]'s tool calls is still asking the person (an open permission request names it). */

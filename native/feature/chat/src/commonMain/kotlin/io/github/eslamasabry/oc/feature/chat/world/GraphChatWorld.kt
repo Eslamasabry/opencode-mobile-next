@@ -571,6 +571,8 @@ internal class GraphChatWorld(
     override val requests: StateFlow<ChatRequestsModel?> = mutableRequests
     private val mutableChildNeeds = MutableStateFlow<Set<String>>(emptySet())
     override val childNeedsYou: StateFlow<Set<String>> = mutableChildNeeds
+    private val mutableChildRunning = MutableStateFlow<Set<String>>(emptySet())
+    override val childRunning: StateFlow<Set<String>> = mutableChildRunning
 
     /** The handle, its graph and the collectors feeding it. Replaced as a whole on reload. */
     private class Attached(
@@ -579,6 +581,13 @@ internal class GraphChatWorld(
         val handle: TranscriptHandle,
         val stop: () -> Unit,
     )
+
+    /** The other conversations of [statuses] with a run going (B-CHAT-117); a failed read keeps what is known. */
+    private fun adoptOtherRuns(statuses: Outcome<Map<SessionId, SessionStatus>>) {
+        val read = (statuses as? Outcome.Ok)?.value ?: return
+        val running = read.filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }.keys
+        mutableChildRunning.value = running.mapTo(HashSet()) { it.raw } - sid.raw
+    }
 
     override val work: CoroutineContext
         get() =
@@ -1171,6 +1180,26 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     mutableRequests.value?.state?.collect { publishVoiceConversation() }
                 },
+                // B-CHAT-117: the runs of the other conversations on this server, read with the page's first status
+                // read (and again after a reconnect, which may have missed their ends), then followed by their run
+                // events, so a delegated step stays live while its sub-agent works after this conversation went idle.
+                scope.launch(registry.mainContext) {
+                    var seen = gateway.events.connects.value
+                    gateway.events.connects.collect { n ->
+                        if (n > seen) adoptOtherRuns(gateway.sessionStatuses())
+                        seen = n
+                    }
+                },
+                scope.launch(registry.mainContext) {
+                    gateway.events.all.collect { envelope ->
+                        when (val event = envelope.event) {
+                            is CoreEvent.RunStarted ->
+                                if (event.sessionId != sid) mutableChildRunning.value += event.sessionId.raw
+                            is CoreEvent.RunEnded -> mutableChildRunning.value -= event.sessionId.raw
+                            else -> Unit
+                        }
+                    }
+                },
                 // Read at every change, never kept: a delegated step whose sub-agent waits on the person says so, and
                 // says no more the moment the request is answered (the engine's list drops it).
                 scope.launch(registry.mainContext) {
@@ -1381,6 +1410,7 @@ internal class GraphChatWorld(
                     checkPhoneFolder()
                     refreshReadOnly(gateway, session)
                     val statuses = gateway.sessionStatuses()
+                    adoptOtherRuns(statuses)
                     if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
                         handle.submit(GatewayEvent.RunStarted(sid.raw))
                         feedKeeper.running(null)

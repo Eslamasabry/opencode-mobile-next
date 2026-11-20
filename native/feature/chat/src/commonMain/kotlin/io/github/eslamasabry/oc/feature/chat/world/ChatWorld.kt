@@ -38,6 +38,10 @@ public interface ChatWorld {
     public val childNeedsYou: StateFlow<Set<String>>
         get() = NoChildNeeds
 
+    /** Other conversations on this server with a run going now (raw ids, this one left out): working sub-agents. */
+    public val childRunning: StateFlow<Set<String>>
+        get() = NoChildNeeds
+
     public val ref: ConversationRef
 
     /** Newest-first rows, published at most every 50 ms by the engine (plan 09 §3.5). */

@@ -90,10 +90,67 @@ class TranscriptSettleTest {
         assertSame(messages, settleStaleLive(messages, busy = true))
     }
 
+    private fun ended(part: Part): List<MessageWithParts> =
+        listOf(msg("u", Role.User, text("u", "go")), msg("a", Role.Assistant, part))
+
+    private fun settledTool(
+        part: Part,
+        askedCalls: Set<String> = emptySet(),
+        liveChildren: Set<String> = emptySet(),
+    ): ToolState =
+        settleStaleLive(ended(part), busy = false, askedCalls = askedCalls, liveChildren = liveChildren)[1]
+            .parts.single().tool!!
+
+    private fun marks(tool: ToolState): Set<String> =
+        tool.metadata?.keys.orEmpty().intersect(setOf(UNANSWERED_KEY, STOPPED_EARLY_KEY))
+
     @Test
-    fun `B-CHAT-117 a tool is finished when the turn has ended`() {
-        val messages = listOf(msg("u", Role.User, text("u", "go")), msg("a", Role.Assistant, tool(ToolStatus.Running)))
-        assertEquals(ToolStatus.Completed, settleStaleLive(messages, busy = false)[1].parts.single().tool!!.status)
+    fun `B-CHAT-117 a step the turn ended on with no words after it never reads finished`() {
+        // Ended with no words after it is no proof it ran (B-461): it stops, never "Ran 1 command".
+        val settled = settledTool(tool(ToolStatus.Running))
+        assertEquals(ToolStatus.Pending, settled.status)
+        assertTrue(settled.status != ToolStatus.Completed)
+    }
+
+    @Test
+    fun `B-CHAT-117 a step the person was asked about and did not answer says so`() {
+        val asked = tool(ToolStatus.Running).copy(callId = "call-1")
+        val settled = settledTool(asked, askedCalls = setOf("call-1"))
+        assertEquals(ToolStatus.Pending, settled.status)
+        assertEquals(setOf(UNANSWERED_KEY), marks(settled))
+    }
+
+    @Test
+    fun `B-CHAT-117 a started step nobody was asked about stops before it finished, never before you answered`() {
+        val started =
+            Part(
+                "t", "m", "s", PartType.Tool, "tool", callId = "call-2", toolName = "bash",
+                tool = ToolState(ToolStatus.Running, startedAtMs = 1_000),
+            )
+        val settled = settledTool(started, askedCalls = setOf("call-other"))
+        assertEquals(ToolStatus.Pending, settled.status)
+        assertEquals(setOf(STOPPED_EARLY_KEY), marks(settled))
+    }
+
+    @Test
+    fun `B-CHAT-117 a step that never started and was never asked about stops with no reason`() {
+        val settled = settledTool(tool(ToolStatus.Running).copy(callId = "call-3"))
+        assertEquals(ToolStatus.Pending, settled.status)
+        assertEquals(emptySet(), marks(settled))
+    }
+
+    @Test
+    fun `B-CHAT-117 a delegated step whose sub-agent still works is not settled when the parent goes idle`() {
+        val child = JsonObject(mapOf("sessionId" to JsonPrimitive("child-1")))
+        val task =
+            Part(
+                "t", "m", "s", PartType.Tool, "tool", callId = "call-4", toolName = "task",
+                tool = ToolState(ToolStatus.Running, metadata = child, startedAtMs = 1_000),
+            )
+        val messages = ended(task)
+        assertSame(messages, settleStaleLive(messages, busy = false, liveChildren = setOf("child-1")))
+        // Once the sub-agent is no longer live, the step settles like any other started step.
+        assertEquals(setOf(STOPPED_EARLY_KEY), marks(settledTool(task, liveChildren = setOf("other-child"))))
     }
 
     @Test
