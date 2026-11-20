@@ -53,7 +53,7 @@ private fun resolvedSystem(current: AppLanguage, uiTag: String): AppLanguage? =
  * (and its share where it is only partly translated), the chosen one in the kit's chosen state.
  */
 @Composable
-internal fun languageChoices(current: AppLanguage, marks: LanguageMarkStyle): List<KitChoice<AppLanguage>> {
+internal fun languageChoices(current: AppLanguage): List<KitChoice<AppLanguage>> {
     val uiTag = LocalKitLocaleTag.current
     val system = resolvedSystem(current, uiTag)
     val offered = AppLanguage.entries.filter { it.tag == null || it.tag in LanguageCoverage.offered }
@@ -75,16 +75,15 @@ internal fun languageChoices(current: AppLanguage, marks: LanguageMarkStyle): Li
             item,
             own,
             supporting = listOfNotNull(named, share).joinToString(" · ").ifEmpty { null },
-            leading = { KitLanguageMark(markOf(item, facts, marks), selected = item == current) },
+            leading = { KitLanguageMark(markOf(item, facts), selected = item == current) },
         )
     }
 }
 
-private fun markOf(item: AppLanguage, facts: LanguageFacts?, style: LanguageMarkStyle): KitLanguageMark =
+private fun markOf(item: AppLanguage, facts: LanguageFacts?): KitLanguageMark =
     when {
         item == AppLanguage.System || facts == null -> KitLanguageMark.Glyph(KitIcons.phone)
-        style == LanguageMarkStyle.Flags -> KitLanguageMark.Flag(facts.country, facts.letters)
-        else -> KitLanguageMark.Letters(facts.letters)
+        else -> KitLanguageMark.Flag(facts.country, facts.letters)
     }
 
 private const val FULL = 100

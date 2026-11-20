@@ -34,9 +34,6 @@ public sealed interface KitLanguageMark {
     /** The round flag of a country by its two letters (`US`, `EG`); one with no shape draws as [fallback] letters. */
     public data class Flag(val country: String, val fallback: String) : KitLanguageMark
 
-    /** Two letters of the language's own script, in the accent colours. */
-    public data class Letters(val text: String) : KitLanguageMark
-
     /** A kit glyph on the round mark (the phone, for "System default"). */
     public data class Glyph(val icon: ImageVector) : KitLanguageMark
 }
@@ -54,7 +51,6 @@ public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: M
         is KitLanguageMark.Flag ->
             if (KitFlagShapes.flags.containsKey(mark.country)) KitCircleFlag(mark.country, modifier.then(ring))
             else Letters(mark.fallback, selected, modifier)
-        is KitLanguageMark.Letters -> Letters(mark.text, selected, modifier)
         is KitLanguageMark.Glyph ->
             Box(
                 modifier.size(MARK_SIZE).clip(CircleShape).background(colors.surface3).then(ring),

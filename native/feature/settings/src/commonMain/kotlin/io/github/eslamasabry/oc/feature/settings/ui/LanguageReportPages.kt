@@ -42,11 +42,7 @@ import org.jetbrains.compose.resources.stringResource
  * tap applies at once; the page redraws in the chosen language and direction (B-L10N-001).
  */
 @Composable
-internal fun ColumnScope.LanguageBody(
-    language: AppLanguage,
-    actions: SettingsActions,
-    marks: LanguageMarkStyle = LanguageMarkStyle.Flags,
-) {
+internal fun ColumnScope.LanguageBody(language: AppLanguage, actions: SettingsActions) {
     // Flutter's picker says what the choice changes before the list (lib/ui/widgets/language_picker.dart:158-159).
     KitText(
         stringResource(Res.string.e7LocaleUiDescription),
@@ -56,7 +52,7 @@ internal fun ColumnScope.LanguageBody(
     )
     Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/widgets/language_picker.dart:159
     KitChoiceList(
-        choices = languageChoices(language, marks),
+        choices = languageChoices(language),
         selected = language,
         semanticsLabel = stringResource(Res.string.e7LocaleUiLanguage),
         modifier = Modifier.testTag("language-choices"),
