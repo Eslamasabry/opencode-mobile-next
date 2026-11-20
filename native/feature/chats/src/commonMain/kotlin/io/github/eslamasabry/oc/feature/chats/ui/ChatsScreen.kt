@@ -146,6 +146,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore__eq1
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsOnly
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsOnly__eq1
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadOnMobile
