@@ -837,4 +837,15 @@
     <string name="appearanceWaitMarksInk">Inchiostro</string>
     <string name="appearanceWaitMarksColour">Colore</string>
     <string name="appearanceWaitMarksNote">Le piccole immagini in movimento accanto a frasi come “Avvio di OpenCode…”.</string>
+    <string name="languageNameEnglish">Inglese</string>
+    <string name="languageNameArabic">Arabo</string>
+    <string name="languageNameSpanish">Spagnolo</string>
+    <string name="languageNameJapanese">Giapponese</string>
+    <string name="languageNamePortuguese">Portoghese</string>
+    <string name="languageNameRussian">Russo</string>
+    <string name="languageNameVietnamese">Vietnamita</string>
+    <string name="languageNameIndonesian">Indonesiano</string>
+    <string name="languageNameFrench">Francese</string>
+    <string name="languageNameChinese">Cinese</string>
+    <string name="languageNameItalian">Italiano</string>
 </resources>

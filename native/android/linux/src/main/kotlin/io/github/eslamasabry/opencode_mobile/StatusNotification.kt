@@ -105,6 +105,7 @@ internal object StatusNotification {
 
     /** Locale changes re-read fixed copy even when nothing else changed. */
     fun refresh(context: Context) {
+        ensureChannel(context)
         if (!owners.any()) return
         val content = wording.effective(context, owners.has(OWNER_SERVER))
         throttle.force(content, SystemClock.elapsedRealtime())
@@ -184,9 +185,16 @@ private class StatusNotificationWording {
      * when the phone server is what is running.
      */
     private fun fallback(context: Context, server: Boolean): StatusContent {
+        val title =
+            when {
+                serverNotice == null -> NativeStrings.get(context, R.string.native_status_ready_title)
+                NativeStrings.matches(context, R.string.native_phone_server_title, serverNotice) ->
+                    NativeStrings.get(context, R.string.native_phone_server_title)
+                else -> serverNotice!!
+            }
         return StatusContent(
             kind = StatusKind.IDLE,
-            title = serverNotice ?: NativeStrings.get(context, R.string.native_status_ready_title),
+            title = title,
             text = NativeStrings.get(
                 context,
                 if (server) R.string.native_phone_server_body else R.string.native_status_ready_body,

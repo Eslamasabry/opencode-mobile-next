@@ -12,6 +12,7 @@
     <string name="native_phone_server_body">Agen Anda tetap bekerja saat Anda memakai aplikasi lain.</string>
     <string name="native_phone_server_channel">OpenCode di ponsel ini</string>
     <string name="native_phone_server_description">Ditampilkan saat server ponsel atau mesin proyek berjalan</string>
+    <string name="native_phone_server_title">OpenCode berjalan di ponsel ini</string>
     <string name="native_setup_channel">Penyiapan</string>
     <string name="native_status_action_new_chat">Percakapan baru</string>
     <string name="native_status_action_open">Buka</string>

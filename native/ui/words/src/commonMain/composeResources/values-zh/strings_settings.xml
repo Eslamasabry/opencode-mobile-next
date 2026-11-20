@@ -792,4 +792,15 @@
     <string name="appearanceWaitMarksColour">彩色</string>
     <string name="appearanceWaitMarksNote">显示在“正在启动 OpenCode…”等文字旁边的小动画。</string>
     <string name="e7LocaleUiItalian">Italiano</string>
+    <string name="languageNameEnglish">英语</string>
+    <string name="languageNameArabic">阿拉伯语</string>
+    <string name="languageNameSpanish">西班牙语</string>
+    <string name="languageNameJapanese">日语</string>
+    <string name="languageNamePortuguese">葡萄牙语</string>
+    <string name="languageNameRussian">俄语</string>
+    <string name="languageNameVietnamese">越南语</string>
+    <string name="languageNameIndonesian">印度尼西亚语</string>
+    <string name="languageNameFrench">法语</string>
+    <string name="languageNameChinese">中文</string>
+    <string name="languageNameItalian">意大利语</string>
 </resources>

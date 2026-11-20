@@ -907,4 +907,15 @@
     <string name="appearanceWaitMarksInk">حبر</string>
     <string name="appearanceWaitMarksColour">ألوان</string>
     <string name="appearanceWaitMarksNote">الصور الصغيرة المتحركة بجانب عبارات مثل «جارٍ تشغيل OpenCode…».</string>
+    <string name="languageNameEnglish">الإنجليزية</string>
+    <string name="languageNameArabic">العربية</string>
+    <string name="languageNameSpanish">الإسبانية</string>
+    <string name="languageNameJapanese">اليابانية</string>
+    <string name="languageNamePortuguese">البرتغالية</string>
+    <string name="languageNameRussian">الروسية</string>
+    <string name="languageNameVietnamese">الفيتنامية</string>
+    <string name="languageNameIndonesian">الإندونيسية</string>
+    <string name="languageNameFrench">الفرنسية</string>
+    <string name="languageNameChinese">الصينية</string>
+    <string name="languageNameItalian">الإيطالية</string>
 </resources>
