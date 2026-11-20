@@ -121,3 +121,6 @@ allow	Formula
 allow	Portugu
 allow	Espa
 allow	Brasil
+allow	Download
+allow	Endpoint
+allow	Auto

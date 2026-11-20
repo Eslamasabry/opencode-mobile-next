@@ -188,7 +188,7 @@ class VoiceSettingsScreenTest {
             show(state, presenter)
             onNodeWithText("Download the natural voice?").assertExists()
             onNodeWithText("This phone can't tell whether this connection costs data.").assertExists()
-            onNodeWithText("Download 148 MB").assertExists()
+            onNodeWithText("Download 148\u00A0MB").assertExists() // a size keeps its unit (no-break space, 4562c7a6d9)
             onAllNodesWithText("mobile data", substring = true).assertCountEquals(0)
         }
     }
@@ -204,7 +204,7 @@ class VoiceSettingsScreenTest {
         runComposeUiTest {
             show(state, presenter)
             onNodeWithText("Download Balanced?").assertExists()
-            onNodeWithText("Download 161 MB on mobile data").assertExists()
+            onNodeWithText("Download 161\u00A0MB on mobile data").assertExists()
         }
     }
 

@@ -84,7 +84,10 @@ class S31VoiceSetupSheetTest {
         VoiceSetupSheet(stage, presenter)
     }
 
-    /** The words are on screen: as text, or as what a screen reader says for a merged part (the progress bar). */
+    /**
+     * The words are on screen: as text, or as what a screen reader says for a merged part (the progress bar). A size
+     * keeps its unit on its line with a no-break space (`161\u00A0MB`, 4562c7a6d9).
+     */
     private fun ComposeUiTest.shows(text: String) {
         val nodes =
             onAllNodes(hasText(text, substring = true) or hasContentDescription(text, substring = true), useUnmergedTree = true)
@@ -101,7 +104,7 @@ class S31VoiceSetupSheetTest {
                     "It needs a one-time download."
             )
             shows("Balanced speech model, picked for this phone's memory")
-            shows("Download 161 MB")
+            shows("Download 161\u00A0MB")
             shows("Not now")
             shows("Choose another speech model")
         }
@@ -110,13 +113,13 @@ class S31VoiceSetupSheetTest {
     fun `B-MEDIA-057 on mobile data the button says so and the cost is named`() =
         sheet("native-voice-setup-mobile-data-dark", VoiceSetupStage.NeedsConsent(1, PackId("base"), SetupNetwork.Metered, 161_000_000, false)) {
             shows("You're on mobile data. This download counts against your data plan.")
-            shows("Download 161 MB on mobile data")
+            shows("Download 161\u00A0MB on mobile data")
         }
 
     @Test
     fun `B-MEDIA-058 the download shows its progress, that listening follows, and Cancel download`() =
         sheet("native-voice-setup-downloading-dark", VoiceSetupStage.Downloading(64_000_000, 161_000_000)) {
-            shows("64 MB of 161 MB")
+            shows("64\u00A0MB of 161\u00A0MB")
             shows("Listening starts when it's done.")
             shows("Cancel download")
         }

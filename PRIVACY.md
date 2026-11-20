@@ -206,8 +206,8 @@ x86_64 or other); `ram_range` and `free_storage_range` (the same ranges as the G
 paseo servers are connected, product names only); `connection_kind` (phone, computer, remote, or a mix, or none; never
 an address); `phone_model` (the phone's model name, for example Pixel 8: letters, digits, space and . _ + - only, at
 most 40 characters; never the maker); and `install_id` (a random UUID that the app makes on the phone for our own server,
-only while usage is on: not Google's ID and not made from the phone, the account or any Android ID; it is deleted when you
-switch usage off, so a new one is made if you switch it on again; it is used to count installs and to see whether the
+only while usage is on: not Google's ID and not made from the phone, the account or any Android ID;
+it is deleted when you switch usage off, so a new one is made if you switch it on again; it is used to count installs and to see whether the
 app keeps working for the same install over time). The same list is what "What we collect" shows under "Only to our own server". Before a request leaves the
 phone, the app checks its real body against this list and drops any key or value not on it (logging only the key's name).
 Taken together, these can tell one phone’s reports from another’s. They never say who you are, and the app sends no name or account with them.

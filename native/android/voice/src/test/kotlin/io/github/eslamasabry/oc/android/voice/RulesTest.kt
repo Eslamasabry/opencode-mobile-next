@@ -43,9 +43,18 @@ class RulesTest {
         // A VPN over mobile data: the cellular transport is carried onto the VPN, or Android calls it metered.
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true, cellular = true, metered = false, notMetered = true)))
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true, metered = true)))
-        // The two answers disagree, or an unvalidated VPN: never free data.
+        // The two answers disagree: never free data.
         assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, metered = false, notMetered = false)))
-        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
+        // An unvalidated VPN that Android still calls not metered, with no cellular link and no metered connection, and
+        // names no network under it: the Wi-Fi-or-wired case, free data (agent-holds-told, 750e6a52c3).
+        assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
+        // Unvalidated with any sign of mobile data, or no not-metered answer: never free data.
+        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false, cellular = true)))
+        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false, metered = true)))
+        assertEquals(
+            SetupNetwork.Unknown,
+            SetupNetworkRules.classify(facts(vpn = true, validated = false, metered = false, notMetered = false)),
+        )
     }
 
     @Test
@@ -121,12 +130,17 @@ class RulesTest {
     }
 
     @Test
-    fun `B-ANDR-102 a validated VPN's own metered answer comes first, no carriers known stays ask`() {
+    fun `B-ANDR-102 a validated VPN's own metered answer comes first, no carriers known asks unless Android says not metered`() {
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true, metered = true)))
         assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true)))
-        // Unvalidated and nothing known about what carries it: never free data.
-        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
+        // Unvalidated and nothing known about what carries it: free only when Android says not metered and no mobile
+        // link (750e6a52c3); otherwise never free data.
+        assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
+        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false, notMetered = false)))
+        // Its links match no connected network, so nothing is known about what carries it: the same rule.
         val unsure = facts(vpn = true, validated = false)
-        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Bluetooth), wifiNet, mobileNet, own = unsure))
+        assertEquals(SetupNetwork.Unmetered, decide(setOf(LinkKind.Bluetooth), wifiNet, mobileNet, own = unsure))
+        val unsureMetered = facts(vpn = true, validated = false, metered = false, notMetered = false)
+        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Bluetooth), wifiNet, mobileNet, own = unsureMetered))
     }
 }

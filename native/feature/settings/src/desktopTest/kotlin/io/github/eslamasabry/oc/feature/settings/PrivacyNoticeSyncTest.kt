@@ -48,6 +48,8 @@ class PrivacyNoticeSyncTest {
         val failures: Set<String>,
         /** Every other word a notice may use: breadcrumb parts, exit reasons and the like. */
         val words: Set<String>,
+        /** The fields only our own server gets, read from the code's one field list (`UmamiField`). */
+        val ownServer: Set<String> = UmamiField.wires,
     ) {
         val allFields: Set<String> get() = events.values.flatMap { it.keys }.toSet() + traces.values.flatMap { it.keys }
         val allValues: Set<String> get() = events.values.flatMap { f -> f.values.flatten() }.toSet() + traces.values.flatMap { f -> f.values.flatten() } + words
@@ -109,6 +111,7 @@ class PrivacyNoticeSyncTest {
             keys = healthKeyWords.keys + healthKeyPatterns.keys + vendorKeys,
             failures = failures,
             words = words,
+            ownServer = UmamiField.wires,
         )
     }
 
@@ -150,11 +153,11 @@ class PrivacyNoticeSyncTest {
         // 1. "What we collect" (HealthContract.contractEvents) both ways.
         val listed = n.contract.values.flatten().toSet()
         val structural = setOf("crash", "breadcrumbs", "problem_report")
-        for (name in code.events.keys + code.properties + code.keys) {
+        for (name in code.events.keys + code.properties + code.keys + code.ownServer) {
             if (name !in listed) out += "What we collect does not list the name `$name` (contractEvents)"
         }
         for (name in listed - structural) {
-            if (name !in code.events && name !in code.properties && name !in code.keys) {
+            if (name !in code.events && name !in code.properties && name !in code.keys && name !in code.ownServer) {
                 out += "What we collect lists `$name`, which the code cannot send"
             }
         }
