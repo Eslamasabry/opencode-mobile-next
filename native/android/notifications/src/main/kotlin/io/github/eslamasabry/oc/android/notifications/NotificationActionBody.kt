@@ -123,6 +123,7 @@ public class NotificationActionBody(
         // setAuthenticationRequired; below that nothing is stopped while locked (the row stays, its tap opens the chat).
         if (lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()) return ShadeOutcome.Ignored
         // Show the answer to the tap first: the person sees "Stopping…" while the call is made.
+        onStopRequested(conversation)
         val outcome =
             try {
                 withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
@@ -139,6 +140,7 @@ public class NotificationActionBody(
             } else {
                 ShadeOutcome.StopFailed
             }
+        onStopSettled(conversation, result)
         return result
     }
 
