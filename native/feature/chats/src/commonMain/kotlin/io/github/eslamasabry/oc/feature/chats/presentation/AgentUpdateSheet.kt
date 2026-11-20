@@ -1,10 +1,13 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
+import io.github.eslamasabry.oc.engine.agents.install.AgentRemovalFacts
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoices
@@ -223,7 +226,11 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     private val local = MutableStateFlow(Local())
     private val offers: StateFlow<AgentUpdateOffer?> = choices?.offer ?: MutableStateFlow(null)
 
-    public val ui: Flow<AgentUpdateHomeUi> = combine(offers, local) { offer, now -> build(offer, now) }
+    private val chain = AgentUpdateChainLog()
+    private val bound = choices != null && choices !== NoAgentUpdateChoices
+
+    public val ui: Flow<AgentUpdateHomeUi> =
+        combine(offers, local) { offer, now -> build(offer, now).also { chain.told(offer, it, bound) } }
 
     public fun current(): AgentUpdateHomeUi = build(offers.value, local.value)
 
@@ -277,6 +284,7 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val engine = choices ?: return
         val offer = offers.value ?: return
         val decision = AgentUpdateSheetRules.decision(offer, local.value.picked)
+        log.i { "update sheet: decided " + decision.entries.joinToString { "${it.key.raw}=${it.value}" } }
         local.update { it.copy(working = true, failure = null) }
         scope.launch {
             when (val outcome = engine.decide(decision)) {
@@ -300,6 +308,7 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val offer = offers.value
         if (choices == null || offer == null || local.value.working) return
         local.update { it.copy(closedKey = offer.appUpdateKey, toConfirm = emptyList(), failure = null) }
+        log.i { "update sheet: not now" }
         scope.launch { choices.notNow() }
     }
 
@@ -308,6 +317,10 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val engine = choices ?: return
         local.update { it.copy(closedKey = null, failure = null) }
         scope.launch { engine.review() }
+    }
+
+    private companion object {
+        val log = AgentUpdateChainLog.log
     }
 
     /** The refused removals were read: the sheet closes. */
@@ -348,3 +361,47 @@ public interface AgentUpdateActions {
 
 /** No sheet: every answer does nothing. */
 public object NoAgentUpdateActions : AgentUpdateActions
+
+/** No engine bound (desktop, previews): never an offer, so no sheet and no Home line; answers do nothing. */
+public object NoAgentUpdateChoices : AgentUpdateChoices {
+    override val offer: StateFlow<AgentUpdateOffer?> = MutableStateFlow(null)
+
+    override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("agentUpdateChoices")))
+
+    override suspend fun notNow(): Outcome<Unit> = Outcome.Ok(Unit)
+
+    override fun removalFacts(id: AgentId): AgentRemovalFacts =
+        AgentRemovalFacts(null, keepsSignIn = true, keepsConversations = true)
+
+    override suspend fun review(): Outcome<Unit> = Outcome.Ok(Unit)
+}
+
+/**
+ * The chain from the engine's offer to the sheet, one AppLog line per step and per change, so a look on a phone says
+ * where it stops: the offer Home reads, the Review row, the sheet opening. Ids, counts and flags only; no secrets.
+ */
+internal class AgentUpdateChainLog {
+    private var offerLine: String? = null
+    private var row = false
+    private var open = false
+
+    fun told(offer: AgentUpdateOffer?, home: AgentUpdateHomeUi, bound: Boolean) {
+        val line =
+            if (offer == null) "home: update offer none (engine bound=$bound)"
+            else "home: update offer rows=${offer.items.size} due=${offer.sheetDue} answered=${offer.answered}"
+        if (line != offerLine) {
+            offerLine = line
+            log.i { line }
+        }
+        val rowNow = home.pending && !home.sheet.visible
+        if (rowNow && !row) log.i { "home: review row shown" }
+        row = rowNow
+        if (home.sheet.visible && !open) log.i { "update sheet: opened" }
+        open = home.sheet.visible
+    }
+
+    companion object {
+        val log = AppLog.tagged("AgentUpdates")
+    }
+}
