@@ -556,6 +556,12 @@ internal fun recordBehind(app: Application, installed: List<AgentId>): Set<Agent
 
 private const val RECORD_LIMIT = 4096L
 
+/**
+ * An install of the agents is running: the setup page's job, or the agents' own install job (the one the updater
+ * starts). The updater's next look must know both, or it reads a running install as "nothing runs".
+ */
+internal fun agentsJobRunning(setupRunning: Boolean, installing: Boolean): Boolean = setupRunning
+
 /** An error's type and the method that threw it (names only, never its text). */
 private fun shape(e: Exception): String {
     val top = e.stackTrace.firstOrNull() ?: return e::class.simpleName.orEmpty()
