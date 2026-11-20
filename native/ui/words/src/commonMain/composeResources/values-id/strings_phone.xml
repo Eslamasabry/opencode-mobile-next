@@ -888,4 +888,12 @@
     <string name="phoneDownloadAskWait">Tunggu Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Pembaruan OpenCode siap · dipasang saat tidak ada balasan yang berjalan</string>
     <string name="phoneDownloadReadyPhone">Pembaruan OpenCode siap · dipasang saat server ponsel siap</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="other">%1$d pembaruan agen lagi menunggu Wi-Fi · sekitar %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">1 pembaruan agen lagi menunggu Wi-Fi · sekitar %1$d MB</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="other">%1$d pembaruan agen menunggu Wi-Fi · sekitar %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">1 pembaruan agen menunggu Wi-Fi · sekitar %1$d MB</string>
 </resources>

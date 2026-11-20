@@ -11,6 +11,9 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
@@ -22,6 +25,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadMapping
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
@@ -208,10 +213,13 @@ class PhoneDownloads(
                 )
             }
             .combine(agentStatus.choices.offer) { rows, offer ->
-                if (offer?.neededGoesAhead == true && offer.network != AgentUpdateNetwork.Unmetered &&
-                    rows.none { it.kind == HomeDownloadKind.Helper }) {
-                    rows + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
-                } else rows
+                val withHelper =
+                    if (offer?.neededGoesAhead == true && offer.network != AgentUpdateNetwork.Unmetered &&
+                        rows.none { it.kind == HomeDownloadKind.Helper }) {
+                        rows + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
+                    } else rows
+                // Agents chosen on the sheet that wait for Wi-Fi join this row (a second sentence, or the line).
+                HomeDownloadMapping.withHeldAgents(withHelper, heldAgentsOf(offer))
             }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
@@ -252,6 +260,23 @@ class PhoneDownloads(
                 }
         }
     }
+}
+
+/**
+ * The agents the person chose to update on the sheet that now wait for Wi-Fi, with their size as the sheet shows it
+ * (decimal MB). OpenCode and the shared parts have their own lines and are not counted. Null when none waits, when the
+ * network is free, or when a size is unknown (a total with a hole would be a guess).
+ */
+internal fun heldAgentsOf(offer: AgentUpdateOffer?): HomeHeldAgents? {
+    val waiting = offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }
+    val held =
+        waiting?.items.orEmpty().filter {
+            it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE &&
+                it.choice == AgentUpdateChoice.Update
+        }
+    val bytes = held.map { it.downloadBytes }
+    return if (held.isEmpty() || bytes.any { it == null }) null
+    else HomeHeldAgents(held.size, HomeDownloadSizes.roundedMb(bytes.sumOf { it ?: 0L }))
 }
 
 /** Only an unmetered network is free: mobile data, a network that cannot be told, and no network all count as paid. */

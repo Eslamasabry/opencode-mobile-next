@@ -931,4 +931,16 @@
     <string name="phoneDownloadAskWait">Esperar al Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Actualización de OpenCode lista · se instala cuando no hay ninguna respuesta en curso</string>
     <string name="phoneDownloadReadyPhone">Actualización de OpenCode lista · se instala cuando el servidor del teléfono esté listo</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="one">%1$d actualización más de agentes espera Wi-Fi · unos %2$d MB</item>
+        <item quantity="many">%1$d actualizaciones más de agentes esperan Wi-Fi · unos %2$d MB</item>
+        <item quantity="other">%1$d actualizaciones más de agentes esperan Wi-Fi · unos %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">1 actualización más de agentes espera Wi-Fi · unos %1$d MB</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="one">%1$d actualización de agentes esperando Wi-Fi · unos %2$d MB</item>
+        <item quantity="many">%1$d actualizaciones de agentes esperando Wi-Fi · unos %2$d MB</item>
+        <item quantity="other">%1$d actualizaciones de agentes esperando Wi-Fi · unos %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">1 actualización de agentes esperando Wi-Fi · unos %1$d MB</string>
 </resources>

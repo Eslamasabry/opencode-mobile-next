@@ -28,6 +28,12 @@ public sealed interface HomeDownloadPhase {
     public data object Failed : HomeDownloadPhase
 
     /**
+     * Only agent updates wait for Wi-Fi (chosen on the sheet, held on mobile data; they start by themselves on Wi-Fi).
+     * No own line (OpenCode, the helper) is waiting, so this is the whole line; it has no mobile-data action.
+     */
+    public data class AgentsWaiting(val held: HomeHeldAgents) : HomeDownloadPhase
+
+    /**
      * The update is ready but has waited a while for the phone to be free ([why]); it installs by itself then. Said
      * only after a short bounded wait, so a hold is never silent for long. Nothing to tap: it needs no choice.
      */
@@ -49,6 +55,9 @@ public enum class HomeHold {
     AgentsChecking,
 }
 
+/** Agent updates the person chose that wait for Wi-Fi: how many, and their size as the update sheet shows it. */
+public data class HomeHeldAgents(val count: Int, val megabytes: Int)
+
 /** One download's state; [megabytes] is the honest "about" size in [HomeDownloadSizes]. */
 public data class HomeDownloadFact(
     val kind: HomeDownloadKind,
@@ -58,6 +67,8 @@ public data class HomeDownloadFact(
     val short: HomeShortSpace? = null,
     /** The agent being installed, by its name, while the agents' update runs ("Updating Claude Code"). */
     val name: String? = null,
+    /** More agent updates wait for Wi-Fi beside this one: said as a second sentence of the same row. */
+    val moreAgents: HomeHeldAgents? = null,
 )
 
 /** The room a stopped download needs and the room the phone has, in megabytes, with the agent's own name. */
@@ -71,6 +82,20 @@ public data class HomeShortSpace(val name: String, val neededMb: Int, val freeMb
 public object HomeDownloadSizes {
     public const val OPEN_CODE_MB: Int = 130
     public const val HELPER_MB: Int = 330
+
+    /**
+     * A size in decimal megabytes (1 MB = 1,000,000 bytes, the unit the update sheet writes), as the lines say it:
+     * whole MB below 100, then to the nearest 10 ("about 660 MB").
+     */
+    public fun roundedMb(bytes: Long): Int {
+        val mb = bytes / DECIMAL_MB
+        val step = if (mb < ROUND_FROM_MB) 1.0 else TEN
+        return (kotlin.math.round(mb / step) * step).toInt()
+    }
+
+    private const val DECIMAL_MB = 1_000_000.0
+    private const val ROUND_FROM_MB = 100.0
+    private const val TEN = 10.0
 
     public fun of(kind: HomeDownloadKind): Int =
         when (kind) {
@@ -128,7 +153,7 @@ public object HomeDownloadRules {
         when (phase) {
             is HomeDownloadPhase.Running -> 0
             HomeDownloadPhase.Failed -> 1
-            HomeDownloadPhase.Waiting -> 2
+            HomeDownloadPhase.Waiting, is HomeDownloadPhase.AgentsWaiting -> 2
             is HomeDownloadPhase.Held -> HELD_RANK
         }
 }
@@ -150,6 +175,18 @@ public object HomeDownloadMapping {
             facts
         } else {
             facts + HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Held(why))
+        }
+
+    /**
+     * Agent updates held on mobile data are said in the row that already speaks about waiting: a second sentence on an
+     * own line that waits for Wi-Fi (OpenCode, the helper), or the whole line when nothing else waits. No new row.
+     */
+    public fun withHeldAgents(facts: List<HomeDownloadFact>, held: HomeHeldAgents?): List<HomeDownloadFact> =
+        when {
+            held == null || held.count <= 0 -> facts
+            facts.any { it.phase == HomeDownloadPhase.Waiting } ->
+                facts.map { if (it.phase == HomeDownloadPhase.Waiting) it.copy(moreAgents = held) else it }
+            else -> facts + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(held))
         }
 
     public fun facts(

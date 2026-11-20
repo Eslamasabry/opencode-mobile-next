@@ -143,6 +143,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
@@ -1369,9 +1370,19 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                         if (openCode) Res.string.phoneDownloadWaitingOpenCode else Res.string.phoneDownloadWaitingHelper,
                         download.megabytes,
                     ),
+                // More agent updates that wait for Wi-Fi are the same row's second sentence.
+                supporting = download.moreAgents?.let { homeAgentsMoreWords(it) },
                 // Waiting is not failing: a calm mark, no warning triangle.
                 tone = StatusTone.Neutral,
                 action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
+            )
+        is HomeDownloadPhase.AgentsWaiting ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                id = "phone-download:Agents",
+                message = homeAgentsOnlyWords(phase.held),
+                // They start by themselves on Wi-Fi: nothing to tap, and no mobile-data choice for them.
+                tone = StatusTone.Neutral,
             )
         is HomeDownloadPhase.Running -> homeRunningStatus(download, phase, actions)
         is HomeDownloadPhase.Held ->
@@ -1392,6 +1403,16 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
             )
     }
 }
+
+@Composable
+private fun homeAgentsMoreWords(held: HomeHeldAgents): String =
+    if (held.count == 1) stringResource(Res.string.phoneDownloadAgentsMore__eq1, held.megabytes)
+    else pluralStringResource(Res.plurals.phoneDownloadAgentsMore, held.count, held.count, held.megabytes)
+
+@Composable
+private fun homeAgentsOnlyWords(held: HomeHeldAgents): String =
+    if (held.count == 1) stringResource(Res.string.phoneDownloadAgentsOnly__eq1, held.megabytes)
+    else pluralStringResource(Res.plurals.phoneDownloadAgentsOnly, held.count, held.count, held.megabytes)
 
 /** The agents' or OpenCode's update that runs on its own, by name, with its share done and one tap to its progress. */
 @Composable

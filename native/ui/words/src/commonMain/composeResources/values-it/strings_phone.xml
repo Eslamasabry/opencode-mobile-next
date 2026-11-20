@@ -930,4 +930,16 @@
     <string name="phoneDownloadAskBodyHelper">È l'aggiornamento dell'helper degli agenti su questo telefono. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
     <string name="phoneDownloadAskNow">Scarica ora</string>
     <string name="phoneDownloadAskWait">Aspetta il Wi-Fi</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="one">%1$d altro aggiornamento degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
+        <item quantity="many">%1$d altri aggiornamenti degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
+        <item quantity="other">%1$d altri aggiornamenti degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">1 altro aggiornamento degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="one">%1$d aggiornamento degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
+        <item quantity="many">%1$d aggiornamenti degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
+        <item quantity="other">%1$d aggiornamenti degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">1 aggiornamento degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
 </resources>

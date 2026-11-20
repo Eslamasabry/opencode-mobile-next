@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -57,6 +58,36 @@ class HomeDownloadLineTest {
         onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
         onNodeWithText("Download on mobile data").performClick()
         assertEquals(listOf("act"), actions.calls)
+    }
+
+    @Test
+    fun `B-DL-405 a waiting OpenCode update with agents held says both in the same row`() = runComposeUiTest {
+        val agents = HomeHeldAgents(3, 660)
+        val fact = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, moreAgents = agents)
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
+        onNodeWithText("3 more agent updates wait for Wi-Fi · about 660 MB").assertExists()
+        onNodeWithText("Download on mobile data").performClick()
+        assertEquals(listOf("act"), actions.calls)
+    }
+
+    @Test
+    fun `B-DL-406 one more agent update reads in the singular`() = runComposeUiTest {
+        val agents = HomeHeldAgents(1, 360)
+        val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting, moreAgents = agents)
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("1 more agent update waits for Wi-Fi · about 360 MB").assertExists()
+    }
+
+    @Test
+    fun `B-DL-407 only agents held is its own line with no mobile-data action`() = runComposeUiTest {
+        val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 660)))
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("3 agent updates waiting for Wi-Fi · about 660 MB").assertExists()
+        assertEquals(0, onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().size)
     }
 
     @Test

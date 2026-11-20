@@ -889,4 +889,12 @@
     <string name="phoneDownloadAskWait">等待 Wi-Fi</string>
     <string name="phoneDownloadReadyReply">OpenCode 更新已就绪 · 没有回复在运行时安装</string>
     <string name="phoneDownloadReadyPhone">OpenCode 更新已就绪 · 手机服务器就绪后安装</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="other">另有 %1$d 个智能体更新正在等待 Wi-Fi · 约 %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">另有 1 个智能体更新正在等待 Wi-Fi · 约 %1$d MB</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="other">%1$d 个智能体更新正在等待 Wi-Fi · 约 %2$d MB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">1 个智能体更新正在等待 Wi-Fi · 约 %1$d MB</string>
 </resources>
