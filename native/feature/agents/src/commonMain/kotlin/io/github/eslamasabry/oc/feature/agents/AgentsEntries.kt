@@ -42,9 +42,6 @@ public class AgentsEntries(
     override fun EntryProviderScope<NavKey>.install() {
         entry<CapabilityAddComputerRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
-            // The agents' update sheet's second door: its own ViewModel, joined to the page's state and actions here.
-            val door = metroViewModel<io.github.eslamasabry.oc.feature.agents.hub.AgentUpdateDoorViewModel>()
-            val updatesReady by door.ready.collectAsStateWithLifecycle()
             LifecycleResumeEffect(vm) {
                 vm.refreshPhone()
                 onPauseOrDispose {}
@@ -113,6 +110,9 @@ public class AgentsEntries(
         }
         entry<AgentsRoute.Home> {
             val vm = metroViewModel<AgentsViewModel>()
+            // The agents' update sheet's second door: its own ViewModel, joined to the page's state and actions here.
+            val door = metroViewModel<io.github.eslamasabry.oc.feature.agents.hub.AgentUpdateDoorViewModel>()
+            val updatesReady by door.ready.collectAsStateWithLifecycle()
             LifecycleResumeEffect(vm) {
                 vm.refreshPhone()
                 onPauseOrDispose {}
