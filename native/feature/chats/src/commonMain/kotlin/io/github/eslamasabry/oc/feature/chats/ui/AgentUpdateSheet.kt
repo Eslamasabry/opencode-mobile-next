@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -65,7 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.localAgentRowOptional
-import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReviewAction
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -259,7 +260,8 @@ internal fun agentUpdateStatus(updates: AgentUpdateHomeUi, actions: AgentUpdateA
             kind = KitStatusKind.Update,
             id = "agent-updates:review",
             message = stringResource(Res.string.agentUpdatesReady),
-            // Nothing is wrong: an answer is waiting. A calm mark.
+            // Nothing is wrong: an answer is waiting. A calm mark: the update glyph, as the running update's line.
             tone = StatusTone.Neutral,
-            action = KitLineAction(stringResource(Res.string.nativePendingReview), actions::reviewAgentUpdates),
+            icon = KitIcons.systemDownload,
+            action = KitLineAction(stringResource(Res.string.agentUpdatesReviewAction), actions::reviewAgentUpdates),
         )

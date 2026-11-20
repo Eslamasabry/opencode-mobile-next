@@ -210,6 +210,12 @@ public object AgentUpdateSheetRules {
                 AgentRefusalUi(name, started.refused[id] ?: RemovalRefusal.Failed)
             }
 
+    /** A refusal for room is old once the engine reads a different free space (the person freed some, or used some). */
+    public fun roomRefusalOld(failure: Failure?, offer: AgentUpdateOffer?, failedAtFree: Long?): Boolean =
+        (failure as? Failure.Media)?.problem == io.github.eslamasabry.oc.core.common.MediaProblem.DownloadNoSpace &&
+            offer != null &&
+            offer.freeBytes != failedAtFree
+
     /** Why Keep is not offered; null when it is. */
     private fun keepBlock(item: AgentUpdateItem): AgentKeepBlock? =
         if (item.keepAllowed) null else item.notKeptReason ?: AgentKeepBlock.NotSupportedAnyMore
@@ -226,6 +232,8 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val toConfirm: List<AgentRemovalAskUi> = emptyList(),
         val working: Boolean = false,
         val failure: Failure? = null,
+        /** The free space the engine reported when it refused for room: a fresh reading makes that refusal old. */
+        val failedAtFree: Long? = null,
         /** The offer answered here: the sheet stays closed for it until a new offer (a Review) comes. */
         val closedAt: AgentUpdateOffer? = null,
         /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
@@ -249,7 +257,12 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val due = offer != null && offer.sheetDue && offer != now.closedAt
         val sheet =
             AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty())
-                .copy(asking = now.toConfirm.firstOrNull(), working = now.working, failure = now.failure)
+                .copy(
+                    asking = now.toConfirm.firstOrNull(),
+                    working = now.working,
+                    failure =
+                        now.failure.takeUnless { AgentUpdateSheetRules.roomRefusalOld(it, offer, now.failedAtFree) },
+                )
         return AgentUpdateHomeUi(
             sheet = sheet.copy(visible = due || now.refused.isNotEmpty(), refused = now.refused.toImmutableList()),
             pending = AgentUpdateSheetRules.pending(offer),
@@ -310,7 +323,9 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
                     if ((outcome.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy) {
                         local.update { it.copy(working = false, closedAt = offer) }
                     } else {
-                        local.update { it.copy(working = false, failure = outcome.failure) }
+                        local.update {
+                            it.copy(working = false, failure = outcome.failure, failedAtFree = offer.freeBytes)
+                        }
                     }
             }
         }
@@ -326,9 +341,14 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     }
 
     /** Home's Review: the sheet shows again for the current offer. */
-    public fun review() {
+    /**
+     * Home's Review: the sheet shows again for the current offer. [reread] (the open sheet's timer): only the engine's
+     * reading is asked again (free space, versions), so the room line and the button follow by themselves; a refusal
+     * on screen stays until the reading changes.
+     */
+    public fun review(reread: Boolean = false) {
         val engine = choices ?: return
-        local.update { it.copy(closedAt = null, failure = null) }
+        if (!reread) local.update { it.copy(closedAt = null, failure = null) }
         scope.launch { engine.review() }
     }
 

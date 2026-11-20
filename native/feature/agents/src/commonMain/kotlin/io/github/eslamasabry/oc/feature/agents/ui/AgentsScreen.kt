@@ -440,7 +440,8 @@ private fun PhoneTab(
             stringResource(Res.string.agentUpdatesReady),
             gutter,
             actions =
-                listOf(KitLineAction(stringResource(Res.string.nativePendingReview), actions::reviewAgentUpdates)),
+                listOf(KitLineAction(stringResource(Res.string.agentUpdatesReviewAction), actions::reviewAgentUpdates)),
+            icon = KitIcons.systemDownload,
         )
     }
     if (state.phone.needsRestart) {

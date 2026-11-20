@@ -140,7 +140,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
-import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
@@ -295,21 +294,17 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
-    // The phone's two automatic downloads say themselves at the end of the Recent label (the stage words' place), not
-    // in a bar above the title (owner, build 10077). Only a page with no Recent list falls back to the status line.
-    // The agents' update choice waits for its answer ("Agent updates ready · Review") in the same place, one line.
+    // The phone's automatic downloads (running, waiting for Wi-Fi, failed) and the agents' update choice ("Agent
+    // updates ready · Review") are each a kit status line of their own above the lists, with their mark and their
+    // action, where the agents' notices sit; never words under the Recent heading, where they read as a stray line of
+    // Recent (10109, 10110). Not in a bar above the title (owner, build 10077): only a page with no list falls back to
+    // the status line. The Recent heading carries only the start-up stage.
     val agentLine = agentUpdateStatus(state.agentUpdates, actions.agentUpdates)
+    val downloadLine = homeDownloadStatus(state.download, actions)
     val downloadStatus =
-        if (HomeDownloadRules.agentLineWins(state.download, agentLine != null)) agentLine
-        else homeDownloadStatus(state.download, actions)
+        if (HomeDownloadRules.agentLineWins(state.download, agentLine != null)) agentLine else downloadLine
     val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
-    // A download running now is a working line of its own above the lists, with its mark, its share done and Show
-    // progress (the Recent label carries words only: no mark and no share, so there it read as a stray line of Recent).
-    val runningLine = downloadStatus?.takeIf { it.working && downloadInList }
-    val lineWords =
-        if (runningLine != null) HomeDownloadRules.placeWins(state.home.stage, null, false)
-        else HomeDownloadRules.placeWins(state.home.stage, state.download, agentLine != null)
-    val statusAction = downloadStatus?.action.takeIf { lineWords == HomeLineWinner.Download }
+    val ownLines = if (downloadInList) listOfNotNull(downloadLine, agentLine) else emptyList()
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
@@ -530,8 +525,8 @@ public fun ChatsScreen(
                     }
                 }
             }
-            runningLine?.let { line ->
-                item(key = "phone-download-running", contentType = "phone-download-running") {
+            ownLines.forEach { line ->
+                item(key = "home-line-${line.id}", contentType = "home-own-line") {
                     Box(kitItemMotion()) { io.github.eslamasabry.oc.ui.kit.status.KitStatusLine(line) }
                 }
             }
@@ -597,13 +592,10 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
                                     prominentDividers = true,
-                                    labelStatus =
-                                        if (lineWords == HomeLineWinner.Download) downloadStatus?.message
-                                        else state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    labelStatus = state.home.stage?.let { stringResource(homeStageWords(it)) },
                                     // Every stage Home names is something this phone is starting: its mark stands
                                     // before the words. The kit draws and animates it; this only switches it on.
-                                    labelWait = KitWaitKind.Starting.takeIf { lineWords == HomeLineWinner.Stage },
-                                    labelAction = statusAction,
+                                    labelWait = KitWaitKind.Starting.takeIf { state.home.stage != null },
                                 ) {
                                     recent.forEach { row ->
                                         key(row.key) {

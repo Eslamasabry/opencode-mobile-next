@@ -3,6 +3,8 @@
 <resources>
     <string name="agentUpdatesTitle">Updates for your agents</string>
     <string name="agentUpdatesReady">Agent updates ready</string>
+    <!-- The action beside "Agent updates ready" (Home, the Agents page): opens the update sheet again. -->
+    <string name="agentUpdatesReviewAction">Review updates</string>
     <!-- One of three answers in a segmented control for one agent: install its new version. Short. -->
     <string name="agentUpdatesChoiceUpdate">Update</string>
     <!-- One of three answers for one agent: keep the version it has now. Short. -->
