@@ -46,7 +46,7 @@ internal object StatusWidgetModel {
             servers?.optJSONObject(i)?.let { out += server(it) }
         }
         if (linuxPresent) {
-            out += Line(Kind.LINUX, "", if (linuxReady) "setUp" else "notSetUp",
+            out += Line(Kind.LINUX, "", if (linuxReady) "running" else "stopped",
                 if (linuxReady) Tone.OK else Tone.IDLE)
         }
         if (snapshot.has("profileID")) {
