@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlin.math.abs
 import kotlin.test.Test
@@ -62,7 +64,8 @@ class MessageMenuOnBubbleTest {
                 CompositionLocalProvider(LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                     KitSheetHost(Modifier.fillMaxSize()) {
                         var open by remember { mutableStateOf(false) }
-                        Box(Modifier.fillMaxSize()) {
+                        // The page on its ground, as a screen draws it (the dim is read against it).
+                        Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                             Column(Modifier.fillMaxSize()) {
                                 Spacer(Modifier.height(above.dp))
                                 KitMessageActions("Message actions", onOpen = { open = true }) {
