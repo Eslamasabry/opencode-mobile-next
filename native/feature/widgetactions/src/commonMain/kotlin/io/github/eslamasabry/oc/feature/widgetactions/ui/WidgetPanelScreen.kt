@@ -77,8 +77,11 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
             Spacer(Modifier.height(Space.S3.dp))
             KitNotice(
                 stringResource(
-                    if (style) Res.string.widgetV2StyleUnavailable
-                    else Res.string.widgetProjectUnavailable
+                    when {
+                        state.changed -> Res.string.widgetV2StyleStale
+                        style -> Res.string.widgetV2StyleUnavailable
+                        else -> Res.string.widgetProjectUnavailable
+                    }
                 )
             )
         }
