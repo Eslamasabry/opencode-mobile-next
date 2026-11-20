@@ -699,7 +699,7 @@ class ChatsViewModelTest {
             home.snapshot.value.copy(
                 opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", profile = ProfileId("main"), onThisPhone = true, phoneOff = true)
             )
-        assertEquals(HomeConnectionState.NotAnswering, vm.state.value.connection?.state)
+        assertEquals(HomeConnectionState.Stopped, vm.state.value.connection?.state)
         vm.newConversation()
         assertEquals(emptyList(), nav.routes)
         assertTrue(vm.state.value.newBlocked)

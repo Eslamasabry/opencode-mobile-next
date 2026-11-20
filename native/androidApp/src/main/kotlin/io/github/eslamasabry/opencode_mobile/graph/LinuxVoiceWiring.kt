@@ -1668,6 +1668,10 @@ internal constructor(
                 id.raw !in closedProfiles &&
                     withContext(io) { runCatchingBlocking { !stoppedByPerson() } ?: false }
             },
+            // The person's own stop is a result of its own (no start problem, no failure, no retry), not a timeout.
+            stoppedByPerson = { id ->
+                id.raw !in closedProfiles && withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: false }
+            },
             onWaiting = { _, waiting ->
                 facts.update {
                     it.copy(starting = waiting, startProblem = if (waiting) null else it.startProblem)

@@ -968,4 +968,5 @@
     <string name="phoneDownloadAgentsOnly__eq1">1 обновление агента ждёт Wi-Fi · около %1$d МБ</string>
     <string name="phoneDownloadWaitingOpenCodeHelper">Обновление OpenCode и помощника агентов ждёт Wi-Fi · около %1$d МБ</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">Это обновление OpenCode и помощника агентов, который ему нужен. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
+    <string name="phoneStoppedByYou">Вы остановили OpenCode на этом телефоне</string>
 </resources>

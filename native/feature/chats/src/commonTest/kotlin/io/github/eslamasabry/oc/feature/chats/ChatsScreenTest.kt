@@ -179,11 +179,42 @@ class ChatsScreenTest {
                 )
             }
         }
-        onAllNodesWithText("OpenCode on this phone is off").assertCountEquals(1)
-        onAllNodesWithText("Start OpenCode on this phone").assertCountEquals(1)
+        onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
+        onAllNodesWithText("Start OpenCode").assertCountEquals(1)
         onAllNodesWithText("Dismiss").assertCountEquals(0)
         onAllNodesWithText("Restart OpenCode").assertCountEquals(0)
+        // The person's own stop is never read as a failure.
+        onAllNodesWithText("isn’t answering", substring = true).assertCountEquals(0)
     }
+
+    @Test
+    fun `B-HOME-215 a stopped phone in the list says You stopped OpenCode on this phone with Start OpenCode, and no failure`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            val phone =
+                ChatsListSourceUi(ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true, unreachable = false, stoppedByPerson = true)
+            setContent {
+                Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }
+            }
+            onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
+            onAllNodesWithText("isn’t answering", substring = true).assertCountEquals(0)
+            onAllNodesWithText("Try again").assertCountEquals(0)
+            onNodeWithText("Start OpenCode").performClick()
+            assertEquals(listOf("start p1"), actions.calls)
+        }
+
+    @Test
+    fun `B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering`() =
+        runComposeUiTest {
+            val phone =
+                ChatsListSourceUi(ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true, unreachable = true)
+            setContent {
+                Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), RecordingChatsActions()) }
+            }
+            onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(0)
+            onAllNodesWithText("This phone isn’t answering", substring = true).assertCountEquals(1)
+            onAllNodesWithText("Try again").assertCountEquals(1)
+        }
 
     @Test
     fun `NEW-BLOCKED a computer that does not answer is one card that says nothing was started, with Try again`() = runComposeUiTest {
@@ -254,9 +285,9 @@ class ChatsScreenTest {
                 phoneOff = true,
             )
         setContent { Themed { io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen(state, actions) } }
-        onAllNodesWithText("OpenCode on this phone is off").assertCountEquals(1)
+        onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
         onAllNodesWithText("Please wait for the current action.").assertCountEquals(0)
-        onNodeWithText("Start OpenCode on this phone").performClick()
+        onNodeWithText("Start OpenCode").performClick()
         assertEquals(listOf("start"), calls)
     }
 

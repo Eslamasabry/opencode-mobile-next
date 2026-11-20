@@ -24,6 +24,10 @@ public interface ChatPhoneServer {
     /** Stop then start it again; a person's restart spends no recovery attempt. */
     public suspend fun restart(profile: ProfileId): Outcome<Unit>
 
+    /** Start this phone's OpenCode after the person stopped it ("Start OpenCode"): no question first. */
+    public suspend fun start(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
     /** True when [profile] is the saved "Phone agents" server, whose helper the app starts (Flutter `recoverAgentBackend`). */
     public fun isAgentHelper(profile: ProfileId): Boolean = false
 
@@ -115,6 +119,9 @@ public enum class PhoneServerWait {
 
     /** A phone agent needs the person to sign in; its conversations wait for that and say so. */
     AgentNeedsSignIn,
+
+    /** The person stopped this phone's OpenCode: a state of its own, not a wait and not a failure. */
+    StoppedByPerson,
 }
 
 private val NotWaiting: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)

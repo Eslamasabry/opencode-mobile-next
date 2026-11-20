@@ -163,6 +163,8 @@
     <string name="termuxProcsStopGroupTeamRestart">You can start the team again from AI Team.</string>
     <string name="phoneServerCardDisconnect">Disconnect from %1$s</string>
     <string name="phoneServerCardStartOpenCode">Start OpenCode</string>
+    <!-- The person's own Stop: the one sentence every surface says (Home, the chat, Settings, the switcher). -->
+    <string name="phoneStoppedByYou">You stopped OpenCode on this phone</string>
     <string name="phoneServerCardStopOpenCode">Stop OpenCode on this phone</string>
     <string name="phoneServerCardShowServerLog">Show server log</string>
     <string name="phoneServerCardOpenTerminal">Open terminal</string>

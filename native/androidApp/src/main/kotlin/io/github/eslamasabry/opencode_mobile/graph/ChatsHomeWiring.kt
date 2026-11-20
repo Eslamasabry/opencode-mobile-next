@@ -232,6 +232,13 @@ class AppChatsHome(
                         main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         selfRun = selfRun(loaded),
+                        // The person's own Stop on This phone's OpenCode: a state of its own, never "isn't answering".
+                        stoppedByPerson =
+                            !agents &&
+                                phoneServer.runsHere(loaded.id) &&
+                                phone.serverFacts.value.let {
+                                    it.stoppedByPerson && !it.starting && it.status?.serverRunning != true
+                                },
                         // Issue 147: the agents' helper that did not start is named with its Try again (the sheet and
                         // the home's notice), never left reading "Starting"; during an update the update speaks.
                         unreachable =

@@ -194,6 +194,26 @@ class OpenWhileStartingTest {
     }
 
     @Test
+    fun `B-CHAT-308 a conversation of this phone after the person's own stop says so, and never fails or counts down`() = runTest {
+        val phone = Phone()
+        phone.wait.value = PhoneServerWait.StoppedByPerson
+        val world = GraphChatWorld(ref, registry(), phoneServer = phone)
+        world.attach()
+        runCurrent()
+        assertEquals(ChatServerWait.StoppedByPerson, world.serverWait.value)
+        // No timeout turns the stop into the failure page, however long it stays stopped.
+        advanceTimeBy(10 * 60_000)
+        runCurrent()
+        assertEquals(ChatLoad.Loading, world.load.value)
+        assertEquals(ChatServerWait.StoppedByPerson, world.serverWait.value)
+        // Starting it again is a wait like any start.
+        phone.wait.value = PhoneServerWait.Starting
+        runCurrent()
+        assertEquals(ChatServerWait.Starting, world.serverWait.value)
+        world.detach()
+    }
+
+    @Test
     fun `OWS-006 while this phone's agents update, an agent conversation waits for them and says so`() = runTest {
         // The helper's server is not "this phone's OpenCode" (here = false): it still waits instead of failing.
         val phone = Phone(here = false)
