@@ -143,6 +143,7 @@ extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> 
         )
     }
 }
+sourceSets.named("scanTest") { resources.srcDir("src/test/resources") }
 tasks.register("scan") {
     group = "verification"
     description = "Quick source-scan quality gates (no other module compiled); `:quality:test` is the full gate."
