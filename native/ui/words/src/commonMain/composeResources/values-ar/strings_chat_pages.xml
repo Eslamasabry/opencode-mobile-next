@@ -478,6 +478,6 @@
         <item quantity="other">التراجع عن %1$d ملف تغيّر؟</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">التراجع عن ملف واحد تغيّر؟</string>
-    <string name="reviewUndoBody">يعود مشروعك كما كان قبل أن يبدأ الوكيل. وتبقى المحادثة.</string>
+    <string name="reviewUndoBody">يخفي هذا الرسائل من حيث بدأت هذه التغييرات، ويعيد ملفاتك كما كانت. يمكنك استعادة كل شيء إلى أن تحذف الرسائل المخفية.</string>
     <string name="reviewDone">تمّ</string>
 </resources>

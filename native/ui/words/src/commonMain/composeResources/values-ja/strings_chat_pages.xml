@@ -422,5 +422,5 @@
         <item quantity="other">%1$d件の変更ファイルを元に戻しますか？</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">1件の変更ファイルを元に戻しますか？</string>
-    <string name="reviewUndoBody">プロジェクトがエージェント開始前の状態に戻ります。会話は残ります。</string>
+    <string name="reviewUndoBody">これらの変更が始まった時点以降のメッセージが非表示になり、ファイルは元の状態に戻ります。非表示のメッセージを削除するまでは、すべて元に戻せます。</string>
 </resources>

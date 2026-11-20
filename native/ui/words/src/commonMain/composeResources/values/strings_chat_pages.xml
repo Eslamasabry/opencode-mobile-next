@@ -435,5 +435,5 @@
         <item quantity="other">Undo %1$d changed files?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Undo 1 changed file?</string>
-    <string name="reviewUndoBody">Your project goes back to how it was before the agent started. The conversation stays.</string>
+    <string name="reviewUndoBody">This hides the messages from where these changes began and puts your files back as they were. You can bring everything back until you delete the hidden messages.</string>
 </resources>

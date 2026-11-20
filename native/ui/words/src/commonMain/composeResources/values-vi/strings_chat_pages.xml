@@ -422,6 +422,6 @@
         <item quantity="other">Hoàn tác %1$d tệp đã thay đổi?</item>
     </plurals>
     <string name="reviewUndoTitle__eq1">Hoàn tác 1 tệp đã thay đổi?</string>
-    <string name="reviewUndoBody">Dự án của bạn trở về như trước khi tác nhân bắt đầu. Cuộc trò chuyện vẫn được giữ.</string>
+    <string name="reviewUndoBody">Thao tác này ẩn các tin nhắn từ chỗ những thay đổi này bắt đầu và đưa tệp của bạn về như cũ. Bạn có thể khôi phục mọi thứ cho đến khi xóa các tin nhắn đã ẩn.</string>
     <string name="reviewDone">Xong</string>
 </resources>
