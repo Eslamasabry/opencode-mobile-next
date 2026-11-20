@@ -135,4 +135,14 @@ class FooterOwnTimeTest {
         assertEquals(74_000L, meta.endedAtMs, "the old reply keeps the clock time it was read with")
         assertEquals(73_000L, meta.tookMs)
     }
+
+    @Test
+    fun `B-CHAT-FOOT-005 a reply still unfinished and made later never makes the footer longer then shorter`() {
+        val answered = reply("m2", 2_000, 74_000)
+        val next = reply("m3", 76_000, null)
+        val f = facts(listOf(prompt, msg(answered, text("x", "m2", "Done.")), msg(next)))
+        val meta = assertNotNull(f.reading.metadata["m1"])
+        assertEquals(74_000L, meta.endedAtMs, "the finished reply's own end, not a later reply's start")
+        assertEquals(73_000L, meta.tookMs)
+    }
 }
