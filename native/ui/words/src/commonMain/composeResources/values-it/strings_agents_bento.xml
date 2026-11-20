@@ -33,7 +33,6 @@
     <string name="agentsConversationsStoredOn">Copia una conversazione da %1$s</string>
     <string name="agentsHostAccount">Account host: %1$s</string>
     <string name="agentsStateSignInUnchecked">Installato, ma questa app non può ancora verificarne l'accesso</string>
-    <string name="agentsStateSignInCheckFailed">Impossibile verificare l'accesso. Prova ad accedere di nuovo.</string>
     <string name="agentsSignInUncheckedBody">Non può ancora essere usato per le conversazioni. Puoi rimuoverlo.</string>
     <string name="agentsStateSetUpAtFirstUse">Installato. Configuralo al primo utilizzo.</string>
     <string name="agentsChipSetUp">Configura</string>

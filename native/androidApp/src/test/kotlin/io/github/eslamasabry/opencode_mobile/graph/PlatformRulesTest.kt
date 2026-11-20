@@ -65,7 +65,7 @@ class PlatformRulesTest {
                 feed(item(a, "s1", title = title + " " + "x".repeat(200))),
                 emptyList(),
                 a,
-                mapOf(a to "Box api_key=sk-live-1234567890abcdef"),
+                WidgetNames(mapOf(a to "Box api_key=sk-live-1234567890abcdef")),
                 setOf(a),
             )
         val row = model.rows.single()
@@ -77,13 +77,30 @@ class PlatformRulesTest {
     }
 
     @Test
+    fun `B-WIDGET-301 the Status widget lists This phone once when the phone agents' helper carries the same name`() {
+        val helper = ProfileId("phone-agents")
+        val model =
+            PlatformRules.widgetModel(
+                feed(item(a, "a1"), item(helper, "h1")),
+                emptyList(),
+                a,
+                WidgetNames(mapOf(a to "This phone", helper to "This phone"), notListed = setOf(helper)),
+                setOf(a, helper),
+            )
+        assertEquals(listOf("This phone"), model.servers.map { it.name })
+        assertEquals(listOf("server-a"), model.servers.map { it.id })
+        // The helper's own conversations still say which connection they belong to.
+        assertEquals("This phone", model.rows.single { it.profile == "phone-agents" }.server)
+    }
+
+    @Test
     fun `B-ANDR-116 each widget row names its own server, and another server's request has no inline answer`() {
         val model =
             PlatformRules.widgetModel(
                 feed(item(a, "a1"), item(b, "b1")),
                 listOf(permission(a, "a1", "per_a"), permission(b, "b1", "per_b")),
                 a,
-                mapOf(a to "A", b to "B"),
+                WidgetNames(mapOf(a to "A", b to "B")),
                 setOf(a, b),
             )
         val (rowA, rowB) = model.rows
@@ -96,9 +113,11 @@ class PlatformRulesTest {
 
     @Test
     fun `B-ANDR-117 the same content gives an equal model, so nothing is rewritten`() {
-        fun build() = PlatformRules.widgetModel(feed(item(a, "a1")), emptyList(), a, mapOf(a to "A"), setOf(a))
+        val names = WidgetNames(mapOf(a to "A"))
+        fun build() = PlatformRules.widgetModel(feed(item(a, "a1")), emptyList(), a, names, setOf(a))
         assertEquals(build(), build())
-        val changed = PlatformRules.widgetModel(feed(item(a, "a1", status = ChatStatus.Running)), emptyList(), a, mapOf(a to "A"), setOf(a))
+        val running = feed(item(a, "a1", status = ChatStatus.Running))
+        val changed = PlatformRules.widgetModel(running, emptyList(), a, names, setOf(a))
         assertTrue(changed != build())
     }
 

@@ -74,4 +74,6 @@
     <string name="widget_allow_for">Izinkan sekali: %1$s</string>
     <string name="widget_reply_for">Balas ke %1$s</string>
     <string name="widget_step_for">%1$s: %2$s</string>
+    <string name="widget_status_set_up">sudah disiapkan</string>
+    <string name="widget_status_not_set_up">belum disiapkan</string>
 </resources>

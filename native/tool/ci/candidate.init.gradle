@@ -4,5 +4,8 @@ allprojects {
         maxParallelForks = 1
         outputs.upToDateWhen { false }
         outputs.cacheIf { false }
+        // A *Renders class writes pictures for a person to look at and asserts nothing: it is not a check, so the
+        // candidate lane leaves it out by name; the build server's render queue runs them (vtest.sh --tests '*Renders*').
+        filter.excludeTestsMatching("*Renders")
     }
 }

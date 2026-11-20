@@ -52,7 +52,7 @@ class ChatJourneyTest {
     @Test
     fun `B-JOURNEY-030 a finished reply is announced once per ended turn, even with every switch off`() = runTest {
         var done = 0
-        val journey = ChatJourney({ 1_000L }, HealthFlow(), Once()) { done++ }
+        val journey = ChatJourney({ 1_000L }, HealthFlow(), Once(), onReplyDone = { done++ })
         journey.sent("s1", onPhone = true)
         journey.busy("s1")
         assertEquals(0, done, "a reply that is still arriving is not finished")

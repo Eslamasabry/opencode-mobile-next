@@ -78,7 +78,6 @@ en	agentsSignInPaste
 en	agentsSignInTerminalIntroOther
 # 2026-11-18: privacy words (look of 10086): the voice privacy line says what the Arabic said (stays on the phone, turned into text on the phone, not kept, the model download needs the internet once) in every language, with "phone"; Arabic "Privacy and data" drops "local" (one name).
 en	e7VoiceUiPrivacyDownload
-es	e7VoiceUiPrivacyDownload
-zh	e7VoiceUiPrivacyDownload
-ar	e7VoiceUiPrivacyDownload
-ar	settingsHubPrivacyRow
+# 2026-11-20: Undo all says what it does (undo-truth-301-r2); the Privacy page's Google line says Google adds the install ID and model (umami-rich-301). Dropped es/zh/ar e7VoiceUiPrivacyDownload and ar settingsHubPrivacyRow: they match the ARB again.
+en	reviewUndoBody
+en	telemetryUsageDetail

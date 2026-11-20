@@ -84,7 +84,8 @@ class KitModelSheetLoadingTest {
         val chosen = mutableListOf<KitModelOption?>()
         setContent { Sheet(models, loading = true, chosen) }
         settle()
-        onNodeWithTag("chat-model-updating").assertExists()
+        // The sheet's own loading line under its title (a6423e66bc), not a ring on the search field.
+        onNodeWithTag("kit-loading-bar").assertExists()
         onNodeWithText("Loading models…").assertDoesNotExist()
         onNode(hasTestTag("chat-model-choice") and hasText("GPT 2")).performClick()
         assertEquals(listOf<KitModelOption?>(models[1]), chosen)
@@ -94,7 +95,7 @@ class KitModelSheetLoadingTest {
     fun `not loading shows no update mark`() = runComposeUiTest {
         setContent { Sheet(models, loading = false) }
         settle()
-        assertTrue(onAllNodesWithTag("chat-model-updating").fetchSemanticsNodes().isEmpty())
+        assertTrue(onAllNodesWithTag("kit-loading-bar").fetchSemanticsNodes().isEmpty())
     }
 
     @Test
