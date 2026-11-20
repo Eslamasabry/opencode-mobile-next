@@ -41,6 +41,8 @@ public enum class WidgetPanelSave {
 
 public object WidgetPanels {
     private val log = AppLog.tagged("WidgetPanel")
+    public val backgrounds: List<String> = listOf("solid", "tinted", "transparent")
+    public val accents: List<String> = listOf("wallpaper", "app", "green", "teal", "blue", "amber")
 
     /** Why a save must not go ahead, from what the setup was opened with and what is stored now. */
     internal fun refusal(opened: WidgetPanelPreferences, current: WidgetPanelPreferences): WidgetPanelSave? =
