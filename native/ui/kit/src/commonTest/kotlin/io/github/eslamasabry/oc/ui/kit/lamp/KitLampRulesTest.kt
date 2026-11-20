@@ -175,4 +175,16 @@ class KitLampRulesTest {
         assertTrue(!TipRules.mayShow(visible = true, modalOpen = true, yieldsToOthers = true, othersShowing = 0))
         assertTrue(!TipRules.mayShow(visible = false, modalOpen = false, yieldsToOthers = true, othersShowing = 0))
     }
+
+    @Test
+    fun `B-LAMP-015 each page root counts its own tips, two roots never see each other, and none means no other tip`() {
+        val a = io.github.eslamasabry.oc.ui.kit.teaching.KitTipPresence()
+        val b = io.github.eslamasabry.oc.ui.kit.teaching.KitTipPresence()
+        a.enter()
+        assertEquals(1, a.others)
+        assertEquals(0, b.others, "another root's tip is not this root's")
+        a.leave()
+        a.leave()
+        assertEquals(0, a.others, "never below zero")
+    }
 }

@@ -361,3 +361,12 @@ private class TipPosition(
         return IntOffset(x, y)
     }
 }
+
+/** Red-proof stub: the line keeps no tip count at all. */
+public class KitTipPresence {
+    public val others: Int get() = 0
+
+    internal fun enter() = Unit
+
+    internal fun leave() = Unit
+}
