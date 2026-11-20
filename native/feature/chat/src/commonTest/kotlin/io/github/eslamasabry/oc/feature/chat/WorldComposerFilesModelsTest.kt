@@ -773,6 +773,55 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
+    fun `B-CHAT-ONCE-009 a send in an existing conversation draws once in every state of its settle`() =
+        runTest {
+            // J22 (build 10114, 24.135 s): a send in a conversation with earlier turns drew its bubble twice for a
+            // frame, "Sending" under it, the shape of journey 2: the same settle run again in the middle of the settle.
+            val f = Fixture(this, correlated = true, deviceMain = true)
+            f.open()
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u0", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t0", "u0", ref.sessionId.raw, PartType.Text, "text", "first ask"))
+            )
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("a0", ref.sessionId.raw, Role.Assistant)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("r0", "a0", ref.sessionId.raw, PartType.Text, "text", "first answer"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.world.draftChanged("second ask")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("second ask"))
+            runCurrent()
+            val clientId =
+                assertNotNull(
+                        f.engine().pending.value.single().dispatchedMessageId,
+                        "the send went out with the client's own message id",
+                    )
+                    .raw
+            val frames = mutableListOf<List<String>>()
+            backgroundScope.launch(f.main) { f.world.pending.collect { frames += drawnPrompts(f.world) } }
+            backgroundScope.launch(f.main) { f.world.transcript.collect { frames += drawnPrompts(f.world) } }
+            runCurrent()
+            hold.complete(Unit)
+            advanceTimeBy(60)
+            runCurrent()
+            f.base.events.emit(GatewayEvent.RunStarted(ref.sessionId))
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo(clientId, ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t1", clientId, ref.sessionId.raw, PartType.Text, "text", "second ask"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(f.world.pending.value.isEmpty(), "the bubble settled on the server's copy")
+            assertEquals(1, drawnPrompts(f.world).count { it == "second ask" }, "one message after the hand-over")
+            val twice = frames.withIndex().filter { (_, drawn) -> drawn.count { it == "second ask" } != 1 }
+            assertTrue(frames.size > 2, "the states were read: $frames")
+            assertTrue(twice.isEmpty(), "states drawing the new message other than once: $twice of ${frames.size}")
+        }
+
+    @Test
     fun `B-CHAT-ONCE-002 the same words sent before are not taken for the message on its way`() =
         runTest {
             val f = Fixture(this)
