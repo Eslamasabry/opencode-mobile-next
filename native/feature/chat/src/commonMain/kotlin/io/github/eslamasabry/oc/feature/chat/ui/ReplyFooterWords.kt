@@ -1,12 +1,15 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chat.presentation.CostWords
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFooterPart
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFooterRules
 import io.github.eslamasabry.oc.feature.chat.presentation.TokenAmount
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnMetadataUi
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.kit.text.kitClock
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -40,7 +43,14 @@ internal fun replyFooterWords(meta: TurnMetadataUi): String {
             }
         }
         .filter { it.isNotBlank() }
-        .joinToString(sep)
+        .joinReplyMetadata(sep)
+}
+
+/** Keep each localized part together while the separators follow the surrounding RTL paragraph. */
+@Composable
+internal fun List<String>.joinReplyMetadata(separator: String): String {
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    return joinToString(separator, transform = if (rtl) KitBidi::auto else null)
 }
 
 @Composable
