@@ -11,6 +11,8 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
+import io.github.eslamasabry.oc.engine.runtime.setup.ComponentProgress
+import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
@@ -27,7 +29,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeHelperStep
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeInstallPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeShortSpace
 import io.github.eslamasabry.oc.feature.chats.presentation.NoHomeDownloads
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.runningPhoneName__agentHelper
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.getString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -131,6 +136,16 @@ class PhoneDownloads(
                 val agentName =
                     (install?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }?.id ?: decision.agent?.raw)
                         ?.let { phones.nameOf(AgentId(it)) }
+                // The job says which part runs now (Node.js, the helper, then the agent): the line names THAT part
+                // with its own share, never the agent's name over another part's number.
+                val part =
+                    if (install?.phase == PhoneAgentInstallPhase.Installing) {
+                        runningPart(progress.components) { id -> phones.nameOf(AgentId(id)) }
+                    } else {
+                        null
+                    }
+                val partName =
+                    part?.let { if (it.helper) getString(Res.string.runningPhoneName__agentHelper) else it.name }
                 val said =
                     HomeDownloadMapping.facts(
                         openCodeWaiting = downloadWaitingSaid(side.waiting, read),
@@ -152,14 +167,15 @@ class PhoneDownloads(
                                 PhoneAgentInstallPhase.Interrupted -> HomeInstallPhase.Failed
                                 else -> HomeInstallPhase.None
                             },
-                        helperPercent = install?.fraction?.let { (it * 100).roundToInt() },
+                        helperPercent =
+                            if (part != null) part.percent else install?.fraction?.let { (it * PERCENT).roundToInt() },
                     )
                         // A helper install that stopped for want of room says how much, beside the failed row.
                         .map { fact ->
                             when {
                                 fact.kind != HomeDownloadKind.Helper -> fact
                                 fact.phase == HomeDownloadPhase.Failed -> fact.copy(short = side.helperShort)
-                                fact.phase is HomeDownloadPhase.Running -> fact.copy(name = agentName)
+                                fact.phase is HomeDownloadPhase.Running -> fact.copy(name = partName ?: agentName)
                                 else -> fact
                             }
                         }
@@ -248,3 +264,20 @@ private data class SideFacts(
     val retrying: Boolean,
     val helperHold: HomeHold?,
 )
+
+/** The part of an agent's install job that runs now: its name (the helper's is a string), and its own share. */
+private class RunningPart(val name: String?, val helper: Boolean, val percent: Int?)
+
+private fun runningPart(components: List<ComponentProgress>, agentName: (String) -> String?): RunningPart? {
+    val running = components.firstOrNull { it.id.startsWith(AGENT_PART) && it.state == ComponentState.Running }
+        ?: return null
+    val percent = running.fraction?.let { (it * PERCENT).roundToInt() }
+    return when (val id = running.id.removePrefix(AGENT_PART)) {
+        "node" -> RunningPart("Node.js", false, percent)
+        "paseo" -> RunningPart(null, true, percent)
+        "user" -> null
+        else -> RunningPart(agentName(id), false, percent)
+    }
+}
+
+private const val AGENT_PART = "agent-"
