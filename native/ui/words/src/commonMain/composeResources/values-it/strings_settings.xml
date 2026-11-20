@@ -826,7 +826,6 @@
     <string name="appearanceGlassLookSmokedLine">Vetro scuro su barre e pulsanti</string>
     <string name="appearanceGlassLookDisclosure">Le anteprime usano colori vividi per far notare le differenze. La pagina dietro mostra il tuo vero sfondo.</string>
     <string name="appearanceGlassLookFrostedLighter">Satinato ora usa schede più chiare, quindi si vede più del tuo sfondo.</string>
-    <string name="appearanceGlassLookHeldMotion">Gli aspetti vetro sono in pausa finché il movimento è disattivo. Riattiva il movimento per sceglierne uno.</string>
     <string name="appearanceGlassLookNeedsAndroid13">La curvatura dei bordi richiede Android 13. Questo telefono la mostra sfocata, in ogni aspetto.</string>
     <string name="appearanceGlassCardHint">Tocca di nuovo Vetro per sceglierne l'aspetto.</string>
     <string name="appearanceGlassCardLook">Vetro · %1$s</string>
