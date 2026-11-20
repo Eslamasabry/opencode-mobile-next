@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.transcript.Tokens
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
@@ -118,6 +119,20 @@ class FooterOwnTimeTest {
         val finished = facts(listOf(prompt, compacting, answered))
         val meta = assertNotNull(finished.reading.metadata["m1"])
         assertEquals(74_000L, meta.endedAtMs, "the compaction finishing later is not the reply ending")
+        assertEquals(73_000L, meta.tookMs)
+    }
+
+    @Test
+    fun `B-CHAT-FOOT-004 an old reply seen again live without its own times keeps the time it had`() {
+        val answered = reply("m2", 2_000, 74_000)
+        val k = TurnFeedKeeper(sid)
+        k.history(listOf(prompt, msg(answered, text("x", "m2", "Done."))), newest = true)
+        // The agent's live stream replays the timeline item with no timestamp, so the adapter stamps it with now.
+        val now = 77_000_000L
+        k.event(GatewayEvent.MessageUpserted(reply("m2", now, now)), now)
+        k.idle()
+        val meta = assertNotNull(TurnFactsPresenter(FixedClock).present(k.feed.value, now).reading.metadata["m1"])
+        assertEquals(74_000L, meta.endedAtMs, "the old reply keeps the clock time it was read with")
         assertEquals(73_000L, meta.tookMs)
     }
 }
