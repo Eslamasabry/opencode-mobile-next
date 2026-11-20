@@ -325,7 +325,8 @@ public class AndroidRemoteTerminalView(
             event.getUnicodeChar(
                 event.metaState and KeyEvent.META_CTRL_MASK.inv() and KeyEvent.META_ALT_MASK.inv()
             )
-        if (point == 0) return super.onKeyDown(keyCode, event)
+        // A dead (accent) key answers its accent with the COMBINING_ACCENT bit set: not a character to send.
+        if (point == 0 || !Character.isValidCodePoint(point)) return super.onKeyDown(keyCode, event)
         val text =
             String(
                 Character.toChars(
