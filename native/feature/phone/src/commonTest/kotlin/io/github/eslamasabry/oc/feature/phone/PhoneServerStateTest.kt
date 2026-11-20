@@ -84,14 +84,13 @@ class PhoneServerStateTest {
     }
 
     @Test
-    fun `B-SET-272 after the person's own stop no earlier failed start turns it into a failure`() {
-        for (problem in listOf(StartProblem.TimedOut, StartProblem.Exited)) {
-            val facts = PhoneServerFacts(status = installed, stoppedByPerson = true, startProblem = problem)
-            val answer = ThisPhoneAnswers.of(derive(facts), facts)
-            assertEquals(AnswerHeadline.StoppedByYou, answer.headline, "$problem")
-            assertEquals(AnswerTone.Off, answer.tone)
-            assertEquals(PhoneAct.Start, answer.primary)
-        }
+    fun `B-SET-272 after the person's own stop This phone says so and is no failure, with nothing to retry`() {
+        val facts = PhoneServerFacts(status = installed, stoppedByPerson = true)
+        val answer = ThisPhoneAnswers.of(derive(facts), facts)
+        assertEquals(AnswerHeadline.StoppedByYou, answer.headline)
+        assertEquals(AnswerTone.Off, answer.tone)
+        assertEquals(AnswerLine.StaysOff, answer.line)
+        assertEquals(PhoneAct.Start, answer.primary)
     }
 
     @Test

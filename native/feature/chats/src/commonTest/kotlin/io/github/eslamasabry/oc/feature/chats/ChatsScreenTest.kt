@@ -212,7 +212,7 @@ class ChatsScreenTest {
                 Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), RecordingChatsActions()) }
             }
             onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(0)
-            onAllNodesWithText("This phone isn’t answering", substring = true).assertCountEquals(1)
+            onAllNodesWithText("isn’t answering", substring = true).assertCountEquals(1)
             onAllNodesWithText("Try again").assertCountEquals(1)
         }
 

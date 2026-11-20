@@ -315,7 +315,9 @@ public object ThisPhoneAnswers {
                 )
             is PhoneServerState.Stopped ->
                 when {
-                    // The person's own stop comes first: no earlier failed start makes it a failure.
+                    // A start the person asked for that failed still says so (B-LINUX-037); the person's stop itself
+                    // no longer writes a start problem (the connection gate answers StoppedByPerson).
+                    failedStart != null && failedStart.isFailure() -> startFailed()
                     state.by == StoppedBy.Person ->
                         ThisPhoneAnswer(
                             AnswerTone.Off,
@@ -323,7 +325,6 @@ public object ThisPhoneAnswers {
                             AnswerLine.StaysOff,
                             PhoneAct.Start,
                         )
-                    failedStart != null && failedStart.isFailure() -> startFailed()
                     state.by == StoppedBy.Idle ->
                         ThisPhoneAnswer(
                             AnswerTone.Off,
