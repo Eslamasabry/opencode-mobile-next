@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.lamp
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -17,8 +18,11 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -251,6 +255,53 @@ class KitLampTest {
             }
         }
     }
+
+    /** A button 64 dp square at the edge, behind the light (a reply's footer button): its taps and the light's. */
+    private class Behind {
+        var button = 0
+        var light = 0
+    }
+
+    private fun ComposeUiTest.hostBehind(behind: Behind) {
+        setContent {
+            KitTheme(KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Full), FakeKitPlatform(), "en") {
+                Box(Modifier.size(W.dp, H.dp)) {
+                    Box(Modifier.size(64.dp).align(Alignment.CenterEnd).clickable { behind.button++ })
+                    KitLamp(KitLampFace(), LABEL, { behind.light++ }, Modifier.align(Alignment.CenterEnd))
+                }
+            }
+        }
+    }
+
+    private fun ComposeUiTest.tapAt(xDp: Float, yDp: Float) {
+        onRoot().performTouchInput { click(Offset(xDp * density, yDp * density)) }
+    }
+
+    @Test
+    fun `B-LAMP-009 a tap beside or above the face, in the touch box but off the mark, reaches the button behind and not the light`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind)
+            waitForIdle()
+            // The quiet face is 12 x 40 at the edge, centred on 150 dp: 188..200 across, 130..170 down; its box is 24 x 56.
+            tapAt(W - 20f, H / 2f)
+            assertEquals(1, behind.button, "beside the face: the button behind is tapped")
+            assertEquals(0, behind.light, "beside the face: the light does not take a tap it does not own")
+            tapAt(W - 6f, H / 2f - 24f)
+            assertEquals(2, behind.button, "above the face: the button behind is tapped")
+            assertEquals(0, behind.light, "above the face: the light does not take it")
+        }
+
+    @Test
+    fun `B-LAMP-010 a tap on the face is the light's alone`() =
+        runDesktopComposeUiTest(W, H) {
+            val behind = Behind()
+            hostBehind(behind)
+            waitForIdle()
+            tapAt(W - 6f, H / 2f)
+            assertEquals(1, behind.light, "on the face: the light opens")
+            assertEquals(0, behind.button, "on the face: the button behind is not also tapped")
+        }
 
     private companion object {
         const val W = 200
