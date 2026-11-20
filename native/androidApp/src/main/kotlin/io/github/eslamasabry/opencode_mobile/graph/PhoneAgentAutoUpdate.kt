@@ -166,7 +166,7 @@ class PhoneAgentAutoUpdate(
                             if (agent in sameVersion()) reloadAfter += agent
                             // Kept until the install ends, so a stop or crash in the middle resumes it next run.
                             phones.markUpdating(agent)
-                            appScope.launch(dispatchers.io) { safely { finish(agent) } }
+                            appScope.launch(dispatchers.io) { finishing(agent) }
                             true
                         }
                         is PhoneAgentInstallResult.Refused ->
@@ -278,7 +278,19 @@ class PhoneAgentAutoUpdate(
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            log.i { "agent update look failed: ${e::class.simpleName}" }
+            log.i { "agent update look failed: ${shape(e)}" }
+        }
+    }
+
+    /** [finish]; if it throws, the install still ends (failed, type logged) and is tried again. */
+    private suspend fun finishing(agent: AgentId) {
+        try {
+            finish(agent)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.i { "agent update wait failed: ${shape(e)}; the update of ${agent.raw} ends as failed" }
+            updaterRef?.settle(agent, AgentUpdateStep.Failed)
         }
     }
 
@@ -310,6 +322,9 @@ class PhoneAgentAutoUpdate(
                         }
                         else -> {
                             restartOlderHelper()
+                            // Ended with no record and no job of ours running: judged by what the folder holds now,
+                            // never left started (an agent still behind is given back for another try).
+                            updaterRef?.settle(agent, AgentUpdateStep.Failed)
                             return
                         }
                     }
@@ -337,7 +352,7 @@ class PhoneAgentAutoUpdate(
         if (started) {
             downloads.helperShort.value = null
             updaterRef?.settle(agent, AgentUpdateStep.Updating)
-            appScope.launch(dispatchers.io) { safely { finish(agent) } }
+            appScope.launch(dispatchers.io) { finishing(agent) }
             return
         }
         appScope.launch(dispatchers.io) {
@@ -532,3 +547,9 @@ internal fun recordBehind(app: Application, installed: List<AgentId>): Set<Agent
 }
 
 private const val RECORD_LIMIT = 4096L
+
+/** An error's type and the method that threw it (names only, never its text). */
+private fun shape(e: Exception): String {
+    val top = e.stackTrace.firstOrNull() ?: return e::class.simpleName.orEmpty()
+    return "${e::class.simpleName} in ${top.className.substringAfterLast('.')}.${top.methodName}"
+}

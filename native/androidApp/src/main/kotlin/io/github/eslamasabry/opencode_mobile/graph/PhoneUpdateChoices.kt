@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentChoiceHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoiceEngine
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoices
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateInventory
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalResult
@@ -37,9 +38,18 @@ class PhoneUpdateChoices(
     private val dispatchers: AppDispatchers,
     private val runtime: BuiltinRuntime,
 ) : AgentUpdateChoices {
+    @Volatile private var lastInventory: AgentUpdateInventory? = null
     private val disk = PhoneChoiceInventory(app, phones) { runtime.serverFacts.value.installedVersion }
     private val host = object : AgentChoiceHost {
-        override suspend fun inventory() = disk.read()
+        // The ONE point every read of versions and sizes passes (the loop, the open sheet's 30 s and on-resume reads,
+        // Home's and the Agents door's Review, decide): while an install job runs or the gate is held the scripts do
+        // not run (they share the one installer slot with the install); the last picture stays, with only the room
+        // re-read, a plain file-system figure that needs no slot.
+        override suspend fun inventory(): AgentUpdateInventory {
+            val last = lastInventory
+            if (last != null && phones.choiceInstallBusy()) return last.copy(freeBytes = app.filesDir.usableSpace)
+            return disk.read().also { lastInventory = it }
+        }
         override suspend fun hasRoom(id: AgentId): Boolean = if (id == AgentId.OPENCODE) {
             val size = HomeDownloadSizes.OPEN_CODE_MB * BYTES_PER_MB
             app.filesDir.usableSpace >= SetupDiskSpace.requiredInstallBytes(size)
@@ -69,8 +79,15 @@ class PhoneUpdateChoices(
     /** True once one inventory has been read: before it, nothing is known to be unasked. */
     @Volatile private var inventoried = false
 
-    internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh().also { inventoried = true } }
+    internal suspend fun refresh() = withContext(dispatchers.io) {
+        // The inventory runs scripts in the phone's Linux, which share ONE installer slot with every install: never
+        // while an install job runs (the picture it holds stays), or a read at a component's start fails the job.
+        if (!phones.choiceInstallBusy()) engine.refresh().also { inventoried = true }
+    }
     private val holds = UnaskedHolds { offer.value }
+
+    /** OpenCode's version at the launch path as the last inventory read it; null when not read or none. */
+    internal val openCodeOnDisk: String? get() = disk.openCodeOnDisk
 
     internal fun allowed(id: AgentId): Boolean = engine.allowed(id).also { if (!it) holds.unasked(id, inventoried) }
     internal suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean =

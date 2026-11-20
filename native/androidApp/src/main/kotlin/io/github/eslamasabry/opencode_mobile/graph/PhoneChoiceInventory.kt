@@ -36,6 +36,10 @@ internal class PhoneChoiceInventory(
     var sharedAnchor: AgentId? = null
         private set
 
+    /** The OpenCode version the last read found at the launch path (the disk program), null when none or unknown. */
+    @Volatile var openCodeOnDisk: String? = null
+        private set
+
     suspend fun read(): AgentUpdateInventory {
         val versions = phones.choiceVersions()
         sharedAnchor = versions.keys.firstOrNull()
@@ -79,6 +83,7 @@ internal class PhoneChoiceInventory(
         val pin = ManagedRuntime.OpenCode2.pinnedVersion
         val installed = File(linux.rootfs, binary.removePrefix("/")).isFile
         val from = if (installed) phones.choiceVersion("opencode2", pin) ?: runningVersion() else null
+        openCodeOnDisk = from
         return if (from == null || from == pin) null else AgentUpdateItem(
             AgentId.OPENCODE, "OpenCode", from, pin, HomeDownloadSizes.OPEN_CODE_MB * MB,
             diskBytes("/opt/opencode2"), AgentUpdateGroup.Optional, true, false, null, null, null,

@@ -574,6 +574,13 @@ class BuiltinLinux(private val context: Context) {
     /**
      * A failed launch/completion must not permanently reserve a dead warm writer. Never signals.
      */
+    /** True while a script (a read or an install) holds the one installer slot; a dead one is reclaimed first. */
+    @Synchronized
+    internal fun installerSlotBusy(): Boolean {
+        reclaimDeadInstaller()
+        return installerProcess != null
+    }
+
     @Synchronized
     private fun reclaimDeadInstaller(): Boolean =
         synchronized(installerGuard) {

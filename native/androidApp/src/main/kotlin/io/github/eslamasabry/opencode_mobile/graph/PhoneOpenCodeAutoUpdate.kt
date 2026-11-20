@@ -71,10 +71,15 @@ class PhoneOpenCodeAutoUpdate(
         val host =
             object : OpenCodeHostFacts {
                 override val updateAllowed: Boolean get() = choices.allowed(AgentId.OPENCODE)
-                override suspend fun refresh() = this@PhoneOpenCodeAutoUpdate.runtime.refreshServer()
+                // The read also takes the program on disk again: right after an update the old server still runs
+                // until its restart, so the running version alone says "below the pin" for a finished update.
+                override suspend fun refresh() {
+                    this@PhoneOpenCodeAutoUpdate.runtime.refreshServer()
+                    choices.refresh()
+                }
 
                 override val installedVersion: String?
-                    get() = choices.offer.value?.items?.find { it.id == AgentId.OPENCODE }?.fromVersion
+                    get() = choices.openCodeOnDisk
                         ?: this@PhoneOpenCodeAutoUpdate.runtime.serverFacts.value.installedVersion
                 override val pinnedVersion: String get() = ManagedRuntime.OpenCode2.pinnedVersion
                 override val runtime: String get() = ManagedRuntime.OpenCode2.wireName
