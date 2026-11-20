@@ -24,4 +24,5 @@
     <string name="notify_status_action_stop_named">Hentikan %1$s</string>
     <string name="notify_status_action_stop">Hentikan</string>
     <string name="notify_status_stopping">Menghentikan…</string>
+    <string name="notify_status_stop_failed">Tidak bisa dihentikan. Buka aplikasi untuk mencoba lagi.</string>
 </resources>

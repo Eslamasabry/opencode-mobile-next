@@ -34,4 +34,5 @@
     <string name="notify_status_action_stop_named">إيقاف %1$s</string>
     <string name="notify_status_action_stop">إيقاف</string>
     <string name="notify_status_stopping">جارٍ الإيقاف…</string>
+    <string name="notify_status_stop_failed">تعذّر الإيقاف. افتح التطبيق للمحاولة مرة أخرى.</string>
 </resources>

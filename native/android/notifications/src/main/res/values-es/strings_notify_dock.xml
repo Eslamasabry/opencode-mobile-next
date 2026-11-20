@@ -28,4 +28,5 @@
     <string name="notify_status_action_stop_named">Detener %1$s</string>
     <string name="notify_status_action_stop">Detener</string>
     <string name="notify_status_stopping">Deteniendo…</string>
+    <string name="notify_status_stop_failed">No se pudo detener. Abre la app para intentarlo de nuevo.</string>
 </resources>

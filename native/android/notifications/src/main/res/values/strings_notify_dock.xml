@@ -26,4 +26,5 @@
     <string name="notify_status_action_stop_named">Stop %1$s</string>
     <string name="notify_status_action_stop">Stop</string>
     <string name="notify_status_stopping">Stopping…</string>
+    <string name="notify_status_stop_failed">Couldn\'t stop it. Open the app to try again.</string>
 </resources>

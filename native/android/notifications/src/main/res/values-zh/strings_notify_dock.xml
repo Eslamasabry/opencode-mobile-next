@@ -24,4 +24,5 @@
     <string name="notify_status_action_stop_named">停止 %1$s</string>
     <string name="notify_status_action_stop">停止</string>
     <string name="notify_status_stopping">正在停止…</string>
+    <string name="notify_status_stop_failed">无法停止。请打开应用后重试。</string>
 </resources>

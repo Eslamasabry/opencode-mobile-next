@@ -320,6 +320,23 @@ class NotificationActionBodyTest {
     }
 
     @Test
+    fun `B-NOTIFY-001 a stop that could not be sent says so on the row`() {
+        val renderer = StatusRenderer(app, NotifyWords(app) { "en" })
+        val target = ConversationRef(ProfileId("p1"), SessionId("ses_7"))
+        val row =
+            renderer.build(
+                StatusContent(StatusKind.Working, "Working on Fix login", text = "Working", conversation = target,
+                    actions = listOf(StatusAction.Open, StatusAction.StopReply), openLabel = "Open", stopLabel = "Stop",
+                    stopFailed = true), true, null)
+        assertEquals(
+            "Couldn't stop it. Open the app to try again.",
+            row.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString(),
+        )
+        // Stop stays, so the person can try again from the row.
+        assertEquals(listOf("Open", "Stop"), row.actions.map { it.title.toString() })
+    }
+
+    @Test
     fun `dock outside a locked phone on API 26-30 stops nothing from the row, as Allow once does`() =
         runTest {
             val stop =
