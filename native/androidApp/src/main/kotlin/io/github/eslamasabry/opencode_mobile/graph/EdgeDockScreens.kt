@@ -1,17 +1,9 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.zacsweers.metro.AppScope
@@ -36,11 +28,8 @@ import io.github.eslamasabry.oc.feature.chats.lamp.LampListController
 import io.github.eslamasabry.oc.feature.chats.lamp.LampPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.HeldAnswers
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
-import io.github.eslamasabry.oc.feature.chats.dock.EdgeDockHost
 import io.github.eslamasabry.oc.feature.chats.dock.EdgeDockPort
 import io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock
-import io.github.eslamasabry.oc.ui.kit.dock.KitDockInsets
-import io.github.eslamasabry.oc.ui.kit.dock.KitEdgeDockState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -91,6 +80,17 @@ class AppEdgeDockPort(
     /** The edge light's side and height. */
     val lightPlace: StateFlow<EdgeLightPlace>
         get() = dock.lightPlace
+
+    /** How many Back notes and first-use tips the light has shown on this device. */
+    val lightTaught: StateFlow<EdgeLightTaught>
+        get() = dock.lightTaught
+
+    /** True once device-wide edge light preferences have been read from disk. */
+    val lightPrefsLoaded: StateFlow<Boolean>
+        get() = dock.lightPrefsLoaded
+
+    /** Records that the edge light's one-time first-use tip was shown. */
+    fun recordLightTipShown() = dock.taughtMore(tips = 1)
 
     /**
      * The light's list: every other conversation's state and progress, up to the list reader's 20 rows. Read only
@@ -184,60 +184,31 @@ class AppEdgeDockPort(
 }
 
 /**
- * Android keeps its back gesture off the dock's scrub zone (at most 200 dp per edge, which the kit already caps). The
- * rectangle is read again whenever the dock's area is laid out.
+ * Home never mounts a switcher (the home list already shows every conversation); Rings are retired, so this is a no-op.
  */
-private fun dockBackGestureExclusion(state: KitEdgeDockState): Modifier =
-    Modifier.systemGestureExclusion { state.gestureExclusion() ?: Rect.Zero }
-
-/** The dock on the Conversations home: inside the safe area, clear of the floating + at the foot. */
 @ContributesIntoSet(AppScope::class, binding = binding<HomeEdgeDock>())
 @Inject
-class AppHomeEdgeDock(private val port: AppEdgeDockPort) : HomeEdgeDock {
+class AppHomeEdgeDock : HomeEdgeDock {
     @Composable
-    override fun Content(clearBottom: Dp) {
-        val mode by port.mode.collectAsStateWithLifecycle()
-        // The edge light is never on the home (the home list shows all of this): with it chosen nothing is mounted.
-        if (!EdgeLightRules.mounts(mode).rings) return
-        EdgeDockHost(
-            port,
-            Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
-            insets = KitDockInsets(bottom = clearBottom),
-            undoBottom = clearBottom,
-            exclusion = ::dockBackGestureExclusion,
-            // The home has its own green "+" a thumb away: the dock's "+" stays for the chat, which has none.
-            offersNew = false,
-        )
-    }
+    override fun Content(@Suppress("UNUSED_PARAMETER") clearBottom: Dp) = Unit
 }
 
-/** The dock in a conversation: clear of the header, the composer and the keyboard (the chat's chrome). */
+/** The switcher in a conversation: Edge light only (Rings are never mounted), clear of the chat's chrome. */
 @ContributesIntoSet(AppScope::class, binding = binding<ChatEdgeDock>())
 @Inject
 class AppChatEdgeDock(private val port: AppEdgeDockPort) : ChatEdgeDock {
     @Composable
-    override fun Content(chrome: PaddingValues, onBottomRoom: (Int) -> Unit) {
+    override fun Content(chrome: PaddingValues, @Suppress("UNUSED_PARAMETER") onBottomRoom: (Int) -> Unit) {
         val mode by port.mode.collectAsStateWithLifecycle()
         val onScreen by port.onScreen.collectAsStateWithLifecycle()
-        if (EdgeLightRules.mounts(mode).light) {
-            // Rings are not mounted; the light sits between the page's top and bottom chrome, under the chat's sheets.
-            EdgeLightMount(
-                port = port,
-                page = onScreen,
-                top = chrome.calculateTopPadding(),
-                bottom = chrome.calculateBottomPadding(),
-                // TODO(KC1): the message box's published top replaces this fixed gap above the bottom chrome.
-                lowAbove = EdgeLightRules.LOW_ABOVE_CHROME_DP.dp,
-            )
-            return
-        }
-        EdgeDockHost(
-            port,
-            Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
-            insets = KitDockInsets(top = chrome.calculateTopPadding(), bottom = chrome.calculateBottomPadding()),
-            undoBottom = chrome.calculateBottomPadding(),
-            exclusion = ::dockBackGestureExclusion,
-            onUndoHeight = onBottomRoom,
+        if (!EdgeLightRules.mounts(mode).light) return
+        EdgeLightMount(
+            port = port,
+            page = onScreen,
+            top = chrome.calculateTopPadding(),
+            bottom = chrome.calculateBottomPadding(),
+            // TODO(KC1): the message box's published top replaces this fixed gap above the bottom chrome.
+            lowAbove = EdgeLightRules.LOW_ABOVE_CHROME_DP.dp,
         )
     }
 }

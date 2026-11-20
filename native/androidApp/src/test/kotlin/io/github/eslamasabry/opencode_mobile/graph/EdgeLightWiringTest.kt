@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
+import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockListRow
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState
@@ -68,28 +69,28 @@ class EdgeLightWiringTest {
     // ---- the choice and its migration -----------------------------------------------------------------------------
 
     @Test
-    fun `settings_default_isRings nothing saved shows Rings and writes nothing`() = runTest {
+    fun `settings_default_isEdgeLight nothing saved shows EdgeLight and writes nothing`() = runTest {
         val store = MapStore()
-        assertEquals(OtherConversationsMode.Rings, EdgeLightPrefs(store).loadMode())
+        assertEquals(OtherConversationsMode.EdgeLight, EdgeLightPrefs(store).loadMode())
         assertTrue(store.data.isEmpty())
     }
 
     @Test
-    fun `migration_dockShownFalse_isHidden and the old key is gone after the move`() = runTest {
+    fun `migration_dockShownFalse_isHidden and keeps the old key non-destructively`() = runTest {
         val store = MapStore(mutableMapOf(EdgeLightKeys.LEGACY_SHOWN to "false"))
         assertEquals(OtherConversationsMode.Hidden, EdgeLightPrefs(store).loadMode())
         assertEquals("hidden", store.data[EdgeLightKeys.MODE])
-        assertFalse(EdgeLightKeys.LEGACY_SHOWN in store.data)
-        // Second start: nothing to move, same answer.
+        assertEquals("false", store.data[EdgeLightKeys.LEGACY_SHOWN])
+        // Second start: same answer.
         assertEquals(OtherConversationsMode.Hidden, EdgeLightPrefs(store).loadMode())
     }
 
     @Test
-    fun `migration_dockShownTrue_isRings`() = runTest {
+    fun `migration_dockShownTrue_isEdgeLight and keeps the old key`() = runTest {
         val store = MapStore(mutableMapOf(EdgeLightKeys.LEGACY_SHOWN to "true"))
-        assertEquals(OtherConversationsMode.Rings, EdgeLightPrefs(store).loadMode())
-        assertEquals("rings", store.data[EdgeLightKeys.MODE])
-        assertFalse(EdgeLightKeys.LEGACY_SHOWN in store.data)
+        assertEquals(OtherConversationsMode.EdgeLight, EdgeLightPrefs(store).loadMode())
+        assertEquals("edge-light", store.data[EdgeLightKeys.MODE])
+        assertEquals("true", store.data[EdgeLightKeys.LEGACY_SHOWN])
     }
 
     @Test
@@ -103,12 +104,12 @@ class EdgeLightWiringTest {
     }
 
     @Test
-    fun `a saved choice survives a restart and wins over a stale old switch`() = runTest {
+    fun `a saved choice survives a restart and wins over a stale old switch without deleting it`() = runTest {
         val store = MapStore()
         assertTrue(EdgeLightPrefs(store).saveMode(OtherConversationsMode.EdgeLight))
         store.data[EdgeLightKeys.LEGACY_SHOWN] = "false"
         assertEquals(OtherConversationsMode.EdgeLight, EdgeLightPrefs(store).loadMode())
-        assertFalse(EdgeLightKeys.LEGACY_SHOWN in store.data)
+        assertEquals("false", store.data[EdgeLightKeys.LEGACY_SHOWN])
     }
 
     // ---- device-scoped keys -----------------------------------------------------------------------------------------
@@ -148,10 +149,8 @@ class EdgeLightWiringTest {
     // ---- what is mounted --------------------------------------------------------------------------------------------
 
     @Test
-    fun `ringsMode_samePartsMountedAsBefore the rings host stays and no light is added`() {
-        assertEquals(EdgeMounts(rings = true, light = false), EdgeLightRules.mounts(OtherConversationsMode.Rings))
-        // Hidden keeps the rings' own host (which draws nothing), as the old off switch did.
-        assertEquals(EdgeMounts(rings = true, light = false), EdgeLightRules.mounts(OtherConversationsMode.Hidden))
+    fun `hiddenMode_neitherRingsNorLightIsMounted`() {
+        assertEquals(EdgeMounts(rings = false, light = false), EdgeLightRules.mounts(OtherConversationsMode.Hidden))
     }
 
     @Test
@@ -220,8 +219,8 @@ class EdgeLightWiringTest {
             )
         val face = EdgeLightRules.face(list, page = null)
         assertEquals(3, face.count)
-        // Done and idle conversations show no mark; everything else does.
-        assertEquals(6, face.marks.size)
+        // Idle shows no mark; Done shows Finished alongside active marks.
+        assertEquals(7, face.marks.size)
         val shown = KitLampRules.shown(face.marks)
         assertEquals(listOf(KitLampMarkKind.NeedsYou, KitLampMarkKind.NeedsYou, KitLampMarkKind.Failed), shown.map { it.kind })
         assertEquals(EdgeLightCounts(needs = 2, failed = 1, working = 3), EdgeLightRules.counts(list, null))
@@ -248,7 +247,7 @@ class EdgeLightWiringTest {
 
     @Test
     fun `nothing going on is the quiet tab`() {
-        val face = EdgeLightRules.face(model(row("a", DockListState.Idle), row("b", DockListState.Done)), page = null)
+        val face = EdgeLightRules.face(model(row("a", DockListState.Idle)), page = null)
         assertTrue(face.quiet)
         assertEquals(0, face.count)
     }
@@ -297,5 +296,88 @@ class EdgeLightWiringTest {
         assertEquals(withoutChips + gap, EdgeLightRules.bottomFromPageDp(EdgeLightHeight.Low, page, withoutChips, gap))
         // A tall chrome lifts Middle rather than covering it.
         assertTrue(EdgeLightRules.bottomFromPageDp(EdgeLightHeight.Middle, page, 500f, gap) >= 500f + gap)
+    }
+
+    // ---- Edge light as the one switcher (B-LAMP-002..004) -----------------------------------------------------------
+
+    @Test
+    fun `B-LAMP-002 a finished conversation shows a Finished mark on the closed face without raising the count`() {
+        val face = EdgeLightRules.face(model(row("d1", DockListState.Done), row("i1", DockListState.Idle)), page = null)
+        assertEquals(0, face.count)
+        assertFalse(face.quiet, "a finished unseen conversation is shown on the face")
+        assertEquals(listOf(KitLampMarkKind.Finished), face.marks.map { it.kind })
+        assertEquals(ref("d1"), face.marks.single().key)
+    }
+
+    @Test
+    fun `B-LAMP-003 migration is non-destructive, defaults to EdgeLight, maps rings and carries dockSide start once`() =
+        runTest {
+        val cases =
+            listOf(
+                Triple("absent", emptyMap<String, String>(), OtherConversationsMode.EdgeLight),
+                Triple("rings", mapOf(EdgeLightKeys.MODE to "rings"), OtherConversationsMode.EdgeLight),
+                Triple("legacy true", mapOf(EdgeLightKeys.LEGACY_SHOWN to "true"), OtherConversationsMode.EdgeLight),
+                Triple("legacy false", mapOf(EdgeLightKeys.LEGACY_SHOWN to "false"), OtherConversationsMode.Hidden),
+                Triple("hidden", mapOf(EdgeLightKeys.MODE to "hidden"), OtherConversationsMode.Hidden),
+                Triple("edge-light", mapOf(EdgeLightKeys.MODE to "edge-light"), OtherConversationsMode.EdgeLight),
+            )
+        for ((name, initial, expected) in cases) {
+            val store = MapStore(initial.toMutableMap())
+            val prefs = EdgeLightPrefs(store)
+            assertEquals(expected, prefs.loadMode(), "$name first read")
+            assertEquals(expected, prefs.loadMode(), "$name second read")
+            for (k in initial.keys) assertTrue(k in store.data, "$name must never delete old key $k")
+        }
+        // Carry oc.dockSide=start once when oc.edgeLight.side was never set, without deleting oc.dockSide.
+        val leftRings = MapStore(mutableMapOf(DockKeys.SIDE to "start"))
+        val prefs = EdgeLightPrefs(leftRings)
+        assertEquals(EdgeLightPlace(KitLampSide.Start, EdgeLightHeight.Low), prefs.loadPlace())
+        assertEquals("start", leftRings.data[EdgeLightKeys.SIDE])
+        assertEquals("start", leftRings.data[DockKeys.SIDE], "old oc.dockSide stays")
+        // Moving the light to End later is never overwritten by the kept oc.dockSide=start.
+        assertTrue(prefs.savePlace(EdgeLightPlace(KitLampSide.End, EdgeLightHeight.Low)))
+        assertEquals(EdgeLightPlace(KitLampSide.End, EdgeLightHeight.Low), EdgeLightPrefs(leftRings).loadPlace())
+    }
+
+    @Test
+    fun `B-LAMP-004 no mode mounts Rings and neither AppHomeEdgeDock nor AppChatEdgeDock mounts KitEdgeDock`() {
+        for (mode in OtherConversationsMode.entries) {
+            assertFalse(EdgeLightRules.mounts(mode).rings, "mode $mode must never mount Rings")
+        }
+        assertTrue(EdgeLightRules.mounts(OtherConversationsMode.EdgeLight).light)
+        assertFalse(EdgeLightRules.mounts(OtherConversationsMode.Hidden).light)
+        val loader = AppHomeEdgeDock::class.java.classLoader!!
+        for (cls in listOf("AppHomeEdgeDock", "AppChatEdgeDock")) {
+            val path = "io/github/eslamasabry/opencode_mobile/graph/$cls.class"
+            val bytes = loader.getResourceAsStream(path)!!.readBytes().toString(Charsets.ISO_8859_1)
+            assertFalse("EdgeDockHost" in bytes, "$cls must not mount EdgeDockHost")
+            assertFalse("KitEdgeDock" in bytes, "$cls must not mount KitEdgeDock")
+        }
+    }
+
+    @Test
+    fun `B-LAMP-006 closed light unmounts the list overlay until opened or placing`() {
+        assertFalse(EdgeLightRules.mountOverlay(open = false, placing = false, lingering = false))
+        assertTrue(EdgeLightRules.mountOverlay(open = true, placing = false, lingering = false))
+        assertTrue(EdgeLightRules.mountOverlay(open = false, placing = true, lingering = false))
+        assertTrue(EdgeLightRules.mountOverlay(open = false, placing = false, lingering = true))
+    }
+
+    @Test
+    fun `B-LAMP-007 first-use tip waits for prefs, shows once at zero tips, and hides when open, placing or hidden`() {
+        fun tip(
+            loaded: Boolean = true,
+            tips: Int = 0,
+            vis: Boolean = true,
+            open: Boolean = false,
+            placing: Boolean = false,
+        ) = EdgeLightRules.showTip(loaded, tips, vis, open, placing)
+
+        assertFalse(tip(loaded = false))
+        assertTrue(tip())
+        assertFalse(tip(tips = 1))
+        assertFalse(tip(vis = false))
+        assertFalse(tip(open = true))
+        assertFalse(tip(placing = true))
     }
 }

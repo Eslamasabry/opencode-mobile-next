@@ -155,7 +155,7 @@ public fun KitRequestFrame(
         if (!inPlace && (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal)) Modifier.padding(horizontal = ringWidth)
         else Modifier
     KitSignalSlip(
-        modifier.widthIn(max = 700.dp).fillMaxWidth().heightIn(max = maxCardHeight()),
+        modifier.widthIn(max = 700.dp).fillMaxWidth().kitMaxHeightAtLayout(maxCardHeight()),
         endsWithTap = true,
     ) {
         Column(

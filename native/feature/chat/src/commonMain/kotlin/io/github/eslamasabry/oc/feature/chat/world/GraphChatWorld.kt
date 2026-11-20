@@ -2940,7 +2940,17 @@ internal class GraphChatWorld(
         refreshDraftProtection()
     }
 
-    /** Canonical ids win; the fallback is post-dispatch, admitted and one-to-one. */
+    /** F2: the last settle decision logged for each bubble, so a streaming reply does not repeat the line. */
+    private val settleNotes = HashMap<Long, String>()
+
+    /**
+     * Canonical ids win; the fallback is post-dispatch, admitted and one-to-one.
+     *
+     * F2 (build 10113, the first message drawn twice for a frame): a bubble that cannot settle yet (not admitted,
+     * or its receipt still being looked up) but whose server row is already in the transcript is handed to that row
+     * in the same run ([PendingSend.serverRowKey]); the screen then draws the row only. A known client id names the
+     * row too.
+     */
     private fun settlePending(s: TranscriptState) {
         val prompts = s.rows.filterIsInstance<PromptRow>()
         // A file-only user message has no prompt row (no words): it is matched by its server id.
@@ -2949,42 +2959,65 @@ internal class GraphChatWorld(
             userMessageKeys.filterTo(LinkedHashSet()) { key ->
                 prompts.none { it.key == key && it.text.isNotBlank() }
             }
+        // F2: bubbles that stay for now, with the server row that already shows them (one row per bubble).
+        val shownAs = HashMap<Long, String>()
         for (bubble in mutablePending.value) {
             val id = canonical[bubble.localId]
             if (bubble.state == PendingState.Failed) continue
             val fileOnly = bubble.text.isBlank()
             val present =
                 id != null && (prompts.any { it.key == id } || (fileOnly && id in wordless))
-            if (bubble.localId !in admitted && !present) continue
+            val taken = shownAs.values
             val matchKey =
                 if (fileOnly)
                     if (id != null) id.takeIf { it in wordless && it !in settled }
                     else
                         wordless.firstOrNull {
-                            it !in settled && it !in baselines[bubble.localId].orEmpty()
+                            it !in settled && it !in taken && it !in baselines[bubble.localId].orEmpty()
                         }
                 else
                     prompts
                         .firstOrNull { row ->
                             row.key !in settled &&
+                                row.key !in taken &&
                                 if (id != null) row.key == id
                                 else
                                     row.key !in baselines[bubble.localId].orEmpty() &&
                                         row.text.trim() == bubble.text.trim()
                         }
                         ?.key
-            if (matchKey == null) continue
-            if (
+            val admittedNow = bubble.localId in admitted
+            val receiptFirst =
                 bubble.state == PendingState.Unconfirmed &&
                     bubble.canCheckReceipt &&
                     recoveryIds.any { (_, localId) -> localId == bubble.localId }
-            ) {
+            val settles = matchKey != null && (admittedNow || present) && !receiptFirst
+            // For the log only: a new row with these words, whatever its key (a client id the server did not keep).
+            val wordsRow =
+                if (id == null) matchKey != null
+                else
+                    !fileOnly &&
+                        prompts.any {
+                            it.key !in settled &&
+                                it.key !in baselines[bubble.localId].orEmpty() &&
+                                it.text.trim() == bubble.text.trim()
+                        }
+            noteSettle(bubble.localId, id != null, present, wordsRow, admittedNow, settles, matchKey != null)
+            if (!admittedNow && !present) {
+                // Not settled before the send's answer, but its server row is here: the row stands for it now.
+                if (matchKey != null) shownAs[bubble.localId] = matchKey
+                continue
+            }
+            if (matchKey == null) continue
+            if (receiptFirst) {
                 // Retire the durable marker along with this bubble. A transcript match alone
                 // must not leave a second recovery bubble behind on the next open.
+                shownAs[bubble.localId] = matchKey
                 reconcilePendingReceipts()
                 continue
             }
             settled += matchKey
+            settleNotes.remove(bubble.localId)
             retireFailedTwins(bubble.localId)
             acknowledgedDraft(bubble.localId)
             admitted -= bubble.localId
@@ -3001,6 +3034,46 @@ internal class GraphChatWorld(
                 list.filterNot { it.localId == bubble.localId }.toImmutableList()
             }
         }
+        // In the same run as the transcript: the row that is each bubble, so no frame draws the words twice.
+        val bubbles = mutablePending.value
+        if (bubbles.any { it.serverRowKey != (shownAs[it.localId] ?: canonical[it.localId]) })
+            mutablePending.update { list ->
+                list
+                    .map {
+                        val key = shownAs[it.localId] ?: canonical[it.localId]
+                        if (it.serverRowKey == key) it else it.copy(serverRowKey = key)
+                    }
+                    .toImmutableList()
+            }
+        settleNotes.keys.retainAll { id -> mutablePending.value.any { it.localId == id } }
+    }
+
+    /**
+     * F2: one line per change of a bubble's settle decision. Yes/no facts and a count only, never the words or ids.
+     */
+    private fun noteSettle(
+        localId: Long,
+        idKnown: Boolean,
+        byId: Boolean,
+        byWords: Boolean,
+        admittedNow: Boolean,
+        settles: Boolean,
+        handed: Boolean,
+    ) {
+        fun yn(b: Boolean) = if (b) "yes" else "no"
+        val decision =
+            when {
+                settles -> "settled"
+                handed -> "shown as the server's row"
+                else -> "kept"
+            }
+        val note =
+            "client id ${yn(idKnown)}, row by id ${yn(byId)}, row with its words ${yn(byWords)}, " +
+                "admitted ${yn(admittedNow)} -> $decision"
+        if (settleNotes[localId] == note) return
+        settleNotes[localId] = note
+        val waiting = mutablePending.value.size
+        sendLog.i { "settle: $note (bubbles $waiting)" }
     }
 
     // ---- Commands ----

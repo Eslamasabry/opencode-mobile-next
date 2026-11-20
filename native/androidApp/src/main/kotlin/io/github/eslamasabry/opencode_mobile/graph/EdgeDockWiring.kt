@@ -108,10 +108,11 @@ class AppEdgeDock(
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private var navigate: (ConversationRef) -> Unit = { navigator.backToChat(it) }
-    private val modeState = MutableStateFlow(OtherConversationsMode.Rings)
-    private val shownState = MutableStateFlow(true)
+    private val modeState = MutableStateFlow(OtherConversationsMode.EdgeLight)
+    private val shownState = MutableStateFlow(false)
     private val placeState = MutableStateFlow(EdgeLightPlace())
     private val taughtState = MutableStateFlow(EdgeLightTaught())
+    private val prefsLoadedState = MutableStateFlow(false)
     private val keyStore =
         object : AttentionKeyStore {
             override suspend fun read(key: String): String? = (stores.prefs.get(key) as? PrefValue.Str)?.value
@@ -200,10 +201,10 @@ class AppEdgeDock(
     val allConversations: Flow<Int>
         get() = runtime.snapshot.map { list -> list.items.count { it.parentId == null } }.distinctUntilChanged()
 
-    /** What the person chose in Settings › Other conversations. Rings is the default. */
+    /** What the person chose in Settings › Other conversations. Edge light is the default. */
     val mode: StateFlow<OtherConversationsMode> = modeState.asStateFlow()
 
-    /** The rings are drawn (the choice is Rings): Hidden and Edge light draw no ring (the live notification row does not read it). */
+    /** The rings are never mounted (kept for the legacy port contract; the live notification row does not read it). */
     val shown: StateFlow<Boolean> = shownState.asStateFlow()
 
     /** Where the edge light sits (device-wide). */
@@ -212,11 +213,14 @@ class AppEdgeDock(
     /** How many Back notes and tips the light showed so far (device-wide). */
     val lightTaught: StateFlow<EdgeLightTaught> = taughtState.asStateFlow()
 
-    /** Saves the choice for this device at once; the rings, the light or neither follow. */
+    /** True once device-wide edge light preferences (including [lightTaught]) have been read from disk. */
+    val lightPrefsLoaded: StateFlow<Boolean> = prefsLoadedState.asStateFlow()
+
+    /** Saves the choice for this device at once; the light or nothing follow. */
     fun setMode(mode: OtherConversationsMode) {
         if (modeState.value == mode) return
         modeState.value = mode
-        shownState.value = mode == OtherConversationsMode.Rings
+        shownState.value = false
         main.launch { lightPrefs.saveMode(mode) }
     }
 
@@ -273,10 +277,11 @@ class AppEdgeDock(
             if (stores.warm() !is Outcome.Ok) return@launch
             lightPrefs.loadMode().let {
                 modeState.value = it
-                shownState.value = it == OtherConversationsMode.Rings
+                shownState.value = false
             }
             placeState.value = lightPrefs.loadPlace()
             taughtState.value = lightPrefs.loadTaught()
+            prefsLoadedState.value = true
             controller.loadPlacement()
             combine(connections.live, stores.profiles.profiles) { live, saved -> live to saved }
                 .collect { (live, loaded) ->

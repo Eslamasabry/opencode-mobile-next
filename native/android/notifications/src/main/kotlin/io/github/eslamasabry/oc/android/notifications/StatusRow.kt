@@ -65,6 +65,10 @@ public data class StatusContent(
     val stopConversation: ConversationRef? = null,
     /** The whole label of the Stop button (already names its conversation); empty = the plain "Stop the reply". */
     val stopLabel: String = "",
+    /** A Stop is under way: the row says "Stopping…" and offers no second Stop. */
+    val stopping: Boolean = false,
+    /** The last Stop could not be sent: the row says so and keeps its Stop button for another try. */
+    val stopFailed: Boolean = false,
 ) {
     public val run: ReplyRun?
         get() = conversation?.takeIf {

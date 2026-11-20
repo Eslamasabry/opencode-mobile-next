@@ -45,13 +45,16 @@ class OtherConversationsChoiceTest {
         }
 
     @Test
-    fun `settings_default_isRings an app with nothing saved shows Rings`() {
-        assertEquals(OtherConversationsMode.Rings, OtherConversationsMode.migrate(saved = null, legacyShown = null))
+    fun `settings_default_isEdgeLight an app with nothing saved shows EdgeLight`() {
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = null, legacyShown = null))
     }
 
     @Test
-    fun `migration_dockShownTrue_isRings`() {
-        assertEquals(OtherConversationsMode.Rings, OtherConversationsMode.migrate(saved = null, legacyShown = "true"))
+    fun `migration_dockShownTrue_isEdgeLight`() {
+        assertEquals(
+            OtherConversationsMode.EdgeLight,
+            OtherConversationsMode.migrate(saved = null, legacyShown = "true"),
+        )
     }
 
     @Test
@@ -62,7 +65,7 @@ class OtherConversationsChoiceTest {
     @Test
     fun `migration_savedChoiceWinsOverTheOldSwitch`() {
         assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate("edge-light", "false"))
-        assertEquals(OtherConversationsMode.Rings, OtherConversationsMode.migrate("rings", "false"))
+        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate("rings", "false"))
         // An unknown saved word falls back to what the old switch said.
         assertEquals(OtherConversationsMode.Hidden, OtherConversationsMode.migrate("nonsense", "false"))
     }
@@ -76,21 +79,38 @@ class OtherConversationsChoiceTest {
 
     @Test
     fun `the row shows the current choice and picking one saves it`() =
-        rig(OtherConversationsMode.Rings) { p, setting, scope ->
+        rig(OtherConversationsMode.EdgeLight) { p, setting, scope ->
             p.onOpen(SettingsPage.Group(SettingsGroupId.Conversations)); scope.runCurrent()
             fun door() = p.state.value.group!!.rows.first { it.id == SettingsRowId.EdgeDock }.door
-            assertEquals(SettingsDoor.Choice(OtherConversationsMode.Rings), door())
-            p.onOtherConversations(OtherConversationsMode.EdgeLight); scope.runCurrent()
-            assertEquals(OtherConversationsMode.EdgeLight, setting.mode.value)
             assertEquals(SettingsDoor.Choice(OtherConversationsMode.EdgeLight), door())
             p.onOtherConversations(OtherConversationsMode.Hidden); scope.runCurrent()
             assertEquals(OtherConversationsMode.Hidden, setting.mode.value)
+            assertEquals(SettingsDoor.Choice(OtherConversationsMode.Hidden), door())
+            p.onOtherConversations(OtherConversationsMode.EdgeLight); scope.runCurrent()
+            assertEquals(OtherConversationsMode.EdgeLight, setting.mode.value)
         }
 
     @Test
     fun `tapping the row changes nothing by itself because the page opens the list`() =
-        rig(OtherConversationsMode.Rings) { p, setting, scope ->
+        rig(OtherConversationsMode.EdgeLight) { p, setting, scope ->
             p.onRow(SettingsRowId.EdgeDock); scope.runCurrent()
-            assertEquals(OtherConversationsMode.Rings, setting.mode.value)
+            assertEquals(OtherConversationsMode.EdgeLight, setting.mode.value)
         }
+
+    @Test
+    fun `B-LAMP-003 only EdgeLight and Hidden exist and rings, absent or legacy true migrate to EdgeLight`() {
+        fun mig(saved: String?, legacy: String?) = OtherConversationsMode.migrate(saved, legacy)
+
+        assertEquals(
+            listOf(OtherConversationsMode.EdgeLight, OtherConversationsMode.Hidden),
+            OtherConversationsMode.entries.toList(),
+        )
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = null, legacy = null))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = "rings", legacy = null))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = "rings", legacy = "false"))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = null, legacy = "true"))
+        assertEquals(OtherConversationsMode.Hidden, mig(saved = null, legacy = "false"))
+        assertEquals(OtherConversationsMode.Hidden, mig(saved = "hidden", legacy = "true"))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = "edge-light", legacy = "false"))
+    }
 }

@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
@@ -499,24 +500,48 @@ internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Commit
 
 /**
  * 45 % of the window's height (40 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
- * every kit part reads; the raw platform container can be another size, e.g. a test host).
+ * every kit part reads; the raw platform container can be another size, e.g. a test host). A provider read where the
+ * card is measured: the room the page measured moves with the keyboard, frame by frame, and must not compose the card
+ * again on each of those frames.
  */
 @Composable
-internal fun maxCardHeight(): Dp {
+internal fun maxCardHeight(): () -> Dp {
     val density = LocalDensity.current
     val heightDp = LocalKitWindow.current.heightDp
     // The space the page measured for the card between the pinned notice and the message box (the stack's caption and
     // gap are inside it): the card never takes more, whatever share of the window it would otherwise be.
-    val room = LocalKitRequestRoom.current?.let { (it - REQUEST_STACK_EXTRA).coerceAtLeast(REQUEST_MIN_CARD) }
-    if (heightDp <= 0f) return room ?: Dp.Infinity
+    val roomOf = LocalKitRequestRoom.current
     val fontScale = (LocalKitAppDensity.current ?: density).fontScale
     val share = if (fontScale >= LARGE_TEXT) HEIGHT_SHARE_LARGE_TEXT else HEIGHT_SHARE
-    val byShare = (heightDp * share).dp
-    return if (room == null) byShare else minOf(byShare, room)
+    return remember(roomOf, heightDp, share) {
+        {
+            val room = roomOf?.invoke()?.let { (it - REQUEST_STACK_EXTRA).coerceAtLeast(REQUEST_MIN_CARD) }
+            when {
+                heightDp <= 0f -> room ?: Dp.Infinity
+                room == null -> (heightDp * share).dp
+                else -> minOf((heightDp * share).dp, room)
+            }
+        }
+    }
 }
 
-/** The room (dp) the page measured for a request card above the message box; null where the page measures none. */
-public val LocalKitRequestRoom: androidx.compose.runtime.ProvidableCompositionLocal<Dp?> =
+/** At most [max] tall, read where this part is measured (an infinite [max] leaves the height free). */
+internal fun Modifier.kitMaxHeightAtLayout(max: () -> Dp): Modifier =
+    layout { measurable, constraints ->
+        val cap = max()
+        val limit =
+            if (cap == Dp.Infinity) constraints.maxHeight
+            else cap.roundToPx().coerceAtMost(constraints.maxHeight).coerceAtLeast(0)
+        val bounded = constraints.copy(minHeight = constraints.minHeight.coerceAtMost(limit), maxHeight = limit)
+        val placeable = measurable.measure(bounded)
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+    }
+
+/**
+ * The room (dp) the page measured for a request card above the message box, read when asked (at measure); null where
+ * the page measures none.
+ */
+public val LocalKitRequestRoom: androidx.compose.runtime.ProvidableCompositionLocal<(() -> Dp)?> =
     androidx.compose.runtime.staticCompositionLocalOf { null }
 
 /**
