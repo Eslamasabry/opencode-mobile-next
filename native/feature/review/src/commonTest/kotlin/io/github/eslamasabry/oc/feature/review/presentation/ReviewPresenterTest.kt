@@ -298,23 +298,27 @@ class ReviewPresenterTest {
         runTest(UnconfinedTestDispatcher()) {
             val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
             val seen = mutableListOf<UndoFromHereUi>()
-            val p = UndoFromHerePresenter(review(), "u2", nav, backgroundScope, ReviewProjectSetup { gate.await(); notGit })
+            val setup = ReviewProjectSetup { gate.await(); notGit }
+            val p = UndoFromHerePresenter(review(), "u2", nav, backgroundScope, setup)
             backgroundScope.launch { p.state.collect { seen += it } }
             runCurrent()
-            assertTrue(seen.none { it.load == ReviewLoad.Ready }, "nothing settled is drawn while the folder is unknown")
+            assertTrue(seen.none { it.load == ReviewLoad.Ready }, "nothing settled while the folder is unknown")
             gate.complete(Unit)
             runCurrent()
-            assertTrue(seen.filter { it.load == ReviewLoad.Ready }.all { it.noFileCopies }, "the first settled page says so")
+            val settled = seen.filter { it.load == ReviewLoad.Ready }
+            assertTrue(settled.all { it.noFileCopies }, "the first settled page says so")
             assertTrue(p.state.value.noFileCopies)
         }
 
     @Test
     fun `B-CHAT-UNDO-002 the staged review is drawn only with its prompt, its count and its Git fact`() =
         runTest(UnconfinedTestDispatcher()) {
-            fake.staged = SessionRevert(MessageId("u2"), null, "snap", persistentListOf(FileDiff("src/b.kt", additions = 2, deletions = 1)))
+            val file = FileDiff("src/b.kt", additions = 2, deletions = 1)
+            fake.staged = SessionRevert(MessageId("u2"), null, "snap", persistentListOf(file))
             val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
             val seen = mutableListOf<StagedUi>()
-            val p = StagedPresenter(review(), nav, backgroundScope, setup = ReviewProjectSetup { gate.await(); notGit })
+            val setup = ReviewProjectSetup { gate.await(); notGit }
+            val p = StagedPresenter(review(), nav, backgroundScope, setup = setup)
             backgroundScope.launch { p.state.collect { seen += it } }
             runCurrent()
             gate.complete(Unit)
