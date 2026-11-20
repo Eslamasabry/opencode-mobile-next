@@ -324,9 +324,14 @@ console.log('grandchild '+cp.spawnSync(process.execPath,['-e',process.env.PROBE]
 private const val PARENT_SCRIPT = """
 const cp=require('child_process'),path=require('path');const own=path.join(__dirname,'own.cjs');
 const o={stdio:'inherit',env:Object.assign({},process.env,{GRANDCHILD:'1'})};
-cp.spawnSync(process.execPath,[own],o);cp.spawnSync(process.execPath,[own],{stdio:'inherit'});
-const f=cp.fork(own,[],o);f.on('exit',()=>{const {Worker}=require('worker_threads');
-new Worker(path.join(__dirname,'wk.cjs'));});
+const done=(child)=>new Promise((resolve)=>child.on('exit',resolve));
+(async()=>{
+await done(cp.spawn(process.execPath,[own],o));
+await done(cp.spawn(process.execPath,[own],{stdio:'inherit'}));
+await done(cp.fork(own,[],o));
+const {Worker}=require('worker_threads');
+new Worker(path.join(__dirname,'wk.cjs'));
+})();
 """
 
 private const val WORKER_SCRIPT = """
