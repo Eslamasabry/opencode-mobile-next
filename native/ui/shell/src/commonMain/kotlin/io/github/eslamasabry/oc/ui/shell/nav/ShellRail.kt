@@ -33,8 +33,12 @@ public enum class ShellDestination {
 
 /** Which rail destination a page is, or null for a page that covers the rail (a conversation, a form). */
 public object ShellRailRules {
-    /** F: the rail exists from medium (`KitNav`, 600 dp); a phone (compact) has no navigation bar at all. */
-    public fun shows(window: WindowClass): Boolean = window >= WindowClass.Medium
+    /**
+     * No rail at any size (BS-RAIL-OFF): Home carries search, the gear and the + itself, and Settings' back goes to Home.
+     * The one place that says so; the frame below draws its content alone.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    public fun shows(window: WindowClass): Boolean = false
 
     public fun destinationOf(top: AppRoute?): ShellDestination? =
         when (top) {

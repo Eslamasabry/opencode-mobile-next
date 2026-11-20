@@ -5,7 +5,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -47,13 +46,12 @@ class ShellRailTest {
     }
 
     @Test
-    fun `B-NAV-100 a tablet window shows Conversations and Settings in a rail`() = runComposeUiTest {
+    fun `B-NAV-100 a tablet window has no rail either, the page is drawn alone`() = runComposeUiTest {
         val picked = mutableListOf<ShellDestination>()
         frame(KitWindowInfo(1000f, 800f), ChatsRoute.Home, picked)
-        onNodeWithTag("shell-rail").assertExists()
+        onNodeWithTag("shell-rail").assertDoesNotExist()
         onNodeWithText("page").assertExists()
-        onNodeWithText("Settings").performClick()
-        assertEquals(listOf(ShellDestination.Settings), picked)
+        assertEquals(emptyList(), picked)
     }
 
     @Test

@@ -26,12 +26,13 @@ class DesktopShellUiTest {
         // Main.kt wraps App in the graph's chat environment (redactor and the rest); the host does the same.
         setContent { graph.kitChatEnvironment.Provide { App(graph.shell, DesktopKitPlatform(), graph.metroViewModelFactory) } }
 
-        // "Conversations" is both the title and the nav tab now; the tab is the one with a handle.
-        onNodeWithTag("kit-nav-Chats").assertExists()
+        // No rail at any size (BS-RAIL-OFF): Home itself is the place, with its own "New conversation".
+        onNodeWithTag("kit-nav-Chats").assertDoesNotExist()
+        onNodeWithText("New conversation").assertExists()
         onNodeWithText("New conversation").performClick()
         // The route-keyed (assisted) entry: no server is connected, so it says so and offers to add one.
         onNodeWithText("Add an OpenCode 2 server to start a conversation.").assertExists()
         onNodeWithContentDescription("Close").performClick()
-        onNodeWithTag("kit-nav-Chats").assertExists()
+        onNodeWithText("New conversation").assertExists()
     }
 }
