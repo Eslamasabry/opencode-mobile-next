@@ -107,6 +107,9 @@ public object TipRules {
         return x to y
     }
 
+    /** Red-proof stub: the line has no yield rule, so another tip on screen changes nothing. */
+    public fun mayShow(visible: Boolean, modalOpen: Boolean, yieldsToOthers: Boolean, othersShowing: Int): Boolean = visible && !modalOpen
+
     /** How far the tip rises toward its anchor as it appears: Full only. */
     public fun riseDp(state: KitMotionState): Int = if (state.travels) MotionTokens.TIP_RISE_DP else 0
 }
