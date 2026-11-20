@@ -963,6 +963,10 @@ internal class GraphChatWorld(
         notReadyJob?.cancel()
         notReadyJob = null
         loadWaiting.value = false
+        // The wait is over (a real answer, or its bound spent): only now may an old agent conversation say it cannot
+        // be picked up again.
+        historyAnswered = true
+        currentAttached()?.gateway?.let { refreshReadOnly(it) }
         // A server the app starts itself: the page holds its waiting state a moment longer than its swap, so a read
         // that succeeds right after crosses over from the waiting state, never Loading → Failed → Live.
         if ((appStartsServer || agentsUpdating()) && !hopeless(failure) && mutableLoad.value is ChatLoad.Loading) {
@@ -1054,6 +1058,7 @@ internal class GraphChatWorld(
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
         historyReconciled = false
+        historyAnswered = false
         rootListing = null
         // Cache-first: a reload or a lost server keeps the last rows on screen until newer ones arrive.
         publishShown()
@@ -1515,12 +1520,20 @@ internal class GraphChatWorld(
     /** The conversation as the server last described it (its agent and folder), for [restartOrNull]. */
     private var sessionSeen: Session? = null
 
+    /** The first history read of this page has had a real answer, or the wait for the server has ended. */
+    private var historyAnswered = false
+
     /**
      * Issue 147: a phone agent's old conversation its agent cannot take up again reads as it was (kept or live rows)
      * with the message box replaced by "Continue in a new conversation", never a refusal. Asked again after each
      * history read: reading it loads the agent on the helper where the agent supports that, and then it continues here.
      */
     private fun restartOrNull(): ReadOnlyChat? {
+        // Waiting is not failing: while the app's own helper or its agent is still starting, "not loaded yet" is not
+        // "cannot be loaded". The page says its real stage (serverWait) and waits; the verdict needs the helper up
+        // and the agent's load tried (or the existing wait's bound spent).
+        if (appStartsServer && !(historyAnswered && !phoneBusy() && phoneServer?.stage(ref.profileId)?.value == null))
+            return null
         if (phoneServer?.needsNewSession(ref) != true) return null
         val session = sessionSeen
         val agent =
@@ -1668,6 +1681,7 @@ internal class GraphChatWorld(
                                 .trim()
                         }
                 historyReconciled = true
+                historyAnswered = true
                 closeKept()
                 publishShown()
                 keepLastKnown(handle)
@@ -1682,6 +1696,8 @@ internal class GraphChatWorld(
             is Outcome.Failed -> {
                 // Issue 147: a phone agent's conversation its agent cannot take up again stays readable from the kept
                 // page, and its message box offers to continue in a new conversation.
+                // A read that only says "not ready yet" is no verdict: the agent was not tried yet.
+                if (!notReady(page.failure)) historyAnswered = true
                 if (currentAttached()?.handle === handle) refreshReadOnly(gateway)
                 if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
                     // An older page that fails leaves the loaded conversation as it is; only the first read waits.
