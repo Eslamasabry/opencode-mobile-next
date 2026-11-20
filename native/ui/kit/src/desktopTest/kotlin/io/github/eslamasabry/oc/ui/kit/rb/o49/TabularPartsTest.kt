@@ -4,7 +4,9 @@ package io.github.eslamasabry.oc.ui.kit.rb.o49
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
