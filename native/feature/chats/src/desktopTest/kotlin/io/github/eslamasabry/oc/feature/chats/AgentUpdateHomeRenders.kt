@@ -94,42 +94,45 @@ class AgentUpdateHomeRenders {
         override suspend fun review(): Outcome<Unit> = Unit.ok()
     }
 
-    private fun item(
-        id: String,
-        name: String,
-        from: String,
-        to: String,
-        downloadMb: Long,
-        installedMb: Long,
-        group: AgentUpdateGroup = AgentUpdateGroup.Optional,
-        removable: Boolean = false,
-    ) =
-        AgentUpdateItem(
-            id = AgentId(id),
-            name = name,
-            fromVersion = from,
-            toVersion = to,
-            downloadBytes = downloadMb * MB,
-            installedBytes = installedMb * MB,
-            group = group,
-            keepAllowed = group == AgentUpdateGroup.Optional,
-            removeAllowed = removable,
-            notKeptReason = null,
-            choice = null,
-            neededWhen = if (group == AgentUpdateGroup.Needed) AgentNeedRule.WithAnyUpdate else null,
-        )
+    /** One row of the offer, as the engine reads it from the disk and the pins. */
+    private data class Part(
+        val id: String,
+        val name: String,
+        val from: String,
+        val to: String,
+        val downloadMb: Long,
+        val installedMb: Long,
+        val group: AgentUpdateGroup = AgentUpdateGroup.Optional,
+        val removable: Boolean = false,
+    ) {
+        fun item() =
+            AgentUpdateItem(
+                id = AgentId(id),
+                name = name,
+                fromVersion = from,
+                toVersion = to,
+                downloadBytes = downloadMb * MB,
+                installedBytes = installedMb * MB,
+                group = group,
+                keepAllowed = group == AgentUpdateGroup.Optional,
+                removeAllowed = removable,
+                notKeptReason = null,
+                choice = null,
+                neededWhen = if (group == AgentUpdateGroup.Needed) AgentNeedRule.WithAnyUpdate else null,
+            )
+    }
 
     private val offer =
         AgentUpdateOffer(
             appUpdateKey = "10110",
             items =
                 listOf(
-                    item("agent-paseo", "Agent helper", "0.15.4", "0.16.1", 330, 330, AgentUpdateGroup.Needed),
-                    item("node", "Node.js", "22.11.0", "22.12.0", 30, 90, AgentUpdateGroup.Needed),
-                    item("claude", "Claude Code", "2.1.325", "2.1.330", 372, 372),
-                    item("codex", "Codex", "0.169.0", "0.172.0", 196, 497, removable = true),
-                    item("antigravity", "Antigravity", "1.5.9", "1.6.2", 91, 253, removable = true),
-                    item("opencode", "OpenCode", "2.2.6", "2.3.1", 130, 260),
+                    Part("agent-paseo", "Agent helper", "0.15.4", "0.16.1", 330, 330, AgentUpdateGroup.Needed).item(),
+                    Part("node", "Node.js", "22.11.0", "22.12.0", 30, 90, AgentUpdateGroup.Needed).item(),
+                    Part("claude", "Claude Code", "2.1.325", "2.1.330", 372, 372).item(),
+                    Part("codex", "Codex", "0.169.0", "0.172.0", 196, 497, removable = true).item(),
+                    Part("antigravity", "Antigravity", "1.5.9", "1.6.2", 91, 253, removable = true).item(),
+                    Part("opencode", "OpenCode", "2.2.6", "2.3.1", 130, 260).item(),
                 ),
             network = AgentUpdateNetwork.Unmetered,
             freeBytes = 6_000 * MB,
@@ -149,7 +152,8 @@ class AgentUpdateHomeRenders {
     fun `renders of Home with the agents' update running and the update sheet, at 360 dp`() {
         val running =
             mixed().copy(
-                download = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Running(40), name = "Claude Code")
+                download =
+                    HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Running(40), name = "Claude Code")
             )
         val keep = AgentUpdateChoice.Keep
         val scenes =
@@ -161,7 +165,8 @@ class AgentUpdateHomeRenders {
                 "sheet-keep-these-versions" to
                     sheetState(mapOf("claude" to keep, "codex" to keep, "antigravity" to keep, "opencode" to keep)),
             )
-        for ((name, state) in scenes) for (dark in listOf(false, true)) shoot("$name-${if (dark) "dark" else "light"}", state, dark)
+        for ((name, state) in scenes)
+            for (dark in listOf(false, true)) shoot("$name-${if (dark) "dark" else "light"}", state, dark)
     }
 
     private companion object {
