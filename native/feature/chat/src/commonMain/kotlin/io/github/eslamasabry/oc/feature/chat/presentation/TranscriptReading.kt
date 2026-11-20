@@ -254,7 +254,11 @@ internal fun transcriptReading(
             // a switch, a compaction) ride as assistant-role messages with no model; one that lands later in the turn
             // is not the reply ending, so it moves neither the clock nor the length.
             val replies = assistants.filter { isReply(it) }
-            val ended = replies.mapNotNull { it.info.time?.completedMs ?: it.info.time?.createdMs }.maxOrNull()
+            // A finished reply's own completion; only when none has finished does a start stand in (a later reply that
+            // has only begun must not make the footer longer and then shorter, B-CHAT-FOOT-005).
+            val ended =
+                replies.mapNotNull { it.info.time?.completedMs }.maxOrNull()
+                    ?: replies.mapNotNull { it.info.time?.createdMs }.maxOrNull()
             val sent =
                 turn.messages.firstOrNull { it.info.role == Role.User }?.info?.time?.createdMs
                     ?: replies.mapNotNull { it.info.time?.createdMs }.minOrNull()
