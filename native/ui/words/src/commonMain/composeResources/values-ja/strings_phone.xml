@@ -887,4 +887,14 @@
     <string name="phoneDownloadAskWait">Wi-Fiを待つ</string>
     <string name="phoneDownloadReadyReply">OpenCodeのアップデートの準備ができました · 返信の実行中でなくなったらインストールします</string>
     <string name="phoneDownloadReadyPhone">OpenCodeのアップデートの準備ができました · スマートフォンのサーバーの準備が整ったらインストールします</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="other">ほか%1$d件のエージェントのアップデートがWi-Fi待ち · 約%2$dMB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">ほか1件のエージェントのアップデートがWi-Fi待ち · 約%1$dMB</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="other">エージェントのアップデート%1$d件がWi-Fi待ち · 約%2$dMB</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">エージェントのアップデート1件がWi-Fi待ち · 約%1$dMB</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">OpenCodeとエージェントヘルパーのアップデートがWi-Fi待ち · 約%1$dMB</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">OpenCodeのアップデートと、それに必要なエージェントヘルパーです。データ通信量を消費します。Wi-Fi待ちにすると後でダウンロードされます。</string>
 </resources>

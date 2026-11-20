@@ -994,4 +994,24 @@
     <string name="phoneDownloadAskWait">انتظر Wi-Fi</string>
     <string name="phoneDownloadReadyReply">تحديث OpenCode جاهز · يُثبَّت عندما لا يكون أي ردّ قيد التشغيل</string>
     <string name="phoneDownloadReadyPhone">تحديث OpenCode جاهز · يُثبَّت عندما يكون خادم الهاتف جاهزًا</string>
+    <plurals name="phoneDownloadAgentsMore">
+        <item quantity="zero">%1$d تحديث إضافي للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="one">تحديث واحد إضافي للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="two">تحديثان إضافيان للوكلاء ينتظران Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="few">%1$d تحديثات إضافية للوكلاء تنتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="many">%1$d تحديثًا إضافيًا للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="other">%1$d تحديث إضافي للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+    </plurals>
+    <string name="phoneDownloadAgentsMore__eq1">تحديث واحد إضافي للوكلاء ينتظر Wi-Fi · نحو %1$d ميغابايت</string>
+    <plurals name="phoneDownloadAgentsOnly">
+        <item quantity="zero">%1$d تحديث للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="one">تحديث واحد للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="two">تحديثان للوكلاء ينتظران Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="few">%1$d تحديثات للوكلاء تنتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="many">%1$d تحديثًا للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+        <item quantity="other">%1$d تحديث للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
+    </plurals>
+    <string name="phoneDownloadAgentsOnly__eq1">تحديث واحد للوكلاء ينتظر Wi-Fi · نحو %1$d ميغابايت</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">تحديث OpenCode ومساعد الوكلاء ينتظران Wi-Fi · نحو %1$d ميغابايت</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">هذا تحديث OpenCode ومساعد الوكلاء الذي يحتاجه. يُحسب من باقة بياناتك. الانتظار حتى Wi-Fi يؤجّله إلى وقت لاحق.</string>
 </resources>
