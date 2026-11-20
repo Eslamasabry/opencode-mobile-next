@@ -88,6 +88,17 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                     onClick = { picking = true },
                     modifier = Modifier.testTag("model-defaults-open-picker"),
                 )
+                // The thinking effort belongs to the model above it, so it stands right under it, before Mode.
+                if (currentRow != null && currentRow.variants.isNotEmpty())
+                    KitRow(
+                        title = stringResource(Res.string.composerFullThinking),
+                        supporting =
+                            if (state.variant.isEmpty()) stringResource(Res.string.composerFullThinkingDefault)
+                            else effortWords(state.variant),
+                        enabled = !state.saving && !state.loading,
+                        disabledReason = busyReason(state),
+                        onClick = { picking = true },
+                    )
                 // Only when the server offers modes to choose from: no dead row otherwise.
                 if (state.modes.isNotEmpty())
                     KitRow(
@@ -100,16 +111,6 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                         disabledReason = busyReason(state),
                         onClick = { choosingMode = true },
                         modifier = Modifier.testTag("model-defaults-open-mode"),
-                    )
-                if (currentRow != null && currentRow.variants.isNotEmpty())
-                    KitRow(
-                        title = stringResource(Res.string.composerFullThinking),
-                        supporting =
-                            if (state.variant.isEmpty()) stringResource(Res.string.composerFullThinkingDefault)
-                            else effortWords(state.variant),
-                        enabled = !state.saving && !state.loading,
-                        disabledReason = busyReason(state),
-                        onClick = { picking = true },
                     )
             }
         }
