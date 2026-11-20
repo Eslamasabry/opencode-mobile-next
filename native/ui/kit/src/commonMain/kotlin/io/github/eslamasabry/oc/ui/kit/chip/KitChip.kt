@@ -150,6 +150,7 @@ public fun KitChip(
             color = words,
             fontWeight = if (firm) FontWeight.SemiBold else baseStyle.fontWeight,
             textDirection = androidx.compose.ui.text.style.TextDirection.Content,
+            fontFeatureSettings = "tnum", // F26: a changing number keeps its width
         )
     val formatted = count?.let { Numbers.format(it) }
     val text = if (kind == KitChipKind.Count && formatted != null) {

@@ -370,7 +370,7 @@ private fun RowBody(
                             Modifier.kitMaxWidth(CapRole.Reading).testTag("kit-row-supporting")
                                 .kitMayTruncate("row-supporting"),
                             style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
-                                color = colors.text2, textDirection = TextDirection.Content,
+                                color = colors.text2, textDirection = TextDirection.Content, fontFeatureSettings = "tnum",
                             ),
                             maxLines = kitRowSupportingLines(chosen, supportingMaxLines),
                             overflow = TextOverflow.Ellipsis,
@@ -398,6 +398,7 @@ private fun RowBody(
                                     tone = TextTone.Secondary,
                                     maxLines = 1,
                                     highlight = highlight,
+                                    tabular = true,
                                 )
                             }
                         }
@@ -412,6 +413,7 @@ private fun RowBody(
                                     if (!enabled || unavailable) Int.MAX_VALUE
                                     else kitRowSupportingLines(chosen, supportingMaxLines),
                                 highlight = highlight.takeIf { enabled && !unavailable },
+                                tabular = true,
                             )
                         }
                     }

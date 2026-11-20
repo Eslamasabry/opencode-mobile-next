@@ -222,7 +222,7 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        KitText(value.text, role = if (value.prominent) TypeRole.Body else TypeRole.Secondary, tone = if (value.prominent) TextTone.Secondary else TextTone.Tertiary, maxLines = RowValueLines, modifier = Modifier.weight(1f, fill = false))
+        KitText(value.text, role = if (value.prominent) TypeRole.Body else TypeRole.Secondary, tone = if (value.prominent) TextTone.Secondary else TextTone.Tertiary, maxLines = RowValueLines, modifier = Modifier.weight(1f, fill = false), tabular = true)
         if (value.chevron) RowChevron()
     }
 }
