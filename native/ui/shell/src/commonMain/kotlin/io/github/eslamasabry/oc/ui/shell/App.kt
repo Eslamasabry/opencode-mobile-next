@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,12 +42,16 @@ import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusScope
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.RouteSaving
 import io.github.eslamasabry.oc.ui.shell.nav.RowTransformGate
 import io.github.eslamasabry.oc.ui.shell.nav.ShellKeyPark
 import io.github.eslamasabry.oc.ui.shell.nav.ShellNavDisplay
+import io.github.eslamasabry.oc.ui.shell.nav.LocalShellPanes
+import io.github.eslamasabry.oc.ui.shell.nav.ShellPanes
+import io.github.eslamasabry.oc.ui.shell.nav.ShellPanesState
 import io.github.eslamasabry.oc.ui.shell.nav.motionLevelOf
 
 /**
@@ -108,11 +113,15 @@ public fun NavShell(
             entryProvider<NavKey> { deps.installers.forEach { with(it) { install() } } }
         }
     val scale by deps.motion.animatorScale.collectAsState()
+    // From 840 dp and not short, a list stands beside the page opened from it (big screens, slice 3).
+    val beside = ShellPanes.beside(LocalKitWindow.current)
+    SideEffect { deps.navigator.beside = beside }
+    val panes = remember(beside, deps.navigator) { ShellPanesState(beside, deps.navigator.restPages) }
     val conditions = deps.statusSources.mapNotNull { it.status() }
     // One toast slot for the window: every page's `LocalKitToasts.current?.show(...)` lands here (it was provided
     // nowhere, so every toast was silent).
     val toasts = remember { KitToastState() }
-    CompositionLocalProvider(LocalKitToasts provides toasts) {
+    CompositionLocalProvider(LocalKitToasts provides toasts, LocalShellPanes provides panes) {
     KitStatusScope(conditions) {
         // N-55: a hardware key nothing on the page used never presses a button or turns into Back.
         // s28: the shell's Ctrl/⌘ shortcuts (F: shortcuts.dart), with or without a field focused; outside the
@@ -138,11 +147,11 @@ public fun NavShell(
                 // App-wide questions get their own modal host above every route (each KitScreen hosts
                 // its own modals inside); with none contributed the tree is unchanged.
                 if (deps.overlays.isEmpty()) {
-                    ShellWide(backStack, deps) { ShellNav(backStack, gate, scale, deps, provider) }
+                    ShellWide(backStack, deps, beside) { ShellNav(backStack, gate, scale, deps, provider) }
                     ShellPageLights(backStack, deps)
                 } else {
                     KitSheetHost(Modifier.fillMaxSize()) {
-                        ShellWide(backStack, deps) { ShellNav(backStack, gate, scale, deps, provider) }
+                        ShellWide(backStack, deps, beside) { ShellNav(backStack, gate, scale, deps, provider) }
                         ShellPageLights(backStack, deps)
                         deps.overlays.forEach { it.Content() }
                     }
@@ -166,12 +175,21 @@ private fun ShellPageLights(backStack: List<NavKey>, deps: ShellDependencies) {
     deps.pageLights.forEach { it.Content(top) }
 }
 
-/** s28: from medium, the rail beside the shell's destinations (Conversations, Settings); a phone is unchanged. */
+/**
+ * s28: from medium, the rail beside the shell's destinations (Conversations, Settings); a phone is unchanged. A list
+ * standing beside its page is the navigation there, so no rail joins it.
+ */
 @Composable
-private fun ShellWide(backStack: List<NavKey>, deps: ShellDependencies, content: @Composable () -> Unit) {
+private fun ShellWide(
+    backStack: List<NavKey>,
+    deps: ShellDependencies,
+    beside: Boolean,
+    content: @Composable () -> Unit,
+) {
     val top = backStack.lastOrNull() as? AppRoute
+    val panes = beside && ShellPanes.layoutOf(backStack) != null
     ShellRailFrame(
-        top = top,
+        top = if (panes) null else top,
         onSelect = { destination ->
             when (destination) {
                 ShellDestination.Chats -> ShellShortcuts.perform(ShellShortcut.Chats, deps.navigator, top)

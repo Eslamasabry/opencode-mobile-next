@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -79,7 +80,11 @@ public fun KitReplyFooter(
     metadata: @Composable () -> Unit = {},
 ) {
     val stacked = LocalDensity.current.fontScale >= FOOTER_WRAP_TEXT_SCALE
-    val frame = modifier.footerEntrance(arriving).fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp)
+    val frame =
+        modifier.footerEntrance(arriving)
+            .fillMaxWidth()
+            .widthIn(max = kitConversationCap())
+            .padding(horizontal = Space.S4.dp)
     val hasActions = onCopy != null || onMore != null
     if (stacked) {
         Column(frame) {
