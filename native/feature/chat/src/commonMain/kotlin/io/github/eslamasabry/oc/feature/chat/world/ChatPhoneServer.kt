@@ -115,6 +115,9 @@ public enum class PhoneServerWait {
 
     /** A phone agent needs the person to sign in; its conversations wait for that and say so. */
     AgentNeedsSignIn,
+
+    /** STUB (red proof): never produced on this branch. */
+    StoppedByPerson,
 }
 
 private val NotWaiting: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)

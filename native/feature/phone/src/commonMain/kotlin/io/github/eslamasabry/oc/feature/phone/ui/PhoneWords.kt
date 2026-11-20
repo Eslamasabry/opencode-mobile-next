@@ -116,6 +116,7 @@ internal fun AnswerHeadline.words(): String =
             AnswerHeadline.Running -> Res.string.thisPhoneAnswerRunning
             AnswerHeadline.NotAnswering -> Res.string.phoneServerRowNotAnswering
             AnswerHeadline.Off -> Res.string.thisPhoneAnswerOff
+            AnswerHeadline.StoppedByYou -> Res.string.thisPhoneAnswerOff
             AnswerHeadline.AndroidClosed -> Res.string.thisPhoneAnswerAndroidClosed
             AnswerHeadline.StoppedItself -> Res.string.thisPhoneAnswerStoppedItself
             AnswerHeadline.Restarting -> Res.string.thisPhoneAnswerRestarting

@@ -95,6 +95,8 @@ public data class ChatsListSourceUi(
      * "This device (Termux)" profile nagged on every open after the move from the old app).
      */
     val selfRun: Boolean = false,
+    /** STUB (red proof): never set on this branch. */
+    val stoppedByPerson: Boolean = false,
 )
 
 public data class ChatsHomeExtraState(

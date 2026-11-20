@@ -142,6 +142,9 @@ public enum class AnswerHeadline {
     Running,
     NotAnswering,
     Off,
+
+    /** STUB (red proof): never produced on this branch. */
+    StoppedByYou,
     AndroidClosed,
     StoppedItself,
     Restarting,

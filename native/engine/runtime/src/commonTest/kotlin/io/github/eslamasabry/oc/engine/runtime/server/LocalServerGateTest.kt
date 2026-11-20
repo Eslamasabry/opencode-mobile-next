@@ -120,6 +120,34 @@ class LocalServerGateTest {
             mayWait = { !stopped },
             booting = { stopped = true; LaunchStartRules.stillBooting(currentTime.milliseconds) },
         )
+        gate.stoppedByPerson = { stopped }
+        assertEquals(LocalServerWait.StoppedByPerson, gate.awaitReady(id))
+    }
+
+    @Test
+    fun `B-SERVERS-047 a stop the person asked for is its own result, never Not answering`() = runTest {
+        val gate = LocalServerGate(
+            { ProbeAnswer.NoAnswer },
+            { error("never start what the person stopped") },
+            clock(),
+            mayWait = { false },
+        )
+        gate.stoppedByPerson = { true }
+        assertEquals(LocalServerWait.StoppedByPerson, gate.awaitReady(id))
+        assertEquals(0, currentTime, "no wait, no countdown")
+    }
+
+    @Test
+    fun `B-SERVERS-048 a server that stopped by itself keeps the failure path`() = runTest {
+        var restarts = 0
+        val gate = LocalServerGate({ ProbeAnswer.NoAnswer }, { restarts++; true }, clock())
+        assertEquals(LocalServerWait.NotAnswering, gate.awaitReady(id))
+        assertEquals(1, restarts)
+    }
+
+    @Test
+    fun `B-SERVERS-049 a closed profile that is not the person's stop stays Not answering`() = runTest {
+        val gate = LocalServerGate({ ProbeAnswer.NoAnswer }, { false }, clock(), mayWait = { false })
         assertEquals(LocalServerWait.NotAnswering, gate.awaitReady(id))
     }
 }

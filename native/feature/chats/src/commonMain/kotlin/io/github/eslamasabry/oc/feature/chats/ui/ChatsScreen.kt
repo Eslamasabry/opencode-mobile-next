@@ -770,6 +770,7 @@ private fun ConnectionStatusPill(
             HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
             HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
             HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
+            HomeConnectionState.Stopped -> Res.string.phoneServerRowNotAnswering
         }
     )
     val switchLabel = stringResource(Res.string.serverSwitcherOpen)
@@ -779,6 +780,7 @@ private fun ConnectionStatusPill(
             HomeConnectionState.Connected -> KitConnectionTone.Ok
             HomeConnectionState.Connecting -> KitConnectionTone.Working
             HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
+            HomeConnectionState.Stopped -> KitConnectionTone.Problem
         },
         // The dot says connected; a word only when it is not.
         word = status.takeUnless { state == HomeConnectionState.Connected },

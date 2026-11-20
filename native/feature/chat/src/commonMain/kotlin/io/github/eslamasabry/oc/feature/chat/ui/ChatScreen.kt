@@ -1669,6 +1669,7 @@ private fun connectionLine(
         return KitStatus(
             KitStatusKind.Connection,
             when (wait) {
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StoppedByPerson -> stringResource(Res.string.launchUiSessionWaiting)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> stringResource(Res.string.connectUpdatingPhone)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)

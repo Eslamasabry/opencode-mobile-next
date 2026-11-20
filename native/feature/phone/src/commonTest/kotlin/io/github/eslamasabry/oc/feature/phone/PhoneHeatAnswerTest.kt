@@ -57,6 +57,6 @@ class PhoneHeatAnswerTest {
     @Test
     fun `the person's own Stop is never rewritten as heat`() {
         val facts = PhoneServerFacts(status = installed, stoppedByPerson = true, heat = PhoneHeatFacts(true, true, null))
-        assertEquals(AnswerHeadline.Off, answer(facts).headline)
+        assertEquals(AnswerHeadline.StoppedByYou, answer(facts).headline)
     }
 }

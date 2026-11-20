@@ -14,6 +14,9 @@ public enum class LocalServerWait {
 
     /** It never answered, even after the one restart (or the person had stopped it). Show Start again with Details. */
     NotAnswering,
+
+    /** STUB (red proof): never returned on this branch. */
+    StoppedByPerson,
 }
 
 /**
@@ -41,6 +44,9 @@ public class LocalServerGate(
      */
     private val booting: suspend (ProfileId) -> Duration = { Duration.ZERO },
 ) {
+    /** STUB (red proof): read by nothing. */
+    public var stoppedByPerson: suspend (ProfileId) -> Boolean = { false }
+
     public suspend fun awaitReady(profile: ProfileId): LocalServerWait {
         if (up(profile)) return LocalServerWait.Ready
         if (!mayWait(profile)) return LocalServerWait.NotAnswering

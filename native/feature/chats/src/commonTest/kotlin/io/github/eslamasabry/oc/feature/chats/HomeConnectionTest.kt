@@ -18,6 +18,22 @@ class HomeConnectionTest {
         ChatsListSourceUi(ProfileId(name), name, shown = true, main = main, onThisPhone = false, unreachable = unreachable)
 
     @Test
+    fun `B-HOME-214 the person's stop is the pill's Stopped; a failure by itself stays Not answering`() {
+        val stopped = source("This phone", main = true).copy(onThisPhone = true, stoppedByPerson = true)
+        val failed = source("This phone", main = true, unreachable = true).copy(onThisPhone = true)
+        fun opening(off: Boolean) =
+            ChatsHomeExtraState(
+                opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", onThisPhone = true, phoneOff = off),
+            )
+        fun pill(sources: ChatsHomeExtraState) = HomeConnectionUi.of(sources)?.state
+        assertEquals(HomeConnectionState.Stopped, pill(ChatsHomeExtraState(sources = persistentListOf(stopped))))
+        assertEquals(HomeConnectionState.Stopped, pill(opening(off = true)))
+        // It stopped by itself: today's failure path, untouched.
+        assertEquals(HomeConnectionState.NotAnswering, pill(opening(off = false)))
+        assertEquals(HomeConnectionState.NotAnswering, pill(ChatsHomeExtraState(sources = persistentListOf(failed))))
+    }
+
+    @Test
     fun `B-NAV-037 the pill names the main server, and says when it is opening or not answering`() {
         assertNull(HomeConnectionUi.of(ChatsHomeExtraState()))
         val sources = persistentListOf(source("Laptop", main = false), source("Office PC", main = true))

@@ -123,6 +123,9 @@ public enum class HomeConnectionState {
     Connected,
     Connecting,
     NotAnswering,
+
+    /** STUB (red proof): never produced on this branch. */
+    Stopped,
 }
 
 /** The pill's words: the server new conversations start on, and how it answers now. */
@@ -531,6 +534,9 @@ public interface ChatsActions {
     ) {}
 
     public fun retrySource(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
+
+    /** STUB (red proof). */
+    public fun startPhoneServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
 
     public fun retryOpening() {}
 
