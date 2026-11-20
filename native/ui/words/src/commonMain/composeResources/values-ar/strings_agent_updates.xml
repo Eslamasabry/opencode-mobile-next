@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentUpdatesTitle">تحديثات لوكلائك</string>
+    <string name="agentUpdatesReady">تحديثات الوكلاء جاهزة</string>
+    <string name="agentUpdatesChoiceUpdate">حدّث</string>
+    <string name="agentUpdatesChoiceKeep">أبقِ</string>
+    <string name="agentUpdatesChoiceRemove">أزِل</string>
+    <string name="agentUpdatesChoiceLabel">ماذا تفعل بـ %1$s</string>
+    <string name="agentUpdatesVersions">الإصدار %1$s ← %2$s</string>
+    <string name="agentUpdatesVersionNew">إصدار جديد %1$s</string>
+    <string name="agentUpdatesDownloads">ينزّل نحو %1$s</string>
+    <string name="agentUpdatesDownloadsUnknown">حجم التنزيل غير معروف</string>
+    <string name="agentUpdatesStays">يبقى على %1$s</string>
+    <string name="agentUpdatesStaysUnknown">يبقى على إصداره الحالي</string>
+    <string name="agentUpdatesFrees">يحرّر نحو %1$s</string>
+    <string name="agentUpdatesFreesUnknown">يحرّر المساحة التي يشغلها</string>
+    <string name="agentUpdatesKeepHelperTooNew">لا يعمل هذا الإصدار مع مساعد الوكلاء الجديد، لذا لا يمكن إبقاؤه.</string>
+    <string name="agentUpdatesKeepNotSupported">لم يعد هذا الإصدار مدعومًا، لذا لا يمكن إبقاؤه.</string>
+    <string name="agentUpdatesNeededLabel">مطلوب لهذه التحديثات</string>
+    <string name="agentUpdatesNeededWhy">يحتاجها الوكلاء الذين تحدّثهم ليعملوا.</string>
+    <string name="agentUpdatesNeededAlways">يحتاجها وكلاؤك ليواصلوا العمل.</string>
+    <string name="agentUpdatesTotalDownload">التنزيل</string>
+    <string name="agentUpdatesTotalFrees">المساحة المحرَّرة</string>
+    <string name="agentUpdatesAbout">نحو %1$s</string>
+    <string name="agentUpdatesAtLeast">%1$s على الأقل</string>
+    <string name="agentUpdatesShortSpace">تحتاج هذه التحديثات إلى نحو %1$s، وفي هذا الهاتف %2$s متاحة. أبقِ وكيلًا أو أزله، أو حرّر مساحة.</string>
+    <string name="agentUpdatesMetered">أنت على بيانات الجوال. ستُنزَّل التحديثات عبرها.</string>
+    <string name="agentUpdatesNetworkUnknown">قد تستخدم هذه الشبكة بيانات الجوال. ستُنزَّل التحديثات عبرها.</string>
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="zero">حدّث %1$d</item>
+        <item quantity="one">حدّث %1$d</item>
+        <item quantity="two">حدّث %1$d</item>
+        <item quantity="few">حدّث %1$d</item>
+        <item quantity="many">حدّث %1$d</item>
+        <item quantity="other">حدّث %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="zero">أزِل %1$d</item>
+        <item quantity="one">أزِل %1$d</item>
+        <item quantity="two">أزِل %1$d</item>
+        <item quantity="few">أزِل %1$d</item>
+        <item quantity="many">أزِل %1$d</item>
+        <item quantity="other">أزِل %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="zero">حدّث %1$d وأزِل %2$d</item>
+        <item quantity="one">حدّث %1$d وأزِل %2$d</item>
+        <item quantity="two">حدّث %1$d وأزِل %2$d</item>
+        <item quantity="few">حدّث %1$d وأزِل %2$d</item>
+        <item quantity="many">حدّث %1$d وأزِل %2$d</item>
+        <item quantity="other">حدّث %1$d وأزِل %2$d</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">أبقِ هذه الإصدارات</string>
+    <string name="agentUpdatesAgentsLine">لم تعد تستخدم وكيلًا؟</string>
+    <string name="agentUpdatesAgentsAction">أزله من صفحة الوكلاء</string>
+    <string name="agentUpdatesLinuxLine">يأتي Git وPython من Ubuntu.</string>
+    <string name="agentUpdatesLinuxAction">حدّثهما من Linux › الحزم</string>
+    <string name="agentUpdatesFailed">لم تبدأ التحديثات.</string>
+    <string name="agentUpdatesNotRemoved">لم تتم إزالة %1$s.</string>
+    <string name="agentUpdatesNoSpace">لا توجد مساحة كافية في هذا الهاتف لهذه التحديثات. أبقِ وكيلًا أو أزله، أو حرّر مساحة.</string>
+</resources>

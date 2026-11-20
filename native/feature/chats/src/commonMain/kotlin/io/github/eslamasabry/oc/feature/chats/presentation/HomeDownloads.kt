@@ -107,6 +107,21 @@ public object HomeDownloadRules {
             else -> HomeLineWinner.None
         }
 
+    /**
+     * The agents' update line ("Agent updates ready · Review", or an agent that was not removed) takes the download's
+     * place unless a download is running now (its share done is the news); it stays until the person answers.
+     */
+    public fun agentLineWins(download: HomeDownloadFact?, agentLine: Boolean): Boolean =
+        agentLine && download?.phase !is HomeDownloadPhase.Running
+
+    /** [placeWins] with the agents' update line: it waits for the start-up stage, as a download that waits does. */
+    public fun placeWins(stage: HomeStage?, download: HomeDownloadFact?, agentLine: Boolean): HomeLineWinner =
+        when {
+            !agentLineWins(download, agentLine) -> placeWins(stage, download)
+            stage != null -> HomeLineWinner.Stage
+            else -> HomeLineWinner.Download
+        }
+
     private const val HELD_RANK = 3
 
     private fun rank(phase: HomeDownloadPhase): Int =

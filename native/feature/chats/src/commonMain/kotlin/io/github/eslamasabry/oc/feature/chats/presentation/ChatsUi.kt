@@ -203,6 +203,8 @@ public data class ChatsUi(
     val download: HomeDownloadFact? = null,
     /** The mobile-data ask is open for this download (opened only from the line's action). */
     val downloadAsk: HomeDownloadKind? = null,
+    /** "Updates for your agents": the sheet, Home's Review line and a removal that did not happen. */
+    val agentUpdates: AgentUpdateHomeUi = AgentUpdateHomeUi(),
     val projectChoices: ImmutableList<ProjectSummary> = persistentListOf(),
     /** This phone's storage access for the projects sheet's Phone storage row; null: not offered. */
     val phoneStorage: PhoneStorageAccess? = null,
@@ -479,6 +481,10 @@ public interface ChatsActions {
 
     /** The ask's Wait for Wi-Fi: closes it; the hold stays. */
     public fun waitForWifi() {}
+
+    /** The agents' update sheet and Home's line about it; none by default (Home's entry joins the sheet's own). */
+    public val agentUpdates: AgentUpdateActions
+        get() = NoAgentUpdateActions
 
     public fun search(query: String)
 

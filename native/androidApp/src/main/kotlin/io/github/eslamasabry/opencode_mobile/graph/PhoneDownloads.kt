@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateNetwork
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -180,6 +181,12 @@ class PhoneDownloads(
                     },
                 )
             }
+            .combine(agentStatus.choices.offer) { rows, offer ->
+                if (offer?.neededGoesAhead == true && offer.network != AgentUpdateNetwork.Unmetered &&
+                    rows.none { it.kind == HomeDownloadKind.Helper }) {
+                    rows + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
+                } else rows
+            }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     override fun downloadNow(kind: HomeDownloadKind) {
@@ -205,11 +212,17 @@ class PhoneDownloads(
     /** A failed download started again by the person: the same job the Update row and the Agents page start. */
     private suspend fun run(kind: HomeDownloadKind) {
         when (kind) {
-            HomeDownloadKind.OpenCode -> setup.update()
+            HomeDownloadKind.OpenCode -> agentStatus.choices.startIfChosen(AgentId.OPENCODE) {
+                setup.update() is Outcome.Ok
+            }
             HomeDownloadKind.Helper ->
                 agentStatus.decision.value.agent?.let { agent ->
-                    val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value
-                    agents?.afterTry(agent, started = answer == PhoneAgentInstallResult.Started, short = true)
+                    agentStatus.choices.startIfChosen(agent) {
+                        val answer = (phones.install(agent.raw) as? Outcome.Ok)?.value
+                        val started = answer == PhoneAgentInstallResult.Started
+                        agents?.afterTry(agent, started, short = true)
+                        started
+                    }
                 }
         }
     }

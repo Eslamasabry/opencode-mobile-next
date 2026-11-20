@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdatesViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeWithAgentUpdates
 
 /**
  * The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime
@@ -48,8 +50,13 @@ public class ChatsEntries(
             NewConversationScreen(state, vm)
         }
         entry<ChatsRoute.Home> {
-            val vm = metroViewModel<ChatsViewModel>()
-            val state by vm.state.collectAsStateWithLifecycle()
+            val home = metroViewModel<ChatsViewModel>()
+            val homeState by home.state.collectAsStateWithLifecycle()
+            // "Updates for your agents": its own ViewModel, joined to Home's state and actions here.
+            val updates = metroViewModel<AgentUpdatesViewModel>()
+            val updatesState by updates.state.collectAsStateWithLifecycle()
+            val state = remember(homeState, updatesState) { homeState.copy(agentUpdates = updatesState) }
+            val vm = remember(home, updates) { HomeWithAgentUpdates(home, updates) }
             val appNotice by appNotices.status.collectAsStateWithLifecycle()
             val replyOffer by appNotices.replyOffer.collectAsStateWithLifecycle()
             val appStatus =

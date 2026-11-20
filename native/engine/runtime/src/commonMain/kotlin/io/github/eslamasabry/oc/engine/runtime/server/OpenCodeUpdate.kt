@@ -52,6 +52,9 @@ public enum class OpenCodeHold {
 
 /** What the auto-updater reads about the phone server's OpenCode (This phone's host model). */
 public interface OpenCodeHostFacts {
+    /** Current-build permission for this pin. Unknown decisions wait. */
+    public val updateAllowed: Boolean get() = false
+
     /** Reads the status again: it may be older than the work that just ended. */
     public suspend fun refresh()
 
@@ -300,6 +303,11 @@ public class OpenCodeAutoUpdater(
     }
 
     private fun decide(key: String, explain: Boolean = false): Boolean {
+        if (!host.updateAllowed) {
+            waiting.value = false
+            track(null)
+            return false
+        }
         val installed = host.installedVersion
         val busy = workBusy()
         val running = jobs.running

@@ -297,9 +297,13 @@ public fun ChatsScreen(
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
     // The phone's two automatic downloads say themselves at the end of the Recent label (the stage words' place), not
     // in a bar above the title (owner, build 10077). Only a page with no Recent list falls back to the status line.
-    val downloadStatus = homeDownloadStatus(state.download, actions)
+    // The agents' update choice waits for its answer ("Agent updates ready · Review") in the same place, one line.
+    val agentLine = agentUpdateStatus(state.agentUpdates, actions.agentUpdates)
+    val downloadStatus =
+        if (HomeDownloadRules.agentLineWins(state.download, agentLine != null)) agentLine
+        else homeDownloadStatus(state.download, actions)
     val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
-    val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download)
+    val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download, agentLine != null)
     val statusAction = downloadStatus?.action.takeIf { lineWords == HomeLineWinner.Download }
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
@@ -630,6 +634,7 @@ public fun ChatsScreen(
         ConversationRenameDialog(state.renaming, actions::finishRename)
         AlwaysAllowConfirm(state.confirmAlways, mask, actions)
         HomeDownloadAsk(state.downloadAsk, actions)
+        AgentUpdateSheet(state.agentUpdates.sheet, actions.agentUpdates)
     }
 }
 

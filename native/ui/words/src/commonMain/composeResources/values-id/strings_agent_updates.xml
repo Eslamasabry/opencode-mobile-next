@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentUpdatesTitle">Pembaruan untuk agen Anda</string>
+    <string name="agentUpdatesReady">Pembaruan agen siap</string>
+    <string name="agentUpdatesChoiceUpdate">Perbarui</string>
+    <string name="agentUpdatesChoiceKeep">Pertahankan</string>
+    <string name="agentUpdatesChoiceRemove">Hapus</string>
+    <string name="agentUpdatesChoiceLabel">Tindakan untuk %1$s</string>
+    <string name="agentUpdatesVersions">Versi %1$s → %2$s</string>
+    <string name="agentUpdatesVersionNew">Versi baru %1$s</string>
+    <string name="agentUpdatesDownloads">Mengunduh sekitar %1$s</string>
+    <string name="agentUpdatesDownloadsUnknown">Ukuran unduhan tidak diketahui</string>
+    <string name="agentUpdatesStays">Tetap di %1$s</string>
+    <string name="agentUpdatesStaysUnknown">Tetap di versi yang ada</string>
+    <string name="agentUpdatesFrees">Mengosongkan sekitar %1$s</string>
+    <string name="agentUpdatesFreesUnknown">Mengosongkan ruang yang dipakainya</string>
+    <string name="agentUpdatesKeepHelperTooNew">Versinya tidak bisa berjalan dengan pembantu agen yang baru, jadi tidak bisa dipertahankan.</string>
+    <string name="agentUpdatesKeepNotSupported">Versinya tidak didukung lagi, jadi tidak bisa dipertahankan.</string>
+    <string name="agentUpdatesNeededLabel">Diperlukan untuk pembaruan ini</string>
+    <string name="agentUpdatesNeededWhy">Agen yang Anda perbarui memerlukan ini untuk berjalan.</string>
+    <string name="agentUpdatesNeededAlways">Agen Anda memerlukan ini agar tetap berjalan.</string>
+    <string name="agentUpdatesTotalDownload">Unduhan</string>
+    <string name="agentUpdatesTotalFrees">Ruang dikosongkan</string>
+    <string name="agentUpdatesAbout">Sekitar %1$s</string>
+    <string name="agentUpdatesAtLeast">Minimal %1$s</string>
+    <string name="agentUpdatesShortSpace">Pembaruan ini memerlukan sekitar %1$s dan ponsel ini punya %2$s kosong. Pertahankan atau hapus satu agen, atau kosongkan ruang.</string>
+    <string name="agentUpdatesMetered">Anda memakai data seluler. Pembaruan diunduh lewat data seluler.</string>
+    <string name="agentUpdatesNetworkUnknown">Jaringan ini mungkin memakai data seluler. Pembaruan diunduh lewat jaringan ini.</string>
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="other">Perbarui %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="other">Hapus %1$d</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="other">Perbarui %1$d dan hapus %2$d</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">Pertahankan versi ini</string>
+    <string name="agentUpdatesAgentsLine">Tidak memakai suatu agen lagi?</string>
+    <string name="agentUpdatesAgentsAction">Hapus di Agen</string>
+    <string name="agentUpdatesLinuxLine">Git dan Python berasal dari Ubuntu.</string>
+    <string name="agentUpdatesLinuxAction">Perbarui di Linux › Paket</string>
+    <string name="agentUpdatesFailed">Pembaruan tidak dimulai.</string>
+    <string name="agentUpdatesNotRemoved">%1$s tidak dihapus.</string>
+    <string name="agentUpdatesNoSpace">Ruang di ponsel ini tidak cukup untuk pembaruan ini. Pertahankan atau hapus satu agen, atau kosongkan ruang.</string>
+</resources>

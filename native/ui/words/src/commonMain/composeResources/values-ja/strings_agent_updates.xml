@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentUpdatesTitle">エージェントのアップデート</string>
+    <string name="agentUpdatesReady">エージェントのアップデートがあります</string>
+    <string name="agentUpdatesChoiceUpdate">アップデート</string>
+    <string name="agentUpdatesChoiceKeep">維持</string>
+    <string name="agentUpdatesChoiceRemove">削除</string>
+    <string name="agentUpdatesChoiceLabel">%1$sの扱い</string>
+    <string name="agentUpdatesVersions">バージョン%1$s → %2$s</string>
+    <string name="agentUpdatesVersionNew">新しいバージョン%1$s</string>
+    <string name="agentUpdatesDownloads">約%1$sをダウンロード</string>
+    <string name="agentUpdatesDownloadsUnknown">ダウンロードサイズ不明</string>
+    <string name="agentUpdatesStays">%1$sのまま</string>
+    <string name="agentUpdatesStaysUnknown">今のバージョンのまま</string>
+    <string name="agentUpdatesFrees">約%1$sを解放</string>
+    <string name="agentUpdatesFreesUnknown">使っている容量を解放</string>
+    <string name="agentUpdatesKeepHelperTooNew">このバージョンは新しいエージェントヘルパーで動かないため、維持できません。</string>
+    <string name="agentUpdatesKeepNotSupported">このバージョンはサポートが終了したため、維持できません。</string>
+    <string name="agentUpdatesNeededLabel">このアップデートに必要</string>
+    <string name="agentUpdatesNeededWhy">アップデートするエージェントの動作に必要です。</string>
+    <string name="agentUpdatesNeededAlways">エージェントが動き続けるために必要です。</string>
+    <string name="agentUpdatesTotalDownload">ダウンロード</string>
+    <string name="agentUpdatesTotalFrees">解放される容量</string>
+    <string name="agentUpdatesAbout">約%1$s</string>
+    <string name="agentUpdatesAtLeast">%1$s以上</string>
+    <string name="agentUpdatesShortSpace">このアップデートには約%1$sが必要ですが、このスマートフォンの空きは%2$sです。エージェントを維持または削除するか、空きを増やしてください。</string>
+    <string name="agentUpdatesMetered">モバイルデータ通信を使っています。アップデートはモバイルデータ通信でダウンロードされます。</string>
+    <string name="agentUpdatesNetworkUnknown">このネットワークはモバイルデータ通信の可能性があります。アップデートはこのネットワークでダウンロードされます。</string>
+    <plurals name="agentUpdatesButtonUpdate">
+        <item quantity="other">%1$d件をアップデート</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonRemove">
+        <item quantity="other">%1$d件を削除</item>
+    </plurals>
+    <plurals name="agentUpdatesButtonBoth">
+        <item quantity="other">%1$d件をアップデート、%2$d件を削除</item>
+    </plurals>
+    <string name="agentUpdatesButtonKeep">このバージョンを維持</string>
+    <string name="agentUpdatesAgentsLine">使わなくなったエージェントは？</string>
+    <string name="agentUpdatesAgentsAction">エージェントで削除</string>
+    <string name="agentUpdatesLinuxLine">GitとPythonはUbuntuから入ります。</string>
+    <string name="agentUpdatesLinuxAction">Linux › パッケージでアップデート</string>
+    <string name="agentUpdatesFailed">アップデートを開始できませんでした。</string>
+    <string name="agentUpdatesNotRemoved">%1$sを削除できませんでした。</string>
+    <string name="agentUpdatesNoSpace">このスマートフォンには、このアップデートに必要な空きがありません。エージェントを維持または削除するか、空きを増やしてください。</string>
+</resources>
