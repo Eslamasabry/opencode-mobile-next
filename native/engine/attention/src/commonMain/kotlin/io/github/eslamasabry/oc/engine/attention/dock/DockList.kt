@@ -65,6 +65,8 @@ public data class DockListRow(
     val isOpen: Boolean,
     /** Rises each time it enters NeedsYou or Failed. */
     val pulse: Int,
+    /** True when the conversation itself is running (false for an idle parent whose sub-agent works). */
+    val ownStateRunning: Boolean = state == DockListState.Working,
 )
 
 /** The whole list: what the face and the panel read. */
@@ -132,6 +134,7 @@ public object DockList {
                     lastActivityMs = facts.lastActivity(e.ref),
                     isOpen = e.ref == ui.open,
                     pulse = e.pulse,
+                    ownStateRunning = e.ownState.listState() == DockListState.Working,
                 )
             }
         return DockListModel(

@@ -156,9 +156,9 @@ internal object EdgeLightRules {
     fun visible(keyboardUp: Boolean, modalOpen: Boolean = false): Boolean = !keyboardUp && !modalOpen
 
     /**
-     * The face for [model]: a mark per other conversation that needs the person, failed or is working, and the number
-     * needs + failed. The conversation on screen and [page] (the conversation a Files, Changes or Git page belongs to)
-     * are left out: it is "other conversations". A finished conversation shows no mark in this version.
+     * The face for [model]: a mark per other conversation that needs the person, failed, is working or finished, and
+     * the number needs + failed. The conversation on screen and [page] (the conversation a Files, Changes or Git page
+     * belongs to) are left out: it is "other conversations".
      */
     fun face(model: DockListModel, page: ConversationRef?): KitLampFace {
         val others = model.rows.filter { !it.isOpen && it.ref != page }
@@ -174,11 +174,28 @@ internal object EdgeLightRules {
                             KitLampMarkKind.Working,
                             row.progress?.takeIf { it.total > 0 }?.let { (it.done.toFloat() / it.total).coerceIn(0f, 1f) },
                         )
-                    DockListState.Done, DockListState.Idle -> null
+                    DockListState.Done -> KitLampMark(row.ref, KitLampMarkKind.Finished)
+                    DockListState.Idle -> null
                 }
             }
         return KitLampFace(count = counts(model, page).number, marks = marks)
     }
+
+    /** First-use tips shown per device: one short tip beside the closed light, tracked in `oc.edgeLight.tips`. */
+    const val FIRST_USE_TIPS: Int = 1
+
+    /** Keep the panel overlay briefly after close so its fold and hide-Undo bar finish, then unmount it. */
+    const val PANEL_LINGER_MS: Long = 8_500L
+
+    /** True while the list panel or place picker needs the list controller, list state and panel strings. */
+    fun mountOverlay(open: Boolean, placing: Boolean, lingering: Boolean): Boolean = open || placing || lingering
+
+    /**
+     * True when the one-time tip beside the closed light may appear: prefs are loaded (no cold-start flash for people
+     * who already saw it), fewer than [FIRST_USE_TIPS] shown, the light is visible, and neither panel nor move is open.
+     */
+    fun showTip(prefsLoaded: Boolean, tipsShown: Int, visible: Boolean, open: Boolean, placing: Boolean): Boolean =
+        prefsLoaded && tipsShown < FIRST_USE_TIPS && visible && !open && !placing
 
     fun counts(model: DockListModel, page: ConversationRef?): EdgeLightCounts {
         val others = model.rows.filter { !it.isOpen && it.ref != page }

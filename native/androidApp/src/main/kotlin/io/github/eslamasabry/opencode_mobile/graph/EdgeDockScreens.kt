@@ -92,6 +92,17 @@ class AppEdgeDockPort(
     val lightPlace: StateFlow<EdgeLightPlace>
         get() = dock.lightPlace
 
+    /** How many Back notes and first-use tips the light has shown on this device. */
+    val lightTaught: StateFlow<EdgeLightTaught>
+        get() = dock.lightTaught
+
+    /** True once device-wide edge light preferences have been read from disk. */
+    val lightPrefsLoaded: StateFlow<Boolean>
+        get() = dock.lightPrefsLoaded
+
+    /** Records that the edge light's one-time first-use tip was shown. */
+    fun recordLightTipShown() = dock.taughtMore(tips = 1)
+
     /**
      * The light's list: every other conversation's state and progress, up to the list reader's 20 rows. Read only
      * while a light is on screen (it is made on first use, so the rings alone never ask for it).

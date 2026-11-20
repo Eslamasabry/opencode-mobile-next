@@ -221,8 +221,8 @@ class EdgeLightWiringTest {
             )
         val face = EdgeLightRules.face(list, page = null)
         assertEquals(3, face.count)
-        // Done and idle conversations show no mark; everything else does.
-        assertEquals(6, face.marks.size)
+        // Idle shows no mark; Done shows Finished alongside active marks.
+        assertEquals(7, face.marks.size)
         val shown = KitLampRules.shown(face.marks)
         assertEquals(listOf(KitLampMarkKind.NeedsYou, KitLampMarkKind.NeedsYou, KitLampMarkKind.Failed), shown.map { it.kind })
         assertEquals(EdgeLightCounts(needs = 2, failed = 1, working = 3), EdgeLightRules.counts(list, null))
@@ -249,7 +249,7 @@ class EdgeLightWiringTest {
 
     @Test
     fun `nothing going on is the quiet tab`() {
-        val face = EdgeLightRules.face(model(row("a", DockListState.Idle), row("b", DockListState.Done)), page = null)
+        val face = EdgeLightRules.face(model(row("a", DockListState.Idle)), page = null)
         assertTrue(face.quiet)
         assertEquals(0, face.count)
     }
@@ -354,5 +354,23 @@ class EdgeLightWiringTest {
             assertFalse("EdgeDockHost" in bytes, "$cls must not mount EdgeDockHost")
             assertFalse("KitEdgeDock" in bytes, "$cls must not mount KitEdgeDock")
         }
+    }
+
+    @Test
+    fun `B-LAMP-006 closed light unmounts the list overlay until opened or placing`() {
+        assertFalse(EdgeLightRules.mountOverlay(open = false, placing = false, lingering = false))
+        assertTrue(EdgeLightRules.mountOverlay(open = true, placing = false, lingering = false))
+        assertTrue(EdgeLightRules.mountOverlay(open = false, placing = true, lingering = false))
+        assertTrue(EdgeLightRules.mountOverlay(open = false, placing = false, lingering = true))
+    }
+
+    @Test
+    fun `B-LAMP-007 first-use tip waits for prefs, shows once at zero tips, and hides when open, placing or hidden`() {
+        assertFalse(EdgeLightRules.showTip(prefsLoaded = false, tipsShown = 0, visible = true, open = false, placing = false))
+        assertTrue(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = true, open = false, placing = false))
+        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 1, visible = true, open = false, placing = false))
+        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = false, open = false, placing = false))
+        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = true, open = true, placing = false))
+        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = true, open = false, placing = true))
     }
 }

@@ -112,6 +112,7 @@ class AppEdgeDock(
     private val shownState = MutableStateFlow(true)
     private val placeState = MutableStateFlow(EdgeLightPlace())
     private val taughtState = MutableStateFlow(EdgeLightTaught())
+    private val prefsLoadedState = MutableStateFlow(false)
     private val keyStore =
         object : AttentionKeyStore {
             override suspend fun read(key: String): String? = (stores.prefs.get(key) as? PrefValue.Str)?.value
@@ -212,6 +213,9 @@ class AppEdgeDock(
     /** How many Back notes and tips the light showed so far (device-wide). */
     val lightTaught: StateFlow<EdgeLightTaught> = taughtState.asStateFlow()
 
+    /** True once device-wide edge light preferences (including [lightTaught]) have been read from disk. */
+    val lightPrefsLoaded: StateFlow<Boolean> = prefsLoadedState.asStateFlow()
+
     /** Saves the choice for this device at once; the rings, the light or neither follow. */
     fun setMode(mode: OtherConversationsMode) {
         if (modeState.value == mode) return
@@ -277,6 +281,7 @@ class AppEdgeDock(
             }
             placeState.value = lightPrefs.loadPlace()
             taughtState.value = lightPrefs.loadTaught()
+            prefsLoadedState.value = true
             controller.loadPlacement()
             combine(connections.live, stores.profiles.profiles) { live, saved -> live to saved }
                 .collect { (live, loaded) ->
