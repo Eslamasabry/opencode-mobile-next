@@ -360,10 +360,10 @@ internal fun esbuildCacheBlock(key: String?): String {
     if (key == null || !ESBUILD_KEY.matches(key)) return "# No esbuild cache: no pin folder name."
     return """
 # The esbuild cache is optional: any failure below starts the helper the normal slow way.
-unset OC_ESBUILD_CACHE_DIR OC_ESBUILD_CACHE_SALT
 oc_eb_root="${'$'}HOME/.cache/oc-esbuild"
 oc_eb_dir="${'$'}oc_eb_root/$key"
 oc_eb_hook="${'$'}oc_eb_dir/hook.cjs"
+oc_eb_pin="${'$'}oc_eb_dir/pin-root"
 if mkdir -p "${'$'}oc_eb_root" 2>/dev/null; then
     for oc_eb_old in "${'$'}oc_eb_root"/*; do
         if [ -d "${'$'}oc_eb_old" ] && [ "${'$'}oc_eb_old" != "${'$'}oc_eb_dir" ]; then
@@ -371,16 +371,18 @@ if mkdir -p "${'$'}oc_eb_root" 2>/dev/null; then
         fi
     done
     if mkdir -p "${'$'}oc_eb_dir/cache" 2>/dev/null; then
-        if cat 2>/dev/null > "${'$'}oc_eb_hook.new" <<'OC_ESBUILD_HOOK_END'
+        # The preload reads the pinned install's folder from this file (it has no environment variable), then the
+        # hook itself is written last: a hook is only ever present beside a pin file.
+        if printf '%s' '/home/oc/.local/share/oc-paseo/$key' 2>/dev/null > "${'$'}oc_eb_pin.new" \
+            && mv -f "${'$'}oc_eb_pin.new" "${'$'}oc_eb_pin" 2>/dev/null \
+            && cat 2>/dev/null > "${'$'}oc_eb_hook.new" <<'OC_ESBUILD_HOOK_END'
 ${EsbuildCacheHook.SOURCE}OC_ESBUILD_HOOK_END
         then
             if mv -f "${'$'}oc_eb_hook.new" "${'$'}oc_eb_hook" 2>/dev/null && [ -s "${'$'}oc_eb_hook" ]; then
-                export OC_ESBUILD_CACHE_DIR="${'$'}oc_eb_dir/cache"
-                export OC_ESBUILD_CACHE_SALT='$key'
                 export NODE_OPTIONS="--require \"${'$'}oc_eb_hook\"${'$'}{NODE_OPTIONS:+ ${'$'}NODE_OPTIONS}"
             fi
         fi
-        rm -rf "${'$'}oc_eb_hook.new" 2>/dev/null || true
+        rm -rf "${'$'}oc_eb_hook.new" "${'$'}oc_eb_pin.new" 2>/dev/null || true
     fi
 fi
 """

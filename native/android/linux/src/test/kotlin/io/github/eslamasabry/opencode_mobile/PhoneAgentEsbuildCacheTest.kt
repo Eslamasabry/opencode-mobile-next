@@ -33,6 +33,7 @@ class PhoneAgentEsbuildCacheTest {
             environment()["HOME"] = home.absolutePath
             environment().remove("NODE_COMPILE_CACHE")
             environment().remove("NODE_OPTIONS")
+            environment().keys.filter { it.startsWith("OC_") }.forEach { environment().remove(it) }
             if (nodeOptions != null) environment()["NODE_OPTIONS"] = nodeOptions
         }.start()
         child.outputStream.use { it.write("fixture\n".toByteArray()) }
@@ -143,7 +144,8 @@ class PhoneAgentEsbuildCacheTest {
 
     @Test fun `B-AGENT-469 the cache lives outside the hashed install tree and the script never writes there`() {
         val block = esbuildCacheBlock(key).replace(EsbuildCacheHook.SOURCE, "")
-        assertFalse(block.contains("oc-paseo"))
+        // The install folder is named only as the text of the pin file; no command touches it.
+        assertFalse(block.replace("'/home/oc/.local/share/oc-paseo/$key'", "").contains("oc-paseo"))
         assertFalse(block.contains("node_modules"))
         assertTrue(block.contains("\"${'$'}HOME/.cache/oc-esbuild\""))
         // Every path the block writes or removes sits under the profile's own cache folder.
