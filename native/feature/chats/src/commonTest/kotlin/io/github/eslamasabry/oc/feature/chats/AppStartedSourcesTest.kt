@@ -79,7 +79,7 @@ class AppStartedSourcesTest {
     }
 
     @Test
-    fun `B-HOME-225 while the agents start no row rings by itself; only a kept tap waits on its row`() {
+    fun `B-HOME-225 while the agents start no row rings by itself and only an own wait rings`() {
         assertFalse(SourceStartRules.rowGettingReady(AppStart.Agents, waiting = false))
         assertFalse(SourceStartRules.rowGettingReady(null, waiting = false))
         assertTrue(SourceStartRules.rowGettingReady(AppStart.Agents, waiting = true))

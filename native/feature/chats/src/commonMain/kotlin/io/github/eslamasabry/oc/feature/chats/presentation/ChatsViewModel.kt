@@ -651,44 +651,22 @@ public class ChatsViewModel(
     override fun openConversation(ref: ConversationRef) {
         val items = feed.snapshot.value.items
         val openable = items.firstOrNull { it.ref == ref && it.canReopen }
-        // B-333: a row that cannot open yet (its server is still opening, or its list is not verified yet) keeps the
-        // tap and opens by itself when it can, instead of ignoring it.
         keptGaveUp.value = null
         endNewKept()
-        if (home.snapshot.value.opening != null || openable == null) {
-            waitingFrom = nav.top.value
-            val keep = home.snapshot.value.opening != null || items.any { it.ref == ref }
-            waitingOpen.value = if (keep) ref else null
-            if (keep) watchKept(ref) else keptTimer?.cancel()
+        endKept()
+        if (home.snapshot.value.opening == null && openable != null) {
+            openNow(openable)
             return
         }
-        endKept()
-        openNow(openable)
-    }
-
-    /**
-     * A kept tap ends: within [KeptTapRules.LIMIT_MS] of waiting with nothing in progress (an agent update does not
-     * count, as on the conversation page) the source has connected and the row opened, or the tap is dropped and the
-     * row says its source is not answering.
-     */
-    private fun watchKept(ref: ConversationRef) {
-        keptTimer?.cancel()
-        keptTimer =
-            viewModelScope.launch {
-                val waits =
-                    combine(waitingOpen, home.snapshot) { waiting, extras ->
-                        when {
-                            waiting != ref -> KeptWait.Ended
-                            extras.sources.any { it.profile == ref.profileId && it.starting == AppStart.AgentsUpdating } ->
-                                KeptWait.Updating
-                            else -> KeptWait.Quiet
-                        }
-                    }
-                if (KeptTapRules.limitSpent(waits) && waitingOpen.value == ref) {
-                    waitingOpen.value = null
-                    keptGaveUp.value = ref
-                }
-            }
+        // OW6 (owner, build 10114): a tap is answered AT ONCE. A row whose source is still starting (or whose list is
+        // not verified yet) opens its conversation now; the page waits INSIDE itself on the named stage and goes on
+        // when the source answers. Before, the tap was kept: Home stayed for 21 s and the conversation then opened by
+        // itself. A ref the list never showed is still ignored.
+        if (home.snapshot.value.opening != null || items.any { it.ref == ref }) {
+            openAttempts++
+            sheet.value = null
+            nav.openChat(ref)
+        }
     }
 
     private fun endKept() {

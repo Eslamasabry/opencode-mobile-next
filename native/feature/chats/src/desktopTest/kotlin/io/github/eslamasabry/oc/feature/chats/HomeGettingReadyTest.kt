@@ -149,16 +149,14 @@ class HomeGettingReadyTest {
             .map { node -> node.config[SemanticsProperties.Text].joinToString(" ", transform = AnnotatedString::text) }
 
     @Test
-    fun `HOME-READY-001 replay install - agent rows show the working mark alone, then their times once ready`() =
+    fun `HOME-READY-001 replay install - only a row with its own wait rings, the others keep their times`() =
         runDesktopComposeUiTest(360, 900) {
             val show = home(starting)
-            // Agent rows (the kept tap too): the mark alone in the time's place, no "Connecting", no time; a screen
-            // reader hears the title, then "Getting ready…".
-            for (title in listOf("Tidy the docs demo README", "Refactor the sync worker")) {
-                val row = rowsOf(title).single()
-                assertTrue(row.startsWith(title) && "Getting ready…" in row, "row: $row")
-                assertTrue("Connecting" !in row && "min ago" !in row, "row: $row")
-            }
+            // OW2: the wait is named ONCE, in Home's status line; a row rings only for its OWN wait (a kept tap).
+            val own = rowsOf("Tidy the docs demo README").single()
+            assertTrue(own.startsWith("Tidy the docs demo README") && "Getting ready…" in own, "row: $own")
+            val other = rowsOf("Refactor the sync worker").single()
+            assertTrue("40 min ago" in other && "Getting ready" !in other, "row: $other")
             // This phone's own OpenCode is up: its row keeps its time.
             val oc = rowsOf("Explain this project").single()
             assertTrue("55 min ago" in oc && "Getting ready" !in oc, "row: $oc")
