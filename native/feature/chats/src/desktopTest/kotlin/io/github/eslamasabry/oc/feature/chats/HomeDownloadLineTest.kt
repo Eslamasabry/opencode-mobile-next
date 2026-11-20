@@ -66,19 +66,28 @@ class HomeDownloadLineTest {
         val fact = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, moreAgents = agents)
         setContent { Home(home(fact)) }
         waitForIdle()
-        onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
-        onNodeWithText("3 more agent updates wait for Wi-Fi · about 660 MB").assertExists()
+        // The status line announces its message and supporting line as one node.
+        onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB", substring = true).assertExists()
+        onNodeWithText("3 more agent updates wait for Wi-Fi · about 660 MB", substring = true).assertExists()
         onNodeWithText("Download on mobile data").performClick()
         assertEquals(listOf("act"), actions.calls)
     }
 
     @Test
-    fun `B-DL-425 OpenCode and its helper are one line and one ask, one total`() = runComposeUiTest {
+    fun `B-DL-425 OpenCode and its helper are one line with one total`() = runComposeUiTest {
+        val fact =
+            HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, megabytes = 460, withHelper = true)
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("OpenCode update and Agent helper waiting for Wi-Fi · about 460 MB").assertExists()
+    }
+
+    @Test
+    fun `B-DL-427 the ask for OpenCode with its helper names both and the one total`() = runComposeUiTest {
         val fact =
             HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, megabytes = 460, withHelper = true)
         setContent { Home(home(fact, ask = HomeDownloadKind.OpenCode)) }
         waitForIdle()
-        onNodeWithText("OpenCode update and Agent helper waiting for Wi-Fi · about 460 MB").assertExists()
         onNodeWithText("Download about 460 MB on mobile data?").assertExists()
         onNodeWithText(
             "This is the OpenCode update and the Agent helper it needs. It counts against your data plan. " +
@@ -92,7 +101,7 @@ class HomeDownloadLineTest {
         val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting, moreAgents = agents)
         setContent { Home(home(fact)) }
         waitForIdle()
-        onNodeWithText("1 more agent update waits for Wi-Fi · about 360 MB").assertExists()
+        onNodeWithText("1 more agent update waits for Wi-Fi · about 360 MB", substring = true).assertExists()
     }
 
     @Test
