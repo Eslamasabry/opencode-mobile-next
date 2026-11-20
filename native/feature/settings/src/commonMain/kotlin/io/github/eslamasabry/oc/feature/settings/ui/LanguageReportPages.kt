@@ -52,18 +52,7 @@ internal fun ColumnScope.LanguageBody(language: AppLanguage, actions: SettingsAc
     )
     Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/widgets/language_picker.dart:159
     KitChoiceList(
-        choices =
-            AppLanguage.entries.filter { it.tag == null || it.tag in LanguageCoverage.offered }.map { item ->
-                val share = item.tag?.let { LanguageCoverage.percent[it] }
-                KitChoice(
-                    item,
-                    languageWords(item),
-                    supporting =
-                        share
-                            ?.takeIf { it < 100 }
-                            ?.let { stringResource(Res.string.languagePickerPartlyTranslated, it) },
-                )
-            },
+        choices = languageChoices(language),
         selected = language,
         semanticsLabel = stringResource(Res.string.e7LocaleUiLanguage),
         modifier = Modifier.testTag("language-choices"),

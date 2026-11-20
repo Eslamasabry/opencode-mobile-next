@@ -791,4 +791,15 @@
     <string name="appearanceWaitMarksColour">Warna</string>
     <string name="appearanceWaitMarksNote">Gambar kecil bergerak di samping tulisan seperti “Memulai OpenCode…”.</string>
     <string name="e7LocaleUiItalian">Italiano</string>
+    <string name="languageNameEnglish">Inggris</string>
+    <string name="languageNameArabic">Arab</string>
+    <string name="languageNameSpanish">Spanyol</string>
+    <string name="languageNameJapanese">Jepang</string>
+    <string name="languageNamePortuguese">Portugis</string>
+    <string name="languageNameRussian">Rusia</string>
+    <string name="languageNameVietnamese">Vietnam</string>
+    <string name="languageNameIndonesian">Indonesia</string>
+    <string name="languageNameFrench">Prancis</string>
+    <string name="languageNameChinese">Tionghoa</string>
+    <string name="languageNameItalian">Italia</string>
 </resources>

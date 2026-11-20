@@ -861,4 +861,15 @@
     <string name="appearanceWaitMarksColour">Цвет</string>
     <string name="appearanceWaitMarksNote">Маленькие движущиеся картинки рядом со словами вроде «Запуск OpenCode…».</string>
     <string name="e7LocaleUiItalian">Italiano</string>
+    <string name="languageNameEnglish">Английский</string>
+    <string name="languageNameArabic">Арабский</string>
+    <string name="languageNameSpanish">Испанский</string>
+    <string name="languageNameJapanese">Японский</string>
+    <string name="languageNamePortuguese">Португальский</string>
+    <string name="languageNameRussian">Русский</string>
+    <string name="languageNameVietnamese">Вьетнамский</string>
+    <string name="languageNameIndonesian">Индонезийский</string>
+    <string name="languageNameFrench">Французский</string>
+    <string name="languageNameChinese">Китайский</string>
+    <string name="languageNameItalian">Итальянский</string>
 </resources>
