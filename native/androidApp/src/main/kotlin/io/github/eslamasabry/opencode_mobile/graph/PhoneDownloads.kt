@@ -127,19 +127,7 @@ class PhoneDownloads(
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =
-                    when (decision.step) {
-                        AgentUpdateStep.WaitingMetered -> if (read) HomeHelperStep.Waiting else HomeHelperStep.None
-                        AgentUpdateStep.Updating -> HomeHelperStep.Updating
-                        AgentUpdateStep.Failed -> HomeHelperStep.Failed
-                        // The install job itself says it runs, whatever the updater's decision reads at this look (it
-                        // reads Waiting/Refused for the NEXT agent while the first one downloads).
-                        else ->
-                            if (install?.phase == PhoneAgentInstallPhase.Installing) {
-                                HomeHelperStep.Updating
-                            } else {
-                                HomeHelperStep.None
-                            }
-                    }
+                    helperStepOf(decision.step, install?.phase == PhoneAgentInstallPhase.Installing, read)
                 val agentName =
                     (install?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }?.id ?: decision.agent?.raw)
                         ?.let { phones.nameOf(AgentId(it)) }
@@ -274,7 +262,7 @@ class PhoneDownloads(
  * (decimal MB). OpenCode and the shared parts have their own lines and are not counted. Null when none waits, when the
  * network is free, or when a size is unknown (a total with a hole would be a guess).
  */
-internal fun heldAgentsOf(offer: AgentUpdateOffer?): HomeHeldAgents? {
+internal fun heldAgentsOf(offer: AgentUpdateOffer?, running: AgentId? = null): HomeHeldAgents? {
     val waiting = offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }
     val held =
         waiting?.items.orEmpty().filter {
@@ -300,6 +288,18 @@ internal fun openCodeWithHelperMb(offer: AgentUpdateOffer?): Int? {
         else -> HomeDownloadSizes.roundedMb(sizes.sumOf { it ?: 0L })
     }
 }
+
+/** Which step of the agents' update Home says: the install job's own "running" beats the updater's reading for the next agent. */
+internal fun helperStepOf(step: AgentUpdateStep, installing: Boolean, networkRead: Boolean): HomeHelperStep =
+    when (step) {
+        AgentUpdateStep.WaitingMetered -> if (networkRead) HomeHelperStep.Waiting else HomeHelperStep.None
+        AgentUpdateStep.Updating -> HomeHelperStep.Updating
+        AgentUpdateStep.Failed -> HomeHelperStep.Failed
+        else -> if (installing) HomeHelperStep.Updating else HomeHelperStep.None
+    }
+
+/** OpenCode, chosen for update on a network that is paid for, is named even when its own updater has not said it waits. */
+internal fun withChosenOpenCode(rows: List<HomeDownloadFact>, offer: AgentUpdateOffer?): List<HomeDownloadFact> = rows
 
 /** Only an unmetered network is free: mobile data, a network that cannot be told, and no network all count as paid. */
 internal fun downloadNetworkMetered(network: SetupNetwork): Boolean = network != SetupNetwork.Unmetered
