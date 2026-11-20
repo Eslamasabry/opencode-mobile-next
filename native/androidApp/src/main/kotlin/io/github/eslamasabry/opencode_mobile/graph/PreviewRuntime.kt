@@ -399,6 +399,9 @@ class PreviewRuntime(
     /** Every list source whose list has been read in this run (the server in use and the ones that joined it). */
     internal fun loadedSourceIds(): Set<ProfileId> = loadedSources.value
 
+    /** The same, as a flow: Home reads again the moment a source is listed. */
+    internal val loadedSourceFlow: StateFlow<Set<ProfileId>> get() = loadedSources
+
     internal suspend fun synchronizeListSources(): Outcome<Unit> = command {
         var failed: Outcome.Failed? = null
         for (profile in profiles.profiles.value) {
