@@ -1068,20 +1068,26 @@ public fun ChatScreen(
                             // the box (not a share of the window); in less than the title, two body lines and the
                             // answers need, its body shows one line and "Details" has the rest, before anything could
                             // draw over the pinned notice (look 10098).
-                            val bottomRoom = io.github.eslamasabry.oc.ui.kit.frame.LocalKitBottomRoom.current?.invoke()
+                            // The room moves with the keyboard, frame by frame: the card reads it where it is
+                            // measured, and this page is composed again only when the card crosses the compact line.
+                            val bottomRoom = io.github.eslamasabry.oc.ui.kit.frame.LocalKitBottomRoom.current
                             val composerPx = remember { androidx.compose.runtime.mutableIntStateOf(0) }
-                            val cardRoom =
-                                bottomRoom?.let { room ->
-                                    room -
-                                        with(androidx.compose.ui.platform.LocalDensity.current) {
-                                            composerPx.intValue.toDp()
-                                        }
+                            val roomDensity = androidx.compose.ui.platform.LocalDensity.current
+                            val cardRoom: (() -> androidx.compose.ui.unit.Dp)? =
+                                remember(bottomRoom, roomDensity) {
+                                    bottomRoom?.let { room ->
+                                        { room() - with(roomDensity) { composerPx.intValue.toDp() } }
+                                    }
                                 }
-                            val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+                            val fontScale = roomDensity.fontScale
+                            val compact by remember(cardRoom, fontScale) {
+                                androidx.compose.runtime.derivedStateOf {
+                                    cardRoom != null && cardRoom() < REQUEST_FULL_ROOM_DP.dp * fontScale
+                                }
+                            }
                             androidx.compose.runtime.CompositionLocalProvider(
                                 io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestRoom provides cardRoom,
-                                io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestCompact provides
-                                    (cardRoom != null && cardRoom < REQUEST_FULL_ROOM_DP.dp * fontScale),
+                                io.github.eslamasabry.oc.ui.kitchat.request.LocalKitRequestCompact provides compact,
                             ) {
                             if (requestActions != null)
                                 ChatRequestSlot(
