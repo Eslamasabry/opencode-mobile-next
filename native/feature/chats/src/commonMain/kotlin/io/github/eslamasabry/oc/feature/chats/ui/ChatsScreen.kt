@@ -111,7 +111,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
-import io.github.eslamasabry.oc.ui.words.res.stageStartingAgents
 import io.github.eslamasabry.oc.ui.words.res.stageStartingHelper
 import io.github.eslamasabry.oc.ui.words.res.stageStartingLinux
 import io.github.eslamasabry.oc.ui.words.res.stageStartingOpenCode
@@ -311,7 +310,6 @@ public fun ChatsScreen(
     val downloadStatus =
         if (HomeDownloadRules.agentLineWins(state.download, agentLine != null)) agentLine else downloadLine
     val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
-    val ownLines = if (downloadInList) listOfNotNull(downloadLine, agentLine) else emptyList()
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
@@ -532,10 +530,14 @@ public fun ChatsScreen(
                     }
                 }
             }
-            ownLines.forEach { line ->
-                item(key = "home-line-${line.id}", contentType = "home-own-line") {
-                    Box(kitItemMotion()) { io.github.eslamasabry.oc.ui.kit.status.KitStatusLine(line) }
-                }
+            // Each line has a place of its own that is always in the list, and the kit's fold opens and closes it: a
+            // line that arrives grows into its room and the rows under it glide down with it, instead of the list
+            // dropping by the line's height in one frame (A2 frame 14, 13.569 s: 25 px at once, no motion).
+            item(key = "home-line-download", contentType = "home-own-line") {
+                io.github.eslamasabry.oc.ui.kit.status.KitStatusLineFold(downloadLine.takeIf { downloadInList })
+            }
+            item(key = "home-line-agents", contentType = "home-own-line") {
+                io.github.eslamasabry.oc.ui.kit.status.KitStatusLineFold(agentLine.takeIf { downloadInList })
             }
             if (state.phase != ChatsPhase.Opening)
                 sections.forEachIndexed { index, section -> item(key = "home-section-$index", contentType = "home-section") { section() } }
@@ -1522,9 +1524,10 @@ private fun HomeDownloadAsk(kind: HomeDownloadKind?, shown: HomeDownloadFact?, a
 
 /** The words for the stage home names at the end of the "Recent" line. */
 internal fun homeStageWords(stage: io.github.eslamasabry.oc.feature.chats.presentation.HomeStage): org.jetbrains.compose.resources.StringResource =
-    when (stage) {
+    when (stage.named()) {
         io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Linux -> Res.string.stageStartingLinux
         io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.OpenCode -> Res.string.stageStartingOpenCode
         io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Helper -> Res.string.stageStartingHelper
-        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Agents -> Res.string.stageStartingAgents
+        // named() folds the agents' warm-up into the helper's name, so this is never reached for it.
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Agents -> Res.string.stageStartingHelper
     }
