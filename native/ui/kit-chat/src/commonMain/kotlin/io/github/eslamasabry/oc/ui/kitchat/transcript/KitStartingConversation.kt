@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,17 +18,16 @@ import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -118,14 +118,17 @@ public fun KitStartingConversation(
                 modifier = Modifier.padding(top = Space.S2.dp),
                 field = {
                     agent?.takeIf(String::isNotBlank)?.let {
-                        Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
-                            KitText(
-                                stringResource(Res.string.upgradeComposerAsk, it),
-                                role = TypeRole.Body,
-                                tone = TextTone.Tertiary,
-                                kind = KitTextKind.Frame,
-                            )
-                        }
+                        KitField(
+                            state = rememberTextFieldState(),
+                            label = stringResource(Res.string.upgradeComposerAsk, it),
+                            kind = KitFieldKind.Multiline,
+                            multilineLines = 1..5,
+                            labelShown = false,
+                            framed = false,
+                            composer = true,
+                            // The outgoing bubble already announces why input is unavailable.
+                            enabled = KitEnabled.Disabled(""),
+                        )
                     }
                 },
                 // Keep the composer's two rows while the conversation has no input actions yet.
