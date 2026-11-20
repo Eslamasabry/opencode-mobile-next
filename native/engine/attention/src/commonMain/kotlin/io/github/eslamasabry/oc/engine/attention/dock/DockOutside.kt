@@ -214,6 +214,10 @@ public object DockOutside {
         // says only "Open" / "Stop"; one that acts on another conversation, or a row that speaks for several, names it.
         val titled = needs.singleOrNull() ?: working.singleOrNull()?.takeIf { needs.isEmpty() }
 
+        val openLabel = if (titled?.ref == openEntry.ref) words.open() else words.openNamed(entryName(openEntry))
+        val stopLabel =
+            stopEntry?.let { if (titled?.ref == it.ref) words.stop() else words.stopNamed(entryName(it)) }.orEmpty()
+
         val only = if (needs.isEmpty() && working.size == 1) working.single() else null
         val progress =
             (only?.state as? DockState.WorkingWithTasks)?.takeIf { it.total > 0 }?.let { (it.done * 100 / it.total).coerceIn(0, 100) }
@@ -238,8 +242,8 @@ public object DockOutside {
             workingCount = working.size,
             progress = progress,
             subText = server?.let { words.onServer(NotificationText.redact(it, MAX_NAME)) }.orEmpty(),
-            open = OutsideAction(openEntry.ref, if (titled?.ref == openEntry.ref) words.open() else words.openNamed(entryName(openEntry))),
-            stop = stopEntry?.let { OutsideAction(it.ref, if (titled?.ref == it.ref) words.stop() else words.stopNamed(entryName(it))) },
+            open = OutsideAction(openEntry.ref, openLabel),
+            stop = stopEntry?.let { OutsideAction(it.ref, stopLabel) },
             // Live facts only: quiet recent rings (the dock is always available) come and go without new alerts.
             pulses = entries.filter { it.state != DockState.Idle }.sumOf { e -> e.pulse + e.children.sumOf { it.pulse } },
         )
