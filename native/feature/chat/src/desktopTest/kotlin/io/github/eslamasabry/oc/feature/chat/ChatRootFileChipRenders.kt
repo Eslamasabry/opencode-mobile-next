@@ -79,7 +79,7 @@ class ChatRootFileChipRenders {
             }
         }
 
-    private fun shoot(mode: AppearanceMode, name: String) {
+    private fun shoot(mode: AppearanceMode, name: String, width: Int = WIDTH, fontScale: Float = 1f) {
         Locale.setDefault(Locale.forLanguageTag("en"))
         // The real presenter checks the names the reply shows against the files the fake server lists, as it does in
         // the app, so the chips are the ones it confirms (notes.txt and README.md; docs.md is not there).
@@ -93,9 +93,9 @@ class ChatRootFileChipRenders {
         val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val states = presenter.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        runDesktopComposeUiTest(width, HEIGHT) {
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
+                CompositionLocalProvider(LocalDensity provides Density(DENSITY, fontScale)) {
                     KitTheme(
                         appearance = KitAppearance(mode = mode, style = Style.Solid, motion = MotionLevel.Full),
                         platform = DesktopKitPlatform(),
@@ -123,10 +123,12 @@ class ChatRootFileChipRenders {
         if (out == null) return
         shoot(AppearanceMode.Dark, "1-notes-chip-dark")
         shoot(AppearanceMode.Light, "2-notes-chip-light")
+        shoot(AppearanceMode.Dark, "3-notes-chip-dark-360-1.3", width = WIDTH_360, fontScale = 1.3f)
     }
 
     private companion object {
         const val WIDTH = 1081
+        const val WIDTH_360 = 945
         const val HEIGHT = 2402
         const val DENSITY = 2.625f
         const val REPLY = "The notes are in `notes.txt`, and the short guide is in `README.md`. `docs.md` is not there yet."
