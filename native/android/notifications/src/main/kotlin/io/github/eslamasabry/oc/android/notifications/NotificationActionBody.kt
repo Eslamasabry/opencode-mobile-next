@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -39,6 +40,10 @@ public class NotificationActionBody(
     private val answerDeadline: Duration = 15.seconds,
     /** The person swiped the status row away (S11-9): reply watch ends for that run only. */
     private val onRowDismissed: (run: ReplyRun) -> Unit = {},
+    /** The person tapped Stop for [conversation]: the row shows "Stopping…" at once, before the stop call returns. */
+    private val onStopRequested: (conversation: ConversationRef) -> Unit = {},
+    /** The stop call for [conversation] ended with [outcome] (StopSent or StopFailed): the row settles. */
+    private val onStopSettled: (conversation: ConversationRef, outcome: ShadeOutcome) -> Unit = { _, _ -> },
 ) {
     private data class AnswerClaim(
         val profile: String,
@@ -117,15 +122,24 @@ public class NotificationActionBody(
         // Stop needs the phone unlocked, as Allow once does: Android 12+ asks through the action's
         // setAuthenticationRequired; below that nothing is stopped while locked (the row stays, its tap opens the chat).
         if (lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()) return ShadeOutcome.Ignored
-        val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
+        // Show the answer to the tap first: the person sees "Stopping…" while the call is made.
+        val outcome =
+            try {
+                withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                onStopSettled(conversation, ShadeOutcome.StopFailed)
+                throw e
+            }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
-        return if (
-            outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound
-        ) {
-            ShadeOutcome.StopSent
-        } else {
-            ShadeOutcome.StopFailed
-        }
+        val result =
+            if (
+                outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound
+            ) {
+                ShadeOutcome.StopSent
+            } else {
+                ShadeOutcome.StopFailed
+            }
+        return result
     }
 
     private fun replyOf(tap: ShadeTap): ShadeReply? =

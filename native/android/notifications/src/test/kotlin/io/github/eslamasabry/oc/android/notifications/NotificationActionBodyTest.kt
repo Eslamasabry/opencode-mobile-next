@@ -258,6 +258,58 @@ class NotificationActionBodyTest {
             assertEquals(1, stops.size)
         }
 
+    private fun stopIntent() =
+        Intent(FrozenExtras.ACTION_STATUS).apply {
+            data = Uri.parse(FrozenExtras.STOP_REPLY_URI)
+            putExtra(FrozenExtras.EXTRA_STATUS_ACTION, "stop_reply")
+            putExtra(FrozenExtras.EXTRA_STATUS_SESSION, "ses_7")
+            putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
+        }
+
+    @Test
+    fun `B-ANDR-092 a Stop tap shows Stopping at once, then settles with the stop's result`() = runTest {
+        val target = ConversationRef(ProfileId("p1"), SessionId("ses_7"))
+        val gate = CompletableDeferred<Outcome<Unit>>()
+        val events = mutableListOf<String>()
+        val handler =
+            NotificationActionBody(
+                shade, { Unit.ok() }, { s -> events += "stop:${s.sessionId.raw}"; gate.await() }, lock,
+                onStopRequested = { events += "requested:${it.sessionId.raw}" },
+                onStopSettled = { c, o -> events += "settled:${c.sessionId.raw}:$o" },
+            )
+        val tap = async { handler.onStatusAction(stopIntent()) }
+        runCurrent()
+        // Before the stop call returns, the row has already been told.
+        assertEquals(listOf("requested:ses_7", "stop:ses_7"), events)
+        gate.complete(Unit.ok())
+        assertEquals(ShadeOutcome.StopSent, tap.await())
+        assertEquals("settled:ses_7:StopSent", events.last())
+        // A stop that fails settles as failed, so the row can offer Stop again.
+        events.clear()
+        val failing = NotificationActionBody(shade, { Unit.ok() }, { Failed(Failure.Network()) }, lock,
+            onStopRequested = { events += "requested" }, onStopSettled = { _, o -> events += "settled:$o" })
+        assertEquals(ShadeOutcome.StopFailed, failing.onStatusAction(stopIntent()))
+        assertEquals(listOf("requested", "settled:StopFailed"), events)
+        assertEquals(target.sessionId, SessionId("ses_7"))
+    }
+
+    @Test
+    fun `B-ANDR-092 a stopping row says Stopping and offers no second Stop, buttons without a name`() {
+        val renderer = StatusRenderer(app, NotifyWords(app) { "en" })
+        val target = ConversationRef(ProfileId("p1"), SessionId("ses_7"))
+        fun row(stopping: Boolean) =
+            renderer.build(
+                StatusContent(StatusKind.Working, "Working on Fix login", text = "Working", conversation = target,
+                    actions = listOf(StatusAction.Open, StatusAction.StopReply), openLabel = "Open", stopLabel = "Stop",
+                    stopping = stopping), true, null)
+        val before = row(false)
+        assertEquals(listOf("Open", "Stop"), before.actions.map { it.title.toString() })
+        assertEquals("Working", before.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString())
+        val after = row(true)
+        assertEquals("Stopping…", after.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString())
+        assertEquals(listOf("Open"), after.actions.map { it.title.toString() })
+    }
+
     @Test
     fun `dock outside a locked phone on API 26-30 stops nothing from the row, as Allow once does`() =
         runTest {

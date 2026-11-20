@@ -26,4 +26,6 @@
     </plurals>
     <string name="notify_status_action_open_named">Ouvrir %1$s</string>
     <string name="notify_status_action_stop_named">Arrêter %1$s</string>
+    <string name="notify_status_action_stop">Arrêter</string>
+    <string name="notify_status_stopping">Arrêt en cours…</string>
 </resources>

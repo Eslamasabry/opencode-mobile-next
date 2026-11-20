@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.android.notifications.QuestionShape
 import io.github.eslamasabry.oc.android.notifications.ReplyStopper
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswer
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
+import io.github.eslamasabry.oc.android.notifications.ShadeOutcome
 import io.github.eslamasabry.oc.android.notifications.ShadeReply
 import io.github.eslamasabry.oc.android.notifications.StopReason
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
@@ -414,6 +415,10 @@ class PlatformHub(
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
     private var pinnedLaunchGeneration = 0L
 
+    /** The status row's "Stopping…" hooks, set by the status receiver from the attention runtime (process-wide, so the cold-start path has them). */
+    @Volatile var onStopRequested: (ConversationRef) -> Unit = {}
+    @Volatile var onStopSettled: (ConversationRef, Boolean) -> Unit = { _, _ -> }
+
     /** Answers a shade tap on the exact pending request of the live connection (plan 11 §10.6). */
     val actionBody: NotificationActionBody =
         NotificationActionBody(
@@ -449,17 +454,25 @@ class PlatformHub(
                     },
                     delegate = ShadeAnswerer { answer -> answer(answer) },
                 ),
+            onStopRequested = { onStopRequested(it) },
+            onStopSettled = { ref, outcome -> onStopSettled(ref, outcome == ShadeOutcome.StopSent) },
             stopper =
                 ReplyStopper { ref ->
-                    val graph = registry.live.value[ref.profileId]
+                    // A cold process has no live connection yet: wait (bounded) for it instead of calling it "gone".
+                    val graph =
+                        registry.live.value[ref.profileId]
+                            ?: withTimeoutOrNull(STOP_GRAPH_WAIT) {
+                                registry.live.first { it[ref.profileId] != null }[ref.profileId]
+                            }
+                    val known = runtime.snapshot.value.items.firstOrNull { it.ref == ref }
+                    // A run waiting on a permission or question is still a run to stop. A run the feed does not
+                    // know yet (just after a cold start) is stopped anyway: a stop for an idle chat is harmless.
                     val stillRunning =
-                        runtime.snapshot.value.items.any {
-                            // A run waiting on a permission or question is still a run to stop.
-                            it.ref == ref &&
-                                (it.status == ChatStatus.Running ||
-                                    it.status == ChatStatus.NeedsYou)
-                        }
-                    if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
+                        known == null ||
+                            known.status == ChatStatus.Running ||
+                            known.status == ChatStatus.NeedsYou
+                    if (graph == null) Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                    else if (!stillRunning) Outcome.Failed(Failure.NotFound())
                     // The chat's own Stop path (the person's Stop recorded, waiting sends called off), not a bare
                     // server stop.
                     else stopLikeTheChat(graph, ref)
@@ -1798,6 +1811,7 @@ class PlatformHub(
     private companion object {
         const val MAX_REQUEST_TOKENS = 256
         const val REQUEST_NOTIFY = 4747
+        const val STOP_GRAPH_WAIT = 8_000L
         const val EXCERPT_WAIT_MS = 5_000L
         const val EXCERPT_MESSAGES = 6
         const val SEED_WAIT_MS = 10_000L

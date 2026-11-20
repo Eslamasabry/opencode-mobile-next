@@ -55,6 +55,12 @@ public interface DockOutsideWords {
     public fun onServer(server: String): String
     public fun openNamed(name: String): String
     public fun stopNamed(name: String): String
+
+    /** "Open", for a row whose title already names the conversation the button opens. */
+    public fun open(): String
+
+    /** "Stop", for a row whose title already names the conversation the button stops. */
+    public fun stop(): String
 }
 
 /** What the dock does not know and the app does. All keyed by conversation; names inside are masked again here. */
@@ -204,6 +210,8 @@ public object DockOutside {
                     )
                     .value
         val stopEntry = working.singleOrNull()?.takeIf { needs.none { n -> n.ref == it.ref } }
+        // The conversation the title names, if it names exactly one. A button that acts on that very conversation
+        // says only "Open" / "Stop"; one that acts on another conversation, or a row that speaks for several, names it.
 
         val only = if (needs.isEmpty() && working.size == 1) working.single() else null
         val progress =
