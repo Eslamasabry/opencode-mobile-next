@@ -450,6 +450,7 @@ public class PaseoGateway(
     internal var listening = false
     private var retry: Job? = null
     private var retryAttempt = 0
+    private var connectedAtMs = 0L
     private var recovering: Job? = null
     private var recoveryDegraded = false
     private var reconciledEpoch: Int? = null
@@ -2526,6 +2527,8 @@ public class PaseoGateway(
         hooks.forEach { it.onDisconnect() }
         refreshCapabilities()
         recoveryDegraded = true
+        if (connectedAtMs > 0L && nowMs() - connectedAtMs >= STABLE_RESET_MS) retryAttempt = 0
+        connectedAtMs = 0L
         if (listening && !closed)
             streamStatus.value = StreamStatus.Reconnecting(retryAttempt + 1, null)
         scheduleReconnect()
@@ -2614,7 +2617,7 @@ public class PaseoGateway(
         }
         lastRecoveryFailure = null
         recoveryDegraded = false
-        retryAttempt = 0
+        connectedAtMs = nowMs()
         if (!announced) announceConnected()
     }
 
@@ -2707,6 +2710,7 @@ public class PaseoGateway(
         internal const val KEPT_HISTORY_SESSIONS: Int = 64
 
         public const val ANNOUNCE_GRACE_MS: Long = 3_000
+        private const val STABLE_RESET_MS: Long = 30_000L
 
         /** Timelines this long are mapped off the lane (docs/qa/json-decode-2026-10-28). */
         public const val BACKGROUND_TIMELINE_ENTRIES: Int = 100

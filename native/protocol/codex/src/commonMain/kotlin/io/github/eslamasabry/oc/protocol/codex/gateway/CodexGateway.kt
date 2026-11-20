@@ -150,6 +150,7 @@ public class CodexGateway(
     private var recovering: Job? = null
     private var retry: Job? = null
     private var retryAttempt = 0
+    private var connectedAtMs = 0L
     private var runRevision = 0L
 
     private val stream = MutableSharedFlow<GatewayEnvelope>(extraBufferCapacity = 4096)
@@ -175,6 +176,10 @@ public class CodexGateway(
                     approvals.clear()
                     turns.clear()
                     recoveryDegraded = true
+                    if (connectedAtMs > 0L && nowMs() - connectedAtMs >= STABLE_RESET_MS) {
+                        retryAttempt = 0
+                    }
+                    connectedAtMs = 0L
                     emitState(reconnecting())
                     scheduleReconnect()
                 }
@@ -1196,7 +1201,7 @@ public class CodexGateway(
                 return
             }
             recoveryDegraded = false
-            retryAttempt = 0
+            connectedAtMs = nowMs()
             emitState(StreamStatus.Connected)
         } catch (e: CodexException) {
             recoveryDegraded = true
@@ -1235,8 +1240,11 @@ public class CodexGateway(
     public val isClosed: Boolean
         get() = closed
 
+    private fun nowMs(): Long = clock.now().toEpochMilliseconds()
+
     private companion object {
         const val MAX_RESUMED = 8
+        const val STABLE_RESET_MS = 30_000L
         val CONTROL = Regex("[\\x00-\\x1f\\x7f]")
         val TURN_FAILED = io.github.eslamasabry.oc.core.common.WireTag("CodexTurnFailed")
     }
