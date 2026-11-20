@@ -387,7 +387,23 @@ sync() {
             .filter { it.isNotBlank() && '$' !in it && "\"name\"" !in it && "sherpa" !in it && "\"version\"" !in it && "\"private\"" !in it && it.trim() !in setOf("{", "}", "},") && "overrides" !in it }
             .map { it.replace('\u0001', '$') }
         assertTrue(lines.size > 80, "${lines.size}")
-        val missing = lines.filter { it !in generated }
-        assertTrue(missing.isEmpty(), "missing from the port:\n" + missing.joinToString("\n"))
+        // 21e5e51b54 replaced the released app's Node swap (unpack into node.new, move the old Node aside to node.old,
+        // move the new one in) by ONE atomic rename of the node link to a proven versioned folder, so a kill leaves a
+        // Node that starts. Exactly those released lines are gone from the port; nothing else may be.
+        val replacedBySwitch = setOf(
+            "trap 'rm -rf \"\$node_dir.new\"' EXIT",
+            "rm -rf \"\$node_dir.new\"",
+            "mkdir -p \"\$node_dir.new\"",
+            "oc_untar \"\$node_part\" \"\$node_dir.new\" 1",
+            "rm -rf \"\$node_dir.old\"",
+            "if [ -d \"\$node_dir\" ]; then mv \"\$node_dir\" \"\$node_dir.old\"; fi",
+            "if ! mv \"\$node_dir.new\" \"\$node_dir\"; then",
+            "  [ ! -d \"\$node_dir.old\" ] || mv \"\$node_dir.old\" \"\$node_dir\"",
+            "  ln -sf \"\$node_dir/bin/\$node_tool\" \"/home/oc/.local/bin/\$node_tool\"",
+        )
+        val missing = lines.filter { it !in generated && it !in replacedBySwitch }
+        assertTrue(missing.isEmpty(), "missing from the port: " + missing.joinToString(" | "))
+        // The replacement is really there: the link is switched by one rename.
+        assertTrue("mv -T \"\$node_link_new\" \"\$node_dir\"" in generated)
     }
 }

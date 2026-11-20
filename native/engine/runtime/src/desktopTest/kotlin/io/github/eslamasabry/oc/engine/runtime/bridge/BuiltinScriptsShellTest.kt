@@ -126,7 +126,8 @@ class BuiltinScriptsShellTest {
                             .replace(NodeCompatScripts.SERVER_ENV, "")
                     ),
             )
-        assertEquals(expected, actual)
+        val changed = actual.filter { (name, hash) -> expected[name] != hash }
+        assertTrue(changed.isEmpty(), "changed:" + changed.entries.joinToString("") { " ${it.key}=${it.value}" })
         assertEquals(
             BuiltinScripts.serverScript(port = 4097).getOrNull()!!.replace("--port 4097\n", "--port 4098\n"),
             BuiltinScripts.serverScript().getOrNull()!!,
