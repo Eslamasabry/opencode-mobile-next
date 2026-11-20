@@ -28,6 +28,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotices
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -56,12 +59,12 @@ import kotlinx.coroutines.flow.StateFlow
 class AgentUpdateNoRoomRenders {
     private val out = File("build/agent-update-noroom").also { it.mkdirs() }
 
-    private fun shoot(name: String, state: ChatsUi, dark: Boolean) {
+    private fun shoot(name: String, state: ChatsUi, dark: Boolean, fontScale: Float = 1f) {
         Locale.setDefault(Locale.forLanguageTag("en"))
         val mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light
         runDesktopComposeUiTest(900, 2000) {
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(2.5f, 1f)) {
+                CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
                     ChatEnvironment {
                         KitTheme(
                             appearance = KitAppearance(mode = mode, motion = MotionLevel.Off),
@@ -155,7 +158,7 @@ class AgentUpdateNoRoomRenders {
     }
 
     @Test
-    fun `renders of the update sheet with too little room and of Home after Not now, at 360 dp`() {
+    fun `renders of the update sheet with too little room and of Home with its update lines, at 360 dp`() {
         val keep = AgentUpdateChoice.Keep
         val signedOut =
             mixed().copy(
@@ -177,11 +180,20 @@ class AgentUpdateNoRoomRenders {
                             "opencode" to keep,
                         )
                     ),
-                "home-after-not-now-review-and-sign-in" to
-                    sheetState(emptyMap(), offer(FREE_MB, answered = true), signedOut),
             )
         for ((name, state) in scenes)
             for (dark in listOf(false, true)) shoot("$name-${if (dark) "dark" else "light"}", state, dark)
+        // Home with two own lines stacked above the lists, at text 1.0 and 1.3: the sign-in notice, then the update's.
+        val waiting = sheetState(emptyMap(), offer(FREE_MB, answered = true), signedOut)
+        val running =
+            signedOut.copy(
+                download =
+                    HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Running(40), name = "Claude Code")
+            )
+        val looks = listOf(1f, 1.3f).flatMap { scale -> listOf(false, true).map { dark -> scale to dark } }
+        for ((name, state) in listOf("home-review-and-sign-in" to waiting, "home-running-and-sign-in" to running))
+            for ((scale, dark) in looks)
+                shoot("$name-${if (scale == 1f) "1.0" else "1.3"}-${if (dark) "dark" else "light"}", state, dark, scale)
     }
 
     private companion object {
