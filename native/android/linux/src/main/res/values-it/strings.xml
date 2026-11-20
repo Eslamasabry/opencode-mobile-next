@@ -16,6 +16,7 @@
     <string name="native_phone_server_body">Il tuo agente continua a lavorare mentre usi altre app.</string>
     <string name="native_phone_server_channel">OpenCode su questo telefono</string>
     <string name="native_phone_server_description">Mostrata mentre il server del telefono o il motore del progetto è in esecuzione</string>
+    <string name="native_phone_server_title">OpenCode è in esecuzione su questo telefono</string>
     <string name="native_setup_channel">Configurazione</string>
     <string name="native_status_action_new_chat">Nuova conversazione</string>
     <string name="native_status_action_open">Apri</string>
