@@ -77,6 +77,7 @@ class OldAgentWaitsRenders {
                                 BasicComposerUi(
                                     available = false,
                                     sending = false,
+                                    steers = false,
                                     targetKey = "old",
                                     models = ComposerModels(usesDefault = true),
                                     readOnly = if (refused) ReadOnlyChat(restart = ChatRestart("antigravity", "/p", "Antigravity")) else null,

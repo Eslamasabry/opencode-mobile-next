@@ -315,4 +315,35 @@ class OldAgentConversationTest {
         assertTrue(world.readOnly.value?.restart != null, "it stays")
         world.detach()
     }
+
+    @Test
+    fun `B-CHAT-306 an old agent conversation opened at the very start of the helper start holds through every stage`() = runTest {
+        // Opened at once: the helper is starting and does not list the agent yet.
+        val helper = StartingHelper(needsNew = null)
+        val f = Fixture(this) { StartingHistory(it, conversation, helper) }
+        f.connect(this)
+        val world = GraphChatWorld(ref, f.registry, phoneServer = helper, lastKnown = f.kept)
+        val seen = mutableListOf<io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat?>()
+        backgroundScope.launch { world.readOnly.collect { seen += it } }
+        world.attach()
+        runCurrent()
+        advanceTimeBy(3_000)
+        assertEquals(ChatServerWait.StartingHelper, world.serverWait.value)
+        assertNull(world.readOnly.value)
+        // The helper answers and lists the agent, which it does not hold yet: the agent is still starting.
+        helper.needsNew = true
+        helper.stages.value = LaunchStage.Agent
+        advanceTimeBy(5_000)
+        assertEquals(ChatServerWait.StartingAgent, world.serverWait.value)
+        assertNull(world.readOnly.value, "listed but not live is not a refusal while the agent starts")
+        assertTrue(world.load.value !is ChatLoad.Live)
+        // Everything is up and the read loads the agent.
+        helper.up()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(ChatLoad.Live, world.load.value)
+        assertNull(world.readOnly.value)
+        assertTrue(seen.none { it?.restart != null }, "the notice never appeared")
+        world.detach()
+    }
 }
