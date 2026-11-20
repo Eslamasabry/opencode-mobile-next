@@ -11,4 +11,4 @@ internal object UpdaterReads {
 /** What an updater asks before it starts anything: is the app in front, and did the person choose this update. */
 @dev.zacsweers.metro.SingleIn(dev.zacsweers.metro.AppScope::class)
 @dev.zacsweers.metro.Inject
-internal class UpdaterGates(val visibility: AppVisibility, val choices: PhoneUpdateChoices)
+class UpdaterGates(val visibility: AppVisibility, val choices: PhoneUpdateChoices)

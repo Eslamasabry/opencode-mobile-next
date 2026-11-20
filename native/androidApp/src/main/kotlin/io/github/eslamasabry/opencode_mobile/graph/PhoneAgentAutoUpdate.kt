@@ -84,7 +84,7 @@ class PhoneAgentAutoUpdate(
     private val snapshot =
         SpacedSnapshot({ SystemClock.elapsedRealtime() }) {
             phones.updateFacts()?.let { facts ->
-                val records = recordBehind(facts.installed)
+                val records = recordBehind(app, facts.installed)
                 AgentSnapshot(facts, facts.behind + records, records - facts.behind)
             }
         }
