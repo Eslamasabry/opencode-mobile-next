@@ -35,11 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberDecoratedNavEntries
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.scene.Scene
-import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventTransitionState
@@ -54,8 +50,8 @@ import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.forward
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
 
 /**
- * [beside]: the window shows a list beside its page (`ShellPanes`, from 840 dp and not short); a stack whose top is a
- * list-detail pair is then drawn as two panes (`ShellPaneSceneStrategy`), anything else as today's single page.
+ * Where the window shows a list beside its page (`LocalShellPanes`, from 840 dp and not short), a stack whose top is a
+ * list-detail pair is drawn as two panes (`ShellPaneSceneStrategy`), anything else as today's single page.
  *
  * The container transform runs on tap, on button-back and under a predictive back gesture (motion lead 2026-11-07,
  * replacing option A): the gesture seeks the same transform, so a chat shrinks toward its row with the finger, a cancel
@@ -71,7 +67,6 @@ public fun ShellNavDisplay(
     onSystemBack: () -> Unit,
     baseDecorators: List<NavEntryDecorator<NavKey>>,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
-    beside: Boolean = false,
 ) {
     // Follow the same resolved policy as kit parts: the person's motion choice, system Remove animations, Saver and
     // heat all apply to navigation too. Calm (and power saver, heat) cross-fades pages; only Off is instant (M-013).
@@ -79,7 +74,8 @@ public fun ShellNavDisplay(
     val levelState = rememberUpdatedState(effectiveLevel)
     val signals = remember { GestureSignals() }
     // How many entries the scene on screen composes once no transition runs: two panes compose the list and its page.
-    val sceneEntries = if (beside && ShellPanes.layoutOf(backStack)?.detail == true) 2 else 1
+    val panes = LocalShellPanes.current
+    val sceneEntries = if (panes?.beside == true && ShellPanes.layoutOf(backStack)?.detail == true) 2 else 1
     SideEffect { signals.sceneEntries = sceneEntries }
     // Which pages the transition in flight joins: rows pair with a page only when one of them grows from a row.
     val growRoutes = remember { GrowRoutes(backStack.lastOrNull()) }
@@ -126,23 +122,11 @@ public fun ShellNavDisplay(
             val entry = entryProvider(key)
             val motion = (key as? AppRoute)?.motion
             val metadata = entry.metadata + (ShellPanes.ROUTE_KEY to key)
-            NavEntry(key, entry.contentKey, if (motion == null) metadata else metadata + (ShellMotion.MOTION_KEY to motion)) {
-                entry.Content()
-            }
+            val marked = if (motion == null) metadata else metadata + (ShellMotion.MOTION_KEY to motion)
+            NavEntry(key, entry.contentKey, marked) { entry.Content() }
         }
     }
-    // While only a list is open beside its pages, its resting page (Home: a new conversation) fills the pages side. It is
-    // not on the back stack, so it gets its own saved state and view models here, cleared when it leaves the window.
-    val restKey = if (beside) ShellPanes.layoutOf(backStack)?.takeIf { !it.detail }?.pair?.rest else null
-    val restEntry = remember(restKey, withMotion) { restKey?.let { withMotion.entryOrNull(it) } }
-    val rest =
-        rememberDecoratedNavEntries(
-                listOfNotNull(restEntry),
-                listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
-            )
-            .firstOrNull()
-    val sceneStrategies =
-        remember(beside, rest) { listOf(ShellPaneSceneStrategy(beside, rest), SinglePaneSceneStrategy<NavKey>()) }
+    val sceneStrategies = rememberPaneStrategies(panes, backStack, withMotion)
 
     // Flutter's fade-forwards paints the page colour under both pages (its backgroundColor): while the covered page has
     // faded and the arriving one is still a quarter width short and half transparent, the ground shows there, never
@@ -223,18 +207,6 @@ public fun ShellNavDisplay(
  * that grows out of its control slides up.
  */
 internal val LocalShellRowTransform: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { true }
-
-/**
- * The entry for [key], or null when no feature installed one: a shell without the resting page's feature (a test, a
- * gallery) shows the list with nothing beside it. Nav3's entry provider refuses an unknown key with an
- * IllegalStateException.
- */
-private fun ((NavKey) -> NavEntry<NavKey>).entryOrNull(key: NavKey): NavEntry<NavKey>? =
-    try {
-        this(key)
-    } catch (_: IllegalStateException) {
-        null
-    }
 
 /** Without the transform, a page that grows from a row moves like every other page. */
 private fun RouteMotion?.withTransform(transform: Boolean): RouteMotion? =

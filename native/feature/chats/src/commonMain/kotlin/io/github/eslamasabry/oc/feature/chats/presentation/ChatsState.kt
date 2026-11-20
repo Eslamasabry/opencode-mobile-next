@@ -71,19 +71,21 @@ public object ChatsState {
         // newest first); then the five latest of the rest.
         val (live, rest) = listed.partition { it.status == ChatStatus.NeedsYou || it.status == ChatStatus.Running }
         val rightNow = live.sortedWith(ChatFeedRules.order).map { row(it, nowMs) }
-        val latest =
-            // F: connection/sessions.dart sortedSessions(): pinned conversations come first, then the newest.
+        // F: connection/sessions.dart sortedSessions(): pinned conversations come first, then the newest.
+        val sortedRest =
             rest.sortedWith(
-                    compareByDescending<ChatFeedItem> { it.identity in pinned }
-                        .thenByDescending { it.lastActivityMs }
-                        .thenBy { it.identity }
-                )
-                .take(RECENT_ROWS)
-                .map { row(it, nowMs) }
+                compareByDescending<ChatFeedItem> { it.identity in pinned }
+                    .thenByDescending { it.lastActivityMs }
+                    .thenBy { it.identity }
+            )
+        val latest = sortedRest.take(RECENT_ROWS).map { row(it, nowMs) }
+        // Big screens: the list beside a conversation shows the rest too, so switching is one tap.
+        val earlier = sortedRest.drop(RECENT_ROWS).map { row(it, nowMs) }
         return ChatsUi(
             phase = phase,
             rightNow = rightNow.toImmutableList(),
             recent = latest.toImmutableList(),
+            earlier = earlier.toImmutableList(),
             showProjects = filters.projectDirectory == null && visible.distinctBy { it.projectName }.size > 1,
             runningShown = visible.count { it.status == ChatStatus.Running },
             showAgents = agentsDiffer(rightNow + latest + briefUi?.rows.orEmpty()),

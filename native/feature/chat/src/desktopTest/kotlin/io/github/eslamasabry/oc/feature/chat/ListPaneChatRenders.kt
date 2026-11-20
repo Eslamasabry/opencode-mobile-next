@@ -14,6 +14,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
@@ -34,7 +35,8 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitCapsAtStart
+import io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumn
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPaneColumn
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneWindow
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -82,9 +84,16 @@ class ListPaneChatRenders {
     }
 
     private val code =
-        "The flakiness comes from `CheckoutBloc` racing the price refresh. Here is the settled wait, and the diff that " +
-            "went into the test:\n\n```kotlin\nfun applyCoupon(code: String): Total {\n    val price = api.refreshPrice()   // awaits the network\n    return cart.total.copy(discount = coupons.lookup(code).amount, price = price)\n}\n```\n\n" +
-            "```diff\n--- a/test/checkout_test.dart\n+++ b/test/checkout_test.dart\n@@ -41,7 +41,9 @@ void main() {\n   test('coupon applies once', () async {\n-    await Future.delayed(const Duration(milliseconds: 200));\n+    await bloc.stream.firstWhere((s) => s.settled);\n     expect(bloc.state.total, 1800);\n+    expect(bloc.state.couponApplications, 1);\n   });\n```\n\nI ran it ten times and every run passed."
+        "The flakiness comes from `CheckoutBloc` racing the price refresh. Here is the settled wait, and the " +
+            "diff that " +
+            "went into the test:\n\n```kotlin\nfun applyCoupon(code: String): Total {\n    val price = api.re" +
+                "freshPrice()   // awaits the network\n    return cart.total.copy(discount = coupons.lookup(code)" +
+                ".amount, price = price)\n}\n```\n\n" +
+            "```diff\n--- a/test/checkout_test.dart\n+++ b/test/checkout_test.dart\n@@ -41,7 +41,9 @@ void ma" +
+                "in() {\n   test('coupon applies once', () async {\n-    await Future.delayed(const Duration(mill" +
+                "iseconds: 200));\n+    await bloc.stream.firstWhere((s) => s.settled);\n     expect(bloc.state.t" +
+                "otal, 1800);\n+    expect(bloc.state.couponApplications, 1);\n   });\n```\n\nI ran it ten times " +
+                "and every run passed."
 
     private fun rows(): List<TranscriptRow> =
         listOf(
@@ -97,7 +106,7 @@ class ListPaneChatRenders {
         )
 
     @Composable
-    private fun Conversation() {
+    internal fun Conversation() {
         val scene = remember { ChatScene() }
         val facts = TurnFactsPresenter(FixedClock).present(runningEditFeed(), 58_000, waitingForYou = true)
         ChatScreen(
@@ -109,7 +118,10 @@ class ListPaneChatRenders {
             ),
             scene.actions,
             scene.host,
-            header = ChatHeaderSlot(ChatHeaderUi(title = "Fix flaky checkout test", projectName = "shopfront", serverName = "This phone"), scene.headerActions),
+            header = ChatHeaderSlot(
+                ChatHeaderUi(title = "Fix flaky checkout test", projectName = "shopfront", serverName = "This phone"),
+                scene.headerActions,
+            ),
             facts = facts,
             requests = RequestSlotUi(permissionCard(CardState.Waiting)),
             requestActions = NoRequestActions,
@@ -124,7 +136,10 @@ class ListPaneChatRenders {
             val platform = DesktopKitPlatform()
             runDesktopComposeUiTest(wDp * 2, hDp * 2) {
                 setContent {
-                    CompositionLocalProvider(LocalDensity provides Density(2f, 1f), LocalKitPlatform provides platform) {
+                    CompositionLocalProvider(
+                        LocalDensity provides Density(2f, 1f),
+                        LocalKitPlatform provides platform,
+                    ) {
                         KitTheme(
                             appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
                             platform = platform,
@@ -151,7 +166,18 @@ class ListPaneChatRenders {
     @Test
     fun conversationPane() =
         shoot("chat-pane-920x800", 920, 800) {
-            KitPaneWindow(Modifier.fillMaxSize()) { CompositionLocalProvider(LocalKitCapsAtStart provides true) { Conversation() } }
+            KitPaneWindow(Modifier.fillMaxSize()) { CompositionLocalProvider(
+                LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp,
+            ) { Conversation() } }
+        }
+
+    /** Decision 3: the pages pane of a 1024 x 1366 portrait tablet beside the 360 dp list. */
+    @Test
+    fun conversationPanePortrait() =
+        shoot("chat-pane-664x1366", 664, 1366) {
+            KitPaneWindow(Modifier.fillMaxSize()) {
+                CompositionLocalProvider(LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp) { Conversation() }
+            }
         }
 
     /** Before: today's conversation over the whole 1280 x 800 window. */

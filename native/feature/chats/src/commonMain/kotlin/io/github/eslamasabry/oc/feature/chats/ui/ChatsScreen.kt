@@ -106,6 +106,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
 import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
 import io.github.eslamasabry.oc.ui.kit.row.kitChosenRow
+import io.github.eslamasabry.oc.ui.kit.action.KitFab
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -374,6 +375,15 @@ public fun ChatsScreen(
         // gives the list the room above it), so no row ever passes under the button.
         bottom =
             if (!footBar) null
+            // Beside a page the list already holds every conversation: only the + (none beside New conversation).
+            else if (openBeside != null) {
+                if (newBeside) null
+                else ({
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        KitFab(stringResource(Res.string.chatsHomeNewChat), KitIcons.add, actions::newConversation)
+                    }
+                })
+            }
             else ({
                 KitFootBar(
                     label = stringResource(Res.string.chats_all_title),
@@ -556,13 +566,16 @@ public fun ChatsScreen(
                 ChatsPhase.Empty ->
                     if (openBeside != null)
                         item(key = "empty", contentType = "empty") {
+                            val newWords = stringResource(Res.string.chatsHomeNewChat)
+                            val computerWords = stringResource(Res.string.chatsHomeConnectComputer)
                             QuietEmpty(
                                 stringResource(Res.string.chatsHomeEmptyTitle),
-                                // New conversation beside it is the way to start; beside a conversation the button stays.
+                                // New conversation beside it is the way to start; beside a conversation the button
+                                // stays.
                                 if (newBeside) null
-                                else KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+                                else KitAction(newWords, actions::newConversation, icon = KitIcons.add),
                                 if (state.hasComputer) null
-                                else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
+                                else KitAction(computerWords, actions::connectComputer, icon = KitIcons.computer),
                             )
                         }
                     else
@@ -597,7 +610,9 @@ public fun ChatsScreen(
                     val above = state.brief?.rows.orEmpty().isNotEmpty()
                     // A conversation the return brief shows is said once, there.
                     val rightNow = state.rightNow.filterNot { it.key in briefKeys }
-                    val recent = state.recent.filterNot { it.key in briefKeys }
+                    // Beside a conversation the list holds every conversation, so switching is one tap.
+                    val shownRecent = if (openBeside != null) state.recent + state.earlier else state.recent
+                    val recent = shownRecent.filterNot { it.key in briefKeys }
                     if (rightNow.isNotEmpty())
                         item(key = "right-now", contentType = "right-now") {
                             Box(kitItemMotion()) {

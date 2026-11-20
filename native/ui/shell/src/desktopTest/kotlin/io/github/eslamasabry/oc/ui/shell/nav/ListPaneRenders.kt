@@ -56,7 +56,8 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 
 /**
- * Pictures only (asserts nothing): the shell at tablet and phone sizes with a Home and a conversation made of kit parts,
+ * Pictures only (asserts nothing): the shell at tablet and phone sizes with a Home and a conversation made of kit
+ * parts,
  * dark, density 2, into `build/bigscreen/list-pane/`. Big screens slice 3 (BS-LIST-PANE); the phone sizes are the
  * before/after pixel proof.
  */
@@ -169,7 +170,9 @@ class ListPaneRenders {
                                 localeTag = "en",
                                 stillFrame = true,
                             ) {
-                                Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { shell.Content() }
+                                Box(
+                                    Modifier.fillMaxSize().background(LocalKitColors.current.ground),
+                                ) { shell.Content() }
                             }
                         }
                     }

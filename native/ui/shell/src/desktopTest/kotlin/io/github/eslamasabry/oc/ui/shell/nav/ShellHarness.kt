@@ -140,7 +140,11 @@ class Harness(scale: Float = 1f, grow: Boolean = true) {
             LocalNavigationEventDispatcherOwner provides owner,
             LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
         ) {
-            KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = TestPlatform, localeTag = "en") {
+            KitTheme(
+                appearance = KitAppearance(mode = AppearanceMode.Light),
+                platform = TestPlatform,
+                localeTag = "en",
+            ) {
                 CompositionLocalProvider(LocalKitWindow provides (window ?: LocalKitWindow.current)) {
                     NavShell(start = ChatsRoute.Home, deps = deps, gate = gate)
                 }

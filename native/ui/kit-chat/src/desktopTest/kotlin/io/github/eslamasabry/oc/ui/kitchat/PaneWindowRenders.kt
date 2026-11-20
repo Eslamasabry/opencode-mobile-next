@@ -29,13 +29,20 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 
 private const val LONG =
-    "val resolvedProfileKeyForTheCurrentServerConnection = profileScopeRegistry.keysFor(profileId).filter { it.startsWith(prefix) }"
+    "val resolvedProfileKeyForTheCurrentServerConnection = profileScopeRegistry.keysFor(profileId).filter { i" +
+        "t.startsWith(prefix) }"
 
 private val PATCH =
     buildString {
         append("--- a/src/Profiles.kt\n+++ b/src/Profiles.kt\n")
-        append("@@ -10,5 +10,5 @@\n context line one\n context line two\n-    $LONG.first()\n+    $LONG.firstOrNull()\n context line three\n")
-        append("@@ -80,5 +80,6 @@\n context line four\n-    $LONG.size\n+    $LONG.count()\n+    $LONG.toList()\n context line five\n")
+        append(
+            "@@ -10,5 +10,5 @@\n context line one\n context line two\n-    $LONG.first()\n+    " +
+                "$LONG.firstOrNull()\n context line three\n",
+        )
+        append(
+            "@@ -80,5 +80,6 @@\n context line four\n-    $LONG.size\n+    $LONG.count()\n+    $LONG.toList()" +
+                "\n context line five\n",
+        )
     }
 
 @Composable

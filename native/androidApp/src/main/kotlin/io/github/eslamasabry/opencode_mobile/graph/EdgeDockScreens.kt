@@ -204,7 +204,7 @@ class AppChatEdgeDock(private val port: AppEdgeDockPort, private val shell: Shel
         val onScreen by port.onScreen.collectAsStateWithLifecycle()
         // Big screens: the list beside the conversation already shows every conversation.
         val listShown by shell.listShown.collectAsStateWithLifecycle()
-        if (!EdgeLightRules.lightShows(mode, listShown)) return
+        if (!edgeLightShows(mode, listShown)) return
         EdgeLightMount(
             port = port,
             page = onScreen,

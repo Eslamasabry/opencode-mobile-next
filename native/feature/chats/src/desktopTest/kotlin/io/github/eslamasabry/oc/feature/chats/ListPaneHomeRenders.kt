@@ -13,6 +13,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -40,7 +41,8 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitCapsAtStart
+import io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumn
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPaneColumn
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneWindow
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -73,24 +75,64 @@ class ListPaneHomeRenders {
         minutesAgo: Long,
         preview: String = "",
         dir: String = "/root/projects/oc_app",
-        status: ChatStatus = ChatStatus.Idle,
         agent: String = "opencode",
     ): ChatFeedItem =
-        item(id, dir, at = NOW - minutesAgo * 60_000L, title = title, status = status).copy(preview = preview, agentId = agent)
+        item(
+            id,
+            dir,
+            at = NOW - minutesAgo * 60_000L,
+            title = title,
+        ).copy(preview = preview, agentId = agent)
 
     private fun homeState(): io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi {
         val items =
             listOf(
-                feedItem("explain", "Explain this project", 0, "Reading lib/ui/kit to map how the parts fit together", status = ChatStatus.Running, agent = "claude")
-                    .copy(running = FeedRunning(NOW - 4 * 60_000L)),
-                feedItem("ask", "Run the tests", 5, "Wants to run npm test", status = ChatStatus.NeedsYou).copy(permission = FeedPermission("req1", "npm test")),
-                feedItem("checkout", "Fix flaky checkout test", 12, "Made the test wait on the settled state", dir = "/root/projects/shopfront", agent = "claude"),
-                feedItem("long", "Rework the reconnect loop so a dropped stream refetches the session list and the open conversation instead of replaying the missed events from the last cursor", 20, "Refetching now"),
+                feedItem(
+                    "explain",
+                    "Explain this project",
+                    0,
+                    "Reading lib/ui/kit to map how the parts fit together",
+                    agent = "claude",
+                )
+                    .copy(status = ChatStatus.Running, running = FeedRunning(NOW - 4 * 60_000L)),
+                feedItem(
+                    "ask",
+                    "Run the tests",
+                    5,
+                    "Wants to run npm test",
+                ).copy(status = ChatStatus.NeedsYou, permission = FeedPermission("req1", "npm test")),
+                feedItem(
+                    "checkout",
+                    "Fix flaky checkout test",
+                    12,
+                    "Made the test wait on the settled state",
+                    dir = "/root/projects/shopfront",
+                    agent = "claude",
+                ),
+                feedItem(
+                    "long",
+                    "Rework the reconnect loop so a dropped stream refetches the session list and the open co" +
+                        "nversation instead of replaying the missed events from the last cursor",
+                    20,
+                    "Refetching now",
+                ),
                 feedItem("hi", "Hi", 60 * 26, "Hi! What would you like to work on today?"),
-                feedItem("who", "You know who you are and what you do", 60 * 27, "I am OpenCode, a coding agent working in your folder", dir = "/root/projects/site"),
+                feedItem(
+                    "who",
+                    "You know who you are and what you do",
+                    60 * 27,
+                    "I am OpenCode, a coding agent working in your folder",
+                    dir = "/root/projects/site",
+                ),
                 feedItem("ready", "Start the release notes", 60 * 30, "Ready when you are.", agent = "codex"),
                 feedItem("build", "What should we build?", 60 * 50, "Hi there, what should we build?"),
-                feedItem("help", "Fix the login bug", 60 * 52, "The token is read before the profile loads", dir = "/root/projects/site"),
+                feedItem(
+                    "help",
+                    "Fix the login bug",
+                    60 * 52,
+                    "The token is read before the profile loads",
+                    dir = "/root/projects/site",
+                ),
                 feedItem("o1", "Older one", 60 * 80, "This one is past the five"),
                 feedItem("o2", "Older two", 60 * 90, "So is this one", dir = "/root/projects/docs"),
             )
@@ -108,29 +150,41 @@ class ListPaneHomeRenders {
                 base.home.copy(
                     sources =
                         persistentListOf(
-                            ChatsListSourceUi(profile = ProfileId("this-phone"), name = "This phone", shown = true, main = true, onThisPhone = true, unreachable = false),
+                            ChatsListSourceUi(
+                                profile = ProfileId("this-phone"),
+                                name = "This phone",
+                                shown = true,
+                                main = true,
+                                onThisPhone = true,
+                                unreachable = false,
+                            ),
                         ),
                 ),
         )
     }
 
     private object NewActions : NewConversationActions {
-        override fun back() {}
-        override fun addServer() {}
-        override fun chooseServer(profile: ProfileId) {}
-        override fun draftChanged(text: String) {}
-        override fun chooseDirectory(directory: String) {}
-        override fun chooseModel(model: ModelRef?) {}
-        override fun chooseAgent(agent: String?) {}
-        override fun separateCopy(on: Boolean) {}
-        override fun sheet(sheet: NewConversationSheet?) {}
-        override fun start() {}
-        override fun import(conversation: ImportableConversation) {}
-        override fun retryLoad() {}
+        override fun back() = Unit
+        override fun addServer() = Unit
+        override fun chooseServer(profile: ProfileId) = Unit
+        override fun draftChanged(text: String) = Unit
+        override fun chooseDirectory(directory: String) = Unit
+        override fun chooseModel(model: ModelRef?) = Unit
+        override fun chooseAgent(agent: String?) = Unit
+        override fun separateCopy(on: Boolean) = Unit
+        override fun sheet(sheet: NewConversationSheet?) = Unit
+        override fun start() = Unit
+        override fun import(conversation: ImportableConversation) = Unit
+        override fun retryLoad() = Unit
     }
 
     private val p1 = ProfileId("p1")
-    private val sonnet = NewConversationModel(ModelRef("anthropic", "sonnet"), "Claude Sonnet 4.5", providerName = "Anthropic", variants = listOf("low", "medium", "high"))
+    private val sonnet = NewConversationModel(
+        ModelRef("anthropic", "sonnet"),
+        "Claude Sonnet 4.5",
+        providerName = "Anthropic",
+        variants = listOf("low", "medium", "high"),
+    )
     private val newUi =
         NewConversationUi(
             servers = listOf(NewConversationServer(p1, "This phone", connected = true)),
@@ -143,7 +197,14 @@ class ListPaneHomeRenders {
                         NewConversationProject("/root/projects/oc_app", "oc_app", false),
                         NewConversationProject("/root/projects/site", "site", false),
                     ),
-                    listOf(sonnet, NewConversationModel(ModelRef("anthropic", "opus"), "Claude Opus 4.1", providerName = "Anthropic")),
+                    listOf(
+                        sonnet,
+                        NewConversationModel(
+                            ModelRef("anthropic", "opus"),
+                            "Claude Opus 4.1",
+                            providerName = "Anthropic",
+                        ),
+                    ),
                     emptyList(),
                     model = sonnet.model,
                 ),
@@ -160,14 +221,19 @@ class ListPaneHomeRenders {
             val platform = DesktopKitPlatform()
             runDesktopComposeUiTest(wDp * 2, hDp * 2) {
                 setContent {
-                    CompositionLocalProvider(LocalDensity provides Density(2f, 1f), LocalKitPlatform provides platform) {
+                    CompositionLocalProvider(
+                        LocalDensity provides Density(2f, 1f),
+                        LocalKitPlatform provides platform,
+                    ) {
                         KitTheme(
                             appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
                             platform = platform,
                             localeTag = "en",
                             stillFrame = true,
                         ) {
-                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { ChatEnvironment(content) }
+                            Box(
+                                Modifier.fillMaxSize().background(LocalKitColors.current.ground),
+                            ) { ChatEnvironment(content) }
                         }
                     }
                 }
@@ -186,9 +252,21 @@ class ListPaneHomeRenders {
     fun homeListPane() =
         shoot("home-pane-360x800", 360, 800) {
             KitPaneWindow(Modifier.fillMaxSize()) {
-                CompositionLocalProvider(LocalOpenBeside provides ChatRoute(ConversationRef(P1, SessionId("checkout")))) {
+                CompositionLocalProvider(
+                    LocalOpenBeside provides ChatRoute(ConversationRef(P1, SessionId("checkout"))),
+                ) {
                     ChatsScreen(homeState(), RecordingChatsActions())
                 }
+            }
+        }
+
+    /** Decision 3: the list pane beside a conversation in a 1024 x 1366 portrait tablet (360 dp of 1024). */
+    @Test
+    fun homeListPanePortrait() =
+        shoot("home-pane-360x1366", 360, 1366) {
+            KitPaneWindow(Modifier.fillMaxSize()) {
+                val open = ChatRoute(ConversationRef(P1, SessionId("checkout")))
+                CompositionLocalProvider(LocalOpenBeside provides open) { ChatsScreen(homeState(), RecordingChatsActions()) }
             }
         }
 
@@ -197,7 +275,9 @@ class ListPaneHomeRenders {
     fun homeListPaneNothingOpen() =
         shoot("home-pane-rest-360x800", 360, 800) {
             KitPaneWindow(Modifier.fillMaxSize()) {
-                CompositionLocalProvider(LocalOpenBeside provides ChatsRoute.New(profile = null)) { ChatsScreen(homeState(), RecordingChatsActions()) }
+                CompositionLocalProvider(
+                    LocalOpenBeside provides ChatsRoute.New(profile = null),
+                ) { ChatsScreen(homeState(), RecordingChatsActions()) }
             }
         }
 
@@ -217,7 +297,7 @@ class ListPaneHomeRenders {
     fun newConversationPane() =
         shoot("new-pane-920x800", 920, 800) {
             KitPaneWindow(Modifier.fillMaxSize()) {
-                CompositionLocalProvider(LocalKitCapsAtStart provides true, LocalRestingBeside provides true) {
+                CompositionLocalProvider(LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp, LocalRestingBeside provides true) {
                     NewConversationScreen(newUi.copy(text = ""), NewActions)
                 }
             }
@@ -227,13 +307,19 @@ class ListPaneHomeRenders {
     @Test
     fun phone() {
         shoot("phone-home-360x780", 360, 780) { ChatsScreen(homeState(), RecordingChatsActions()) }
-        shoot("phone-empty-360x780", 360, 780) { ChatsScreen(ChatsUi(phase = ChatsPhase.Empty), RecordingChatsActions()) }
+        shoot("phone-empty-360x780", 360, 780) { ChatsScreen(
+            ChatsUi(phase = ChatsPhase.Empty),
+            RecordingChatsActions(),
+        ) }
         shoot("phone-new-360x780", 360, 780) { NewConversationScreen(newUi, NewActions) }
     }
 
     /** Before: today's empty Home over the whole 1280 x 800 window. */
     @Test
-    fun emptyBefore() = shoot("before-home-empty-1280x800", 1280, 800) { ChatsScreen(ChatsUi(phase = ChatsPhase.Empty), RecordingChatsActions()) }
+    fun emptyBefore() = shoot("before-home-empty-1280x800", 1280, 800) { ChatsScreen(
+        ChatsUi(phase = ChatsPhase.Empty),
+        RecordingChatsActions(),
+    ) }
 
     /** Before: today's Home over the whole 1280 x 800 window. */
     @Test

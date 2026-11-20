@@ -132,6 +132,14 @@ internal data class EdgeLightCounts(val needs: Int, val failed: Int, val working
     val number: Int get() = needs + failed
 }
 
+/**
+ * Whether the light mounts at all: the Edge light is chosen and no list stands beside the conversation. On a wide window
+ * the conversation list is in view beside it (big screens), so the light, the phone's way between conversations, stays
+ * hidden there; it comes back when the window shows the conversation alone.
+ */
+internal fun edgeLightShows(mode: OtherConversationsMode, listShown: Boolean): Boolean =
+    EdgeLightRules.mounts(mode).light && !listShown
+
 /** The light's pure rules: which parts mount, where, when it hides and what its face says. */
 internal object EdgeLightRules {
     /**
@@ -156,13 +164,6 @@ internal object EdgeLightRules {
             is GitRoute -> route.ref
             else -> null
         }
-
-    /**
-     * Whether the light mounts at all: the Edge light is chosen and no list stands beside the conversation. On a wide
-     * window the conversation list is in view beside it (big screens), so the light, the phone's way between
-     * conversations, stays hidden there; it comes back when the window shows the conversation alone.
-     */
-    fun lightShows(mode: OtherConversationsMode, listShown: Boolean): Boolean = mounts(mode).light && !listShown
 
     /** Pages the shell mounts the light on. A conversation's own page mounts it inside its frame (under its sheets). */
     fun shellPageConversation(route: AppRoute?): ConversationRef? = if (route is ChatRoute) null else pageConversation(route)

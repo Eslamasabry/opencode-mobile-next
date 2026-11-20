@@ -10,6 +10,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumn
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPaneColumn
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -30,6 +32,7 @@ internal const val HEADER_CAPSULE_MARGIN_DP: Int = 4
 
 /** The capsule's side margin, dp: where the message box and the transcript's bubbles stand (measured on the real chat). */
 internal const val HEADER_CAPSULE_SIDE_DP: Int = 14
+
 
 /**
  * The floating header of a chat (owner 2026-11-17, "one capsule will look cleaner"): one capsule across the width, on
@@ -82,10 +85,15 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
                                 ),
                         )
                     )
+    // Beside a list (big screens) the capsule stands on the message box's side margin, the page's column edges.
+    val column = LocalKitPaneColumn.current
     Box(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
+            .padding(
+                horizontal = (if (column == null) HEADER_CAPSULE_SIDE_DP else KitPaneColumn.SIDE_DP).dp,
+                vertical = HEADER_CAPSULE_MARGIN_DP.dp,
+            )
             .then(shadow)
             .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
             .then(look.modifier)

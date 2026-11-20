@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitContentEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPaneColumn
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -139,6 +140,9 @@ public fun KitTopBar(
     /** The subtitle's state colour (Dart `subtitleTone`): neutral is secondary, progress the accent, ok green. */
     subtitleTone: StatusTone = StatusTone.Neutral,
 ) {
+    // Big screens: in a pane beside a list the list is the way back, so the bar draws no Back (a Close stays).
+    @Suppress("NAME_SHADOWING")
+    val exit = if (exit == KitTopBarExit.Back && LocalKitPaneColumn.current != null) KitTopBarExit.None else exit
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val window = LocalKitWindow.current

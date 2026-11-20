@@ -36,7 +36,10 @@ class ShellListShownTest {
         val navigator = ShellNavigator()
         val installer = EntryInstaller {
             entry<ChatsRoute.Home> { KitScreen(title = "Home") { KitText("list") } }
-            entry<ChatRoute> { KitScreen(title = "Chat") { KitButton("Files", onClick = { navigator.open(FilesRoute.Folder(it.ref)) }) } }
+            entry<ChatRoute> { KitScreen(title = "Chat") { KitButton(
+                "Files",
+                onClick = { navigator.open(FilesRoute.Folder(it.ref)) },
+            ) } }
             entry<FilesRoute.Folder> { KitScreen(title = "Files") { KitText("files") } }
         }
         val window = mutableStateOf(KitWindowInfo(1280f, 800f))
@@ -44,7 +47,11 @@ class ShellListShownTest {
         val platform = DesktopKitPlatform()
         setContent {
             CompositionLocalProvider(LocalKitPlatform provides platform) {
-                KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
+                KitTheme(
+                    appearance = KitAppearance(mode = AppearanceMode.Light),
+                    platform = platform,
+                    localeTag = "en",
+                ) {
                     CompositionLocalProvider(LocalKitWindow provides window.value) {
                         Column { NavShell(start = ChatsRoute.Home, deps = deps, gate = RowTransformGate()) }
                     }

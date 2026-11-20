@@ -68,6 +68,10 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
+import io.github.eslamasabry.oc.ui.routes.LocalRestingBeside
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.test.onAllNodesWithText
 import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.NavShell
 import io.github.eslamasabry.oc.ui.shell.ShellDependencies
@@ -80,7 +84,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Big screens, slice 3 (BS-LIST-PANE): from 840 dp wide (and not short) Home's conversation list stays as the start pane,
+ * Big screens, slice 3 (BS-LIST-PANE): from 840 dp wide (and not short) Home's conversation list stays as the start
+ * pane,
  * 296 dp, and the open conversation fills the rest; under 840 dp everything is the phone's single page. Run on the real
  * NavShell at real window sizes (one dp per pixel), with a Home and a conversation made of kit parts.
  */
@@ -105,6 +110,12 @@ class ShellListPaneTest {
         ChatRoute.openMotion = motion
     }
 
+    private class NewModel(private val route: NavKey, private val cleared: MutableList<NavKey>) : ViewModel() {
+        override fun onCleared() {
+            cleared += route
+        }
+    }
+
     private class Panes(window: KitWindowInfo? = null) {
         val navigator = ShellNavigator()
         val gate = RowTransformGate()
@@ -124,6 +135,10 @@ class ShellListPaneTest {
 
         /** What the list saw as the page open beside it ([LocalOpenBeside]), last composition. */
         var openSeen: NavKey? = null
+
+        /** Each New conversation route composed, in order, and the ones whose view model was cleared. */
+        val newSeen = mutableListOf<NavKey>()
+        val cleared = mutableListOf<NavKey>()
 
         private val installer = EntryInstaller {
             entry<ChatsRoute.Home> {
@@ -149,16 +164,30 @@ class ShellListPaneTest {
                     KitButton(NEW, onClick = {}, modifier = Modifier.testTag(PLUS))
                 }
             }
-            entry<ChatsRoute.New> {
-                KitScreen(title = "New", backLabel = "Back", onBack = navigator::back) { KitText(NEW_PAGE) }
+            // As New conversation does (NewConversationViewModel): Start opens the started conversation when this page
+            // is what the person sees (on top, or resting beside the list); its view model must outlive the hand-over.
+            entry<ChatsRoute.New> { route ->
+                val resting = LocalRestingBeside.current
+                viewModel { NewModel(route, cleared) }
+                newSeen += route
+                KitScreen(title = "New", backLabel = "Back", onBack = navigator::back) {
+                    KitText(NEW_PAGE)
+                    val shown = { navigator.top.value == route || resting }
+                    KitButton(START, onClick = { if (shown()) navigator.openChat(ref(9)) })
+                }
+            }
+            entry<ChatsRoute.All> {
+                KitScreen(title = "Everything", backLabel = "Back", onBack = navigator::back) {
+                    KitRow("Every 5", "preview 5", onClick = { navigator.openChat(ref(5)) })
+                }
             }
             entry<ChatRoute> { route ->
                 chatWidth = LocalKitWindow.current.widthDp
                 var taps by rememberSaveable { mutableIntStateOf(0) }
                 val composer = remember { FocusRequester() }
                 val field = rememberTextFieldState()
-                // As the conversation does (ChatTypingFocus, around the whole page): the shell's steer of a typed letter
-                // lands in the message field.
+                // As the conversation does (ChatTypingFocus, around the whole page): the shell's steer of a typed
+                // letter lands in the message field.
                 Column(
                     Modifier.focusProperties {
                             onEnter = {
@@ -169,10 +198,14 @@ class ShellListPaneTest {
                         .focusGroup()
                 ) {
                     KitGrowPage(growKey = route.ref) {
-                        KitScreen(title = "Chat ${route.ref.sessionId.raw}", backLabel = "Back", onBack = navigator::back) {
+                        val title = "Chat ${route.ref.sessionId.raw}"
+                        KitScreen(title = title, backLabel = "Back", onBack = navigator::back) {
                             KitText("transcript ${route.ref.sessionId.raw}")
                             KitButton("Tapped $taps", onClick = { taps++ }, modifier = Modifier.testTag(SEND))
-                            BasicTextField(field, Modifier.size(200.dp, 48.dp).testTag(COMPOSER).focusRequester(composer))
+                            BasicTextField(
+                                field,
+                                Modifier.size(200.dp, 48.dp).testTag(COMPOSER).focusRequester(composer),
+                            )
                         }
                     }
                 }
@@ -188,7 +221,8 @@ class ShellListPaneTest {
                 LocalNavigationEventDispatcherOwner provides owner,
                 LocalDensity provides Density(1f),
             ) {
-                KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
+                val light = KitAppearance(mode = AppearanceMode.Light)
+                KitTheme(appearance = light, platform = platform, localeTag = "en") {
                     CompositionLocalProvider(LocalKitWindow provides (window.value ?: LocalKitWindow.current)) {
                         focus = LocalFocusManager.current
                         NavShell(start = ChatsRoute.Home, deps = deps, gate = gate)
@@ -247,7 +281,8 @@ class ShellListPaneTest {
         open(12)
         onNodeWithText("transcript s12").assertIsDisplayed()
         onNodeWithText("transcript s11").assertDoesNotExist()
-        assertEquals(listOf(ChatsRoute.Home, ChatRoute(ref(12))), p.navigator.snapshot(), "the back stack does not grow per tap")
+        val stack = p.navigator.snapshot()
+        assertEquals(listOf(ChatsRoute.Home, ChatRoute(ref(12))), stack, "the back stack does not grow per tap")
         assertEquals(first, p.list!!.firstVisibleItemIndex, "the list keeps its scroll")
         val settled = onNodeWithTag(SEND).getBoundsInRoot()
         // The next conversation is whole and in place on its first frame: nothing grows out of the row between panes.
@@ -263,7 +298,8 @@ class ShellListPaneTest {
     }
 
     @Test
-    fun `B-NAV-212 Back from a conversation in two panes shows the list with a new conversation beside it`() = at(1280, 800) { p ->
+    fun `B-NAV-212 Back from a conversation in two panes shows the list with a new conversation beside it`() =
+        at(1280, 800) { p ->
         onNodeWithText(NEW_PAGE).assertIsDisplayed()
         open(2)
         onNodeWithText(NEW_PAGE).assertDoesNotExist()
@@ -279,7 +315,8 @@ class ShellListPaneTest {
         waitForIdle()
         assertEquals(listOf(ChatsRoute.Home), p.navigator.snapshot())
         onNodeWithText("Row 0").assertIsDisplayed()
-        assertEquals(commits, p.gate.trace.count { it == GateEvent.GestureCommitted }, "the app does not take the second Back")
+        val after = p.gate.trace.count { it == GateEvent.GestureCommitted }
+        assertEquals(commits, after, "the app does not take the second Back")
     }
 
     @Test
@@ -324,7 +361,8 @@ class ShellListPaneTest {
             onNodeWithText("Row 0").assertIsDisplayed()
             onNodeWithTag(PLUS).assertIsDisplayed()
             val plus = onNodeWithTag(PLUS).getBoundsInRoot()
-            assertTrue(plus.bottom.value <= h && plus.right.value <= LIST_PANE, "$w x $h: the + sits at the list pane's foot ($plus)")
+            val atFoot = plus.bottom.value <= h && plus.right.value <= LIST_PANE
+            assertTrue(atFoot, "$w x $h: the + sits at the list pane's foot ($plus)")
         }
     }
 
@@ -366,7 +404,8 @@ class ShellListPaneTest {
             waitForIdle()
             presses++
         }
-        assertTrue((focusedLeft() ?: LIST_PANE) < LIST_PANE, "Left from the conversation reaches the list (now ${focusedNode()})")
+        val left = focusedLeft() ?: LIST_PANE
+        assertTrue(left < LIST_PANE, "Left from the conversation reaches the list (now ${focusedNode()})")
     }
 
     @Test
@@ -405,7 +444,77 @@ class ShellListPaneTest {
     }
 
     @Test
-    fun `B-NAV-216 a letter typed with nothing focused lands in the conversation beside the list`() = at(1280, 800) { p ->
+    fun `B-NAV-230 the panes use the whole width at every window, the list grows before margins appear`() {
+        for (w in SWEEP_FROM..SWEEP_TO step SWEEP_STEP) {
+            val list = ShellPanes.listWidth(w.toFloat(), 1f)
+            assertTrue(list in 320f..420f, "$w dp: the list is 320 to 420 dp ($list)")
+            if (w - list > PAGE_CAP) assertEquals(420f, list, "$w dp: before any margin the list is at its widest")
+        }
+        assertEquals(LIST_PANE, ShellPanes.listWidth(1280f, 1f), "360 dp on a 1280 dp window")
+        assertEquals(320f, ShellPanes.listWidth(840f, 1f), "320 dp on an 840 dp window")
+        // The conversation pane takes all the rest; its page is centred only past its cap.
+        for ((w, h) in listOf(840 to 800, 1024 to 768, 1280 to 800, 1600 to 900)) at(w, h) { p ->
+            open(1)
+            val pane = w - p.listWidth
+            assertEquals(minOf(pane, PAGE_CAP), p.chatWidth, "$w dp: the conversation's page fills its pane to the cap")
+            val send = onNodeWithTag(SEND).getBoundsInRoot()
+            if (pane > PAGE_CAP) {
+                val left = send.left.value - p.listWidth
+                assertTrue(left >= (pane - PAGE_CAP) / 2, "$w dp: two equal margins past the cap ($left)")
+            }
+        }
+    }
+
+    @Test
+    fun `B-NAV-226 Start on the resting New conversation opens the started conversation beside the list`() =
+        at(1280, 800) { p ->
+            onNodeWithText(NEW_PAGE).assertIsDisplayed()
+            val first = p.newSeen.last()
+            mainClock.autoAdvance = false
+            onNodeWithText(START).performClick()
+            // No frame shows a second New conversation beside the started conversation.
+            repeat(FRAMES) {
+                mainClock.advanceTimeByFrame()
+                val newShown = onAllNodesWithText(NEW_PAGE).fetchSemanticsNodes().isNotEmpty()
+                val chatShown = onAllNodesWithText("transcript s9").fetchSemanticsNodes().isNotEmpty()
+                assertTrue(!(newShown && chatShown), "frame $it: a New conversation beside the started one")
+            }
+            mainClock.autoAdvance = true
+            waitForIdle()
+            onNodeWithText("transcript s9").assertIsDisplayed()
+            onNodeWithText(NEW_PAGE).assertDoesNotExist()
+            assertEquals(listOf(ChatsRoute.Home, ChatRoute(ref(9))), p.navigator.snapshot())
+            assertEquals(ChatRoute(ref(9)), p.openSeen, "its row is the chosen one")
+            assertTrue(first !in p.cleared, "the starting page keeps its view model while the first message settles")
+            // Back: a fresh New conversation rests beside the list again.
+            runOnIdle { p.back() }
+            waitForIdle()
+            onNodeWithText(NEW_PAGE).assertIsDisplayed()
+            assertTrue(p.newSeen.last() != first, "a fresh page, not the one that started the conversation")
+        }
+
+    @Test
+    fun `B-NAV-227 every way into a conversation lands beside the list`() = at(1280, 800) { p ->
+        runOnIdle { p.navigator.open(ChatsRoute.All()) }
+        waitForIdle()
+        onNodeWithText("Every 5").performClick()
+        waitForIdle()
+        assertEquals(listOf(ChatsRoute.Home, ChatRoute(ref(5))), p.navigator.snapshot(), "from All conversations")
+        onNodeWithText("transcript s5").assertIsDisplayed()
+        onNodeWithText("Row 0").assertIsDisplayed()
+        // A notification or the edge light (switchTo) and a page's link back to a conversation (backToChat) too.
+        runOnIdle { p.navigator.switchTo(ref(6)) }
+        waitForIdle()
+        assertEquals(listOf(ChatsRoute.Home, ChatRoute(ref(6))), p.navigator.snapshot(), "switchTo")
+        runOnIdle { p.navigator.backToChat(ref(7)) }
+        waitForIdle()
+        assertEquals(listOf(ChatsRoute.Home, ChatRoute(ref(7))), p.navigator.snapshot(), "backToChat")
+        onNodeWithText("Row 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun `B-NAV-216 a letter typed with nothing focused lands in the conversation beside the list`() =
+        at(1280, 800) { p ->
         // A tap on a touch screen focuses nothing (a desktop click may focus the row): open it as a tap does.
         runOnIdle { p.navigator.openChat(ref(1)) }
         waitForIdle()
@@ -423,6 +532,12 @@ class ShellListPaneTest {
         const val COMPOSER = "pane-composer"
         const val NEW = "New conversation"
         const val NEW_PAGE = "a new conversation, ready to type"
+        const val START = "Start"
+        const val FRAMES = 4
+        const val SWEEP_FROM = 840
+        const val SWEEP_TO = 1700
+        const val SWEEP_STEP = 40
+        const val PAGE_CAP = 1000f
         const val LIST_PANE = 360f
         const val MAX_PRESSES = 120
         const val ARROWS = 4
