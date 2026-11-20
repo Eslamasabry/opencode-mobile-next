@@ -9,7 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** The helper's esbuild cache, seen through the launch script: what it exports, writes and removes, and that nothing in it stops a start. */
+/** The helper's esbuild cache through the launch script; nothing in it may stop a start. */
 class PhoneAgentEsbuildCacheTest {
     @get:Rule val folder = TemporaryFolder()
 
@@ -117,5 +117,31 @@ class PhoneAgentEsbuildCacheTest {
         assertEquals(0, run.code)
         assertEquals("unset", run.options)
         assertFalse(File(home, "pwned").exists())
+    }
+
+    @Test fun `B-AGENT-468 the pin's folder name comes from the installed helper link, nothing else`() {
+        val root = folder.newFolder("rootfs")
+        val bin = File(root, "home/oc/.local/bin").apply { mkdirs() }
+        assertEquals(null, InstalledHelperVersion.installName(root))
+        java.nio.file.Files.createSymbolicLink(
+            File(bin, "paseo").toPath(),
+            java.nio.file.Paths.get("/home/oc/.local/share/oc-paseo/$key/node_modules/.bin/paseo"),
+        )
+        assertEquals(key, InstalledHelperVersion.installName(root))
+        File(bin, "paseo").delete()
+        java.nio.file.Files.createSymbolicLink(File(bin, "paseo").toPath(), java.nio.file.Paths.get("/usr/bin/paseo"))
+        assertEquals(null, InstalledHelperVersion.installName(root))
+    }
+
+    @Test fun `B-AGENT-469 the cache lives outside the hashed install tree and the script never writes there`() {
+        val block = esbuildCacheBlock(key)
+        assertFalse(block.contains("oc-paseo"))
+        assertFalse(block.contains("node_modules"))
+        assertTrue(block.contains("\"${'$'}HOME/.cache/oc-esbuild\""))
+        // Every path the block writes or removes sits under the profile's own cache folder.
+        val writes = Regex("(?:mkdir -p|rm -rf|mv -f)\\s+\"([^\"]+)\"")
+        val touched = writes.findAll(block).map { it.groupValues[1] }.toList()
+        assertTrue(touched.isNotEmpty())
+        assertTrue(touched.toString(), touched.all { it.contains("oc_eb_") })
     }
 }

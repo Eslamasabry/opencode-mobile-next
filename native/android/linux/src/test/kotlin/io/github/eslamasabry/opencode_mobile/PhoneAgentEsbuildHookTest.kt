@@ -34,7 +34,8 @@ class PhoneAgentEsbuildHookTest {
         File(work, "node_modules/esbuild/index.js").writeText(
             "const fs=require('fs');const path=require('path');const c=path.join(__dirname,'..','..','calls.txt');\n" +
                 "const n=()=>{fs.appendFileSync(c,'x');return fs.readFileSync(c,'utf8').length;};\n" +
-                "exports.build=async(o)=>({errors:[],warnings:[],metafile:{n:1},outputFiles:[{path:'/o.js',text:'T'+n()}]});\n" +
+                "exports.build=async(o)=>({errors:[],warnings:[],metafile:{n:1},\n" +
+                "outputFiles:[{path:'/o.js',text:'T'+n()}]});\n" +
                 "exports.transform=async(code)=>({code:'C'+n(),map:'',warnings:[]});\n" +
                 "exports.version='stub';\n",
         )
@@ -49,7 +50,11 @@ class PhoneAgentEsbuildHookTest {
         )
     }
 
-    private fun run(env: Map<String, String> = emptyMap(), cacheDir: String? = cache.absolutePath, preload: Boolean = true): String {
+    private fun run(
+        env: Map<String, String> = emptyMap(),
+        cacheDir: String? = cache.absolutePath,
+        preload: Boolean = true,
+    ): String {
         val entry = File(work, "plugins/one/index.ts").absolutePath
         val command = mutableListOf(node!!)
         if (preload) command += listOf("--require", hook.absolutePath)
@@ -81,7 +86,8 @@ class PhoneAgentEsbuildHookTest {
         run()
         val entries = cache.listFiles()!!.filter { it.name.startsWith("b-") }
         entries.forEach { it.writeText("{\"text\":\"evil\",\"sum\":\"nope\"") }
-        cache.listFiles()!!.filter { it.name.startsWith("t-") }.forEach { it.writeText("{\"code\":\"evil\",\"sum\":\"wrong\"}") }
+        cache.listFiles()!!.filter { it.name.startsWith("t-") }
+            .forEach { it.writeText("{\"code\":\"evil\",\"sum\":\"wrong\"}") }
         val out = run()
         assertFalse(out, out.contains("evil"))
         assertEquals(4, calls())
