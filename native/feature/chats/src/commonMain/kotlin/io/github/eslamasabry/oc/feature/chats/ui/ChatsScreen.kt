@@ -1006,7 +1006,8 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         canArchive = row.key in state.archivable,
         pinnable = row.key in state.pinnable,
         shareable = row.key in state.shareable,
-        stoppable = state.stoppable && row.running != null,
+        // A turn that waits on the person (Needs you) still runs: the chat's own box offers Stop then too.
+        stoppable = state.stoppable && (row.running != null || row.permission != null || row.question != null),
         pinned = row.key in state.pinned,
         renamable = row.key in state.renamable,
         deletable = row.key in state.deletable,
