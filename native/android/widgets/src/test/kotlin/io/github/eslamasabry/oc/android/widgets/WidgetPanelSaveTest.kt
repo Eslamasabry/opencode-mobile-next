@@ -1,40 +1,34 @@
 package io.github.eslamasabry.oc.android.widgets
 
-import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Test
 
-/** What lets a widget setup save: the server it was opened for, not the connection's scope token. */
+/** Why a widget setup is refused: each refusal has its own name, so the log says which check said no. */
 class WidgetPanelSaveTest {
-    private fun prefs(profile: String, scope: String, project: String = "", projects: List<String> = listOf("api", "web")) =
-        WidgetPanelPreferences(project = project, projects = projects, scope = scope, profile = profile)
+    private val listed = listOf("api", "web")
+
+    private fun prefs(scope: String, project: String = "", projects: List<String> = listed) =
+        WidgetPanelPreferences(project = project, projects = projects, scope = scope)
 
     @Test
-    fun `B-WIDGET-302 a save after a reconnect keeps the chosen projects`() {
-        val opened = prefs("p1", scope = "token-before", project = "api")
-        val afterReconnect = prefs("p1", scope = "token-after")
-        assertNull(WidgetPanels.refusal(opened, afterReconnect))
+    fun `B-WIDGET-302 the same scope and a listed project is not refused`() {
+        assertNull(WidgetPanels.refusal(prefs("s1", "api"), prefs("s1")))
     }
 
     @Test
-    fun `B-WIDGET-303 a setup opened for another server is refused as changed`() {
-        assertEquals(
-            WidgetPanelSave.SetupChanged,
-            WidgetPanels.refusal(prefs("p1", "s", "api"), prefs("p2", "s")),
-        )
+    fun `B-WIDGET-303 a changed scope token is refused as ScopeChanged`() {
+        assertEquals(WidgetPanelSave.ScopeChanged, WidgetPanels.refusal(prefs("s1", "api"), prefs("s2")))
     }
 
     @Test
     fun `B-WIDGET-304 a project the widget no longer lists is refused, All projects never is`() {
-        assertEquals(
-            WidgetPanelSave.ProjectGone,
-            WidgetPanels.refusal(prefs("p1", "s", "gone"), prefs("p1", "s")),
-        )
-        assertNull(WidgetPanels.refusal(prefs("p1", "s", ""), prefs("p1", "s", projects = emptyList())))
+        assertEquals(WidgetPanelSave.ProjectGone, WidgetPanels.refusal(prefs("s", "gone"), prefs("s")))
+        assertNull(WidgetPanels.refusal(prefs("s", ""), prefs("s", projects = emptyList())))
     }
 
     @Test
-    fun `B-WIDGET-305 a setup opened before the app published anything saves once it did`() {
-        assertNull(WidgetPanels.refusal(prefs("", ""), prefs("p1", "s")))
+    fun `B-WIDGET-305 before the app published anything both scopes are blank and agree`() {
+        assertNull(WidgetPanels.refusal(prefs(""), prefs("")))
     }
 }

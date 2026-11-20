@@ -93,7 +93,7 @@ open class WidgetOverlayActivity : ComponentActivity() {
                                 )
                             ) {
                                 WidgetPanelSave.Saved -> WidgetPanelResult.Saved
-                                WidgetPanelSave.SetupChanged,
+                                WidgetPanelSave.ScopeChanged,
                                 WidgetPanelSave.ProjectGone,
                                 WidgetPanelSave.NotOwned -> WidgetPanelResult.Changed
                                 else -> WidgetPanelResult.Failed

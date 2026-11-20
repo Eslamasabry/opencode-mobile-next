@@ -65,7 +65,7 @@ class PlatformRulesTest {
                 feed(item(a, "s1", title = title + " " + "x".repeat(200))),
                 emptyList(),
                 a,
-                mapOf(a to "Box api_key=sk-live-1234567890abcdef"),
+                WidgetNames(mapOf(a to "Box api_key=sk-live-1234567890abcdef")),
                 setOf(a),
             )
         val row = model.rows.single()
@@ -84,9 +84,8 @@ class PlatformRulesTest {
                 feed(item(a, "a1"), item(helper, "h1")),
                 emptyList(),
                 a,
-                mapOf(a to "This phone", helper to "This phone"),
+                WidgetNames(mapOf(a to "This phone", helper to "This phone"), notListed = setOf(helper)),
                 setOf(a, helper),
-                notListed = setOf(helper),
             )
         assertEquals(listOf("This phone"), model.servers.map { it.name })
         assertEquals(listOf("server-a"), model.servers.map { it.id })
@@ -101,7 +100,7 @@ class PlatformRulesTest {
                 feed(item(a, "a1"), item(b, "b1")),
                 listOf(permission(a, "a1", "per_a"), permission(b, "b1", "per_b")),
                 a,
-                mapOf(a to "A", b to "B"),
+                WidgetNames(mapOf(a to "A", b to "B")),
                 setOf(a, b),
             )
         val (rowA, rowB) = model.rows
@@ -114,9 +113,11 @@ class PlatformRulesTest {
 
     @Test
     fun `B-ANDR-117 the same content gives an equal model, so nothing is rewritten`() {
-        fun build() = PlatformRules.widgetModel(feed(item(a, "a1")), emptyList(), a, mapOf(a to "A"), setOf(a))
+        val names = WidgetNames(mapOf(a to "A"))
+        fun build() = PlatformRules.widgetModel(feed(item(a, "a1")), emptyList(), a, names, setOf(a))
         assertEquals(build(), build())
-        val changed = PlatformRules.widgetModel(feed(item(a, "a1", status = ChatStatus.Running)), emptyList(), a, mapOf(a to "A"), setOf(a))
+        val running = feed(item(a, "a1", status = ChatStatus.Running))
+        val changed = PlatformRules.widgetModel(running, emptyList(), a, names, setOf(a))
         assertTrue(changed != build())
     }
 

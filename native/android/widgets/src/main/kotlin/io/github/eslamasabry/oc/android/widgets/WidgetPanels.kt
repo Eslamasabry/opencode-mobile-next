@@ -4,6 +4,8 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.label
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.opencode_mobile.SessionsWidgetProvider
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
 import io.github.eslamasabry.opencode_mobile.WidgetV2Bridge
@@ -18,8 +20,6 @@ public data class WidgetPanelPreferences(
     val projects: List<String> = emptyList(),
     val project: String = "",
     val scope: String = "",
-    /** The server (profile id) the setup was opened for; blank before the app ever published a snapshot. */
-    val profile: String = "",
 )
 
 /** Why a panel save did not happen. Logged by name; the person gets [Words] from the window. */
@@ -27,31 +27,28 @@ public enum class WidgetPanelSave {
     Saved,
     NotOwned,
     Invalid,
-    /** The setup was opened for another server than the one the widget now follows. */
-    SetupChanged,
+    /** The snapshot's scope token is not the one the setup was opened with. */
+    ScopeChanged,
     /** The chosen project is no longer one the widget lists. */
     ProjectGone,
     NoStorage,
     Unreadable,
-    NotWritten,
+    /** The store refused the write (a closed lane, a clash). */
+    WriteRefused,
+    /** Another writer changed the stored styles between the read and the write. */
+    ChangedUnderneath,
 }
 
 public object WidgetPanels {
     private val log = AppLog.tagged("WidgetPanel")
 
-    /**
-     * A setup opened for a server stays valid while the widget follows that server. A reconnect changes the
-     * snapshot's scope token, never the server, so it is no reason to refuse the save.
-     */
+    /** Why a save must not go ahead, from what the setup was opened with and what is stored now. */
     internal fun refusal(opened: WidgetPanelPreferences, current: WidgetPanelPreferences): WidgetPanelSave? =
         when {
-            opened.profile.isNotEmpty() && opened.profile != current.profile -> WidgetPanelSave.SetupChanged
+            opened.scope != current.scope -> WidgetPanelSave.ScopeChanged
             opened.project.isNotEmpty() && opened.project !in current.projects -> WidgetPanelSave.ProjectGone
             else -> null
         }
-
-    public val backgrounds: List<String> = listOf("solid", "tinted", "transparent")
-    public val accents: List<String> = listOf("wallpaper", "app", "green", "teal", "blue", "amber")
 
     public fun owns(context: Context, widgetId: Int): Boolean =
         AppWidgetManager.getInstance(context).getAppWidgetInfo(widgetId)?.provider?.packageName ==
@@ -85,7 +82,6 @@ public object WidgetPanels {
             projects = projects,
             project = style.optString("project").takeIf { it in projects }.orEmpty(),
             scope = snapshot?.optString("scopeToken").orEmpty(),
-            profile = profile,
         )
     }
 
@@ -103,42 +99,88 @@ public object WidgetPanels {
         return result
     }
 
+    private fun beforeWrite(context: Context, widgetId: Int, preferences: WidgetPanelPreferences): WidgetPanelSave? {
+        val refused =
+            when {
+                !owns(context, widgetId) -> WidgetPanelSave.NotOwned
+                preferences.background !in backgrounds || preferences.accent !in accents -> WidgetPanelSave.Invalid
+                else -> null
+            }
+        if (refused != null) return refused
+        val current = read(context, widgetId)
+        val result = refusal(preferences, current)
+        // Which comparison refused, as yes/no facts only: never a token, a project name or a profile id.
+        if (result != null) {
+            log.w {
+                "panel check: $result scopeEqual=${preferences.scope == current.scope} " +
+                    "openedScopeBlank=${preferences.scope.isEmpty()} currentScopeBlank=${current.scope.isEmpty()} " +
+                    "projectListed=${preferences.project.isEmpty() || preferences.project in current.projects}"
+            }
+        }
+        return result
+    }
+
     private suspend fun saveChecked(
         context: Context,
         widgetId: Int,
         preferences: WidgetPanelPreferences,
     ): WidgetPanelSave {
-        if (!owns(context, widgetId)) return WidgetPanelSave.NotOwned
-        if (preferences.background !in backgrounds || preferences.accent !in accents)
-            return WidgetPanelSave.Invalid
-        refusal(preferences, read(context, widgetId))?.let { return it }
-        val storage = WidgetFeed.persistence ?: return WidgetPanelSave.NoStorage
-        val profile = WidgetV2Bridge.snapshot(context)?.optString("profileID").orEmpty()
-        val owner = profile.ifBlank { WidgetV2Bridge.DEVICE_STYLE_KEY }
-        val key = "oc.widgetStyle.$owner"
-        val before = storage.string(key)
-        val styles =
-            try {
-                JSONObject(before ?: "{}")
-            } catch (_: Exception) {
-                return WidgetPanelSave.Unreadable
+        val refused = beforeWrite(context, widgetId, preferences)
+        val storage = WidgetFeed.persistence
+        val result =
+            when {
+                refused != null -> refused
+                storage == null -> WidgetPanelSave.NoStorage
+                else -> store(context, storage, widgetId, preferences)
             }
-        styles.put(
-            widgetId.toString(),
-            JSONObject()
-                .put("background", preferences.background)
-                .put("accent", preferences.accent)
-                .put("project", preferences.project),
-        )
-        val saved =
-            if (profile.isBlank())
-                (storage.store.compareAndSet(storage.lanes.app, key, before, styles.toString())
-                        as? Outcome.Ok)
-                    ?.value == true
-            else storage.cas(profile, key, before, styles.toString())
-        if (!saved) return WidgetPanelSave.NotWritten
-        SessionsWidgetProvider.refreshAll(context)
-        UsageWidgetProvider.refreshAll(context)
-        return WidgetPanelSave.Saved
+        if (result == WidgetPanelSave.Saved) {
+            SessionsWidgetProvider.refreshAll(context)
+            UsageWidgetProvider.refreshAll(context)
+        }
+        return result
+    }
+
+    private suspend fun store(
+        context: Context,
+        storage: WidgetPersistence,
+        widgetId: Int,
+        preferences: WidgetPanelPreferences,
+    ): WidgetPanelSave {
+        val profile = WidgetV2Bridge.snapshot(context)?.optString("profileID").orEmpty()
+        val key = "oc.widgetStyle.${profile.ifBlank { WidgetV2Bridge.DEVICE_STYLE_KEY }}"
+        val before = storage.string(key)
+        val styles = parseStyles(before) ?: return WidgetPanelSave.Unreadable
+        val next = styles.put(widgetId.toString(), style(preferences)).toString()
+        return write(storage, profile, key, before, next)
+    }
+
+    private fun parseStyles(raw: String?): JSONObject? =
+        try {
+            JSONObject(raw ?: "{}")
+        } catch (_: Exception) {
+            null
+        }
+
+    private fun style(preferences: WidgetPanelPreferences): JSONObject =
+        JSONObject()
+            .put("background", preferences.background)
+            .put("accent", preferences.accent)
+            .put("project", preferences.project)
+
+    private suspend fun write(
+        storage: WidgetPersistence,
+        profile: String,
+        key: String,
+        before: String?,
+        next: String,
+    ): WidgetPanelSave {
+        val lane = if (profile.isBlank()) storage.lanes.app else storage.lanes.forProfile(ProfileId(profile))
+        return when (val done = storage.store.compareAndSet(lane, key, before, next)) {
+            is Outcome.Failed -> {
+                log.w { "panel write: lane refused (${done.failure.label()}) profileBlank=${profile.isBlank()}" }
+                WidgetPanelSave.WriteRefused
+            }
+            is Outcome.Ok -> if (done.value) WidgetPanelSave.Saved else WidgetPanelSave.ChangedUnderneath
+        }
     }
 }
