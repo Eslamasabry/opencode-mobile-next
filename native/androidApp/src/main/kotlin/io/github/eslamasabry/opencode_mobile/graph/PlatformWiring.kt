@@ -865,6 +865,10 @@ class PlatformHub(
         }
     }
 
+    /** The Servers page's own rule ([isPhoneHelper], PreviewRuntime.publishServers): one filter for both lists. */
+    private fun helperIds(): Set<ProfileId> =
+        stores.profiles.profiles.value.filter { stores.isPhoneHelper(it) }.map { it.id }.toSet()
+
     private fun publishTile(waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
         if (!registry.live.value.containsKey(profile)) return
@@ -918,7 +922,7 @@ class PlatformHub(
         val savedProfiles = stores.profiles.profiles.value
         val names = savedProfiles.associate { it.id to it.profile.name }
         val base =
-            PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
+            PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys, helperIds())
         val loaded = stores.profiles.profile(profile) ?: return
         if (!stores.lanes.forProfile(profile).isAdmitting) return
         val location =
@@ -1075,6 +1079,7 @@ class PlatformHub(
                 profile,
                 stores.profiles.profiles.value.associate { it.id to it.profile.name },
                 registry.live.value.keys,
+                helperIds(),
             )
         if (
             current != base ||
@@ -1211,6 +1216,7 @@ class PlatformHub(
                     profile,
                     stores.profiles.profiles.value.associate { it.id to it.profile.name },
                     registry.live.value.keys,
+                    helperIds(),
                 ) != base
         )
             return
@@ -1846,6 +1852,8 @@ internal object PlatformRules {
         active: ProfileId,
         names: Map<ProfileId, String>,
         online: Set<ProfileId>,
+        /** The phone agents' helper profiles: they name their rows, but are no server a person lists. */
+        notListed: Set<ProfileId> = emptySet(),
     ): WidgetModel {
         val rows =
             feed.items
@@ -1890,7 +1898,8 @@ internal object PlatformRules {
             pending = waiting.size,
             rows = rows,
             servers =
-                names.map { (id, name) -> WidgetServer(widgetText(name), id in online, id.raw) },
+                names
+                    .map { (id, name) -> WidgetServer(widgetText(name), id in online, id.raw) },
         )
     }
 
