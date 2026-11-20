@@ -80,9 +80,11 @@ class UndoNonGitRenders {
     fun `undo words render`() {
         if (out == null) return
         val git = persistentListOf(FileDiff("src/a.kt", additions = 2, deletions = 1))
-        val review = StagedUi(phase = StagedPhase.Review, title = "Blue app", prompt = "make it blue", messagesAfter = 3)
-        shoot("nongit-confirm", review.copy(files = persistentListOf(), noFileCopies = true, confirm = StagedConfirm.PutBack))
-        shoot("git-confirm", review.copy(files = git, confirm = StagedConfirm.PutBack))
+        val review =
+            StagedUi(phase = StagedPhase.Review, title = "Blue app", prompt = "make it blue", messagesAfter = 3)
+        val ask = StagedConfirm.PutBack
+        shoot("nongit-confirm", review.copy(files = persistentListOf(), noFileCopies = true, confirm = ask))
+        shoot("git-confirm", review.copy(files = git, confirm = ask))
         shoot("nongit-done", StagedUi(phase = StagedPhase.Restored, noFileCopies = true))
         shoot("git-done", StagedUi(phase = StagedPhase.Restored))
     }
