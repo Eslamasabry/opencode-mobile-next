@@ -24,6 +24,8 @@ public object AgentKeys {
      * credential. Swept with the owner.
      */
     public fun phoneAgentFacts(owner: OwnerId): String = "oc.phoneAgentFacts.${owner.raw}"
+    /** The agent whose automatic update was started and not finished (owner-keyed, swept with the owner). */
+    public fun agentUpdating(owner: OwnerId): String = "oc.agentUpdating.${owner.raw}"
     public fun agentInstall(owner: OwnerId): String = "oc.agentInstall.${owner.raw}"
 
     /** The last install that failed or was interrupted, kept until the next attempt or until it is dismissed. */

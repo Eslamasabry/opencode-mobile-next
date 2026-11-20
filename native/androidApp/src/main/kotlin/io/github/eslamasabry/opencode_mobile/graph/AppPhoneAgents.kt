@@ -310,7 +310,7 @@ class AppPhoneAgents(
         }
 
     /** The agent whose automatic update was started and not finished, kept per phone: `oc.agentUpdating.<owner>`. */
-    private fun updatingKey(owner: ProfileId) = "oc.agentUpdating.${owner.raw}"
+    private fun updatingKey(owner: ProfileId) = AgentKeys.agentUpdating(owner)
 
     /** Records that the automatic update of [agent] runs (null: it ended), so a stop in the middle is resumed. */
     @Suppress("TooGenericExceptionCaught")
