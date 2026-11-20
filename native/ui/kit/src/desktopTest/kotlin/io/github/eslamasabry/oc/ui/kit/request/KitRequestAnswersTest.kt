@@ -64,7 +64,7 @@ class KitRequestAnswersTest {
         }
 
     @Test
-    fun `B-LAMP-016 Allow once and Deny stack full width, Allow once on top, when a label would wrap; never a broken label`() {
+    fun `B-LAMP-016 Allow once and Deny stack full width, Allow once on top, when a label would wrap, so no label is ever broken`() {
         for ((scale, stacked) in listOf(1f to false, 1.3f to true)) {
             runDesktopComposeUiTest(360, 500) {
                 k2Host(fontScale = scale, widthDp = 360, heightDp = 500) {
