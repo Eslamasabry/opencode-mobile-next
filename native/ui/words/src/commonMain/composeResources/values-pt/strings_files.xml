@@ -25,4 +25,5 @@
     <string name="filesReasonNotShowableBody">Não é texto nem imagem. Abra-o no computador onde ele está.</string>
     <string name="filesReasonNotShowablePhoneBody">Não é texto nem imagem. Ele está neste celular, então outro app pode abri-lo: escolha Abrir com.</string>
     <string name="filesShowingSaved">Mostrando o que foi salvo. Não é possível acessar o servidor agora.</string>
+    <string name="filesReasonOutside">Este arquivo está fora do projeto e não pode ser aberto aqui.</string>
 </resources>

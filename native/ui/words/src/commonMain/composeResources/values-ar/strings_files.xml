@@ -24,4 +24,5 @@
     <string name="filesReasonNotShowableBody">ليس نصًا ولا صورة. افتحه على الحاسوب الذي يوجد عليه.</string>
     <string name="filesReasonNotShowablePhoneBody">ليس نصًا ولا صورة. الملف على هذا الهاتف، لذا يمكن لتطبيق آخر فتحه: اختر «فتح باستخدام».</string>
     <string name="filesShowingSaved">يُعرض ما حُفظ سابقًا. تعذّر الوصول إلى الخادم الآن.</string>
+    <string name="filesReasonOutside">هذا الملف خارج المشروع ولا يمكن فتحه هنا.</string>
 </resources>

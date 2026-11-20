@@ -101,6 +101,7 @@ import io.github.eslamasabry.oc.ui.words.res.filesReasonDenied
 import io.github.eslamasabry.oc.ui.words.res.filesReasonDeniedBody
 import io.github.eslamasabry.oc.ui.words.res.filesReasonMissing
 import io.github.eslamasabry.oc.ui.words.res.filesReasonMissingBody
+import io.github.eslamasabry.oc.ui.words.res.filesReasonOutside
 import io.github.eslamasabry.oc.ui.words.res.filesReasonNotShowable
 import io.github.eslamasabry.oc.ui.words.res.filesReasonNotShowableBody
 import io.github.eslamasabry.oc.ui.words.res.filesReasonNotShowablePhoneBody
@@ -373,7 +374,7 @@ private fun Body(state: FileUi, actions: FileActions) {
             )
         FilePhase.Failed -> {
             // B-184: a file that will not open says why, in the file's own terms; a connection problem keeps Try again.
-            val reason = FileReadReason.of(state.failure)
+            val reason = FileReadReason.of(state.failure, state.path)
             if (reason == null) {
                 KitStateView(
                     kind = KitStateKind.Error,
@@ -386,7 +387,7 @@ private fun Body(state: FileUi, actions: FileActions) {
                 KitStateView(
                     kind = KitStateKind.Error,
                     title = stringResource(reasonTitle(reason)),
-                    body = stringResource(reasonBody(reason, onPhone = state.canOpenLocal)),
+                    body = reasonBody(reason, onPhone = state.canOpenLocal)?.let { stringResource(it) },
                     failure = state.failure,
                     onRetry = if (reason.retryHelps) actions::retry else null,
                     retryLabel = if (reason.retryHelps) stringResource(Res.string.kitTryAgain) else null,
@@ -559,6 +560,7 @@ private fun reasonTitle(reason: FileReadReason) =
         FileReadReason.TooBig -> Res.string.filesReasonTooBig
         FileReadReason.Missing -> Res.string.filesReasonMissing
         FileReadReason.Denied -> Res.string.filesReasonDenied
+        FileReadReason.Outside -> Res.string.filesReasonOutside
         FileReadReason.NotShowable -> Res.string.filesReasonNotShowable
     }
 
@@ -569,6 +571,7 @@ private fun reasonBody(reason: FileReadReason, onPhone: Boolean) =
             if (onPhone) Res.string.filesReasonTooBigPhoneBody else Res.string.filesReasonTooBigBody
         FileReadReason.Missing -> Res.string.filesReasonMissingBody
         FileReadReason.Denied -> Res.string.filesReasonDeniedBody
+        FileReadReason.Outside -> null
         FileReadReason.NotShowable ->
             if (onPhone) Res.string.filesReasonNotShowablePhoneBody else Res.string.filesReasonNotShowableBody
     }
