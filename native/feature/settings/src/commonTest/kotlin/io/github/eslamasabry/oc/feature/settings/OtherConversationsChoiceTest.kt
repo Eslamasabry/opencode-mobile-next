@@ -51,7 +51,10 @@ class OtherConversationsChoiceTest {
 
     @Test
     fun `migration_dockShownTrue_isEdgeLight`() {
-        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = null, legacyShown = "true"))
+        assertEquals(
+            OtherConversationsMode.EdgeLight,
+            OtherConversationsMode.migrate(saved = null, legacyShown = "true"),
+        )
     }
 
     @Test
@@ -96,16 +99,18 @@ class OtherConversationsChoiceTest {
 
     @Test
     fun `B-LAMP-003 only EdgeLight and Hidden exist and rings, absent or legacy true migrate to EdgeLight`() {
+        fun mig(saved: String?, legacy: String?) = OtherConversationsMode.migrate(saved, legacy)
+
         assertEquals(
             listOf(OtherConversationsMode.EdgeLight, OtherConversationsMode.Hidden),
             OtherConversationsMode.entries.toList(),
         )
-        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = null, legacyShown = null))
-        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = "rings", legacyShown = null))
-        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = "rings", legacyShown = "false"))
-        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = null, legacyShown = "true"))
-        assertEquals(OtherConversationsMode.Hidden, OtherConversationsMode.migrate(saved = null, legacyShown = "false"))
-        assertEquals(OtherConversationsMode.Hidden, OtherConversationsMode.migrate(saved = "hidden", legacyShown = "true"))
-        assertEquals(OtherConversationsMode.EdgeLight, OtherConversationsMode.migrate(saved = "edge-light", legacyShown = "false"))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = null, legacy = null))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = "rings", legacy = null))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = "rings", legacy = "false"))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = null, legacy = "true"))
+        assertEquals(OtherConversationsMode.Hidden, mig(saved = null, legacy = "false"))
+        assertEquals(OtherConversationsMode.Hidden, mig(saved = "hidden", legacy = "true"))
+        assertEquals(OtherConversationsMode.EdgeLight, mig(saved = "edge-light", legacy = "false"))
     }
 }

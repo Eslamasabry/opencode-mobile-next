@@ -27,7 +27,7 @@ import kotlin.test.assertEquals
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** B-LAMP-005: Settings › Conversations › Other conversations shows only Edge light and Hidden and stores the choice. */
+/** B-LAMP-005: Other conversations sheet shows only Edge light and Hidden and stores the choice. */
 @OptIn(ExperimentalTestApi::class)
 class OtherConversationsSheetTest {
     @BeforeTest

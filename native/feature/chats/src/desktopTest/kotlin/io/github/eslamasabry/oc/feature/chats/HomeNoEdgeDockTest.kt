@@ -37,9 +37,10 @@ class HomeNoEdgeDockTest {
     @Test
     fun `B-LAMP-004 Home never composes HomeEdgeDock or KitEdgeDock while connecting or live`() {
         val base = mixed(extra = 2)
+        val connecting = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone")
         val states =
             listOf(
-                "connecting" to base.copy(home = base.home.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone"))),
+                "connecting" to base.copy(home = base.home.copy(opening = connecting)),
                 "live" to base,
             )
         for ((label, state) in states) {
@@ -56,8 +57,14 @@ class HomeNoEdgeDockTest {
                 setContent {
                     CompositionLocalProvider(LocalDensity provides Density(1f)) {
                         ChatEnvironment {
+                            val look =
+                                KitAppearance(
+                                    mode = AppearanceMode.Dark,
+                                    motion = MotionLevel.Off,
+                                    style = Style.Solid,
+                                )
                             KitTheme(
-                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off, style = Style.Solid),
+                                appearance = look,
                                 platform = DesktopKitPlatform(),
                                 localeTag = "en",
                                 stillFrame = true,

@@ -310,7 +310,8 @@ class EdgeLightWiringTest {
     }
 
     @Test
-    fun `B-LAMP-003 migration is non-destructive, defaults to EdgeLight, maps rings and carries dockSide start once`() = runTest {
+    fun `B-LAMP-003 migration is non-destructive, defaults to EdgeLight, maps rings and carries dockSide start once`() =
+        runTest {
         val cases =
             listOf(
                 Triple("absent", emptyMap<String, String>(), OtherConversationsMode.EdgeLight),
@@ -364,11 +365,19 @@ class EdgeLightWiringTest {
 
     @Test
     fun `B-LAMP-007 first-use tip waits for prefs, shows once at zero tips, and hides when open, placing or hidden`() {
-        assertFalse(EdgeLightRules.showTip(prefsLoaded = false, tipsShown = 0, visible = true, open = false, placing = false))
-        assertTrue(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = true, open = false, placing = false))
-        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 1, visible = true, open = false, placing = false))
-        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = false, open = false, placing = false))
-        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = true, open = true, placing = false))
-        assertFalse(EdgeLightRules.showTip(prefsLoaded = true, tipsShown = 0, visible = true, open = false, placing = true))
+        fun tip(
+            loaded: Boolean = true,
+            tips: Int = 0,
+            vis: Boolean = true,
+            open: Boolean = false,
+            placing: Boolean = false,
+        ) = EdgeLightRules.showTip(loaded, tips, vis, open, placing)
+
+        assertFalse(tip(loaded = false))
+        assertTrue(tip())
+        assertFalse(tip(tips = 1))
+        assertFalse(tip(vis = false))
+        assertFalse(tip(open = true))
+        assertFalse(tip(placing = true))
     }
 }
