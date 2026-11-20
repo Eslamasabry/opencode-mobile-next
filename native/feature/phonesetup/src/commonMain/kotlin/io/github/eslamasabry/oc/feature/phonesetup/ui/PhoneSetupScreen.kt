@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgressTone
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -122,6 +123,10 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
+    if (LocalKitWindow.current.cls.isWide) {
+        PhoneSetupWideScreen(state, actions)
+        return
+    }
     val progress = state.progress
     KitScreen(
         topBar = {

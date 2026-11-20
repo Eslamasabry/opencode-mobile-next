@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.row.KitLockedRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -108,6 +109,8 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             idle -> Res.string.phoneSetupStartScreenTitle
             else -> Res.string.phoneSetupStartScreenTitle
         }
+    val wide = LocalKitWindow.current.cls.isWide
+    val wideJob = wide && !state.checking && journeyBody(state) == JourneyBody.Job
     KitScreen(
         topBar = {
             KitTopBar(
@@ -115,11 +118,12 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
+                large = wideJob,
             )
         },
-        width = KitScreenWidth.Reading,
+        width = if (wideJob) KitScreenWidth.Full else KitScreenWidth.Reading,
         loading = state.checking,
-        bottom = if (idle || state.customizing || state.checking) null else ({ JobAction(state, actions) }),
+        bottom = if (idle || state.customizing || state.checking || wideJob) null else ({ JobAction(state, actions) }),
         edges = KitScreenEdges.Bleed,
     ) {
         if (state.checking) {
@@ -129,7 +133,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             when (journeyBody(state)) {
                 JourneyBody.Nothing -> Unit
                 JourneyBody.Hero -> StartHero(state, actions)
-                JourneyBody.Job -> Job(state, actions)
+                JourneyBody.Job -> Job(state, actions, wide = wideJob)
             }
         }
         KitSheet(
@@ -536,7 +540,7 @@ private fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
 }
 
 @Composable
-private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
+private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions, wide: Boolean = false) {
     val progress = state.progress
     var detailsOpen by remember { mutableStateOf(false) }
     val rows =
@@ -641,6 +645,70 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 "\u2066$total\u2069",
             )
         } else null
+    if (wide) {
+        val trail =
+            rows.mapIndexed { index, step ->
+                when {
+                    finished(step) -> KitTrailMark.Done
+                    index == current && !checking -> KitTrailMark.Current
+                    else -> KitTrailMark.Waiting
+                }
+            }
+        val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
+        val costParts =
+            if (!running) emptyList()
+            else
+                SetupRingCost.parts(
+                    eta,
+                    lastStep = rows.none { it.state == ComponentState.Pending },
+                    downloading = caption != null,
+                    transport = state.transport,
+                )
+        val costLine =
+            if (costParts.isEmpty()) null
+            else
+                costParts
+                    .map { part ->
+                        when (part) {
+                            RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
+                            is RingCostPart.Minutes ->
+                                org.jetbrains.compose.resources.pluralStringResource(
+                                    Res.plurals.phoneSetupRingMinutesLeft,
+                                    part.minutes,
+                                    part.minutes,
+                                )
+                            RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
+                            RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
+                        }
+                    }
+                    .joinToString(" · ")
+        val clock = progress.stepElapsedSeconds
+        val heartbeatLine =
+            if (running && clock != null) {
+                val doing = progress.activity?.let { activityWords(it) }
+                val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
+                if (doing != null) stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
+                else stepClock
+            } else null
+        val showQuietNote = running && clock != null && (progress.quietSeconds ?: 0) >= 30
+        SetupJourneyWideJob(
+            state = state,
+            rows = rows,
+            done = done,
+            title = title,
+            measured = measured,
+            halted = halted,
+            caption = caption,
+            trail = trail,
+            costLine = costLine,
+            heartbeatLine = heartbeatLine,
+            showQuietNote = showQuietNote,
+            note = note,
+            batteryNotice = { BatteryCardNotice(state, actions) },
+            actionFoot = { JobAction(state, actions) },
+        )
+        return
+    }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val availableHeight = (maxHeight - Space.S4.dp).coerceAtLeast(0.dp)
         Box(
