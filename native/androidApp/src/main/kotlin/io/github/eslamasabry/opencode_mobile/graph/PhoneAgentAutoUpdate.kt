@@ -81,6 +81,13 @@ class PhoneAgentAutoUpdate(
     }
 
     @Volatile private var updaterRef: AgentAutoUpdater? = null
+    private val snapshot =
+        SpacedSnapshot({ SystemClock.elapsedRealtime() }) {
+            phones.updateFacts()?.let { facts ->
+                val records = recordBehind(app, facts.installed)
+                AgentSnapshot(facts, facts.behind + records, records - facts.behind)
+            }
+        }
     private val log = AppLog.tagged("AgentAutoUpdate")
 
     fun start() {
@@ -109,19 +116,26 @@ class PhoneAgentAutoUpdate(
                 override val readDue: Boolean get() = phones.updateReadDue()
 
                 override suspend fun read() {
+                    UpdaterReads.agents.incrementAndGet()
                     val done = phones.readForUpdate()
                     log.i { "read of the installed agents ${if (done) "done" else "did not finish"}" }
                 }
 
+                // The updater's reads of the phone's agents (facts, install records) go through ONE spaced snapshot:
+                // however often a look asks, the disk and the helper are read at most once in a few seconds.
                 override val installed: List<AgentId>
-                    get() = choices.offer.value?.items.orEmpty().map { it.id }
-                        .filter { choices.allowed(it) && it != AgentId.OPENCODE }
-                override val behind: Set<AgentId> get() = installed.toSet()
-                override val reinstall: Set<AgentId>
-                    get() = choices.offer.value?.items.orEmpty().filter { it.fromVersion == it.toVersion }
-                        .map { it.id }.toSet()
+                    get() = snapshot.get()?.facts?.installed.orEmpty()
+
+                override val behind: Set<AgentId> get() = snapshot.get()?.behind.orEmpty()
+
+                override val reinstall: Set<AgentId> get() = snapshot.get()?.reinstall.orEmpty()
+
                 override val helperBehind: Boolean
-                    get() = choices.offer.value?.items.orEmpty().any { it.neededWhen != null }
+                    get() =
+                        snapshot.get()?.facts?.let {
+                            it.helperOnDiskBehind ||
+                                (it.helperRunning && it.helperVersion != null && it.helperVersion != pins.paseo.version)
+                        } == true
 
                 override val pinKey: String = pinned
                 override val switchPending: Boolean get() = runtime.switchPending()
@@ -449,6 +463,32 @@ private fun holdOf(step: AgentUpdateStep): HomeHold? =
         AgentUpdateStep.Reading -> HomeHold.AgentsChecking
         else -> null
     }
+
+/** What one read of the phone's agents said: the facts, what is behind, and what only its install record says. */
+private class AgentSnapshot(
+    val facts: AppPhoneAgents.UpdateFacts,
+    val behind: Set<AgentId>,
+    val reinstall: Set<AgentId>,
+)
+
+/** One read of the phone's agents at most every [SNAPSHOT_SPACING_MS]; every look in between gets the same answer. */
+private class SpacedSnapshot(private val now: () -> Long, private val read: () -> AgentSnapshot?) {
+    private var at = Long.MIN_VALUE
+    private var value: AgentSnapshot? = null
+
+    @Synchronized
+    fun get(): AgentSnapshot? {
+        val t = now()
+        if (at == Long.MIN_VALUE || t - at >= SNAPSHOT_SPACING_MS) {
+            at = t
+            UpdaterReads.agents.incrementAndGet()
+            value = read()
+        }
+        return value
+    }
+}
+
+private const val SNAPSHOT_SPACING_MS = 5_000L
 
 /**
  * What each agent's install of its pinned version recorded (issue 147), read straight from the phone's Linux tree:

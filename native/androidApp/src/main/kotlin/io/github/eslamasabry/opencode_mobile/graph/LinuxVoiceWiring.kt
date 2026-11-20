@@ -814,10 +814,11 @@ internal constructor(
         val stopped = withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }
         val owner = ownerId()?.let { profiles.profile(it) }?.profile
         val versions = OpenCodeVersions.of(status, owner?.serverVersion, owner?.requiresOpenCode2Migration != true)
+        if (status?.serverRunning != true) liveVersion = null
         facts.update {
             it.copy(
                 status = status,
-                installedVersion = versions.installed,
+                installedVersion = liveVersion ?: versions.installed,
                 pinnedVersion = versions.pinned,
                 stoppedByPerson = stopped,
                 replyRunning = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true,
@@ -1322,8 +1323,27 @@ internal constructor(
                 target?.password,
                 port::probe,
             )
-        facts.update { it.copy(probe = answer) }
+        // The version that RUNS, from the server's own health answer: the saved profile only says what the last setup
+        // job recorded (an update that finished on disk read "below the pin" for ever).
+        liveVersion =
+            if (answer == ProbeAnswer.Answered && target != null) {
+                withContext(io) { PhoneLoopbackProbe.version(PhoneServerScripts.PORT, target.password) }
+            } else {
+                null
+            }
+        facts.update { it.copy(probe = answer, installedVersion = liveVersion ?: it.installedVersion) }
+        saveLiveVersion()
     }
+
+    /** The stored record follows the running server, so This phone and Home stop showing an older saved number. */
+    private suspend fun saveLiveVersion() {
+        val live = liveVersion ?: return
+        val loaded = ownerId()?.let { profiles.profile(it) } ?: return
+        if (loaded.profile.serverVersion != live) profiles.upsert(loaded.profile.copy(serverVersion = live))
+    }
+
+    /** The version the running phone server reported at the last refresh; null while it is not running or unread. */
+    @Volatile private var liveVersion: String? = null
 
     /**
      * The phone server's own profile still says the Flutter app's address (127.0.0.1:4097) after the update from

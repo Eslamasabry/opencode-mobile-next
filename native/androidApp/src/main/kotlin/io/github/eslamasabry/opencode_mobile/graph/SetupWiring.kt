@@ -375,7 +375,10 @@ class BuiltinSetupFinisher(
             }
         if (outcome is Outcome.Failed) {
             // The last step's reason, by its fixed name only: what the job's "failed at start" line points at.
-            AppLog.tagged("Setup").w { "finish step failed: ${(outcome.failure as? Failure.Runtime)?.problem}" }
+            AppLog.tagged("Setup").w {
+                val failure = outcome.failure
+                "finish step failed: ${failure::class.simpleName} ${(failure as? Failure.Runtime)?.problem}"
+            }
             return outcome
         }
         return connections.connect(profile.id)

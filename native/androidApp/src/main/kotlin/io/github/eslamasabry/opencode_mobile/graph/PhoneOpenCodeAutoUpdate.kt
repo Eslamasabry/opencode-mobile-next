@@ -5,14 +5,18 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.engine.runtime.install.ManagedRuntime
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeAutoUpdater
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHostFacts
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJobs
+import io.github.eslamasabry.oc.engine.runtime.server.UpdaterHooks
 import io.github.eslamasabry.oc.engine.runtime.server.launchOpenCodeAutoUpdate
 import io.github.eslamasabry.oc.engine.runtime.server.openCodeAutoUpdateLooks
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
+import kotlin.time.Duration.Companion.seconds
 import android.os.SystemClock
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,6 +25,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -40,10 +45,11 @@ class PhoneOpenCodeAutoUpdate(
     private val leases: NativeChatLeases,
     private val appScope: AppCoroutineScope,
     private val downloads: PhoneDownloads,
-    private val choices: PhoneUpdateChoices,
+    private val gates: UpdaterGates,
 ) {
     private var started = false
     @Volatile private var updaterRef: OpenCodeAutoUpdater? = null
+    private val choices get() = gates.choices
     private val wakeLock = Any()
     private var wakeJob: kotlinx.coroutines.Job? = null
 
@@ -90,9 +96,11 @@ class PhoneOpenCodeAutoUpdate(
                 override suspend fun updateOpenCode(runtime: String): Boolean =
                     choices.startIfChosen(AgentId.OPENCODE) {
                     val result = setup.update()
+                    // Busy in either form (a runtime slot, or a payload lease held by an agents' install) means it did
+                    // not start: the try is kept, never spent.
                     val refused =
                         (result as? Outcome.Failed)?.failure.let {
-                            it is Failure.Runtime && it.problem == RuntimeProblem.SlotBusy
+                            (it is Failure.Runtime && it.problem == RuntimeProblem.SlotBusy) || it is Failure.Busy
                         }
                     if (refused) log.i { "update refused before it started (work running or not known idle)" }
                     !refused
@@ -116,26 +124,44 @@ class PhoneOpenCodeAutoUpdate(
                 nowMs = { SystemClock.elapsedRealtime() },
                 // A retry waiting for its time wakes itself: ONE pending delayed look (a newer ask replaces
                 // the older one), cancelled with the app's scope.
-                wake = { delayMs ->
-                    synchronized(wakeLock) {
-                        wakeJob?.cancel()
-                        wakeJob =
-                            appScope.launch {
-                                kotlinx.coroutines.delay(delayMs)
-                                updaterRef?.changed()
+                hooks =
+                    UpdaterHooks(
+                        onRead = { UpdaterReads.opencode.incrementAndGet() },
+                        wake = { delayMs ->
+                            synchronized(wakeLock) {
+                                wakeJob?.cancel()
+                                wakeJob =
+                                    appScope.launch {
+                                        kotlinx.coroutines.delay(delayMs)
+                                        updaterRef?.changed()
+                                    }
                             }
-                    }
-                },
+                        },
+                    ),
             ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
                 val reading = idle.get()
-                val busy = settle.busy(reading.idle)
-                busy
+                // Not in front: the restart that ends the update needs the foreground service admission only a
+                // visible app has, so the try is kept (with the backoff) and the next look in front runs it.
+                settle.busy(reading.idle) || gates.visibility.state.value != Visibility.Foreground
             }
         updaterRef = updater
         downloads.openCode = this
         downloads.start()
         appScope.launch { updater.waitingForUnmetered.collect { downloads.openCodeWaiting.value = it } }
+        // One line a minute while the updaters are active: how many reads each made, and the heap, so a look can assert
+        // "under N" and a loop shows at once (never found by a crash again).
+        appScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(READ_REPORT_SECONDS.seconds)
+                val rt = Runtime.getRuntime()
+                log.i {
+                    "updater reads: opencode ${UpdaterReads.opencode.getAndSet(0)}, " +
+                        "agents ${UpdaterReads.agents.getAndSet(0)} in the last minute; " +
+                        "heap ${(rt.totalMemory() - rt.freeMemory()) / MB} MB"
+                }
+            }
+        }
         // Held a while for a busy or not-ready phone: Home says so in its one download line (never at once).
         appScope.launch { updater.held.collect { downloads.openCodeHeld.value = it } }
         appScope.launch { updater.fellShort.collect { downloads.openCodeShort.value = it } }
@@ -149,8 +175,19 @@ class PhoneOpenCodeAutoUpdate(
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
-            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> },
-                settled, reads, choices.offer.map { Unit }),
+            merge(
+                // Only what the decision reads counts as a change: a read the updater itself makes refreshes the
+                // server's facts, and that must never ask for the next look.
+                combine(
+                    decisionFacts(runtime.serverFacts),
+                    setup.progress,
+                    leases.busy,
+                    gates.visibility.state,
+                ) { _, _, _, _ -> },
+                settled,
+                reads,
+                choices.offer.map { Unit },
+            ),
             log = { log.i { it } },
         )
         appScope.launch {
@@ -174,3 +211,12 @@ class PhoneOpenCodeAutoUpdate(
 interface PhoneOpenCodeAutoUpdateAccessors {
     val phoneOpenCodeAutoUpdate: PhoneOpenCodeAutoUpdate
 }
+
+/** The server facts the updater's decision reads (version, move pending, install phase, running); nothing else. */
+private fun decisionFacts(facts: kotlinx.coroutines.flow.StateFlow<PhoneServerFacts>) =
+    facts
+        .map { listOf(it.installedVersion, it.needsOpenCode2Move, it.status?.phase, it.status?.serverRunning) }
+        .distinctUntilChanged()
+
+private const val READ_REPORT_SECONDS = 60
+private const val MB = 1_048_576L

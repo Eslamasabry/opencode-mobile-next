@@ -6028,7 +6028,8 @@ exec gc supervisor run
             // Re-requesting a background FGS start would lose Android 12+ admission.
             if (!nativeOwned) BuiltinServerService.start(context, currentNotice())
         } catch (error: Exception) {
-            // A refused foreground service must not leave an unsupervised child.
+            // A refused foreground service must not leave an unsupervised child; the class says why (never a message).
+            Log.w(TAG, "service $name: the foreground start failed: ${failureShape(error)}")
             removeService(name)
             throw error
         }

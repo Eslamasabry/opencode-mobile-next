@@ -100,11 +100,8 @@ public class OpenCodeAutoUpdater(
     private val log: ((String) -> Unit)? = null,
     /** A monotonic clock in milliseconds; the default (no clock) never tells a hold. */
     private val nowMs: () -> Long = { 0L },
-    /**
-     * Asks for one more look [delayMs] from now (the binding runs a delayed, cancel-aware [changed]): a retry waiting
-     * for its time does not depend on some other state change to wake it.
-     */
-    private val wake: (delayMs: Long) -> Unit = {},
+    /** The binding's two hooks: a delayed look, and a count of the reads this updater really makes. */
+    private val hooks: UpdaterHooks = UpdaterHooks(),
     private val workBusy: () -> Boolean,
 ) {
     private var lastLine: String? = null
@@ -153,6 +150,24 @@ public class OpenCodeAutoUpdater(
     private var retryNotBefore = 0L
     private val shortfalls = mutableMapOf<String, Int>()
 
+    private var lastRefreshAt = 0L
+
+    /**
+     * The one read of the server inside [changed]. A read updates the server's facts, which are among the flows that
+     * call [changed] again, so an unspaced read here is a loop of requests (thousands of sockets a minute, then the
+     * heap): at most one read in [REFRESH_SPACING_MS], whatever triggered the look. No clock (0): no spacing.
+     */
+    private suspend fun refreshSpaced(force: Boolean = false) {
+        val now = nowMs()
+        if (!force && tooSoon(now)) return
+        lastRefreshAt = now
+        hooks.onRead()
+        withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+    }
+
+    private fun tooSoon(now: Long): Boolean =
+        now != 0L && lastRefreshAt != 0L && now - lastRefreshAt < REFRESH_SPACING_MS
+
     private fun belowPin(): Boolean {
         val installed = host.installedVersion?.trim()?.removePrefix("v")
         return !installed.isNullOrEmpty() && installed != host.pinnedVersion
@@ -170,7 +185,8 @@ public class OpenCodeAutoUpdater(
         }
         if (!sawRunning && nowMs() - awaitingSince < START_GRACE_MS) return
         awaiting = null
-        withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+        // Once per job, so never spaced: a job shorter than the spacing must still judge the version AFTER it ended.
+        refreshSpaced(force = true)
         if (!belowPin()) {
             short.value = false
             shortfalls.remove(key)
@@ -184,7 +200,7 @@ public class OpenCodeAutoUpdater(
             if (n < MAX_TRIES) {
                 attempted -= key
                 retryNotBefore = nowMs() + RETRY_SPACING_MS
-                wake(RETRY_SPACING_MS)
+                hooks.wake(RETRY_SPACING_MS)
                 retryArmed = true
                 finishing.value = true
             } else {
@@ -201,7 +217,7 @@ public class OpenCodeAutoUpdater(
             if (awaiting == key) verifyEnded(key)
             if (short.value && !jobs.running) {
                 // The person's Try again may have brought it to the pin: read again before keeping the failed row.
-                withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+                refreshSpaced()
                 if (!belowPin()) short.value = false
             }
             if (nowMs() < retryNotBefore) {
@@ -215,7 +231,7 @@ public class OpenCodeAutoUpdater(
                 note("the wait for the other job is over; trying again")
             }
             if (!decide(key, explain = true)) return
-            withTimeoutOrNull(READ_LIMIT) { host.refresh() }
+            refreshSpaced()
             if (!decide(key)) return
             // A try refused before the job started is not spent: the next look tries again.
             if (jobs.updateOpenCode(host.runtime)) {
@@ -234,7 +250,7 @@ public class OpenCodeAutoUpdater(
                 // the next look is after a backoff (30 s, doubling, at most 2 min), not at once.
                 busyStreak++
                 retryNotBefore = busyDeadline(nowMs(), busyStreak)
-                if (retryNotBefore > 0L) wake(retryNotBefore - nowMs())
+                if (retryNotBefore > 0L) hooks.wake(retryNotBefore - nowMs())
                 if (!busyWaiting) note("refused before it started (busy); waiting, the try is kept")
                 busyWaiting = true
             }
@@ -401,6 +417,7 @@ public class OpenCodeUpdateRestart(
 private const val BUSY_BACKOFF_MS = 30_000L
 private const val BUSY_BACKOFF_MAX_MS = 120_000L
 private const val BUSY_DOUBLINGS = 3
+private const val REFRESH_SPACING_MS = 30_000L
 
 /** When a busy-refused try looks again: 30 s, doubling, at most 2 min. No clock (0) means no backoff. */
 private fun busyDeadline(now: Long, streak: Int): Long =
@@ -409,3 +426,13 @@ private fun busyDeadline(now: Long, streak: Int): Long =
     } else {
         now + minOf(BUSY_BACKOFF_MS shl (streak - 1).coerceAtMost(BUSY_DOUBLINGS), BUSY_BACKOFF_MAX_MS)
     }
+
+/**
+ * What the binding gives the updater beyond its facts: [wake] asks for one more look [delayMs] from now (a delayed,
+ * cancel-aware [OpenCodeAutoUpdater.changed], so a retry waiting for its time depends on no other state change), and
+ * [onRead] is called once for every read of the server (the per-minute counter).
+ */
+public class UpdaterHooks(
+    public val wake: (delayMs: Long) -> Unit = {},
+    public val onRead: () -> Unit = {},
+)
