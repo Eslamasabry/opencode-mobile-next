@@ -157,7 +157,7 @@ internal fun WaitPen.place(phase: Float): Float {
 }
 
 /** An arrival with weight: it passes its mark a little and settles. A square hand arrives without it. */
-internal fun WaitPen.spring(x: Float): Float = if (square) easeOut(x) else overshoot(x)
+internal fun WaitPen.settle(x: Float): Float = if (square) easeOut(x) else overshoot(x)
 
 /** A fixed shape from its path data, in grid units, parsed once. [cut] makes overlapping pieces cut through. */
 internal fun waitShape(data: String, cut: Boolean = false): Path =
