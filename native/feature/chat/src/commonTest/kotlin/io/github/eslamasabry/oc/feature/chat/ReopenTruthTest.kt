@@ -486,6 +486,45 @@ class ReopenTruthTest {
         }
 
     @Test
+    fun `B-CHAT-KEPT-003 while a mid-reply kept page waits, the chat shows its loading state, never the start page`() =
+        runTest {
+            val f = Fixture(this, story(done = false))
+            f.connect()
+            val visit = f.worlds.open(ref)
+            runCurrent()
+            f.worlds.release(visit)
+            runCurrent()
+            f.gateway.messages = story(done = true)
+            val gate = CompletableDeferred<Unit>()
+            f.gateway.gate = gate
+            val again = f.worlds.open(ref)
+            val presenter =
+                io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter(again, RecordingNavigator(), Immediate)
+            fun face(at: String) {
+                val ui = presenter.current()
+                assertEquals(
+                    io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase.Loading,
+                    ui.phase,
+                    "$at: the wait shows the loading state, as a cold open does, never the start page or an empty chat",
+                )
+                assertTrue(ui.rows.isEmpty(), "$at: no rows are drawn during the wait")
+            }
+            face("at once")
+            runCurrent()
+            face("after the first turn of the loop")
+            for (ms in listOf(250L, 500L, 400L)) {
+                advanceTimeBy(ms)
+                runCurrent()
+                face("${ms} ms on")
+            }
+            gate.complete(Unit)
+            runCurrent()
+            assertTrue("The fox named the stars, one by one." in shownWords(again), "the chat opens on the finished reply")
+            f.worlds.release(again)
+            runCurrent()
+        }
+
+    @Test
     fun `B-CHAT-KEPT-002 with no live read the page kept mid-reply is still drawn after a moment`() =
         runTest {
             val f = Fixture(this, story(done = false))
