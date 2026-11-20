@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
@@ -18,11 +19,12 @@ class HeldAgentsTest {
         mb: Long?,
         choice: AgentUpdateChoice? = AgentUpdateChoice.Update,
         group: AgentUpdateGroup = AgentUpdateGroup.Optional,
+        need: AgentNeedRule? = null,
     ) =
         AgentUpdateItem(
             id = AgentId(id), name = id, fromVersion = "1", toVersion = "2", downloadBytes = mb?.let { it * 1_000_000 },
             installedBytes = null, group = group, keepAllowed = true, removeAllowed = true, notKeptReason = null,
-            choice = choice, neededWhen = null,
+            choice = choice, neededWhen = need,
         )
 
     private fun offer(
@@ -55,5 +57,15 @@ class HeldAgentsTest {
     @Test
     fun `B-DL-413 a size that is not known is not guessed`() {
         assertNull(heldAgentsOf(offer(listOf(item("claude", 220), item("codex", null)))))
+    }
+
+    @Test
+    fun `B-DL-426 OpenCode with its helper is the sheet's sizes added, or the usual sizes without them`() {
+        val needed =
+            item("paseo", 330, choice = null, group = AgentUpdateGroup.Needed, need = AgentNeedRule.WithAnyUpdate)
+        assertEquals(460, openCodeWithHelperMb(offer(listOf(item(AgentId.OPENCODE.raw, 130), needed))))
+        assertEquals(460, openCodeWithHelperMb(offer(listOf(item(AgentId.OPENCODE.raw, null), needed))))
+        assertNull(openCodeWithHelperMb(offer(listOf(item(AgentId.OPENCODE.raw, 130)))))
+        assertNull(openCodeWithHelperMb(null))
     }
 }

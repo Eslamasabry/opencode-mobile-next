@@ -48,4 +48,15 @@ class HomeHeldAgentsTest {
         assertEquals(42, HomeDownloadSizes.roundedMb(41_700_000))
         assertNull(HomeDownloadMapping.withHeldAgents(emptyList(), HomeHeldAgents(0, 0)).firstOrNull())
     }
+
+    @Test
+    fun `B-DL-424 OpenCode waiting with the helper makes one line with one total, the helper's own line gone`() {
+        val openCode = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
+        val helper = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
+        val rows = HomeDownloadMapping.openCodeWithHelper(listOf(openCode, helper), 460)
+        assertEquals(listOf(openCode.copy(withHelper = true, megabytes = 460)), rows)
+        // No OpenCode wait, or no shared parts: nothing changes.
+        assertEquals(listOf(helper), HomeDownloadMapping.openCodeWithHelper(listOf(helper), 460))
+        assertEquals(listOf(openCode, helper), HomeDownloadMapping.openCodeWithHelper(listOf(openCode, helper), null))
+    }
 }

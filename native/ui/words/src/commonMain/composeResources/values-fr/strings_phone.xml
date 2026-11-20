@@ -942,4 +942,6 @@
         <item quantity="other">%1$d mises à jour d’agents en attente de Wi-Fi · environ %2$d Mo</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 mise à jour d’agents en attente de Wi-Fi · environ %1$d Mo</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Mise à jour d’OpenCode et de l’assistant des agents en attente de Wi-Fi · environ %1$d Mo</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">C’est la mise à jour d’OpenCode et de l’assistant des agents dont il a besoin. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
 </resources>

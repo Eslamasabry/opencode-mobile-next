@@ -1012,4 +1012,6 @@
         <item quantity="other">%1$d تحديث للوكلاء ينتظر Wi-Fi · نحو %2$d ميغابايت</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">تحديث واحد للوكلاء ينتظر Wi-Fi · نحو %1$d ميغابايت</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">تحديث OpenCode ومساعد الوكلاء ينتظران Wi-Fi · نحو %1$d ميغابايت</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">هذا تحديث OpenCode ومساعد الوكلاء الذي يحتاجه. يُحسب من باقة بياناتك. الانتظار حتى Wi-Fi يؤجّله إلى وقت لاحق.</string>
 </resources>

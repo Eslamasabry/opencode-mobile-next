@@ -943,4 +943,6 @@
         <item quantity="other">%1$d actualizaciones de agentes esperando Wi-Fi · unos %2$d MB</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 actualización de agentes esperando Wi-Fi · unos %1$d MB</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Actualización de OpenCode y del ayudante de agentes esperando Wi-Fi · unos %1$d MB</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">Es la actualización de OpenCode y del ayudante de agentes que necesita. Cuenta para tu plan de datos. Esperar al Wi-Fi la deja para más tarde.</string>
 </resources>

@@ -69,6 +69,8 @@ public data class HomeDownloadFact(
     val name: String? = null,
     /** More agent updates wait for Wi-Fi beside this one: said as a second sentence of the same row. */
     val moreAgents: HomeHeldAgents? = null,
+    /** The shared parts (the Agent helper) ride with this OpenCode update: one line, one size, one yes. */
+    val withHelper: Boolean = false,
 )
 
 /** The room a stopped download needs and the room the phone has, in megabytes, with the agent's own name. */
@@ -176,6 +178,23 @@ public object HomeDownloadMapping {
         } else {
             facts + HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Held(why))
         }
+
+    /**
+     * OpenCode waits for the shared parts the sheet lists (the Agent helper): the helper's own waiting line would
+     * replace OpenCode's and hide what the yes starts. One line names both, with the one total ([totalMegabytes], the
+     * sheet's sizes added; null adds the helper's usual size).
+     */
+    public fun openCodeWithHelper(facts: List<HomeDownloadFact>, totalMegabytes: Int?): List<HomeDownloadFact> {
+        val openCode =
+            facts.firstOrNull { it.kind == HomeDownloadKind.OpenCode && it.phase == HomeDownloadPhase.Waiting }
+        return if (totalMegabytes == null || openCode == null) {
+            facts
+        } else {
+            facts
+                .filterNot { it.kind == HomeDownloadKind.Helper && it.phase == HomeDownloadPhase.Waiting }
+                .map { if (it === openCode) it.copy(withHelper = true, megabytes = totalMegabytes) else it }
+        }
+    }
 
     /**
      * Agent updates held on mobile data are said in the row that already speaks about waiting: a second sentence on an

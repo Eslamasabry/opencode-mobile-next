@@ -896,4 +896,6 @@
         <item quantity="other">%1$d bản cập nhật tác nhân đang chờ Wi-Fi · khoảng %2$d MB</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 bản cập nhật tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Bản cập nhật OpenCode và trình hỗ trợ tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">Đây là bản cập nhật OpenCode và trình hỗ trợ tác nhân mà nó cần. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
 </resources>

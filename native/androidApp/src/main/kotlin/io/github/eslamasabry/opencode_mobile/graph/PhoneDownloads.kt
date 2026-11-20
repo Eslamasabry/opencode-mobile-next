@@ -219,7 +219,10 @@ class PhoneDownloads(
                         rows + HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
                     } else rows
                 // Agents chosen on the sheet that wait for Wi-Fi join this row (a second sentence, or the line).
-                HomeDownloadMapping.withHeldAgents(withHelper, heldAgentsOf(offer))
+                HomeDownloadMapping.withHeldAgents(
+                    HomeDownloadMapping.openCodeWithHelper(withHelper, openCodeWithHelperMb(offer)),
+                    heldAgentsOf(offer),
+                )
             }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
@@ -230,7 +233,11 @@ class PhoneDownloads(
                 run(kind)
             } else {
                 when (kind) {
-                    HomeDownloadKind.OpenCode -> openCode?.allowMeteredOnce()
+                    HomeDownloadKind.OpenCode -> {
+                        openCode?.allowMeteredOnce()
+                        // OpenCode waits for the shared parts the offer lists: the same yes releases them.
+                        if (agentStatus.choices.openCodeNeedsShared) agents?.allowMeteredOnce(sharedOnly = true)
+                    }
                     HomeDownloadKind.Helper -> agents?.allowMeteredOnce()
                 }
             }
@@ -277,6 +284,21 @@ internal fun heldAgentsOf(offer: AgentUpdateOffer?): HomeHeldAgents? {
     val bytes = held.map { it.downloadBytes }
     return if (held.isEmpty() || bytes.any { it == null }) null
     else HomeHeldAgents(held.size, HomeDownloadSizes.roundedMb(bytes.sumOf { it ?: 0L }))
+}
+
+/**
+ * OpenCode's update with the shared parts it waits for (the Agent helper), in decimal MB from the sheet's own sizes;
+ * null when the offer lists no shared part. Without a size for each, the usual sizes are added (130 + 330).
+ */
+internal fun openCodeWithHelperMb(offer: AgentUpdateOffer?): Int? {
+    val shared = offer?.items.orEmpty().filter { it.neededWhen != null }
+    val openCode = offer?.items.orEmpty().firstOrNull { it.id == AgentId.OPENCODE }
+    val sizes = (listOfNotNull(openCode) + shared).map { it.downloadBytes }
+    return when {
+        shared.isEmpty() -> null
+        openCode == null || sizes.any { it == null } -> HomeDownloadSizes.OPEN_CODE_MB + HomeDownloadSizes.HELPER_MB
+        else -> HomeDownloadSizes.roundedMb(sizes.sumOf { it ?: 0L })
+    }
 }
 
 /** Only an unmetered network is free: mobile data, a network that cannot be told, and no network all count as paid. */

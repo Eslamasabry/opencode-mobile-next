@@ -150,6 +150,8 @@ import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore__eq1
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsOnly
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsOnly__eq1
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyOpenCodeHelper
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCodeHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadOnMobile
@@ -640,7 +642,7 @@ public fun ChatsScreen(
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)
         AlwaysAllowConfirm(state.confirmAlways, mask, actions)
-        HomeDownloadAsk(state.downloadAsk, actions)
+        HomeDownloadAsk(state.downloadAsk, state.download, actions)
         AgentUpdateSheet(state.agentUpdates.sheet, actions.agentUpdates)
     }
 }
@@ -1371,7 +1373,11 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 id = "phone-download:${download.kind.name}",
                 message =
                     stringResource(
-                        if (openCode) Res.string.phoneDownloadWaitingOpenCode else Res.string.phoneDownloadWaitingHelper,
+                        when {
+                            openCode && download.withHelper -> Res.string.phoneDownloadWaitingOpenCodeHelper
+                            openCode -> Res.string.phoneDownloadWaitingOpenCode
+                            else -> Res.string.phoneDownloadWaitingHelper
+                        },
                         download.megabytes,
                     ),
                 // More agent updates that wait for Wi-Fi are the same row's second sentence.
@@ -1487,17 +1493,22 @@ private fun homeMegabytes(mb: Int): String = "$mb\u00A0MB"
 
 /** The voice download's mobile-data ask (same KitConfirm structure): the size, Download now, Wait for Wi-Fi. */
 @Composable
-private fun HomeDownloadAsk(kind: HomeDownloadKind?, actions: ChatsActions) {
+private fun HomeDownloadAsk(kind: HomeDownloadKind?, shown: HomeDownloadFact?, actions: ChatsActions) {
+    val fact = shown?.takeIf { it.kind == kind }
     KitConfirm(
         spec =
             kind?.let {
                 KitConfirmSpec(
-                    title = stringResource(Res.string.phoneDownloadAskTitle, HomeDownloadSizes.of(it)),
+                    title =
+                        stringResource(Res.string.phoneDownloadAskTitle, fact?.megabytes ?: HomeDownloadSizes.of(it)),
                     body =
                         stringResource(
-                            if (it == HomeDownloadKind.OpenCode)
-                                Res.string.phoneDownloadAskBodyOpenCode
-                            else Res.string.phoneDownloadAskBodyHelper
+                            when {
+                                it == HomeDownloadKind.OpenCode && fact?.withHelper == true ->
+                                    Res.string.phoneDownloadAskBodyOpenCodeHelper
+                                it == HomeDownloadKind.OpenCode -> Res.string.phoneDownloadAskBodyOpenCode
+                                else -> Res.string.phoneDownloadAskBodyHelper
+                            }
                         ),
                     confirmLabel = stringResource(Res.string.phoneDownloadAskNow),
                     kind = KitConfirmKind.Neutral,

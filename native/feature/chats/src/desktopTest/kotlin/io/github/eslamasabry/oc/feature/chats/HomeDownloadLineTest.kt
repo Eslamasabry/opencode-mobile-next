@@ -73,6 +73,20 @@ class HomeDownloadLineTest {
     }
 
     @Test
+    fun `B-DL-425 OpenCode and its helper are one line and one ask, one total`() = runComposeUiTest {
+        val fact =
+            HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting, megabytes = 460, withHelper = true)
+        setContent { Home(home(fact, ask = HomeDownloadKind.OpenCode)) }
+        waitForIdle()
+        onNodeWithText("OpenCode update and Agent helper waiting for Wi-Fi · about 460 MB").assertExists()
+        onNodeWithText("Download about 460 MB on mobile data?").assertExists()
+        onNodeWithText(
+            "This is the OpenCode update and the Agent helper it needs. It counts against your data plan. " +
+                "Waiting for Wi-Fi keeps it for later.",
+        ).assertExists()
+    }
+
+    @Test
     fun `B-DL-406 one more agent update reads in the singular`() = runComposeUiTest {
         val agents = HomeHeldAgents(1, 360)
         val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting, moreAgents = agents)
