@@ -221,7 +221,8 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                             busy = true,
                             runStartedAtMs = s.runStartedAtMs.takeIf { s.busy } ?: atMs,
                             lastProgressAtMs = atMs,
-                            retry = null,
+                            // The retry block stays while the next attempt is in flight (B-CHAT-RETRY-001): it goes only
+                            // when output arrives or the run ends, so the page does not change height between attempts.
                             lastOutcome = null,
                             idleSaid = false,
                         )
@@ -259,8 +260,8 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                         s.copy(
                             ledger = shown(),
                             lastProgressAtMs = atMs,
-                            // Fresh output means the retry worked.
-                            retry = null,
+                            // Real output means the retry worked; an empty reply opened for the next attempt does not.
+                            retry = if (isOutput(event)) null else s.retry,
                             // B8: streamed words, a new turn or reply, a reply that opens or a step that runs mean the
                             // conversation is active again: not idle as said. A durable event replayed unchanged after a
                             // reconnect is not applied at all and keeps it.
@@ -274,6 +275,16 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                 }
         }
     }
+
+    /** Words or a step: what shows a retry worked (an empty reply, a status or a new attempt starting do not). */
+    private fun isOutput(event: GatewayEvent): Boolean =
+        when (event) {
+            is GatewayEvent.PartDelta -> true
+            is GatewayEvent.PartUpserted ->
+                event.part.type == io.github.eslamasabry.oc.core.model.transcript.PartType.Tool ||
+                    event.part.text.isNotBlank()
+            else -> false
+        }
 
     /** B8: an applied event that shows the conversation working (whatever the status said before it). */
     private fun active(event: GatewayEvent): Boolean =
