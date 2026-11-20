@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -41,7 +43,12 @@ class KitDiffSplitAddedTest {
             ChatTestTheme {
                 CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(width.toFloat(), height.toFloat())) {
                     Box(Modifier.size(width.dp, height.dp)) {
-                        KitDiffView(fixture(), maxLines = 5000, hunkLabel = { _, _, _, _ -> "hunk" }, gapLabel = { "$it hidden" })
+                        KitDiffView(
+                            fixture(),
+                            maxLines = 5000,
+                            hunkLabel = { _, _, _, _ -> "hunk" },
+                            gapLabel = { "$it hidden" },
+                        )
                     }
                 }
             }
@@ -53,15 +60,18 @@ class KitDiffSplitAddedTest {
             show(840, 800)
             for (added in listOf("changed alpha", longLine, "added beta", "added gamma")) {
                 val b = onNode(hasText(added), useUnmergedTree = true).getUnclippedBoundsInRoot()
-                assertTrue(b.left.value >= 0f && b.right.value <= 840.5f, "'$added' sits at ${b.left}..${b.right}, outside 0..840")
+                val inside = b.left.value >= 0f && b.right.value <= 840.5f
+                assertTrue(inside, "'$added' sits at ${b.left}..${b.right}, outside 0..840")
             }
-            val newHalf = onAllNodes(hasTestTag("diff-new-half") and androidx.compose.ui.test.hasAnyDescendant(hasText(longLine)), useUnmergedTree = true)
-                .onFirst().getUnclippedBoundsInRoot()
+            val newHalfNode = hasTestTag("diff-new-half") and hasAnyDescendant(hasText(longLine))
+            val newHalf = onAllNodes(newHalfNode, useUnmergedTree = true).onFirst().getUnclippedBoundsInRoot()
             val oldHalves = onAllNodes(hasTestTag("diff-old-half"), useUnmergedTree = true).fetchSemanticsNodes()
-            val level = oldHalves.map { it.boundsInRoot }.firstOrNull { kotlin.math.abs(it.top - newHalf.top.value) < 1f }
+            val level = oldHalves.map { it.boundsInRoot }
+                .firstOrNull { abs(it.top - newHalf.top.value) < 1f }
             assertTrue(level != null, "no old half starts at the long new line's row")
-            assertEquals(newHalf.bottom.value - newHalf.top.value, level.height, 1f, "old and new halves of the paired row differ in height")
-            assertTrue(newHalf.bottom.value - newHalf.top.value > 30f, "the 160-character line should wrap inside its half")
+            val newHeight = newHalf.bottom.value - newHalf.top.value
+            assertEquals(newHeight, level.height, 1f, "old and new halves of the paired row differ in height")
+            assertTrue(newHeight > 30f, "the 160-character line should wrap inside its half")
         }
 
     @Test
@@ -71,7 +81,8 @@ class KitDiffSplitAddedTest {
             onAllNodes(hasContentDescription("Next change"), useUnmergedTree = true).onFirst().performClick()
             waitForIdle()
             val b = onNode(hasText(longLine), useUnmergedTree = true).getUnclippedBoundsInRoot()
-            assertTrue(b.top.value >= 0f && b.bottom.value <= 300.5f, "change 2 is at ${b.top}..${b.bottom}, outside the 300 dp window")
+            val inWindow = b.top.value >= 0f && b.bottom.value <= 300.5f
+            assertTrue(inWindow, "change 2 is at ${b.top}..${b.bottom}, outside the 300 dp window")
             assertTrue(b.right.value <= 840.5f, "change 2 runs to ${b.right}")
         }
 }

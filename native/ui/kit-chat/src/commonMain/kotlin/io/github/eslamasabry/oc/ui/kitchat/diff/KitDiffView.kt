@@ -329,7 +329,11 @@ public fun KitDiffView(
         val g = Geometry(numberWidth, glyphWidth, wraps, splitOn, textWidth)
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             KitMarkdownSelection {
-                val sideways = if (wraps) Modifier.fillMaxWidth() else Modifier.horizontalScroll(rememberScrollState()).width(contentWidth)
+                val sideways = if (wraps) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.horizontalScroll(rememberScrollState()).width(contentWidth)
+                }
                 if (full) {
                     LazyColumn(
                         frame.then(if (bounded) Modifier else Modifier.heightIn(max = UNBOUNDED_LINES_MAX)).then(sideways),

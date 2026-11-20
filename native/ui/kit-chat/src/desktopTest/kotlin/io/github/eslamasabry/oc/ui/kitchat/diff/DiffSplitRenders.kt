@@ -18,7 +18,10 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
 
-/** Pictures only (asserts nothing): the split diff at 840, 1280, 1280 Arabic and a 360 phone, into /dev/shm/diffsplit. */
+/**
+ * Pictures only (asserts nothing): the split diff at 840, 1280, 1280 Arabic and a 360 phone,
+ * into /dev/shm/diffsplit.
+ */
 class DiffSplitRenders {
     private val longLine = "val route = " + "segment-".repeat(18) + "end!"
 
@@ -36,18 +39,27 @@ class DiffSplitRenders {
     @Test
     fun `diff split renders`() {
         val out = File("/dev/shm/diffsplit").also { it.mkdirs() }
-        for ((name, w, h, tag) in listOf(
+        for (shot in listOf(
             Shot("w840", 840, 800, "en"),
             Shot("w1280", 1280, 800, "en"),
             Shot("w1280-ar", 1280, 800, "ar"),
             Shot("phone", 360, 780, "en"),
         )) {
+            val name = shot.name
+            val w = shot.w
+            val h = shot.h
+            val tag = shot.tag
             runDesktopComposeUiTest(w, h) {
                 setContent {
                     ChatTestTheme(localeTag = tag) {
                         CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(w.toFloat(), h.toFloat())) {
                             Box(Modifier.size(w.dp, h.dp)) {
-                                KitDiffView(fixture(), maxLines = 5000, hunkLabel = { _, _, _, _ -> "hunk" }, gapLabel = { "$it hidden" })
+                                KitDiffView(
+                                    fixture(),
+                                    maxLines = 5000,
+                                    hunkLabel = { _, _, _, _ -> "hunk" },
+                                    gapLabel = { "$it hidden" },
+                                )
                             }
                         }
                     }
