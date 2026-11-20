@@ -133,3 +133,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10107 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: everything since 10106 (source 470cbdfbca) |
 | 10108 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: update-sheet-shows, undo-truth-301-r2, crash-fixes-301-r2, reply-path-absolute-r2, root-file-chip-r2, thinking-first-newconv (no Italian) on top of 10107 (source ce09d2dc7b) |
 | 10109 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: update-sheet-visible, Italian (pr150-italian first part), okhttp-floor-3 and the status_all chore on top of 10108 (source 37cb52cab7) |
+| 10110 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: pr150-italian-2-r2, root-file-chip-r3, injection-fixes-301 up to a6f4f2cea9 (not the Tailscale row) and undo-truth-r3 on top of 10109 (source e3c3b15102) |
