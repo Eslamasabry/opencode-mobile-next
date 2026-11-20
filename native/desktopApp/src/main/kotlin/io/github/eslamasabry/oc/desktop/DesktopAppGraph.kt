@@ -3,9 +3,14 @@ package io.github.eslamasabry.oc.desktop
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.Channel
+import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
+import io.github.eslamasabry.oc.core.common.pace.Pacer
+import io.github.eslamasabry.oc.core.common.pace.Visibility
+import kotlinx.coroutines.flow.MutableStateFlow
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -25,6 +30,11 @@ interface DesktopAppGraph : ViewModelGraph {
     val shell: ShellDependencies
 
     @Provides fun platformCapabilities(): PlatformCapabilities = PlatformCapabilities.desktop()
+
+    /** The desktop window is always in the foreground for pacing. */
+    @Provides
+    @SingleIn(AppScope::class)
+    fun pacer(): Pacer = DefaultPacer(MutableStateFlow(Visibility.Foreground))
 
     @Provides
     fun chatEnvironment(
