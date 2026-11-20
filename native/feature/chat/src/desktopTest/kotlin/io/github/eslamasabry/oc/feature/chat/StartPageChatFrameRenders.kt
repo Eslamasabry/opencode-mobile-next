@@ -29,6 +29,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.upgradeStartSending
+import org.jetbrains.compose.resources.stringResource
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -72,7 +75,10 @@ class StartPageChatFrameRenders {
                             if (settled.value) {
                                 chat.Screen(state, canGoBack = true, projectName = "Notes", agentName = "OpenCode", facts = TurnFactsUi.Empty)
                             } else {
-                                KitStartingConversation(prompt, "Notes", model.label, "Sending…", "Back", {}, agent = "OpenCode")
+                                KitStartingConversation(
+                                    prompt, "Notes", model.label, stringResource(Res.string.upgradeStartSending),
+                                    "Back", {}, agent = "OpenCode",
+                                )
                             }
                         }
                     }
