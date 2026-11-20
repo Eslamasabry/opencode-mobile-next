@@ -219,4 +219,21 @@ class DockListTest {
         assertEquals(2, model.rows.size)
         assertEquals(2, model.more)
     }
+
+    @Test
+    fun `B-LAMP-001 idle parent with working sub-agent has ownStateRunning false while working parent has true`() {
+        val child = ConversationRef(p, SessionId("child"))
+        val idleParent =
+            DockModel.empty(cap = 20)
+                .reduce(DockEvent.Meta(child, "Explore", "explore", a.sessionId))
+                .reduce(DockEvent.RunStarted(child))
+        val idleRow = build(idleParent).rows.single()
+        assertEquals(DockListState.Working, idleRow.state)
+        assertFalse(idleRow.ownStateRunning)
+
+        val runningParent = idleParent.reduce(DockEvent.RunStarted(a))
+        val runningRow = build(runningParent).rows.single()
+        assertEquals(DockListState.Working, runningRow.state)
+        assertTrue(runningRow.ownStateRunning)
+    }
 }

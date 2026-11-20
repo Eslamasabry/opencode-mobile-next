@@ -146,8 +146,15 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore__eq1
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsOnly
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsOnly__eq1
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyOpenCodeHelper
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCodeHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadOnMobile
@@ -630,15 +637,13 @@ public fun ChatsScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
-        // The edge dock over the list, clear of the foot bar; under Glass it bends the list's recording.
-        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
-            edgeDock?.Content(clearBottom = if (footBar) io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE.dp else 0.dp)
-        }
+        // Rings are retired on Home; keep the parameter for callers without mounting edgeDock.
+        edgeDock.let { Unit }
       }
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)
         AlwaysAllowConfirm(state.confirmAlways, mask, actions)
-        HomeDownloadAsk(state.downloadAsk, actions)
+        HomeDownloadAsk(state.downloadAsk, state.download, actions)
         AgentUpdateSheet(state.agentUpdates.sheet, actions.agentUpdates)
     }
 }
@@ -1371,12 +1376,26 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 id = "phone-download:${download.kind.name}",
                 message =
                     stringResource(
-                        if (openCode) Res.string.phoneDownloadWaitingOpenCode else Res.string.phoneDownloadWaitingHelper,
+                        when {
+                            openCode && download.withHelper -> Res.string.phoneDownloadWaitingOpenCodeHelper
+                            openCode -> Res.string.phoneDownloadWaitingOpenCode
+                            else -> Res.string.phoneDownloadWaitingHelper
+                        },
                         download.megabytes,
                     ),
+                // More agent updates that wait for Wi-Fi are the same row's second sentence.
+                supporting = download.moreAgents?.let { homeAgentsMoreWords(it) },
                 // Waiting is not failing: a calm mark, no warning triangle.
                 tone = StatusTone.Neutral,
                 action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
+            )
+        is HomeDownloadPhase.AgentsWaiting ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                id = "phone-download:Agents",
+                message = homeAgentsOnlyWords(phase.held),
+                // They start by themselves on Wi-Fi: nothing to tap, and no mobile-data choice for them.
+                tone = StatusTone.Neutral,
             )
         is HomeDownloadPhase.Running -> homeRunningStatus(download, phase, actions)
         is HomeDownloadPhase.Held ->
@@ -1397,6 +1416,16 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
             )
     }
 }
+
+@Composable
+private fun homeAgentsMoreWords(held: HomeHeldAgents): String =
+    if (held.count == 1) stringResource(Res.string.phoneDownloadAgentsMore__eq1, held.megabytes)
+    else pluralStringResource(Res.plurals.phoneDownloadAgentsMore, held.count, held.count, held.megabytes)
+
+@Composable
+private fun homeAgentsOnlyWords(held: HomeHeldAgents): String =
+    if (held.count == 1) stringResource(Res.string.phoneDownloadAgentsOnly__eq1, held.megabytes)
+    else pluralStringResource(Res.plurals.phoneDownloadAgentsOnly, held.count, held.count, held.megabytes)
 
 /** The agents' or OpenCode's update that runs on its own, by name, with its share done and one tap to its progress. */
 @Composable
@@ -1467,17 +1496,22 @@ private fun homeMegabytes(mb: Int): String = "$mb\u00A0MB"
 
 /** The voice download's mobile-data ask (same KitConfirm structure): the size, Download now, Wait for Wi-Fi. */
 @Composable
-private fun HomeDownloadAsk(kind: HomeDownloadKind?, actions: ChatsActions) {
+private fun HomeDownloadAsk(kind: HomeDownloadKind?, shown: HomeDownloadFact?, actions: ChatsActions) {
+    val fact = shown?.takeIf { it.kind == kind }
     KitConfirm(
         spec =
             kind?.let {
                 KitConfirmSpec(
-                    title = stringResource(Res.string.phoneDownloadAskTitle, HomeDownloadSizes.of(it)),
+                    title =
+                        stringResource(Res.string.phoneDownloadAskTitle, fact?.megabytes ?: HomeDownloadSizes.of(it)),
                     body =
                         stringResource(
-                            if (it == HomeDownloadKind.OpenCode)
-                                Res.string.phoneDownloadAskBodyOpenCode
-                            else Res.string.phoneDownloadAskBodyHelper
+                            when {
+                                it == HomeDownloadKind.OpenCode && fact?.withHelper == true ->
+                                    Res.string.phoneDownloadAskBodyOpenCodeHelper
+                                it == HomeDownloadKind.OpenCode -> Res.string.phoneDownloadAskBodyOpenCode
+                                else -> Res.string.phoneDownloadAskBodyHelper
+                            }
                         ),
                     confirmLabel = stringResource(Res.string.phoneDownloadAskNow),
                     kind = KitConfirmKind.Neutral,

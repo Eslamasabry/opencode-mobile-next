@@ -22,4 +22,6 @@
     </plurals>
     <string name="notify_status_action_open_named">Mở %1$s</string>
     <string name="notify_status_action_stop_named">Dừng %1$s</string>
+    <string name="notify_status_action_stop">Dừng</string>
+    <string name="notify_status_stopping">Đang dừng…</string>
 </resources>

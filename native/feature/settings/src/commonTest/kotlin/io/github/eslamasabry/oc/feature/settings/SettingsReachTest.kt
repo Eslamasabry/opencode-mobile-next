@@ -95,7 +95,7 @@ class SettingsReachTest {
                 phraseChips = true,
                 transcriptDisplay = true,
                 opens = null,
-                otherConversations = OtherConversationsMode.Rings,
+                otherConversations = OtherConversationsMode.EdgeLight,
             )
         assertEquals(SettingsRowId.entries.toSet(), SettingsStructure.searchable(all).toSet())
     }

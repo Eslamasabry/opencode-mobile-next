@@ -32,4 +32,6 @@
     </plurals>
     <string name="notify_status_action_open_named">فتح %1$s</string>
     <string name="notify_status_action_stop_named">إيقاف %1$s</string>
+    <string name="notify_status_action_stop">إيقاف</string>
+    <string name="notify_status_stopping">جارٍ الإيقاف…</string>
 </resources>

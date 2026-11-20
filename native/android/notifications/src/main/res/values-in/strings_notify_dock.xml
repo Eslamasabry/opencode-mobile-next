@@ -22,4 +22,6 @@
     </plurals>
     <string name="notify_status_action_open_named">Buka %1$s</string>
     <string name="notify_status_action_stop_named">Hentikan %1$s</string>
+    <string name="notify_status_action_stop">Hentikan</string>
+    <string name="notify_status_stopping">Menghentikan…</string>
 </resources>
