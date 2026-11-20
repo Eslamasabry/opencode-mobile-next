@@ -256,7 +256,8 @@ class WorldComposerFilesModelsTest {
         SelectionGateway(base, applied), io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway {
         private var next = 0
 
-        override fun createPromptMessageId() = io.github.eslamasabry.oc.core.common.ids.MessageId("msg_client_${++next}")
+        override fun createPromptMessageId() =
+            io.github.eslamasabry.oc.core.common.ids.MessageId("msg_client_${++next}")
 
         override suspend fun promptWithMessageId(
             session: SessionId,
@@ -276,7 +277,8 @@ class WorldComposerFilesModelsTest {
      * The phone's immediate main dispatcher on the test's virtual clock (F2 r2, build 10114): work posted to the main
      * thread runs as its own task; a coroutine of the main context resumed FROM a main task runs at once, in place
      * (nested inside the code that resumed it), and a resume from any other lane is posted. `yield()` posts, as on the
-     * phone. This is what let the delivery engine's `reconciled` run the world's settle again in the middle of a settle.
+     * phone. This is what let the delivery engine's `reconciled` run the world's settle again in the middle of a
+     * settle.
      */
     @OptIn(kotlinx.coroutines.InternalCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     private class DeviceMain(private val inner: kotlinx.coroutines.test.TestDispatcher) :
@@ -346,31 +348,41 @@ class WorldComposerFilesModelsTest {
         ) = Outcome.Failed(Failure.Unavailable(FeatureId("agentFeatures")))
     }
 
+    /** What a restart keeps: a second fixture made with the first one's [Stores] reads what the first one wrote. */
+    private class Stores(
+        val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
+        val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
+        val payloads: MemoryPayloadStore = MemoryPayloadStore(),
+    )
+
     private inner class Fixture(
         val test: TestScope,
         selection: ModelRef? = null,
         runtime: String? = null,
-        val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
-        val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
-        val payloads: MemoryPayloadStore = MemoryPayloadStore(),
-        /** The server keeps the client's message id (OpenCode 2): the bubble knows its row before the echo. */
-        correlated: Boolean = false,
-        /** The world's main context behaves as the phone's Main.immediate (see [DeviceMain]). */
-        deviceMain: Boolean = false,
+        val stores: Stores = Stores(),
+        /**
+         * As on the phone (F2 r2): the server keeps the client's message id (OpenCode 2), so a bubble knows its row
+         * before the echo, and the world's main context behaves as the phone's immediate main dispatcher
+         * ([DeviceMain]).
+         */
+        phone: Boolean = false,
     ) {
+        val prefsBackend = stores.prefsBackend
+        val composerPrefs = stores.composerPrefs
+        val payloads = stores.payloads
         val base =
             FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
         val gateway =
             when {
                 runtime != null -> BoundRuntimeGateway(base, selection, runtime)
-                correlated -> CorrelatedGateway(base, selection)
+                phone -> CorrelatedGateway(base, selection)
                 else -> SelectionGateway(base, selection)
             }
         val operations = ScriptedOperations()
         val dispatcher = StandardTestDispatcher(test.testScheduler)
-        val main: kotlinx.coroutines.CoroutineDispatcher = if (deviceMain) DeviceMain(dispatcher) else dispatcher
+        val main: kotlinx.coroutines.CoroutineDispatcher = if (phone) DeviceMain(dispatcher) else dispatcher
         val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers =
-            if (!deviceMain) TestDispatchers(dispatcher)
+            if (!phone) TestDispatchers(dispatcher)
             else
                 object : io.github.eslamasabry.oc.core.common.AppDispatchers {
                     override val main = this@Fixture.main
@@ -381,7 +393,7 @@ class WorldComposerFilesModelsTest {
                 }
 
         init {
-            if (correlated) base.capabilities.value = base.capabilities.value.copy(clientPromptMessageID = true)
+            if (phone) base.capabilities.value = base.capabilities.value.copy(clientPromptMessageID = true)
         }
         val clock = TestClock()
         val app = AppCoroutineScope(test.backgroundScope.coroutineContext)
@@ -737,7 +749,7 @@ class WorldComposerFilesModelsTest {
             // Device line 5, 1 ms after "settled": the delivery engine's reconciled ran the world's settle again in the
             // middle of the settle, on the bubble already stripped of its client id, and that run published the bubble
             // without its row while the row was shown. Each state is read the moment it is published.
-            val f = Fixture(this, correlated = true, deviceMain = true)
+            val f = Fixture(this, phone = true)
             val frames = mutableListOf<List<String>>()
             firstSendThroughSettle(f, "hello d8") {
                 backgroundScope.launch(f.main) { f.world.pending.collect { frames += drawnPrompts(f.world) } }
@@ -753,7 +765,7 @@ class WorldComposerFilesModelsTest {
         runTest {
             // The screen's own pairing (ChatPresenter.states): the rows and the bubbles reach it as separate values, so
             // any state the world publishes, even for a moment, can be drawn for a frame.
-            val f = Fixture(this, correlated = true, deviceMain = true)
+            val f = Fixture(this, phone = true)
             val frames = mutableListOf<List<String>>()
             firstSendThroughSettle(f, "hello d8") {
                 val screen = kotlinx.coroutines.CoroutineScope(backgroundScope.coroutineContext + f.main)
@@ -777,7 +789,7 @@ class WorldComposerFilesModelsTest {
         runTest {
             // J22 (build 10114, 24.135 s): a send in a conversation with earlier turns drew its bubble twice for a
             // frame, "Sending" under it, the shape of journey 2: the same settle run again in the middle of the settle.
-            val f = Fixture(this, correlated = true, deviceMain = true)
+            val f = Fixture(this, phone = true)
             f.open()
             f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u0", ref.sessionId.raw, Role.User)))
             f.base.events.emit(
@@ -1424,9 +1436,7 @@ class WorldComposerFilesModelsTest {
             val second =
                 Fixture(
                     this,
-                    prefsBackend = first.prefsBackend,
-                    composerPrefs = first.composerPrefs,
-                    payloads = first.payloads,
+                    stores = first.stores,
                 )
             second.queuesPrompts()
             second.open()
@@ -1453,9 +1463,7 @@ class WorldComposerFilesModelsTest {
             val second =
                 Fixture(
                     this,
-                    prefsBackend = first.prefsBackend,
-                    composerPrefs = first.composerPrefs,
-                    payloads = first.payloads,
+                    stores = first.stores,
                 )
             second.queuesPrompts()
             second.open()
