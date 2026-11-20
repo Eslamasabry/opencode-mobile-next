@@ -331,7 +331,7 @@ class StatusModelParityTest {
         assertEquals(
             setOf(
                 "kind", "title", "text", "lines", "subText", "progress", "actions", "conversation", "turnId", "publicTitle", "count",
-                "openLabel", "stopConversation", "stopLabel",
+                "openLabel", "stopConversation", "stopLabel", "stopping",
             ),
             StatusContent::class.java.declaredFields.filterNot { java.lang.reflect.Modifier.isStatic(it.modifiers) }.map { it.name }.toSet(),
         )
