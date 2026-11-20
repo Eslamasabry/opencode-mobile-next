@@ -168,7 +168,7 @@
     <string name="usage_widget_description">各プランの上限の残量とリセット時刻を表示します。</string>
     <string name="usage_widget_empty">まだ上限の読み取り結果がありません。「使用状況」を開いて接続してください。</string>
     <string name="usage_widget_row_title">%1$s · %2$s</string>
-    <string name="usage_widget_left">残り%1$d%</string>
+    <string name="usage_widget_left">残り%1$d%%</string>
     <string name="usage_widget_resets">%1$s後にリセット</string>
     <string name="usage_widget_updated">%1$s前に更新</string>
     <string name="usage_widget_sign_in">サインイン</string>
@@ -188,7 +188,7 @@
     <string name="usage_widget_provider_codex">Codex</string>
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
-    <string name="usage_widget_column">%1$s残り%2$d%</string>
+    <string name="usage_widget_column">%1$s残り%2$d%%</string>
     <string name="usage_widget_short_hours">%1$d時間</string>
     <string name="usage_widget_short_days">%1$d日</string>
     <string name="usage_widget_short_week">週間</string>
@@ -299,7 +299,7 @@
     <string name="widget_status_tasks_running">%1$d件実行中</string>
     <string name="widget_status_span_day">%1$d日</string>
     <string name="widget_status_plan">%1$s · %2$s</string>
-    <string name="widget_status_left">残り%1$d%</string>
+    <string name="widget_status_left">残り%1$d%%</string>
     <string name="widget_status_replace">このウィジェットを置き換える：「会話」または「ステータス」を追加してください</string>
     <string name="widget_allow_for">今回のみ許可：%1$s</string>
     <string name="widget_reply_for">%1$sに返信</string>
