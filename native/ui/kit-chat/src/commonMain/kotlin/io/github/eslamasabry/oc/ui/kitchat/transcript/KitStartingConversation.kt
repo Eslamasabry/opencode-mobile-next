@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
@@ -112,7 +113,12 @@ public fun KitStartingConversation(
                 field = {
                     agent?.takeIf(String::isNotBlank)?.let {
                         Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
-                            KitText(stringResource(Res.string.upgradeComposerAsk, it), role = TypeRole.Body, tone = TextTone.Tertiary)
+                            KitText(
+                                stringResource(Res.string.upgradeComposerAsk, it),
+                                role = TypeRole.Body,
+                                tone = TextTone.Tertiary,
+                                kind = KitTextKind.Frame,
+                            )
                         }
                     }
                 },
