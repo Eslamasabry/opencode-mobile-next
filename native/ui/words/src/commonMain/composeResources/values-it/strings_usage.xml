@@ -114,8 +114,8 @@
     <string name="quotaInAppFailRemove">Impossibile disattivare l'utilizzo su %1$s. Riprova.</string>
     <string name="usageTabSpending">Spese</string>
     <string name="usagePlansRefresh">Aggiorna piani</string>
-    <string name="usageLeft">%1$s%% rimasto</string>
-    <string name="usageUsedPercent">%1$s%% usato</string>
+    <string name="usageLeft">%1$s% rimasto</string>
+    <string name="usageUsedPercent">%1$s% usato</string>
     <string name="usageWindowFiveHour">5 ore</string>
     <string name="usageWindowWeek">Settimana</string>
     <string name="usageWindowMonth">Mese</string>
@@ -176,9 +176,9 @@
     <string name="usageConnReadsHere">I numeri arrivano da qui</string>
     <string name="usageSameAccount">Stesso account</string>
     <string name="usageAlertAt">Avvisami al</string>
-    <string name="usageAlertAtPlan">Solo per %1$s. Gli altri piani usano %2$s%%.</string>
+    <string name="usageAlertAtPlan">Solo per %1$s. Gli altri piani usano %2$s%.</string>
     <string name="usageAlertAtSame">Come i tuoi altri piani</string>
-    <string name="usageAlertSameAsOthers">Come gli altri piani (%1$s%%)</string>
+    <string name="usageAlertSameAsOthers">Come gli altri piani (%1$s%)</string>
     <string name="usageNotifyReset">Avvisami quando si azzera</string>
     <string name="usageNotifyResetHelp">Un messaggio quando un limite esaurito torna disponibile.</string>
     <string name="usageDetails">Dettagli</string>
