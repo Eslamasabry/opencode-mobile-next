@@ -250,10 +250,18 @@ internal fun transcriptReading(
         // F: transcript_turns.dart `_messageMeta`: the model is named when it differs from the one before the turn.
         val changed = models.isNotEmpty() && (models.size > 1 || models.first() != previousModel)
         if (!live && assistants.isNotEmpty()) {
-            val ended = assistants.mapNotNull { it.info.time?.completedMs ?: it.info.time?.createdMs }.maxOrNull()
+            // B-CHAT-FOOT-001: the footer's end is a real reply's own end. The server's notices (Instructions updated,
+            // a switch, a compaction) ride as assistant-role messages with no model; one that lands later in the turn
+            // is not the reply ending, so it moves neither the clock nor the length.
+            val replies = assistants.filter { isReply(it) }
+            // A finished reply's own completion; only when none has finished does a start stand in (a later reply that
+            // has only begun must not make the footer longer and then shorter, B-CHAT-FOOT-005).
+            val ended =
+                replies.mapNotNull { it.info.time?.completedMs }.maxOrNull()
+                    ?: replies.mapNotNull { it.info.time?.createdMs }.maxOrNull()
             val sent =
                 turn.messages.firstOrNull { it.info.role == Role.User }?.info?.time?.createdMs
-                    ?: assistants.mapNotNull { it.info.time?.createdMs }.minOrNull()
+                    ?: replies.mapNotNull { it.info.time?.createdMs }.minOrNull()
             metadata[turn.turnId] =
                 TurnMetadataUi(
                     models,
@@ -419,3 +427,8 @@ private fun passingWords(text: String): Boolean {
             !words.contains("```") &&
             (words.length <= 80 || words.endsWith(':') && words.length <= 200))
 }
+
+/** A message the agent itself wrote: it names a model, or carries a part that is not a notice, switch or compaction. */
+private fun isReply(message: io.github.eslamasabry.oc.core.model.transcript.MessageWithParts): Boolean =
+    message.info.modelId != null ||
+        message.parts.any { it.type != PartType.Notice && it.type != PartType.Switch && it.type != PartType.Compaction }
