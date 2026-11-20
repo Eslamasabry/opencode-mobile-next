@@ -168,7 +168,7 @@
     <string name="usage_widget_description">Còn lại bao nhiêu của mỗi giới hạn gói, và khi nào được đặt lại.</string>
     <string name="usage_widget_empty">Chưa có số liệu giới hạn. Mở Mức dùng để kết nối nguồn.</string>
     <string name="usage_widget_row_title">%1$s · %2$s</string>
-    <string name="usage_widget_left">Còn %1$d%</string>
+    <string name="usage_widget_left">Còn %1$d%%</string>
     <string name="usage_widget_resets">Đặt lại sau %1$s</string>
     <string name="usage_widget_updated">Cập nhật %1$s trước</string>
     <string name="usage_widget_sign_in">Đăng nhập</string>
@@ -188,7 +188,7 @@
     <string name="usage_widget_provider_codex">Codex</string>
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
-    <string name="usage_widget_column">%1$s còn %2$d%</string>
+    <string name="usage_widget_column">%1$s còn %2$d%%</string>
     <string name="usage_widget_short_hours">%1$d giờ</string>
     <string name="usage_widget_short_days">%1$d ngày</string>
     <string name="usage_widget_short_week">Tuần</string>
@@ -299,7 +299,7 @@
     <string name="widget_status_tasks_running">%1$d đang chạy</string>
     <string name="widget_status_span_day">%1$d ngày</string>
     <string name="widget_status_plan">%1$s · %2$s</string>
-    <string name="widget_status_left">Còn %1$d%</string>
+    <string name="widget_status_left">Còn %1$d%%</string>
     <string name="widget_status_replace">Hãy thay tiện ích này: thêm Cuộc trò chuyện hoặc Trạng thái</string>
     <string name="widget_allow_for">Cho phép một lần: %1$s</string>
     <string name="widget_reply_for">Trả lời %1$s</string>

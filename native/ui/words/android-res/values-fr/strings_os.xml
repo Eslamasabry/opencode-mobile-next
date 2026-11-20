@@ -176,7 +176,7 @@
     <string name="usage_widget_description">Ce qu’il reste sur chaque limite de l’offre, et quand elle se réinitialise.</string>
     <string name="usage_widget_empty">Aucune mesure de limite pour l’instant. Ouvrez Utilisation pour connecter une source.</string>
     <string name="usage_widget_row_title">%1$s · %2$s</string>
-    <string name="usage_widget_left">%1$d% restant</string>
+    <string name="usage_widget_left">%1$d%% restant</string>
     <string name="usage_widget_resets">Réinitialisation dans %1$s</string>
     <string name="usage_widget_updated">Actualisé il y a %1$s</string>
     <string name="usage_widget_sign_in">Se connecter</string>
@@ -196,7 +196,7 @@
     <string name="usage_widget_provider_codex">Codex</string>
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
-    <string name="usage_widget_column">%1$s %2$d% restant</string>
+    <string name="usage_widget_column">%1$s %2$d%% restant</string>
     <string name="usage_widget_short_hours">%1$d h</string>
     <string name="usage_widget_short_days">%1$d j</string>
     <string name="usage_widget_short_week">Sem.</string>
@@ -311,7 +311,7 @@
     <string name="widget_status_tasks_running">%1$d en cours</string>
     <string name="widget_status_span_day">%1$d j</string>
     <string name="widget_status_plan">%1$s · %2$s</string>
-    <string name="widget_status_left">%1$d% restant</string>
+    <string name="widget_status_left">%1$d%% restant</string>
     <string name="widget_status_replace">Remplacez ce widget\u00A0: ajoutez Conversations ou État</string>
     <string name="widget_allow_for">Autoriser une fois\u00A0: %1$s</string>
     <string name="widget_reply_for">Répondre à %1$s</string>

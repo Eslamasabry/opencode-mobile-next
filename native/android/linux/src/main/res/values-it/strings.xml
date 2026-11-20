@@ -2,20 +2,20 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <plurals name="native_chip_pending">
-        <item quantity="one">%1$d ha bisogno di te</item>
-        <item quantity="many">%1$d di loro hanno bisogno di te</item>
-        <item quantity="other">%1$d hanno bisogno di te</item>
+        <item quantity="one">%1$d richiede la tua attenzione</item>
+        <item quantity="many">%1$d richiedono la tua attenzione</item>
+        <item quantity="other">%1$d richiedono la tua attenzione</item>
     </plurals>
     <plurals name="native_chip_running">
-        <item quantity="one">%1$d in corso</item>
-        <item quantity="many">%1$d in corso</item>
-        <item quantity="other">%1$d in corso</item>
+        <item quantity="one">%1$d in esecuzione</item>
+        <item quantity="many">%1$d in esecuzione</item>
+        <item quantity="other">%1$d in esecuzione</item>
     </plurals>
-    <string name="native_live_channel">Connessione di programmazione attiva</string>
-    <string name="native_live_description">Mostrata mentre OpenCode tiene attiva in background una connessione al server</string>
+    <string name="native_live_channel">Connessione di coding live</string>
+    <string name="native_live_description">Mostrata mentre OpenCode mantiene attiva una sessione del server in background</string>
     <string name="native_phone_server_body">Il tuo agente continua a lavorare mentre usi altre app.</string>
     <string name="native_phone_server_channel">OpenCode su questo telefono</string>
-    <string name="native_phone_server_description">Mostrata mentre il server del telefono o il motore dei progetti è in esecuzione</string>
+    <string name="native_phone_server_description">Mostrata mentre il server del telefono o il motore del progetto è in esecuzione</string>
     <string name="native_setup_channel">Configurazione</string>
     <string name="native_status_action_new_chat">Nuova conversazione</string>
     <string name="native_status_action_open">Apri</string>
@@ -23,12 +23,12 @@
     <string name="native_status_action_stop_opencode">Ferma OpenCode</string>
     <string name="native_status_action_stop_reply">Ferma la risposta</string>
     <string name="native_status_on_this_phone">su questo telefono</string>
-    <string name="native_status_paused_android_body">Android ferma il lavoro in background dopo 6 ore al giorno. Apri OpenCode per continuare.</string>
-    <string name="native_status_paused_android_title">In pausa · limite di Android per il background</string>
+    <string name="native_status_paused_android_body">Android interrompe il lavoro in background dopo 6 ore al giorno. Apri OpenCode per continuare.</string>
+    <string name="native_status_paused_android_title">In pausa · Limite in background di Android</string>
     <string name="native_status_paused_idle_body">Tocca per riavviare OpenCode</string>
-    <string name="native_status_paused_idle_title">In pausa · niente in esecuzione</string>
+    <string name="native_status_paused_idle_title">In pausa · Nessuna attività in esecuzione</string>
     <string name="native_status_public_paused">OpenCode · in pausa</string>
     <string name="native_status_public_ready">OpenCode · pronto</string>
-    <string name="native_status_ready_body">Pronto quando vuoi</string>
-    <string name="native_status_ready_title">Pronto · niente in esecuzione</string>
+    <string name="native_status_ready_body">Pronto quando vuoi tu</string>
+    <string name="native_status_ready_title">Pronto · nulla in esecuzione</string>
 </resources>

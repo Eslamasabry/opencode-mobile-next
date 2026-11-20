@@ -56,7 +56,7 @@
     <string name="teamUiTermAgent">Agente · polecat</string>
     <string name="teamUiTermProject">Progetto · rig</string>
     <string name="teamUiTermRun">Esecuzione · convoy</string>
-    <string name="teamUiTermTeam">Team · city</string>
+    <string name="teamUiTermTeam">Team · città</string>
     <string name="teamUiTermWork">Lavoro · bead</string>
     <string name="teamUiTermsHeading">Termini</string>
     <string name="teamUiTurnOffBody">Rimuove da questo telefono la sua scheda, gli elementi di attenzione e i dati del team in cache. Nulla cambia sull'host.</string>
@@ -176,7 +176,7 @@
     <string name="teamUiAgentOutputCopy">Copia output</string>
     <string name="teamUiAgentOutputEnded">Conversazione terminata · output non più sull'host</string>
     <string name="teamUiAgentOutputJump">Vai all'ultimo</string>
-    <string name="teamUiAgentOutputLive">Live</string>
+    <string name="teamUiAgentOutputLive">In diretta</string>
     <string name="teamUiAgentOutputTitle">Output live</string>
     <string name="teamUiAgentOutputUnavailable">Output live non disponibile per questo agente</string>
     <string name="teamUiAgentRecyclingSoon">Riciclo imminente · contesto quasi pieno</string>
@@ -205,7 +205,7 @@
     <string name="teamUiWorkSheetMissing">Questo elemento di lavoro non è più sull'host.</string>
     <string name="teamUiWorkSheetNoTimestamps">L'host non ha inviato timestamp.</string>
     <string name="teamUiWorkSheetOpenSession">Apri conversazione</string>
-    <string name="teamUiWorkSheetOutput">Output</string>
+    <string name="teamUiWorkSheetOutput">Risultato</string>
     <string name="teamUiWorkSheetStamp">%1$s · %2$s (%3$s)</string>
     <string name="teamUiWorkSheetTarget">Destinazione merge</string>
     <string name="teamUiWorkSheetTimestamps">Timestamp</string>
@@ -271,7 +271,7 @@
     <string name="teamUiHostKindDisclaimerWsl">Sospensione e chiusura del coperchio mettono in pausa il team; le esecuzioni riprendono al risveglio. WSL si ferma anche alla chiusura dell'ultimo terminale.</string>
     <string name="teamUiHostKindHint">Cambia solo il promemoria mostrato con il team.</string>
     <string name="teamUiHostKindLabel">Tipo di computer</string>
-    <string name="teamUiHostKindLaptop">Laptop</string>
+    <string name="teamUiHostKindLaptop">Portatile</string>
     <string name="teamUiHostKindWsl">Windows (WSL)</string>
     <string name="teamUiReceiptSent">Inviato · in attesa di conferma dell'host</string>
     <string name="teamUiReceiptAnswered">Risposto</string>
@@ -323,7 +323,7 @@
     <string name="teamUiStartRunSupervisionBalancedHint">Il team decide da solo le questioni di routine e chiede prima dei merge, in caso di errori e per le scelte di design.</string>
     <string name="teamUiStartRunSupervisionAutonomous">Autonoma</string>
     <string name="teamUiStartRunSupervisionAutonomousHint">Il team lavora fino al completamento entro i limiti dell'host e chiede solo quando non può continuare.</string>
-    <string name="teamUiStartRunPlannerLabel">Planner</string>
+    <string name="teamUiStartRunPlannerLabel">Pianificatore</string>
     <string name="teamUiStartRunPlannerMayor">Sindaco</string>
     <string name="teamUiStartRunSend">Invia al %1$s</string>
     <string name="teamUiStartRunHostGuide">Guida host</string>
@@ -616,7 +616,7 @@
     <string name="teamBoardPrioritySomeday">Prima o poi</string>
     <string name="teamBoardTypeBug">Bug</string>
     <string name="teamBoardTypeFeature">Funzionalità</string>
-    <string name="teamBoardTypeEpic">Epic</string>
+    <string name="teamBoardTypeEpic">Epica</string>
     <string name="teamBoardTypeChore">Manutenzione</string>
     <string name="teamBoardEpicProgress">%1$d di %2$d completati</string>
     <string name="teamBoardFlagNeedsYou">Serve te</string>
@@ -904,7 +904,7 @@
     <string name="teamRoleNameProduct">Prodotto</string>
     <string name="teamRoleNameFrontend">Frontend</string>
     <string name="teamRoleNameBackend">Backend</string>
-    <string name="teamRoleNameTester">Tester</string>
+    <string name="teamRoleNameTester">Collaudatore</string>
     <string name="teamRolePurposeGeneral">Qualsiasi attività, svolta in modo diretto</string>
     <string name="teamRolePurposeProduct">Trasforma un'idea in requisiti chiari e un piano</string>
     <string name="teamRolePurposeFrontend">Schermate, layout e sensazione d'uso</string>
@@ -975,7 +975,7 @@
     <string name="teamChatLeadClaimedRole">%1$s ha preso “%2$s”</string>
     <string name="teamChatLeadStartingItRole">%1$s ha iniziato</string>
     <string name="teamChatLeadClaimedItRole">%1$s ha preso l'attività</string>
-    <string name="teamRolesSearchAliases">roles personas agents team frontend backend tester product designer instructions</string>
+    <string name="teamRolesSearchAliases">ruoli persone agenti team frontend backend collaudatore prodotto designer istruzioni</string>
     <string name="teamUiStatePhoneStoppedTitle">AI Team interrotto</string>
     <string name="teamUiStatePhoneStoppedBody">L'AI Team su questo telefono non è in esecuzione. Avvialo per continuare le tue attività.</string>
     <string name="teamStartStepService">Avvio del servizio del team</string>
@@ -1003,7 +1003,7 @@
     <string name="teamProjectPlan">Rivedi il piano</string>
     <string name="teamProjectBoard">Bacheca</string>
     <string name="teamProjectGraph">Dipendenze</string>
-    <string name="teamProjectTimeline">Timeline</string>
+    <string name="teamProjectTimeline">Cronologia</string>
     <string name="teamProjectServers">Server</string>
     <string name="teamProjectMilestones">Tappe</string>
     <string name="teamProjectMerge">Coda di merge</string>
@@ -1692,12 +1692,12 @@
     <string name="teamTaskNextWork">Poi: il worker inizia</string>
     <string name="teamTaskStepsDone">Tutti i passi completati</string>
     <string name="teamTaskFinishedAgo">Terminata %1$s fa</string>
-    <string name="teamVoiceProductOwner">Product owner</string>
-    <string name="teamVoiceArchitect">Architect</string>
-    <string name="teamVoiceManager">Manager</string>
-    <string name="teamVoiceDeveloper">Developer</string>
-    <string name="teamVoiceDeveloperAs">Developer · %1$s</string>
-    <string name="teamVoiceReviewer">Reviewer</string>
+    <string name="teamVoiceProductOwner">Responsabile prodotto</string>
+    <string name="teamVoiceArchitect">Architetto</string>
+    <string name="teamVoiceManager">Responsabile</string>
+    <string name="teamVoiceDeveloper">Sviluppatore</string>
+    <string name="teamVoiceDeveloperAs">Sviluppatore · %1$s</string>
+    <string name="teamVoiceReviewer">Revisore</string>
     <string name="teamVoiceSaysPlanning">Sto pianificando come realizzarlo.</string>
     <string name="teamVoiceSaysPlanReady">Il piano è pronto per te.</string>
     <string name="teamVoiceSaysStarting">Sto partendo su questa attività.</string>

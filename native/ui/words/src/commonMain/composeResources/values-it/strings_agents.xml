@@ -28,7 +28,7 @@
     <string name="a2aCanceled">Annullata</string>
     <string name="a2aRejected">Rifiutata</string>
     <string name="a2aUnknown">Stato attività non supportato</string>
-    <string name="a2aAddressError">Usa un'origine HTTPS o un URL pubblico di Agent Card senza credenziali, query o frammento. HTTP è supportato solo sull'indirizzo di loopback di questo dispositivo.</string>
+    <string name="a2aAddressError">Usa un'origine HTTPS o un URL pubblico della Scheda agente senza credenziali, query o frammento. HTTP è supportato solo sull'indirizzo di loopback di questo telefono.</string>
     <string name="a2aAuthenticationError">L'agente ha rifiutato questa credenziale o non è riuscito a usarla. Torna all'agente per aggiornarla, poi riapri l'attività salvata.</string>
     <string name="a2aUnavailable">Impossibile raggiungere l'agente oppure ha rifiutato questa operazione. Aggiorna un'attività nota per verificarne lo stato.</string>
     <string name="a2aInvalidResponse">L'agente ha restituito una risposta non supportata, troppo grande o non corrispondente. L'attività salvata non è stata sostituita.</string>
@@ -165,7 +165,7 @@
     <string name="externalAgentsRemoveTitle">Rimuovere %1$s?</string>
     <string name="externalAgentsRemoveBody">Le sue attività salvate e la sua chiave lasciano questo telefono. Il lavoro già avviato prosegue, e ciò che conserva resta con lui.</string>
     <string name="externalAgentsBusy">Attendi il termine del passaggio corrente</string>
-    <string name="externalAgentsAddressHelper">Il suo indirizzo web, o l'indirizzo della sua Agent Card.</string>
+    <string name="externalAgentsAddressHelper">Il suo indirizzo web, o l'indirizzo della sua Scheda agente.</string>
     <string name="externalAgentsCheck">Verifica agente</string>
     <string name="externalAgentsCheckNeedsAddress">Digita prima l'indirizzo dell'agente</string>
     <string name="externalAgentsStopChecking">Ferma la verifica</string>
@@ -179,7 +179,7 @@
     <string name="externalAgentsKeyLabel">Chiave dell'agente</string>
     <string name="externalAgentsKeyHelper">La chiave che il proprietario ti ha dato. Rimane nell'archivio sicuro di questo telefono e viene inviata solo a questo agente.</string>
     <string name="externalAgentsNoKey">Questo agente non chiede una chiave. Non inviare informazioni private se non ti fidi.</string>
-    <string name="externalAgentsDetailCard">Agent Card</string>
+    <string name="externalAgentsDetailCard">Scheda agente</string>
     <string name="externalAgentsDetailEndpoint">Endpoint</string>
     <string name="externalAgentsDetailVersion">Versione</string>
     <string name="externalAgentsDetailConnection">Connessione</string>
@@ -391,7 +391,7 @@
     <string name="agentCardProgressValue">%1$d%</string>
     <string name="cardsFromAgentsTitle">Card dagli agenti</string>
     <string name="cardsFromAgentsSupporting">Gli agenti possono mostrarti scelte, moduli e report come card, e chiedere una foto.</string>
-    <string name="cardsStatusOff">Off</string>
+    <string name="cardsStatusOff">Disattivato</string>
     <string name="cardsStatusChecking">Verifica di questo telefono…</string>
     <string name="cardsStatusOn">Attivo per %1$s</string>
     <string name="cardsStatusPartial">Attivo per %1$s. %2$s</string>

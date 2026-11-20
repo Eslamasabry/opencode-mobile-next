@@ -253,7 +253,7 @@
     <string name="chatUiDeleteMessage">Elimina il messaggio</string>
     <string name="chatUiDeleteThisMessage">Eliminare questo messaggio?</string>
     <string name="chatUiDetails">Dettagli</string>
-    <string name="chatUiDirectory">Directory</string>
+    <string name="chatUiDirectory">Cartella</string>
     <string name="chatUiDisableTheCurrentPublicSessionLink">Disattiva il link di conversazione pubblico corrente</string>
     <string name="chatUiDiscardDraft">Scarta la bozza</string>
     <string name="chatUiDiscardPromptChanges">Scartare le modifiche al prompt?</string>
@@ -287,7 +287,7 @@
     <string name="chatUiJumpAnywhereForkRestoresAPromptFor">Salta ovunque. La ramificazione ripristina un prompt per modificarlo.</string>
     <string name="chatUiKeepItPending">Mantieni in sospeso</string>
     <string name="chatUiKeepItQueued">Mantieni in coda</string>
-    <string name="chatUiLanguageServer">Language server</string>
+    <string name="chatUiLanguageServer">Server linguistico</string>
     <string name="chatUiList">Elenco</string>
     <string name="chatUiLongReasoningCollapsedInTheTranscript">Ragionamento lungo mostrato compresso nella trascrizione</string>
     <string name="chatUiMCPServers">Server MCP</string>
