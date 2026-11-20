@@ -1185,6 +1185,12 @@ public fun ChatScreen(
                                                 }
                                             },
                                         LocalInPlaceRequests provides inPlaceRequests,
+                                        // A send refused while an undo waits: its row opens the undo's review, as
+                                        // the staged line does (that line hides while the keyboard is up).
+                                        LocalUndoReview provides
+                                            remember(state.canPutBack, actions) {
+                                                if (state.canPutBack) actions::putBack else null
+                                            },
                                     ) {
                                         ChatTranscriptList(
                                             waitingKey = waitingKey,

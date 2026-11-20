@@ -765,7 +765,7 @@ public class ChatsViewModel(
 
     override fun stopRow(row: ConversationRowUi) {
         val port = stopper ?: return
-        if (row.running == null) return
+        if (row.running == null && row.permission == null && row.question == null) return
         viewModelScope.launch {
             port.stop(row.ref)
             feed.refresh()
