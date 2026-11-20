@@ -29,9 +29,15 @@ public object ProjectFiles {
                 )
         }
 
-    public suspend fun open(gateway: FileGateway, path: String, line: Int? = null): Outcome<OpenedFile> {
-        val normal = FilePaths.normalize(path)
-        return when (val read = gateway.fileContent(normal)) {
+    public suspend fun open(gateway: FileGateway, path: String, line: Int? = null): Outcome<OpenedFile> =
+        // A path below the project reaches here already relative. One still starting with a slash lies
+        // outside it, and the server only reads inside the project: dropping the slash would glue it onto
+        // the project folder and read a file that was never meant, so it is refused as not readable.
+        if (path.startsWith("/")) Outcome.Failed(Failure.Media(MediaProblem.FileDenied))
+        else openInside(gateway, FilePaths.normalize(path), line)
+
+    private suspend fun openInside(gateway: FileGateway, normal: String, line: Int?): Outcome<OpenedFile> =
+        when (val read = gateway.fileContent(normal)) {
             is Outcome.Failed -> read
             is Outcome.Ok -> {
                 val data =
@@ -40,7 +46,6 @@ public object ProjectFiles {
                 Outcome.Ok(OpenedFile(data, FilePreview.body(data, line)))
             }
         }
-    }
 
     /** Fuzzy file-name search across the project (`/fs/find`). */
     public suspend fun find(gateway: FileGateway, query: String): Outcome<ImmutableList<FileNode>> {

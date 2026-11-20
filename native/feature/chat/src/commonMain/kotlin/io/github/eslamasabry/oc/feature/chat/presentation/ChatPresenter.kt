@@ -1750,8 +1750,14 @@ public class ChatPresenter(
 
     override val pictureScope: String get() = world.ref.profileId.raw
 
-    override suspend fun readPicture(path: String): ByteArray? =
-        (world.readPicture(path) as? Outcome.Ok)?.value
+    override suspend fun readPicture(path: String): ByteArray? = readInProject(path)
+
+    /** A picture's bytes by its place under the project; one outside the project is not read. */
+    private suspend fun readInProject(path: String): ByteArray? {
+        val inProject = projectRelativePath(path, world.directory)
+        if (inProject.startsWith("/")) return null
+        return (world.readPicture(inProject) as? Outcome.Ok)?.value
+    }
 
     override fun openPicture(path: String, name: String) {
         val id = nextId++
@@ -1760,7 +1766,7 @@ public class ChatPresenter(
             it.copy(picture = PictureUi(id, name, bytes = null, failed = false, gallery, index))
         }
         launcher.launch {
-            val read = world.readPicture(path)
+            val read = readInProject(path)?.let { Outcome.Ok(it) }
             local.update {
                 if (it.picture?.id != id) it
                 else
@@ -1790,14 +1796,18 @@ public class ChatPresenter(
             // A miss is checked again only after the conversation moved on and is idle (Flutter:
             // agents name a file
             // moments before they create it), never once per streamed word.
+            // An absolute path under the project is asked for by its place there; one outside it is never
+            // asked for (the server reads only the project), so it stays plain text.
+            val inProject = projectRelativePath(path, world.directory)
             val skip =
-                path in local.value.confirmedPaths ||
+                inProject.startsWith("/") ||
+                    path in local.value.confirmedPaths ||
                     (seen != null && (seen == CHECKING || seen == transcript.revision || transcript.run.busy))
             if (skip) continue
             if (pathChecks.size >= MAX_PATH_CHECKS) pathChecks.remove(pathChecks.keys.first())
             pathChecks[path] = CHECKING
             launcher.launch {
-                val found = (world.fileExists(path) as? Outcome.Ok)?.value == true
+                val found = (world.fileExists(inProject) as? Outcome.Ok)?.value == true
                 if (found) {
                     pathChecks.remove(path)
                     local.update { it.copy(confirmedPaths = it.confirmedPaths.add(path)) }
