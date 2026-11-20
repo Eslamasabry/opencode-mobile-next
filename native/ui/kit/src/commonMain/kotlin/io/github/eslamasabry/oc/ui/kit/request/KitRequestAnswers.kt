@@ -163,7 +163,8 @@ private fun AnswerButtons(content: @Composable () -> Unit) {
         val side = natural.all { it <= half }
         val w = if (side) half else full
         val h = measurables.maxOf { it.minIntrinsicHeight(w) }
-        val placed = measurables.map { it.measure(Constraints(minWidth = w, maxWidth = w, minHeight = if (side) h else 0)) }
+        val fit = Constraints(minWidth = w, maxWidth = w, minHeight = if (side) h else 0)
+        val placed = measurables.map { it.measure(fit) }
         if (side) {
             layout(full, placed.maxOf { it.height }) {
                 placed[0].place(0, 0)

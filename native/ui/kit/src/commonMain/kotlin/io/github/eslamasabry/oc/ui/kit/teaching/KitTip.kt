@@ -71,6 +71,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotionSpecs
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.pace
@@ -237,15 +238,7 @@ public fun KitTip(
             // Never over the words of the part around the anchor (the message box): above or below all of it.
             val place = rememberTipPosition(above, gap, beside, clearance)
             val bubble: @Composable () -> Unit = {
-                val enter: EnterTransition =
-                    if (motion.reduced) EnterTransition.None
-                    else fadeIn(specs.tipFade()) +
-                        (when {
-                            rise == 0 -> EnterTransition.None
-                            // Toward the light: from the page side, whichever physical edge it sits on.
-                            beside -> slideInHorizontally(specs.pace<IntOffset>(KitPace.Standard)) { if (anchorOnRight) -rise else rise }
-                            else -> slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { if (above) -rise else rise }
-                        })
+                val enter = tipEnter(specs, motion.reduced, rise, if (beside) anchorOnRight else null, above)
                 val exit: ExitTransition = if (motion.reduced) ExitTransition.None else fadeOut(specs.tipFade())
                 AnimatedVisibility(shown, enter = enter, exit = exit, label = "kit.tip") {
                     KitTipBubble(
@@ -263,6 +256,28 @@ public fun KitTip(
             else Popup(popupPositionProvider = place, onDismissRequest = { dismiss() }, properties = PopupProperties(focusable = false, dismissOnClickOutside = true)) { bubble() }
         }
     }
+}
+
+/**
+ * How the tip comes in: a fade and, at Full, a small rise toward its anchor. [sideOnRight] is set for a tip by an
+ * edge part (it comes in sideways, from the page side, whichever physical edge the part sits on); null for the rest.
+ */
+private fun tipEnter(
+    specs: KitMotionSpecs,
+    reduced: Boolean,
+    rise: Int,
+    sideOnRight: Boolean?,
+    above: Boolean,
+): EnterTransition {
+    if (reduced) return EnterTransition.None
+    val pace = specs.pace<IntOffset>(KitPace.Standard)
+    val slide: EnterTransition =
+        when {
+            rise == 0 -> EnterTransition.None
+            sideOnRight != null -> slideInHorizontally(pace) { if (sideOnRight) -rise else rise }
+            else -> slideInVertically(pace) { if (above) -rise else rise }
+        }
+    return fadeIn(specs.tipFade()) + slide
 }
 
 /**

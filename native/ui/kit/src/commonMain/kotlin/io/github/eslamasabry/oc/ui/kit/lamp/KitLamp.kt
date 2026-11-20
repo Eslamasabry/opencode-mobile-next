@@ -465,8 +465,9 @@ private fun LampMarks(face: KitLampFace, settled: Boolean) {
                     )
                 }
                 if (KitLampRules.numberCompact(face)) {
-                    // "9+" would touch both sides of the gutter-wide face: written at a fixed small size, 2 dp or more clear.
-                    CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, KitLampDims.NUMBER_COMPACT_SCALE), content = number)
+                    // "9+" would touch both sides of the gutter-wide face: written small, 2 dp or more clear.
+                    val small = Density(LocalDensity.current.density, KitLampDims.NUMBER_COMPACT_SCALE)
+                    CompositionLocalProvider(LocalDensity provides small, content = number)
                 } else {
                     KitFrameText(number)
                 }
