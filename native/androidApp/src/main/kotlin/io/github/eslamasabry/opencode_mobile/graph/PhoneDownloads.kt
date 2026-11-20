@@ -8,15 +8,15 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.voice.device.AndroidSetupNetwork
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
-import io.github.eslamasabry.oc.engine.runtime.setup.ComponentProgress
-import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallStep
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallResult
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
@@ -65,6 +65,8 @@ class PhoneDownloads(
 ) : HomeDownloads {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val network = AndroidSetupNetwork(app)
+    private val log = AppLog.tagged("DownloadsLine")
+    @Volatile private var lastSaid = ""
 
     @Volatile private var now: SetupNetwork = SetupNetwork.Unknown
 
@@ -136,16 +138,24 @@ class PhoneDownloads(
                 val agentName =
                     (install?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }?.id ?: decision.agent?.raw)
                         ?.let { phones.nameOf(AgentId(it)) }
-                // The job says which part runs now (Node.js, the helper, then the agent): the line names THAT part
-                // with its own share, never the agent's name over another part's number.
+                // The agents' install job names the step it is on (Node.js, the helper, then the agent): the line names
+                // THAT part with the step's own share, never the agent's name over another step's number. (The
+                // components of `setup.progress` belong to the setup page's job, not to this one.)
                 val part =
                     if (install?.phase == PhoneAgentInstallPhase.Installing) {
-                        runningPart(progress.components) { id -> phones.nameOf(AgentId(id)) }
+                        runningPart(install.step, install.fraction) { phones.nameOf(AgentId(install.id)) }
                     } else {
                         null
                     }
                 val partName =
                     part?.let { if (it.helper) getString(Res.string.runningPhoneName__agentHelper) else it.name }
+                if (part != null) {
+                    val saying = "${install?.step} ${part.percent}"
+                    if (saying != lastSaid) {
+                        lastSaid = saying
+                        log.i { "update line: step=${install?.step} share=${part.percent ?: "none"}" }
+                    }
+                }
                 val said =
                     HomeDownloadMapping.facts(
                         openCodeWaiting = downloadWaitingSaid(side.waiting, read),
@@ -268,16 +278,12 @@ private data class SideFacts(
 /** The part of an agent's install job that runs now: its name (the helper's is a string), and its own share. */
 private class RunningPart(val name: String?, val helper: Boolean, val percent: Int?)
 
-private fun runningPart(components: List<ComponentProgress>, agentName: (String) -> String?): RunningPart? {
-    val running = components.firstOrNull { it.id.startsWith(AGENT_PART) && it.state == ComponentState.Running }
-        ?: return null
-    val percent = running.fraction?.let { (it * PERCENT).roundToInt() }
-    return when (val id = running.id.removePrefix(AGENT_PART)) {
-        "node" -> RunningPart("Node.js", false, percent)
-        "paseo" -> RunningPart(null, true, percent)
-        "user" -> null
-        else -> RunningPart(agentName(id), false, percent)
+private fun runningPart(step: PhoneAgentInstallStep?, fraction: Double?, agentName: () -> String?): RunningPart? {
+    val percent = fraction?.let { (it * PERCENT).roundToInt() }
+    return when (step) {
+        PhoneAgentInstallStep.Runtime -> RunningPart("Node.js", false, percent)
+        PhoneAgentInstallStep.Helper -> RunningPart(null, true, percent)
+        PhoneAgentInstallStep.Agent -> RunningPart(agentName(), false, percent)
+        PhoneAgentInstallStep.Linux, null -> null
     }
 }
-
-private const val AGENT_PART = "agent-"
