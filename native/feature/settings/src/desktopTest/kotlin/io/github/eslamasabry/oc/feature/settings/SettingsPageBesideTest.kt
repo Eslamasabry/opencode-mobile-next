@@ -85,10 +85,11 @@ class SettingsPageBesideTest {
         state: SettingsUi,
         window: androidx.compose.runtime.State<KitWindowInfo>,
         actions: SettingsActions = RecordingActions(),
+        fontScale: Float = 1f,
     ) =
         setContent {
             Locale.setDefault(Locale.ENGLISH)
-            CompositionLocalProvider(LocalDensity provides Density(1f)) {
+            CompositionLocalProvider(LocalDensity provides Density(1f, fontScale)) {
                 KitTheme(
                     appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off),
                     platform = DesktopKitPlatform(),
@@ -136,7 +137,7 @@ class SettingsPageBesideTest {
     fun `B-NAV-251 the open page and its scroll survive the 840 dp threshold both ways`() =
         runDesktopComposeUiTest(1280, 500) {
             val window = mutableStateOf(KitWindowInfo(1280f, 500f))
-            show(state(SettingsPage.About), window)
+            show(state(SettingsPage.About), window, fontScale = 2f)
             waitForIdle()
             fun offset(): Float =
                 onAllNodes(hasScrollAction()).fetchSemanticsNodes().maxOf {
