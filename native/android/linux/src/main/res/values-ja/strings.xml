@@ -11,6 +11,7 @@
     <string name="native_phone_server_body">ほかのアプリを使っている間も、エージェントは作業を続けます。</string>
     <string name="native_phone_server_channel">この端末上のOpenCode</string>
     <string name="native_phone_server_description">端末内サーバーまたはプロジェクトエンジンが実行中のときに表示されます</string>
+    <string name="native_phone_server_title">OpenCodeがこのスマートフォンで実行中</string>
     <string name="native_setup_channel">セットアップ</string>
     <string name="native_status_action_new_chat">新しい会話</string>
     <string name="native_status_action_open">開く</string>

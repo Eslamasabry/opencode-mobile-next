@@ -447,4 +447,6 @@
     <string name="reviewUndoBody">Cela masque les messages à partir de l’endroit où ces modifications ont commencé et remet vos fichiers comme ils étaient. Vous pouvez tout récupérer tant que vous n’avez pas supprimé les messages masqués.</string>
     <string name="reviewDone">Terminé</string>
     <string name="reviewRevertNoSnapshot">Ce projet n’utilise pas Git, donc les fichiers ne peuvent pas être restaurés. L’annulation masque seulement les messages.</string>
+    <string name="reviewRevertRestoreConfirmBodyNoFiles">Les messages masqués reviennent. Vous pourrez de nouveau annuler à partir d'une invite plus tard.</string>
+    <string name="reviewRevertRestoredBodyNoFiles">Les messages sont revenus à leur état d'origine.</string>
 </resources>

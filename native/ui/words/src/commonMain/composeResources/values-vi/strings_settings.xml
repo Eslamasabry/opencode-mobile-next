@@ -791,4 +791,15 @@
     <string name="appearanceWaitMarksColour">Màu</string>
     <string name="appearanceWaitMarksNote">Những hình nhỏ chuyển động bên cạnh dòng chữ như “Đang khởi động OpenCode…”.</string>
     <string name="e7LocaleUiItalian">Italiano</string>
+    <string name="languageNameEnglish">Tiếng Anh</string>
+    <string name="languageNameArabic">Tiếng Ả Rập</string>
+    <string name="languageNameSpanish">Tiếng Tây Ban Nha</string>
+    <string name="languageNameJapanese">Tiếng Nhật</string>
+    <string name="languageNamePortuguese">Tiếng Bồ Đào Nha</string>
+    <string name="languageNameRussian">Tiếng Nga</string>
+    <string name="languageNameVietnamese">Tiếng Việt</string>
+    <string name="languageNameIndonesian">Tiếng Indonesia</string>
+    <string name="languageNameFrench">Tiếng Pháp</string>
+    <string name="languageNameChinese">Tiếng Trung</string>
+    <string name="languageNameItalian">Tiếng Ý</string>
 </resources>

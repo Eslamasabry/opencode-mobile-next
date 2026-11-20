@@ -425,4 +425,6 @@
     <string name="reviewUndoBody">Thao tác này ẩn các tin nhắn từ chỗ những thay đổi này bắt đầu và đưa tệp của bạn về như cũ. Bạn có thể khôi phục mọi thứ cho đến khi xóa các tin nhắn đã ẩn.</string>
     <string name="reviewDone">Xong</string>
     <string name="reviewRevertNoSnapshot">Đây không phải dự án Git nên không thể khôi phục tệp. Hoàn tác chỉ ẩn tin nhắn.</string>
+    <string name="reviewRevertRestoreConfirmBodyNoFiles">Các tin nhắn đã ẩn sẽ quay lại. Sau này bạn vẫn có thể hoàn tác từ một lời nhắc.</string>
+    <string name="reviewRevertRestoredBodyNoFiles">Các tin nhắn đã trở lại như cũ.</string>
 </resources>

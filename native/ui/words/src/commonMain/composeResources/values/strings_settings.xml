@@ -486,6 +486,18 @@
     <string name="e7LocaleUiVietnamese">Tiếng Việt</string>
     <string name="e7LocaleUiIndonesian">Bahasa Indonesia</string>
     <string name="e7LocaleUiFrench">Français</string>
+    <!-- The name of each language in the app's own language, under its name in its own language on the Language list. -->
+    <string name="languageNameEnglish">English</string>
+    <string name="languageNameArabic">Arabic</string>
+    <string name="languageNameSpanish">Spanish</string>
+    <string name="languageNameJapanese">Japanese</string>
+    <string name="languageNamePortuguese">Portuguese</string>
+    <string name="languageNameRussian">Russian</string>
+    <string name="languageNameVietnamese">Vietnamese</string>
+    <string name="languageNameIndonesian">Indonesian</string>
+    <string name="languageNameFrench">French</string>
+    <string name="languageNameChinese">Chinese</string>
+    <string name="languageNameItalian">Italian</string>
     <string name="e7LocaleUiItalian">Italiano</string>
     <string name="serverSettingsRemoveTitle">Remove %1$s</string>
     <string name="serverSettingsRecheckAgents">Check for agents again</string>

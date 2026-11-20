@@ -88,6 +88,8 @@ public data class KitChoice<T>(
     val supporting: String? = null,
     val recommended: Boolean = false,
     val enabled: KitEnabled = KitEnabled.Enabled,
+    /** A mark before the title (a language row's round flag); null = none. */
+    val leading: (@Composable () -> Unit)? = null,
 )
 
 /** The mark at a choice row's start (Dart `KitChoiceMark`). */
@@ -163,6 +165,7 @@ public fun <T> KitChoiceList(
                             },
                         enabled = c.enabled,
                         haptic = if (sends) KitHaptic.Select else null,
+                        leading = c.leading,
                         onClick = { onSelect(c.value) },
                     )
                 }

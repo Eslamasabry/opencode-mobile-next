@@ -448,4 +448,6 @@
     <string name="reviewUndoBody">Esto oculta los mensajes desde donde empezaron estos cambios y devuelve tus archivos a como estaban. Puedes recuperar todo hasta que elimines los mensajes ocultos.</string>
     <string name="reviewDone">Listo</string>
     <string name="reviewRevertNoSnapshot">No es un proyecto Git, así que no se pueden devolver los archivos. Deshacer solo oculta mensajes.</string>
+    <string name="reviewRevertRestoreConfirmBodyNoFiles">Los mensajes ocultos vuelven. Más adelante puedes volver a deshacer desde un mensaje.</string>
+    <string name="reviewRevertRestoredBodyNoFiles">Los mensajes volvieron a como estaban.</string>
 </resources>
