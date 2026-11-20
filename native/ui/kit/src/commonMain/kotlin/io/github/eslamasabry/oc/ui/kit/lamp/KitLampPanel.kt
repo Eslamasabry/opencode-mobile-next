@@ -374,7 +374,7 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
                 }
             }
             model.sections.forEachIndexed { i, section ->
-                Column(Modifier.fillMaxWidth().onSizeChanged { heights[i + 1] = it.height }) {
+                Column(Modifier.fillMaxWidth().onSizeChanged { heights[i + 1] = it.height }.testTag(LAMP_PANEL_ITEM_TAG)) {
                     Section(section, model.editing, words, actions)
                 }
             }
@@ -705,6 +705,7 @@ private const val SCRIM_BACK_SHARE: Float = 0.35f // NV: LAMP-CRAFT §3, the scr
 public const val LAMP_PANEL_TAG: String = "kit-lamp-panel"
 public const val LAMP_PANEL_LIST_TAG: String = "kit-lamp-panel-list"
 public const val LAMP_PANEL_HEADING_TAG: String = "kit-lamp-panel-heading"
+public const val LAMP_PANEL_ITEM_TAG: String = "kit-lamp-panel-item"
 public const val LAMP_PANEL_EDIT_TAG: String = "kit-lamp-panel-edit"
 public const val LAMP_PANEL_ALL_TAG: String = "kit-lamp-panel-all"
 public const val LAMP_PANEL_ALL_SHORT_TAG: String = "kit-lamp-panel-all-short"

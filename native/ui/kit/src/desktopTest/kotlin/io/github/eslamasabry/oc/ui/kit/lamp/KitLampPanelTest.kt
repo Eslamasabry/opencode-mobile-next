@@ -19,6 +19,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.DpRect
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -26,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.action.STOP_BUTTON_TAG
 import io.github.eslamasabry.oc.ui.kit.request.KitHeld
+import io.github.eslamasabry.oc.ui.kit.request.KitRequest
 import io.github.eslamasabry.oc.ui.kit.row.REORDER_HANDLE_TAG
 import kotlin.math.abs
 import kotlin.test.Test
@@ -341,6 +344,61 @@ class KitLampPanelTest {
                 waitForIdle()
                 onAllNodesWithText("Hidden · 1").assertCountEquals(0)
             }
+        }
+    }
+    private fun askingModel(count: Int): KitLampPanelModel =
+        K2.model().copy(
+            sections =
+                listOf(
+                    KitLampSection(
+                        KitLampGroup.NeedsYou,
+                        "Needs you",
+                        (1..count).map {
+                            KitLampRow(
+                                "ask$it",
+                                "Reply with exactly the word: base-$it",
+                                KitLampRowMark.NeedsYou,
+                                state = "for 8m",
+                                stateTone = KitLampTone.Attention,
+                                request = KitRequest("rq$it", "Asks to fetch: example.org"),
+                            )
+                        },
+                    ),
+                ),
+            all = 3,
+        )
+
+    /** No item of the list straddles the list's top edge: each is fully in view or fully out of it. */
+    private fun ComposeUiTest.assertNoItemCutAtTop(what: String) {
+        val top = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot().top.value
+        val items = onAllNodesWithTag(LAMP_PANEL_ITEM_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        assertTrue(items.isNotEmpty(), "$what: items found")
+        for (b in items) assertTrue(b.bottom <= top + 0.5f || b.top >= top - 0.5f, "$what: an item (${b.top}..${b.bottom}) is cut by the list's top $top")
+    }
+
+    @Test
+    fun `B-LAMP-K2-071 at 360 dp and text 1_3 with one request the section label is never half under the header`() {
+        for (height in 380..560 step 20) {
+            runDesktopComposeUiTest(360, height) {
+                panel(Scene(askingModel(1)), width = 360, height = height, fontScale = 1.3f)
+                waitForIdle()
+                assertNoItemCutAtTop("window $height dp")
+            }
+        }
+    }
+
+    @Test
+    fun `B-LAMP-K2-072 with three requests the resting scroll lands on an item edge`() {
+        runDesktopComposeUiTest(360, 520) {
+            panel(Scene(askingModel(3)), width = 360, height = 520, fontScale = 1.3f)
+            waitForIdle()
+            assertNoItemCutAtTop("opening")
+            onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 90f, durationMillis = 180) }
+            waitForIdle()
+            assertNoItemCutAtTop("after a swipe")
+            onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = top + 90f, endY = bottom - 4f, durationMillis = 180) }
+            waitForIdle()
+            assertNoItemCutAtTop("after a swipe back")
         }
     }
 }
