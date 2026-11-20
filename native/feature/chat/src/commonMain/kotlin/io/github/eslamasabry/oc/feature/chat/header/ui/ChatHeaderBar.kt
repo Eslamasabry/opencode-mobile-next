@@ -171,6 +171,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuFind
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuGoTo
 import io.github.eslamasabry.oc.ui.words.res.chatMenuContinueElsewhere
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuNeedsPrompt
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.stateNoteTitle
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindReasoning
 import org.jetbrains.compose.resources.stringResource
@@ -229,11 +230,14 @@ public fun ChatHeaderTopBar(
 ) {
     val state = slot.state
     val actions = slot.actions
+    val serverName =
+        if (state.serverName == SAVED_PHONE_NAME) stringResource(Res.string.settingsV3ThisPhone)
+        else state.serverName
     val subtitle =
         when {
-            state.serverName != null && state.projectName != null ->
-                stringResource(Res.string.continueWithSubtitle, state.serverName, state.projectName)
-            else -> state.serverName ?: state.projectName
+            serverName != null && state.projectName != null ->
+                stringResource(Res.string.continueWithSubtitle, serverName, state.projectName)
+            else -> serverName ?: state.projectName
         }
     val transcriptWords = transcriptWords()
     var menuPage by remember(actions) { mutableStateOf(HeaderMenuPage.Main) }
@@ -308,9 +312,9 @@ public fun ChatHeaderTopBar(
             {
                 KitTopBarScope(
                     project = project,
-                    server = state.serverName,
+                    server = serverName,
                     projectLabel =
-                        state.serverName?.let {
+                        serverName?.let {
                             stringResource(
                                 Res.string.chatProjectServerChipFilesSemantics,
                                 project,
@@ -991,3 +995,5 @@ private fun transcriptWords(): TranscriptWords {
         )
     }
 }
+
+private const val SAVED_PHONE_NAME: String = "This phone"
