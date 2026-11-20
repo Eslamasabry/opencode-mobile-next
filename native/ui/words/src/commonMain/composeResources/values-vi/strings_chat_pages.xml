@@ -424,5 +424,5 @@
     <string name="reviewUndoTitle__eq1">Hoàn tác 1 tệp đã thay đổi?</string>
     <string name="reviewUndoBody">Thao tác này ẩn các tin nhắn từ chỗ những thay đổi này bắt đầu và đưa tệp của bạn về như cũ. Bạn có thể khôi phục mọi thứ cho đến khi xóa các tin nhắn đã ẩn.</string>
     <string name="reviewDone">Xong</string>
-    <string name="reviewRevertNoSnapshot">Thư mục này không dùng Git nên không thể khôi phục tệp. Hoàn tác chỉ ẩn tin nhắn.</string>
+    <string name="reviewRevertNoSnapshot">Đây không phải dự án Git nên không thể khôi phục tệp. Hoàn tác chỉ ẩn tin nhắn.</string>
 </resources>

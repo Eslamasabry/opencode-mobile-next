@@ -238,7 +238,7 @@
     <string name="reviewRevertScreenIntro">This prompt and everything after it are hidden. Nothing is final until you choose below.</string>
     <string name="reviewRevertFilesLabel">Files in this undo</string>
     <string name="reviewRevertNoFiles">No files change with this undo.</string>
-    <string name="reviewRevertNoSnapshot">This folder isn't under Git, so files can't be put back. The undo hides messages only.</string>
+    <string name="reviewRevertNoSnapshot">This isn't a Git project, so files can't be put back. The undo hides messages only.</string>
     <string name="reviewRevertFileLines">+%1$d −%2$d</string>
     <string name="reviewRevertFileSupporting">%1$s · %2$s</string>
     <string name="reviewRevertRestoreTitle">Put everything back</string>

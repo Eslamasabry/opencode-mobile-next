@@ -446,5 +446,5 @@
     <string name="reviewUndoTitle__eq1">Desfazer 1 arquivo alterado?</string>
     <string name="reviewUndoBody">Isso oculta as mensagens desde onde estas alterações começaram e devolve seus arquivos ao que eram. Você pode recuperar tudo até excluir as mensagens ocultas.</string>
     <string name="reviewDone">Concluído</string>
-    <string name="reviewRevertNoSnapshot">Esta pasta não está sob o Git, então os arquivos não podem ser restaurados. Desfazer só oculta mensagens.</string>
+    <string name="reviewRevertNoSnapshot">Não é um projeto Git, então os arquivos não podem ser restaurados. Desfazer só oculta mensagens.</string>
 </resources>
