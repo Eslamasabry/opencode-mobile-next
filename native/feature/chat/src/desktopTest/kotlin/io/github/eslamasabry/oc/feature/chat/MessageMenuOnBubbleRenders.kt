@@ -105,6 +105,8 @@ class MessageMenuOnBubbleRenders {
             footer("u1")
 
     private fun shoot(name: String, style: Style, dark: Boolean, scale: Float, rows: List<TranscriptRow>, live: Boolean = false) {
+        // The live background's glass is drawn in software here: its frames take minutes on the build server.
+        val timeout = kotlin.time.Duration.parse(if (live) "15m" else "6m")
         val o = out ?: return
         Locale.setDefault(Locale.forLanguageTag("en"))
         val world = FakeChatWorld()
@@ -114,7 +116,7 @@ class MessageMenuOnBubbleRenders {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val states = presenter.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
         // runSkikoComposeUiTest honours its timeout (runDesktopComposeUiTest keeps a minute, too short for Glass here).
-        runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = kotlin.time.Duration.parse("6m")) {
+        runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = timeout) {
             setContent {
                 val state by states.collectAsState()
                 CompositionLocalProvider(LocalDensity provides Density(DENSITY, scale)) {
@@ -169,7 +171,14 @@ class MessageMenuOnBubbleRenders {
         for (dark in listOf(true, false)) for (scale in listOf(1.0f, 1.3f)) {
             shoot("solid-${mode(dark)}-360-${scale}", Style.Solid, dark, scale, middle())
         }
+    }
+
+    @Test
+    fun `message menu on bubble renders, near the top`() {
+        if (out == null) return
         shoot("near-top-solid-dark-360-1.0", Style.Solid, dark = true, scale = 1.0f, rows = nearTop(paragraphs = 4))
+        // At 1.3 a paragraph is taller: two put the prompt just under the bar (three put it under the bar's buttons).
+        shoot("near-top-glass-dark-360-1.3", Style.Glass, dark = true, scale = 1.3f, rows = nearTop(paragraphs = 2))
     }
 
     @Test
@@ -178,7 +187,6 @@ class MessageMenuOnBubbleRenders {
         for (dark in listOf(true, false)) for (scale in listOf(1.0f, 1.3f)) {
             shoot("glass-${mode(dark)}-360-${scale}", Style.Glass, dark, scale, middle())
         }
-        shoot("near-top-glass-dark-360-1.3", Style.Glass, dark = true, scale = 1.3f, rows = nearTop(paragraphs = 3))
     }
 
     @Test
