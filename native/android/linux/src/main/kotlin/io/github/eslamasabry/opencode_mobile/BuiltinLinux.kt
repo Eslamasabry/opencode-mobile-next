@@ -1418,7 +1418,13 @@ class BuiltinLinux(private val context: Context) {
         val hostTicket =
             if (name.startsWith("agent-host.")) admittedHostTicket(name, process) else null
         removeService(name)
-        services[name] = serviceStarted(name, process, port, "Agents are working on this phone")
+        services[name] =
+            serviceStarted(
+                name,
+                process,
+                port,
+                NativeStrings.get(context, LinuxR.string.native_phone_server_title),
+            )
         recordRunning()
         try {
             BuiltinServerService.start(context, currentNotice())
@@ -5219,6 +5225,7 @@ class BuiltinLinux(private val context: Context) {
             activityEpoch++
             if (resumed) idleReturnNotification.clear()
         }
+        if (resumed) StatusNotification.refresh(context)
         idleTimer.schedule(SystemClock.elapsedRealtime())
         if (!resumed) cancelServerRecovery()
     }

@@ -123,27 +123,28 @@ class HomeDownloadLineTest {
     }
 
     @Test
-    fun `B-HOME-211 on a list the waiting update sits in Recent's status place with its action, no bar`() =
+    fun `B-HOME-211 on a list the waiting update is a status line of its own above the lists, with its action`() =
         runComposeUiTest {
             val waiting = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
             setContent { Home(listed(waiting)) }
             waitForIdle()
-            onNodeWithTag("kit-row-panel-status", useUnmergedTree = true).assertExists()
             onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
-            // The page's one status line (the bar above the title) is not used for it.
-            assertTrue(onAllNodesWithTag("kit-status-line", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+            // 7bbf340fd0: it no longer sits as bare words in Recent's status place (under the Recent heading, where it
+            // read as part of Recent); it is a kit status line of its own with its mark and action.
+            assertTrue(onAllNodesWithTag("kit-row-panel-status", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
             onNodeWithText("Download on mobile data").performClick()
             assertEquals(listOf("act"), actions.calls)
         }
 
     @Test
-    fun `B-HOME-211 while the helper starts its words win the place, the waiting update does not stack`() =
+    fun `B-HOME-211 while the helper starts its words stay with Recent and the waiting update is its own line`() =
         runComposeUiTest {
             val waiting = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
             setContent { Home(listed(waiting, HomeStage.Helper)) }
             waitForIdle()
+            // 7bbf340fd0: the Recent heading keeps only the start-up stage; the update's line stacks above the lists.
             onNodeWithText("Starting the agents’ helper…").assertExists()
-            assertTrue(onAllNodesWithText("waiting for Wi-Fi", substring = true).fetchSemanticsNodes().isEmpty())
-            assertTrue(onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().isEmpty())
+            onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
+            onNodeWithText("Download on mobile data").assertExists()
         }
 }

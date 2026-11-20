@@ -74,6 +74,8 @@ class OpenCodeUpdateTest {
         override val runtime: String = "openCode2"
         override val switchPending: Boolean = false
         override val installProblem: Boolean = false
+        // The person chose Update (the choice gate).
+        override var updateAllowed: Boolean = true
     }
 
     private class Jobs : OpenCodeUpdateJobs {
@@ -146,6 +148,19 @@ class OpenCodeUpdateTest {
     fun `B-LINUX-079 on an unmetered network the automatic update runs`() = runTest {
         val jobs = Jobs()
         OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = false), jobs) { false }.changed()
+        assertEquals(listOf("openCode2"), jobs.runs)
+    }
+
+    @Test
+    fun `B-LINUX-079 nothing runs without the person's decision, and it runs once the decision is given`() = runTest {
+        val host = Host("2.1.1", pinned, metered = false).apply { updateAllowed = false }
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(host, jobs) { false }
+        updater.changed()
+        updater.changed()
+        assertEquals(emptyList(), jobs.runs, "no decision: no download, however often it looks")
+        host.updateAllowed = true
+        updater.changed()
         assertEquals(listOf("openCode2"), jobs.runs)
     }
 
