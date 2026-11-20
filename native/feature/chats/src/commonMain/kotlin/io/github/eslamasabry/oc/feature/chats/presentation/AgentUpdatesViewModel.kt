@@ -20,14 +20,16 @@ import kotlinx.coroutines.flow.stateIn
 /**
  * "Updates for your agents" on Home (owner 2026-11-19; the engine's update-choice contract). Its own ViewModel so
  * Home's grows no further; Home's entry joins its state and actions to Home's ([HomeWithAgentUpdates]).
- * [choices] null: no offer ever (desktop, previews).
+ * [choices] is a NON-NULL key on purpose: Metro binds `AgentUpdateChoices` (PhoneUpdateChoices, one per app), and a
+ * nullable parameter is a different key that binding never satisfies, so `AgentUpdateChoices? = null` always got null
+ * on the phone and Home never saw the offer (build 10108). Where nothing binds it (desktop), [NoAgentUpdateChoices].
  */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 public class AgentUpdatesViewModel(
     private val nav: AppNavigator,
-    choices: AgentUpdateChoices? = null,
+    choices: AgentUpdateChoices = NoAgentUpdateChoices,
 ) : ViewModel(), AgentUpdateActions {
     private val model = AgentUpdateSheetModel(choices, viewModelScope)
 
