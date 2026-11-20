@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
@@ -13,6 +14,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadMapping
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHelperStep
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupJobComponent
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -58,7 +61,9 @@ class DownloadsFollowTest {
 
     @Test
     fun `B-DL-431 OpenCode chosen for update is named in the line even before its own updater says it waits`() {
-        val rows = listOf(item(AgentId.OPENCODE.raw, 130), item("claude", 360))
+        val shared = item("agent-paseo", 330, null)
+            .copy(group = AgentUpdateGroup.Needed, neededWhen = AgentNeedRule.Always)
+        val rows = listOf(item(AgentId.OPENCODE.raw, 130), item("claude", 360), shared)
         val helper = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
         val named = withChosenOpenCode(listOf(helper), offer(rows))
         assertEquals(
@@ -66,7 +71,7 @@ class DownloadsFollowTest {
             named.map { it.kind }.sortedBy { it.ordinal },
         )
         // Kept, on Wi-Fi, or with a line of its own already: nothing is added.
-        val kept = listOf(item(AgentId.OPENCODE.raw, 130, AgentUpdateChoice.Keep), item("claude", 360))
+        val kept = listOf(item(AgentId.OPENCODE.raw, 130, AgentUpdateChoice.Keep), item("claude", 360), shared)
         assertEquals(listOf(helper), withChosenOpenCode(listOf(helper), offer(kept)))
         assertEquals(listOf(helper), withChosenOpenCode(listOf(helper), offer(rows, AgentUpdateNetwork.Unmetered)))
         val own = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(40))
@@ -83,5 +88,16 @@ class DownloadsFollowTest {
             listOf(HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 690))),
             HomeDownloadMapping.withHeldAgents(rows, held).map { it.phase },
         )
+    }
+
+    @Test
+    fun `B-DL-437 the shared job reports the active named component and its own bytes`() {
+        val parts = listOf(item("agent-node", 58), item("agent-paseo", 330).copy(name = "Agent helper"))
+        val node = SetupJobComponent("agent-node", "done", done = 58, total = 58)
+        val helper = SetupJobComponent("agent-paseo", "running", done = 33, total = 330)
+        val job = SetupJobRecord("shared", "running", listOf(node, helper), current = helper.id)
+        val fact = sharedDownloadFact(job, parts)
+        assertEquals("Agent helper", fact.name)
+        assertEquals(HomeDownloadPhase.Running(10, 330), fact.phase)
     }
 }

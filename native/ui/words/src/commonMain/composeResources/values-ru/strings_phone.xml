@@ -938,16 +938,16 @@
     <string name="thisPhoneRestartingRow">Перезапуск. Обычно это занимает меньше минуты…</string>
     <string name="linuxMgrProblemNotAnswering">Linux долго не отвечает. Повторите попытку чуть позже.</string>
     <string name="phoneDownloadWaitingOpenCode">Обновление OpenCode ждёт Wi-Fi · около %1$d МБ</string>
-    <string name="phoneDownloadWaitingHelper">Обновление помощника агентов ждёт Wi-Fi · около %1$d МБ</string>
+    <string name="phoneDownloadWaitingHelper">Обновление помощника агента ждёт Wi-Fi · около %1$d МБ</string>
     <string name="phoneDownloadOnMobile">Скачать по мобильным данным</string>
     <string name="phoneDownloadRunningOpenCode">Обновление OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Обновление помощника агентов</string>
+    <string name="phoneDownloadRunningHelper">Обновление помощника агента</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">Обновление OpenCode не завершилось.</string>
-    <string name="phoneDownloadFailedHelper">Обновление помощника агентов не завершилось.</string>
+    <string name="phoneDownloadFailedHelper">Обновление помощника агента не завершилось.</string>
     <string name="phoneDownloadAskTitle">Скачать около %1$d МБ по мобильным данным?</string>
     <string name="phoneDownloadAskBodyOpenCode">Это обновление OpenCode для этого телефона. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
-    <string name="phoneDownloadAskBodyHelper">Это обновление помощника агентов на этом телефоне. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
+    <string name="phoneDownloadAskBodyHelper">Это обновление помощника агента на этом телефоне. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
     <string name="phoneDownloadAskNow">Скачать сейчас</string>
     <string name="phoneDownloadAskWait">Ждать Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Обновление OpenCode готово · установится, когда не будет идти ответ</string>
@@ -966,7 +966,7 @@
         <item quantity="other">%1$d обновления агентов ждут Wi-Fi · около %2$d МБ</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 обновление агента ждёт Wi-Fi · около %1$d МБ</string>
-    <string name="phoneDownloadWaitingOpenCodeHelper">Обновление OpenCode и помощника агентов ждёт Wi-Fi · около %1$d МБ</string>
-    <string name="phoneDownloadAskBodyOpenCodeHelper">Это обновление OpenCode и помощника агентов, который ему нужен. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Обновление OpenCode и помощника агента ждёт Wi-Fi · около %1$d МБ</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">Это обновление OpenCode и помощника агента, который ему нужен. Оно расходует ваш мобильный трафик. Если подождать Wi-Fi, оно отложится на потом.</string>
     <string name="phoneStoppedByYou">Вы остановили OpenCode на этом телефоне</string>
 </resources>

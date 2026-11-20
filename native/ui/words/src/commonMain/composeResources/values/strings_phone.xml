@@ -898,7 +898,7 @@
     <string name="linuxMgrResetBackUpFirst">Back up first</string>
     <string name="thermalGuardSaveFailed">Couldn't save heat protection. Try again.</string>
     <string name="phoneDownloadWaitingOpenCode">OpenCode update waiting for Wi-Fi · about %1$d MB</string>
-    <string name="phoneDownloadWaitingHelper">Agents helper update waiting for Wi-Fi · about %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Agent helper update waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadWaitingOpenCodeHelper">OpenCode update and Agent helper waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadReadyReply">OpenCode update ready · installs when no reply is running</string>
     <string name="phoneDownloadReadyPhone">OpenCode update ready · installs when the phone server is ready</string>
@@ -914,13 +914,13 @@
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 agent update waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadRunningOpenCode">Updating OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Updating the agents helper</string>
+    <string name="phoneDownloadRunningHelper">Updating the agent helper</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">The OpenCode update didn't finish.</string>
-    <string name="phoneDownloadFailedHelper">The agents helper update didn't finish.</string>
+    <string name="phoneDownloadFailedHelper">The agent helper update didn't finish.</string>
     <string name="phoneDownloadAskTitle">Download about %1$d MB on mobile data?</string>
     <string name="phoneDownloadAskBodyOpenCode">This is the OpenCode update for this phone. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
-    <string name="phoneDownloadAskBodyHelper">This is the update for the agents helper on this phone. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
+    <string name="phoneDownloadAskBodyHelper">This is the update for the agent helper on this phone. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">This is the OpenCode update and the Agent helper it needs. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
     <string name="phoneDownloadAskNow">Download now</string>
     <string name="phoneDownloadAskWait">Wait for Wi-Fi</string>

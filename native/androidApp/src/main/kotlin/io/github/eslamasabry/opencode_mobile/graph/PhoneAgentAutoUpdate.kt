@@ -22,6 +22,12 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.install.AgentAutoUpdater
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecord
+import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord
+import io.github.eslamasabry.opencode_mobile.SetupRunner
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecorded
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateJobs
@@ -72,20 +78,47 @@ class PhoneAgentAutoUpdate(
      * is looked at now rather than at the next 30 s look.
      */
     fun allowMeteredOnce(sharedOnly: Boolean = false) {
-        val updater = updaterRef ?: return
         if (sharedOnly) {
             // OpenCode's yes covers the shared parts it waits for (Node.js, the helper) and nothing else: the
             // agents the person chose keep waiting for Wi-Fi.
             appScope.launch(dispatchers.io) {
-                safely { choices.updateShared(meteredAllowed = true, alongsideAgents = true) }
+                safely { updateShared(meteredAllowed = true, alongsideAgents = true) }
             }
             return
         }
+        val updater = updaterRef ?: return
         if (choices.offer.value?.neededGoesAhead == true) {
-            appScope.launch(dispatchers.io) { safely { choices.updateShared(meteredAllowed = true) } }
+            appScope.launch(dispatchers.io) { safely { updateShared(meteredAllowed = true) } }
         }
         updater.allowMeteredOnce()
         appScope.launch(dispatchers.io) { safely { updater.changed() } }
+    }
+
+    private val sharedWatch = Mutex()
+
+    private suspend fun updateShared(meteredAllowed: Boolean, alongsideAgents: Boolean = false) {
+        val parts = choices.offer.value?.items.orEmpty().filter { it.neededWhen != null }
+        if (!choices.updateShared(meteredAllowed, alongsideAgents)) return
+        val runner = SetupRunner.get(app)
+        val first = SetupJobRecord.parse(runner.status()) ?: return
+        // A shared job ends with Paseo. Ordinary agent installs append the anchor agent's payload.
+        if (first.components.lastOrNull()?.id != AgentInstaller.AGENT_PASEO) return
+        appScope.launch(dispatchers.io) {
+            sharedWatch.withLock { safely { followSharedJob(runner, first.jobId, parts) } }
+        }
+    }
+
+    private suspend fun followSharedJob(runner: SetupRunner, jobId: String, parts: List<AgentUpdateItem>) {
+        try {
+            while (true) {
+                val job = SetupJobRecord.parse(runner.status()) ?: return
+                if (job.jobId != jobId || job.state != "running") return
+                downloads.sharedRunning.value = sharedDownloadFact(job, parts)
+                delay(1.seconds)
+            }
+        } finally {
+            downloads.sharedRunning.value = null
+        }
     }
 
     @Volatile private var updaterRef: AgentAutoUpdater? = null
@@ -271,7 +304,7 @@ class PhoneAgentAutoUpdate(
         // answered: an empty store is a valid start (zero decisions), and a read that hangs is given up and logged.
         val warm = kotlinx.coroutines.withTimeoutOrNull(WARM_LIMIT_SECONDS.seconds) { phones.warmForUpdate() } == true
         val read = kotlinx.coroutines.withTimeoutOrNull(CHOICES_LIMIT_SECONDS.seconds) { choices.refresh() } != null
-        if (warm && read) choices.updateShared(meteredAllowed = false)
+        if (warm && read) updateShared(meteredAllowed = false)
         // One line when the picture changes: whether the choices were read at all, how many rows, and whether the
         // sheet is due (the sheet that never showed left no line in any tag).
         val offer = choices.offer.value
