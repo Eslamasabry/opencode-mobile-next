@@ -43,8 +43,8 @@
     <string name="usageCurrentProject">Progetto corrente</string>
     <string name="usageSessions">Conversazioni</string>
     <string name="usagePrompts">Prompt</string>
-    <string name="usageInput">Input</string>
-    <string name="usageOutput">Output</string>
+    <string name="usageInput">Ingresso</string>
+    <string name="usageOutput">Uscita</string>
     <string name="usageCacheRead">Lettura cache</string>
     <string name="usageCacheWrite">Scrittura cache</string>
     <string name="mcpAdd">Aggiungi server MCP</string>
@@ -172,7 +172,7 @@
     <string name="e7WorkspaceDisconnect">Disconnetti</string>
     <string name="e7WorkspaceConnected">Connesso</string>
     <string name="e7WorkspaceConnecting">Connessione in corso</string>
-    <string name="e7WorkspaceOffline">Offline</string>
+    <string name="e7WorkspaceOffline">Senza connessione</string>
     <string name="e7WorkspaceJustNow">Proprio ora</string>
     <string name="e7WorkspaceMinutesAgo">%1$d min fa</string>
     <string name="e7WorkspaceHoursAgo">%1$dh fa</string>
@@ -597,7 +597,7 @@
     <string name="settingsV3VoiceTyping">Dettatura vocale</string>
     <string name="settingsV3Permissions">Autorizzazioni e automazione</string>
     <string name="settingsV3Notifications">Notifiche</string>
-    <string name="settingsV3Background">Background</string>
+    <string name="settingsV3Background">Sfondo</string>
     <string name="settingsV3Language">Lingua</string>
     <string name="settingsV3NotConnected">Non connesso</string>
     <string name="settingsV3StatusVersion">Stato e versione</string>

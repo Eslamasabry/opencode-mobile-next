@@ -291,7 +291,7 @@
     <string name="termuxProcsKindClaudeCode">Claude Code</string>
     <string name="termuxProcsKindDevService">Servizio di sviluppo</string>
     <string name="termuxProcsKindTerminal">Terminale</string>
-    <string name="termuxProcsKindHelper">Helper</string>
+    <string name="termuxProcsKindHelper">Assistente</string>
     <string name="termuxProcsBusy">Occupato</string>
     <string name="termuxProcsIdle">Inattivo</string>
     <string name="termuxProcsRunningFor">in esecuzione da %1$s</string>

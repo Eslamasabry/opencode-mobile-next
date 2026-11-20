@@ -20,7 +20,7 @@
     <string name="fbKindTopic">Argomento</string>
     <string name="fbKindEvent">Evento</string>
     <string name="fbKindOther">Elemento</string>
-    <string name="fbMemoryTitle">Memory</string>
+    <string name="fbMemoryTitle">Memoria</string>
     <string name="fbMemoryFromFactsBook">%1$d in attesa</string>
     <string name="fbMemoryFromFactsBookNone">Tutto a posto</string>
     <plurals name="fbMemoryReview">

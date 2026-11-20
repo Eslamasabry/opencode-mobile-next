@@ -177,7 +177,7 @@
     <string name="readerUiSymbolFile">File</string>
     <string name="readerUiSymbolModule">Modulo</string>
     <string name="readerUiSymbolNamespace">Namespace</string>
-    <string name="readerUiSymbolPackage">Package</string>
+    <string name="readerUiSymbolPackage">Pacchetto</string>
     <string name="readerUiSymbolClass">Classe</string>
     <string name="readerUiSymbolMethod">Metodo</string>
     <string name="readerUiSymbolProperty">Proprietà</string>
@@ -291,7 +291,7 @@
     <string name="e7LibraryEnterAValue">Inserisci un valore</string>
     <string name="e7LibraryTheServerReturnedAnUnsafeAuthorizationLink">Il server ha restituito un link di autorizzazione non sicuro. Sono ammessi solo link HTTPS con host valido e senza credenziali incorporate.</string>
     <string name="e7LibraryCouldNotLoadThisSection">Impossibile caricare questa sezione</string>
-    <string name="e7LibrarySkills">Skills</string>
+    <string name="e7LibrarySkills">Skill</string>
     <string name="e7LibraryNoSkillsAvailable">Nessuna skill disponibile</string>
     <string name="e7LibraryUnavailable">Non disponibile</string>
     <string name="e7LibraryFinishOrCancelTheCurrentMCPAuthorization">Completa o annulla prima l'autorizzazione MCP in corso.</string>

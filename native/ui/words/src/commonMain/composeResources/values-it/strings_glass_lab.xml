@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="glassLabTitle">Glass lab</string>
+    <string name="glassLabTitle">Laboratorio del vetro</string>
     <string name="glassLabRowLine">Regola ogni valore glass su un'anteprima dal vivo (build di test)</string>
     <string name="glassLabHandle">Controlli glass</string>
     <string name="glassLabHandleOpen">Aperto</string>

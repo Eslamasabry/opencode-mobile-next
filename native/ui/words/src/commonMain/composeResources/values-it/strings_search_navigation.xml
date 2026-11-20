@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="nativeSearchPlaceChats">Conversazioni</string>
-    <string name="nativeSearchAliasesChats">Chat; sessioni</string>
+    <string name="nativeSearchAliasesChats">Conversazioni; cronologia</string>
     <string name="nativeSearchPlaceProjectFiles">File del progetto</string>
     <string name="nativeSearchAliasesProjectFiles">File; cartelle</string>
     <string name="nativeSearchPlaceProjectChanges">Modifiche</string>
@@ -16,7 +16,7 @@
     <string name="nativeSearchPlaceProjectSearch">Cerca nel progetto</string>
     <string name="nativeSearchAliasesProjectSearch">Trova testo; file; simboli</string>
     <string name="nativeSearchPlaceAllConversations">Cerca in tutte le conversazioni</string>
-    <string name="nativeSearchAliasesAllConversations">Sessioni globali; cronologia</string>
+    <string name="nativeSearchAliasesAllConversations">Conversazioni globali; cronologia</string>
     <string name="nativeSearchPlaceSettings">Impostazioni</string>
     <string name="nativeSearchAliasesSettings">Preferenze</string>
     <string name="nativeSearchPlaceModels">Modelli e valori predefiniti</string>

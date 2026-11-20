@@ -40,14 +40,14 @@
     <string name="connectionPasswordUnreadableDetails">L'archiviazione sicura di questo telefono non è riuscita ad aprire la password salvata per questo server. Può accadere dopo il ripristino del telefono da un backup o dopo una modifica del blocco schermo. La password non è stata cambiata: inseriscila di nuovo per connetterti.</string>
     <string name="connectionTokenUnreadableDetails">L'archiviazione sicura di questo telefono non è riuscita ad aprire il token salvato per questo server. Può accadere dopo il ripristino del telefono da un backup o dopo una modifica del blocco schermo. Il token non è stato cambiato: inseriscilo di nuovo per connetterti.</string>
     <string name="updateConnectionToken">Aggiorna token</string>
-    <string name="paseoAddressHint">ws://100.64.0.1:6767 or wss://paseo.example</string>
+    <string name="paseoAddressHint">ws://100.64.0.1:6767 o wss://paseo.example</string>
     <string name="paseoPasswordLabel">Password del daemon (opzionale)</string>
     <string name="paseoPasswordHelp">Impostala con "paseo daemon set-password". È archiviata nell'archiviazione sicura di questo dispositivo.</string>
     <string name="paseoSetupNotice">Esegui "paseo start --no-relay" sul computer su cui è installato Claude Code o Pi. Questa app non usa mai il relay Paseo: connettiti su questo dispositivo o attraverso la tua rete privata.</string>
     <string name="connectionDisplayName">Nome visualizzato (opzionale)</string>
     <string name="connectionDisplayNameHint">Per impostazione predefinita, l'host del server</string>
     <string name="connectionServerAddress">Indirizzo del server</string>
-    <string name="codexAddressHint">wss://codex.example or ws://127.0.0.1:4500</string>
+    <string name="codexAddressHint">wss://codex.example o ws://127.0.0.1:4500</string>
     <string name="codexProjectFolder">Cartella del progetto sul server</string>
     <string name="codexTokenReentry">Inserisci di nuovo il token di connessione</string>
     <string name="codexTokenLabel">Token di connessione</string>
