@@ -184,7 +184,7 @@ class ChatsScreenTest {
         onAllNodesWithText("Dismiss").assertCountEquals(0)
         onAllNodesWithText("Restart OpenCode").assertCountEquals(0)
         // The person's own stop is never read as a failure.
-        onAllNodesWithText("isn’t answering", substring = true).assertCountEquals(0)
+        onAllNodesWithText("answering", substring = true).assertCountEquals(0)
     }
 
     @Test
@@ -197,7 +197,7 @@ class ChatsScreenTest {
                 Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }
             }
             onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
-            onAllNodesWithText("isn’t answering", substring = true).assertCountEquals(0)
+            onAllNodesWithText("answering", substring = true).assertCountEquals(0)
             onAllNodesWithText("Try again").assertCountEquals(0)
             onNodeWithText("Start OpenCode").performClick()
             assertEquals(listOf("start p1"), actions.calls)
@@ -212,7 +212,7 @@ class ChatsScreenTest {
                 Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), RecordingChatsActions()) }
             }
             onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(0)
-            onAllNodesWithText("isn’t answering", substring = true).assertCountEquals(1)
+            onAllNodesWithText("isn't answering", substring = true).assertCountEquals(1)
             onAllNodesWithText("Try again").assertCountEquals(1)
         }
 
