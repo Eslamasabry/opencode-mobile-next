@@ -790,4 +790,5 @@
     <string name="appearanceWaitMarksInk">Mực</string>
     <string name="appearanceWaitMarksColour">Màu</string>
     <string name="appearanceWaitMarksNote">Những hình nhỏ chuyển động bên cạnh dòng chữ như “Đang khởi động OpenCode…”.</string>
+    <string name="e7LocaleUiItalian">Italiano</string>
 </resources>

@@ -791,4 +791,5 @@
     <string name="appearanceWaitMarksInk">インク</string>
     <string name="appearanceWaitMarksColour">カラー</string>
     <string name="appearanceWaitMarksNote">「OpenCodeを起動中…」などの言葉の横に出る、小さな動く絵です。</string>
+    <string name="e7LocaleUiItalian">Italiano</string>
 </resources>

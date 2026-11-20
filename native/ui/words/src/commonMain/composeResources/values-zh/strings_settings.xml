@@ -791,4 +791,5 @@
     <string name="appearanceWaitMarksInk">墨色</string>
     <string name="appearanceWaitMarksColour">彩色</string>
     <string name="appearanceWaitMarksNote">显示在“正在启动 OpenCode…”等文字旁边的小动画。</string>
+    <string name="e7LocaleUiItalian">Italiano</string>
 </resources>
