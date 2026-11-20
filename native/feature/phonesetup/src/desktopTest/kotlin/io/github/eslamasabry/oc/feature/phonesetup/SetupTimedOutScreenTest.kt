@@ -125,7 +125,8 @@ class SetupTimedOutScreenTest {
                 quietSeconds = 45,
             )
         run(ui(running), Actions()) {
-            onNodeWithText("Unpacking files · \u20662:05\u2069").assertExists()
+            // The clock says whose it is ("This step"): a step's own, never the whole job's (setupStepClock).
+            onNodeWithText("Unpacking files · This step · \u20662:05\u2069").assertExists()
             onNodeWithText("Still working. Long steps can take several minutes.").assertExists()
         }
     }

@@ -21,6 +21,8 @@ class OpenCodeIdleSettleTest {
         override val runtime: String = "opencode2"
         override val switchPending: Boolean = false
         override val installProblem: Boolean = false
+        // The person chose Update (the choice gate).
+        override val updateAllowed: Boolean = true
     }
 
     private class Jobs : OpenCodeUpdateJobs {

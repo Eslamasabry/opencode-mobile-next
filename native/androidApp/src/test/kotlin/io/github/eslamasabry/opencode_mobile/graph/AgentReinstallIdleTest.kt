@@ -54,6 +54,8 @@ class AgentReinstallIdleTest {
                 override val switchPending: Boolean = false
                 override val installProblem: Boolean = false
                 override val metered: Boolean = false
+                // The person chose Update for it on the sheet (the choice gate).
+                override fun updateAllowed(agent: AgentId): Boolean = true
             }
         val started = mutableListOf<AgentId>()
         val jobs =
