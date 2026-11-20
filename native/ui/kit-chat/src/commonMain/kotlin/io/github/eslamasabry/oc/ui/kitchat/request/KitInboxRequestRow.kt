@@ -35,6 +35,12 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
+/** The two answers' looks on Home's waiting row: the refusing answer is never the accented one. */
+internal data class InboxAnswerRoles(val reject: KitButtonRole, val allow: KitButtonRole)
+
+internal fun inboxAnswerRoles(primary: Boolean): InboxAnswerRoles =
+    InboxAnswerRoles(reject = KitButtonRole.Tertiary, allow = if (primary) KitButtonRole.Primary else KitButtonRole.Secondary)
+
 /** The waiting Inbox row (`kit_request_row.dart`): place, question, command and trailing answers. */
 @Composable
 public fun KitInboxRequestRow(
@@ -110,8 +116,9 @@ public fun KitInboxRequestRow(
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
-                KitButton(rejectLabel!!, onReject!!, role = KitButtonRole.Tertiary, enabled = enabled)
-                KitButton(allowLabel!!, onAllow!!, role = if (primary) KitButtonRole.Primary else KitButtonRole.Secondary, enabled = enabled, maxLines = 1)
+                val roles = inboxAnswerRoles(primary)
+                KitButton(rejectLabel!!, onReject!!, role = roles.reject, enabled = enabled)
+                KitButton(allowLabel!!, onAllow!!, role = roles.allow, enabled = enabled, maxLines = 1)
             }
         }
         if (ifIgnored != null) {
