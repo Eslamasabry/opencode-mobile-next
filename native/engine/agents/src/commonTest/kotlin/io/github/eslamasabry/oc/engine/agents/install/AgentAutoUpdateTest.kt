@@ -74,6 +74,10 @@ class AgentAutoUpdateTest {
         override var installProblem: Boolean = false
         override var metered: Boolean = false
         override var resume: AgentId? = null
+
+        /** The person's decision (the update sheet): which agents are chosen to be updated. All, unless a test says. */
+        var allowed: Set<AgentId> = setOf(AgentId("claude"), AgentId("codex"), AgentId("qwen"))
+        override fun updateAllowed(agent: AgentId): Boolean = agent in allowed
     }
 
     private class Jobs : AgentUpdateJobs {
@@ -101,6 +105,25 @@ class AgentAutoUpdateTest {
         host.pinKey = "paseo 0.15.5 claude 2.1.322"
         updater.changed()
         assertEquals(listOf(claude, claude), jobs.started)
+    }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE nothing moves without a decision, and the chosen agent alone runs once it is given`() = runTest {
+        val host = Host().apply {
+            installed = listOf(claude, codex)
+            behind = setOf(claude, codex)
+            allowed = emptySet()
+        }
+        val jobs = Jobs()
+        val updater = AgentAutoUpdater(host, jobs) { false }
+        updater.changed()
+        updater.changed()
+        // No decision: no install starts and nothing is spent, however often it looks.
+        assertTrue(jobs.started.isEmpty())
+        host.allowed = setOf(codex)
+        updater.changed()
+        // Only the agent the person chose; Claude was not chosen and is never started.
+        assertEquals(listOf(codex), jobs.started)
     }
 
     @Test
