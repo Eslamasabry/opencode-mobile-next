@@ -8,12 +8,10 @@ import kotlin.test.assertEquals
 
 /** B-AGENT-SIZE-001: one unit for a download's size, so the sheet, Home's line, the ask and the room check agree. */
 class DownloadSizeUnitTest {
-    private val mib = 1024L * 1024L
-
     @Test
     fun `B-AGENT-SIZE-001 the update sheet says the same OpenCode size as Home's line`() {
         val sheet = PhoneSizes.text(HomeDownloadSizes.bytesOf(HomeDownloadKind.OpenCode))
-        assertEquals("130 MB", sheet, "the sheet's words read the bytes in PhoneSizes' unit; Home says 130")
+        assertEquals("130 MB", sheet, "the sheet reads 130,000,000 bytes as 130 MB; Home says 130")
         assertEquals(130, HomeDownloadSizes.of(HomeDownloadKind.OpenCode))
     }
 

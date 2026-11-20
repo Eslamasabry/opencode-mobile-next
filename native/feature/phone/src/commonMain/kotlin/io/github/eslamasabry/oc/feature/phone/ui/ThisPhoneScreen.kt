@@ -628,16 +628,16 @@ private val noticeEdge: Modifier
 @Composable
 private fun storageSize(bytes: Long): String =
     when {
-        bytes >= 1_073_741_824L ->
+        bytes >= 1_000_000_000L ->
             stringResource(
                 Res.string.termuxStorageBytesGb,
-                "${bytes / 1_073_741_824L}.${bytes % 1_073_741_824L * 10 / 1_073_741_824L}",
+                "${bytes / 1_000_000_000L}.${bytes % 1_000_000_000L * 10 / 1_000_000_000L}",
             )
-        bytes >= 1_048_576L ->
+        bytes >= 1_000_000L ->
             stringResource(
                 Res.string.termuxStorageBytesMb,
-                "${bytes / 1_048_576L}.${bytes % 1_048_576L * 10 / 1_048_576L}",
+                "${bytes / 1_000_000L}.${bytes % 1_000_000L * 10 / 1_000_000L}",
             )
-        bytes >= 1_024L -> stringResource(Res.string.termuxStorageBytesKb, "${bytes / 1_024L}")
+        bytes >= 1_000L -> stringResource(Res.string.termuxStorageBytesKb, "${bytes / 1_000L}")
         else -> stringResource(Res.string.termuxStorageBytesB, "$bytes")
     }

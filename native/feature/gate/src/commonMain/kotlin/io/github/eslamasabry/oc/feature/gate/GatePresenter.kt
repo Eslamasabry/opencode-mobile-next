@@ -261,11 +261,11 @@ public class GatePresenter(
 
         /** The needed space in the person's terms ("120 MB", "1.5 GB"); never a raw byte count. */
         public fun formatBytes(bytes: Long): String {
-            val mb = bytes / (1024.0 * 1024.0)
-            return if (mb < 1024) {
+            val mb = bytes / 1_000_000.0
+            return if (mb < 1000) {
                 "${kotlin.math.ceil(mb).toLong().coerceAtLeast(1)} MB"
             } else {
-                val gbTenths = kotlin.math.ceil(mb / 1024.0 * 10).toLong()
+                val gbTenths = kotlin.math.ceil(mb / 1000.0 * 10).toLong()
                 "${gbTenths / 10}.${gbTenths % 10} GB"
             }
         }
