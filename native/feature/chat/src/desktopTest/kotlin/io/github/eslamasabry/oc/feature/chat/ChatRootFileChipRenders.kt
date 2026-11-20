@@ -44,11 +44,15 @@ import kotlinx.collections.immutable.toPersistentList
 /**
  * Picture only, asserts nothing: a reply that names files at the project root in inline code, drawn the way the chat
  * draws it once those names are confirmed as files (the root listing holds notes.txt and README.md; docs.md is not
- * there). Writes PNGs to `ROOT_FILE_CHIP_OUT`; does nothing when that is unset.
+ * there). Writes PNGs to `ROOT_FILE_CHIP_OUT` (or the server's render-out folder); does nothing when neither exists.
  */
 @OptIn(ExperimentalTestApi::class)
 class ChatRootFileChipRenders {
-    private val out = System.getenv("ROOT_FILE_CHIP_OUT")?.let { File(it).also(File::mkdirs) }
+    // The environment variable, or (on the picture server, which gets no variables) its render-out folder; nowhere else.
+    private val out =
+        (System.getenv("ROOT_FILE_CHIP_OUT")?.let(::File)
+                ?: File(System.getProperty("user.home"), "render-out").takeIf { it.isDirectory }?.resolve("root-file-chip"))
+            ?.also(File::mkdirs)
 
     private val composerActions =
         object : BasicComposerActions {
