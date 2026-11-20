@@ -58,14 +58,25 @@ import javax.imageio.ImageIO
 class ChatStripClearRenders {
     private val rows = (0 until 40).map { i -> "Row $i: the build finished and every check passed, then the notes were written." }
 
+    /** Every style, theme and navigation mode at 2.625; the dark gesture case also at 2.0 and 3.0. */
+    private val cases =
+        listOf(Style.Solid, Style.Glass).flatMap { style ->
+            listOf(true, false).flatMap { dark ->
+                listOf("gesture" to 24, "buttons" to 48).flatMap { (mode, nav) ->
+                    val densities = if (dark && mode == "gesture") listOf(2.0f, 2.625f, 3.0f) else listOf(2.625f)
+                    densities.map { d -> Case(style, dark, mode, nav, d) }
+                }
+            }
+        }
+
+    private data class Case(val style: Style, val dark: Boolean, val mode: String, val nav: Int, val density: Float)
+
     @Test
     fun renders() {
         val out = File(System.getenv("STRIP_RENDER_DIR") ?: "build/strip-renders").apply { mkdirs() }
-        for (style in listOf(Style.Solid, Style.Glass)) for (dark in listOf(true, false)) for ((mode, nav) in listOf("gesture" to 24, "buttons" to 48)) {
-            for (density in listOf(2.0f, 2.625f, 3.0f)) {
-                if (density != 2.625f && !(dark && mode == "gesture")) continue
-                shot(File(out, "strip-${style.name.lowercase()}-${if (dark) "dark" else "light"}-$mode-d$density.png"), style, dark, nav, density)
-            }
+        for (c in cases) {
+            val name = "strip-${c.style.name.lowercase()}-${if (c.dark) "dark" else "light"}-${c.mode}-d${c.density}.png"
+            shot(File(out, name), c.style, c.dark, c.nav, c.density)
         }
     }
 
