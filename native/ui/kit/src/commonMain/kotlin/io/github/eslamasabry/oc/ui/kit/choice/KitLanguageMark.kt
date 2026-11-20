@@ -11,11 +11,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
@@ -29,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -51,7 +50,7 @@ public sealed interface KitLanguageMark {
 @Composable
 public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
-    val ring = if (selected) Modifier.selectionRing(colors.accent) else Modifier
+    val ring = if (selected) Modifier.kitHairlineBorder(RING_WIDTH, colors.accent, CircleShape) else Modifier
     when (mark) {
         is KitLanguageMark.Flag ->
             if (KitFlagShapes.flags.containsKey(mark.country)) KitCircleFlag(mark.country, modifier.then(ring))
@@ -73,14 +72,6 @@ public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: M
             }
     }
 }
-
-/** The chosen mark's accent ring: a 2 dp circle stroke over the mark's edge, a selection cue and not a surface. */
-private fun Modifier.selectionRing(color: Color): Modifier =
-    drawWithContent {
-        drawContent()
-        val width = RING_WIDTH.toPx()
-        drawCircle(color, radius = (size.minDimension - width) / 2f, style = Stroke(width))
-    }
 
 @Composable
 private fun Letters(text: String, selected: Boolean, modifier: Modifier) {
@@ -119,6 +110,7 @@ public fun KitCircleFlag(country: String, modifier: Modifier = Modifier, size: D
 }
 
 private val MARK_SIZE = 40.dp
+/** The chosen mark's accent ring, drawn by the kit's own edge helper. */
 private val RING_WIDTH = 2.dp
 private const val OPAQUE = "FF"
 private const val HEX = 16
