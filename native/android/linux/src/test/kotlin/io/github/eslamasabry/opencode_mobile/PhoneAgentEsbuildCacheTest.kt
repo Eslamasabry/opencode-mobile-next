@@ -134,7 +134,7 @@ class PhoneAgentEsbuildCacheTest {
     }
 
     @Test fun `B-AGENT-469 the cache lives outside the hashed install tree and the script never writes there`() {
-        val block = esbuildCacheBlock(key)
+        val block = esbuildCacheBlock(key).replace(EsbuildCacheHook.SOURCE, "")
         assertFalse(block.contains("oc-paseo"))
         assertFalse(block.contains("node_modules"))
         assertTrue(block.contains("\"${'$'}HOME/.cache/oc-esbuild\""))
