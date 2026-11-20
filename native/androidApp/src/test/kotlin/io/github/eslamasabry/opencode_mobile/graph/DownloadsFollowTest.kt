@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadMapping
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHelperStep
@@ -70,5 +71,17 @@ class DownloadsFollowTest {
         assertEquals(listOf(helper), withChosenOpenCode(listOf(helper), offer(rows, AgentUpdateNetwork.Unmetered)))
         val own = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(40))
         assertEquals(listOf(own), withChosenOpenCode(listOf(own), offer(rows)))
+    }
+
+    @Test
+    fun `B-DL-434 only optional agents wait after the named downloads finish`() {
+        val remaining = offer(listOf(item("claude", 370), item("codex", 190), item("antigravity", 130)))
+        val updaterWait = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)
+        val rows = withChosenOpenCode(listOf(updaterWait), remaining)
+        val held = heldAgentsOf(remaining)
+        assertEquals(
+            listOf(HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 690))),
+            HomeDownloadMapping.withHeldAgents(rows, held).map { it.phase },
+        )
     }
 }

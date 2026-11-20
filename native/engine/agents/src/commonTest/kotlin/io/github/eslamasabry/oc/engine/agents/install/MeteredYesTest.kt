@@ -23,6 +23,7 @@ class MeteredYesTest {
             choice = null, neededWhen = need,
         )
 
+    private var sharedInstalled = false
     private val host =
         object : AgentChoiceHost {
             override suspend fun inventory() =
@@ -31,7 +32,7 @@ class MeteredYesTest {
                         item(AgentId.OPENCODE.raw),
                         item("claude"), item("codex"), item("gemini"), item("qwen"),
                         item("paseo", AgentUpdateGroup.Needed, AgentNeedRule.WithAnyUpdate),
-                    ),
+                    ).filterNot { sharedInstalled && it.group == AgentUpdateGroup.Needed },
                     network = AgentUpdateNetwork.Metered,
                     freeBytes = null,
                 )
@@ -77,5 +78,20 @@ class MeteredYesTest {
         assertEquals(StartRefusal.NotChosen, startRefusal(allowed = false, needsShared = true) { false })
         assertEquals(StartRefusal.WorkRunning, startRefusal(allowed = true, needsShared = false) { true })
         assertEquals(null, startRefusal(allowed = true, needsShared = false) { false })
+    }
+
+    @Test
+    fun `B-DL-433 one yes survives a refused helper start and releases both named updates`() = runTest {
+        val engine = engineWithFourAgentsChosen()
+        val starts = mutableListOf<String>()
+        assertFalse(engine.startShared(meteredAllowed = true, alongsideAgents = true) { false })
+        engine.refresh()
+        assertFalse(engine.startIfChosen(AgentId.OPENCODE) { starts.add("OpenCode") })
+        assertTrue(engine.startShared(meteredAllowed = false) { starts.add("helper") })
+        assertFalse(engine.startShared(meteredAllowed = false) { starts.add("duplicate") })
+        sharedInstalled = true
+        engine.refresh()
+        assertTrue(engine.startIfChosen(AgentId.OPENCODE) { starts.add("OpenCode") })
+        assertEquals(listOf("helper", "OpenCode"), starts)
     }
 }
