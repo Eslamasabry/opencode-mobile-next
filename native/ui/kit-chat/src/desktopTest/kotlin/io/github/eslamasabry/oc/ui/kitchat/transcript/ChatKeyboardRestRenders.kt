@@ -56,6 +56,10 @@ import javax.imageio.ImageIO
  */
 @Suppress("MaxLineLength")
 class ChatKeyboardRestRenders {
+    private val style = Style.Solid
+    private val dark = true
+    private val density = 2.625f
+
     private val rows = (0 until 40).map { i -> "Row $i: the build finished and every check passed, then the notes were written." }
 
     /** Keyboard closed (the 24 dp gesture strip) and open (330 dp), at rest and scrolled away (the jump arrow shows). */
@@ -67,7 +71,7 @@ class ChatKeyboardRestRenders {
         }
     }
 
-    private fun shot(file: File, bottomDp: Int, away: Boolean, style: Style = Style.Solid, dark: Boolean = true, density: Float = 2.625f) =
+    private fun shot(file: File, bottomDp: Int, away: Boolean) =
         runDesktopComposeUiTest((W * density).toInt(), (H * density).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(density)) {
