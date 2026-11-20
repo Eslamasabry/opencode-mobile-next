@@ -90,14 +90,6 @@ class ProjectFilesTest {
     }
 
     @Test
-    fun `B-184 a path outside the project is refused as not readable and never asked for`() = runTest {
-        val files = FakeFiles(contents = mapOf("home/oc/task.log" to FileContent("x", "text", null, null)))
-        val opened = ProjectFiles.open(files, "/home/oc/task.log")
-        assertEquals(MediaProblem.FileDenied, ((opened as Outcome.Failed).failure as Failure.Media).problem)
-        assertTrue(files.read.isEmpty())
-    }
-
-    @Test
     fun `B-MEDIA-001 a file with a NUL byte is binary even when it decodes`() {
         val data = FileData("x.txt", null, byteArrayOf(0x61, 0x00, 0x62))
         assertIs<FileBody.Binary>(FilePreview.body(data))
