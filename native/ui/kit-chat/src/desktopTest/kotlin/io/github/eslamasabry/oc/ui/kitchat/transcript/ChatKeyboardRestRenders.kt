@@ -58,7 +58,7 @@ import javax.imageio.ImageIO
 class ChatKeyboardRestRenders {
     private val style = Style.Solid
     private val dark = true
-    private val density = 2.625f
+    private val scale = 2.625f
 
     private val rows = (0 until 40).map { i -> "Row $i: the build finished and every check passed, then the notes were written." }
 
@@ -72,9 +72,9 @@ class ChatKeyboardRestRenders {
     }
 
     private fun shot(file: File, bottomDp: Int, away: Boolean) =
-        runDesktopComposeUiTest((W * density).toInt(), (H * density).toInt()) {
+        runDesktopComposeUiTest((W * scale).toInt(), (H * scale).toInt()) {
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(density)) {
+                CompositionLocalProvider(LocalDensity provides Density(scale)) {
                     KitTheme(
                         KitAppearance(
                             mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light,
