@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.DpRect
@@ -371,9 +372,14 @@ class KitLampPanelTest {
     /** No item of the list straddles the list's top edge: each is fully in view or fully out of it. */
     private fun ComposeUiTest.assertNoItemCutAtTop(what: String) {
         val top = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot().top.value
-        val items = onAllNodesWithTag(LAMP_PANEL_ITEM_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        val items = onAllNodesWithTag(LAMP_PANEL_ITEM_TAG, useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue(items.isNotEmpty(), "$what: items found")
-        for (b in items) assertTrue(b.bottom <= top + 0.5f || b.top >= top - 0.5f, "$what: an item (${b.top}..${b.bottom}) is cut by the list's top $top")
+        // The unclipped place and size: a node's boundsInRoot is already cut to the scroll viewport.
+        for (n in items) {
+            val from = n.positionInRoot.y
+            val to = from + n.size.height
+            assertTrue(to <= top + 0.5f || from >= top - 0.5f, "$what: an item ($from..$to) is cut by the list's top $top")
+        }
     }
 
     @Test
@@ -396,7 +402,7 @@ class KitLampPanelTest {
             onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 90f, durationMillis = 180) }
             waitForIdle()
             assertNoItemCutAtTop("after a swipe")
-            onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = top + 90f, endY = bottom - 4f, durationMillis = 180) }
+            onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeDown(startY = top + 90f, endY = bottom - 4f, durationMillis = 180) }
             waitForIdle()
             assertNoItemCutAtTop("after a swipe back")
         }
