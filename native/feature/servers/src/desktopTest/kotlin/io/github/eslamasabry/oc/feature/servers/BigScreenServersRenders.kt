@@ -105,6 +105,7 @@ class BigScreenServersRenders {
             Shot("tab1024", 1024, 768, 1f, ""),
             Shot("tabl", 1280, 800, 1f, ""),
             Shot("tabl", 1280, 800, 1.3f, "-t13"),
+            Shot("wide1600", 1600, 900, 1f, ""),
         )
 
     private val out = File("build/bigscreen").also { it.mkdirs() }

@@ -114,4 +114,5 @@
     <string name="editor40SaveChanges">Lưu thay đổi</string>
     <string name="editor40Stale">Máy chủ đã lưu này hoặc đăng nhập của nó đã thay đổi. Hãy đóng trang này và mở lại máy chủ trước khi thử.</string>
     <string name="editor40Deleted">Máy chủ này đã bị xóa. Hãy đóng trang này để quay lại danh sách máy chủ đã lưu.</string>
+    <string name="serversEditNamed">Sửa %1$s</string>
 </resources>

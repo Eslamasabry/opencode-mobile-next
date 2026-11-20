@@ -153,7 +153,7 @@ internal fun ServerSavedRows(
                     else actions.settings(server.id)
                 },
                 trailing =
-                    if (onSelect != null) KitRowTrailing.Chevron
+                    if (onSelect != null) KitRowTrailing.None
                     else KitRowTrailing.Menu(name, items, title = name),
             )
         }

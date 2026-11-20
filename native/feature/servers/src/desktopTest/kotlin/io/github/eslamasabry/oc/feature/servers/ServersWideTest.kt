@@ -11,6 +11,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -181,6 +182,8 @@ class ServersWideTest {
         showAt(1280, 800, { ServersScreen(listUi(), actions, onThisPhone = {}) }) {
             val rowBounds = onNodeWithText("Office desktop").getBoundsInRoot()
             val actionBounds = onNodeWithText("Open Home laptop").getBoundsInRoot()
+            onNodeWithText("Edit Home laptop").assertExists()
+            onNodeWithText("Conversations").assertExists()
             val delta = actionBounds.left.value - rowBounds.left.value
             assertTrue(
                 delta > 300f,
@@ -189,6 +192,7 @@ class ServersWideTest {
             onNodeWithText("Office desktop").performClick()
             waitForIdle()
             val deskAction = onNodeWithText("Connect to Office desktop").getBoundsInRoot()
+            onNodeWithText("Edit Office desktop").assertExists()
             assertTrue(
                 deskAction.left.value - rowBounds.left.value > 300f,
                 "Expected newly chosen server action ($deskAction) beside list row ($rowBounds)",
@@ -320,6 +324,44 @@ class ServersWideTest {
             waitForIdle()
             onNode(hasText("Office desktop", substring = true) and isSelected()).assertExists()
             onNode(hasText("Home laptop", substring = true) and isSelected()).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `B-SRV-304 servers wide fills every width from 840 to 1700 with no gap wider than gutter`() {
+        val widths = (840..1700 step 40).toList() + 1700
+        val gutter = 16f
+        val tolerance = 1f
+        for (width in widths.distinct()) {
+            showAt(width, 800, { ServersScreen(listUi(), RecordingServersActions(), onThisPhone = {}) }) {
+                val start = onNodeWithTag("servers-wide-start").getBoundsInRoot()
+                val end = onNodeWithTag("servers-wide-end").getBoundsInRoot()
+                val leftMargin = start.left.value
+                val rightMargin = width - end.right.value
+                val centerGap = end.left.value - start.right.value
+                val startWidth = start.right.value - start.left.value
+                val endWidth = end.right.value - end.left.value
+                assertTrue(
+                    leftMargin <= gutter + tolerance,
+                    "At ${width}dp left margin $leftMargin exceeded gutter $gutter (start=$start)",
+                )
+                assertTrue(
+                    rightMargin <= gutter + tolerance,
+                    "At ${width}dp right margin $rightMargin exceeded gutter $gutter (end=$end)",
+                )
+                assertTrue(
+                    centerGap in 0f..(gutter + tolerance),
+                    "At ${width}dp center gap $centerGap exceeded gutter $gutter (start=$start, end=$end)",
+                )
+                assertTrue(
+                    startWidth in 359f..561f,
+                    "At ${width}dp list column width $startWidth outside [360, 560]",
+                )
+                assertTrue(
+                    endWidth >= 359f,
+                    "At ${width}dp detail column width $endWidth below 360",
+                )
+            }
         }
     }
 }

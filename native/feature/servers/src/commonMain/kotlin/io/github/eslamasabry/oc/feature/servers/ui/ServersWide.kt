@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.servers.ui
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -10,11 +11,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
@@ -48,11 +50,10 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerReadyOpen
 import io.github.eslamasabry.oc.ui.words.res.agentAccountTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveAction
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
 import io.github.eslamasabry.oc.ui.words.res.connectionServerAddress
 import io.github.eslamasabry.oc.ui.words.res.connectorCardRuns
-import io.github.eslamasabry.oc.ui.words.res.e7SetupEditServer
-import io.github.eslamasabry.oc.ui.words.res.monitorSession
 import io.github.eslamasabry.oc.ui.words.res.otherServerWorking
 import io.github.eslamasabry.oc.ui.words.res.otherServerWorking__eq1
 import io.github.eslamasabry.oc.ui.words.res.rows40Move
@@ -61,6 +62,7 @@ import io.github.eslamasabry.oc.ui.words.res.serverRowConnected
 import io.github.eslamasabry.oc.ui.words.res.serverRowDetailsTitle
 import io.github.eslamasabry.oc.ui.words.res.serverRowQueuedWaiting
 import io.github.eslamasabry.oc.ui.words.res.serverRowQueuedWaiting__eq1
+import io.github.eslamasabry.oc.ui.words.res.serversEditNamed
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ConnectTo
 import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ServerSettings
@@ -73,10 +75,22 @@ internal fun isServersWide(windowClass: WindowClass, availableWidthDp: Float): B
     windowClass.isWide && availableWidthDp >= Layout.EXPANDED_FROM
 
 /**
+ * Start/list column width in dp on wide windows: grows with body width between [Layout.PANE_DETAIL_MIN_WIDTH]
+ * (360 dp) and [Layout.CONFIRM_WIDTH] (560 dp) while keeping at least [Layout.PANE_DETAIL_MIN_WIDTH] for detail.
+ */
+internal fun wideStartColumnWidthDp(bodyWidthDp: Float): Float {
+    val minStart = Layout.PANE_DETAIL_MIN_WIDTH.toFloat()
+    val maxStart = Layout.CONFIRM_WIDTH.toFloat()
+    val maxForDetail = (bodyWidthDp - Space.S4 - Layout.PANE_DETAIL_MIN_WIDTH).coerceAtLeast(minStart)
+    return (bodyWidthDp * WIDE_START_SHARE).coerceIn(minStart, minOf(maxStart, maxForDetail))
+}
+
+private const val WIDE_START_SHARE: Float = 0.45f
+
+/**
  * Shared Expanded (>= 840 dp) two-column frame for Servers pages:
- * starts at the top right under the top bar (title lives in the bar beside Back),
- * lays out two top-aligned, reading-capped columns horizontally centred when wider than two
- * reading columns, and scrolls vertically when content grows past the viewport.
+ * starts at the top right under the top bar, fills the full width between page gutters with no empty
+ * side bands (start column held to min/max, detail column taking the rest), and scrolls vertically.
  */
 @Composable
 internal fun ServersWideFrame(
@@ -86,38 +100,39 @@ internal fun ServersWideFrame(
     subHeader: (@Composable () -> Unit)? = null,
     scrollState: ScrollState = kitPageScrollState(),
 ) {
-    val maxGroupWidth = (Layout.READING_WIDTH * 2 + Space.S6).dp
-    Box(
-        Modifier.fillMaxSize().verticalScroll(scrollState),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(
-            Modifier.fillMaxWidth()
-                .widthIn(max = maxGroupWidth)
-                .padding(top = Space.S3.dp, bottom = Space.S6.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val startWidth = wideStartColumnWidthDp(maxWidth.value).dp
+        Box(
+            Modifier.fillMaxSize().verticalScroll(scrollState),
+            contentAlignment = Alignment.TopStart,
         ) {
-            headerAction?.let { action ->
+            Column(
+                Modifier.fillMaxWidth()
+                    .padding(top = Space.S3.dp, bottom = Space.S6.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+            ) {
+                headerAction?.let { action ->
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        action()
+                    }
+                }
+                subHeader?.let { banner ->
+                    Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
+                        banner()
+                    }
+                }
                 Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                    verticalAlignment = Alignment.Top,
                 ) {
-                    action()
+                    Box(Modifier.width(startWidth).testTag("servers-wide-start")) { start() }
+                    Box(Modifier.weight(1f).testTag("servers-wide-end")) { end() }
                 }
-            }
-            subHeader?.let { banner ->
-                Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
-                    banner()
-                }
-            }
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
-                verticalAlignment = Alignment.Top,
-            ) {
-                Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { start() }
-                Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { end() }
             }
         }
     }
@@ -215,7 +230,7 @@ internal fun WideServerDetailPanel(
                 if (activityNotes.isNotEmpty()) {
                     KitDivider()
                     WideFactRow(
-                        label = stringResource(Res.string.monitorSession),
+                        label = stringResource(Res.string.chatsHomeTitle),
                         value = activityNotes.joinToString(" · "),
                         mono = false,
                     )
@@ -253,7 +268,7 @@ internal fun WideServerDetailPanel(
                         }
                     }
                     KitButton(
-                        label = stringResource(Res.string.e7SetupEditServer),
+                        label = stringResource(Res.string.serversEditNamed, displayName),
                         onClick = { actions.edit(server.id) },
                         role = KitButtonRole.Secondary,
                         enabled = enabled,

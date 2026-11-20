@@ -134,4 +134,5 @@
     <string name="editor40SaveChanges">Guardar cambios</string>
     <string name="editor40Stale">Este servidor guardado o su inicio de sesión cambió. Cierra esta página y abre el servidor de nuevo antes de intentarlo.</string>
     <string name="editor40Deleted">Este servidor se quitó. Cierra esta página para volver a tus servidores guardados.</string>
+    <string name="serversEditNamed">Editar %1$s</string>
 </resources>
