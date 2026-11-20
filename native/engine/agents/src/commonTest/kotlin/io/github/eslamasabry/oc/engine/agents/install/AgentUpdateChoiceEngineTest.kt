@@ -34,7 +34,7 @@ class AgentUpdateChoiceEngineTest {
             override suspend fun remove(id: AgentId): Outcome<RemovalResult> = error("no removal here")
         }
 
-    private suspend fun chosen(network: AgentUpdateNetwork, vararg ids: AgentId): AgentUpdateChoiceEngine {
+    private suspend fun chosen(network: AgentUpdateNetwork, ids: List<AgentId>): AgentUpdateChoiceEngine {
         val items = listOf(optional(AgentId.OPENCODE, "OpenCode", 130), optional(AgentId.CLAUDE, "Claude Code", 120), helper)
         val engine = AgentUpdateChoiceEngine("100", FakeAgentPrefs(), host(network, items))
         engine.refresh()
@@ -44,7 +44,7 @@ class AgentUpdateChoiceEngineTest {
 
     @Test
     fun `B-AGENT-METERED-001 on mobile data a shared part waiting for Wi-Fi does not hold OpenCode back`() = runTest {
-        val engine = chosen(AgentUpdateNetwork.Metered, AgentId.OPENCODE, AgentId.CLAUDE)
+        val engine = chosen(AgentUpdateNetwork.Metered, listOf(AgentId.OPENCODE, AgentId.CLAUDE))
         var started = false
         assertTrue(engine.startIfChosen(AgentId.OPENCODE) { started = true; true }, "OpenCode goes at once")
         assertTrue(started)
@@ -52,13 +52,13 @@ class AgentUpdateChoiceEngineTest {
 
     @Test
     fun `B-AGENT-METERED-002 on a free network the shared part still goes ahead of OpenCode`() = runTest {
-        val engine = chosen(AgentUpdateNetwork.Unmetered, AgentId.OPENCODE)
+        val engine = chosen(AgentUpdateNetwork.Unmetered, listOf(AgentId.OPENCODE))
         assertFalse(engine.startIfChosen(AgentId.OPENCODE) { true })
     }
 
     @Test
     fun `B-AGENT-METERED-003 once the shared part has its own yes on mobile data it goes first again`() = runTest {
-        val engine = chosen(AgentUpdateNetwork.Metered, AgentId.OPENCODE)
+        val engine = chosen(AgentUpdateNetwork.Metered, listOf(AgentId.OPENCODE))
         assertTrue(engine.startShared(meteredAllowed = true) { true })
         assertFalse(engine.startIfChosen(AgentId.OPENCODE) { true })
     }
