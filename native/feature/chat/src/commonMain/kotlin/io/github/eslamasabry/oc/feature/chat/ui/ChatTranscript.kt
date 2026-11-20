@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
@@ -140,6 +141,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatLiveHideSteps
@@ -328,6 +330,13 @@ internal class SignInTurnReply(
 
 internal val LocalSignInTurnReply =
     androidx.compose.runtime.compositionLocalOf<SignInTurnReply?> { null }
+
+/**
+ * A send refused while an undo waits: what opens that undo's review (the staged line's Review), while one waits. The
+ * chat screen provides it; without it (no undo waiting) the refused send's row keeps Try again.
+ */
+internal val LocalUndoReview =
+    androidx.compose.runtime.compositionLocalOf<(() -> Unit)?> { null }
 
 /**
  * B2: a short, safe code for a send failure (no server text, no address): what QA asked to see
@@ -1087,20 +1096,38 @@ private fun PendingBubble(
                 )
             PendingState.Failed -> {
                 val failure = p.failure
+                val action = failedSendAction(failure, words, onRetry)
                 KitSendFailed(
                     lines = listOfNotNull(words.notSent, failure?.let(words.sendFailure)),
-                    actionLabel = words.tryAgain,
-                    onAction = onRetry,
+                    actionLabel = action.label,
+                    onAction = action.onAction,
                     details =
                         failure
                             ?.takeIf { words.details.isNotEmpty() }
                             ?.let { KitSendFailedDetails(words.details, words.copyDetails, failureCode(it), it.details) },
                     detailsTag = "chat-send-failure-details",
-                    actionTag = "chat-send-error-try-again",
+                    actionTag = action.tag,
                 )
             }
         }
     }
+}
+
+/** A failed send's one way on, its label and its test handle. */
+@Immutable
+private class FailedSendAction(val label: String, val onAction: () -> Unit, val tag: String)
+
+/**
+ * Refused while an undo waits: Try again is refused the same way until the undo is reviewed, so the row's one way on
+ * is that review (the staged line above hides while the keyboard is up). Any other failure: Try again.
+ */
+@Composable
+private fun failedSendAction(failure: Failure?, words: ChatListWords, onRetry: () -> Unit): FailedSendAction {
+    val review =
+        LocalUndoReview.current?.takeIf { (failure as? Failure.Refused)?.reason == RefusalReason.UndoUnresolved }
+    return if (review != null)
+        FailedSendAction(stringResource(Res.string.revertReview), review, "chat-send-review-undo")
+    else FailedSendAction(words.tryAgain, onRetry, "chat-send-error-try-again")
 }
 
 /**
