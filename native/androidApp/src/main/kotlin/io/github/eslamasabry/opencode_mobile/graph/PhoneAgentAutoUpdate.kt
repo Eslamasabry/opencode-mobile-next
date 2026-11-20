@@ -251,10 +251,23 @@ class PhoneAgentAutoUpdate(
         }
     }
 
+    private var lastChoicesLine = ""
+
     private suspend fun refreshChoices() {
-        if (phones.warmForUpdate()) {
-            choices.refresh()
-            choices.updateShared(meteredAllowed = false)
+        // Never gated on luck: the stores are asked to load (bounded), and the choices are read whether or not that
+        // answered: an empty store is a valid start (zero decisions), and a read that hangs is given up and logged.
+        val warm = kotlinx.coroutines.withTimeoutOrNull(WARM_LIMIT_SECONDS.seconds) { phones.warmForUpdate() } == true
+        val read = kotlinx.coroutines.withTimeoutOrNull(CHOICES_LIMIT_SECONDS.seconds) { choices.refresh() } != null
+        if (warm && read) choices.updateShared(meteredAllowed = false)
+        // One line when the picture changes: whether the choices were read at all, how many rows, and whether the
+        // sheet is due (the sheet that never showed left no line in any tag).
+        val offer = choices.offer.value
+        val line =
+            "update choices: warm=$warm read=$read offer ${offer?.items?.size ?: "none"} rows, " +
+                "sheetDue=${offer?.sheetDue}, answered=${offer?.answered}"
+        if (line != lastChoicesLine) {
+            lastChoicesLine = line
+            log.i { line }
         }
     }
 
@@ -411,6 +424,8 @@ class PhoneAgentAutoUpdate(
         /** Agent work that reads busy for two hours without a break is taken as a stale reading. */
         const val BUSY_BOUND_MS = 2L * 60 * 60 * 1000
         const val LOOK_EVERY = 30L
+        const val WARM_LIMIT_SECONDS = 20L
+        const val CHOICES_LIMIT_SECONDS = 120L
         const val WAIT_EVERY = 5L
         const val UNSTARTED_GRACE = 2L
         const val WAIT_STEPS = 180

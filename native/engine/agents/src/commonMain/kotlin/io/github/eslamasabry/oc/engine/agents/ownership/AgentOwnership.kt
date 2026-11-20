@@ -115,6 +115,7 @@ public class AgentOwnership(private val prefs: AgentPrefs) {
             key == AgentKeys.agentPhoneGate(owner) || key == AgentKeys.phoneAgentGateMigration(owner) ||
                 key == AgentKeys.phoneAgentFacts(owner) ||
                 key == AgentKeys.agentInstall(owner) || key == AgentKeys.agentInstallResult(owner) ||
+                key == AgentKeys.agentUpdating(owner) ||
                 key == AgentKeys.agentFeed(owner) ||
                 key == AgentKeys.phoneAgentsUsed(owner) || key.endsWith(".${owner.raw}${AgentKeys.AGENTS_SUFFIX}")
         }

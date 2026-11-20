@@ -83,6 +83,16 @@ object SecurityFeatureBindings {
                     "explicit per-server foreground monitor consent",
                 )
             )
+            // The agent whose automatic update runs (`oc.agentUpdating.<owner>`), so a stop in the middle is resumed.
+            register(
+                KeyShape(
+                    "oc.agentUpdating.",
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":engine:agents",
+                    "agent whose automatic update was started and not finished",
+                )
+            )
             // STATE: saved native state (pins, budgets, models, prompt history, pending commands and more).
             registerStateKeys(this)
             // PORT-SCREENS-2: reader choices, new-chat project, shared project folders, list sources, opening titles.

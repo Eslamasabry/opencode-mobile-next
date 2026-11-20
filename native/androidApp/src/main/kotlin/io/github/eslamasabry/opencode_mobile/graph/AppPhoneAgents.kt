@@ -214,7 +214,6 @@ class AppPhoneAgents(
     /** Whether the helper's install was in place at its pin when [readForUpdate] last looked; null before it ran. */
     @Volatile private var helperInPlace: Boolean? = null
 
-    /** The app build the last [readForUpdate] ran under, kept per phone: `oc.agentUpdateRead.<owner>`. */
     /** An install that brings the helper to its pin ended: the on-disk check no longer says behind. */
     internal fun noteHelperInPlace() {
         helperInPlace = true
@@ -289,19 +288,20 @@ class AppPhoneAgents(
         return state.copy(agents = (state.agents + rows).toImmutableList())
     }
 
-    private fun updateReadKey(owner: ProfileId) = "oc.agentUpdateRead.${owner.raw}"
+    /** One [readForUpdate] finished in this app run (in memory only: a new run reads again). */
+    @Volatile private var readThisRun = false
 
     /**
-     * True at the first look after an app update (the build differs from the one the last read ran under) or before
-     * any read: the automatic update then asks for one [readForUpdate] before it decides.
+     * True while the phone has an owner and no [readForUpdate] has finished in this app run: the automatic update
+     * asks for one before it decides. (A per-build "read done" mark was dropped: an unregistered per-profile key that,
+     * set after an empty read, kept a phone from ever reading again. An old mark is ignored.)
      */
     @Suppress("TooGenericExceptionCaught")
     internal fun updateReadDue(): Boolean =
         try {
             if (needsRestart) false
             else {
-                val owner = agentOwner(ownerId())
-                owner != null && gatePrefs(owner).string(updateReadKey(owner)) != BuildConfig.VERSION_CODE.toString()
+                agentOwner(ownerId()) != null && !readThisRun
             }
         } catch (e: CancellationException) {
             throw e
@@ -310,7 +310,7 @@ class AppPhoneAgents(
         }
 
     /** The agent whose automatic update was started and not finished, kept per phone: `oc.agentUpdating.<owner>`. */
-    private fun updatingKey(owner: ProfileId) = "oc.agentUpdating.${owner.raw}"
+    private fun updatingKey(owner: ProfileId) = AgentKeys.agentUpdating(owner)
 
     /** Records that the automatic update of [agent] runs (null: it ended), so a stop in the middle is resumed. */
     @Suppress("TooGenericExceptionCaught")
@@ -386,7 +386,7 @@ class AppPhoneAgents(
             helperInPlace = (place as? Outcome.Ok)?.value?.let { it == 0 }
         }
         if (stop.isStopped) return false
-        gatePrefs(owner).commit { putString(updateReadKey(owner), BuildConfig.VERSION_CODE.toString()) }
+        readThisRun = true
         return true
     }
 
@@ -441,12 +441,15 @@ class AppPhoneAgents(
         val owner = agentOwner(ownerId())
         if (owner == null || needsRestart || !linux.installed) return@read emptyMap()
         val installing = setupJobs.anySetupRunning() != false
+        // The updater's own facts (the versions its last read kept) stand in for a live read that gave nothing: the
+        // offer must name every agent the updater sees behind, or the updater waits for a decision nobody is asked.
+        val kept = keptFacts(owner)
         buildMap {
             for (agent in phoneCatalog()) {
                 if (stop.isStopped) break
                 val present = PhoneAgentPayloads.present(linux, requireNotNull(agent.recipe).executable)
                 val answer = versionOf(owner, agent, present, installing, stop)
-                val version = answer?.get("foundVersion") as? String
+                val version = (answer?.get("foundVersion") as? String) ?: kept[agent.id.raw]?.found
                 if (version != null) put(agent.id, version)
             }
         }

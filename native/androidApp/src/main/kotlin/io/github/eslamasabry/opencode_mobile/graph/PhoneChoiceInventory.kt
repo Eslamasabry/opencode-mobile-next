@@ -24,7 +24,11 @@ import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import org.jetbrains.compose.resources.getString
 
-internal class PhoneChoiceInventory(private val app: Application, private val phones: AppPhoneAgents) {
+internal class PhoneChoiceInventory(
+    private val app: Application,
+    private val phones: AppPhoneAgents,
+    private val runningVersion: () -> String? = { null },
+) {
     private val linux = BuiltinLinux.get(app)
     private val network = AndroidSetupNetwork(app)
     private val pins = AgentPins.builtIn
@@ -74,7 +78,7 @@ internal class PhoneChoiceInventory(private val app: Application, private val ph
         val binary = "/opt/opencode2/bin/opencode2"
         val pin = ManagedRuntime.OpenCode2.pinnedVersion
         val installed = File(linux.rootfs, binary.removePrefix("/")).isFile
-        val from = if (installed) phones.choiceVersion("opencode2", pin) else null
+        val from = if (installed) phones.choiceVersion("opencode2", pin) ?: runningVersion() else null
         return if (from == null || from == pin) null else AgentUpdateItem(
             AgentId.OPENCODE, "OpenCode", from, pin, HomeDownloadSizes.OPEN_CODE_MB * MB,
             diskBytes("/opt/opencode2"), AgentUpdateGroup.Optional, true, false, null, null, null,

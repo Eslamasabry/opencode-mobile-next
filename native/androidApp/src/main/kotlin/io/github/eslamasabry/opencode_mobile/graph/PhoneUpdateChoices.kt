@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
@@ -16,6 +17,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentChoiceHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoiceEngine
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoices
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalResult
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
@@ -35,7 +37,7 @@ class PhoneUpdateChoices(
     private val dispatchers: AppDispatchers,
     private val runtime: BuiltinRuntime,
 ) : AgentUpdateChoices {
-    private val disk = PhoneChoiceInventory(app, phones)
+    private val disk = PhoneChoiceInventory(app, phones) { runtime.serverFacts.value.installedVersion }
     private val host = object : AgentChoiceHost {
         override suspend fun inventory() = disk.read()
         override suspend fun hasRoom(id: AgentId): Boolean = if (id == AgentId.OPENCODE) {
@@ -64,10 +66,20 @@ class PhoneUpdateChoices(
     override suspend fun notNow() = command { engine.notNow() }
     override fun removalFacts(id: AgentId) = engine.removalFacts(id)
 
-    internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh() }
-    internal fun allowed(id: AgentId): Boolean = engine.allowed(id)
+    /** True once one inventory has been read: before it, nothing is known to be unasked. */
+    @Volatile private var inventoried = false
+
+    internal suspend fun refresh() = withContext(dispatchers.io) { engine.refresh().also { inventoried = true } }
+    private val holds = UnaskedHolds { offer.value }
+
+    internal fun allowed(id: AgentId): Boolean = engine.allowed(id).also { if (!it) holds.unasked(id, inventoried) }
     internal suspend fun startIfChosen(id: AgentId, start: suspend () -> Boolean): Boolean =
-        withContext(dispatchers.io) { engine.startIfChosen(id, start) }
+        withContext(dispatchers.io) {
+            // An agent with no offer row is neither held nor updated: its inventory is read again (the row, and so
+            // the question, follows) and nothing downloads without a decision.
+            if (holds.unasked(id, inventoried)) refresh()
+            engine.startIfChosen(id, start)
+        }
 
     internal suspend fun updateShared(meteredAllowed: Boolean): Boolean = withContext(dispatchers.io) {
         engine.startShared(meteredAllowed) {
@@ -91,3 +103,17 @@ class PhoneUpdateChoices(
 }
 
 private const val BYTES_PER_MB = 1_000_000L
+
+/** Says (once) that an agent has no row in the current offer: it is not updated, the caller reads again. */
+private class UnaskedHolds(private val current: () -> AgentUpdateOffer?) {
+    private val log = AppLog.tagged("UpdateChoices")
+    private val logged = mutableSetOf<AgentId>()
+
+    fun unasked(id: AgentId, inventoried: Boolean): Boolean {
+        val missing = inventoried && current()?.items?.none { it.id == id } != false
+        if (missing && synchronized(logged) { logged.add(id) }) {
+            log.i { "hold has no offer row: ${id.raw}; the inventory is read again, nothing is updated unasked" }
+        }
+        return missing
+    }
+}
