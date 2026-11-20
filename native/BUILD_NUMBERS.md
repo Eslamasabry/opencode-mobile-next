@@ -132,3 +132,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10106 | build | 2026-11-18 | interim 3.0.1 line, not the candidate: 10105's content + sol-trial-301, update-backoff, umami-rich-301, sol-round2-301, opencode-retry-wakes (source 7d49f81fa3) |
 | 10107 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: everything since 10106 (source 470cbdfbca) |
 | 10108 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: update-sheet-shows, undo-truth-301-r2, crash-fixes-301-r2, reply-path-absolute-r2, root-file-chip-r2, thinking-first-newconv (no Italian) on top of 10107 (source ce09d2dc7b) |
+| 10109 | build | 2026-11-20 | interim 3.0.1 line, not the candidate: update-sheet-visible, Italian (pr150-italian first part), okhttp-floor-3 and the status_all chore on top of 10108 (source 37cb52cab7) |
