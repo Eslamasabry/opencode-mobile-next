@@ -39,8 +39,8 @@ object PluralRules {
                     else -> OTHER
                 }
             }
-            "es" -> when { n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
-            "pt", "fr", "it" -> when { n == 0 || n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
+            "es", "it" -> when { n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
+            "pt", "fr" -> when { n == 0 || n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
             "ru" -> {
                 val m10 = n % 10; val m100 = n % 100
                 when {
