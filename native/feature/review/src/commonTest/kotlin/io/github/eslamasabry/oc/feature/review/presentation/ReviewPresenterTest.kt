@@ -31,6 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -288,6 +289,56 @@ class ReviewPresenterTest {
         assertEquals(1, ui.messagesAfter)
         assertEquals(listOf("src/b.kt"), ui.files?.map { it.file })
     }
+
+    private val notGit =
+        io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent
+
+    @Test
+    fun `B-CHAT-UNDO-001 the undo page is not drawn as a Git page before it knows the folder is not under Git`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+            val seen = mutableListOf<UndoFromHereUi>()
+            val p = UndoFromHerePresenter(review(), "u2", nav, backgroundScope, ReviewProjectSetup { gate.await(); notGit })
+            backgroundScope.launch { p.state.collect { seen += it } }
+            runCurrent()
+            assertTrue(seen.none { it.load == ReviewLoad.Ready }, "nothing settled is drawn while the folder is unknown")
+            gate.complete(Unit)
+            runCurrent()
+            assertTrue(seen.filter { it.load == ReviewLoad.Ready }.all { it.noFileCopies }, "the first settled page says so")
+            assertTrue(p.state.value.noFileCopies)
+        }
+
+    @Test
+    fun `B-CHAT-UNDO-002 the staged review is drawn only with its prompt, its count and its Git fact`() =
+        runTest(UnconfinedTestDispatcher()) {
+            fake.staged = SessionRevert(MessageId("u2"), null, "snap", persistentListOf(FileDiff("src/b.kt", additions = 2, deletions = 1)))
+            val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+            val seen = mutableListOf<StagedUi>()
+            val p = StagedPresenter(review(), nav, backgroundScope, setup = ReviewProjectSetup { gate.await(); notGit })
+            backgroundScope.launch { p.state.collect { seen += it } }
+            runCurrent()
+            gate.complete(Unit)
+            runCurrent()
+            val review = seen.filter { it.phase == StagedPhase.Review }
+            assertTrue(review.isNotEmpty())
+            assertTrue(
+                review.all { it.prompt != null && it.messagesAfter != null && it.noFileCopies },
+                "every drawn review page already has its prompt, its count and says the folder is not under Git",
+            )
+        }
+
+    @Test
+    fun `B-CHAT-UNDO-003 a successful undo never flashes the changed line on its way to the review`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val seen = mutableListOf<UndoFromHereUi>()
+            val p = UndoFromHerePresenter(review(), "u2", nav, backgroundScope)
+            backgroundScope.launch { p.state.collect { seen += it } }
+            runCurrent()
+            p.confirm()
+            runCurrent()
+            assertEquals(listOf("back", "staged"), nav.went)
+            assertTrue(seen.none { it.block == UndoBlock.Stale }, "no state says the conversation changed")
+        }
 
     @Test
     fun `B-CHAT-105 keep asks first, commits the reviewed undo and says it is kept`() = runTest(UnconfinedTestDispatcher()) {
