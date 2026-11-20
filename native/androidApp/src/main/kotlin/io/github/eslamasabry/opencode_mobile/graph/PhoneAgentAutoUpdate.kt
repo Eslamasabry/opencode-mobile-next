@@ -251,10 +251,23 @@ class PhoneAgentAutoUpdate(
         }
     }
 
+    private var lastChoicesLine = ""
+
     private suspend fun refreshChoices() {
-        if (phones.warmForUpdate()) {
+        val warm = phones.warmForUpdate()
+        if (warm) {
             choices.refresh()
             choices.updateShared(meteredAllowed = false)
+        }
+        // One line when the picture changes: whether the choices were read at all, how many rows, and whether the
+        // sheet is due (the sheet that never showed left no line in any tag).
+        val offer = choices.offer.value
+        val line =
+            "update choices: warm=$warm offer ${offer?.items?.size ?: "none"} rows, sheetDue=${offer?.sheetDue}, " +
+                "answered=${offer?.answered}"
+        if (line != lastChoicesLine) {
+            lastChoicesLine = line
+            log.i { line }
         }
     }
 
