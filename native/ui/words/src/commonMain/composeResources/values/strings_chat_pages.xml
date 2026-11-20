@@ -245,7 +245,7 @@
         <item quantity="other">Show %1$d more files</item>
     </plurals>
     <string name="reviewRevertNoFiles">No project files changed after this prompt.</string>
-    <string name="reviewRevertNoGitFiles">Files can't be put back here because this project isn't a Git repository.</string>
+    <string name="reviewRevertNoGitFiles">Files can't be put back here because this isn't a Git project.</string>
     <string name="reviewRevertReplacingNotice">You already went back to an earlier prompt. Going back here replaces that point.</string>
     <string name="reviewRevertCannotUndo">Commands already run and outside files won't be undone.</string>
     <string name="reviewRevertCanBringBack">You can bring everything back from chat until you keep this point.</string>

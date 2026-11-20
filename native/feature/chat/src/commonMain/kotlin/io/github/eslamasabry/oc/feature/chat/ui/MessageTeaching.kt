@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -9,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource
@@ -17,6 +22,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.TipMoment
 import io.github.eslamasabry.oc.engine.settings.teaching.TipVisit
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.tipMessageDetails
 import io.github.eslamasabry.oc.ui.words.res.tipPromptGoBack
@@ -83,12 +89,19 @@ internal fun PromptGoBackTip(eligible: Boolean, content: @Composable () -> Unit)
         return
     }
     val active by teaching.controller.active.collectAsStateWithLifecycle()
-    KitTip(
-        message = stringResource(Res.string.tipPromptGoBack),
-        visible = active?.id == TeachingIds.PromptGoBack,
-        onDismissed = { teaching.controller.dismiss(TeachingIds.PromptGoBack) },
-        anchor = content,
-    )
+    val gutter = LocalKitTokens.current.gutter.dp
+    // KitPromptBubble applies its own side gutter inside a full-width Box; anchor the tip to the
+    // content column inside that gutter so the tip's right corner never runs into the screen edge.
+    Box(Modifier.fillMaxWidth()) {
+        content()
+        KitTip(
+            message = stringResource(Res.string.tipPromptGoBack),
+            visible = active?.id == TeachingIds.PromptGoBack,
+            onDismissed = { teaching.controller.dismiss(TeachingIds.PromptGoBack) },
+            modifier = Modifier.matchParentSize().padding(horizontal = gutter),
+            anchor = {},
+        )
+    }
 }
 
 /** Only the newest completed reply anchors the contextual message-actions tip. */

@@ -1,8 +1,15 @@
 package io.github.eslamasabry.oc.feature.review
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -30,9 +37,25 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.status.KitVital
+import io.github.eslamasabry.oc.ui.kit.status.KitVitalsStrip
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
@@ -252,6 +275,81 @@ class UndoRedesignReviewRenders {
             actions = undoActions,
         )
     }
+
+    /** Taste Pass B (Final Round 3) — Impact Ledger: tabular KitVitalsStrip, concentric KitSegmented, unified 16 dp rail & uniform sectionGap rhythm. */
+    @Composable
+    private fun TastePreviewB() {
+        val gutter = LocalKitTokens.current.gutter.dp
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    title = "Go back to this prompt",
+                    exit = KitTopBarExit.Back,
+                    exitLabel = "Back",
+                    onExit = {},
+                )
+            },
+            width = KitScreenWidth.Reading,
+            bottom = {
+                KitActionBlock(
+                    modifier = Modifier.padding(horizontal = gutter, vertical = Space.S2.dp),
+                    primary = KitAction("Go back to this prompt", onClick = {}),
+                )
+            },
+            edges = KitScreenEdges.Bleed,
+        ) {
+            Column(
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = Space.S3.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                KitVitalsStrip(
+                    vitals = listOf(
+                        KitVital("4", "Messages to hide", "4 messages to hide"),
+                        KitVital("3", "Files to put back", "3 files to put back"),
+                    ),
+                )
+                KitSegmented(
+                    segments = listOf(
+                        KitSegment(true, "With files"),
+                        KitSegment(false, "Messages only"),
+                    ),
+                    selected = true,
+                    semanticsLabel = "What goes back",
+                    modifier = Modifier.padding(horizontal = gutter),
+                    onChange = {},
+                )
+                KitRowGroup(label = "From this prompt", section = true) {
+                    KitRow(
+                        title = LONG_PROMPT,
+                        titleMaxLines = 2,
+                    )
+                }
+                KitRowGroup(
+                    label = "Project files",
+                    section = true,
+                    note = "Commands already run and outside files won't be undone. You can bring everything back until you keep this point.",
+                ) {
+                    THREE_FILES.forEach { file ->
+                        val cut = file.file.lastIndexOf('/')
+                        val name = file.file.substring(cut + 1)
+                        val dir = file.file.substring(0, cut)
+                        KitRow(
+                            title = name,
+                            supporting = dir,
+                            titleIsFileName = true,
+                            trailing = KitRowTrailing.Value("+${file.additions} −${file.deletions}", chevron = false),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(Space.S2.dp))
+            }
+        }
+    }
+
+    @Test
+    fun `render taste B preview`() = shoot("taste-B-preview", solidVariants) { TastePreviewB() }
 
     private companion object {
         const val LONG_PROMPT =
