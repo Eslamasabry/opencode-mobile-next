@@ -28,13 +28,13 @@
     <string name="agentUpdatesMetered">Bạn đang dùng dữ liệu di động. Các cập nhật sẽ tải bằng dữ liệu di động.</string>
     <string name="agentUpdatesNetworkUnknown">Mạng này có thể dùng dữ liệu di động. Các cập nhật sẽ tải qua mạng này.</string>
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="other">Cập nhật %1$d</item>
+        <item quantity="other">Cập nhật %1$d tác nhân</item>
     </plurals>
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="other">Gỡ %1$d</item>
+        <item quantity="other">Gỡ %1$d tác nhân</item>
     </plurals>
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="other">Cập nhật %1$d và gỡ %2$d</item>
+        <item quantity="other">Cập nhật %1$d và gỡ %2$d tác nhân</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">Giữ các phiên bản này</string>
     <string name="agentUpdatesAgentsLine">Không dùng một tác nhân nữa?</string>

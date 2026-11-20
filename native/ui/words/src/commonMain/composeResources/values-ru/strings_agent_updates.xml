@@ -28,22 +28,22 @@
     <string name="agentUpdatesMetered">Вы на мобильных данных. Обновления скачаются через них.</string>
     <string name="agentUpdatesNetworkUnknown">Эта сеть может расходовать мобильные данные. Обновления скачаются через неё.</string>
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="one">Обновить %1$d</item>
-        <item quantity="few">Обновить %1$d</item>
-        <item quantity="many">Обновить %1$d</item>
-        <item quantity="other">Обновить %1$d</item>
+        <item quantity="one">Обновить %1$d агента</item>
+        <item quantity="few">Обновить %1$d агента</item>
+        <item quantity="many">Обновить %1$d агентов</item>
+        <item quantity="other">Обновить %1$d агента</item>
     </plurals>
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="one">Удалить %1$d</item>
-        <item quantity="few">Удалить %1$d</item>
-        <item quantity="many">Удалить %1$d</item>
-        <item quantity="other">Удалить %1$d</item>
+        <item quantity="one">Удалить %1$d агента</item>
+        <item quantity="few">Удалить %1$d агента</item>
+        <item quantity="many">Удалить %1$d агентов</item>
+        <item quantity="other">Удалить %1$d агента</item>
     </plurals>
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="one">Обновить %1$d и удалить %2$d</item>
-        <item quantity="few">Обновить %1$d и удалить %2$d</item>
-        <item quantity="many">Обновить %1$d и удалить %2$d</item>
-        <item quantity="other">Обновить %1$d и удалить %2$d</item>
+        <item quantity="one">Обновить %1$d и удалить %2$d агента</item>
+        <item quantity="few">Обновить %1$d и удалить %2$d агента</item>
+        <item quantity="many">Обновить %1$d и удалить %2$d агентов</item>
+        <item quantity="other">Обновить %1$d и удалить %2$d агента</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">Оставить эти версии</string>
     <string name="agentUpdatesAgentsLine">Этот агент больше не нужен?</string>

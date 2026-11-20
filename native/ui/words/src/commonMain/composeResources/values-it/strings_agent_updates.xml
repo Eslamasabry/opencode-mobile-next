@@ -28,19 +28,19 @@
     <string name="agentUpdatesMetered">Stai usando i dati mobili. Gli aggiornamenti si scaricano con quelli.</string>
     <string name="agentUpdatesNetworkUnknown">Questa rete potrebbe usare i dati mobili. Gli aggiornamenti si scaricano con quella.</string>
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="one">Aggiorna %1$d</item>
-        <item quantity="many">Aggiorna %1$d</item>
-        <item quantity="other">Aggiorna %1$d</item>
+        <item quantity="one">Aggiorna %1$d agente</item>
+        <item quantity="many">Aggiorna %1$d agenti</item>
+        <item quantity="other">Aggiorna %1$d agenti</item>
     </plurals>
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="one">Rimuovi %1$d</item>
-        <item quantity="many">Rimuovi %1$d</item>
-        <item quantity="other">Rimuovi %1$d</item>
+        <item quantity="one">Rimuovi %1$d agente</item>
+        <item quantity="many">Rimuovi %1$d agenti</item>
+        <item quantity="other">Rimuovi %1$d agenti</item>
     </plurals>
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="one">Aggiorna %1$d e rimuovi %2$d</item>
-        <item quantity="many">Aggiorna %1$d e rimuovi %2$d</item>
-        <item quantity="other">Aggiorna %1$d e rimuovi %2$d</item>
+        <item quantity="one">Aggiorna %1$d e rimuovi %2$d agente</item>
+        <item quantity="many">Aggiorna %1$d e rimuovi %2$d agenti</item>
+        <item quantity="other">Aggiorna %1$d e rimuovi %2$d agenti</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">Mantieni queste versioni</string>
     <string name="agentUpdatesAgentsLine">Non usi più un agente?</string>

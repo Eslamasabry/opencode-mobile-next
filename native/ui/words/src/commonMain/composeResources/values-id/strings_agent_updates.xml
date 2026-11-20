@@ -28,13 +28,13 @@
     <string name="agentUpdatesMetered">Anda memakai data seluler. Pembaruan diunduh lewat data seluler.</string>
     <string name="agentUpdatesNetworkUnknown">Jaringan ini mungkin memakai data seluler. Pembaruan diunduh lewat jaringan ini.</string>
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="other">Perbarui %1$d</item>
+        <item quantity="other">Perbarui %1$d agen</item>
     </plurals>
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="other">Hapus %1$d</item>
+        <item quantity="other">Hapus %1$d agen</item>
     </plurals>
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="other">Perbarui %1$d dan hapus %2$d</item>
+        <item quantity="other">Perbarui %1$d dan hapus %2$d agen</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">Pertahankan versi ini</string>
     <string name="agentUpdatesAgentsLine">Tidak memakai suatu agen lagi?</string>

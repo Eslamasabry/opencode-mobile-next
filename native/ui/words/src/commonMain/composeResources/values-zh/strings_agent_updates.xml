@@ -28,13 +28,13 @@
     <string name="agentUpdatesMetered">你正在使用移动数据。更新将通过移动数据下载。</string>
     <string name="agentUpdatesNetworkUnknown">此网络可能使用移动数据。更新将通过此网络下载。</string>
     <plurals name="agentUpdatesButtonUpdate">
-        <item quantity="other">更新 %1$d 个</item>
+        <item quantity="other">更新 %1$d 个智能体</item>
     </plurals>
     <plurals name="agentUpdatesButtonRemove">
-        <item quantity="other">移除 %1$d 个</item>
+        <item quantity="other">移除 %1$d 个智能体</item>
     </plurals>
     <plurals name="agentUpdatesButtonBoth">
-        <item quantity="other">更新 %1$d 个并移除 %2$d 个</item>
+        <item quantity="other">更新 %1$d 个并移除 %2$d 个智能体</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">保留这些版本</string>
     <string name="agentUpdatesAgentsLine">不再使用某个智能体？</string>
