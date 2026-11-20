@@ -595,7 +595,6 @@
     <string name="stageStartingLinux">Starting Linux…</string>
     <string name="stageStartingOpenCode">Starting OpenCode…</string>
     <string name="stageStartingHelper">Starting the agents’ helper…</string>
-    <string name="stageStartingAgents">Starting agents…</string>
     <string name="stageStartingAgent">Starting %1$s…</string>
     <string name="stageOpeningConversation">Opening the conversation…</string>
     <string name="chatLoadingConversation">Loading the conversation</string>
