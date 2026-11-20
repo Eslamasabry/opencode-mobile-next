@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiLanguage
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiPortuguese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiFrench
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiIndonesian
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiItalian
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiRussian
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiVietnamese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
