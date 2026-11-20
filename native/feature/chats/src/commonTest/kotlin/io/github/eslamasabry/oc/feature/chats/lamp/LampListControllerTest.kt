@@ -128,6 +128,24 @@ class LampListControllerTest {
     }
 
     @Test
+    fun `B-LAMP-012 an answered row keeps Allowed, never Allow once and Deny again, while the server still lists the request`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val w = world(lrow("a", NeedsYou, request = perm("r1")))
+            w.lamp.allowOnce(lref("a"), "r1")
+            advanceTimeBy(3_100)
+            runCurrent()
+            assertEquals(1, w.sent.size, "sent once")
+            // The server's list still holds the request: the row must not ask again.
+            assertTrue(w.lamp.ui.value.row("a").request!!.answer is LampAnswerUi.Held, "still the receipt, not the buttons")
+            advanceTimeBy(5_000)
+            assertTrue(w.lamp.ui.value.row("a").request!!.answer is LampAnswerUi.Held, "still the receipt 8 s on")
+            // A send that never settles gives the buttons back in the end: waiting is bounded.
+            advanceTimeBy(6_000)
+            runCurrent()
+            assertEquals(LampAnswerUi.AllowDeny, w.lamp.ui.value.row("a").request!!.answer)
+        }
+
+    @Test
     fun `B-LAMP-M1 Deny is held the same way and Undo sends nothing`() = runTest(UnconfinedTestDispatcher()) {
         val w = world(lrow("a", NeedsYou, request = perm("r1")))
         w.lamp.deny(lref("a"), "r1")
