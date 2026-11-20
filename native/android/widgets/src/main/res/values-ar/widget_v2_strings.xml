@@ -99,6 +99,6 @@
     <string name="widget_allow_for">السماح مرة: %1$s</string>
     <string name="widget_reply_for">الرد على %1$s</string>
     <string name="widget_step_for">%1$s: %2$s</string>
-    <string name="widget_status_set_up">مُعَدّ</string>
-    <string name="widget_status_not_set_up">غير مُعَدّ</string>
+    <string name="widget_status_set_up">تم الإعداد</string>
+    <string name="widget_status_not_set_up">لم يتم الإعداد</string>
 </resources>
