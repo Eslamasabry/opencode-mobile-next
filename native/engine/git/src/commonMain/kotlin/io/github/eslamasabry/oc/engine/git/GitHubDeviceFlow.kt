@@ -277,7 +277,9 @@ public class GitHubDeviceFlow(
                 "authorization_pending" -> continue
                 "slow_down" -> {
                     val named = body.long("interval")
-                    interval = if (named != null) named * 1000 else interval + SLOW_DOWN_MS
+                    interval =
+                        if (named != null) named.coerceIn(MIN_POLL_SECONDS, MAX_POLL_SECONDS) * MS_PER_SECOND
+                        else (interval + SLOW_DOWN_MS).coerceAtLeast(MIN_POLL_MS)
                 }
                 "expired_token" -> return GitHubResult.Problem(GitHubSignInProblem.Expired, errorDetails(body))
                 "access_denied" -> return GitHubResult.Problem(GitHubSignInProblem.Denied, errorDetails(body))
@@ -436,6 +438,10 @@ public class GitHubDeviceFlow(
         /** How many network failures in a row end the wait. */
         public const val MAX_POLL_FAILURES: Int = 3
         private const val SLOW_DOWN_MS = 5_000L
+        private const val MIN_POLL_SECONDS = 1L
+        private const val MAX_POLL_SECONDS = 60L
+        private const val MS_PER_SECOND = 1_000L
+        private const val MIN_POLL_MS = MIN_POLL_SECONDS * MS_PER_SECOND
     }
 }
 
