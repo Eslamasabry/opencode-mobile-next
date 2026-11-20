@@ -43,8 +43,16 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumn
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumnPage
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.DemoRoute
+import io.github.eslamasabry.oc.ui.routes.OnboardingRoute
+import io.github.eslamasabry.oc.ui.routes.PairingRoute
+import io.github.eslamasabry.oc.ui.routes.PreviewRoute
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import io.github.eslamasabry.oc.ui.routes.TerminalRoute
+import io.github.eslamasabry.oc.ui.routes.WidgetPanel
 import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
 import io.github.eslamasabry.oc.ui.routes.LocalRestingBeside
 
@@ -63,7 +71,8 @@ import io.github.eslamasabry.oc.ui.routes.LocalRestingBeside
 internal class ShellPanePair(
     val isList: (NavKey) -> Boolean,
     val isDetail: (NavKey) -> Boolean,
-    val rest: () -> NavKey,
+    /** The detail's resting page; null for a pair whose list stands alone as its own page (Settings' hub). */
+    val rest: (() -> NavKey)?,
 )
 
 /**
@@ -75,17 +84,20 @@ internal class ShellPanePair(
 @Stable
 internal class ShellRestPages {
     private val current =
-        mutableStateMapOf<ShellPanePair, NavKey>().apply { ShellPanes.pairs.forEach { put(it, it.rest()) } }
+        mutableStateMapOf<ShellPanePair, NavKey>().apply {
+            ShellPanes.pairs.forEach { pair -> pair.rest?.let { put(pair, it()) } }
+        }
 
     /** Retired resting pages, oldest first; still decorated (their view models live), never drawn. */
     val retired: SnapshotStateList<NavKey> = mutableStateListOf()
 
-    fun current(pair: ShellPanePair): NavKey = current.getValue(pair)
+    fun current(pair: ShellPanePair): NavKey? = current[pair]
 
     fun retire(pair: ShellPanePair) {
-        retired.add(current(pair))
+        val fresh = pair.rest ?: return
+        retired.add(current.getValue(pair))
         while (retired.size > KEEP) retired.removeAt(0)
-        current[pair] = pair.rest()
+        current[pair] = fresh()
     }
 
     private companion object {
@@ -133,9 +145,10 @@ internal object ShellPanes {
     }
 
     /**
-     * Every list-detail pair, the first that matches wins. THE one place a pair is added: the next (S6) is the Settings
-     * hub (`SettingsRoute.Home`) as the list and a page opened from it (servers, agents, phone setup) as the detail.
-     * With no conversation open, Home's pages side is a new conversation, ready to type into.
+     * Every list-detail pair, the first that matches wins. THE one place a pair is added. With no conversation open,
+     * Home's pages side is a new conversation, ready to type into. The second is Settings: its hub is the list, and any
+     * page reached from it (servers, agents, usage, tools, a settings page of its own) is the detail; with nothing
+     * opened the hub is its own two panes (the group list and the group's rows), so it has no resting page.
      */
     val pairs: List<ShellPanePair> =
         listOf(
@@ -144,7 +157,21 @@ internal object ShellPanes {
                 isDetail = { it is ChatRoute },
                 rest = { ChatsRoute.New(profile = null) },
             ),
+            ShellPanePair(
+                isList = { it == SettingsRoute.Home },
+                isDetail = { it.opensBesideSettings() },
+                rest = null,
+            ),
         )
+
+    /**
+     * A page the Settings list keeps beside it. Not these: a conversation (Home's pair), the terminal, and the
+     * full-window flows (onboarding, pairing, previews, widget panels, the demo), which own the whole window.
+     */
+    private fun NavKey.opensBesideSettings(): Boolean =
+        this is AppRoute && this != SettingsRoute.Home && this !is ChatRoute && this !is ChatsRoute &&
+            this !is TerminalRoute && this !is OnboardingRoute && this !is PairingRoute && this !is PreviewRoute &&
+            this !is WidgetPanel && this !is DemoRoute
 
     /** Lists stand beside their pages on an Expanded or Large window that is not short (`Layout.EXPANDED_FROM`). */
     fun beside(window: KitWindowInfo): Boolean = window.cls.isWide && !window.short
@@ -239,21 +266,26 @@ private fun PanesRow(list: NavEntry<NavKey>, detail: NavEntry<NavKey>?, rest: Na
     val listWidth = ShellPanes.listWidth(LocalKitWindow.current.widthDp, LocalDensity.current.fontScale)
     val page = detail ?: rest
     val open = page?.metadata?.get(ShellPanes.ROUTE_KEY) as? NavKey
+    // A list with nothing open and no resting page (Settings' hub) fills the window as its own page. It stays in the same
+    // place of the same tree when a page opens beside it, so no page moves between parents (the lookahead rule).
+    val alone = page == null
     CompositionLocalProvider(LocalShellInPane provides true) {
-        Row(Modifier.fillMaxSize().typingLandsBeside(detailFocus)) {
-            KitPaneWindow(Modifier.width(listWidth.dp).fillMaxHeight()) {
+        Row(Modifier.fillMaxSize().then(if (alone) Modifier else Modifier.typingLandsBeside(detailFocus))) {
+            KitPaneWindow(if (alone) Modifier.weight(1f).fillMaxHeight() else Modifier.width(listWidth.dp).fillMaxHeight()) {
                 Box {
                     // The list shows the open page's row as the chosen one (and, with the resting page open, no second
                     // way to it).
                     CompositionLocalProvider(LocalOpenBeside provides open) { list.Content() }
-                    KitDivider(Modifier.align(Alignment.CenterEnd).fillMaxHeight(), vertical = true)
+                    if (!alone) KitDivider(Modifier.align(Alignment.CenterEnd).fillMaxHeight(), vertical = true)
                 }
             }
             // Beside the list the page fills the pane up to its column's cap (header, transcript and message box on
             // one pair of edges); past the cap it is centred: two equal margins, never one band.
-            KitPaneColumnPage(Modifier.weight(1f).fillMaxHeight().focusRequester(detailFocus).focusGroup()) {
-                CompositionLocalProvider(LocalRestingBeside provides (detail == null)) {
-                    if (page != null) key(page.contentKey) { page.Content() }
+            if (page != null) {
+                KitPaneColumnPage(Modifier.weight(1f).fillMaxHeight().focusRequester(detailFocus).focusGroup()) {
+                    CompositionLocalProvider(LocalRestingBeside provides (detail == null)) {
+                        key(page.contentKey) { page.Content() }
+                    }
                 }
             }
         }

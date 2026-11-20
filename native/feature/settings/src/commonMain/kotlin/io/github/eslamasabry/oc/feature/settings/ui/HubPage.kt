@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
+import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
 import io.github.eslamasabry.oc.ui.words.res.settingsHubDetailEmpty
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -111,7 +112,10 @@ internal fun HubPage(
                 actions = actions,
                 scroll = scroll,
             ) {
-                HubBody(state, actions)
+                // Standing beside a page opened from it (big screens, shell pane): the group whose rows that page
+                // came from stays marked, as it was in the wide two-pane view.
+                val beside = LocalOpenBeside.current != null
+                HubBody(state, actions, selected = if (beside) state.firstGroup?.id else null)
             }
         }
     }
