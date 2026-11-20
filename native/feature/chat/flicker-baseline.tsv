@@ -1,157 +1,119 @@
-# Flicker findings that were there when feature/chat moved onto kitUiTest (report run, 2026-11-20). One line per
-# <Class.test> <RULE> <words>. Only shrinks: a line goes with its fix, in the fix's commit. Empty at the cut.
-AgentSetUpBubbleTest.B-AGENT-113 a plain failure keeps Not sent and Try again	FIRST	fix the tests
-AgentSetUpBubbleTest.B-AGENT-113 a plain failure keeps Not sent and Try again	JUMP	#kit-prompt-bubble
-AgentSetUpBubbleTest.B-AGENT-113 a send that needs its agent set up says so once and opens the set-up terminal	FIRST	fix the tests
-AgentSetUpBubbleTest.B-AGENT-113 a send that needs its agent set up says so once and opens the set-up terminal	JUMP	#kit-prompt-bubble
-ChatCardSlotTest.B-CHAT-004 an answered card is a receipt that opens read-only, a passed-over one says Not answered	ABA	
-ChatCardSlotTest.B-CHAT-004 an answered card is a receipt that opens read-only, a passed-over one says Not answered	BLINK	Two options
-ChatEdgesBuildRenders.chat edges build render default dark	FIRST	#chat-live-line
-ChatEdgesBuildRenders.chat edges build render default dark	JUMP	#chat-live-line
-ChatEdgesBuildRenders.chat edges build render default light	FIRST	#chat-live-line
-ChatEdgesBuildRenders.chat edges build render default light	JUMP	#chat-live-line
-ChatEdgesBuildRenders.chat edges build render owner configuration dark	FIRST	#chat-live-line
-ChatEdgesBuildRenders.chat edges build render owner configuration dark	JUMP	#chat-live-line
-ChatFloatingScreenTest.B-CHAT-EDGE-015 on the real chat the capsule keeps the same margin on both sides and holds the project line	FIRST	#chat-turn-files
-ChatFloatingScreenTest.B-CHAT-EDGE-015 on the real chat the capsule keeps the same margin on both sides and holds the project line	JUMP	#chat-turn-files
-ChatFloatingScreenTest.B-CHAT-EDGE-021 the capsule's second line carries the project and the place, as the live header builds it	FIRST	#chat-turn-files
-ChatFloatingScreenTest.B-CHAT-EDGE-021 the capsule's second line carries the project and the place, as the live header builds it	JUMP	#chat-turn-files
-ChatFloatingScreenTest.B-CHAT-EDGE-022 a header with no place set shows no place, so the 021 check does tell the two apart	FIRST	#chat-turn-files
-ChatFloatingScreenTest.B-CHAT-EDGE-022 a header with no place set shows no place, so the 021 check does tell the two apart	JUMP	#chat-turn-files
-ChatLimitResetHeadlineTest.SIGNIN-C-1 a limit's headline carries the reset on a 12 hour clock	FIRST	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-1 a limit's headline carries the reset on a 12 hour clock	JUMP	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-2 and on a 24 hour clock	FIRST	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-2 and on a 24 hour clock	JUMP	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-3 a limit with no reset keeps today's headline	FIRST	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-3 a limit with no reset keeps today's headline	JUMP	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-4 a reply with no time keeps today's headline	FIRST	#chat-reply-failed
-ChatLimitResetHeadlineTest.SIGNIN-C-4 a reply with no time keeps today's headline	JUMP	#chat-reply-failed
-ChatRunningTurnTest.B-CHAT-063 an opened thought says its first line once, the rest under it	FIRST	#chat-live-line
-ChatRunningTurnTest.B-CHAT-063 an opened thought says its first line once, the rest under it	JUMP	#chat-live-line
-ChatRunningTurnTest.B-CHAT-063 while a step runs the steps stay in view and the live line says how long the turn has run	FIRST	#chat-live-line
-ChatRunningTurnTest.B-CHAT-063 while a step runs the steps stay in view and the live line says how long the turn has run	JUMP	#chat-live-line
-ChatRunningTurnTest.audit 1 a thought the reading does not know folds under Thought and never prints its words	FIRST	#chat-live-line
-ChatRunningTurnTest.audit 1 a thought the reading does not know folds under Thought and never prints its words	JUMP	#chat-live-line
-ChatScrollRestoreTest.09-7_3 a reader's place and follow choice survive leaving the chat and coming back	ABA	#transcript-list
-ChatScrollRestoreTest.09-7_3 a reader's place and follow choice survive leaving the chat and coming back	BLINK	#transcript-jump-fade
-ChatScrollRestoreTest.09-7_3 a reader's place and follow choice survive leaving the chat and coming back	BLINK	Jump to latest
-ComposerModelsFilesTest.09-10_2 a running pick keeps Send off and files alone can send	JUMP	#kit-composer-box
-ComposerModelsFilesTest.09-10_3 a model choice closes the sheet only after the world verified it	DOUBLE	Mini
-ComposerModelsFilesTest.09-10_3 a model choice closes the sheet only after the world verified it	JUMP	#chat-model-choice
-ComposerModelsFilesTest.09-10_3 the model sheet loads on open and a failed load offers plain-word retry	BLINK	#kit-notice
-ComposerModelsFilesTest.09-10_3 the model sheet shows loading and empty copy	BLINK	#chat-model-loading
-ComposerModelsFilesTest.09-10_6 the plus is never a dead control and opens the tray when files are its only choice	ABA	Attach and more
-ComposerModelsFilesTest.09-10_6 the plus is never a dead control and opens the tray when files are its only choice	JUMP	#chat-composer-field
-ComposerModelsFilesTest.B-151 no Saved prompts row where the chat offers none	JUMP	#chat-composer-field
-ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	ABA	Attach and more
-ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	ABA	Close
-ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	JUMP	#chat-composer-field
-ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	JUMP	#kit-sheet
-ComposerModelsFilesTest.B-CHAT-009 the tray offers Photos, File and More where the platform offers them, never a paste button	ABA	Attach and more
-ComposerModelsFilesTest.B-CHAT-009 the tray offers Photos, File and More where the platform offers them, never a paste button	JUMP	#chat-composer-field
-ComposerModelsFilesTest.B-CHAT-087 an at-word lists project files and a tap inserts and stages the file	ABA	#kit-composer-box
-ComposerModelsFilesTest.B-CHAT-087 an at-word lists project files and a tap inserts and stages the file	JUMP	#kit-composer-box
-ComposerModelsFilesTest.B-NAV-049 a slash field lists server commands and a tap fills the command	JUMP	#kit-composer-box
-ConnectingAliveTest.CA-2 saved turns in memory show at once with no placeholder, and the status still says Connecting	FIRST	#chat-turn-files
-ConnectingAliveTest.CA-2 saved turns in memory show at once with no placeholder, and the status still says Connecting	JUMP	#chat-turn-files
-ConnectingAliveTest.CA-3 connected shows the conversation with no placeholder and no working mark	FIRST	#chat-turn-files
-ConnectingAliveTest.CA-3 connected shows the conversation with no placeholder and no working mark	JUMP	#chat-turn-files
-ConnectingAliveTest.CA-4 a wait that is spent says the agent is not answering, with Restart, and nothing is working	FIRST	#chat-load-error
-ConnectingAliveTest.CA-4 a wait that is spent says the agent is not answering, with Restart, and nothing is working	JUMP	#chat-load-error
-ConnectingAliveTest.CA-7 the wait ending in not answering moves neither the header nor the message box	JUMP	#chat-loading
-DockUndoRoomTest.B-DOCK-UNDO-05 the newest reply ends above the Undo bar and comes back down when the bar goes	FIRST	#chat-turn-footer
-DockUndoRoomTest.B-DOCK-UNDO-05 the newest reply ends above the Undo bar and comes back down when the bar goes	JUMP	#chat-turn-footer
-DockUndoRoomTest.B-DOCK-UNDO-06 reading older replies, nothing they see moves when the bar comes and goes	JUMP	#chat-turn-footer
-DockUndoRoomTest.B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes	ABA	#chat-turn-footer
-DockUndoRoomTest.B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes	ABA	#kit-undo
-DockUndoRoomTest.B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes	JUMP	#chat-turn-footer
-FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	ABA	#chat-stop-button
-FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	ABA	Quick phrases
-FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	ABA	Send
-FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	BLINK	#chat-stop-button
-FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	BLINK	Quick phrases
-FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	JUMP	#chat-composer-field
-FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	ABA	#chat-stop-button
-FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	ABA	Quick phrases
-FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	ABA	Send
-FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	BLINK	#chat-stop-button
-FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	BLINK	Quick phrases
-FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	JUMP	#chat-composer-field
-LooksCaptureTest.chatRunning	FIRST	#chat-live-line
-LooksCaptureTest.chatRunning	JUMP	#chat-live-line
-LooksCaptureTest.modelPicker	FIRST	Running the auth tests now.
-LooksCaptureTest.modelPicker	JUMP	Running the auth tests now.
-PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	ABA	Details
-PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	DOUBLE	Details
-PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	DOUBLE	Edit ⁦e#.txt⁩?
-PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	JUMP	Deny
-PermissionNoteFastTypingTest.A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny	ABA	Details
-PermissionNoteFastTypingTest.A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny	DOUBLE	Details
-PermissionNoteFastTypingTest.A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny	JUMP	Deny
-PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	ABA	#kit-screen-body
-PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	ABA	Attach and more
-PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	ABA	Close
-PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	DOUBLE	Prompt editor
-QuestionSheetScreenTest.B-CHAT-072 own answer is visible immediately and choosing a radio answer clears its text	ABA	Or write your own answer
-R12OneRunStateTest.R12 stopped - the footer says Stopped once, no Stopping and no waiting	FIRST	#chat-turn-footer
-R12OneRunStateTest.R12 stopped - the footer says Stopped once, no Stopping and no waiting	JUMP	#chat-turn-footer
-R12OneRunStateTest.R12 stopping while the card still waits - the tail says Stopping once and nothing waits	FIRST	#chat-live-line
-R12OneRunStateTest.R12 stopping while the card still waits - the tail says Stopping once and nothing waits	JUMP	#chat-live-line
-R12OneRunStateTest.R12 waiting for the decision - the waiting step says it once, the transcript adds no waiting line of its own	FIRST	#chat-work-line
-R12OneRunStateTest.R12 waiting for the decision - the waiting step says it once, the transcript adds no waiting line of its own	JUMP	#chat-work-line
-R12OneRunStateTest.R12 working - after the decision is sent the live line says what the turn does, never waiting	FIRST	#chat-live-line
-R12OneRunStateTest.R12 working - after the decision is sent the live line says what the turn does, never waiting	JUMP	#chat-live-line
-R13ReasoningFoldedTest.R13 a turn whose only work is a thought folds it under one Thought line	FIRST	#chat-turn-footer
-R13ReasoningFoldedTest.R13 a turn whose only work is a thought folds it under one Thought line	JUMP	#chat-git-chip
-R13ReasoningFoldedTest.R13 a turn whose only work is a thought folds it under one Thought line	JUMP	#chat-turn-footer
-R13ReasoningFoldedTest.R13 with Show reasoning on each thought opens on its own Thought step, never loose in the reply	FIRST	#chat-turn-footer
-R13ReasoningFoldedTest.R13 with Show reasoning on each thought opens on its own Thought step, never loose in the reply	JUMP	#chat-turn-footer
-R13ReasoningFoldedTest.R13 with Show reasoning on each thought opens on its own Thought step, never loose in the reply	JUMP	#chat-work-line
-R8ComposerFollowsKeyboardTest.R8 the message box follows the bottom inset down when the keyboard goes, and keeps no keyboard room	FIRST	#kit-prompt-bubble
-R8ComposerFollowsKeyboardTest.R8 the message box follows the bottom inset down when the keyboard goes, and keeps no keyboard room	JUMP	#kit-prompt-bubble
-R8ComposerFollowsKeyboardTest.R8 the message box follows the bottom inset down when the keyboard goes, and keeps no keyboard room	JUMP	#kit-screen-bottom
-RequestSlotGoldensTest.P-103 a one-line request opens in full on tap and the rest stay one line	JUMP	Request # of #: Open this web page?, ⁦https://example.com/do
-S25ComposerLimitStripTest.B-181-001 the strip shows at 80 percent with its reset, and View usage opens Usage for this server	FIRST	#kit-composer-box
-S25ComposerLimitStripTest.B-181-001 the strip shows at 80 percent with its reset, and View usage opens Usage for this server	JUMP	#chat-composer-field
-S25ComposerLimitStripTest.B-181-002 the cross hides the strip	ABA	#kit-composer-box
-S25ComposerLimitStripTest.B-181-002 the cross hides the strip	BLINK	Dismiss
-S25ComposerLimitStripTest.B-181-002 the cross hides the strip	FIRST	#kit-composer-box
-S25ComposerLimitStripTest.B-181-002 the cross hides the strip	JUMP	#chat-composer-field
-S25ComposerLimitStripTest.B-181-003 no readings, or a window under 80 percent, shows no strip	JUMP	#chat-composer-field
-S25ComposerLimitStripTest.B-181-004 desktop render of the whole composer with the strip	FIRST	#kit-composer-box
-S25ComposerLimitStripTest.B-181-004 desktop render of the whole composer with the strip	JUMP	#kit-composer-box
-S8FoldAnchorTest.P-010 without the hold the opened row slides up by its growth	JUMP	#header-#
-SlashMenuComposerTest.S30-CHAT-002 a slash lists app actions five at most, then Show all opens the Commands sheet	JUMP	#kit-composer-box
-SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	ABA	#chat-slash-menu
-SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	ABA	Ask OpenCode…
-SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	BLINK	Ask OpenCode…
-SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	JUMP	#kit-composer-box
-StarPromptRenders.B-STAR-018 the ask is its own card at rest and never rides a running turn	FIRST	Enjoying OpenCode Mobile?
-StarPromptRenders.B-STAR-018 the ask is its own card at rest and never rides a running turn	JUMP	#kit-prompt-bubble
-StarPromptRenders.B-STAR-018 the ask is its own card at rest and never rides a running turn	JUMP	Enjoying OpenCode Mobile?
-StepsCraftPicturesTest.glassDarkContourStepArrivingStrip	BLINK	#kit-step-node
-StepsCraftPicturesTest.glassDarkContourStepArrivingStrip	FIRST	#.#s
-StepsTreeTest.D1-ASK-002 the waiting step carries Allow once and Deny in place, with no card, and the slot above the box stays empty	FIRST	#chat-work-line
-StepsTreeTest.D1-ASK-002 the waiting step carries Allow once and Deny in place, with no card, and the slot above the box stays empty	JUMP	#chat-work-line
-StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	FIRST	#chat-turn-files
-StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	JUMP	#chat-git-chip
-StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	JUMP	#chat-turn-files
-StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	JUMP	#chat-work-line
-StepsTreeTest.D1-SCREEN-002 a reply with no counted tokens or cost ends on its short footer	FIRST	#chat-turn-files
-StepsTreeTest.D1-SCREEN-002 a reply with no counted tokens or cost ends on its short footer	JUMP	#chat-turn-files
-StoppedOnceScreenTest.a live stopped turn with one step says Stopped once and shows its step	FIRST	#chat-turn-footer
-StoppedOnceScreenTest.a live stopped turn with one step says Stopped once and shows its step	JUMP	#chat-turn-footer
-StoppedOnceScreenTest.the same turn reopened draws the same lines	FIRST	#chat-turn-footer
-StoppedOnceScreenTest.the same turn reopened draws the same lines	JUMP	#chat-turn-footer
-StoppedOnceScreenTest.words that streamed before Stop stay, and one Stopped follows them	FIRST	#chat-turn-footer
-StoppedOnceScreenTest.words that streamed before Stop stay, and one Stopped follows them	JUMP	#chat-turn-footer
-TurnFailSignInTest.B-AGENT-189 Details on the turn failure opens and holds the agent's own text	FIRST	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 Details on the turn failure opens and holds the agent's own text	JUMP	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 a turn that failed on a lapsed sign-in says the sign-in sentence alone, not also carry on	FIRST	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 a turn that failed on a lapsed sign-in says the sign-in sentence alone, not also carry on	JUMP	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 pressing Sign in again on the turn failure opens that agent's sign-in	FIRST	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 pressing Sign in again on the turn failure opens that agent's sign-in	JUMP	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 render the turn failure block at 360 dp, text 1_0 and 1_3	FIRST	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 render the turn failure block at 360 dp, text 1_0 and 1_3	JUMP	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 the turn failure block has one button, Sign in again, and no providers or model detour	FIRST	#chat-reply-failed
-TurnFailSignInTest.B-AGENT-189 the turn failure block has one button, Sign in again, and no providers or model detour	JUMP	#chat-reply-failed
+# Flicker findings that were there when feature/chat moved onto kitUiTest (report run, 2026-11-21). One line per
+# <Class.test> <RULE> <words> <family>. Only shrinks: a line goes with its fix, in the fix's commit. Empty at the cut.
+ChatCardSlotTest.B-CHAT-004 an answered card is a receipt that opens read-only, a passed-over one says Not answered	ABA		6
+ChatCardSlotTest.B-CHAT-004 an answered card is a receipt that opens read-only, a passed-over one says Not answered	BLINK	Two options	6
+ChatLimitResetHeadlineTest.SIGNIN-C-1 a limit's headline carries the reset on a 12 hour clock	FIRST	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-1 a limit's headline carries the reset on a 12 hour clock	JUMP	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-2 and on a 24 hour clock	FIRST	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-2 and on a 24 hour clock	JUMP	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-3 a limit with no reset keeps today's headline	FIRST	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-3 a limit with no reset keeps today's headline	JUMP	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-4 a reply with no time keeps today's headline	FIRST	#chat-reply-failed	1
+ChatLimitResetHeadlineTest.SIGNIN-C-4 a reply with no time keeps today's headline	JUMP	#chat-reply-failed	1
+ChatRunningTurnTest.B-CHAT-063 an opened thought says its first line once, the rest under it	FIRST	#chat-live-line	1
+ChatRunningTurnTest.B-CHAT-063 an opened thought says its first line once, the rest under it	JUMP	#chat-live-line	1
+ChatRunningTurnTest.B-CHAT-063 while a step runs the steps stay in view and the live line says how long the turn has run	FIRST	#chat-live-line	1
+ChatRunningTurnTest.B-CHAT-063 while a step runs the steps stay in view and the live line says how long the turn has run	JUMP	#chat-live-line	1
+ChatRunningTurnTest.audit 1 a thought the reading does not know folds under Thought and never prints its words	FIRST	#chat-live-line	1
+ChatRunningTurnTest.audit 1 a thought the reading does not know folds under Thought and never prints its words	JUMP	#chat-live-line	1
+ChatScrollRestoreTest.09-7_3 a reader's place and follow choice survive leaving the chat and coming back	ABA	#transcript-list	8
+ChatScrollRestoreTest.09-7_3 a reader's place and follow choice survive leaving the chat and coming back	BLINK	#transcript-jump-fade	7
+ChatScrollRestoreTest.09-7_3 a reader's place and follow choice survive leaving the chat and coming back	BLINK	Jump to latest	7
+ComposerModelsFilesTest.09-10_2 a running pick keeps Send off and files alone can send	JUMP	#kit-composer-box	2
+ComposerModelsFilesTest.09-10_3 a model choice closes the sheet only after the world verified it	DOUBLE	Mini	6
+ComposerModelsFilesTest.09-10_3 a model choice closes the sheet only after the world verified it	JUMP	#chat-model-choice	4
+ComposerModelsFilesTest.09-10_3 the model sheet loads on open and a failed load offers plain-word retry	BLINK	#kit-notice	4
+ComposerModelsFilesTest.09-10_3 the model sheet shows loading and empty copy	BLINK	#chat-model-loading	4
+ComposerModelsFilesTest.09-10_6 the plus is never a dead control and opens the tray when files are its only choice	ABA	Attach and more	2
+ComposerModelsFilesTest.09-10_6 the plus is never a dead control and opens the tray when files are its only choice	JUMP	#chat-composer-field	2
+ComposerModelsFilesTest.B-151 no Saved prompts row where the chat offers none	JUMP	#chat-composer-field	2
+ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	ABA	Attach and more	2
+ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	ABA	Close	19
+ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	JUMP	#chat-composer-field	2
+ComposerModelsFilesTest.B-151 the Add tray opens Saved prompts where 2_1_4 kept them	JUMP	#kit-sheet	19
+ComposerModelsFilesTest.B-CHAT-009 the tray offers Photos, File and More where the platform offers them, never a paste button	ABA	Attach and more	2
+ComposerModelsFilesTest.B-CHAT-009 the tray offers Photos, File and More where the platform offers them, never a paste button	JUMP	#chat-composer-field	2
+ComposerModelsFilesTest.B-CHAT-087 an at-word lists project files and a tap inserts and stages the file	ABA	#kit-composer-box	2
+ComposerModelsFilesTest.B-CHAT-087 an at-word lists project files and a tap inserts and stages the file	JUMP	#kit-composer-box	2
+ComposerModelsFilesTest.B-NAV-049 a slash field lists server commands and a tap fills the command	JUMP	#kit-composer-box	2
+ConnectingAliveTest.CA-4 a wait that is spent says the agent is not answering, with Restart, and nothing is working	FIRST	#chat-load-error	1
+ConnectingAliveTest.CA-4 a wait that is spent says the agent is not answering, with Restart, and nothing is working	JUMP	#chat-load-error	1
+ConnectingAliveTest.CA-7 the wait ending in not answering moves neither the header nor the message box	JUMP	#chat-loading	1
+DockUndoRoomTest.B-DOCK-UNDO-05 the newest reply ends above the Undo bar and comes back down when the bar goes	FIRST	#chat-turn-footer	1
+DockUndoRoomTest.B-DOCK-UNDO-05 the newest reply ends above the Undo bar and comes back down when the bar goes	JUMP	#chat-turn-footer	1
+DockUndoRoomTest.B-DOCK-UNDO-06 reading older replies, nothing they see moves when the bar comes and goes	JUMP	#chat-turn-footer	1
+DockUndoRoomTest.B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes	ABA	#chat-turn-footer	1
+DockUndoRoomTest.B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes	ABA	#kit-undo	19
+DockUndoRoomTest.B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes	JUMP	#chat-turn-footer	1
+FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	ABA	#chat-stop-button	3
+FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	ABA	Quick phrases	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	ABA	Send	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	BLINK	#chat-stop-button	3
+FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	BLINK	Quick phrases	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-001 sixty letters typed key by key reach the message box in order while saves echo back	JUMP	#chat-composer-field	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	ABA	#chat-stop-button	3
+FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	ABA	Quick phrases	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	ABA	Send	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	BLINK	#chat-stop-button	3
+FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	BLINK	Quick phrases	2
+FastTypingKeepsEveryLetterTest.A1-TYPE-002 sixty letters typed as a keyboard rewriting its word reach the message box in order	JUMP	#chat-composer-field	2
+PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	ABA	Details	6
+PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	DOUBLE	Details	6
+PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	DOUBLE	Edit ⁦e#.txt⁩?	6
+PermissionAnswersScreenTest.B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it	JUMP	Deny	9
+PermissionNoteFastTypingTest.A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny	ABA	Details	6
+PermissionNoteFastTypingTest.A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny	DOUBLE	Details	6
+PermissionNoteFastTypingTest.A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny	JUMP	Deny	9
+QuestionSheetScreenTest.B-CHAT-072 own answer is visible immediately and choosing a radio answer clears its text	ABA	Or write your own answer	6
+QuietLineScreenTest.B-435 ar 360dp text 1 live clock and real loss	JUMP	#chat-live-line	1
+QuietLineScreenTest.B-435 ar 360dp text 1 point 3 live clock and real loss	JUMP	#chat-live-line	1
+QuietLineScreenTest.B-435 ar Motion off counts time without a sweep	JUMP	#chat-live-line	1
+QuietLineScreenTest.B-435 pictures at density 3	JUMP	#chat-live-line	1
+R2DeclinedNotEditedTest.R2 gate - on screen the refused write's line reads 1 step, never Edited 1 file	FIRST	#chat-turn-footer	1
+R2DeclinedNotEditedTest.R2 gate - on screen the refused write's line reads 1 step, never Edited 1 file	JUMP	#chat-git-chip	5
+R2DeclinedNotEditedTest.R2 gate - on screen the refused write's line reads 1 step, never Edited 1 file	JUMP	#chat-turn-footer	1
+ReasoningDefaultOpenTest.the setting opens it, the person's choice holds, a changed setting starts over	ABA	#assistant-reasoning-block	20
+ReasoningDefaultOpenTest.the setting opens it, the person's choice holds, a changed setting starts over	ABA	The race is in the bloc, so the test waits on the settled to	20
+RequestSlotGoldensTest.P-103 a one-line request opens in full on tap and the rest stay one line	JUMP	Request # of #: Open this web page?, ⁦https://example.com/do	1
+S25ComposerLimitStripTest.B-181-001 the strip shows at 80 percent with its reset, and View usage opens Usage for this server	FIRST	#kit-composer-box	2
+S25ComposerLimitStripTest.B-181-001 the strip shows at 80 percent with its reset, and View usage opens Usage for this server	JUMP	#chat-composer-field	2
+S25ComposerLimitStripTest.B-181-002 the cross hides the strip	ABA	#kit-composer-box	2
+S25ComposerLimitStripTest.B-181-002 the cross hides the strip	BLINK	Dismiss	2
+S25ComposerLimitStripTest.B-181-002 the cross hides the strip	FIRST	#kit-composer-box	2
+S25ComposerLimitStripTest.B-181-002 the cross hides the strip	JUMP	#chat-composer-field	2
+S25ComposerLimitStripTest.B-181-003 no readings, or a window under 80 percent, shows no strip	JUMP	#chat-composer-field	2
+S25ComposerLimitStripTest.B-181-004 desktop render of the whole composer with the strip	FIRST	#kit-composer-box	2
+S25ComposerLimitStripTest.B-181-004 desktop render of the whole composer with the strip	JUMP	#kit-composer-box	2
+S8FoldAnchorTest.P-010 without the hold the opened row slides up by its growth	JUMP	#header-#	9
+SlashMenuComposerTest.S30-CHAT-002 a slash lists app actions five at most, then Show all opens the Commands sheet	JUMP	#kit-composer-box	2
+SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	ABA	#chat-slash-menu	2
+SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	ABA	Ask OpenCode…	2
+SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	BLINK	Ask OpenCode…	2
+SlashMenuComposerTest.S30-CHAT-002 an app action leaves the box and runs, a server command fills the box	JUMP	#kit-composer-box	2
+StarPromptRenders.B-STAR-018 the ask is its own card at rest and never rides a running turn	JUMP	#kit-prompt-bubble	1
+StepsCraftPicturesTest.glassDarkContourStepArrivingStrip	BLINK	#kit-step-node	9
+StepsCraftPicturesTest.glassDarkContourStepArrivingStrip	FIRST	#.#s	9
+StepsTreeTest.D1-ASK-002 the waiting step carries Allow once and Deny in place, with no card, and the slot above the box stays empty	FIRST	#chat-work-line	1
+StepsTreeTest.D1-ASK-002 the waiting step carries Allow once and Deny in place, with no card, and the slot above the box stays empty	JUMP	#chat-work-line	1
+StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	FIRST	#chat-turn-files	1
+StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	JUMP	#chat-git-chip	5
+StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	JUMP	#chat-turn-files	1
+StepsTreeTest.D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost	JUMP	#chat-work-line	1
+StepsTreeTest.D1-SCREEN-002 a reply with no counted tokens or cost ends on its short footer	FIRST	#chat-turn-files	1
+StepsTreeTest.D1-SCREEN-002 a reply with no counted tokens or cost ends on its short footer	JUMP	#chat-turn-files	1
+StoppedOnceScreenTest.a live stopped turn with one step says Stopped once and shows its step	FIRST	#chat-turn-footer	1
+StoppedOnceScreenTest.a live stopped turn with one step says Stopped once and shows its step	JUMP	#chat-turn-footer	1
+StoppedOnceScreenTest.the same turn reopened draws the same lines	FIRST	#chat-turn-footer	1
+StoppedOnceScreenTest.the same turn reopened draws the same lines	JUMP	#chat-turn-footer	1
+StoppedOnceScreenTest.words that streamed before Stop stay, and one Stopped follows them	FIRST	#chat-turn-footer	1
+StoppedOnceScreenTest.words that streamed before Stop stay, and one Stopped follows them	JUMP	#chat-turn-footer	1
+TurnFailSignInTest.B-AGENT-189 Details on the turn failure opens and holds the agent's own text	FIRST	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 Details on the turn failure opens and holds the agent's own text	JUMP	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 a turn that failed on a lapsed sign-in says the sign-in sentence alone, not also carry on	FIRST	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 a turn that failed on a lapsed sign-in says the sign-in sentence alone, not also carry on	JUMP	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 pressing Sign in again on the turn failure opens that agent's sign-in	FIRST	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 pressing Sign in again on the turn failure opens that agent's sign-in	JUMP	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 render the turn failure block at 360 dp, text 1_0 and 1_3	FIRST	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 render the turn failure block at 360 dp, text 1_0 and 1_3	JUMP	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 the turn failure block has one button, Sign in again, and no providers or model detour	FIRST	#chat-reply-failed	1
+TurnFailSignInTest.B-AGENT-189 the turn failure block has one button, Sign in again, and no providers or model detour	JUMP	#chat-reply-failed	1
