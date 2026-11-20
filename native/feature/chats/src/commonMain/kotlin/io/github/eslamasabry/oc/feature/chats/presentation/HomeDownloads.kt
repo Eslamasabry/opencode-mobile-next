@@ -78,7 +78,7 @@ public object HomeDownloadSizes {
             HomeDownloadKind.Helper -> HELPER_MB
         }
 
-    /** The size [of] says, in bytes. One unit for every size the app says or compares (the seam; see B-AGENT-SIZE-001). */
+    /** The size [of] says, in bytes: the decimal megabyte `PhoneSizes` reads (B-AGENT-SIZE-001). */
     public fun bytesOf(kind: HomeDownloadKind): Long = of(kind) * BYTES_PER_MB
 
     /** A size in bytes said in whole megabytes, rounded up (what a download needs). */

@@ -628,16 +628,21 @@ private val noticeEdge: Modifier
 @Composable
 private fun storageSize(bytes: Long): String =
     when {
-        bytes >= 1_000_000_000L ->
+        bytes >= BYTES_PER_GB ->
             stringResource(
                 Res.string.termuxStorageBytesGb,
-                "${bytes / 1_000_000_000L}.${bytes % 1_000_000_000L * 10 / 1_000_000_000L}",
+                "${bytes / BYTES_PER_GB}.${bytes % BYTES_PER_GB * 10 / BYTES_PER_GB}",
             )
-        bytes >= 1_000_000L ->
+        bytes >= BYTES_PER_MB ->
             stringResource(
                 Res.string.termuxStorageBytesMb,
-                "${bytes / 1_000_000L}.${bytes % 1_000_000L * 10 / 1_000_000L}",
+                "${bytes / BYTES_PER_MB}.${bytes % BYTES_PER_MB * 10 / BYTES_PER_MB}",
             )
-        bytes >= 1_000L -> stringResource(Res.string.termuxStorageBytesKb, "${bytes / 1_000L}")
+        bytes >= BYTES_PER_KB -> stringResource(Res.string.termuxStorageBytesKb, "${bytes / BYTES_PER_KB}")
         else -> stringResource(Res.string.termuxStorageBytesB, "$bytes")
     }
+
+// The decimal units Android's own Settings and Files show (one unit with PhoneSizes).
+private const val BYTES_PER_KB = 1_000L
+private const val BYTES_PER_MB = 1_000_000L
+private const val BYTES_PER_GB = 1_000_000_000L
