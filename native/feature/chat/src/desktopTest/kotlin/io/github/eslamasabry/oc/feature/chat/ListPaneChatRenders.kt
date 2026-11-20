@@ -171,10 +171,10 @@ class ListPaneChatRenders {
             ) { Conversation() } }
         }
 
-    /** Decision 3: the pages pane of a 1024 x 1366 portrait tablet beside the 360 dp list. */
+    /** Decision 3: the pages pane of a 1024 x 1366 portrait tablet beside the 320 dp list. */
     @Test
     fun conversationPanePortrait() =
-        shoot("chat-pane-664x1366", 664, 1366) {
+        shoot("chat-pane-704x1366", 704, 1366) {
             KitPaneWindow(Modifier.fillMaxSize()) {
                 CompositionLocalProvider(LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp) { Conversation() }
             }

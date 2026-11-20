@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -213,7 +214,13 @@ class ListPaneHomeRenders {
             text = "",
         )
 
-    private fun shoot(name: String, wDp: Int, hDp: Int, content: @Composable () -> Unit) {
+    private fun shoot(
+        name: String,
+        wDp: Int,
+        hDp: Int,
+        measure: androidx.compose.ui.test.ComposeUiTest.() -> Unit = {},
+        content: @Composable () -> Unit,
+    ) {
         val out = File("build/bigscreen/list-pane-real").also { it.mkdirs() }
         val previous = Locale.getDefault()
         Locale.setDefault(Locale.forLanguageTag("en"))
@@ -241,6 +248,7 @@ class ListPaneHomeRenders {
                 mainClock.advanceTimeBy(1_000)
                 waitForIdle()
                 ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$name.png"))
+                measure()
             }
         } finally {
             Locale.setDefault(previous)
@@ -260,13 +268,15 @@ class ListPaneHomeRenders {
             }
         }
 
-    /** Decision 3: the list pane beside a conversation in a 1024 x 1366 portrait tablet (360 dp of 1024). */
+    /** Decision 3: the list pane beside a conversation in a 1024 x 1366 portrait tablet (320 dp of 1024). */
     @Test
     fun homeListPanePortrait() =
-        shoot("home-pane-360x1366", 360, 1366) {
+        shoot("home-pane-320x1366", 320, 1366) {
             KitPaneWindow(Modifier.fillMaxSize()) {
                 val open = ChatRoute(ConversationRef(P1, SessionId("checkout")))
-                CompositionLocalProvider(LocalOpenBeside provides open) { ChatsScreen(homeState(), RecordingChatsActions()) }
+                CompositionLocalProvider(LocalOpenBeside provides open) {
+                    ChatsScreen(homeState(), RecordingChatsActions())
+                }
             }
         }
 
@@ -297,11 +307,42 @@ class ListPaneHomeRenders {
     fun newConversationPane() =
         shoot("new-pane-920x800", 920, 800) {
             KitPaneWindow(Modifier.fillMaxSize()) {
-                CompositionLocalProvider(LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp, LocalRestingBeside provides true) {
+                CompositionLocalProvider(
+                    LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp,
+                    LocalRestingBeside provides true,
+                ) {
                     NewConversationScreen(newUi.copy(text = ""), NewActions)
                 }
             }
         }
+
+    /**
+     * B-NAV-231 (reproduction only, the release line's Home): one page from 600 to 839 dp, empty and with rows. Prints
+     * the header's and the body's left and right edges in dp (`BS231` lines in the test's output).
+     */
+    @Test
+    fun onePaneHome() {
+        for (w in listOf(600, 720, 800)) {
+            for ((kind, state) in listOf("rows" to homeState(), "empty" to ChatsUi(phase = ChatsPhase.Empty))) {
+                shoot("one-pane-home-$kind-${w}x800", w, 800, measure = { edges("$kind-$w", kind) }) {
+                    ChatsScreen(state, RecordingChatsActions())
+                }
+            }
+        }
+    }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.edges(name: String, kind: String) {
+        fun at(text: String): String =
+            onAllNodesWithText(text, substring = true)
+                .fetchSemanticsNodes()
+                .firstOrNull()
+                ?.boundsInRoot
+                ?.let { "%.0f..%.0f".format(it.left / 2f, it.right / 2f) } ?: "none"
+        val body =
+            if (kind == "rows") listOf("Right now", "Run the tests")
+            else listOf("No conversations yet", "New conversation")
+        println("BS231 $name header=${at("Conversations")} " + body.joinToString(" ") { "$it=${at(it)}" })
+    }
 
     /** The phone, unchanged (before and after must not differ by a pixel): Home, empty Home, New conversation. */
     @Test
