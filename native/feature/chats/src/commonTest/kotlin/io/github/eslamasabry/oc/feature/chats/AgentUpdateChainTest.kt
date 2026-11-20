@@ -158,7 +158,7 @@ class AgentUpdateChainTest {
         runCurrent()
         val reviewed = port.current
         assertTrue(reviewed.answered && sheet.current().sheet.visible)
-        sheet.proceed()
+        sheet.applyChoices()
         runCurrent()
         assertFalse(sheet.current().sheet.visible)
         port.offer.value = reviewed.copy(freeBytes = 0)
