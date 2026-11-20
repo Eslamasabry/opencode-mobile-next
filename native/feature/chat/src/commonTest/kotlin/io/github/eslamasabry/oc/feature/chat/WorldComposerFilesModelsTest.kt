@@ -79,6 +79,7 @@ import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -250,6 +251,85 @@ class WorldComposerFilesModelsTest {
         }
     }
 
+    /** OpenCode 2's exact dispatch correlation: the server's user message carries the id the client chose. */
+    private class CorrelatedGateway(base: FakeServerGateway, applied: ModelRef?) :
+        SelectionGateway(base, applied), io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway {
+        private var next = 0
+
+        override fun createPromptMessageId() =
+            io.github.eslamasabry.oc.core.common.ids.MessageId("msg_client_${++next}")
+
+        override suspend fun promptWithMessageId(
+            session: SessionId,
+            messageId: io.github.eslamasabry.oc.core.common.ids.MessageId,
+            prompt: io.github.eslamasabry.oc.core.model.OutgoingPrompt,
+            beforeSend: () -> Boolean,
+        ): Outcome<PromptAdmission> {
+            if (!beforeSend()) return Outcome.Failed(Failure.Unavailable(FeatureId("prompt")))
+            return when (val sent = prompt(session, prompt, null)) {
+                is Outcome.Failed -> sent
+                is Outcome.Ok -> Outcome.Ok(PromptAdmission.Confirmed(messageId.raw))
+            }
+        }
+    }
+
+    /**
+     * The phone's immediate main dispatcher on the test's virtual clock (F2 r2, build 10114): work posted to the main
+     * thread runs as its own task; a coroutine of the main context resumed FROM a main task runs at once, in place
+     * (nested inside the code that resumed it), and a resume from any other lane is posted. `yield()` posts, as on the
+     * phone. This is what let the delivery engine's `reconciled` run the world's settle again in the middle of a
+     * settle.
+     */
+    @OptIn(kotlinx.coroutines.InternalCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    private class DeviceMain(private val inner: kotlinx.coroutines.test.TestDispatcher) :
+        kotlinx.coroutines.CoroutineDispatcher(), kotlinx.coroutines.Delay {
+        private var onMain = false
+
+        private fun asMain(block: Runnable): Runnable =
+            object : Runnable {
+                override fun run() {
+                    val was = onMain
+                    onMain = true
+                    try {
+                        block.run()
+                    } finally {
+                        onMain = was
+                    }
+                }
+            }
+
+        private fun mainTask(block: () -> Unit): Runnable =
+            asMain(
+                object : Runnable {
+                    override fun run() = block()
+                }
+            )
+
+        override fun isDispatchNeeded(context: kotlin.coroutines.CoroutineContext): Boolean = !onMain
+
+        override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) =
+            inner.dispatch(context, asMain(block))
+
+        override fun scheduleResumeAfterDelay(
+            timeMillis: Long,
+            continuation: kotlinx.coroutines.CancellableContinuation<Unit>,
+        ) {
+            val handle =
+                inner.invokeOnTimeout(
+                    timeMillis,
+                    mainTask { with(continuation) { this@DeviceMain.resumeUndispatched(Unit) } },
+                    continuation.context,
+                )
+            continuation.invokeOnCancellation { handle.dispose() }
+        }
+
+        override fun invokeOnTimeout(
+            timeMillis: Long,
+            block: Runnable,
+            context: kotlin.coroutines.CoroutineContext,
+        ): kotlinx.coroutines.DisposableHandle = inner.invokeOnTimeout(timeMillis, asMain(block), context)
+    }
+
     /**
      * A server that cannot switch a conversation's runtime (Paseo) names the one this conversation
      * runs on, as `PaseoGateway.providerIdForSession` does.
@@ -268,22 +348,53 @@ class WorldComposerFilesModelsTest {
         ) = Outcome.Failed(Failure.Unavailable(FeatureId("agentFeatures")))
     }
 
+    /** What a restart keeps: a second fixture made with the first one's [Stores] reads what the first one wrote. */
+    private class Stores(
+        val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
+        val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
+        val payloads: MemoryPayloadStore = MemoryPayloadStore(),
+    )
+
     private inner class Fixture(
         val test: TestScope,
         selection: ModelRef? = null,
         runtime: String? = null,
-        val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
-        val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
-        val payloads: MemoryPayloadStore = MemoryPayloadStore(),
+        val stores: Stores = Stores(),
+        /**
+         * As on the phone (F2 r2): the server keeps the client's message id (OpenCode 2), so a bubble knows its row
+         * before the echo, and the world's main context behaves as the phone's immediate main dispatcher
+         * ([DeviceMain]).
+         */
+        phone: Boolean = false,
     ) {
+        val prefsBackend = stores.prefsBackend
+        val composerPrefs = stores.composerPrefs
+        val payloads = stores.payloads
         val base =
             FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
         val gateway =
-            if (runtime == null) SelectionGateway(base, selection)
-            else BoundRuntimeGateway(base, selection, runtime)
+            when {
+                runtime != null -> BoundRuntimeGateway(base, selection, runtime)
+                phone -> CorrelatedGateway(base, selection)
+                else -> SelectionGateway(base, selection)
+            }
         val operations = ScriptedOperations()
         val dispatcher = StandardTestDispatcher(test.testScheduler)
-        val dispatchers = TestDispatchers(dispatcher)
+        val main: kotlinx.coroutines.CoroutineDispatcher = if (phone) DeviceMain(dispatcher) else dispatcher
+        val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers =
+            if (!phone) TestDispatchers(dispatcher)
+            else
+                object : io.github.eslamasabry.oc.core.common.AppDispatchers {
+                    override val main = this@Fixture.main
+                    override val default = dispatcher
+                    override val io = dispatcher
+
+                    override fun serial(name: String) = dispatcher
+                }
+
+        init {
+            if (phone) base.capabilities.value = base.capabilities.value.copy(clientPromptMessageID = true)
+        }
         val clock = TestClock()
         val app = AppCoroutineScope(test.backgroundScope.coroutineContext)
         val kv =
@@ -589,6 +700,137 @@ class WorldComposerFilesModelsTest {
             runCurrent()
             assertEquals(1, drawnPrompts(f.world).count { it == "second ask" }, "and once after it")
             assertTrue(f.world.pending.value.isEmpty(), "the bubble settled on the server's copy")
+        }
+
+    /**
+     * F2 r2 (build 10114, journey 2, lines of the AppLog tag chat-send): New conversation sends; the chat opens on the
+     * bubble; the send goes out with the client's message id (the bubble now knows its row); the server admits it; the
+     * run starts; the server's copy arrives under that id and the bubble settles. Up to here one frame per state.
+     */
+    private suspend fun TestScope.firstSendThroughSettle(
+        f: Fixture,
+        words: String,
+        watch: () -> Unit,
+    ) {
+        val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+        f.gateway.holdNextPrompt = hold
+        f.connect()
+        val engine = f.engine()
+        assertIs<Outcome.Ok<*>>(engine.send(SendRequest(ref, words)))
+        runCurrent()
+        f.world
+        runCurrent()
+        val clientId =
+            assertNotNull(
+                    engine.pending.value.single().dispatchedMessageId,
+                    "the send went out with the client's own message id",
+                )
+                .raw
+        watch()
+        runCurrent()
+        // The send's answer: admitted (device line 3) before the server's copy is read.
+        hold.complete(Unit)
+        advanceTimeBy(60)
+        runCurrent()
+        f.base.events.emit(GatewayEvent.RunStarted(ref.sessionId))
+        f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo(clientId, ref.sessionId.raw, Role.User)))
+        f.base.events.emit(
+            GatewayEvent.PartUpserted(Part("t1", clientId, ref.sessionId.raw, PartType.Text, "text", words))
+        )
+        advanceTimeBy(60)
+        runCurrent()
+        assertTrue(f.world.pending.value.isEmpty(), "the bubble settled on the server's copy")
+        assertEquals(listOf(words), drawnPrompts(f.world), "one message after the hand-over")
+    }
+
+    @Test
+    fun `B-CHAT-ONCE-007 every state the world publishes while the first bubble settles draws the message once`() =
+        runTest {
+            // Device line 5, 1 ms after "settled": the delivery engine's reconciled ran the world's settle again in the
+            // middle of the settle, on the bubble already stripped of its client id, and that run published the bubble
+            // without its row while the row was shown. Each state is read the moment it is published.
+            val f = Fixture(this, phone = true)
+            val frames = mutableListOf<List<String>>()
+            firstSendThroughSettle(f, "hello d8") {
+                backgroundScope.launch(f.main) { f.world.pending.collect { frames += drawnPrompts(f.world) } }
+                backgroundScope.launch(f.main) { f.world.transcript.collect { frames += drawnPrompts(f.world) } }
+            }
+            val twice = frames.withIndex().filter { (_, drawn) -> drawn.count { it == "hello d8" } != 1 }
+            assertTrue(frames.size > 2, "the states were read: $frames")
+            assertTrue(twice.isEmpty(), "states drawing the message other than once: $twice of ${frames.size}")
+        }
+
+    @Test
+    fun `B-CHAT-ONCE-008 every chat state the screen is given draws the first message once through the hand-over`() =
+        runTest {
+            // The screen's own pairing (ChatPresenter.states): the rows and the bubbles reach it as separate values, so
+            // any state the world publishes, even for a moment, can be drawn for a frame.
+            val f = Fixture(this, phone = true)
+            val frames = mutableListOf<List<String>>()
+            firstSendThroughSettle(f, "hello d8") {
+                val screen = kotlinx.coroutines.CoroutineScope(backgroundScope.coroutineContext + f.main)
+                val states =
+                    io.github.eslamasabry.oc.feature.chat.presentation
+                        .ChatPresenter(f.world, RecordingNavigator(), Immediate)
+                        .states(screen, f.dispatcher, kotlinx.coroutines.flow.SharingStarted.Eagerly)
+                backgroundScope.launch(f.main) {
+                    states.collect { ui ->
+                        frames += ui.rows.filterIsInstance<PromptRow>().map { it.text } + ui.pending.map { it.text }
+                    }
+                }
+            }
+            val twice = frames.withIndex().filter { (_, drawn) -> drawn.count { it == "hello d8" } > 1 }
+            assertTrue(frames.isNotEmpty(), "the screen was given states")
+            assertTrue(twice.isEmpty(), "screen states drawing the message twice: $twice of ${frames.size}")
+        }
+
+    @Test
+    fun `B-CHAT-ONCE-009 a send in an existing conversation draws once in every state of its settle`() =
+        runTest {
+            // J22 (build 10114, 24.135 s): a send in a conversation with earlier turns drew its bubble twice for a
+            // frame, "Sending" under it, the shape of journey 2: the same settle run again in the middle of the settle.
+            val f = Fixture(this, phone = true)
+            f.open()
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u0", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t0", "u0", ref.sessionId.raw, PartType.Text, "text", "first ask"))
+            )
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("a0", ref.sessionId.raw, Role.Assistant)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("r0", "a0", ref.sessionId.raw, PartType.Text, "text", "first answer"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.world.draftChanged("second ask")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("second ask"))
+            runCurrent()
+            val clientId =
+                assertNotNull(
+                        f.engine().pending.value.single().dispatchedMessageId,
+                        "the send went out with the client's own message id",
+                    )
+                    .raw
+            val frames = mutableListOf<List<String>>()
+            backgroundScope.launch(f.main) { f.world.pending.collect { frames += drawnPrompts(f.world) } }
+            backgroundScope.launch(f.main) { f.world.transcript.collect { frames += drawnPrompts(f.world) } }
+            runCurrent()
+            hold.complete(Unit)
+            advanceTimeBy(60)
+            runCurrent()
+            f.base.events.emit(GatewayEvent.RunStarted(ref.sessionId))
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo(clientId, ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(Part("t1", clientId, ref.sessionId.raw, PartType.Text, "text", "second ask"))
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(f.world.pending.value.isEmpty(), "the bubble settled on the server's copy")
+            assertEquals(1, drawnPrompts(f.world).count { it == "second ask" }, "one message after the hand-over")
+            val twice = frames.withIndex().filter { (_, drawn) -> drawn.count { it == "second ask" } != 1 }
+            assertTrue(frames.size > 2, "the states were read: $frames")
+            assertTrue(twice.isEmpty(), "states drawing the new message other than once: $twice of ${frames.size}")
         }
 
     @Test
@@ -1194,9 +1436,7 @@ class WorldComposerFilesModelsTest {
             val second =
                 Fixture(
                     this,
-                    prefsBackend = first.prefsBackend,
-                    composerPrefs = first.composerPrefs,
-                    payloads = first.payloads,
+                    stores = first.stores,
                 )
             second.queuesPrompts()
             second.open()
@@ -1223,9 +1463,7 @@ class WorldComposerFilesModelsTest {
             val second =
                 Fixture(
                     this,
-                    prefsBackend = first.prefsBackend,
-                    composerPrefs = first.composerPrefs,
-                    payloads = first.payloads,
+                    stores = first.stores,
                 )
             second.queuesPrompts()
             second.open()

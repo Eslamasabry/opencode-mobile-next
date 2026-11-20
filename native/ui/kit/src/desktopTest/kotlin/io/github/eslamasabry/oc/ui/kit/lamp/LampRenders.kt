@@ -161,7 +161,7 @@ class LampRenders {
     private fun anchorPx(): Rect {
         val d = DENSITY
         val right = (W_DP - 16f) * d
-        val bottom = (H_DP - LIGHT_BOTTOM_DP - KitLampDims.TOUCH_PAD) * d
+        val bottom = (H_DP - LIGHT_BOTTOM_DP - (KitLampDims.TOUCH_H - KitLampDims.QUIET_H) / 2f) * d
         val top = bottom - KitLampDims.OPEN_H * d
         return Rect(right - KitLampDims.FACE_W * d, top, right, bottom)
     }

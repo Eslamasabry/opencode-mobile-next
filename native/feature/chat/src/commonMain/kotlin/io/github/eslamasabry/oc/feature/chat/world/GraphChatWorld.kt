@@ -1257,7 +1257,7 @@ internal class GraphChatWorld(
                         delivery.running(ref, s.run.busy)
                         services.chatRequests.engine.runActivity(sid, s.run.busy)
                         syncDelivery(delivery)
-                        settlePending(s)
+                        settleBubbles(s)
                         reconcilePendingReceipts()
                     }
                 },
@@ -2564,7 +2564,8 @@ internal class GraphChatWorld(
         val expected = currentAttached()
         baselines[localId] =
             expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
-        setPending(localId) { it.copy(state = PendingState.Sending, failure = null) }
+        // A new attempt finds its own row again (a new client id, a new baseline): the old one no longer stands for it.
+        setPending(localId) { it.copy(state = PendingState.Sending, failure = null, serverRowKey = null) }
         // Try again sends the same words, files and model; the live composer is irrelevant.
         val original = sentSnapshots[localId] ?: SentSnapshot(persistentListOf(), null)
         return dispatch(localId, bubble.text, original, expected)
@@ -2934,7 +2935,7 @@ internal class GraphChatWorld(
                 }
                 .toImmutableList()
         }
-        settlePending(mutableTranscript.value)
+        settleBubbles(mutableTranscript.value)
         publishVoiceConversation()
     }
 
@@ -2982,7 +2983,37 @@ internal class GraphChatWorld(
     private val settleNotes = HashMap<Long, String>()
 
     /**
-     * Canonical ids win; the fallback is post-dispatch, admitted and one-to-one.
+     * F2 r2 (build 10114, line 5 of journey 2): the delivery engine's `reconciled`, called while a bubble settles, ran
+     * the settle again in place (the world's delivery watch resumes at once on the phone's main dispatcher), on the
+     * bubble already stripped of its client id but not yet removed, and that run published it without its row while the
+     * row was shown: one frame drew the message twice. A settle never runs inside another one: a call made during a
+     * run is done once the run has ended.
+     */
+    private fun settleBubbles(s: TranscriptState) {
+        if (settling) {
+            settleAgain = true
+            return
+        }
+        settling = true
+        try {
+            settlePending(s)
+            var again = 0
+            while (settleAgain && again++ < MAX_SETTLE_AGAIN) {
+                settleAgain = false
+                settlePending(mutableTranscript.value)
+            }
+        } finally {
+            settling = false
+            settleAgain = false
+        }
+    }
+
+    /** F2 r2: a settle is running ([settleBubbles] is not entered twice); [settleAgain]: it was asked for meanwhile. */
+    private var settling = false
+    private var settleAgain = false
+
+    /**
+     * Canonical ids win; the fallback is post-dispatch, admitted and one-to-one. Run only through [settleBubbles].
      *
      * F2 (build 10113, the first message drawn twice for a frame): a bubble that cannot settle yet (not admitted,
      * or its receipt still being looked up) but whose server row is already in the transcript is handed to that row
@@ -3057,6 +3088,11 @@ internal class GraphChatWorld(
             settled += matchKey
             settleNotes.remove(bubble.localId)
             retireFailedTwins(bubble.localId)
+            // F2 r2: the bubble leaves first, in the state that shows its row, before anything that can run code of
+            // other parts in place (the delivery engine's reconciled below).
+            mutablePending.update { list ->
+                list.filterNot { it.localId == bubble.localId }.toImmutableList()
+            }
             acknowledgedDraft(bubble.localId)
             admitted -= bubble.localId
             canonical.remove(bubble.localId)
@@ -3068,17 +3104,16 @@ internal class GraphChatWorld(
                     ?.engine
                     ?.reconciled(it)
             }
-            mutablePending.update { list ->
-                list.filterNot { it.localId == bubble.localId }.toImmutableList()
-            }
         }
-        // In the same run as the transcript: the row that is each bubble, so no frame draws the words twice.
+        // In the same run as the transcript: the row that is each bubble, so no frame draws the words twice. F2 r2: a
+        // row once known stays the bubble's while the bubble lives (a new attempt clears it, retrySend).
+        fun rowOf(bubble: PendingSend) = shownAs[bubble.localId] ?: canonical[bubble.localId] ?: bubble.serverRowKey
         val bubbles = mutablePending.value
-        if (bubbles.any { it.serverRowKey != (shownAs[it.localId] ?: canonical[it.localId]) })
+        if (bubbles.any { it.serverRowKey != rowOf(it) })
             mutablePending.update { list ->
                 list
                     .map {
-                        val key = shownAs[it.localId] ?: canonical[it.localId]
+                        val key = rowOf(it)
                         if (it.serverRowKey == key) it else it.copy(serverRowKey = key)
                     }
                     .toImmutableList()
@@ -3455,6 +3490,9 @@ internal class GraphChatWorld(
 
         /** How long a failure page of a server the app starts waits for a read already on its way: over the swap. */
         const val FAILED_SETTLE_MS = 300L
+
+        /** F2 r2: settles asked for during a settle, run after it; a bound, never reached in practice. */
+        const val MAX_SETTLE_AGAIN = 4
 
         /** F23: how long a page kept mid-reply waits for the live read before it is drawn anyway. */
         const val KEPT_MID_REPLY_WAIT_MS = 1_200L
