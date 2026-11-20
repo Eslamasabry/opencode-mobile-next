@@ -96,7 +96,7 @@ class AgentUpdateNoRoomRenders {
 
         override fun removalFacts(id: AgentId): AgentRemovalFacts = AgentRemovalFacts(null, true, true)
 
-        override suspend fun review(): Outcome<Unit> = Unit.ok()
+        override suspend fun review(raise: Boolean): Outcome<Unit> = Unit.ok()
     }
 
     /** One row of the offer, as the engine reads it from the disk and the pins. */

@@ -60,8 +60,12 @@ public interface AgentUpdateChoices {
     /** The facts the confirm before a removal states: read from the existing removal, never guessed. */
     public fun removalFacts(id: AgentId): AgentRemovalFacts
 
-    /** The Home row's "Review": makes the sheet show again (sheetDue = true) for the current key. */
-    public suspend fun review(): Outcome<Unit>
+    /**
+     * The Home row's "Review": makes the sheet show again (sheetDue = true) for the current key. [raise] false is a
+     * reading only (room and versions again): it never makes the sheet due. The open sheet's timer reads that way; a
+     * timer that raised the sheet re-opened one already answered.
+     */
+    public suspend fun review(raise: Boolean = true): Outcome<Unit>
 }
 
 public data class AgentUpdateStarted(
