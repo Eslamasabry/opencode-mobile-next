@@ -14505,6 +14505,8 @@ widgets:widget_ask_outside_run	a057e0b034
 widgets:widget_ask_outside_write	5cb0ee699b
 widgets:widget_ask_permission	3b63d00855
 widgets:widget_ask_read	e81121a3e8
+widgets:widget_status_not_set_up	5b1b9e6744
+widgets:widget_status_set_up	8921f36c95
 workBackgroundPending	f973ccfbec
 workBackgroundRequested	e2c953031e
 workCancel	ef133eb749

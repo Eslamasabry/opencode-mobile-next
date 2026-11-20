@@ -84,4 +84,6 @@
     <string name="widget_allow_for">Consenti una volta: %1$s</string>
     <string name="widget_reply_for">Rispondi a %1$s</string>
     <string name="widget_step_for">%1$s: %2$s</string>
+    <string name="widget_status_set_up">configurato</string>
+    <string name="widget_status_not_set_up">non configurato</string>
 </resources>

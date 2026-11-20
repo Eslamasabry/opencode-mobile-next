@@ -20,12 +20,21 @@ public data class WidgetPanelUi(
     val project: String = "",
     val saving: Boolean = false,
     val failed: Boolean = false,
+    /** The setup is for a server the widget no longer follows: close it and open it again. */
+    val changed: Boolean = false,
     val closed: Boolean = false,
     val saved: Boolean = false,
 )
 
+/** How a save ended, in the three ways the window words differently. */
+public enum class WidgetPanelResult {
+    Saved,
+    Changed,
+    Failed,
+}
+
 public fun interface WidgetPanelPort {
-    public suspend fun save(state: WidgetPanelUi): Boolean
+    public suspend fun save(state: WidgetPanelUi): WidgetPanelResult
 }
 
 public interface WidgetPanelActions {
@@ -49,7 +58,7 @@ public class WidgetPanelViewModel(initial: WidgetPanelUi, private val port: Widg
 
     override fun background(value: String) {
         if (!mutable.value.saving && value in listOf("solid", "tinted", "transparent"))
-            mutable.value = mutable.value.copy(background = value, failed = false)
+            mutable.value = mutable.value.copy(background = value, failed = false, changed = false)
     }
 
     override fun accent(value: String) {
@@ -73,9 +82,16 @@ public class WidgetPanelViewModel(initial: WidgetPanelUi, private val port: Widg
         if (mutable.value.saving) return
         mutable.value = mutable.value.copy(saving = true, failed = false)
         viewModelScope.launch {
-            val saved = port.save(mutable.value)
+            val result = port.save(mutable.value)
+            val saved = result == WidgetPanelResult.Saved
             mutable.value =
-                mutable.value.copy(saving = false, failed = !saved, closed = saved, saved = saved)
+                mutable.value.copy(
+                    saving = false,
+                    failed = !saved,
+                    changed = result == WidgetPanelResult.Changed,
+                    closed = saved,
+                    saved = saved,
+                )
         }
     }
 
