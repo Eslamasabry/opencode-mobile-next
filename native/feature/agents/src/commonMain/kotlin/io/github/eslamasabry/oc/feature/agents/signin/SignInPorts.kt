@@ -242,9 +242,9 @@ public interface SignInAgents {
 
     /**
      * `SignInOutputReader` over the transcript: the newest https page not on this phone, and a
-     * device code.
+     * device code. Suspends because a long transcript is read off the main thread.
      */
-    public fun read(transcript: String): SignInFound
+    public suspend fun read(transcript: String): SignInFound
 
     /**
      * The set-up terminal of an agent set up at first use ended: remember that the person set it up (whatever the

@@ -101,8 +101,16 @@ public class OkHttpEngineFactory(
         // its headers arrive, so the calls are cancelled through their own handles too.
         client.interceptors.filterIsInstance<LiveCalls>().forEach { it.cancelAll() }
         client.dispatcher.cancelAll()
-        client.connectionPool.evictAll()
-        client.dispatcher.executorService.shutdown()
+        // Closing a TLS socket writes its goodbye to the network, which Android refuses on the main
+        // thread (NetworkOnMainThreadException when a caller closed a client there). The pool is
+        // emptied on the dispatcher's own worker, then that executor winds down after it.
+        val executor = client.dispatcher.executorService
+        try {
+            executor.execute { client.connectionPool.evictAll() }
+        } catch (_: java.util.concurrent.RejectedExecutionException) {
+            // Already shut down by an earlier release: its pool was emptied then.
+        }
+        executor.shutdown()
     }
 
     override suspend fun openTerminal(

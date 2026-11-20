@@ -2265,19 +2265,25 @@ internal class Oc2Gateway(
                 is Outcome.Ok -> reply.value
             }
         val (bytes, mime) = downloaded
+        // Bigger than the viewer reads: refused with the plain "too big" answer. A whole large file
+        // held as bytes and then as base64 text ran the phone out of memory.
+        val tooBig = bytes === TOO_BIG || bytes.size > MAX_FILE_BYTES
         val sniff = minOf(bytes.size, 8192)
         var binary = false
         for (i in 0 until sniff) if (bytes[i] == 0.toByte()) binary = true
         val text =
-            if (binary) null
+            if (binary || tooBig) null
             else
                 try {
                     bytes.decodeToString(throwOnInvalidSequence = true)
                 } catch (_: CharacterCodingException) {
                     null
                 }
-        return if (text != null) FileContent(text, "text", null, mime).ok()
-        else FileContent(Base64.encode(bytes), "binary", "base64", mime).ok()
+        return when {
+            tooBig -> Failure.Media(MediaProblem.FileTooBig).failed()
+            text != null -> FileContent(text, "text", null, mime).ok()
+            else -> FileContent(Base64.encode(bytes), "binary", "base64", mime).ok()
+        }
     }
 
     /** `GET /fs/find?query=&type=file` (Flutter `Api2Gateway.findFile`): project-relative paths. */
@@ -2400,7 +2406,9 @@ internal class Oc2Gateway(
                 { request(route.path, route.method, route.query) },
                 readFailure = ::readFailure,
             ) { reply ->
-                reply.bodyAsBytes() to
+                val declared = reply.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L
+                // Over the cap by its own header: the body is never read ([TOO_BIG] stands for it).
+                (if (declared > MAX_FILE_BYTES) TOO_BIG else reply.bodyAsBytes()) to
                     reply.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()
             }
         if (response is Outcome.Failed) {
@@ -2553,6 +2561,12 @@ internal class Oc2Gateway(
     }
 
     companion object {
+        /** The largest file the viewer reads whole; more is refused, never held in memory. */
+        const val MAX_FILE_BYTES: Int = 16 * 1024 * 1024
+
+        /** Stands for a body that was not read because it declared more than [MAX_FILE_BYTES]. */
+        private val TOO_BIG = ByteArray(0)
+
         val Capabilities =
             ServerCapabilities(
                 scheduledPrompts =

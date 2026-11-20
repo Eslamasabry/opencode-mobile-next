@@ -256,9 +256,11 @@ class NativePhoneSignIn(
                 phones.value.noteSetUp(owner, descriptor.id)
             }
 
-            override fun read(transcript: String): SignInFound =
-                SignInOutputReader.read(transcript.lines().map(::SignInRow)).let {
-                    SignInFound(it.page?.url, it.code)
+            override suspend fun read(transcript: String): SignInFound =
+                withContext(dispatchers.default) {
+                    SignInOutputReader.read(transcript.lines().map(::SignInRow)).let {
+                        SignInFound(it.page?.url, it.code)
+                    }
                 }
         }
 

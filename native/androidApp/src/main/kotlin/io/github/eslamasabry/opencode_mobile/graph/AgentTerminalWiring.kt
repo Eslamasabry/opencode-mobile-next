@@ -303,11 +303,12 @@ class NativeSignInAgents(
         }
     }
 
-    override fun read(transcript: String): SignInFound {
-        val output =
-            SignInOutputReader.read(transcript.lineSequence().map { SignInRow(it) }.asIterable())
-        return SignInFound(output.page?.url, output.code)
-    }
+    override suspend fun read(transcript: String): SignInFound =
+        withContext(dispatchers.default) {
+            val output =
+                SignInOutputReader.read(transcript.lineSequence().map { SignInRow(it) }.asIterable())
+            SignInFound(output.page?.url, output.code)
+        }
 }
 
 @SingleIn(AppScope::class)
