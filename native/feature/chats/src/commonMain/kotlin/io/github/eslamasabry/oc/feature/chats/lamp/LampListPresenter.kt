@@ -144,7 +144,7 @@ public object LampListPresenter {
             pinned = row.pinned,
             subAgentOf = null,
             tree = tree,
-            stop = stopOf(row.ref, row.state == DockListState.Working, input.stops),
+            stop = stopOf(row.ref, row.ownStateRunning, input.stops),
             edit =
                 if (!input.editing) null
                 else LampRowEditUi(row.pinned, canMoveUp = index > 0, canMoveDown = index in 0 until pinnedOrder.lastIndex, canHide = true, isSubAgent = false),

@@ -28,8 +28,8 @@ class SettingsRowsWiringTest {
             opens = SETTINGS_OPENS,
             phraseChips = true,
             transcriptDisplay = true,
-            // Android draws the rings and the edge light, so the Other conversations row exists (the host passes EdgeDockSetting).
-            otherConversations = OtherConversationsMode.Rings,
+            // Android draws the edge light, so the Other conversations row exists (the host passes EdgeDockSetting).
+            otherConversations = OtherConversationsMode.EdgeLight,
         )
 
     private fun rows(facts: SettingsFacts) =

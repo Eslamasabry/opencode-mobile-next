@@ -634,10 +634,8 @@ public fun ChatsScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
-        // The edge dock over the list, clear of the foot bar; under Glass it bends the list's recording.
-        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
-            edgeDock?.Content(clearBottom = if (footBar) io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE.dp else 0.dp)
-        }
+        // Rings are retired on Home; keep the parameter for callers without mounting edgeDock.
+        edgeDock.let { Unit }
       }
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)

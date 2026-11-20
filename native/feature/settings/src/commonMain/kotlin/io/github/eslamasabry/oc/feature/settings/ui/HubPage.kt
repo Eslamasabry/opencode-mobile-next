@@ -587,7 +587,7 @@ private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
     }
 }
 
-/** Other conversations: three choices, one tap picks (the sheet closes, the choice is saved at once). */
+/** Other conversations: two choices, one tap picks (the sheet closes, the choice is saved at once). */
 @Composable
 internal fun ColumnScope.OtherConversationsBody(
     mode: OtherConversationsMode,
@@ -615,7 +615,6 @@ internal fun otherConversationsWords(
 ): String =
     stringResource(
         when (mode) {
-            OtherConversationsMode.Rings -> Res.string.dockModeRings
             OtherConversationsMode.EdgeLight -> Res.string.dockModeEdgeLight
             OtherConversationsMode.Hidden -> Res.string.dockModeHidden
         }
@@ -625,7 +624,6 @@ private fun otherConversationsHint(
     mode: OtherConversationsMode
 ): StringResource =
     when (mode) {
-        OtherConversationsMode.Rings -> Res.string.dockModeRingsHint
         OtherConversationsMode.EdgeLight -> Res.string.dockModeEdgeLightHint
         OtherConversationsMode.Hidden -> Res.string.dockModeHiddenHint
     }
