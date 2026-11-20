@@ -6,6 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.onNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
@@ -23,6 +27,11 @@ import kotlin.test.assertTrue
 /** FLICKER F14 / A2: what Home's status places do when a line comes or a stage changes its words. */
 @OptIn(ExperimentalTestApi::class)
 class HomeStatusSteadyTest {
+    private fun hasContentDescriptionContaining(text: String) =
+        SemanticsMatcher("content description contains $text") { node ->
+            node.config.getOrNull(SemanticsProperties.ContentDescription)?.any { text in it } == true
+        }
+
     @Test
     fun `B-HOME-221 a status line that arrives does not drop the list by its whole height in one frame`() =
         runComposeUiTest {
@@ -40,7 +49,7 @@ class HomeStatusSteadyTest {
                 }
             }
             mainClock.advanceTimeBy(1_000)
-            fun top(): Float = onNodeWithText("Write the notes", substring = true).fetchSemanticsNode().boundsInRoot.top
+            fun top(): Float = onNode(hasContentDescriptionContaining("Write the notes")).fetchSemanticsNode().boundsInRoot.top
             val before = top()
             state =
                 state.copy(download = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(10)))

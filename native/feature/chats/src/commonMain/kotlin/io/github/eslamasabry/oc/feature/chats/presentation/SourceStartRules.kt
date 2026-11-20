@@ -71,12 +71,14 @@ public object SourceStartRules {
     public fun takesTap(appStart: AppStart?): Boolean = savedLine(appStart) != SavedRowLine.MustConnect
 
     /**
-     * A row shows the working mark alone in the time's place while its phone agents' helper is being started
-     * ([AppStart.Agents]), or while its own kept tap ([waiting]) waits for its source; an agent update keeps its own
-     * word ("Updating…"). This phone's OpenCode rows keep their times while it starts: the pill carries that wait.
+     * A row shows the working mark alone in the time's place only for its OWN wait: its kept tap ([waiting]) waits
+     * for its source; an agent update keeps its own word ("Updating…"). While the phone's agents start, the ONE named
+     * stage in Home's status line says so ("Starting the agents' helper…"); a row never repeats it as a ring of its
+     * own (owner, build 10114: five rows, five rings, none naming anything, and still turning after the
+     * conversation had worked).
      */
     public fun rowGettingReady(appStart: AppStart?, waiting: Boolean): Boolean =
-        appStart == AppStart.Agents || (waiting && appStart != AppStart.AgentsUpdating)
+        waiting && appStart != AppStart.AgentsUpdating
 
     /** What a row waiting for its source (a kept tap) says: updating while the agents update, else connecting. */
     public fun waitingWord(appStart: AppStart?): WaitingWord =

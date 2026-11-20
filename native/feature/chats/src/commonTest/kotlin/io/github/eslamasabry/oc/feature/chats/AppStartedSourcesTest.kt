@@ -79,6 +79,14 @@ class AppStartedSourcesTest {
     }
 
     @Test
+    fun `B-HOME-225 while the agents start no row rings by itself; only a kept tap waits on its row`() {
+        assertFalse(SourceStartRules.rowGettingReady(AppStart.Agents, waiting = false))
+        assertFalse(SourceStartRules.rowGettingReady(null, waiting = false))
+        assertTrue(SourceStartRules.rowGettingReady(AppStart.Agents, waiting = true))
+        assertFalse(SourceStartRules.rowGettingReady(AppStart.AgentsUpdating, waiting = true))
+    }
+
+    @Test
     fun `APPSTART-002 a saved row of a source the app starts says starting and takes a tap, a computer's says connect`() {
         assertEquals(SavedRowLine.MustConnect, SourceStartRules.savedLine(null))
         assertEquals(SavedRowLine.PhoneStarting, SourceStartRules.savedLine(AppStart.Phone))
