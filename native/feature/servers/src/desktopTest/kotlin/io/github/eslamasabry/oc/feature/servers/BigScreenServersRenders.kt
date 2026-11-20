@@ -202,6 +202,14 @@ class BigScreenServersRenders {
                 )
             }
         }
+        shoot("servers-form-pair") {
+            CompositionLocalProvider(LocalKitSecretSink provides sink) {
+                ServerEditorScreen(
+                    ServerEditorUi(step = ServerEditorStep.Connect, newServer = true, canScan = true, canTailscale = true, pairingProblem = io.github.eslamasabry.oc.feature.servers.pairing.PairingProblem.NotJson),
+                    Editor(),
+                )
+            }
+        }
         shoot("servers-failed") {
             CompositionLocalProvider(LocalKitSecretSink provides sink) {
                 ServersScreen(listUi(ServerIssue.ConnectFailed, Failure.Network(NetworkWhy.Dns, Redacted("OpenGateway - Network - Dns"))), actions, onThisPhone = {})

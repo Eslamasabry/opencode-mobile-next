@@ -282,7 +282,7 @@ class ServersWideTest {
             },
         ) {
             val open = onNodeWithText("Open conversations").getBoundsInRoot()
-            val version = onNodeWithText("Version 2.2.6", substring = true).getBoundsInRoot()
+            val version = onNodeWithText("/home/dev/projects/oc_app", substring = true).getBoundsInRoot()
             val delta = version.left.value - open.left.value
             assertTrue(
                 delta > 300f,
@@ -308,11 +308,13 @@ class ServersWideTest {
         ) {
             val url = onNodeWithText("Server URL").getBoundsInRoot()
             val check = onNodeWithText("Check connection").getBoundsInRoot()
-            val delta = check.left.value - url.left.value
+            // The phone form sits unchanged in the start column; the help panel takes the other column.
             assertTrue(
-                delta > 300f,
-                "Expected form Check connection ($check) in second column beside Server URL ($url), delta=$delta",
+                check.top.value > url.bottom.value && kotlin.math.abs(check.left.value - url.left.value) < 64f,
+                "Expected the unchanged form in one column: url=$url, check=$check",
             )
+            val help = onNodeWithText("Tailscale setup and recovery").getBoundsInRoot()
+            assertTrue(help.left.value - url.left.value > 300f, "Expected help beside the form: help=$help, url=$url")
         }
     }
 

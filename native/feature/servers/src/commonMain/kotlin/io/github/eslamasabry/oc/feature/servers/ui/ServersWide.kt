@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorStep
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
 import io.github.eslamasabry.oc.ui.design.layout.CapAlign
@@ -396,6 +397,31 @@ internal fun WideFactRow(label: String, value: String, mono: Boolean) {
             KitMonoText(value)
         } else {
             KitText(value, role = TypeRole.Body, tone = TextTone.Primary)
+        }
+    }
+}
+
+/**
+ * Right-hand panel of the wide server form: the facts the server told us once it is checked or ready, otherwise the
+ * Tailscale guidance. It reads no field text beyond the address host and takes no secret.
+ */
+@Composable
+internal fun WideServerEditorDetails(
+    step: ServerEditorStep,
+    readyName: String,
+    host: String?,
+    version: String?,
+    runtimes: List<String>,
+    directory: String,
+    checked: Boolean,
+) {
+    if (step == ServerEditorStep.Ready || (checked && step == ServerEditorStep.Connect)) {
+        WideServerReadyDetailsPanel(readyName, host, version, runtimes, directory)
+    } else {
+        KitSurfacePanel(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                TailscaleHelpContent()
+            }
         }
     }
 }
