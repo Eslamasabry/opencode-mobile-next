@@ -535,7 +535,8 @@ class AttentionRuntime(
         val stopRef = outside?.stop?.ref
         val nowMs = android.os.SystemClock.elapsedRealtime()
         stopping.entries.removeAll { (ref, at) -> ref != stopRef || nowMs - at > STOPPING_MAX_MS }
-        val conversations = outside?.toStatusContent()?.let { it.copy(stopping = stopRef != null && stopRef in stopping) }
+        val conversations =
+            outside?.toStatusContent()?.let { it.copy(stopping = stopRef != null && stopRef in stopping) }
         latest = conversations ?: StatusModel.build(input, statusWords, clock.now(), ::formatTime)
         mutableConversationsRow.value = conversations
         mutableRow.value = latest

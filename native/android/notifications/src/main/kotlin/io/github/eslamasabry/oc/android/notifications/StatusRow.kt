@@ -65,7 +65,7 @@ public data class StatusContent(
     val stopConversation: ConversationRef? = null,
     /** The whole label of the Stop button (already names its conversation); empty = the plain "Stop the reply". */
     val stopLabel: String = "",
-    /** A Stop was tapped for [stopConversation] and has not settled: the row says "Stopping…" and offers no second Stop. */
+    /** A Stop is under way: the row says "Stopping…" and offers no second Stop. */
     val stopping: Boolean = false,
 ) {
     public val run: ReplyRun?

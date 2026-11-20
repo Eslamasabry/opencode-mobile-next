@@ -266,6 +266,17 @@ class NotificationActionBodyTest {
             putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
         }
 
+    private fun observer(events: MutableList<String>, short: Boolean = false) =
+        object : StopObserver {
+            override fun requested(conversation: ConversationRef) {
+                events += if (short) "requested" else "requested:${conversation.sessionId.raw}"
+            }
+
+            override fun settled(conversation: ConversationRef, outcome: ShadeOutcome) {
+                events += if (short) "settled:$outcome" else "settled:${conversation.sessionId.raw}:$outcome"
+            }
+        }
+
     @Test
     fun `B-ANDR-092 a Stop tap shows Stopping at once, then settles with the stop's result`() = runTest {
         val target = ConversationRef(ProfileId("p1"), SessionId("ses_7"))
@@ -274,9 +285,7 @@ class NotificationActionBodyTest {
         val handler =
             NotificationActionBody(
                 shade, { Unit.ok() }, { s -> events += "stop:${s.sessionId.raw}"; gate.await() }, lock,
-                onStopRequested = { events += "requested:${it.sessionId.raw}" },
-                onStopSettled = { c, o -> events += "settled:${c.sessionId.raw}:$o" },
-            )
+            ).apply { onStop = observer(events) }
         val tap = async { handler.onStatusAction(stopIntent()) }
         runCurrent()
         // Before the stop call returns, the row has already been told.
@@ -286,8 +295,8 @@ class NotificationActionBodyTest {
         assertEquals("settled:ses_7:StopSent", events.last())
         // A stop that fails settles as failed, so the row can offer Stop again.
         events.clear()
-        val failing = NotificationActionBody(shade, { Unit.ok() }, { Failed(Failure.Network()) }, lock,
-            onStopRequested = { events += "requested" }, onStopSettled = { _, o -> events += "settled:$o" })
+        val failing = NotificationActionBody(shade, { Unit.ok() }, { Failed(Failure.Network()) }, lock)
+            .apply { onStop = observer(events, short = true) }
         assertEquals(ShadeOutcome.StopFailed, failing.onStatusAction(stopIntent()))
         assertEquals(listOf("requested", "settled:StopFailed"), events)
         assertEquals(target.sessionId, SessionId("ses_7"))

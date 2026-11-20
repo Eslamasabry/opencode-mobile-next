@@ -40,11 +40,10 @@ public class NotificationActionBody(
     private val answerDeadline: Duration = 15.seconds,
     /** The person swiped the status row away (S11-9): reply watch ends for that run only. */
     private val onRowDismissed: (run: ReplyRun) -> Unit = {},
-    /** The person tapped Stop for [conversation]: the row shows "Stopping…" at once, before the stop call returns. */
-    private val onStopRequested: (conversation: ConversationRef) -> Unit = {},
-    /** The stop call for [conversation] ended with [outcome] (StopSent or StopFailed): the row settles. */
-    private val onStopSettled: (conversation: ConversationRef, outcome: ShadeOutcome) -> Unit = { _, _ -> },
 ) {
+    /** Told when a Stop is tapped and when its call ends, so the row can say "Stopping…" and settle. */
+    public var onStop: StopObserver = StopObserver.None
+
     private data class AnswerClaim(
         val profile: String,
         val session: String,
@@ -123,12 +122,12 @@ public class NotificationActionBody(
         // setAuthenticationRequired; below that nothing is stopped while locked (the row stays, its tap opens the chat).
         if (lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()) return ShadeOutcome.Ignored
         // Show the answer to the tap first: the person sees "Stopping…" while the call is made.
-        onStopRequested(conversation)
+        onStop.requested(conversation)
         val outcome =
             try {
                 withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
             } catch (e: kotlinx.coroutines.CancellationException) {
-                onStopSettled(conversation, ShadeOutcome.StopFailed)
+                onStop.settled(conversation, ShadeOutcome.StopFailed)
                 throw e
             }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
@@ -140,7 +139,7 @@ public class NotificationActionBody(
             } else {
                 ShadeOutcome.StopFailed
             }
-        onStopSettled(conversation, result)
+        onStop.settled(conversation, result)
         return result
     }
 
@@ -165,5 +164,18 @@ public class NotificationActionBody(
 
     private fun release(request: AnswerClaim) {
         synchronized(inFlight) { inFlight.remove(request) }
+    }
+}
+
+/** The status row's side of a Stop tap: [requested] fires before the stop call, [settled] after it. */
+public interface StopObserver {
+    public fun requested(conversation: ConversationRef)
+
+    public fun settled(conversation: ConversationRef, outcome: ShadeOutcome)
+
+    public object None : StopObserver {
+        override fun requested(conversation: ConversationRef): Unit = Unit
+
+        override fun settled(conversation: ConversationRef, outcome: ShadeOutcome): Unit = Unit
     }
 }

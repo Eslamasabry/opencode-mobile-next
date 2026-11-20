@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.android.notifications.ReplyStopper
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswer
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
 import io.github.eslamasabry.oc.android.notifications.ShadeOutcome
+import io.github.eslamasabry.oc.android.notifications.StopObserver
 import io.github.eslamasabry.oc.android.notifications.ShadeReply
 import io.github.eslamasabry.oc.android.notifications.StopReason
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
@@ -415,7 +416,7 @@ class PlatformHub(
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
     private var pinnedLaunchGeneration = 0L
 
-    /** The status row's "Stopping…" hooks, set by the status receiver from the attention runtime (process-wide, so the cold-start path has them). */
+    /** The status row's "Stopping…" hooks, set by the status receiver from the attention runtime. */
     @Volatile var onStopRequested: (ConversationRef) -> Unit = {}
     @Volatile var onStopSettled: (ConversationRef, Boolean) -> Unit = { _, _ -> }
 
@@ -454,8 +455,6 @@ class PlatformHub(
                     },
                     delegate = ShadeAnswerer { answer -> answer(answer) },
                 ),
-            onStopRequested = { onStopRequested(it) },
-            onStopSettled = { ref, outcome -> onStopSettled(ref, outcome == ShadeOutcome.StopSent) },
             stopper =
                 ReplyStopper { ref ->
                     // A cold process has no live connection yet: wait (bounded) for it instead of calling it "gone".
@@ -486,6 +485,15 @@ class PlatformHub(
                             true
                 },
         )
+            .also { body ->
+                body.onStop =
+                    object : StopObserver {
+                        override fun requested(conversation: ConversationRef) = onStopRequested(conversation)
+
+                        override fun settled(conversation: ConversationRef, outcome: ShadeOutcome) =
+                            onStopSettled(conversation, outcome == ShadeOutcome.StopSent)
+                    }
+            }
 
     /** Called once from OcApplication.onCreate, before any OS component runs. */
     fun start() {
