@@ -8,6 +8,8 @@ package io.github.eslamasabry.oc.core.common.text
 public object PhoneSizes {
     private const val LRI = '⁦'
     private const val PDI = '⁩'
+    private const val KILOBYTE = 1000.0
+    private const val MEGABYTE = 1_000_000.0
     private const val NBSP = ' '
 
     public fun text(bytes: Long): String {
