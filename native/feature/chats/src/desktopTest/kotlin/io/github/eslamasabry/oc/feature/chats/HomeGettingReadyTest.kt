@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.util.Locale
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -90,7 +91,7 @@ class HomeGettingReadyTest {
             starting = starting,
         )
 
-    private fun ui(vararg sources: ChatsListSourceUi, keptTap: Boolean = false): ChatsUi {
+    private fun ui(vararg sources: ChatsListSourceUi): ChatsUi {
         val base =
             ChatsState.build(
                 ChatFeedSnapshot(items.toImmutableList()),
@@ -100,12 +101,11 @@ class HomeGettingReadyTest {
                 settingsAvailable = true,
                 nowMs = NOW,
             )
-        val withSources = base.copy(home = base.home.copy(sources = persistentListOf(*sources)))
-        return if (keptTap) withSources.copy(waitingOpen = items.first().ref) else withSources
+        return base.copy(home = base.home.copy(sources = persistentListOf(*sources)))
     }
 
     /** The app has just been installed: the phone's OpenCode answers, the agents' helper is still starting. */
-    private val starting get() = ui(phoneSource(), agentsSource(starting = AppStart.Agents), keptTap = true)
+    private val starting get() = ui(phoneSource(), agentsSource(starting = AppStart.Agents))
 
     private val ready get() = ui(phoneSource(), agentsSource())
 
@@ -149,15 +149,13 @@ class HomeGettingReadyTest {
             .map { node -> node.config[SemanticsProperties.Text].joinToString(" ", transform = AnnotatedString::text) }
 
     @Test
-    fun `HOME-READY-001 replay install - agent rows show the working mark alone, then their times once ready`() =
+    fun `HOME-READY-001 replay install - no row rings while the agents start, every row keeps its time`() =
         runDesktopComposeUiTest(360, 900) {
             val show = home(starting)
-            // Agent rows (the kept tap too): the mark alone in the time's place, no "Connecting", no time; a screen
-            // reader hears the title, then "Getting ready…".
+            // OW2: the wait is named ONCE, in Home's status line; no row rings or says anything of its own.
             for (title in listOf("Tidy the docs demo README", "Refactor the sync worker")) {
                 val row = rowsOf(title).single()
-                assertTrue(row.startsWith(title) && "Getting ready…" in row, "row: $row")
-                assertTrue("Connecting" !in row && "min ago" !in row, "row: $row")
+                assertTrue("Getting ready" !in row && "min ago" in row, "row: $row")
             }
             // This phone's own OpenCode is up: its row keeps its time.
             val oc = rowsOf("Explain this project").single()
@@ -177,7 +175,6 @@ class HomeGettingReadyTest {
             val opening =
                 starting.let {
                     it.copy(
-                        waitingOpen = null,
                         home =
                             it.home.copy(
                                 sources = persistentListOf(phoneSource(), agentsSource()),
@@ -195,14 +192,30 @@ class HomeGettingReadyTest {
         }
 
     @Test
-    fun `HOME-READY-003 guard - an agent update keeps its word, and a source that failed shows times`() =
+    fun `HOME-READY-003 guard - an agent update puts no word or ring on the rows, and a failed source shows times`() =
         runDesktopComposeUiTest(360, 900) {
-            val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating), keptTap = true))
-            assertTrue("Updating…" in rowsOf("Tidy the docs demo README").single())
-            assertTrue("40 min ago" in rowsOf("Refactor the sync worker").single())
+            val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating)))
+            assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
+            val rows = spoken("kit-recent-row")
+            assertTrue(rows.none { "Getting ready" in it || "Updating" in it }, "rows: $rows")
             show(ui(phoneSource(), agentsSource(unreachable = true)))
             assertTrue(spoken("kit-recent-row").none { "Getting ready" in it }, "rows: ${spoken("kit-recent-row")}")
             assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
+        }
+
+    @Test
+    fun `B-HOME-227 a source that did not start is said once in a notice with Try again, never on the rows`() =
+        runDesktopComposeUiTest(360, 900) {
+            val said = "The agents on this phone didn't start"
+            // Waiting is not failing: while the helper starts the notice is not shown.
+            val show = home(ui(phoneSource(), agentsSource(starting = AppStart.Agents)))
+            assertTrue(texts().none { said in it }, "texts: ${texts()}")
+            // Refused for good: Home says so once, with its way forward, and no row repeats it.
+            show(ui(phoneSource(), agentsSource(unreachable = true)))
+            assertEquals(1, texts().count { said in it }, "texts: ${texts()}")
+            assertTrue(texts().any { it == "Try again" }, "texts: ${texts()}")
+            val rows = spoken("kit-recent-row")
+            assertTrue(rows.none { "Getting ready" in it || "Not answering" in it }, "rows: $rows")
         }
 
     private companion object {

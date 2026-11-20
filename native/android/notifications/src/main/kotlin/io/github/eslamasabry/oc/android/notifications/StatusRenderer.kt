@@ -31,6 +31,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                 .setContentTitle(content.title)
                 .setContentText(
                     if (content.stopping) words.text(R.string.notify_status_stopping)
+                    else if (content.stopFailed) words.text(R.string.notify_status_stop_failed)
                     else content.text.ifEmpty { content.lines.firstOrNull().orEmpty() }
                 )
                 .setContentIntent(openIntent(CONTENT_REQUEST, null, content))

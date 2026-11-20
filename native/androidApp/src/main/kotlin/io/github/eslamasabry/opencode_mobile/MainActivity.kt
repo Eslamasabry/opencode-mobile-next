@@ -32,6 +32,7 @@ import io.github.eslamasabry.opencode_mobile.graph.TerminalLinksGraph
 import io.github.eslamasabry.opencode_mobile.graph.UpdateNoticeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.UpdateNoticeHost
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import io.github.eslamasabry.opencode_mobile.graph.attentionRuntime
 import io.github.eslamasabry.opencode_mobile.graph.migration
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
 import io.github.eslamasabry.opencode_mobile.graph.projectExport
@@ -165,6 +166,8 @@ class MainActivity : ComponentActivity() {
         // phone's mode turned the status-bar icons dark over the app's dark page after every return.
         appGraph.projectExport.activate(this)
         platformHub.onResumed(this)
+        // The person is in the app: a notification's "couldn't stop it" words have been seen.
+        attentionRuntime.onAppOpened()
     }
 
     override fun onDestroy() {

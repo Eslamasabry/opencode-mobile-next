@@ -45,26 +45,38 @@ public class AgentUpdateChoiceEngine(
     private var reviewing = false
     private var sharedAttempt = emptyList<Pair<AgentId, String?>>()
 
-    public suspend fun refresh(): Unit = lane.withLock {
-        val snapshot = read()
-        val pending = snapshot?.items.orEmpty().filter { it.choice == AgentUpdateChoice.Remove }
-        if (pending.isNotEmpty() && !host.busy()) {
-            // Only a confirmed decide can write Remove. Revalidate the disk row and consume before dispatch.
-            host.removeChosen(pending, decisions)
-            read()
-        }
-    }
+    /**
+     * The inventory runs scripts in the phone's Linux and can take seconds. It is read under its own lock, never the
+     * command lane's, so a person's answer is not queued behind a timer's read; only the result is applied in the lane.
+     */
+    private val reads = Mutex()
 
-    private suspend fun read(): AgentUpdateOffer? {
-        inventory = host.inventory()
+    private fun apply(fresh: AgentUpdateInventory): AgentUpdateOffer? {
+        inventory = fresh
         state.value = decisions.offer(inventory, reviewing)
         return state.value
     }
 
-    override suspend fun review(raise: Boolean): Outcome<Unit> = lane.withLock {
-        if (raise) reviewing = true
-        read()
-        Unit.ok()
+    public suspend fun refresh() {
+        val fresh = reads.withLock { host.inventory() }
+        lane.withLock {
+            val snapshot = apply(fresh)
+            val pending = snapshot?.items.orEmpty().filter { it.choice == AgentUpdateChoice.Remove }
+            if (pending.isNotEmpty() && !host.busy()) {
+                // Only a confirmed decide can write Remove. Revalidate the disk row and consume before dispatch.
+                host.removeChosen(pending, decisions)
+                apply(reads.withLock { host.inventory() })
+            }
+        }
+    }
+
+    override suspend fun review(raise: Boolean): Outcome<Unit> {
+        val fresh = reads.withLock { host.inventory() }
+        return lane.withLock {
+            if (raise) reviewing = true
+            apply(fresh)
+            Unit.ok()
+        }
     }
 
     override suspend fun notNow(): Outcome<Unit> = lane.withLock { save(emptyList()) }
@@ -74,7 +86,9 @@ public class AgentUpdateChoiceEngine(
 
     override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> = lane.withLock {
         val presented = state.value?.items.orEmpty().associateBy { it.id }
-        val snapshot = read() ?: return@withLock stale()
+        // The answer is checked against the picture the sheet shows (the open sheet re-reads it by itself every 30 s):
+        // reading the phone's versions again here held the "Update 4 agents" button spinning for 6.4 s (F14).
+        val snapshot = apply(inventory) ?: return@withLock stale()
         val selected = snapshot.items.filter { it.id in choices }.map { it.copy(choice = choices[it.id]) }
         val staleRow = selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }
         if (selected.size != choices.size || staleRow) return@withLock stale()
@@ -84,7 +98,8 @@ public class AgentUpdateChoiceEngine(
         if (selected.any { it.choice != AgentUpdateChoice.Keep } && host.busy()) return@withLock busy()
         val removals = selected.filter { it.choice == AgentUpdateChoice.Remove }
         val refused = host.removeChosen(removals, decisions)
-        if (removals.isNotEmpty()) read()
+        // Removals change the disk: that one picture is read again (it is the only read an answer makes).
+        if (removals.isNotEmpty()) apply(reads.withLock { host.inventory() })
         AgentUpdateStarted(
             selected.ids(AgentUpdateChoice.Update), removals.map { it.id }.filterNot { it in refused },
             selected.ids(AgentUpdateChoice.Keep), refused,

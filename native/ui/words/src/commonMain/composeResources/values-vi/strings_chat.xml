@@ -1245,7 +1245,6 @@
     <string name="stageStartingLinux">Đang khởi động Linux…</string>
     <string name="stageStartingOpenCode">Đang khởi động OpenCode…</string>
     <string name="stageStartingHelper">Đang khởi động trình hỗ trợ các tác nhân…</string>
-    <string name="stageStartingAgents">Đang khởi động các tác nhân…</string>
     <string name="stageStartingAgent">Đang khởi động %1$s…</string>
     <string name="stageOpeningConversation">Đang mở cuộc trò chuyện…</string>
     <string name="kitTurnLiveStillThinking">Vẫn đang suy nghĩ</string>

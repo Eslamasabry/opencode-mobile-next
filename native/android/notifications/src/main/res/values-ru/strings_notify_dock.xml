@@ -30,4 +30,5 @@
     <string name="notify_status_action_stop_named">Остановить: %1$s</string>
     <string name="notify_status_action_stop">Остановить</string>
     <string name="notify_status_stopping">Останавливаю…</string>
+    <string name="notify_status_stop_failed">Не удалось остановить. Откройте приложение и попробуйте снова.</string>
 </resources>

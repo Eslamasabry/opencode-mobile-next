@@ -11,6 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMenuHold
+import io.github.eslamasabry.oc.ui.kit.foundation.KitMessageFace
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitMessageFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMessageContent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 
 /**
@@ -24,6 +29,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.shape
  * guard does not read it as a control touching the window edge and two stacked messages are not "tight"), and it is at
  * least the minimum target tall, so a one-line reply is as easy to tap as any button. The words keep their place at the
  * start of the row and the page gutter.
+ *
+ * Its menu opens on the message's face (F4, option C): a surface inside [content] that reports itself
+ * (`kitMessageFace`, the prompt's bubble), else the content's own box; the page dims around that face.
  */
 @Composable
 public fun KitMessageActions(
@@ -33,10 +41,16 @@ public fun KitMessageActions(
     content: @Composable () -> Unit,
 ) {
     val minTarget = LocalKitTokens.current.minTarget.dp
+    // F4, option C: the menu opens on the message's own face (the prompt's bubble, or the reply's own block), not on
+    // this full-width row, and the page dims around that face.
+    val face = remember { KitMessageFace() }
+    val tile = KitShapeId.Tile.shape()
     Box(
-        modifier.heightIn(min = minTarget).kitEdge(KitEdge.Bleed).kitMenuHold(label, onOpen, KitShapeId.Tile.shape()),
+        modifier.heightIn(min = minTarget).kitEdge(KitEdge.Bleed).kitMenuHold(label, onOpen, tile, face),
         contentAlignment = Alignment.CenterStart,
     ) {
-        content()
+        Box(Modifier.kitMessageContent(face, tile)) {
+            CompositionLocalProvider(LocalKitMessageFace provides face, content = content)
+        }
     }
 }

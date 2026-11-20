@@ -8,7 +8,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -52,6 +50,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportScrolledUnder
@@ -195,17 +195,11 @@ public fun KitTranscriptList(
     // Reading history: the phrase row folds away, so the jump pill rises out of the message box (owner 2026-11-14).
     io.github.eslamasabry.oc.ui.kit.frame.KitReportAwayFromLatest { state.awayFromLatest }
     val chrome = kitScreenChromePadding()
-    val insetPadding =
-        PaddingValues(
-            top = contentPadding.calculateTopPadding() + chrome.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding() + chrome.calculateBottomPadding(),
-        )
+    // The chrome's padding follows the bottom block's measured height, which moves on every frame the keyboard
+    // travels: it is read where the list is measured (its content padding, its pin) and placed (the pill, the
+    // fade), never while composing, so the list is not composed again on each of those frames.
+    val insetPadding = remember(contentPadding, chrome) { SumPadding(contentPadding, chrome) }
     val pin = remember(state) { BottomPin(state) }
-    val bottomInset = insetPadding.calculateBottomPadding()
-    SideEffect {
-        // The bottom chrome (composer, request slot) changed height: re-pin in the same frame as the new padding.
-        pin.inset(bottomInset.value)
-    }
     Box(modifier) {
         // E20-S30: what the list draws, recorded for the pill's blur (the pill itself is never in it).
         val backdrop = rememberKitFrostState()
@@ -224,7 +218,7 @@ public fun KitTranscriptList(
             // the page's (the pill lies in the page's recording: reading that would draw the pill into itself).
             modifier =
                 Modifier.fillMaxSize()
-                    .keepsBottom(pin)
+                    .keepsBottom(pin) { insetPadding.calculateBottomPadding().value }
                     .kitFrostSource(backdrop)
                     .kitScreenListEdges()
                     .testTag("transcript-list"),
@@ -233,7 +227,6 @@ public fun KitTranscriptList(
         // E20-S30 (owner 2026-11-07, "Big gap not required"): no solid lane behind the pill. The words scroll on under
         // the translucent composer; while the pill shows, only a short soft fade (never a block) settles them where
         // the viewport meets the composer, so letters do not run into the pill.
-        val chromeBottom = chrome.calculateBottomPadding()
         val ground = LocalKitColors.current.ground
         val fadeState =
             animateFloatAsState(
@@ -257,7 +250,7 @@ public fun KitTranscriptList(
             Box(
                 Modifier.align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(JUMP_FADE_DP.dp + chromeBottom)
+                    .heightAtLayout { JUMP_FADE_DP.dp + chrome.calculateBottomPadding() }
                     .testTag("transcript-jump-fade")
                     .drawBehind {
                         drawRect(
@@ -280,9 +273,12 @@ public fun KitTranscriptList(
             if (floating)
                 // A floating chat (owner 2026-11-17): the pill's place, centred above the message box, as a round arrow only;
                 // its target stands on the block's top.
-                Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom)
+                Modifier.align(Alignment.BottomCenter).liftAtLayout { chrome.calculateBottomPadding() }
             // Bottom centre, its face 8 dp above the composer's veil (the 48 dp target's own margin counts toward it).
-            else Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom + jumpPillLift(LocalKitTokens.current.minTarget).dp),
+            else {
+                val lift = jumpPillLift(LocalKitTokens.current.minTarget).dp
+                Modifier.align(Alignment.BottomCenter).liftAtLayout { chrome.calculateBottomPadding() + lift }
+            },
             round = floating,
         )
     }
@@ -336,8 +332,11 @@ internal class BottomPin(private val state: TranscriptListState) {
     }
 }
 
-private fun Modifier.keepsBottom(pin: BottomPin): Modifier =
+private fun Modifier.keepsBottom(pin: BottomPin, bottomInsetDp: () -> Float): Modifier =
     this.then(Modifier.layout { measurable, constraints ->
+        // The bottom chrome (composer, request slot) changed height: re-pin before the list measures with the new
+        // padding.
+        pin.inset(bottomInsetDp())
         if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
         val placeable = measurable.measure(constraints)
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
@@ -387,3 +386,35 @@ private fun KitJumpToLatest(
             onClick = jump,
         )
 }
+
+/** [a] plus [b], each side read only when asked (at measure), never while composing. */
+private class SumPadding(private val a: PaddingValues, private val b: PaddingValues) : PaddingValues {
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp =
+        a.calculateLeftPadding(layoutDirection) + b.calculateLeftPadding(layoutDirection)
+
+    override fun calculateTopPadding(): Dp = a.calculateTopPadding() + b.calculateTopPadding()
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp =
+        a.calculateRightPadding(layoutDirection) + b.calculateRightPadding(layoutDirection)
+
+    override fun calculateBottomPadding(): Dp = a.calculateBottomPadding() + b.calculateBottomPadding()
+}
+
+/** This part's height, [height], read at measure. */
+private fun Modifier.heightAtLayout(height: () -> Dp): Modifier =
+    layout { measurable, constraints ->
+        val h = height().roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
+        val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+        layout(placeable.width, h) { placeable.place(0, 0) }
+    }
+
+/** This part raised by [lift] from its place (as a bottom padding would), read at measure. */
+private fun Modifier.liftAtLayout(lift: () -> Dp): Modifier =
+    layout { measurable, constraints ->
+        val by = lift().roundToPx().coerceAtLeast(0)
+        val maxH =
+            if (constraints.hasBoundedHeight) (constraints.maxHeight - by).coerceAtLeast(0) else constraints.maxHeight
+        val placeable =
+            measurable.measure(constraints.copy(minHeight = constraints.minHeight.coerceAtMost(maxH), maxHeight = maxH))
+        layout(placeable.width, placeable.height + by) { placeable.place(0, 0) }
+    }

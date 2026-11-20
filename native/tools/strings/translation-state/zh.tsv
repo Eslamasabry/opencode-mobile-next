@@ -8512,6 +8512,7 @@ notifications:notify_status_reconnecting_generic	f987ad9aaa
 notifications:notify_status_reconnecting_title	13eb70484a
 notifications:notify_status_setup_title	128820a91b
 notifications:notify_status_still_working	70653d6417
+notifications:notify_status_stop_failed	57513d9d47
 notifications:notify_status_stopping	1cf8bee792
 notifications:notify_status_tasks_progress	c73a5e8487
 notifications:notify_status_tries_again_at	825ed1c2c5
@@ -11514,7 +11515,6 @@ skillsScreenLoadFailed	32578ee4bc
 skillsScreenLoading	e897e2aa98
 stageOpeningConversation	e1b16e3b63
 stageStartingAgent	edab4cd01e
-stageStartingAgents	fd8bbb990a
 stageStartingHelper	0e40257fb8
 stageStartingLinux	62581ab675
 stageStartingOpenCode	f74de953f2
