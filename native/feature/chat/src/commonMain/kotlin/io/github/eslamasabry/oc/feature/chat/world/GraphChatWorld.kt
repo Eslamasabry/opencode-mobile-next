@@ -331,6 +331,7 @@ internal class GraphChatWorld(
      * the connection's.
      */
     private var ownDirectory: String? = null
+    private var ownWorkspace: String? = null
 
     override val directory: String?
         get() =
@@ -1036,6 +1037,7 @@ internal class GraphChatWorld(
         voiceLiveUsers.clear()
         unbind()
         ownDirectory = null
+        ownWorkspace = null
         mutableCaps.value = ServerCapabilities()
         // Another server owns another catalog and selection; a stale graph publishes nothing.
         mutableModels.value = ComposerModels()
@@ -1374,6 +1376,7 @@ internal class GraphChatWorld(
                     val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
                     session?.title?.let { mutableTitle.value = it }
                     ownDirectory = session?.directory
+                    ownWorkspace = session?.workspaceId?.raw
                     // Issue 147: a folder in the phone's storage the agent cannot reach is said as the page opens.
                     checkPhoneFolder()
                     refreshReadOnly(gateway, session)
@@ -3149,7 +3152,7 @@ internal class GraphChatWorld(
     @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
     override suspend fun readPicture(path: String): Outcome<ByteArray> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        val read = a.gateway.fileContent(path)
+        val read = filesOf(a).fileContent(path)
         if (currentAttached() !== a) return Outcome.Failed(STALE)
         val file = (read as? Outcome.Ok)?.value ?: return read as Outcome.Failed
         if (file.encoding?.lowercase() != "base64" || file.content.length > MAX_PICTURE_BASE64) {
@@ -3174,16 +3177,33 @@ internal class GraphChatWorld(
         rootListing?.let { return it.await() }
         val mine = CompletableDeferred<Outcome<Set<String>>>()
         rootListing = mine
-        val listed = a.gateway.listFiles("")
+        val listed = filesOf(a).listFiles("")
         val result: Outcome<Set<String>> =
             when (listed) {
                 is Outcome.Ok -> Outcome.Ok(listed.value.filter { !it.isDir }.map { it.name }.toSet())
                 is Outcome.Failed -> listed
             }
+        // The one line a look at the build needs: how many files the root listing held and whether it answered.
+        chipLog.i { "chips: root listing n=${(result as? Outcome.Ok)?.value?.size ?: -1}" }
         // A failed or stale read is not kept: the next ask reads again.
         if ((result is Outcome.Failed || currentAttached() !== a) && rootListing === mine) rootListing = null
         mine.complete(result)
         return result
+    }
+
+    private val chipLog: io.github.eslamasabry.oc.core.common.Log
+        get() = io.github.eslamasabry.oc.core.common.AppLog.tagged("chips")
+
+    /**
+     * The files of THIS conversation's own folder, as the file pages read them. The gateway's shared location is the
+     * server's, which is not the conversation's folder when the server hosts several projects; asking it listed the
+     * wrong folder, so a name the reply's own file card opens was never confirmed.
+     */
+    private fun filesOf(a: Attached): io.github.eslamasabry.oc.core.domain.FileGateway {
+        val folder = ownDirectory?.takeIf { it.isNotBlank() }
+        val located = a.gateway as? io.github.eslamasabry.oc.core.domain.LocatedFileGateway
+        if (folder == null || located == null) return a.gateway
+        return located.filesAt(io.github.eslamasabry.oc.core.model.ServerLocation(folder, ownWorkspace))
     }
 
     override suspend fun fileExists(path: String): Outcome<Boolean> {
@@ -3194,7 +3214,7 @@ internal class GraphChatWorld(
         val dir = if (slash == 0) "/" else path.substring(0, slash)
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         if (!a.gateway.capabilities.value.fileBrowsing) return Outcome.Ok(false)
-        val listed = a.gateway.listFiles(dir)
+        val listed = filesOf(a).listFiles(dir)
         if (currentAttached() !== a) return Outcome.Failed(STALE)
         val nodes = (listed as? Outcome.Ok)?.value ?: return listed as Outcome.Failed
         return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
@@ -3214,7 +3234,11 @@ internal class GraphChatWorld(
     private suspend fun rootFileIn(a: Attached, name: String): Outcome<Boolean> =
         when (val names = rootFileNames(a)) {
             is Outcome.Failed -> names
-            is Outcome.Ok -> if (currentAttached() === a) Outcome.Ok(name in names.value) else Outcome.Failed(STALE)
+            is Outcome.Ok -> {
+                val found = name in names.value
+                chipLog.i { "chips: root name matched=$found" }
+                if (currentAttached() === a) Outcome.Ok(found) else Outcome.Failed(STALE)
+            }
         }
 
     private var acknowledgingRead = false
