@@ -74,6 +74,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -101,7 +102,7 @@ class ReopenTruthTest {
         )
 
     /** A server whose history read can be held back (a slow server while the conversation opens again). */
-    private class SlowHistory(val base: FakeServerGateway, val messages: List<MessageWithParts>) : ServerGateway by base {
+    private class SlowHistory(val base: FakeServerGateway, var messages: List<MessageWithParts>) : ServerGateway by base {
         var gate: CompletableDeferred<Unit>? = null
 
         override suspend fun messagePage(
@@ -423,5 +424,128 @@ class ReopenTruthTest {
                     assertTrue(first.work?.startsWith("fallback") != true, "turn $turn: $first")
                 }
             }
+        }
+
+    // ---- F23 (build 10113, edge-light-show E13): a page kept while its reply still ran ----
+
+    /** The story's prompt and its reply: [done] false = the reply still running (no completed time), as kept 2.2 s in. */
+    private fun story(done: Boolean): List<MessageWithParts> =
+        listOf(
+            prompt("u1", 10, "Write a 900 word story about a fox. No tools."),
+            msg(
+                MessageInfo(
+                    "a1",
+                    ref.sessionId.raw,
+                    Role.Assistant,
+                    providerId = "opencode",
+                    modelId = "big-pickle",
+                    time = MsgTime(11, if (done) 40 else null),
+                    finish = if (done) "stop" else null,
+                ),
+                thought("a1-r", "a1"),
+                *(if (done) arrayOf(words("a1-t", "a1", "The fox named the stars, one by one.")) else emptyArray()),
+            ),
+        )
+
+    private fun shownWords(world: ChatWorld): List<String> =
+        world.transcript.value.rows.mapNotNull {
+            when (it) {
+                is io.github.eslamasabry.oc.engine.transcript.state.PromptRow -> it.text
+                is io.github.eslamasabry.oc.engine.transcript.state.BlockRow -> it.text
+                else -> null
+            }
+        }
+
+    @Test
+    fun `B-CHAT-KEPT-001 a page kept while its reply ran is not drawn while the live read is a moment away`() =
+        runTest {
+            val f = Fixture(this, story(done = false))
+            f.connect()
+            val visit = f.worlds.open(ref)
+            runCurrent()
+            f.worlds.release(visit) // left 2.2 s into the reply
+            runCurrent()
+            assertNotNull(f.memory.page, "leaving kept the page")
+            // The reply finished while the person was away; the live read answers 250 ms after the chat opens.
+            f.gateway.messages = story(done = true)
+            val gate = CompletableDeferred<Unit>()
+            f.gateway.gate = gate
+            val again = f.worlds.open(ref)
+            runCurrent()
+            advanceTimeBy(250)
+            runCurrent()
+            assertTrue(
+                shownWords(again).isEmpty(),
+                "the page kept mid-reply is behind the server: nothing of it is drawn before the live read (${shownWords(again)})",
+            )
+            gate.complete(Unit)
+            runCurrent()
+            assertTrue("The fox named the stars, one by one." in shownWords(again), "the chat opens on the finished reply")
+            f.worlds.release(again)
+            runCurrent()
+        }
+
+    @Test
+    fun `B-CHAT-KEPT-003 while a mid-reply kept page waits, the chat shows its loading state, never the start page`() =
+        runTest {
+            val f = Fixture(this, story(done = false))
+            f.connect()
+            val visit = f.worlds.open(ref)
+            runCurrent()
+            f.worlds.release(visit)
+            runCurrent()
+            f.gateway.messages = story(done = true)
+            val gate = CompletableDeferred<Unit>()
+            f.gateway.gate = gate
+            val again = f.worlds.open(ref)
+            val presenter =
+                io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter(again, RecordingNavigator(), Immediate)
+            fun face(at: String) {
+                val ui = presenter.current()
+                assertEquals(
+                    io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase.Loading,
+                    ui.phase,
+                    "$at: the wait shows the loading state, as a cold open does, never the start page or an empty chat",
+                )
+                assertTrue(ui.rows.isEmpty(), "$at: no rows are drawn during the wait")
+            }
+            face("at once")
+            runCurrent()
+            face("after the first turn of the loop")
+            for (ms in listOf(250L, 500L, 400L)) {
+                advanceTimeBy(ms)
+                runCurrent()
+                face("${ms} ms on")
+            }
+            gate.complete(Unit)
+            runCurrent()
+            assertTrue("The fox named the stars, one by one." in shownWords(again), "the chat opens on the finished reply")
+            f.worlds.release(again)
+            runCurrent()
+        }
+
+    @Test
+    fun `B-CHAT-KEPT-002 with no live read the page kept mid-reply is still drawn after a moment`() =
+        runTest {
+            val f = Fixture(this, story(done = false))
+            f.connect()
+            val visit = f.worlds.open(ref)
+            runCurrent()
+            f.worlds.release(visit)
+            runCurrent()
+            val gate = CompletableDeferred<Unit>()
+            f.gateway.gate = gate
+            val again = f.worlds.open(ref)
+            runCurrent()
+            advanceTimeBy(5_000)
+            runCurrent()
+            assertTrue(
+                "Write a 900 word story about a fox. No tools." in shownWords(again),
+                "a server that does not answer never leaves the chat empty: the kept page is drawn",
+            )
+            gate.complete(Unit)
+            runCurrent()
+            f.worlds.release(again)
+            runCurrent()
         }
 }
