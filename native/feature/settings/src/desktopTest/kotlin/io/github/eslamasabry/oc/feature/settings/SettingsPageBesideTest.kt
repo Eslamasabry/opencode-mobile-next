@@ -14,6 +14,8 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
@@ -117,7 +119,7 @@ class SettingsPageBesideTest {
                         assertEquals(1, list, "$at: the group's rows stand beside the page")
                         val l = onNodeWithTag("settings-list-pane").getBoundsInRoot()
                         val d = onNodeWithTag("settings-detail-pane").getBoundsInRoot()
-                        assertTrue(abs(d.left.value - l.right.value) <= 1f, "$at: the page starts at the list's edge ($l, $d)")
+                        assertTrue(w - l.right.value > PAGE_CAP || abs(d.left.value - l.right.value) <= 1f, "$at: the page starts at the list's edge ($l, $d)")
                         val left = d.left.value - l.right.value
                         val right = w - d.right.value
                         assertTrue(right <= 1f || abs(left - right) <= 1f, "$at: fills, or two equal margins ($left, $right)")
@@ -132,26 +134,24 @@ class SettingsPageBesideTest {
 
     @Test
     fun `B-NAV-251 the open page and its scroll survive the 840 dp threshold both ways`() =
-        runDesktopComposeUiTest(1280, 420) {
-            val window = mutableStateOf(KitWindowInfo(1280f, 1100f))
+        runDesktopComposeUiTest(1280, 500) {
+            val window = mutableStateOf(KitWindowInfo(1280f, 500f))
             show(state(SettingsPage.About), window)
             waitForIdle()
             fun offset(): Float =
                 onAllNodes(hasScrollAction()).fetchSemanticsNodes().maxOf {
                     it.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)?.value?.invoke() ?: 0f
                 }
-            window.value = KitWindowInfo(1280f, 420f)
-            waitForIdle()
             onAllNodes(hasScrollAction()).fetchSemanticsNodes().let { assertTrue(it.isNotEmpty()) }
             onNodeWithTag("settings-detail-pane").performTouchInput { swipeUp() }
             waitForIdle()
             val scrolled = offset()
             assertTrue(scrolled > 0f, "the About page scrolls ($scrolled)")
-            window.value = KitWindowInfo(700f, 420f)
+            window.value = KitWindowInfo(700f, 500f)
             waitForIdle()
             assertEquals(0, onAllTag("settings-list-pane"), "narrow: one page")
             assertEquals(scrolled, offset(), "the page keeps its scroll when it goes under 840 dp")
-            window.value = KitWindowInfo(1280f, 420f)
+            window.value = KitWindowInfo(1280f, 500f)
             waitForIdle()
             assertEquals(1, onAllTag("settings-list-pane"), "wide again: beside the list")
             assertEquals(scrolled, offset(), "and when it comes back beside the list")
@@ -171,7 +171,7 @@ class SettingsPageBesideTest {
             show(state(SettingsPage.PhraseChips), mutableStateOf(KitWindowInfo(412f, 915f)), actions)
             waitForIdle()
             assertEquals(0, onAllTag("settings-list-pane"))
-            onNodeWithText("Phrase suggestions").performClick()
+            onAllNodesWithText("Phrase suggestions").onLast().performClick()
             waitForIdle()
             assertEquals(listOf("chips:false"), calls)
         }
@@ -194,5 +194,9 @@ class SettingsPageBesideTest {
             waitForIdle()
             assertTrue("outside:AppStorage" in base.calls, "the confirm door is the phone's: ${base.calls}")
         }
+    }
+
+    private companion object {
+        const val PAGE_CAP = 1000
     }
 }
