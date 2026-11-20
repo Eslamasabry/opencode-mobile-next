@@ -88,6 +88,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -1038,10 +1040,15 @@ class AndroidNewConversationHost(
                                         providerName = p.name.ifBlank { null },
                                         // Its thinking efforts (Paseo `thinkingOptions`, kept as `variants`).
                                         variants =
-                                            (p.modelData[model]?.get("variants") as? JsonObject)
-                                                ?.keys
-                                                ?.toList()
-                                                .orEmpty(),
+                                            newConversationVariants(
+                                                p.modelData[model]?.get("variants"),
+                                                catalog
+                                                    ?.models
+                                                    ?.firstOrNull { it.providerId == p.id && it.id == model }
+                                                    ?.variants
+                                                    ?.filterNot { it.disabled }
+                                                    ?.map { it.id },
+                                            ),
                                     )
                                 }
                             },
@@ -1811,3 +1818,22 @@ internal fun newConversationServerStateOf(state: PhoneServerState): NewConversat
             else NewConversationServerState.Stopped
         else -> NewConversationServerState.Starting
     }
+
+/**
+ * The thinking efforts a model offers. OpenCode 1 and the phone agents name them as the keys of an object; OpenCode 2
+ * lists them as rows with an id in its model catalog. Reading only the object left every OpenCode 2 model with none, so
+ * the Thinking choice never showed in New conversation.
+ */
+internal fun newConversationVariants(raw: JsonElement?, catalog: List<String>?): List<String> {
+    val own =
+        when (raw) {
+            is JsonObject -> raw.keys.toList()
+            is JsonArray ->
+                raw.mapNotNull { row ->
+                    (row as? JsonObject)?.get("id")?.let { (it as? JsonPrimitive)?.content }
+                        ?: (row as? JsonPrimitive)?.content
+                }
+            else -> emptyList()
+        }
+    return own.ifEmpty { catalog.orEmpty() }
+}
