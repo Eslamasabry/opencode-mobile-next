@@ -75,7 +75,10 @@ class NeedsYouWordsRenders {
         }
 
     private fun ComposeUiTest.host(style: Style, scale: Float, content: @Composable () -> Unit) =
-        k2Host(style, true, false, MotionLevel.Full, fontScale = scale, density = D, widthDp = W, heightDp = H, content = content)
+        k2Host(
+            style, true, false, MotionLevel.Full,
+            fontScale = scale, density = D, widthDp = W, heightDp = H, content = content,
+        )
 
     private fun ComposeUiTest.shoot(name: String) {
         ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, name))
@@ -110,7 +113,11 @@ class NeedsYouWordsRenders {
     fun `closed light beside a bubble renders`() {
         val busy = KitLampFace(2, listOf(mark("n", KitLampMarkKind.NeedsYou), mark("w", KitLampMarkKind.Working, 0.4f)))
         val marks =
-            listOf(mark("n", KitLampMarkKind.NeedsYou), mark("f", KitLampMarkKind.Failed), mark("w", KitLampMarkKind.Working, 0.4f))
+            listOf(
+                mark("n", KitLampMarkKind.NeedsYou),
+                mark("f", KitLampMarkKind.Failed),
+                mark("w", KitLampMarkKind.Working, 0.4f),
+            )
         val nine = KitLampFace(12, marks)
         val faces = listOf("quiet" to KitLampFace(), "busy" to busy, "nine" to nine)
         for (style in listOf(Style.Solid, Style.Glass)) for (scale in listOf(1f, 1.3f)) for ((name, face) in faces) {
