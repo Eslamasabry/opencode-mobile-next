@@ -30,7 +30,7 @@ internal fun BackNoteTip(leftTitle: String?, onDismissed: () -> Unit, bar: @Comp
     var shownTitle by remember { mutableStateOf(leftTitle) }
     if (leftTitle != null && leftTitle != shownTitle) shownTitle = leftTitle
     KitTip(
-        message = shownTitle?.let { stringResource(Res.string.tipBackReturnsTo, it) }.orEmpty(),
+        message = stringResource(Res.string.tipBackReturnsTo, shownTitle.orEmpty()),
         visible = leftTitle != null,
         onDismissed = onDismissed,
         anchor = bar,
