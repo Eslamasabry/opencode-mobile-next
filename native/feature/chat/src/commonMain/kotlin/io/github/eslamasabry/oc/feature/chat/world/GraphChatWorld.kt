@@ -1314,15 +1314,16 @@ internal class GraphChatWorld(
                             keepLastKnown(handle)
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
-                            // A made-permanent undo removed messages on the server. A read only adds what it
-                            // finds, so the removed ones would stay on screen: the conversation is opened again
-                            // from scratch, as after Delete message and Undo from here. Done from a coroutine of
-                            // its own: reopening ends the collector this code runs in.
-                            if (event.kind == io.github.eslamasabry.oc.core.domain.events.RevertKind.Committed)
+                            // An undo that waits hides the messages from its prompt on, one made permanent removes
+                            // them, and putting it back shows them again. A read only adds what it finds, so the
+                            // conversation is opened again from scratch, as after Delete message and Undo from
+                            // here. Done from a coroutine of its own: reopening ends the collector this code runs in.
+                            if (event.kind == io.github.eslamasabry.oc.core.domain.events.RevertKind.Unknown)
+                                readHistory(gateway, handle, bridge)
+                            else
                                 scope.launch(registry.mainContext) {
                                     if (currentAttached()?.graph === graph) bind(graph)
                                 }
-                            else readHistory(gateway, handle, bridge)
                         }
                     }
                 },
@@ -1598,18 +1599,22 @@ internal class GraphChatWorld(
             is Outcome.Ok -> {
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-                handle.loadHistory(page.value.items.map(bridge::message), version)
-                feedKeeper.history(page.value.items, feedVersion, newest = cursor == null)
+                // The messages an undo hides (its prompt and all after) are not shown while it waits; the page keeps
+                // them so that putting the undo back can show them again.
+                val shown =
+                    page.value.items.filter { boundary == null || it.info.id < boundary.raw }
+                handle.loadHistory(shown.map(bridge::message), version)
+                feedKeeper.history(shown, feedVersion, newest = cursor == null)
                 publishVoiceConversation()
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
-                page.value.items
+                shown
                     .filter {
                         it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User
                     }
                     .forEach { userMessageKeys += "prompt:${it.info.id}" }
                 knownUserPrompts +=
-                    page.value.items
+                    shown
                         .filter {
                             it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User
                         }
