@@ -66,6 +66,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import io.github.eslamasabry.oc.core.common.holdStages
@@ -260,6 +261,9 @@ internal class GraphChatWorld(
     private var protectedByHistory = false
     private var checkedRestoreRevision: Long? = null
     private var historyReconciled = false
+
+    /** The files at the project's root, listed once per open and again after a turn (null = not read yet). */
+    private var rootListing: CompletableDeferred<Outcome<Set<String>>>? = null
     private val knownUserPrompts = HashSet<String>()
     private val draftSubmissions = HashMap<Long, DraftSubmission>()
     private val draftAcknowledgements = HashMap<Long, () -> Unit>()
@@ -1039,6 +1043,7 @@ internal class GraphChatWorld(
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
         historyReconciled = false
+        rootListing = null
         // Cache-first: a reload or a lost server keeps the last rows on screen until newer ones arrive.
         publishShown()
         mutableReadOnly.value = null
@@ -1311,6 +1316,8 @@ internal class GraphChatWorld(
                             reconcilePendingReceipts()
                         bridge.event(event)?.let(handle::submit)
                         if (event is CoreEvent.RunEnded && event.sessionId == sid) {
+                            // A turn may have made or removed files: the root listing is read again when next needed.
+                            rootListing = null
                             keepLastKnown(handle)
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
@@ -3159,9 +3166,30 @@ internal class GraphChatWorld(
         }
     }
 
+    /**
+     * The names of the files (not folders) at the project's root. One request serves every name asked meanwhile,
+     * so a reply naming several files never makes one request per name.
+     */
+    private suspend fun rootFileNames(a: Attached): Outcome<Set<String>> {
+        rootListing?.let { return it.await() }
+        val mine = CompletableDeferred<Outcome<Set<String>>>()
+        rootListing = mine
+        val listed = a.gateway.listFiles("")
+        val result: Outcome<Set<String>> =
+            when (listed) {
+                is Outcome.Ok -> Outcome.Ok(listed.value.filter { !it.isDir }.map { it.name }.toSet())
+                is Outcome.Failed -> listed
+            }
+        // A failed or stale read is not kept: the next ask reads again.
+        if ((result is Outcome.Failed || currentAttached() !== a) && rootListing === mine) rootListing = null
+        mine.complete(result)
+        return result
+    }
+
     override suspend fun fileExists(path: String): Outcome<Boolean> {
         val slash = path.lastIndexOf('/')
-        val name = if (slash >= 0) path.substring(slash + 1) else ""
+        if (slash < 0) return rootFileExists(path)
+        val name = path.substring(slash + 1)
         if (name.isEmpty()) return Outcome.Ok(false)
         val dir = if (slash == 0) "/" else path.substring(0, slash)
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
@@ -3171,6 +3199,23 @@ internal class GraphChatWorld(
         val nodes = (listed as? Outcome.Ok)?.value ?: return listed as Outcome.Failed
         return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
     }
+
+    /** A name with no slash is a file only if it is exactly a file at the project's root. */
+    private suspend fun rootFileExists(name: String): Outcome<Boolean> {
+        val a = currentAttached()
+        return when {
+            name.isEmpty() -> Outcome.Ok(false)
+            a == null -> Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+            !a.gateway.capabilities.value.fileBrowsing -> Outcome.Ok(false)
+            else -> rootFileIn(a, name)
+        }
+    }
+
+    private suspend fun rootFileIn(a: Attached, name: String): Outcome<Boolean> =
+        when (val names = rootFileNames(a)) {
+            is Outcome.Failed -> names
+            is Outcome.Ok -> if (currentAttached() === a) Outcome.Ok(name in names.value) else Outcome.Failed(STALE)
+        }
 
     private var acknowledgingRead = false
 
