@@ -96,14 +96,16 @@ public object TipRules {
     public fun inside(anchorHeightPx: Float, windowHeightPx: Float): Boolean = anchorHeightPx > windowHeightPx / 2f
 
     /**
-     * Beside an edge part ([KitTipPlacement.BesideEdge]): the tip stands on the page side of the anchor, [gapPx] away,
-     * centred on it vertically and kept in the window, so it points at a 16 dp light and never lies over it. Returns
-     * the tip's top-left (px).
+     * By an edge part ([KitTipPlacement.BesideEdge]): the tip stands on the page side of the anchor's gutter box, its
+     * end edge on the box's inner edge, and ABOVE the mark by [gapPx] (below it only where there is no room above),
+     * kept in the window. The row beside the light is where a reply's buttons stand, so the tip is never level with
+     * it. Returns the tip's top-left (px).
      */
     public fun besideEdge(anchorLeft: Int, anchorTop: Int, anchorRight: Int, anchorBottom: Int, windowWidth: Int, windowHeight: Int, tipWidth: Int, tipHeight: Int, gapPx: Int): Pair<Int, Int> {
         val onRight = (anchorLeft + anchorRight) / 2 > windowWidth / 2
-        val x = (if (onRight) anchorLeft - gapPx - tipWidth else anchorRight + gapPx).coerceIn(0, (windowWidth - tipWidth).coerceAtLeast(0))
-        val y = ((anchorTop + anchorBottom) / 2 - tipHeight / 2).coerceIn(0, (windowHeight - tipHeight).coerceAtLeast(0))
+        val x = (if (onRight) anchorLeft - tipWidth else anchorRight).coerceIn(0, (windowWidth - tipWidth).coerceAtLeast(0))
+        val above = anchorTop - gapPx - tipHeight
+        val y = (if (above >= 0) above else anchorBottom + gapPx).coerceIn(0, (windowHeight - tipHeight).coerceAtLeast(0))
         return x to y
     }
 
@@ -129,8 +131,9 @@ public enum class KitTipPlacement {
     Auto,
 
     /**
-     * Beside a thin part on the screen edge (the edge light, 16 dp): on the page side of it, centred on it, moving
-     * sideways toward it as it appears. Above or below would cover the reply's buttons that line up with the light.
+     * By a thin part on the screen edge (the edge light): on the page side of its gutter box and above its mark, moving
+     * sideways toward it as it appears. Level with it would cover the reply's buttons that line up with the light; the
+     * bubble takes no touch there, so a button under it still answers.
      */
     BesideEdge,
 }
@@ -215,7 +218,7 @@ public fun KitTip(
                         })
                 val exit: ExitTransition = if (motion.reduced) ExitTransition.None else fadeOut(specs.tipFade())
                 AnimatedVisibility(shown, enter = enter, exit = exit, label = "kit.tip") {
-                    KitTipBubble(message, Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } })
+                    KitTipBubble(message, if (beside) Modifier else Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } })
                 }
             }
             // In the window's own layer where there is one (every app screen): a tip that opened a window of its own as
