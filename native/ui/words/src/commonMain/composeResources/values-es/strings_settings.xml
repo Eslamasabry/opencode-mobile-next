@@ -839,4 +839,15 @@
     <string name="appearanceWaitMarksColour">Color</string>
     <string name="appearanceWaitMarksNote">Los pequeños dibujos animados junto a frases como «Iniciando OpenCode…».</string>
     <string name="e7LocaleUiItalian">Italiano</string>
+    <string name="languageNameEnglish">Inglés</string>
+    <string name="languageNameArabic">Árabe</string>
+    <string name="languageNameSpanish">Español</string>
+    <string name="languageNameJapanese">Japonés</string>
+    <string name="languageNamePortuguese">Portugués</string>
+    <string name="languageNameRussian">Ruso</string>
+    <string name="languageNameVietnamese">Vietnamita</string>
+    <string name="languageNameIndonesian">Indonesio</string>
+    <string name="languageNameFrench">Francés</string>
+    <string name="languageNameChinese">Chino</string>
+    <string name="languageNameItalian">Italiano</string>
 </resources>
