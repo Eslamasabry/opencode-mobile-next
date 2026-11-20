@@ -144,7 +144,7 @@ class ChatsViewModelTest {
     fun `SCREENS-NAV-27 rows open their chat, New conversation slides up, the gear opens Settings only when it can`() {
         val nav = RecordingNavigator()
         val closed = Door(available = false)
-        // Only a row the feed lists, and that can be reopened, opens (a stale or unresumable ref stays shut).
+        // A row the feed lists opens, verified or not (its page waits); a ref the list never showed stays shut.
         val feed = Feed().apply {
             snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1"), item("gone").copy(canReopen = false)))
         }
@@ -167,7 +167,7 @@ class ChatsViewModelTest {
         vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("unlisted")))
         vm.newConversation()
         // Each New route carries fresh command and tab ids, so compare what it is, not one instance.
-        assertEquals(listOf("openChat s1", "open New"), nav.calls.map { it.substringBefore('(') })
+        assertEquals(listOf("openChat s1", "openChat gone", "open New"), nav.calls.map { it.substringBefore('(') })
         assertEquals(null, (nav.routes.single() as ChatsRoute.New).profile)
 
         val open = Door(available = true)
@@ -474,7 +474,7 @@ class ChatsViewModelTest {
     }
 
     @Test
-    fun `B-333 a row tapped while its server opens is kept, says it waits, and opens once it can`() = runTest {
+    fun `B-HOME-226 a tap on a row while its server opens opens its conversation at once`() = runTest {
         val nav = RecordingNavigator()
         val home = Home(listOf(source("main", main = true)))
         val feed = Feed()
@@ -484,114 +484,28 @@ class ChatsViewModelTest {
             home.snapshot.value.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = P1))
         val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
         vm.openConversation(ref)
-        assertEquals(ref, vm.state.value.waitingOpen, "the tap is kept and the row says it waits")
-        // The server answered, but its list is not verified yet: still kept, nothing opens.
-        home.snapshot.value = home.snapshot.value.copy(opening = null)
-        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false)))
-        assertEquals(emptyList(), nav.calls)
-        assertEquals(ref, vm.state.value.waitingOpen)
-        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1")))
-        assertEquals(listOf("openChat s1"), nav.calls)
-        assertNull(vm.state.value.waitingOpen)
+        assertEquals(listOf("openChat s1"), nav.calls, "the tap is answered at once; the page waits inside")
     }
 
     @Test
-    fun `B-333 a kept tap is dropped when the person moves on, so it never opens a conversation they left`() = runTest {
+    fun `B-HOME-226 a tap on a row whose list is not verified yet opens at once, exactly once`() = runTest {
         val nav = RecordingNavigator()
-        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false), item("s2"))) }
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false))) }
         val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
         vm.openConversation(ref)
-        nav.top.value = ChatsRoute.All("running")
-        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1"), item("s2")))
-        assertEquals(emptyList(), nav.calls, "another page is on top: the kept tap is dropped")
-        nav.top.value = null
-        vm.openConversation(ref.copy(sessionId = io.github.eslamasabry.oc.core.common.ids.SessionId("s2")))
-        assertEquals(listOf("openChat s2"), nav.calls, "another tap replaces it")
-    }
-
-    @Test
-    fun `B-333 a kept tap costs nothing while the row cannot open, and opens exactly once when it can`() = runTest {
-        val nav = RecordingNavigator()
-        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false))) }
-        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
-        val seen = mutableListOf<io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect { seen += it } }
-        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
-        vm.openConversation(ref)
-        assertEquals(ref, vm.state.value.waitingOpen)
-        val before = seen.size
-        // 100 feed emissions that change nothing about the row: no attempt, no state written by the kept tap.
-        repeat(100) { i ->
-            feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false)), revision = i + 1L)
-        }
-        assertEquals(0, vm.openAttempts)
-        assertTrue(seen.size - before <= 1, "the kept tap made the home emit ${seen.size - before} times")
-        assertTrue(seen.drop(before).all { it.waitingOpen == ref })
-        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1")), revision = 500)
-        repeat(100) { i -> feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1")), revision = 600L + i) }
+        repeat(20) { i -> feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1")), revision = i + 1L) }
+        assertEquals(listOf("openChat s1"), nav.calls)
         assertEquals(1, vm.openAttempts)
-        assertEquals(listOf("openChat s1"), nav.calls)
     }
 
     @Test
-    fun `B-333 a kept tap ends - after the wait's limit the row stops saying Connecting and says Not answering`() = runTest {
+    fun `B-HOME-226 a ref the list never showed is still ignored`() = runTest {
         val nav = RecordingNavigator()
-        val home = Home(listOf(source("main", main = true)))
-        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false))) }
-        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
-        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
-        vm.openConversation(ref)
-        advanceTimeBy(60_000)
-        assertEquals(ref, vm.state.value.waitingOpen)
-        advanceTimeBy(40_000)
-        assertNull(vm.state.value.waitingOpen)
-        assertEquals(ref, vm.state.value.keptGaveUp)
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("nobody")))
         assertEquals(emptyList(), nav.calls)
-        // A new tap waits again and clears the old word.
-        vm.openConversation(ref)
-        assertEquals(ref, vm.state.value.waitingOpen)
-        assertNull(vm.state.value.keptGaveUp)
-    }
-
-    @Test
-    fun `B-333 a kept tap does not run out while the app updates the source's agents`() = runTest {
-        val nav = RecordingNavigator()
-        val updating =
-            io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi(
-                P1, "Claude Code", shown = true, main = false, onThisPhone = true, unreachable = false, agents = true,
-                starting = io.github.eslamasabry.oc.feature.chats.presentation.AppStart.AgentsUpdating,
-            )
-        val home = Home(listOf(source("main", main = true), updating))
-        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false))) }
-        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
-        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
-        vm.openConversation(ref)
-        advanceTimeBy(10 * 60_000)
-        assertEquals(ref, vm.state.value.waitingOpen)
-        assertNull(vm.state.value.keptGaveUp)
-        // The update ends and the source still does not answer: the wait's limit counts from here, and the tap
-        // ends. (It also lets the test end: runTest drains the scheduler, and a wait that never ends never drains.)
-        home.snapshot.value =
-            home.snapshot.value.copy(sources = listOf(source("main", main = true), updating.copy(starting = null)).toImmutableList())
-        advanceTimeBy(io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.LIMIT_MS + 1_000)
-        assertNull(vm.state.value.waitingOpen)
-        assertEquals(ref, vm.state.value.keptGaveUp)
-    }
-
-    @Test
-    fun `B-333 the kept-tap decision opens only a row that can open, on the page it was tapped on`() {
-        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
-        val shut = listOf(item("s1").copy(canReopen = false))
-        val open = listOf(item("s1"))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Wait, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(null, true, true, open))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Drop, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, false, true, open))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Wait, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, true, false, open))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Wait, io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, true, true, shut))
-        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.KeptTap.Open(open.single()), io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.decide(ref, true, true, open))
     }
 
     @Test

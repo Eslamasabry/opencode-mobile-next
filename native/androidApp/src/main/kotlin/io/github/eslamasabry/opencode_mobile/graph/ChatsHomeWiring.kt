@@ -140,6 +140,9 @@ class AppChatsHome(
         // The stage home names changes with the real signals behind it: This phone's own start, and the start of each
         // agents' helper that is saved.
         scope.launch { stages.stageOfPhone().collect { publish() } }
+        // A source that becomes LISTED ends the agents' settle: Home reads again at that moment, not at the next event
+        // (the feed's own change can come a moment before the source counts as loaded).
+        scope.launch { runtime.loadedSourceFlow.collect { publish() } }
         scope.launch {
             runtime.profiles.profiles
                 .map { all -> all.map { it.id }.filter(runtime::isPhoneHelper) }
@@ -186,7 +189,7 @@ class AppChatsHome(
     }
 
     /** When the app's own work on each helper last showed (its update or start stage), for the grace after it. */
-    private val helperWorkAt = java.util.concurrent.ConcurrentHashMap<ProfileId, Long>()
+    private val settle = HelperSettle(HELPER_SETTLE.inWholeMilliseconds)
     private var settleLook: kotlinx.coroutines.Job? = null
 
     /**
@@ -195,10 +198,13 @@ class AppChatsHome(
      * real failure then shows, once, and never clears by itself within seconds.
      */
     private fun helperSettling(id: ProfileId, updating: Boolean): Boolean {
-        val now = clock.now().toEpochMilliseconds()
-        if (updating || stages.stageOfHelper(id).value != null) helperWorkAt[id] = now
-        val since = helperWorkAt[id] ?: return false
-        val settling = now - since < HELPER_SETTLE.inWholeMilliseconds
+        val settling =
+            settle.settling(
+                id,
+                workNow = updating || stages.stageOfHelper(id).value != null,
+                listed = id in runtime.loadedSourceIds(),
+                nowMs = clock.now().toEpochMilliseconds(),
+            )
         if (settling && settleLook?.isActive != true) {
             settleLook = scope.launch {
                 delay(HELPER_SETTLE + 1.seconds)
@@ -665,6 +671,22 @@ internal object HomeAgentNoticeRules {
                     }
                     .toImmutableList(),
         )
+    }
+}
+
+/** When the helper's source stops being "settling": the moment it is listed, else after the bound. */
+internal object HelperSettleRules {
+    fun settling(sinceWorkMs: Long, boundMs: Long, listed: Boolean): Boolean = !listed && sinceWorkMs < boundMs
+}
+
+/** The settle of each agents' helper: when its work last showed, and whether it still settles now. */
+internal class HelperSettle(private val boundMs: Long) {
+    private val workAt = java.util.concurrent.ConcurrentHashMap<ProfileId, Long>()
+
+    fun settling(id: ProfileId, workNow: Boolean, listed: Boolean, nowMs: Long): Boolean {
+        if (workNow) workAt[id] = nowMs
+        val since = workAt[id] ?: return false
+        return HelperSettleRules.settling(nowMs - since, boundMs, listed)
     }
 }
 

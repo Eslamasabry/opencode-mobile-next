@@ -1432,7 +1432,6 @@
     <string name="stageStartingLinux">Запуск Linux…</string>
     <string name="stageStartingOpenCode">Запуск OpenCode…</string>
     <string name="stageStartingHelper">Запуск помощника агентов…</string>
-    <string name="stageStartingAgents">Запуск агентов…</string>
     <string name="stageStartingAgent">Запуск %1$s…</string>
     <string name="stageOpeningConversation">Открытие беседы…</string>
     <string name="kitTurnLiveStillThinking">Всё ещё думает</string>

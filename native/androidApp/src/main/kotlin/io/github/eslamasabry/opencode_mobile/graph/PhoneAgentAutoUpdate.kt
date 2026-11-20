@@ -157,7 +157,12 @@ class PhoneAgentAutoUpdate(
             }
         val jobs =
             object : AgentUpdateJobs {
-                override val running: Boolean get() = setup.progress.value.state == SetupState.Running
+                override val running: Boolean
+                    get() =
+                        agentsJobRunning(
+                            setup.progress.value.state == SetupState.Running,
+                            phones.state.value.installation?.phase == PhoneAgentInstallPhase.Installing,
+                        )
                 override val failed: Boolean get() = false
 
                 // Refused because the phone is busy: the try is not spent. Any other refusal (no room, not
@@ -555,6 +560,12 @@ internal fun recordBehind(app: Application, installed: List<AgentId>): Set<Agent
 }
 
 private const val RECORD_LIMIT = 4096L
+
+/**
+ * An install of the agents is running: the setup page's job, or the agents' own install job (the one the updater
+ * starts). The updater's next look must know both, or it reads a running install as "nothing runs".
+ */
+internal fun agentsJobRunning(setupRunning: Boolean, installing: Boolean): Boolean = setupRunning || installing
 
 /** An error's type and the method that threw it (names only, never its text). */
 private fun shape(e: Exception): String {
