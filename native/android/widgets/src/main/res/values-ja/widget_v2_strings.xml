@@ -73,4 +73,6 @@
     <string name="widget_allow_for">今回のみ許可: %1$s</string>
     <string name="widget_reply_for">%1$sに返信</string>
     <string name="widget_step_for">%1$s: %2$s</string>
+    <string name="widget_status_set_up">セットアップ済み</string>
+    <string name="widget_status_not_set_up">未セットアップ</string>
 </resources>
