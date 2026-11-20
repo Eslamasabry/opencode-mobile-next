@@ -91,11 +91,23 @@ class SetupWiringTest {
 
     @Test
     fun `B-SETUP-008 setup spec carries probe and compat labels without changing default labels`() {
-        val base = SetupStepSpec(id = "linux", weight = 15, data = emptyMap(), native = true, labels = mapOf("unpack" to "Unpacking"))
-        val enriched = NativeSetupHost.spec(
-            base,
-            extraLabels = mapOf("probe" to "Checking Linux on this phone…", "compat" to "Trying again in compatibility mode"),
-        )
+        val base =
+            SetupStepSpec(
+                id = "linux",
+                weight = 15,
+                data = emptyMap(),
+                native = true,
+                labels = mapOf("unpack" to "Unpacking"),
+            )
+        val enriched =
+            NativeSetupHost.spec(
+                base,
+                extraLabels =
+                    mapOf(
+                        "probe" to "Checking Linux on this phone…",
+                        "compat" to "Trying again in compatibility mode",
+                    ),
+            )
         assertEquals("Unpacking", enriched.labels["unpack"])
         assertEquals("Checking Linux on this phone…", enriched.labels["probe"])
         assertEquals("Trying again in compatibility mode", enriched.labels["compat"])

@@ -50,28 +50,23 @@ fi
     fun writeProotCompat(rootfs: File): Boolean =
         try {
             val file = safeStateFile(rootfs, createDir = true)
-            if (file != null) {
-                val mode = existingMode(file)
-                val tmp = File(file.parentFile, "node-compat.new")
-                if (!java.nio.file.Files.isSymbolicLink(tmp.toPath())) {
-                    val content = "$mode\n$PROOT_COMPAT\n"
-                    tmp.writeText(content)
-                    if (!tmp.renameTo(file)) {
-                        file.writeText(content)
-                        tmp.delete()
-                    }
-                    true
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
+            file != null && writeAtomically(file, "${existingMode(file)}\n$PROOT_COMPAT\n")
         } catch (_: java.io.IOException) {
             false
         } catch (_: SecurityException) {
             false
         }
+
+    private fun writeAtomically(file: File, content: String): Boolean {
+        val tmp = File(file.parentFile, "node-compat.new")
+        if (isLink(tmp)) return false
+        tmp.writeText(content)
+        if (!tmp.renameTo(file)) {
+            file.writeText(content)
+            tmp.delete()
+        }
+        return true
+    }
 
     /** Removes a `proot-compat` marker from [STATE_PATH] when compat mode also failed. */
     fun clearProotCompat(rootfs: File) {

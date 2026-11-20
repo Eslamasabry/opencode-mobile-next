@@ -71,11 +71,16 @@ class LinuxProotProbeTest {
         assertEquals(listOf(false), stages)
         assertTrue(killed.isEmpty())
         assertFalse(NodeCompatState.prootCompat(rootfs))
-        assertFalse(SetupStepRetry.effectiveCompat(requestedCompat = false, markerPresent = NodeCompatState.prootCompat(rootfs)))
+        assertFalse(
+            SetupStepRetry.effectiveCompat(
+                requestedCompat = false,
+                markerPresent = NodeCompatState.prootCompat(rootfs),
+            ),
+        )
     }
 
     @Test
-    fun `B-SETUP-002 normal hang writes compat marker and later steps and checks run in compat`() = withRootfs { rootfs ->
+    fun `B-SETUP-002 normal hang writes compat marker for later steps and checks`() = withRootfs { rootfs ->
         val killed = mutableListOf<Int>()
         val stages = mutableListOf<Boolean>()
         val runner = FakeProbeRunner(rootfs) { mode, _, killPid ->
@@ -106,7 +111,12 @@ class LinuxProotProbeTest {
         assertEquals(listOf(false, true), stages)
         assertTrue(NodeCompatState.prootCompat(rootfs))
         // Subsequent setup steps and checks read the marker and run in compat mode.
-        assertTrue(SetupStepRetry.effectiveCompat(requestedCompat = false, markerPresent = NodeCompatState.prootCompat(rootfs)))
+        assertTrue(
+            SetupStepRetry.effectiveCompat(
+                requestedCompat = false,
+                markerPresent = NodeCompatState.prootCompat(rootfs),
+            ),
+        )
     }
 
     @Test
@@ -131,8 +141,9 @@ class LinuxProotProbeTest {
         assertEquals(listOf(LinuxProotProbe.Mode.NORMAL, LinuxProotProbe.Mode.COMPAT), runner.modesTried)
         assertEquals(listOf(1001, 1002), killed)
         // Must not trigger SetupStepRetry's interruption retry loop.
-        assertFalse(SetupStepRetry.interrupted(failed.failure))
-        assertFalse(SetupStepRetry.again(attempt = 1, cancelled = false, interrupted = SetupStepRetry.interrupted(failed.failure)))
+        val interrupted = SetupStepRetry.interrupted(failed.failure)
+        assertFalse(interrupted)
+        assertFalse(SetupStepRetry.again(attempt = 1, cancelled = false, interrupted = interrupted))
         assertFalse(NodeCompatState.prootCompat(rootfs))
     }
 
@@ -192,7 +203,10 @@ class LinuxProotProbeTest {
         val process = ProcessBuilder("/bin/sh", "-c", LinuxProotProbe.COMMAND).redirectErrorStream(true).start()
         val output = process.inputStream.bufferedReader().readText()
         val code = process.waitFor()
-        assertTrue("probe command must print token, got code=$code out=$output", LinuxProotProbe.matchedOutput(code, output))
+        assertTrue(
+            "probe command must print token, got code=$code out=$output",
+            LinuxProotProbe.matchedOutput(code, output),
+        )
         assertFalse(LinuxProotProbe.matchedOutput(1, output))
         assertFalse(LinuxProotProbe.matchedOutput(0, "something else"))
 

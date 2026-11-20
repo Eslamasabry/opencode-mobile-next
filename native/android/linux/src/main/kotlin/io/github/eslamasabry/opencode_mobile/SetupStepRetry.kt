@@ -140,13 +140,14 @@ internal object LinuxProotProbe {
         waitExited: () -> Boolean,
         sendTerm: (Int) -> Unit,
         sendKill: (Int) -> Unit,
-    ): Boolean {
-        if (!isSameProcess(pid)) return false
-        sendTerm(pid)
-        if (waitExited()) return true
-        if (isSameProcess(pid)) sendKill(pid)
-        return true
-    }
+    ): Boolean =
+        if (!isSameProcess(pid)) {
+            false
+        } else {
+            sendTerm(pid)
+            if (!waitExited() && isSameProcess(pid)) sendKill(pid)
+            true
+        }
 
     fun run(
         runner: Runner,
