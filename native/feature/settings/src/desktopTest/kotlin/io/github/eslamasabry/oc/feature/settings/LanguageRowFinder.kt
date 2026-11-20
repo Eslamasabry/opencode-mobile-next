@@ -4,7 +4,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.onNode
 
 /**
  * The Language list's row for [name]. A row says the language in its own name and, under it, the name in the app's
