@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -530,7 +532,7 @@ public fun ChatScreen(
     // Every item the transcript draws below the engine's rows (ChatTranscriptList): a jump to a row (a timeline pick, a
     // Find hit, an arrival) counts them, or it lands one row off while background work shows.
     val itemsBelowRows =
-        (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
+        (if (state.live != null && LiveSlot.host(state.live, state.pending, LocalKitAppearance.current.style == KitSurfaceStyle.Signal) == null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
             (if (transcriptFacts.background.isNotEmpty()) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).

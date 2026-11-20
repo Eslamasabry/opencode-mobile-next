@@ -78,6 +78,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAskView
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import io.github.eslamasabry.oc.ui.kitchat.transcript.kitTranscriptItemMotion
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitEarlierMessages
 import io.github.eslamasabry.oc.feature.chat.presentation.OlderUi
@@ -511,9 +512,12 @@ internal fun ChatTranscriptList(
         unique.firstOrNull { it is PromptRow || it is FooterRow }?.takeIf { it is FooterRow }?.key
     val newestCompleted =
         remember(unique, facts.reading.metadata) { rowFacts.newestCompleted(unique, facts.reading.metadata) }
+    // F28: the live line is the pending bubble's own status line while that bubble still says it is sending.
+    val liveHost = LiveSlot.host(live, pending, LocalKitAppearance.current.style == KitSurfaceStyle.Signal)
+    val liveRow = live != null && liveHost == null
     val newestKey =
         when {
-            live != null -> ListKeys.LIVE
+            liveRow -> ListKeys.LIVE
             pending.isNotEmpty() -> ListKeys.pending(pending.first().localId)
             else -> unique.firstOrNull()?.key
         }
@@ -537,11 +541,11 @@ internal fun ChatTranscriptList(
     val runningSteps: Boolean? = if (live == null) null else stepsShown
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
-        remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
+        remember(unique, pending, liveRow, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
             rowFacts.itemKeys(
                 buildList {
                     if (extraBottomPx > 0) add(ListKeys.DOCK_ROOM)
-                    if (live != null && listWords != null) add(ListKeys.LIVE)
+                    if (liveRow && listWords != null) add(ListKeys.LIVE)
                     if (facts.background.isNotEmpty() && listWords != null) add(ListKeys.BACKGROUND)
                     if (listWords != null) pending.forEach { add(ListKeys.pending(it.localId)) }
                 },
@@ -609,7 +613,7 @@ internal fun ChatTranscriptList(
                 }
             }
         }
-        if (live != null && listWords != null) {
+        if (liveRow && live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
               Box(kitTranscriptItemMotion()) {
                 // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
@@ -751,9 +755,23 @@ internal fun ChatTranscriptList(
               // The bubble rose from the field on its own; when the server's copy replaces it, neither fades (no
               // flash, no double bubble).
               Box(kitTranscriptItemMotion(fadeIn = false)) {
+                val status =
+                    if (live != null && p.localId == liveHost?.localId)
+                        liveLineWords(
+                            live = live,
+                            listWords = listWords,
+                            notice = facts.live,
+                            work = unique.firstOrNull()?.turnId?.let { facts.work[it] },
+                            writing = unique.firstOrNull().let { it is BlockRow && it.live },
+                            elapsedMs =
+                                (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
+                                    ?.let { facts.nowMs - it },
+                        )
+                    else null
                 PendingBubble(
                     p,
                     listWords,
+                    liveStatus = status,
                     onRetry = { onRetrySend(p.localId) },
                     check = receiptChecks[p.localId],
                     onCheck =
@@ -1037,6 +1055,7 @@ internal fun ImmutableList<TranscriptRow>.distinctKeys(): ImmutableList<Transcri
 private fun PendingBubble(
     p: PendingSend,
     words: ChatListWords,
+    liveStatus: LiveLineWords? = null,
     onRetry: () -> Unit,
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
@@ -1083,7 +1102,17 @@ private fun PendingBubble(
                 actionTag = if (onSignIn != null) "chat-send-sign-in-again" else "chat-send-error-try-again",
             )
         } else when (p.state) {
-            PendingState.Sending -> KitQuietLine(words.sending)
+            // One status slot (F28): "Sending" and the live words ("Thinking…") take this same line in turn.
+            PendingState.Sending ->
+                KitTurnLiveLine(
+                    words = liveStatus?.words ?: words.sending,
+                    tone = liveStatus?.tone ?: KitTurnLiveTone.Quiet,
+                    spoken = liveStatus?.spoken ?: words.sending,
+                    step = liveStatus?.step,
+                    modifier =
+                        Modifier.padding(horizontal = Space.S4.dp)
+                            .let { if (liveStatus != null) it.testTag("chat-live-line") else it },
+                )
             // Review opens the waiting-sends page, which lists only sends with a record: without one it would
             // open empty (Paseo fault 2), so the bubble offers Send again itself.
             PendingState.Unconfirmed ->
