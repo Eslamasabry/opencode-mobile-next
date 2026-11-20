@@ -111,14 +111,14 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         }
     val wide = LocalKitWindow.current.cls.isWide
     val wideJob = wide && !state.checking && journeyBody(state) == JourneyBody.Job
+    val barTitle = journeyTitle(state)
     KitScreen(
         topBar = {
             KitTopBar(
-                journeyTitle(state),
+                if (wideJob) "" else barTitle,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
-                large = wideJob,
             )
         },
         width = if (wideJob) KitScreenWidth.Full else KitScreenWidth.Reading,
@@ -133,7 +133,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             when (journeyBody(state)) {
                 JourneyBody.Nothing -> Unit
                 JourneyBody.Hero -> StartHero(state, actions)
-                JourneyBody.Job -> Job(state, actions, wide = wideJob)
+                JourneyBody.Job -> Job(state, actions, wide = wideJob, pageTitle = barTitle)
             }
         }
         KitSheet(
@@ -540,7 +540,12 @@ private fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
 }
 
 @Composable
-private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions, wide: Boolean = false) {
+private fun Job(
+    state: SetupJourneyUi,
+    actions: SetupJourneyActions,
+    wide: Boolean = false,
+    pageTitle: String = "",
+) {
     val progress = state.progress
     var detailsOpen by remember { mutableStateOf(false) }
     val rows =
@@ -692,6 +697,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions, wide: Boole
             } else null
         val showQuietNote = running && clock != null && (progress.quietSeconds ?: 0) >= 30
         SetupJourneyWideJob(
+            pageTitle = pageTitle,
             state = state,
             rows = rows,
             done = done,

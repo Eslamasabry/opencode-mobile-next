@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,8 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentState
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupComponentIds
@@ -51,6 +52,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
@@ -62,8 +64,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
-import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -93,7 +93,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitMarkDone
 import io.github.eslamasabry.oc.ui.words.res.kitMarkFailed
 import io.github.eslamasabry.oc.ui.words.res.kitMarkWaiting
 import io.github.eslamasabry.oc.ui.words.res.kitMarkWorking
-import io.github.eslamasabry.oc.ui.words.res.kitProgressRingSteps
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupEssentialsWhy
@@ -141,31 +140,32 @@ import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewInterrupted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewPercent
+import io.github.eslamasabry.oc.ui.words.res.teamUiHomeRunProgress
 import io.github.eslamasabry.oc.ui.words.res.voiceComponentSummary
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Wide-window (Expanded+, >= 840 dp) two-column layout for [PhoneSetupScreen]: overview, progress and main action on
- * the start side; installed parts with their plain descriptions and live status marks on the end side. The two columns
- * share one top and bottom edge, are vertically centred in the window, and each keeps its kit reading cap.
+ * Wide-window (Expanded+, >= 840 dp) two-column layout for [PhoneSetupScreen]: title sits directly above the two
+ * top-aligned columns in one vertically centred composition, with overview/progress and main action on the start side
+ * and the natural-height Setup details panel on the end side.
  */
 @Composable
 internal fun PhoneSetupWideScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
     val progress = state.progress
+    val pageTitle =
+        stringResource(
+            if (progress == null) Res.string.phoneSetupStartScreenTitle
+            else Res.string.phoneSetupProgressTitle,
+        )
     KitScreen(
         topBar = {
             KitTopBar(
-                title =
-                    stringResource(
-                        if (progress == null) Res.string.phoneSetupStartScreenTitle
-                        else Res.string.phoneSetupProgressTitle,
-                    ),
+                title = "",
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
-                large = true,
             )
         },
         width = KitScreenWidth.Full,
@@ -180,25 +180,32 @@ internal fun PhoneSetupWideScreen(state: PhoneSetupUi, actions: PhoneSetupAction
                         .padding(top = Space.S2.dp, bottom = Space.S6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                        horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
+                    Column(
+                        Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(Space.S5.dp),
                     ) {
-                        Column(
-                            Modifier.weight(1f)
-                                .fillMaxHeight()
-                                .kitMaxWidth(CapRole.Reading, CapAlign.Start),
-                            verticalArrangement = Arrangement.SpaceBetween,
+                        KitText(
+                            pageTitle,
+                            Modifier.semantics { heading() },
+                            role = TypeRole.LargeTitle,
+                            kind = KitTextKind.Frame,
+                            pageTitle = true,
+                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
+                            verticalAlignment = Alignment.Top,
                         ) {
-                            if (progress == null) WideStartSummary(state, actions)
-                            else WideJobSummary(progress, state, actions)
-                        }
-                        Box(
-                            Modifier.weight(1f)
-                                .fillMaxHeight()
-                                .kitMaxWidth(CapRole.Reading, CapAlign.Start),
-                        ) {
-                            WidePartsPanel(state, progress, Modifier.fillMaxWidth().fillMaxHeight())
+                            Column(
+                                Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start),
+                                verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                            ) {
+                                if (progress == null) WideStartSummary(state, actions)
+                                else WideJobSummary(progress, state, actions)
+                            }
+                            Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
+                                WidePartsPanel(state, progress, Modifier.fillMaxWidth())
+                            }
                         }
                     }
                 }
@@ -270,7 +277,7 @@ private fun WideStartSummary(state: PhoneSetupUi, actions: PhoneSetupActions) {
     }
 }
 
-/** Three short marked steps ("Install", "Name a project", "Start a conversation") from the localized promise line. */
+/** Three numbered future steps ("1 Install", "2 Name a project", "3 Start a conversation") from the promise line. */
 @Composable
 private fun WideStartStepList() {
     val raw = stringResource(Res.string.phoneSetupStartStepsNoTime)
@@ -280,12 +287,24 @@ private fun WideStartStepList() {
             .map { part -> part.trim().replaceFirstChar { ch -> ch.uppercase() } }
             .filter { it.isNotEmpty() }
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        for (step in steps) {
+        steps.forEachIndexed { index, step ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
-                KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.Accent, growsWithText = true)
+                KitSurface(
+                    level = SurfaceLevel.Surface2,
+                    shape = KitShapeId.Circle,
+                    padding = KitSurfacePadding.None,
+                ) {
+                    Box(Modifier.size(STEP_BADGE_DP.dp), contentAlignment = Alignment.Center) {
+                        KitText(
+                            Numbers.format(index + 1),
+                            role = TypeRole.Caption,
+                            tone = TextTone.Accent,
+                        )
+                    }
+                }
                 KitText(step, role = TypeRole.Secondary, tone = TextTone.Secondary)
             }
         }
@@ -521,10 +540,10 @@ private fun WidePartsPanel(state: PhoneSetupUi, progress: SetupProgress?, modifi
             val s = it.progress?.state
             s == ComponentState.Done || s == ComponentState.Skipped
         }
-    // Keep the download size once (in the left paragraph on start); show step progress during a job.
+    // Keep the download size once (in the left paragraph on start); name what the count measures during a job.
     val headerMeta =
         if (progress != null && entries.isNotEmpty()) {
-            stringResource(Res.string.kitProgressRingSteps, "$doneCount", "${entries.size}")
+            stringResource(Res.string.teamUiHomeRunProgress, doneCount, entries.size)
         } else {
             null
         }
@@ -673,15 +692,17 @@ private fun WideStopConfirm(state: PhoneSetupUi, actions: PhoneSetupActions) {
 
 private const val ARTWORK_WIDTH_DP = 208
 private const val ARTWORK_HEIGHT_DP = 156
+private const val STEP_BADGE_DP = 22
 private const val PERCENT_MAX = 100
 
 /**
- * Wide-window (Expanded+, >= 840 dp) two-column layout for [SetupJourneyScreen]'s progress/ring page: the progress
- * ring, stage, live clock/cost, note and action sit on the start side; all setup parts with their plain descriptions
- * and live Done/Working/Waiting/Failed marks sit in a panel on the end side.
+ * Wide-window (Expanded+, >= 840 dp) two-column layout for [SetupJourneyScreen]'s progress/ring page: the page title
+ * sits directly above the two columns in one vertically centred group, with the progress ring, stage, live clock/cost,
+ * note and action on the start side and all setup parts with Done/Working/Waiting/Failed marks on the end side.
  */
 @Composable
 internal fun SetupJourneyWideJob(
+    pageTitle: String,
     state: SetupJourneyUi,
     rows: List<JourneyComponentProgress>,
     done: Int,
@@ -710,86 +731,98 @@ internal fun SetupJourneyWideJob(
                     .testTag("setup-progress-viewport"),
                 contentAlignment = Alignment.Center,
             ) {
-                Row(
+                Column(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(Space.S5.dp),
                 ) {
-                    Column(
-                        Modifier.weight(1f)
-                            .kitMaxWidth(CapRole.Reading, CapAlign.Start)
-                            .testTag("setup-progress-body"),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                    KitText(
+                        pageTitle,
+                        Modifier.semantics { heading() },
+                        role = TypeRole.LargeTitle,
+                        kind = KitTextKind.Frame,
+                        pageTitle = true,
+                    )
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        KitProgressRing(
-                            title,
-                            stringResource(Res.string.setupProgressViewOverallLabel),
-                            value = measured,
-                            done = done,
-                            of = rows.size,
-                            finished = progress.state == JourneySetupState.Done,
-                            halted = halted,
-                            caption = caption,
-                            trail = trail,
-                        )
-                        if (costLine != null) {
-                            Spacer(Modifier.height(Space.S5.dp))
-                            KitText(
-                                costLine,
-                                Modifier.testTag("phone-setup-progress-cost"),
-                                role = TypeRole.RowTitle,
-                                tone = TextTone.Secondary,
-                                textAlign = TextAlign.Center,
+                        Column(
+                            Modifier.weight(1f)
+                                .kitMaxWidth(CapRole.Reading, CapAlign.Start)
+                                .testTag("setup-progress-body"),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            KitProgressRing(
+                                title,
+                                stringResource(Res.string.setupProgressViewOverallLabel),
+                                value = measured,
+                                done = done,
+                                of = rows.size,
+                                finished = progress.state == JourneySetupState.Done,
+                                halted = halted,
+                                caption = caption,
+                                trail = trail,
                             )
-                        }
-                        if (heartbeatLine != null) {
-                            Spacer(Modifier.height(if (costLine == null) Space.S5.dp else Space.S2.dp))
-                            KitText(
-                                heartbeatLine,
-                                Modifier.testTag("phone-setup-progress-heartbeat"),
-                                role = TypeRole.RowTitle,
-                                tone = TextTone.Secondary,
-                                textAlign = TextAlign.Center,
-                            )
-                            if (showQuietNote) {
-                                Spacer(Modifier.height(Space.S1.dp))
+                            if (costLine != null) {
+                                Spacer(Modifier.height(Space.S5.dp))
                                 KitText(
-                                    stringResource(Res.string.setupHeartbeatQuiet),
+                                    costLine,
+                                    Modifier.testTag("phone-setup-progress-cost"),
+                                    role = TypeRole.RowTitle,
+                                    tone = TextTone.Secondary,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                            if (heartbeatLine != null) {
+                                Spacer(Modifier.height(if (costLine == null) Space.S5.dp else Space.S2.dp))
+                                KitText(
+                                    heartbeatLine,
+                                    Modifier.testTag("phone-setup-progress-heartbeat"),
+                                    role = TypeRole.RowTitle,
+                                    tone = TextTone.Secondary,
+                                    textAlign = TextAlign.Center,
+                                )
+                                if (showQuietNote) {
+                                    Spacer(Modifier.height(Space.S1.dp))
+                                    KitText(
+                                        stringResource(Res.string.setupHeartbeatQuiet),
+                                        role = TypeRole.Secondary,
+                                        tone = TextTone.Tertiary,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
+                            }
+                            if (note != null) {
+                                Spacer(
+                                    Modifier.height(
+                                        if (costLine == null && heartbeatLine == null) Space.S5.dp else Space.S2.dp,
+                                    ),
+                                )
+                                KitText(
+                                    note,
+                                    Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp),
                                     role = TypeRole.Secondary,
                                     tone = TextTone.Tertiary,
                                     textAlign = TextAlign.Center,
                                 )
                             }
+                            batteryNotice()
+                            if (
+                                state.failure != null &&
+                                    state.confirmStop == null &&
+                                    !state.confirmRemoveVoice
+                            ) {
+                                Spacer(Modifier.height(Space.S3.dp))
+                                KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
+                            }
+                            Box(Modifier.padding(top = Space.S5.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
+                                actionFoot()
+                            }
                         }
-                        if (note != null) {
-                            Spacer(
-                                Modifier.height(
-                                    if (costLine == null && heartbeatLine == null) Space.S5.dp else Space.S2.dp,
-                                ),
-                            )
-                            KitText(
-                                note,
-                                Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp),
-                                role = TypeRole.Secondary,
-                                tone = TextTone.Tertiary,
-                                textAlign = TextAlign.Center,
-                            )
+                        Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
+                            WideJourneyPartsPanel(state, rows, done)
                         }
-                        batteryNotice()
-                        if (
-                            state.failure != null &&
-                                state.confirmStop == null &&
-                                !state.confirmRemoveVoice
-                        ) {
-                            Spacer(Modifier.height(Space.S3.dp))
-                            KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
-                        }
-                        Box(Modifier.padding(top = Space.S5.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
-                            actionFoot()
-                        }
-                    }
-                    Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) {
-                        WideJourneyPartsPanel(state, rows, done)
                     }
                 }
             }
@@ -806,7 +839,7 @@ private fun WideJourneyPartsPanel(
     val progress = state.progress
     val headerMeta =
         if (rows.isNotEmpty()) {
-            stringResource(Res.string.kitProgressRingSteps, "$doneCount", "${rows.size}")
+            stringResource(Res.string.teamUiHomeRunProgress, doneCount, rows.size)
         } else {
             null
         }

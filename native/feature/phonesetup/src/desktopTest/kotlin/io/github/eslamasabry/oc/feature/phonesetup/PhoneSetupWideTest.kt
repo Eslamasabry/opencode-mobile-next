@@ -240,6 +240,7 @@ class PhoneSetupWideTest {
                 etaSeconds = 240,
             )
         showAt(1280, 800, PhoneSetupUi(checking = false, items = items, progress = running)) {
+            onNodeWithText("1 of 4 done").assertExists()
             assertDoneMarkDrawn("Linux base")
         }
     }
@@ -271,6 +272,7 @@ class PhoneSetupWideTest {
                 part.left.value > 640f && stage.right.value < part.left.value && pause.right.value < part.left.value,
                 "Expected ring stage ($stage) and Pause ($pause) on left column beside parts ($part) on right",
             )
+            onNodeWithText("2 of 4 done").assertExists()
             assertDoneMarkDrawn("Linux base")
         }
         showContentAt(839, 800, { SetupJourneyScreen(journeyRunningUi(), NoJourneyActions) }) {
