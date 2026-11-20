@@ -109,7 +109,12 @@ class LaunchStages(
                 else -> LaunchStage.OpenCode
             }
 
-        /** The helper: its source connecting, else its own start, else Linux while the phone's start runs. */
+        /**
+         * The helper: its source connecting, else its own start, else Linux while the phone's start runs, else the
+         * helper's start while its start loop is still in its first window. Between two of the real signals (its own
+         * start ended, its connection not begun; a refused try waiting to be asked again) the wait is still on, so it
+         * keeps its name: a waiting state never clears by itself and returns (waiting is not failing).
+         */
         fun helperStageOf(
             wanted: Boolean,
             phoneStarting: Boolean,
@@ -120,6 +125,7 @@ class LaunchStages(
                 agentConnecting -> LaunchStage.Agent
                 helperStarting -> LaunchStage.Helper
                 wanted && phoneStarting -> LaunchStage.Linux
+                wanted -> LaunchStage.Helper
                 else -> null
             }
     }
