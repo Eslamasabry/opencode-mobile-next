@@ -252,13 +252,32 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.platform.LocalDensity
 
+@Composable
+public fun ChatsScreen(
+    state: ChatsUi,
+    actions: ChatsActions,
+    appStatus: KitStatus? = null,
+    replyOffer: (@Composable () -> Unit)? = null,
+    root: () -> Boolean = { false },
+    sections: List<@Composable () -> Unit> = emptyList(),
+    shellBar: Boolean = true,
+    edgeDock: io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock? = null,
+) {
+    // PLANT (scratch, never merged): the page sits 40 dp low on its first frame only.
+    var plantFirst by remember { mutableStateOf(true) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { plantFirst = false }
+    Box(Modifier.padding(top = if (plantFirst) 40.dp else 0.dp)) {
+        ChatsScreenInner(state, actions, appStatus, replyOffer, root, sections, shellBar, edgeDock)
+    }
+}
+
 /**
  * The Conversations home (07 §5 B01). Arranges kit parts only (Konsist K1). One list by urgency in
  * Today / Earlier, reading width; no bottom bar (B-NAV-037): New conversation and Servers are
  * top-bar words, search sits under the bar.
  */
 @Composable
-public fun ChatsScreen(
+private fun ChatsScreenInner(
     state: ChatsUi,
     actions: ChatsActions,
     appStatus: KitStatus? = null,
