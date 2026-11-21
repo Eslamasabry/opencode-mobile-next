@@ -59,7 +59,8 @@ internal fun KitAndroidClipboardBoundary(context: Context, mode: KitClipboardMod
 
 /**
  * The policy wrapper must stay an [AndroidClipboard]: Compose's text fields read the platform manager through
- * `getNativeClipboardManager`, which throws for any other [Clipboard]: a plain wrapper crashed every text field's selection toolbar.
+ * `getNativeClipboardManager`, which throws for any other [Clipboard]: a plain wrapper crashed every text field's
+ * selection toolbar.
  */
 private fun policyClipboard(original: Clipboard, mode: KitClipboardMode): Clipboard {
     val platform = original as? AndroidClipboard ?: return object : Clipboard by original {
