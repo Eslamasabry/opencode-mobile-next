@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
-import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
@@ -29,7 +28,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadMapping
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
-import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHold
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHold
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
@@ -255,6 +253,20 @@ class PhoneDownloads(
         }
     }
 
+    override fun downloadHeldAgents() {
+        val offer = agentStatus.choices.offer.value
+        val live = liveNetwork.value?.asOfferNetwork()
+        val shown = if (offer != null && live != null) offer.copy(network = live) else offer
+        val running =
+            phones.state.value.installation?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }?.id
+                ?.let { AgentId(it) }
+        // Exactly the agents (and versions) the line names; nothing else gains the yes.
+        val named = heldAgentVersionsOf(shown, running, agentStatus.choices.mobile::covers)
+        if (named.isEmpty()) return
+        agentStatus.choices.mobile.grant(named)
+        agents?.lookNow()
+    }
+
     override fun tryAgain(kind: HomeDownloadKind): Boolean {
         if (metered) return false
         scope.launch(dispatchers.io) { run(kind) }
@@ -278,29 +290,6 @@ class PhoneDownloads(
                 }
         }
     }
-}
-
-/**
- * The agents the person chose to update on the sheet that now wait for Wi-Fi, with their size as the sheet shows it
- * (decimal MB). OpenCode and the shared parts have their own lines and are not counted. Null when none waits, when the
- * network is free, or when a size is unknown (a total with a hole would be a guess).
- */
-internal fun heldAgentsOf(
-    offer: AgentUpdateOffer?,
-    running: AgentId? = null,
-    liveNetwork: AgentUpdateNetwork? = null,
-    consented: (AgentId) -> Boolean = { false },
-): HomeHeldAgents? {
-    val net = liveNetwork ?: offer?.network
-    val waiting = offer?.takeIf { it.answered && net != AgentUpdateNetwork.Unmetered }
-    val held =
-        waiting?.items.orEmpty().filter {
-            it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE && it.id != running &&
-                it.choice == AgentUpdateChoice.Update && !consented(it.id)
-        }
-    val bytes = held.map { it.downloadBytes }
-    return if (held.isEmpty() || bytes.any { it == null }) null
-    else HomeHeldAgents(held.size, HomeDownloadSizes.roundedMb(bytes.sumOf { it ?: 0L }))
 }
 
 /**

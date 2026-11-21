@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
@@ -1121,6 +1122,11 @@ class ChatsViewModelTest {
         val now = mutableListOf<HomeDownloadKind>()
         var retried = mutableListOf<HomeDownloadKind>()
         var retryStarts = true
+        var heldAgentsYes = 0
+
+        override fun downloadHeldAgents() {
+            heldAgentsYes++
+        }
 
         override fun downloadNow(kind: HomeDownloadKind) {
             now += kind
@@ -1198,5 +1204,17 @@ class ChatsViewModelTest {
         vm.actOnDownload()
         assertNull(vm.state.value.downloadAsk)
         assertTrue(downloads.retried.isEmpty())
+    }
+
+    @Test
+    fun `B-DL-445 the action on the agents-only line is the yes for the held agents, no ask`() = runTest {
+        val held = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 660)))
+        val downloads = Downloads(listOf(held))
+        val vm = downloadHome(downloads)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.actOnDownload()
+        assertEquals(1, downloads.heldAgentsYes)
+        assertNull(vm.state.value.downloadAsk)
+        assertTrue(downloads.now.isEmpty(), "the helper's own yes is not given")
     }
 }

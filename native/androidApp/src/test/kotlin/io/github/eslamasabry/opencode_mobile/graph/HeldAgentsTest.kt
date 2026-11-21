@@ -97,4 +97,16 @@ class HeldAgentsLiveTest {
         assertNull(heldAgentsOf(offer, consented = { true }))
         assertEquals(HomeHeldAgents(1, 200), heldAgentsOf(offer, consented = { it.raw != "gemini" }))
     }
+
+    @Test
+    fun `B-DL-447 the yes names the same agents and versions as the line, no more`() {
+        assertEquals(
+            mapOf(AgentId("claude") to "2", AgentId("gemini") to "2"),
+            heldAgentVersionsOf(offer, consented = { it.raw == "codex" }),
+        )
+        assertEquals(
+            mapOf(AgentId("codex") to "2"),
+            heldAgentVersionsOf(offer, running = AgentId("claude"), consented = { it.raw == "gemini" }),
+        )
+    }
 }
