@@ -50,9 +50,23 @@ internal object PhoneLoopbackProbe {
 
     private fun answerOf(conn: java.net.HttpURLConnection, body: Boolean): Pair<Int?, String?> {
         val status = conn.responseCode
-        val text =
-            if (body && status == HTTP_OK) conn.inputStream.use { it.readNBytes(MAX_BODY).decodeToString() } else null
+        val text = if (body && status == HTTP_OK) conn.inputStream.use { readAtMost(it, MAX_BODY) } else null
         return status to text
+    }
+
+    /**
+     * At most [max] bytes as text. minSdk 26: InputStream.readNBytes is API 33, and on Android 8-12 its missing
+     * method is an Error that `catch (e: Exception)` does not catch.
+     */
+    private fun readAtMost(input: java.io.InputStream, max: Int): String {
+        val buffer = ByteArray(max)
+        var n = 0
+        while (n < max) {
+            val read = input.read(buffer, n, max - n)
+            if (read < 0) break
+            n += read
+        }
+        return buffer.decodeToString(0, n)
     }
 
     private fun versionIn(text: String): String? {
