@@ -283,7 +283,7 @@ public fun ChatsScreen(
     val backExit = homeBackExitStatus(root)
     // Flutter's home bar (KitTopBar.shell): the server pill opens the switcher; Search and Settings sit on their own
     // round faces. No overflow: Servers is the pill, Inbox is the needs-you line, the rest are rows at the list's end.
-    val settingsLabel = stringResource(Res.string.librarySettingsTitle)
+    val settingsActionLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
     // G3: the empty page (and the list that could not be read) carries New conversation as its own full-width button
     // at the bottom (Flutter KitStateView.calm). Every other state of the home has the foot bar, and the bar always
@@ -295,7 +295,7 @@ public fun ChatsScreen(
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
-        if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
+        if (state.settingsAvailable) add(KitLineAction(settingsActionLabel, actions::openSettings, icon = KitIcons.settingsGear))
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
