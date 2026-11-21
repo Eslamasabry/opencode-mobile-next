@@ -143,3 +143,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10117 | build | 2026-11-21 | tablet test: bs-phase1 with the list pane |
 | 10118 | build | 2026-11-21 | 3.0.1 proving build: agent pins |
 | 10119 | build | 2026-11-21 | 3.0.1 release candidate build |
+| 10120 | build | 2026-11-21 | 3.0.1 release candidate build 2 |
