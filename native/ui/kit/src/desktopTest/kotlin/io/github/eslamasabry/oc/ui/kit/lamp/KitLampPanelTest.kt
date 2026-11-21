@@ -453,7 +453,7 @@ class KitLampPanelTest {
                 val label = topOf("Needs you")
                 val title = topOf("Reply with exactly the word: base-1")
                 assertTrue(label >= list - 0.5f, "$what: the label ($label) starts at or below the list top ($list)")
-                assertTrue(title >= list - 0.5f && title >= header, "$what: the title ($title) is under the header ($header)")
+                assertTrue(title >= list - 0.5f && title >= header, "$what: title $title under header $header")
             }
         }
     }
@@ -473,7 +473,7 @@ class KitLampPanelTest {
                 val before = topOf(watched)
                 val rows = scene.model.sections.single().rows
                 val extra =
-                    rows.first().copy(key = "ask9", title = "Reply with exactly the word: base-9", request = KitRequest("rq9", "Asks"))
+                    rows.first().copy(key = "ask9", title = "Reply: base-9", request = KitRequest("rq9", "Asks"))
                 val section = scene.model.sections.single()
                 val all = if (atTop) listOf(extra) + rows else rows + extra
                 scene.model = scene.model.copy(sections = listOf(section.copy(rows = all)))

@@ -66,7 +66,8 @@ class LampPanelHeightRenders {
 
     @Test
     fun `open panel renders`() {
-        for (style in listOf(Style.Solid, Style.Glass)) for (scale in listOf(1f, 1.3f)) for ((name, count) in listOf("one" to 1, "three" to 3)) {
+        val counts = listOf("one" to 1, "three" to 3)
+        for (style in listOf(Style.Solid, Style.Glass)) for (scale in listOf(1f, 1.3f)) for ((name, count) in counts) {
             runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
                 k2Host(
                     style, true, false, MotionLevel.Full,

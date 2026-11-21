@@ -447,19 +447,12 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
             }
         }
     }
-    val fade = KitLampPanelDims.FADE.dp
     Box(
         modifier
             .fillMaxWidth()
             .testTag(LAMP_PANEL_LIST_TAG)
             .layout { m, c ->
-                val known = keys.map { heights[it] ?: 0 }
-                val groups = listOf(heights[MORE_KEY] ?: 0) + groupKeys.map { g -> g.sumOf { heights[it] ?: 0 } }
-                val room = if (c.hasBoundedHeight) c.maxHeight else Constraints.Infinity
-                val view = KitLampPanelRules.viewport(groups, room).coerceAtMost(room)
-                val h =
-                    if (room == Constraints.Infinity) known.sum()
-                    else KitLampPanelRules.clearOfLabels(view, known.sum(), labelSpans(keys, heights))
+                val h = listHeight(keys, groupKeys, heights, c)
                 val p = m.measure(c.copy(minHeight = h, maxHeight = h))
                 layout(p.width, h) { p.place(0, 0) }
             }
@@ -468,37 +461,75 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
                 // Not drawn until it has taken its opening place, so it never shows scrolled to the bottom for a frame.
                 alpha = if (shown) 1f else 0f
             }
-            .drawWithContent {
-                drawContent()
-                // Reverse scrolling: 0 is the bottom. More above while not at the top; more below while scrolled up.
-                val above = scroll.value < scroll.maxValue
-                val below = scroll.value > 0
-                if (!above && !below) return@drawWithContent
-                val f = (fade.toPx() / size.height).coerceIn(0f, 0.5f)
-                val top = if (above) Color.Transparent else Color.Black
-                val bottom = if (below) Color.Transparent else Color.Black
-                drawRect(Brush.verticalGradient(0f to top, f to Color.Black, 1f - f to Color.Black, 1f to bottom), blendMode = BlendMode.DstIn)
-            },
+            .fadeAtCutEdges(scroll),
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(scroll, reverseScrolling = true)) {
-            Column(Modifier.fillMaxWidth().onSizeChanged { heights[MORE_KEY] = it.height }) {
-                if (model.more > 0) {
-                    Box(
-                        Modifier.fillMaxWidth().heightIn(min = KitLampPanelDims.FOOTER_H.dp).kitTappable(onClick = actions.onAll, role = KitTappableRole.Row).padding(horizontal = Space.S4.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) { KitText(words.more(model.more), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 2) }
-                }
-                if (model.sections.isEmpty() && model.hidden.isEmpty()) {
-                    Box(Modifier.fillMaxWidth().padding(Space.S4.dp), contentAlignment = Alignment.Center) {
-                        KitText(words.empty, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-                    }
-                }
+            PanelItems(model, words, actions) { key, height -> heights[key] = height }
+        }
+    }
+}
+
+/** The list's height in [c]: the groups that fit, trimmed so no section label is cut by its top edge. */
+private fun listHeight(
+    keys: List<String>,
+    groupKeys: List<List<String>>,
+    heights: Map<String, Int>,
+    c: Constraints,
+): Int {
+    val known = keys.map { heights[it] ?: 0 }
+    if (!c.hasBoundedHeight) return known.sum()
+    val groups = listOf(heights[MORE_KEY] ?: 0) + groupKeys.map { g -> g.sumOf { heights[it] ?: 0 } }
+    val view = KitLampPanelRules.viewport(groups, c.maxHeight).coerceAtMost(c.maxHeight)
+    return KitLampPanelRules.clearOfLabels(view, known.sum(), labelSpans(keys, heights))
+}
+
+/** A fade at a cut edge while there is more past it. Reverse scrolling: 0 is the bottom. */
+private fun Modifier.fadeAtCutEdges(scroll: ScrollState): Modifier =
+    drawWithContent {
+        drawContent()
+        val above = scroll.value < scroll.maxValue
+        val below = scroll.value > 0
+        if (!above && !below) return@drawWithContent
+        val f = (KitLampPanelDims.FADE.dp.toPx() / size.height).coerceIn(0f, 0.5f)
+        val top = if (above) Color.Transparent else Color.Black
+        val bottom = if (below) Color.Transparent else Color.Black
+        val brush = Brush.verticalGradient(0f to top, f to Color.Black, 1f - f to Color.Black, 1f to bottom)
+        drawRect(brush, blendMode = BlendMode.DstIn)
+    }
+
+@Composable
+private fun PanelItems(
+    model: KitLampPanelModel,
+    words: KitLampPanelWords,
+    actions: KitLampPanelActions,
+    onHeight: (key: String, height: Int) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().onSizeChanged { onHeight(MORE_KEY, it.height) }) {
+        if (model.more > 0) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = KitLampPanelDims.FOOTER_H.dp)
+                    .kitTappable(onClick = actions.onAll, role = KitTappableRole.Row)
+                    .padding(horizontal = Space.S4.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                KitText(
+                    words.more(model.more),
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                    kind = KitTextKind.Frame,
+                    maxLines = 2,
+                )
             }
-            model.sections.forEach { section ->
-                Section(section, model.editing, words, actions) { key, height -> heights[key] = height }
+        }
+        if (model.sections.isEmpty() && model.hidden.isEmpty()) {
+            Box(Modifier.fillMaxWidth().padding(Space.S4.dp), contentAlignment = Alignment.Center) {
+                KitText(words.empty, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
             }
         }
     }
+    model.sections.forEach { section -> Section(section, model.editing, words, actions, onHeight) }
 }
 
 @Composable
