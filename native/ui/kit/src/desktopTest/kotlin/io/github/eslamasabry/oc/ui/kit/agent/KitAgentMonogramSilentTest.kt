@@ -27,6 +27,6 @@ class KitAgentMonogramSilentTest {
             }
         }
         waitUntil { onAllNodes(isRoot()).fetchSemanticsNodes().isNotEmpty() }
-        onAllNodesWithText("F", useUnmergedTree = true).assertCountEquals(0)
+        onAllNodesWithText("F").assertCountEquals(0)
     }
 }
