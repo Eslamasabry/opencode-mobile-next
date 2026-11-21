@@ -165,8 +165,8 @@ class PhoneAgentAutoUpdate(
                 // A download of hundreds of megabytes never goes over data that is paid for, unless the person said
                 // Download now on Home's ask; only an unmetered network is free (unknown and offline count as paid).
                 override val metered: Boolean get() = downloads.metered
-                override fun meteredYes(agent: AgentId): Boolean = choices.mobileYes(agent)
-                override fun spendMeteredYes(agent: AgentId) = choices.spendMobileYes(agent)
+                override fun meteredYes(agent: AgentId): Boolean = choices.mobile.covers(agent)
+                override fun spendMeteredYes(agent: AgentId) = choices.mobile.spend(agent)
             }
         val jobs =
             object : AgentUpdateJobs {

@@ -37,11 +37,15 @@ class MobileYesTest {
         override suspend fun update(agent: AgentId): Boolean = true.also { started += agent }
     }
 
-    private fun host(engine: AgentUpdateChoiceEngine, behindNow: Set<AgentId>, extraAllowed: Set<AgentId> = emptySet()) =
+    private fun host(
+        engine: AgentUpdateChoiceEngine,
+        behindNow: Set<AgentId>,
+        extraAllowed: Set<AgentId> = emptySet(),
+    ) =
         object : AgentUpdateHost {
-            override suspend fun refresh() {}
+            override suspend fun refresh() = Unit
             override val readDue = false
-            override suspend fun read() {}
+            override suspend fun read() = Unit
             override val installed = listOf(claude, codex, gemini)
             override val behind = behindNow
             override val helperBehind = false
@@ -50,8 +54,8 @@ class MobileYesTest {
             override val installProblem = false
             override val metered = true
             override fun updateAllowed(agent: AgentId) = engine.allowed(agent) || agent in extraAllowed
-            override fun meteredYes(agent: AgentId) = engine.mobileYes(agent)
-            override fun spendMeteredYes(agent: AgentId) = engine.spendMobileYes(agent)
+            override fun meteredYes(agent: AgentId) = engine.mobile.covers(agent)
+            override fun spendMeteredYes(agent: AgentId) = engine.mobile.spend(agent)
         }
 
     private suspend fun sheetAnswered(): AgentUpdateChoiceEngine {

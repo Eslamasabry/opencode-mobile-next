@@ -230,7 +230,7 @@ class PhoneDownloads(
                 // Agents chosen on the sheet that wait for Wi-Fi join this row (a second sentence, or the line).
                 HomeDownloadMapping.withHeldAgents(
                     HomeDownloadMapping.openCodeWithHelper(named, openCodeWithHelperMb(offer)),
-                    heldAgentsOf(offer, running, consented = agentStatus.choices::mobileYes),
+                    heldAgentsOf(offer, running, consented = agentStatus.choices.mobile::covers),
                 )
             }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())

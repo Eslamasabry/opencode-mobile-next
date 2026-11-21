@@ -46,9 +46,6 @@ public class AgentUpdateChoiceEngine(
     private var reviewing = false
     private var sharedAttempt = emptyList<Pair<AgentId, String?>>()
 
-    /** What the last answered sheet said about the network, for exactly the agents it updates: id to version. */
-    @kotlin.concurrent.Volatile private var mobileYes = emptyMap<AgentId, String>()
-
     /**
      * The inventory runs scripts in the phone's Linux and can take seconds. It is read under its own lock, never the
      * command lane's, so a person's answer is not queued behind a timer's read; only the result is applied in the lane.
@@ -126,7 +123,7 @@ public class AgentUpdateChoiceEngine(
     ): Outcome<Unit> = decisions.save(items).also {
         if (it is Outcome.Ok) {
             // Set before the offer changes, so the look that the change wakes already sees the yes.
-            mobileYes = yes
+            mobile.record(yes)
             reviewing = false
             sharedConsent = emptySet()
             sharedAttempt = emptyList()
@@ -138,16 +135,8 @@ public class AgentUpdateChoiceEngine(
         snapshot.answered && snapshot.items.any { it.id == id && it.choice == AgentUpdateChoice.Update }
     } == true
 
-    /** True while [id]'s update was chosen on a sheet that said mobile data and has not started yet (M1-C). */
-    public fun mobileYes(id: AgentId): Boolean {
-        val row = state.value?.items?.firstOrNull { it.id == id } ?: return false
-        return row.choice == AgentUpdateChoice.Update && mobileYes[id] == row.toVersion
-    }
-
-    /** [id]'s install started: its sheet yes is spent. */
-    public fun spendMobileYes(id: AgentId) {
-        mobileYes = mobileYes - id
-    }
+    /** The sheet's yes for mobile data, per agent (M1-C): [MobileConsent.covers] and [MobileConsent.spend]. */
+    public val mobile: MobileConsent = MobileConsent { state.value }
 
     /** OpenCode waits for the shared parts (Node.js, the helper) that the sheet's offer still lists. */
     public val openCodeNeedsShared: Boolean
