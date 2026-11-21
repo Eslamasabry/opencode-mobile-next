@@ -46,6 +46,9 @@ public class AgentUpdateChoiceEngine(
     private var reviewing = false
     private var sharedAttempt = emptyList<Pair<AgentId, String?>>()
 
+    /** What the last answered sheet said about the network, for exactly the agents it updates: id to version. */
+    @kotlin.concurrent.Volatile private var mobileYes = emptyMap<AgentId, String>()
+
     /**
      * The inventory runs scripts in the phone's Linux and can take seconds. It is read under its own lock, never the
      * command lane's, so a person's answer is not queued behind a timer's read; only the result is applied in the lane.
@@ -97,7 +100,14 @@ public class AgentUpdateChoiceEngine(
         val staleRow = selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }
         if (selected.size != choices.size || staleRow) return@withLock stale()
         if (!host.fits(snapshot, selected)) return@withLock Failure.Media(MediaProblem.DownloadNoSpace).failed()
-        val saved = save(selected)
+        // The yes on a sheet that said mobile data and showed the size is the consent for exactly these updates.
+        val yes =
+            if (snapshot.network == AgentUpdateNetwork.Metered) {
+                selected.filter { it.choice == AgentUpdateChoice.Update }.associate { it.id to it.toVersion }
+            } else {
+                emptyMap()
+            }
+        val saved = save(selected, yes)
         if (saved is Outcome.Failed) return@withLock saved
         if (selected.any { it.choice != AgentUpdateChoice.Keep } && host.busy()) return@withLock busy()
         val removals = selected.filter { it.choice == AgentUpdateChoice.Remove }
@@ -110,8 +120,13 @@ public class AgentUpdateChoiceEngine(
         ).ok()
     }
 
-    private suspend fun save(items: List<AgentUpdateItem>): Outcome<Unit> = decisions.save(items).also {
+    private suspend fun save(
+        items: List<AgentUpdateItem>,
+        yes: Map<AgentId, String> = emptyMap(),
+    ): Outcome<Unit> = decisions.save(items).also {
         if (it is Outcome.Ok) {
+            // Set before the offer changes, so the look that the change wakes already sees the yes.
+            mobileYes = yes
             reviewing = false
             sharedConsent = emptySet()
             sharedAttempt = emptyList()
@@ -124,10 +139,15 @@ public class AgentUpdateChoiceEngine(
     } == true
 
     /** True while [id]'s update was chosen on a sheet that said mobile data and has not started yet (M1-C). */
-    public fun mobileYes(id: AgentId): Boolean = false
+    public fun mobileYes(id: AgentId): Boolean {
+        val row = state.value?.items?.firstOrNull { it.id == id } ?: return false
+        return row.choice == AgentUpdateChoice.Update && mobileYes[id] == row.toVersion
+    }
 
     /** [id]'s install started: its sheet yes is spent. */
-    public fun spendMobileYes(id: AgentId) {}
+    public fun spendMobileYes(id: AgentId) {
+        mobileYes = mobileYes - id
+    }
 
     /** OpenCode waits for the shared parts (Node.js, the helper) that the sheet's offer still lists. */
     public val openCodeNeedsShared: Boolean
