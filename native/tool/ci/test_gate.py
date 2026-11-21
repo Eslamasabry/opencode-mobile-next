@@ -79,7 +79,7 @@ class Gate(unittest.TestCase):
                "Execution failed for task ':ui:kit:testAndroidHostTest'.\n"
                "> There were failing tests. See the report at: file:///x\n")
         code, md = run_gate(log, ':ui:kit:verifyRoborazziAndroidHostTest',
-                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('N1 B-KIT-029 the title keeps room next to long actions on a phone',))])
+                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop]',))])
         self.assertEqual(code, 0, md)
         self.assertIn('known noise', md)
 
@@ -327,11 +327,11 @@ class KnownFailuresCeiling(unittest.TestCase):
     }
     # Exact test lines allowed today (they replace class lines; they can only shrink too).
     EXACT_CEILING = {
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2_1280x800',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_1280x800',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2_1280x800[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_1280x800[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop]',
     }
 
     @staticmethod
