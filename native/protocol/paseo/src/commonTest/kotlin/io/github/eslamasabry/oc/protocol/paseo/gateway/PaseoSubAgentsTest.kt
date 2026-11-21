@@ -101,6 +101,17 @@ class PaseoSubAgentsTest {
     }
 
     @Test
+    fun `B-AGENT-191 a running sub-agent listed before its conversation's turn is known works once the turn starts`() = runTest {
+        val h = ready()
+        h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor()))
+        h.pump()
+        assertNotEquals(SessionStatus.Busy, h.gateway.sessionStatuses().ok()[SessionId(sub)])
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        h.pump()
+        assertEquals(SessionStatus.Busy, h.gateway.sessionStatuses().ok()[SessionId(sub)])
+    }
+
+    @Test
     fun `B-AGENT-165 its steps stream into its own conversation`() = runTest {
         val h = ready()
         h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor()))

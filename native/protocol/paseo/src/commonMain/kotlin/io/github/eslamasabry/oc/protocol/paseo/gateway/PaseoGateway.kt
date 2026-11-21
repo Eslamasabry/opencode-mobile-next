@@ -1400,6 +1400,7 @@ public class PaseoGateway(
             }
             checkLocation(scope, epoch)
             statuses[sessionId] = SessionStatus.Busy
+            wakeSubagents(sessionId)
             return PromptAdmission.Confirmed(null)
         } catch (e: PaseoException) {
             awaitingTurn.remove(sessionId)
@@ -2419,7 +2420,10 @@ public class PaseoGateway(
         if (statuses[id] == status) return
         statuses[id] = status
         if (status == SessionStatus.Idle) live[id]?.let(::finishOpen)
-        if (status == SessionStatus.Busy) emit(GatewayEvent.RunStarted(SessionId(id)))
+        if (status == SessionStatus.Busy) {
+            emit(GatewayEvent.RunStarted(SessionId(id)))
+            wakeSubagents(id)
+        }
     }
 
     private fun onEvent(push: PaseoPush) {
