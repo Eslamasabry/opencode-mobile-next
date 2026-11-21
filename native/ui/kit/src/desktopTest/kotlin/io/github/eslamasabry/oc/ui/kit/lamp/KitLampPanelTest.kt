@@ -432,4 +432,45 @@ class KitLampPanelTest {
             onAllNodesWithText("Allow once")[0].assertIsDisplayed()
             onAllNodesWithText("Allow once")[1].assertIsDisplayed()
         }
+
+    /** The unclipped top (px in the root) of the first node showing [text]. */
+    private fun ComposeUiTest.topOf(text: String): Float =
+        onAllNodesWithText(text, useUnmergedTree = true).fetchSemanticsNodes().first().positionInRoot.y
+
+    @Test
+    fun `B-LAMP-K2-075 the open panel rests at its top - the label and the first request whole under the header`() {
+        for (count in listOf(1, 3)) for (fontScale in listOf(1f, 1.3f)) {
+            runDesktopComposeUiTest(360, 520) {
+                panel(Scene(askingModel(count)), width = 360, height = 520, fontScale = fontScale)
+                waitForIdle()
+                val what = "$count requests, text $fontScale"
+                val list = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot().top.value
+                val header = onNodeWithText("You are in", substring = true).getUnclippedBoundsInRoot().bottom.value
+                val label = topOf("Needs you")
+                val title = topOf("Reply with exactly the word: base-1")
+                assertTrue(label >= list - 0.5f, "$what: the label ($label) starts at or below the list top ($list)")
+                assertTrue(title >= list - 0.5f && title >= header, "$what: the first request's title ($title) is not under the header ($header)")
+            }
+        }
+    }
+
+    @Test
+    fun `B-LAMP-K2-076 a request that arrives while the panel is open does not move the rows the person is looking at`() {
+        for (atTop in listOf(true, false)) {
+            runDesktopComposeUiTest(360, 520) {
+                val scene = Scene(askingModel(3))
+                panel(scene, width = 360, height = 520, fontScale = 1.3f)
+                waitForIdle()
+                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 60f, durationMillis = 180) }
+                waitForIdle()
+                val watched = "Reply with exactly the word: base-2"
+                val before = topOf(watched)
+                val rows = scene.model.sections.single().rows
+                val extra = rows.first().let { it.copy(key = "ask9", title = "Reply with exactly the word: base-9", request = KitRequest("rq9", "Asks to fetch: example.org")) }
+                scene.model = scene.model.copy(sections = listOf(scene.model.sections.single().copy(rows = if (atTop) listOf(extra) + rows else rows + extra)))
+                waitForIdle()
+                near(before, topOf(watched), "the watched row stays where it was (arrival ${if (atTop) "above" else "below"})", tol = 1.5f)
+            }
+        }
+    }
 }
