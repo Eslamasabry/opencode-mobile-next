@@ -701,7 +701,10 @@ internal constructor(
         }
     }
 
-    private val facts = MutableStateFlow(PhoneServerFacts())
+    // The person's own Stop is stored: the first facts already carry it, so Home's first frame draws the stopped state
+    // (never connected until the server says so). A record that cannot be read is no stop.
+    private val facts =
+        MutableStateFlow(firstServerFacts(runCatchingBlocking { stoppedByPerson() } ?: false))
 
     /** The phone server's readings, for home's "Starting this phone…" wait (E05-S20). Read-only. */
     val serverFacts: StateFlow<PhoneServerFacts>

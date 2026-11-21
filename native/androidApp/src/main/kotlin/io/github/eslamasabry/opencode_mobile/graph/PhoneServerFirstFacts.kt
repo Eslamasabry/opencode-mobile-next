@@ -7,4 +7,4 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
  * frame of Home must already draw it (the stopped state and "Start OpenCode"); nothing reads connected until the
  * server says so.
  */
-internal fun firstServerFacts(storedStop: Boolean): PhoneServerFacts = PhoneServerFacts()
+internal fun firstServerFacts(storedStop: Boolean): PhoneServerFacts = PhoneServerFacts(stoppedByPerson = storedStop)
