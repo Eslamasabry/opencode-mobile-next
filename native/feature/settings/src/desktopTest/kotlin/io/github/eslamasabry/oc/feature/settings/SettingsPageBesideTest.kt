@@ -14,6 +14,8 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
@@ -194,6 +196,28 @@ class SettingsPageBesideTest {
             onNodeWithText("Clear this app's storage").performClick()
             waitForIdle()
             assertTrue("outside:AppStorage" in base.calls, "the confirm door is the phone's: ${base.calls}")
+        }
+    }
+
+    @Test
+    fun `B-NAV-253 beside the page the list marks the page's own row, or its group, never another`() {
+        // The group's rows stand beside the page: the page's row is the chosen one, no other.
+        runDesktopComposeUiTest(1280, 800) {
+            show(state(SettingsPage.Privacy), mutableStateOf(KitWindowInfo(1280f, 800f)))
+            waitForIdle()
+            onNodeWithTag(SettingsRowId.Privacy.tag).assertIsSelected()
+            onNodeWithTag(SettingsRowId.About.tag).assertIsNotSelected()
+        }
+        // No rows handed over (the groups list stands): the group the page came from is marked, not the first one.
+        runDesktopComposeUiTest(1280, 800) {
+            show(state(SettingsPage.Privacy).copy(listGroup = null), mutableStateOf(KitWindowInfo(1280f, 800f)))
+            waitForIdle()
+            val marked =
+                groups.filter {
+                    onAllNodes(androidx.compose.ui.test.hasTestTag("settings-group-${it.name}"))
+                        .fetchSemanticsNodes().any { n -> n.config.getOrNull(SemanticsProperties.Selected) == true }
+                }
+            assertEquals(listOf(SettingsGroupId.ThisApp), marked, "only the group the page came from is marked")
         }
     }
 

@@ -215,7 +215,7 @@ internal fun SettingsPagePanes(
             ) {
                 if (listGroup != null)
                     GroupBody(state.copy(group = listGroup), actions, SettingsPage.Group(listGroup.id), openPage = page)
-                else HubBody(state, actions, selected = state.firstGroup?.id)
+                else HubBody(state, actions, selected = (state.stack.lastOrNull { it is SettingsPage.Group } as? SettingsPage.Group)?.id)
             }
         },
         detail = { Box(Modifier.fillMaxSize().testTag("settings-detail-pane")) { detail() } },
@@ -490,10 +490,12 @@ private fun ColumnScope.GroupBody(
             val title = rowWords(row.id)
             val request = remember(row.id) { BringIntoViewRequester() }
             val focused = state.focusedRow == row.id
+            // The page open beside this list: its row is the chosen one.
+            val open = openPage != null && (row.door as? SettingsDoor.Page)?.page == openPage
             LaunchedEffect(focused) { if (focused) request.bringIntoView() }
             val rowModifier =
                 Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
-                    selected = focused
+                    selected = focused || open
                 }
             when {
                 row.door is SettingsDoor.Choice ->
@@ -517,7 +519,7 @@ private fun ColumnScope.GroupBody(
                     KitRow(
                         title = title,
                         modifier = rowModifier,
-                        selected = focused || (openPage != null && (row.door as? SettingsDoor.Page)?.page == openPage),
+                        selected = focused || open,
                         leading = KitRowLeading.Glyph(rowGlyph(row.id)),
                         trailing =
                             rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }

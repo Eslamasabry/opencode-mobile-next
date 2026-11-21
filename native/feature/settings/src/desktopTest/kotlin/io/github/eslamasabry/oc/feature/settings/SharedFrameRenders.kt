@@ -13,11 +13,8 @@ import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
-import io.github.eslamasabry.oc.feature.settings.presentation.GroupUi
-import io.github.eslamasabry.oc.feature.settings.presentation.HubUi
-import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
-import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
-import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -43,18 +40,29 @@ class SharedFrameRenders {
     private val out =
         File(System.getProperty("user.home"), "render-out").takeIf { it.isDirectory }?.resolve("shared-frame")?.also(File::mkdirs)
 
-    private val pages =
-        listOf(
-            "hub" to SettingsPage.Hub,
-            "group" to SettingsPage.Group(SettingsGroupId.ThisApp),
-            "notifications" to SettingsPage.Notifications,
-            "privacy" to SettingsPage.Privacy,
-            "collect" to SettingsPage.WhatWeCollect,
-            "about" to SettingsPage.About,
-            "updates" to SettingsPage.Updates,
-            "storage" to SettingsPage.Storage,
-            "phrases" to SettingsPage.PhraseChips,
-            "appearance" to SettingsPage.Appearance,
+    private val thisAppRows =
+        persistentListOf(
+            SettingsRowUi(SettingsRowId.Notifications, SettingsDoor.Page(SettingsPage.Notifications)),
+            SettingsRowUi(SettingsRowId.Appearance, SettingsDoor.Page(SettingsPage.Appearance)),
+            SettingsRowUi(SettingsRowId.Language, SettingsDoor.Page(SettingsPage.Language)),
+            SettingsRowUi(SettingsRowId.Privacy, SettingsDoor.Page(SettingsPage.Privacy)),
+            SettingsRowUi(SettingsRowId.Updates, SettingsDoor.Page(SettingsPage.Updates)),
+            SettingsRowUi(SettingsRowId.Storage, SettingsDoor.Page(SettingsPage.Storage)),
+        )
+    private val helpRows =
+        persistentListOf(
+            SettingsRowUi(SettingsRowId.Guide, SettingsDoor.Outside(SettingsOutside.Guide)),
+            SettingsRowUi(SettingsRowId.Tips, SettingsDoor.Outside(SettingsOutside.Tips)),
+            SettingsRowUi(SettingsRowId.ReportProblem, SettingsDoor.Outside(SettingsOutside.ReportProblem)),
+            SettingsRowUi(SettingsRowId.About, SettingsDoor.Page(SettingsPage.About)),
+        )
+    private val localData =
+        LocalDataFacts(
+            queued = 3,
+            queueBytes = 18 * 1024L,
+            drafts = 2,
+            draftBytes = 3 * 1024L,
+            servers = persistentListOf(ProfileId("laptop")),
         )
 
     private val groups =
@@ -66,13 +74,62 @@ class SharedFrameRenders {
             SettingsGroupId.Help,
         )
 
-    private fun shoot(name: String, page: SettingsPage, w: Int, h: Int, density: Float, key: String) {
-        val state =
+    /** Real rows: the page's own facts filled, the group's rows under it, as the presenter hands them over. */
+    private fun scene(name: String): SettingsUi {
+        val thisApp = GroupUi(SettingsGroupId.ThisApp, thisAppRows)
+        val help = GroupUi(SettingsGroupId.Help, helpRows)
+        val hub = HubUi(groups = groups, server = ServerLine("Laptop", false))
+        fun under(group: GroupUi, page: SettingsPage) =
             SettingsUi(
-                stack = if (page == SettingsPage.Hub) persistentListOf(SettingsPage.Hub) else persistentListOf(SettingsPage.Hub, page),
-                hub = HubUi(groups = groups),
+                stack = persistentListOf(SettingsPage.Hub, SettingsPage.Group(group.id), page),
+                hub = hub,
+                listGroup = group,
                 firstGroup = GroupUi(SettingsGroupId.Server, persistentListOf()),
             )
+        return when (name) {
+            "hub" -> SettingsUi(hub = hub, firstGroup = GroupUi(SettingsGroupId.Server, persistentListOf()))
+            "group" ->
+                SettingsUi(
+                    stack = persistentListOf(SettingsPage.Hub, SettingsPage.Group(SettingsGroupId.ThisApp)),
+                    hub = hub,
+                    group = thisApp,
+                )
+            "help" ->
+                SettingsUi(
+                    stack = persistentListOf(SettingsPage.Hub, SettingsPage.Group(SettingsGroupId.Help)),
+                    hub = hub,
+                    group = help,
+                )
+            "notifications" ->
+                under(thisApp, SettingsPage.Notifications).copy(
+                    notifications =
+                        NotificationFacts(
+                            blocked = true,
+                            usageAlertsShown = true,
+                            profiles = persistentListOf(NotificationProfile(ProfileId("laptop"), "Laptop", false, true)),
+                            background = BackgroundState.Off,
+                        )
+                )
+            "privacy" -> under(thisApp, SettingsPage.Privacy).copy(localData = LocalDataUi(localData))
+            "privacy-confirm" ->
+                under(thisApp, SettingsPage.Privacy).copy(
+                    localData = LocalDataUi(localData, confirm = LocalDataKind.entries.first())
+                )
+            "storage" ->
+                under(thisApp, SettingsPage.Storage).copy(
+                    localModels = LocalModelStorageFacts(loading = false, present = true, size = "1.2 GB")
+                )
+            "about" -> under(help, SettingsPage.About).copy(about = AboutFacts("1.0.44", "52"))
+            "updates" -> under(thisApp, SettingsPage.Updates)
+            else -> under(thisApp, SettingsPage.Appearance)
+        }
+    }
+
+    private val pages =
+        listOf("hub", "group", "help", "notifications", "privacy", "privacy-confirm", "storage", "about", "updates", "appearance")
+
+    private fun shoot(name: String, w: Int, h: Int, density: Float, key: String) {
+        val state = scene(name)
         runDesktopComposeUiTest((w * density).toInt(), (h * density).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(density)) {
@@ -100,11 +157,11 @@ class SharedFrameRenders {
     fun `shared frame renders`() {
         if (out == null) return
         Locale.setDefault(Locale.ENGLISH)
-        for ((name, page) in pages) {
-            shoot(name, page, 360, 780, 2f, "phone")
-            shoot(name, page, 412, 915, 2f, "phone412")
-            shoot(name, page, 1280, 800, 1f, "tabl")
-            shoot(name, page, 800, 1280, 1f, "tabp")
+        for (name in pages) {
+            shoot(name, 360, 780, 2f, "phone")
+            shoot(name, 412, 915, 2f, "phone412")
+            shoot(name, 1280, 800, 1f, "tabl")
+            shoot(name, 800, 1280, 1f, "tabp")
         }
     }
 }
