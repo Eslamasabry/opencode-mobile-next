@@ -916,18 +916,18 @@
     <string name="thermalGuardSaveFailed">Impossibile salvare la protezione dal calore. Riprova.</string>
     <string name="linuxMgrProblemNotAnswering">Linux ci sta mettendo molto a rispondere. Riprova tra un momento.</string>
     <string name="phoneDownloadWaitingOpenCode">Aggiornamento di OpenCode in attesa del Wi-Fi · circa %1$d MB</string>
-    <string name="phoneDownloadWaitingHelper">Aggiornamento dell'helper degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Aggiornamento dell'assistente agente in attesa del Wi-Fi · circa %1$d MB</string>
     <string name="phoneDownloadReadyReply">Aggiornamento di OpenCode pronto · si installa quando nessuna risposta è in corso</string>
     <string name="phoneDownloadReadyPhone">Aggiornamento di OpenCode pronto · si installa quando il server del telefono è pronto</string>
     <string name="phoneDownloadOnMobile">Scarica con i dati mobili</string>
     <string name="phoneDownloadRunningOpenCode">Aggiornamento di OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Aggiornamento dell'helper degli agenti</string>
+    <string name="phoneDownloadRunningHelper">Aggiornamento dell'assistente agente</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">L'aggiornamento di OpenCode non è terminato.</string>
-    <string name="phoneDownloadFailedHelper">L'aggiornamento dell'helper degli agenti non è terminato.</string>
+    <string name="phoneDownloadFailedHelper">L'aggiornamento dell'assistente agente non è terminato.</string>
     <string name="phoneDownloadAskTitle">Scaricare circa %1$d MB con i dati mobili?</string>
     <string name="phoneDownloadAskBodyOpenCode">È l'aggiornamento di OpenCode per questo telefono. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
-    <string name="phoneDownloadAskBodyHelper">È l'aggiornamento dell'helper degli agenti su questo telefono. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
+    <string name="phoneDownloadAskBodyHelper">È l'aggiornamento dell'assistente agente su questo telefono. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
     <string name="phoneDownloadAskNow">Scarica ora</string>
     <string name="phoneDownloadAskWait">Aspetta il Wi-Fi</string>
     <plurals name="phoneDownloadAgentsMore">
@@ -942,7 +942,8 @@
         <item quantity="other">%1$d aggiornamenti degli agenti in attesa del Wi-Fi · circa %2$d MB</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 aggiornamento degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
-    <string name="phoneDownloadWaitingOpenCodeHelper">Aggiornamento di OpenCode e dell'helper degli agenti in attesa del Wi-Fi · circa %1$d MB</string>
-    <string name="phoneDownloadAskBodyOpenCodeHelper">È l'aggiornamento di OpenCode e dell'helper degli agenti che gli serve. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Aggiornamento di OpenCode e dell'assistente agente in attesa del Wi-Fi · circa %1$d MB</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">È l'aggiornamento di OpenCode e dell'assistente agente che gli serve. Consuma il tuo piano dati. Se aspetti il Wi-Fi, resta in sospeso.</string>
     <string name="phoneStoppedByYou">Hai arrestato OpenCode su questo telefono</string>
+    <string name="phoneSetupStageCheckingLinux">Verifica di Linux su questo telefono…</string>
 </resources>

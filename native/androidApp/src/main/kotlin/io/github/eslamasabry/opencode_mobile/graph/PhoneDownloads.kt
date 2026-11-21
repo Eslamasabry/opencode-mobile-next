@@ -13,9 +13,12 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
+import io.github.eslamasabry.oc.engine.runtime.setup.ComponentProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
@@ -92,6 +95,7 @@ class PhoneDownloads(
 
     /** OpenCode's update ended below the pin and the next try waits for its time and an idle phone. */
     internal val openCodeRetrying = MutableStateFlow(false)
+    internal val sharedRunning = MutableStateFlow<HomeDownloadFact?>(null)
     internal val openCodeWaiting = MutableStateFlow(false)
     internal val openCodeHeld = MutableStateFlow<OpenCodeHold?>(null)
     @Volatile internal var openCode: PhoneOpenCodeAutoUpdate? = null
@@ -200,6 +204,7 @@ class PhoneDownloads(
                     },
                 )
             }
+            .combine(sharedRunning) { rows, shared -> if (shared == null) rows else listOf(shared) }
             .combine(agentStatus.choices.offer) { rows, offer ->
                 val withHelper =
                     if (offer?.neededGoesAhead == true && offer.network != AgentUpdateNetwork.Unmetered &&
@@ -223,7 +228,9 @@ class PhoneDownloads(
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     override fun downloadNow(kind: HomeDownloadKind) {
-        val phase = facts.value.firstOrNull { it.kind == kind }?.phase
+        val fact = facts.value.firstOrNull { it.kind == kind } ?: return
+        val phase = fact.phase
+        if (phase != HomeDownloadPhase.Waiting && phase != HomeDownloadPhase.Failed) return
         scope.launch(dispatchers.io) {
             if (phase == HomeDownloadPhase.Failed) {
                 run(kind)
@@ -232,7 +239,7 @@ class PhoneDownloads(
                     HomeDownloadKind.OpenCode -> {
                         openCode?.allowMeteredOnce()
                         // OpenCode waits for the shared parts the offer lists: the same yes releases them.
-                        if (agentStatus.choices.openCodeNeedsShared) agents?.allowMeteredOnce(sharedOnly = true)
+                        if (fact.withHelper) agents?.allowMeteredOnce(sharedOnly = true)
                     }
                     HomeDownloadKind.Helper -> agents?.allowMeteredOnce()
                 }
@@ -319,10 +326,15 @@ internal fun withChosenOpenCode(rows: List<HomeDownloadFact>, offer: AgentUpdate
         offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }?.items.orEmpty().any {
             it.id == AgentId.OPENCODE && it.choice == AgentUpdateChoice.Update
         }
-    return if (!chosen || rows.any { it.kind == HomeDownloadKind.OpenCode }) {
-        rows
+    val optionalOnly = offer?.answered == true && offer.items.none { it.neededWhen != null } &&
+        offer.items.any { it.id != AgentId.OPENCODE && it.choice == AgentUpdateChoice.Update }
+    val named = if (optionalOnly) {
+        rows.filterNot { it.kind == HomeDownloadKind.Helper && it.phase == HomeDownloadPhase.Waiting }
+    } else rows
+    return if (!chosen || named.any { it.kind == HomeDownloadKind.OpenCode }) {
+        named
     } else {
-        listOf(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)) + rows
+        listOf(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)) + named
     }
 }
 
@@ -358,4 +370,21 @@ private fun runningPart(step: PhoneAgentInstallStep?, fraction: Double?, agentNa
         PhoneAgentInstallStep.Agent -> RunningPart(agentName(), false, percent)
         PhoneAgentInstallStep.Linux, null -> null
     }
+}
+
+/** A shared-only job bypasses the agent install marker. Read the active component's own bytes from the runner. */
+internal fun sharedDownloadFact(job: SetupJobRecord, parts: List<AgentUpdateItem>): HomeDownloadFact {
+    val active = job.current?.let(job::component)
+    val item = parts.firstOrNull { it.id.raw == active?.id }
+    val fraction = active?.let {
+        ComponentProgress(
+            it.id, it.componentState, bytesDone = it.done, bytesTotal = it.total, percent = it.percent,
+        ).fraction
+    }
+    val size = item?.downloadBytes?.let(HomeDownloadSizes::roundedMb)
+    return HomeDownloadFact(
+        HomeDownloadKind.Helper,
+        HomeDownloadPhase.Running(fraction?.let { (it * PERCENT).roundToInt() }, size),
+        name = item?.name,
+    )
 }

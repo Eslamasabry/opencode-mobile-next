@@ -874,16 +874,16 @@
     <string name="thisPhoneRestartingRow">Đang khởi động lại. Thường mất chưa đến một phút…</string>
     <string name="linuxMgrProblemNotAnswering">Linux đang mất nhiều thời gian để trả lời. Hãy thử lại sau giây lát.</string>
     <string name="phoneDownloadWaitingOpenCode">Bản cập nhật OpenCode đang chờ Wi-Fi · khoảng %1$d MB</string>
-    <string name="phoneDownloadWaitingHelper">Bản cập nhật trình hỗ trợ tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Bản cập nhật tiến trình phụ của tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
     <string name="phoneDownloadOnMobile">Tải bằng dữ liệu di động</string>
     <string name="phoneDownloadRunningOpenCode">Đang cập nhật OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Đang cập nhật trình hỗ trợ tác nhân</string>
+    <string name="phoneDownloadRunningHelper">Đang cập nhật tiến trình phụ của tác nhân</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">Bản cập nhật OpenCode chưa hoàn tất.</string>
-    <string name="phoneDownloadFailedHelper">Bản cập nhật trình hỗ trợ tác nhân chưa hoàn tất.</string>
+    <string name="phoneDownloadFailedHelper">Bản cập nhật tiến trình phụ của tác nhân chưa hoàn tất.</string>
     <string name="phoneDownloadAskTitle">Tải khoảng %1$d MB bằng dữ liệu di động?</string>
     <string name="phoneDownloadAskBodyOpenCode">Đây là bản cập nhật OpenCode cho điện thoại này. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
-    <string name="phoneDownloadAskBodyHelper">Đây là bản cập nhật trình hỗ trợ tác nhân trên điện thoại này. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
+    <string name="phoneDownloadAskBodyHelper">Đây là bản cập nhật tiến trình phụ của tác nhân trên điện thoại này. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
     <string name="phoneDownloadAskNow">Tải ngay</string>
     <string name="phoneDownloadAskWait">Chờ Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Bản cập nhật OpenCode đã sẵn sàng · sẽ cài khi không có phản hồi nào đang chạy</string>
@@ -896,7 +896,8 @@
         <item quantity="other">%1$d bản cập nhật tác nhân đang chờ Wi-Fi · khoảng %2$d MB</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 bản cập nhật tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
-    <string name="phoneDownloadWaitingOpenCodeHelper">Bản cập nhật OpenCode và trình hỗ trợ tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
-    <string name="phoneDownloadAskBodyOpenCodeHelper">Đây là bản cập nhật OpenCode và trình hỗ trợ tác nhân mà nó cần. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Bản cập nhật OpenCode và tiến trình phụ của tác nhân đang chờ Wi-Fi · khoảng %1$d MB</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">Đây là bản cập nhật OpenCode và tiến trình phụ của tác nhân mà nó cần. Nó tính vào gói dữ liệu của bạn. Chờ Wi-Fi sẽ để dành cho sau.</string>
     <string name="phoneStoppedByYou">Bạn đã dừng OpenCode trên điện thoại này</string>
+    <string name="phoneSetupStageCheckingLinux">Đang kiểm tra Linux trên điện thoại này…</string>
 </resources>

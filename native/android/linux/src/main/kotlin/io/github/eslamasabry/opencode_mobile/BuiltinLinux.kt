@@ -242,6 +242,7 @@ class BuiltinLinux(private val context: Context) {
             configure()
             projectStorage.prepare()
             ready.writeText(image.sha256)
+            synchronized(prootProbeLock) { recentProotProbe = null }
             phase = "ready"
             message = null
             archive.delete()
@@ -1100,7 +1101,11 @@ class BuiltinLinux(private val context: Context) {
                     "TERM=xterm-256color",
                     "TMPDIR=/tmp",
                 ) +
-                (if (compat) listOf(COMPAT_GLIBC_TUNABLES) else emptyList()) +
+                (if (SetupStepRetry.effectiveCompat(compat, serverCompat())) {
+                    listOf(COMPAT_GLIBC_TUNABLES)
+                } else {
+                    emptyList()
+                }) +
                 program
         workLeases.observeTerminalsSoon()
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command)
@@ -2807,15 +2812,200 @@ class BuiltinLinux(private val context: Context) {
                 "PROOT_TMP_DIR" to tmp.absolutePath,
                 "LD_LIBRARY_PATH" to nativeDir,
             )
-        // Compatibility mode (issue #117): no seccomp acceleration in proot.
-        return if (compat) base + ("PROOT_NO_SECCOMP" to "1") else base
+        // Compatibility mode (issue #117/#151): no seccomp acceleration in proot when requested or marked.
+        val effectiveCompat = SetupStepRetry.effectiveCompat(compat, serverCompat())
+        return if (effectiveCompat) base + ("PROOT_NO_SECCOMP" to "1") else base
     }
 
     /**
-     * Whether the server's proot runs in compatibility mode: the Node install found that Node.js only runs that way
-     * on this phone and wrote `proot-compat` under its saved safe mode (NodeCompatState, issue #117).
+     * Whether the server's proot runs in compatibility mode: the Node install or the setup liveness probe wrote
+     * `proot-compat` under the rootfs safe-mode state (NodeCompatState, issues #117/#151).
      */
     fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
+
+    private val prootProbeLock = Any()
+    private var recentProotProbe: Pair<Long, LinuxProotProbe.Result>? = null
+
+    /**
+     * Runs the bounded proot liveness probe (issue #151) before a check on an existing base, reusing a result
+     * captured moments ago so back-to-back root/agent check passes do not probe twice.
+     */
+    fun ensureProotLiveness(): Boolean {
+        if (!installed) return true
+        val cached =
+            synchronized(prootProbeLock) {
+                recentProotProbe?.takeIf { SystemClock.elapsedRealtime() - it.first <= PROOT_PROBE_CACHE_MS }?.second
+            }
+        val result = cached ?: probeProotLiveness()
+        return result is LinuxProotProbe.Result.Ready
+    }
+
+    /** Consumes a fresh probe result captured by [ensureProotLiveness] right before setup started. */
+    internal fun consumeRecentProotProbe(): LinuxProotProbe.Result? =
+        synchronized(prootProbeLock) {
+            val found =
+                recentProotProbe?.takeIf { SystemClock.elapsedRealtime() - it.first <= PROOT_PROBE_CACHE_MS }?.second
+            recentProotProbe = null
+            found
+        }
+
+    /**
+     * One bounded proot liveness probe in normal mode (20 s); on hang/failure kills that exact PID, writes the
+     * rootfs `proot-compat` marker, and probes once in compat mode. An existing marker skips normal mode.
+     */
+    internal fun probeProotLiveness(
+        isCancelled: () -> Boolean = { false },
+        onStage: (compatRetry: Boolean) -> Unit = {},
+        timeoutMs: Long = LinuxProotProbe.TIMEOUT_MS,
+    ): LinuxProotProbe.Result {
+        val runner =
+            object : LinuxProotProbe.Runner {
+                override fun hasCompatMarker(): Boolean = serverCompat()
+
+                override fun writeCompatMarker() {
+                    NodeCompatState.writeProotCompat(rootfs)
+                }
+
+                override fun clearCompatMarker() {
+                    NodeCompatState.clearProotCompat(rootfs)
+                }
+
+                override fun runOnce(
+                    mode: LinuxProotProbe.Mode,
+                    timeoutMs: Long,
+                    killPid: (Int) -> Unit,
+                ): LinuxProotProbe.Attempt = runProotLivenessAttempt(mode, timeoutMs, isCancelled, killPid)
+            }
+        val result = LinuxProotProbe.run(runner, timeoutMs, onStage)
+        synchronized(prootProbeLock) {
+            recentProotProbe =
+                if (result is LinuxProotProbe.Result.Cancelled) null
+                else SystemClock.elapsedRealtime() to result
+        }
+        return result
+    }
+
+    private fun runProotLivenessAttempt(
+        mode: LinuxProotProbe.Mode,
+        timeoutMs: Long,
+        isCancelled: () -> Boolean,
+        killPid: (Int) -> Unit,
+    ): LinuxProotProbe.Attempt {
+        val compat = mode == LinuxProotProbe.Mode.COMPAT
+        val process =
+            ProcessBuilder(prootCommand(listOf("/bin/sh", "-c", LinuxProotProbe.COMMAND), agentUser = false, compat))
+                .redirectErrorStream(true)
+                .apply {
+                    environment().clear()
+                    environment().putAll(prootEnvironment(compat))
+                }
+                .start()
+        val pid = pidOf(process)
+        val identity = pid?.let { kernelIdentity(it) }
+        val output = StringBuilder()
+        val reader = startProbeReader(process, output)
+        return try {
+            process.outputStream.close()
+            val finished = waitForProbe(process, timeoutMs, isCancelled)
+            if (finished) {
+                reader.join(PROOT_PROBE_STOP_GRACE_MS)
+                val text = synchronized(output) { output.toString() }
+                val code = process.exitValue()
+                if (LinuxProotProbe.matchedOutput(code, text)) LinuxProotProbe.Attempt.Answered
+                else LinuxProotProbe.Attempt.Exited(code)
+            } else {
+                stopProbeProcess(process, pid, identity, killPid)
+                reader.join(PROOT_PROBE_STOP_GRACE_MS)
+                if (isCancelled()) LinuxProotProbe.Attempt.Cancelled else LinuxProotProbe.Attempt.Hung(pid)
+            }
+        } finally {
+            try {
+                if (process.isAlive) stopProbeProcess(process, pid, identity, killPid)
+            } catch (_: java.io.IOException) {
+                // Best-effort probe cleanup.
+            } catch (_: SecurityException) {
+                // Best-effort probe cleanup.
+            }
+            try {
+                process.inputStream.close()
+            } catch (_: java.io.IOException) {
+                // Already closed.
+            }
+        }
+    }
+
+    private fun startProbeReader(process: Process, output: StringBuilder): Thread =
+        Thread(
+                {
+                    try {
+                        process.inputStream.bufferedReader().use { input ->
+                            input.forEachLine { line -> appendProbeLine(output, line) }
+                        }
+                    } catch (_: java.io.IOException) {
+                        // Stream closed when the timed-out probe is killed.
+                    }
+                },
+                "phone-proot-probe",
+            )
+            .apply {
+                isDaemon = true
+                start()
+            }
+
+    private fun appendProbeLine(output: StringBuilder, line: String) {
+        synchronized(output) {
+            if (output.length < PROOT_PROBE_OUTPUT_CAP) output.appendLine(line)
+        }
+    }
+
+    private fun waitForProbe(process: Process, timeoutMs: Long, isCancelled: () -> Boolean): Boolean {
+        val deadline = SystemClock.elapsedRealtime() + timeoutMs.coerceAtLeast(0L)
+        var finished = false
+        while (!finished && !isCancelled() && SystemClock.elapsedRealtime() < deadline) {
+            val step = (deadline - SystemClock.elapsedRealtime()).coerceIn(1L, PROCESS_POLL_MS)
+            finished = process.waitFor(step, TimeUnit.MILLISECONDS)
+        }
+        return finished
+    }
+
+    private fun stopProbeProcess(
+        process: Process,
+        pid: Int?,
+        identity: RuntimeProcessIdentity?,
+        killPid: (Int) -> Unit,
+    ) {
+        if (pid != null && identity != null) {
+            val uid = AndroidProcess.myUid()
+            val below =
+                if (identity.sameProcess(kernelIdentity(pid))) {
+                    descendants(pid).mapNotNull { kernelIdentity(it) }.filter { processUid(it.pid) == uid }
+                } else {
+                    emptyList()
+                }
+            for (child in below) signalIfExact(child, uid, OsConstants.SIGTERM)
+            LinuxProotProbe.stopExactProcess(
+                pid = pid,
+                isSameProcess = { target ->
+                    identity.sameProcess(kernelIdentity(target)) && processUid(target) == uid
+                },
+                waitExited = { process.waitFor(PROOT_PROBE_STOP_GRACE_MS, TimeUnit.MILLISECONDS) },
+                sendTerm = { target -> signal(target, OsConstants.SIGTERM) },
+                sendKill = { target -> signal(target, OsConstants.SIGKILL) },
+            )
+            for (child in below) signalIfExact(child, uid, OsConstants.SIGKILL)
+            killPid(pid)
+            process.waitFor(PROOT_PROBE_STOP_GRACE_MS, TimeUnit.MILLISECONDS)
+        } else {
+            process.destroyForcibly()
+            process.waitFor(PROOT_PROBE_STOP_GRACE_MS, TimeUnit.MILLISECONDS)
+        }
+    }
+
+    private fun signalIfExact(identity: RuntimeProcessIdentity, uid: Int, sig: Int) {
+        if (identity.sameProcess(kernelIdentity(identity.pid)) && processUid(identity.pid) == uid) {
+            signal(identity.pid, sig)
+        }
+    }
 
     // ---- long-running services ---------------------------------------------
 
@@ -6925,6 +7115,9 @@ exec gc supervisor run
         private const val MAX_ENV_BYTES = 131_072
         private const val CPU_SAMPLE_MS = 1_000L
         private const val STOP_GRACE_MS = 2_000L
+        private const val PROOT_PROBE_CACHE_MS = 15_000L
+        private const val PROOT_PROBE_STOP_GRACE_MS = 500L
+        private const val PROOT_PROBE_OUTPUT_CAP = 4_096
         private const val MAX_STOP_PIDS = 256
 
         internal fun registeredAppProcessIds(

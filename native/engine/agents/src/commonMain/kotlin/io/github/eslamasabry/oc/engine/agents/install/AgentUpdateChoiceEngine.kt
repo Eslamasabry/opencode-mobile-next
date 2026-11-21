@@ -42,6 +42,7 @@ public class AgentUpdateChoiceEngine(
     private val log = AppLog.tagged("AgentUpdateChoice")
     private val state = MutableStateFlow<AgentUpdateOffer?>(null)
     override val offer: StateFlow<AgentUpdateOffer?> = state.asStateFlow()
+    private var sharedConsent = emptySet<Pair<AgentId, String>>()
     private var reviewing = false
     private var sharedAttempt = emptyList<Pair<AgentId, String?>>()
 
@@ -54,7 +55,10 @@ public class AgentUpdateChoiceEngine(
     private fun apply(fresh: AgentUpdateInventory): AgentUpdateOffer? {
         inventory = fresh
         state.value = decisions.offer(inventory, reviewing)
-        return state.value
+        val offered = state.value
+        sharedConsent =
+            if (allowed(AgentId.OPENCODE)) sharedConsent.intersect(offered?.sharedPins.orEmpty()) else emptySet()
+        return offered
     }
 
     public suspend fun refresh() {
@@ -109,6 +113,7 @@ public class AgentUpdateChoiceEngine(
     private suspend fun save(items: List<AgentUpdateItem>): Outcome<Unit> = decisions.save(items).also {
         if (it is Outcome.Ok) {
             reviewing = false
+            sharedConsent = emptySet()
             sharedAttempt = emptyList()
             state.value = decisions.offer(inventory, reviewing)
         }
@@ -138,16 +143,31 @@ public class AgentUpdateChoiceEngine(
         start: suspend () -> Boolean,
     ): Boolean = lane.withLock {
         val current = state.value ?: return@withLock false
-        val updates = current.items.filter { it.choice == AgentUpdateChoice.Update }
-        val sharedOnly = current.neededGoesAhead || (updates.any { it.id == AgentId.OPENCODE } &&
-            current.items.any { it.neededWhen == AgentNeedRule.WithAnyUpdate })
-        val canDownload = current.network == AgentUpdateNetwork.Unmetered || meteredAllowed
         val targets = current.items.filter { it.neededWhen != null }.map { it.id to it.fromVersion }
-        // Agent jobs bring the shared parts too, so they go alone; a yes for OpenCode releases only them.
-        val eligible = sharedOnly && (alongsideAgents || updates.none { it.id != AgentId.OPENCODE }) && canDownload
-        (eligible && targets != sharedAttempt && !host.busy() && start()).also { if (it) sharedAttempt = targets }
+        if (targets.isEmpty() || targets == sharedAttempt) return@withLock false
+        val pins = current.sharedPins
+        if (alongsideAgents && meteredAllowed && allowed(AgentId.OPENCODE)) sharedConsent = pins
+        val approved = sharedConsent.containsAll(pins)
+        val eligible = current.sharedEligible(approved, meteredAllowed && !alongsideAgents)
+        (eligible && !host.busy() && start()).also { started ->
+            if (started) {
+                sharedAttempt = targets
+                sharedConsent = emptySet()
+            }
+        }
     }
 }
+
+private fun AgentUpdateOffer.sharedEligible(approved: Boolean, helperConsent: Boolean): Boolean {
+    if (network != AgentUpdateNetwork.Unmetered && !approved && !helperConsent) return false
+    val updates = items.filter { it.choice == AgentUpdateChoice.Update }
+    val needed = neededGoesAhead || (updates.any { it.id == AgentId.OPENCODE } &&
+        items.any { it.neededWhen == AgentNeedRule.WithAnyUpdate })
+    return needed && (approved || updates.none { it.id != AgentId.OPENCODE })
+}
+
+private val AgentUpdateOffer.sharedPins: Set<Pair<AgentId, String>>
+    get() = items.filter { it.neededWhen != null }.map { it.id to it.toVersion }.toSet()
 
 /** Why an update did not start when it was asked to; the first condition that says no. */
 internal enum class StartRefusal { NotChosen, NeedsSharedParts, WorkRunning, StartRefused }

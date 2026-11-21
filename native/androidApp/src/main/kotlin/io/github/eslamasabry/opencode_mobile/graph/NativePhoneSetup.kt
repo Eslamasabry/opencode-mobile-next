@@ -79,6 +79,7 @@ class NativePhoneSetup(
     override val toolsChanged: StateFlow<Int> = changed
     private val linux by lazy { BuiltinLinux.get(app) }
     private val runner by lazy { SetupRunner.get(app) }
+    @Volatile private var probeLabels: Map<String, String> = emptyMap()
 
     private suspend fun <T> native(block: () -> T): Outcome<T> =
         withContext(dispatchers.io) { attempt(::classifyRuntime) { block() } }
@@ -93,7 +94,9 @@ class NativePhoneSetup(
                 script: String,
                 agentUser: Boolean,
             ): Outcome<SetupCheckRun> = native {
-                linux.run(script, 120, agentUser).let { SetupCheckRun(it.exitCode, it.output) }
+                NativeSetupHost.runChecked({ linux.ensureProotLiveness() }) {
+                    linux.run(script, 120, agentUser).let { SetupCheckRun(it.exitCode, it.output) }
+                }
             }
 
             override suspend fun startSetup(job: SetupJobStart): Outcome<Unit> {
@@ -165,7 +168,7 @@ class NativePhoneSetup(
                                     s.skipped,
                                     s.version,
                                     s.stage,
-                                    s.labels,
+                                    if (probeLabels.isEmpty()) s.labels else probeLabels + s.labels,
                                     s.data,
                                     s.agentUser,
                                 )
@@ -285,6 +288,11 @@ class NativePhoneSetup(
                 stageRetrying = getString(Res.string.phoneSetupStageRetrying),
                 stageCompat = getString(Res.string.phoneSetupStageCompat),
                 addingTitle = { names -> adding.replace("{names}", names.joinToString(separator)) },
+            )
+        probeLabels =
+            mapOf(
+                "probe" to getString(Res.string.phoneSetupStageCheckingLinux),
+                "compat" to words.stageCompat,
             )
         return SetupEngine(
                 host,
