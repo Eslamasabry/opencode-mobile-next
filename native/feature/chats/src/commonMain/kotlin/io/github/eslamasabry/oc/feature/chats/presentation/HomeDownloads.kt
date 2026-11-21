@@ -29,7 +29,8 @@ public sealed interface HomeDownloadPhase {
 
     /**
      * Only agent updates wait for Wi-Fi (chosen on the sheet, held on mobile data; they start by themselves on Wi-Fi).
-     * No own line (OpenCode, the helper) is waiting, so this is the whole line; it has no mobile-data action.
+     * No own line (OpenCode, the helper) is waiting, so this is the whole line; its action is the yes for exactly
+     * these agents.
      */
     public data class AgentsWaiting(val held: HomeHeldAgents) : HomeDownloadPhase
 
@@ -273,6 +274,12 @@ public interface HomeDownloads {
      * and the person is asked first.
      */
     public fun tryAgain(kind: HomeDownloadKind): Boolean
+
+    /**
+     * The person tapped "Download on mobile data" on the agents-only line: the agents that line names download on this
+     * network, once, and nothing else gains the yes.
+     */
+    public fun downloadHeldAgents(): Unit = Unit
 }
 
 @ContributesBinding(AppScope::class)
