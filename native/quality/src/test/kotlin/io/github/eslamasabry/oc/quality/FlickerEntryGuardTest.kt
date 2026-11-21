@@ -25,8 +25,9 @@ class FlickerEntryGuardTest {
     private val ceilings =
         mapOf(
             "feature/chat" to 330,
-            // +2: HomeStageSpokenNameTest adopted after the freeze (families 10, 11)
-            "feature/chats" to 217,
+            // 217 - 73: family 10 (the chip line's first frame) went with its fix; the +2 of HomeStageSpokenNameTest
+            // (adopted after the freeze, families 10, 11) are in that count
+            "feature/chats" to 144,
         )
 
     /** Test files in recorded modules that may start Compose themselves (path from the native root to reason). */
