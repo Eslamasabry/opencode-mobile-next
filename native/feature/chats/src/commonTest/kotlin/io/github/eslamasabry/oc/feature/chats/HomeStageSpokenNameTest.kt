@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.stageStartingHelper
 import kotlin.test.Test
@@ -52,7 +52,7 @@ class HomeStageSpokenNameTest {
 
     @Test
     fun `B-HOME-240 the starting-helper stage is spoken with the same words it shows`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             var shown by mutableStateOf("")
             setContent {
