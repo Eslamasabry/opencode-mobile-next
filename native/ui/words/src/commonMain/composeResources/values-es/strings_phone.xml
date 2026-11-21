@@ -917,16 +917,16 @@
     <string name="thisPhoneRestartingRow">Reiniciando. Suele tardar menos de un minuto…</string>
     <string name="linuxMgrProblemNotAnswering">Linux está tardando mucho en responder. Inténtalo de nuevo en un momento.</string>
     <string name="phoneDownloadWaitingOpenCode">Actualización de OpenCode esperando Wi-Fi · unos %1$d MB</string>
-    <string name="phoneDownloadWaitingHelper">Actualización del ayudante de agentes esperando Wi-Fi · unos %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Actualización del ayudante del agente esperando Wi-Fi · unos %1$d MB</string>
     <string name="phoneDownloadOnMobile">Descargar con datos móviles</string>
     <string name="phoneDownloadRunningOpenCode">Actualizando OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Actualizando el ayudante de agentes</string>
+    <string name="phoneDownloadRunningHelper">Actualizando el ayudante del agente</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">La actualización de OpenCode no terminó.</string>
-    <string name="phoneDownloadFailedHelper">La actualización del ayudante de agentes no terminó.</string>
+    <string name="phoneDownloadFailedHelper">La actualización del ayudante del agente no terminó.</string>
     <string name="phoneDownloadAskTitle">¿Descargar unos %1$d MB con datos móviles?</string>
     <string name="phoneDownloadAskBodyOpenCode">Es la actualización de OpenCode para este teléfono. Cuenta para tu plan de datos. Esperar al Wi-Fi la deja para más tarde.</string>
-    <string name="phoneDownloadAskBodyHelper">Es la actualización del ayudante de agentes de este teléfono. Cuenta para tu plan de datos. Esperar al Wi-Fi la deja para más tarde.</string>
+    <string name="phoneDownloadAskBodyHelper">Es la actualización del ayudante del agente de este teléfono. Cuenta para tu plan de datos. Esperar al Wi-Fi la deja para más tarde.</string>
     <string name="phoneDownloadAskNow">Descargar ahora</string>
     <string name="phoneDownloadAskWait">Esperar al Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Actualización de OpenCode lista · se instala cuando no hay ninguna respuesta en curso</string>
@@ -943,8 +943,8 @@
         <item quantity="other">%1$d actualizaciones de agentes esperando Wi-Fi · unos %2$d MB</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 actualización de agentes esperando Wi-Fi · unos %1$d MB</string>
-    <string name="phoneDownloadWaitingOpenCodeHelper">Actualización de OpenCode y del ayudante de agentes esperando Wi-Fi · unos %1$d MB</string>
-    <string name="phoneDownloadAskBodyOpenCodeHelper">Es la actualización de OpenCode y del ayudante de agentes que necesita. Cuenta para tu plan de datos. Esperar al Wi-Fi la deja para más tarde.</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Actualización de OpenCode y del ayudante del agente esperando Wi-Fi · unos %1$d MB</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">Es la actualización de OpenCode y del ayudante del agente que necesita. Cuenta para tu plan de datos. Esperar al Wi-Fi la deja para más tarde.</string>
     <string name="phoneStoppedByYou">Detuviste OpenCode en este teléfono</string>
     <string name="phoneSetupStageCheckingLinux">Comprobando Linux en este teléfono…</string>
 </resources>

@@ -22,6 +22,12 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.install.AgentAutoUpdater
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecord
+import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord
+import io.github.eslamasabry.opencode_mobile.SetupRunner
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecorded
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateJobs
@@ -66,23 +72,28 @@ class PhoneAgentAutoUpdate(
 ) {
     private val choices get() = status.choices
     private var started = false
+    private val sharedUpdates by lazy {
+        SharedUpdateJobs(app, choices, downloads) { observe ->
+            appScope.launch(dispatchers.io) { safely(observe) }
+        }
+    }
 
     /**
      * The person chose Download now on mobile data (Home's ask): the pending install runs on this network, once, and
      * is looked at now rather than at the next 30 s look.
      */
     fun allowMeteredOnce(sharedOnly: Boolean = false) {
-        val updater = updaterRef ?: return
         if (sharedOnly) {
             // OpenCode's yes covers the shared parts it waits for (Node.js, the helper) and nothing else: the
             // agents the person chose keep waiting for Wi-Fi.
             appScope.launch(dispatchers.io) {
-                safely { choices.updateShared(meteredAllowed = true, alongsideAgents = true) }
+                safely { sharedUpdates.start(meteredAllowed = true, alongsideAgents = true) }
             }
             return
         }
+        val updater = updaterRef ?: return
         if (choices.offer.value?.neededGoesAhead == true) {
-            appScope.launch(dispatchers.io) { safely { choices.updateShared(meteredAllowed = true) } }
+            appScope.launch(dispatchers.io) { safely { sharedUpdates.start(meteredAllowed = true) } }
         }
         updater.allowMeteredOnce()
         appScope.launch(dispatchers.io) { safely { updater.changed() } }
@@ -271,7 +282,7 @@ class PhoneAgentAutoUpdate(
         // answered: an empty store is a valid start (zero decisions), and a read that hangs is given up and logged.
         val warm = kotlinx.coroutines.withTimeoutOrNull(WARM_LIMIT_SECONDS.seconds) { phones.warmForUpdate() } == true
         val read = kotlinx.coroutines.withTimeoutOrNull(CHOICES_LIMIT_SECONDS.seconds) { choices.refresh() } != null
-        if (warm && read) choices.updateShared(meteredAllowed = false)
+        if (warm && read) sharedUpdates.start(meteredAllowed = false)
         // One line when the picture changes: whether the choices were read at all, how many rows, and whether the
         // sheet is due (the sheet that never showed left no line in any tag).
         val offer = choices.offer.value
@@ -571,4 +582,37 @@ internal fun agentsJobRunning(setupRunning: Boolean, installing: Boolean): Boole
 private fun shape(e: Exception): String {
     val top = e.stackTrace.firstOrNull() ?: return e::class.simpleName.orEmpty()
     return "${e::class.simpleName} in ${top.className.substringAfterLast('.')}.${top.methodName}"
+}
+
+/** Follows only jobs admitted by the shared installer, using their runner ID until they finish. */
+private class SharedUpdateJobs(
+    private val app: Application,
+    private val choices: PhoneUpdateChoices,
+    private val downloads: PhoneDownloads,
+    private val observe: (suspend () -> Unit) -> Unit,
+) {
+    private val sharedWatch = Mutex()
+
+    suspend fun start(meteredAllowed: Boolean, alongsideAgents: Boolean = false) {
+        val parts = choices.offer.value?.items.orEmpty().filter { it.neededWhen != null }
+        if (!choices.updateShared(meteredAllowed, alongsideAgents)) return
+        val runner = SetupRunner.get(app)
+        // A shared job ends with Paseo. Ordinary agent installs append the anchor agent's payload.
+        val first = SetupJobRecord.parse(runner.status())
+            ?.takeIf { it.components.lastOrNull()?.id == AgentInstaller.AGENT_PASEO } ?: return
+        observe { sharedWatch.withLock { followSharedJob(runner, first.jobId, parts) } }
+    }
+
+    private suspend fun followSharedJob(runner: SetupRunner, jobId: String, parts: List<AgentUpdateItem>) {
+        try {
+            while (true) {
+                val job = SetupJobRecord.parse(runner.status()) ?: return
+                if (job.jobId != jobId || job.state != "running") return
+                downloads.sharedRunning.value = sharedDownloadFact(job, parts)
+                delay(1.seconds)
+            }
+        } finally {
+            downloads.sharedRunning.value = null
+        }
+    }
 }

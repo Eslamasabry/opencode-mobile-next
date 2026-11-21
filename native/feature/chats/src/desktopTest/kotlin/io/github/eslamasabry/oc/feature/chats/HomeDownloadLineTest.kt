@@ -114,10 +114,10 @@ class HomeDownloadLineTest {
     }
 
     @Test
-    fun `DOWNLOAD-CONSENT a waiting helper says about 330 MB`() = runComposeUiTest {
+    fun `B-DL-436 the helper line uses the same name as the combined ask`() = runComposeUiTest {
         setContent { Home(home(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))) }
         waitForIdle()
-        onNodeWithText("Agents helper update waiting for Wi-Fi · about 330 MB").assertExists()
+        onNodeWithText("Agent helper update waiting for Wi-Fi · about 330 MB").assertExists()
     }
 
     @Test
@@ -148,10 +148,18 @@ class HomeDownloadLineTest {
     }
 
     @Test
+    fun `B-DL-435 OpenCode shows its download size while running without a percentage`() = runComposeUiTest {
+        setContent { Home(home(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(null)))) }
+        waitForIdle()
+        onNodeWithText("Updating OpenCode · 130 MB").assertExists()
+        onNodeWithText("Download on mobile data").assertDoesNotExist()
+    }
+
+    @Test
     fun `DOWNLOAD-CONSENT an unknown share shows only the working words`() = runComposeUiTest {
         setContent { Home(home(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Running(null)))) }
         waitForIdle()
-        onNodeWithText("Updating the agents helper").assertExists()
+        onNodeWithText("Updating the agent helper").assertExists()
     }
 
     @Test

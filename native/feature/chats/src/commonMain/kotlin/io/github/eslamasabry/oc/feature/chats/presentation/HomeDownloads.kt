@@ -22,7 +22,7 @@ public sealed interface HomeDownloadPhase {
     public data object Waiting : HomeDownloadPhase
 
     /** Downloading now, on any network. [percent] is null when the share done is not known. */
-    public data class Running(val percent: Int?) : HomeDownloadPhase
+    public data class Running(val percent: Int?, val sizeMb: Int? = null) : HomeDownloadPhase
 
     /** It ended without finishing. The words are plain; technical text stays out of the line. */
     public data object Failed : HomeDownloadPhase

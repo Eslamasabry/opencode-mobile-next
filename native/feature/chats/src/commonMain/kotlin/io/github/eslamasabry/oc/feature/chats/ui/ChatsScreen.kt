@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxHeight
+import io.github.eslamasabry.oc.ui.words.res.setupHeartbeatLine
+import io.github.eslamasabry.oc.ui.words.res.termuxProcsMemoryMb
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunningBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunning
 import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
@@ -1413,11 +1415,18 @@ private fun homeRunningStatus(
         )
     // The agent being installed, by its own name, when the agents' update says which.
     val named = download.name?.let { stringResource(Res.string.agentsUpdatingAgent, it) } ?: what
+    val size = phase.sizeMb ?: download.megabytes.takeIf { download.kind == HomeDownloadKind.OpenCode }
+    val message = when {
+        phase.percent != null -> stringResource(Res.string.phoneDownloadRunningPercent, named, phase.percent)
+        size != null ->
+            stringResource(Res.string.setupHeartbeatLine, named, stringResource(Res.string.termuxProcsMemoryMb, size))
+        else -> named
+    }
     return KitStatus(
         kind = KitStatusKind.Work,
         id = "phone-download:${download.kind.name}",
         // Numbers only: the kit's working mark stands still when the person turned motion off.
-        message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, named, it) } ?: named,
+        message = message,
         tone = StatusTone.Progress,
         working = true,
         wait = KitWaitKind.Downloading.takeIf { phase.percent != null },
