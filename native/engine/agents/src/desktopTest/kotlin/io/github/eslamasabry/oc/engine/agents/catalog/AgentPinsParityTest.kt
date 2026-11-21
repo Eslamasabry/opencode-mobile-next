@@ -124,21 +124,21 @@ class AgentPinsParityTest {
         // newer).
         // Each SHA-256 and size is the release manifest's, and equals the bytes of the downloaded binary.
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("claude"))!!.recipe!!
-        assertEquals("2.1.327", recipe.version)
+        assertEquals("2.1.330", recipe.version)
         assertEquals(ClaudeScripts.VERSION, recipe.version)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
-        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.327/linux-arm64/claude", arm.url)
-        assertEquals("acf0ef2f9da8d5ab08f193f007e19a06cbfb608b96a2f1f758d63a92a386cff8", arm.sha256)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.330/linux-arm64/claude", arm.url)
+        assertEquals("6016f90cac783e367fb1aa97c768a2efb94a0128a5b46b70fb3d8fcbbd9dd444", arm.sha256)
         assertEquals(ClaudeScripts.ARM64_SHA256, arm.sha256)
-        assertEquals(371779000L, arm.downloadBytes)
-        assertEquals(371779000L, arm.installedBytes)
+        assertEquals(379971000L, arm.downloadBytes)
+        assertEquals(379971000L, arm.installedBytes)
         assertEquals(AgentArtifactFormat.Executable, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
-        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.327/linux-x64/claude", x64.url)
-        assertEquals("343c744baa14bfd38286a7cb90871051f04379956da6c5b803a9e66019a76ac9", x64.sha256)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.330/linux-x64/claude", x64.url)
+        assertEquals("f390eaa0814e6a1bff74cbb47acb74cb9c89d30ced809fe0af5af00c7bfe8ebb", x64.sha256)
         assertEquals(ClaudeScripts.X64_SHA256, x64.sha256)
-        assertEquals(372904464L, x64.downloadBytes)
-        assertEquals(372904464L, x64.installedBytes)
+        assertEquals(381121040L, x64.downloadBytes)
+        assertEquals(381121040L, x64.installedBytes)
         assertEquals(AgentArtifactFormat.Executable, x64.format)
     }
 

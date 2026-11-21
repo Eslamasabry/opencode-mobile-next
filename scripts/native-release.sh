@@ -83,6 +83,7 @@ command -v git >/dev/null || cannot "git is required"
 [[ -f "$NATIVE/version.properties" && -x "$NATIVE/tool/version_code.sh" ]] || cannot "not the repository root ($ROOT)"
 
 # ---- preflight (both modes) -------------------------------------------------------------------------------------------
+python3 -I "$NATIVE/tool/qa/check_tested_pins.py"
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null)" || fail "Detached HEAD is not releasable."
 [[ "$branch" == "$RELEASE_BRANCH" ]] || fail "native releases start on $RELEASE_BRANCH only (this is $branch)."
 [[ -z "$(git status --porcelain=v1 --untracked-files=all)" ]] || fail "the working tree is not clean (commit or remove every change, untracked files too)."

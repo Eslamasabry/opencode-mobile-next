@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.engine.agents.OwnerId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
+import io.github.eslamasabry.oc.engine.agents.certification.certifiedClaude327
 import io.github.eslamasabry.oc.engine.agents.gate.CheckRequiredReason
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
 import io.github.eslamasabry.oc.engine.agents.host.Abi
@@ -134,7 +135,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-130 Claude's check ends with a sign-in read and signed-out becomes needs sign-in`() = runTest {
         val rig = Rig(Abi.Arm64V8a)
-        rig.installed(AgentId.CLAUDE, "2.1.327")
+        rig.installed(AgentId.CLAUDE, "2.1.330")
         rig.host.authResult = { _, _, _ -> AuthProjection(AuthState.SignedOut).ok() }
         val r = rig.check.run(owner, AgentId.CLAUDE)
         assertEquals(PhoneCheckFailure.NeedsSignIn, r.failure)
@@ -154,6 +155,21 @@ class PhoneCheckTest {
         assertEquals(PhoneCheckFailure.WrongArchitecture, r.failure)
         assertTrue(rig.host.calls.isEmpty())
         assertFalse(rig.check.checkInFlight)
+    }
+
+    @Test
+    fun `B-LINUX-132 the new Claude pin needs its own phone check after a certified older install`() = runTest {
+        val rig = Rig(Abi.Arm64V8a)
+        val arch = AgentArchitecture.Arm64
+        val fingerprint = PhoneGate.fingerprint(certifiedClaude327, arch, pins)
+        val old = PhoneGate.entry(fingerprint, arch, "2.1.327")
+        PhoneGate.write(rig.prefs, owner, mapOf("claude" to old))
+        rig.installed(AgentId.CLAUDE, catalog.byId(AgentId.CLAUDE)!!.recipe!!.version)
+
+        val result = (GateInspector(rig.prefs, rig.host).inspect(owner, AgentId.CLAUDE) as Outcome.Ok).value
+        assertTrue(result.installed)
+        assertFalse(result.architectureQualified)
+        assertEquals(CheckRequiredReason.AgentVersion, result.checkRequiredReason)
     }
 
     @Test

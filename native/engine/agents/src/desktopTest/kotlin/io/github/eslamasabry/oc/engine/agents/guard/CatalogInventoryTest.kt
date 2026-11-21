@@ -104,15 +104,15 @@ class CatalogInventoryTest {
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
         // same agents' pins literally. Gemini CLI and Cline did not move.
         "claude" to listOf(
-            text("2.1.319", "2.1.327"),
-            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.327/linux-arm64/claude"),
-            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "acf0ef2f9da8d5ab08f193f007e19a06cbfb608b96a2f1f758d63a92a386cff8"),
-            number("downloadBytes", 339797432, 371779000),
-            number("installedBytes", 339797432, 371779000),
-            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.327/linux-x64/claude"),
-            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "343c744baa14bfd38286a7cb90871051f04379956da6c5b803a9e66019a76ac9"),
-            number("downloadBytes", 340226576, 372904464),
-            number("installedBytes", 340226576, 372904464),
+            text("2.1.319", "2.1.330"),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.330/linux-arm64/claude"),
+            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "6016f90cac783e367fb1aa97c768a2efb94a0128a5b46b70fb3d8fcbbd9dd444"),
+            number("downloadBytes", 339797432, 379971000),
+            number("installedBytes", 339797432, 379971000),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.330/linux-x64/claude"),
+            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "f390eaa0814e6a1bff74cbb47acb74cb9c89d30ced809fe0af5af00c7bfe8ebb"),
+            number("downloadBytes", 340226576, 381121040),
+            number("installedBytes", 340226576, 381121040),
         ),
         "codex" to listOf(
             text("0.167.0", "0.171.0"),

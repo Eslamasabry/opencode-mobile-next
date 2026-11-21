@@ -53,6 +53,15 @@ class SignInOutputReaderTest {
     }
 
     @Test
+    fun `B-AGENT-026 Claude compact sign-in keeps the entire page and offers no device code`() {
+        // The compact query begins with a scope mask and a 43-character PKCE challenge.
+        val page = "https://claude.ai/oauth/authorize?C" + "a".repeat(43)
+        val found = read("Browser didn't open? Use the url below to sign in:\n\n$page\n\nPaste code here if prompted >")
+        assertEquals(page, found.page?.url)
+        assertNull(found.code)
+    }
+
+    @Test
     fun `B-AGENT-026 a page a program broke at the edge is put back together`() {
         val url = "https://claude.ai/oauth/authorize?code=true&client_id=9d1c250a" +
             "&response_type=code&redirect_uri=https%3A%2F%2Fconsole.anthropic" +
