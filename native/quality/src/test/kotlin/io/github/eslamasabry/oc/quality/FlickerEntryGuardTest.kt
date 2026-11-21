@@ -26,7 +26,8 @@ class FlickerEntryGuardTest {
         mapOf(
             "feature/chat" to 330,
             // +2: HomeStageSpokenNameTest adopted after the freeze (families 10, 11)
-            "feature/chats" to 217,
+            // +26: tablet pane tests adopted after the freeze (families 10, 11); they go with those families' fix
+            "feature/chats" to 243,
         )
 
     /** Test files in recorded modules that may start Compose themselves (path from the native root to reason). */

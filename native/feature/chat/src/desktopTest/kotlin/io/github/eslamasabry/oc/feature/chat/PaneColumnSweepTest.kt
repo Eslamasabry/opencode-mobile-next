@@ -13,6 +13,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
+import io.github.eslamasabry.oc.ui.gate.flicker.Allow
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
@@ -72,9 +73,21 @@ class PaneColumnSweepTest {
 
     private fun ComposeUiTest.bounds(tag: String): DpRect = onNodeWithTag(tag, useUnmergedTree = true).getBoundsInRoot()
 
+    /**
+     * The sweep changes the pane's width between its steps on purpose, so these parts move in one frame each time.
+     * CAUTION: this allow hides any REAL jump of these three parts in THIS test, so the sweep is no flicker proof for
+     * the permission card: the conversation tests are.
+     */
+    private val sweepMoves =
+        setOf(
+            Allow.jump("Allow once", "the sweep changes the window width between steps"),
+            Allow.jump("#kit-tool-end", "the sweep changes the window width between steps"),
+            Allow.jump("#permission-card-allow", "the sweep changes the window width between steps"),
+        )
+
     @Test
     fun `B-NAV-230 one column fills the pane at every width, two equal margins only past its cap`() =
-        kitUiTest(WIDEST + 40, 900) {
+        kitUiTest(WIDEST + 40, 900, allow = sweepMoves) {
             val pane = mutableIntStateOf(NARROWEST)
             show(pane, column = true)
             var offset: Float? = null
