@@ -254,10 +254,11 @@ class AppPhoneAgents(
                 AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
             }
         // The Updated note names every agent this run of updates finished, in the order they finished: an install that
-        // starts keeps the run going, any other decision starts it over.
+        // starts keeps the run going, any other decision starts it over. An agent is named once, at its first finish —
+        // a repeated Updated decision (a re-read, a retry) must not repeat the name.
         val updated =
             when (decision.step) {
-                AgentUpdateStep.Updated -> updateNote.updated + listOfNotNull(name)
+                AgentUpdateStep.Updated -> (updateNote.updated + listOfNotNull(name)).distinct()
                 AgentUpdateStep.Updating -> updateNote.updated
                 else -> emptyList()
             }
