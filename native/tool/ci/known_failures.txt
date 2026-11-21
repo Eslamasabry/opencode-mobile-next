@@ -10,23 +10,5 @@
 # both classes pass on the pinned line) and the two tools/strings lines (a gate module, never absorbed) are gone.
 # Flutter golden gates compare with frozen Flutter pictures that are not re-recordable; the runner differs from the PC.
 * :: *.rb.*GateTest | Flutter golden gate (FlutterGoldenGate): reference is a frozen Flutter picture
-engine/runtime :: io.github.eslamasabry.oc.engine.runtime.install.VerbatimScriptsTest | known noise before CI goldens (1 failing)
-feature/background :: io.github.eslamasabry.oc.feature.background.BackgroundScreenUiTest | known noise before CI goldens (2 failing)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ServerSwitcherSheetTest | known noise before CI goldens (2 failing)
-feature/devservices :: io.github.eslamasabry.oc.feature.devservices.DevServicesScreenTest | known noise before CI goldens (2 failing)
-feature/devservices :: io.github.eslamasabry.oc.feature.devservices.rb.o47.DevServicesPageTest | known noise before CI goldens (2 failing)
-feature/files :: io.github.eslamasabry.oc.feature.files.FolderPolishTest | known noise before CI goldens (1 failing)
-feature/phone :: io.github.eslamasabry.oc.feature.phone.PhoneScreensTest | known noise before CI goldens (2 failing)
-feature/phonesetup :: io.github.eslamasabry.oc.feature.phonesetup.PhoneSetupScreenTest | known noise before CI goldens (2 failing)
-feature/servers :: io.github.eslamasabry.oc.feature.servers.PhoneOwnServerMarkTest | known noise before CI goldens (2 failing)
-feature/updates :: io.github.eslamasabry.oc.feature.updates.UpdatesScreenUiTest | known noise before CI goldens (2 failing)
-feature/usage :: io.github.eslamasabry.oc.feature.usage.LimitsScreenTest | known noise before CI goldens (2 failing)
-feature/usage :: io.github.eslamasabry.oc.feature.usage.UsageScreenTest | known noise before CI goldens (4 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.E20S09StateActionsTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.Kita1FrameInsetsTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.S7PolishKitTest | known noise before CI goldens (4 failing)
+ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone | 3.0.0: a bar with long text actions squeezes its title (the review's file page); fix = text actions to overflow
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest | known noise before CI goldens (4 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTaskSheetParityTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTextHaloParityTest | known noise before CI goldens (2 failing)
-ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest | known noise before CI goldens (2 failing)
