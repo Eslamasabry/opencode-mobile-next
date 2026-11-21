@@ -378,7 +378,7 @@ class KitLampPanelTest {
         for (n in labels) {
             val from = n.positionInRoot.y
             val to = from + n.size.height
-            assertTrue(to <= top + 0.5f || from >= top - 0.5f, "$what: a label ($from..$to) is cut by the list's top $top")
+            assertTrue(to <= top + 0.5f || from >= top - 0.5f, "$what: a label ($from..$to) is cut by the top $top")
         }
     }
 
@@ -400,10 +400,14 @@ class KitLampPanelTest {
             waitForIdle()
             assertNoLabelCutAtTop("opening")
             for (step in 1..4) {
-                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeDown(startY = top + 40f * step, endY = bottom - 4f, durationMillis = 180) }
+                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput {
+                    swipeDown(startY = top + 40f * step, endY = bottom - 4f, durationMillis = 180)
+                }
                 waitForIdle()
                 assertNoLabelCutAtTop("after a swipe down $step")
-                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 40f * step, durationMillis = 180) }
+                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput {
+                    swipeUp(startY = bottom - 4f, endY = top + 40f * step, durationMillis = 180)
+                }
                 waitForIdle()
                 assertNoLabelCutAtTop("after a swipe up $step")
             }
@@ -417,7 +421,7 @@ class KitLampPanelTest {
                 panel(Scene(askingModel(3)), width = 360, height = height, fontScale = 1.3f)
                 waitForIdle()
                 val panelH = onNodeWithTag(LAMP_PANEL_TAG).getUnclippedBoundsInRoot().h()
-                assertTrue(panelH >= height - 1f, "window $height dp: the panel takes the room ($panelH dp), not a part of it")
+                assertTrue(panelH >= height - 1f, "window $height dp: the panel is $panelH dp, not all the room")
             }
         }
     }
@@ -449,27 +453,32 @@ class KitLampPanelTest {
                 val label = topOf("Needs you")
                 val title = topOf("Reply with exactly the word: base-1")
                 assertTrue(label >= list - 0.5f, "$what: the label ($label) starts at or below the list top ($list)")
-                assertTrue(title >= list - 0.5f && title >= header, "$what: the first request's title ($title) is not under the header ($header)")
+                assertTrue(title >= list - 0.5f && title >= header, "$what: the title ($title) is under the header ($header)")
             }
         }
     }
 
     @Test
-    fun `B-LAMP-K2-076 a request that arrives while the panel is open does not move the rows the person is looking at`() {
+    fun `B-LAMP-K2-076 a request that arrives while open does not move the rows the person is looking at`() {
         for (atTop in listOf(true, false)) {
             runDesktopComposeUiTest(360, 520) {
                 val scene = Scene(askingModel(3))
                 panel(scene, width = 360, height = 520, fontScale = 1.3f)
                 waitForIdle()
-                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 60f, durationMillis = 180) }
+                onNodeWithTag(LAMP_PANEL_LIST_TAG).performTouchInput {
+                    swipeUp(startY = bottom - 4f, endY = top + 60f, durationMillis = 180)
+                }
                 waitForIdle()
                 val watched = "Reply with exactly the word: base-2"
                 val before = topOf(watched)
                 val rows = scene.model.sections.single().rows
-                val extra = rows.first().let { it.copy(key = "ask9", title = "Reply with exactly the word: base-9", request = KitRequest("rq9", "Asks to fetch: example.org")) }
-                scene.model = scene.model.copy(sections = listOf(scene.model.sections.single().copy(rows = if (atTop) listOf(extra) + rows else rows + extra)))
+                val extra =
+                    rows.first().copy(key = "ask9", title = "Reply with exactly the word: base-9", request = KitRequest("rq9", "Asks"))
+                val section = scene.model.sections.single()
+                val all = if (atTop) listOf(extra) + rows else rows + extra
+                scene.model = scene.model.copy(sections = listOf(section.copy(rows = all)))
                 waitForIdle()
-                near(before, topOf(watched), "the watched row stays where it was (arrival ${if (atTop) "above" else "below"})", tol = 1.5f)
+                near(before, topOf(watched), "the watched row stays put (arrival at top: $atTop)", tol = 1.5f)
             }
         }
     }

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.lamp
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -268,10 +269,9 @@ public object KitLampPanelRules {
      * `top..bottom` span from the list's top): the label is then fully out, never half in view.
      */
     internal fun clearOfLabels(h: Int, total: Int, labels: List<IntRange>): Int {
-        if (h >= total) return h
         val cut = total - h
-        val hit = labels.firstOrNull { cut > it.first && cut < it.last } ?: return h
-        return total - hit.last
+        val hit = labels.firstOrNull { cut > it.first && cut < it.last }
+        return if (h >= total || hit == null) h else total - hit.last
     }
 
     /** The scrim's strength behind the open panel, by style (LAMP-CRAFT §6). */
@@ -364,6 +364,36 @@ private class PanelRest {
     var keys: List<String> = emptyList()
     var tops: IntArray = IntArray(0)
     var max = 0
+
+    /** Puts the list where it belongs for the items now known: the opening place, or the row it holds. */
+    suspend fun place(scroll: ScrollState, heights: Map<String, Int>, ks: List<String>, max: Int) {
+        val at = tops(ks, heights)
+        val held = anchorKey?.let { k -> ks.indexOf(k).takeIf { it >= 0 }?.let { at[it] + anchorOffset } }
+        val viewTop =
+            if (atOpen) ks.indexOfLast { it.startsWith("label:") }.let { if (it < 0) 0 else at[it] }
+            else held ?: (max - scroll.value)
+        val want = max - viewTop.coerceIn(0, max)
+        keys = ks
+        tops = at
+        this.max = max
+        applied = want
+        if (scroll.value != want) scroll.scrollTo(want)
+    }
+
+    /** After a scroll: settle with a label whole or gone, then keep the row at the top. */
+    suspend fun settle(scroll: ScrollState, heights: Map<String, Int>) {
+        atOpen = false
+        var viewTop = scroll.maxValue - scroll.value
+        val cut = labelSpans(keys, heights).firstOrNull { viewTop > it.first && viewTop < it.last }
+        if (cut != null) {
+            viewTop = if (viewTop - cut.first < cut.last - viewTop) cut.first else cut.last
+            scroll.animateScrollTo(scroll.maxValue - viewTop)
+        }
+        val i = keys.indices.lastOrNull { tops[it] <= viewTop } ?: 0
+        anchorKey = keys[i]
+        anchorOffset = viewTop - tops[i]
+        applied = scroll.value
+    }
 }
 
 private fun tops(keys: List<String>, heights: Map<String, Int>): IntArray {
@@ -398,50 +428,23 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
     val liveKeys by rememberUpdatedState(keys)
     val rest = remember { PanelRest() }
     var shown by remember { mutableStateOf(false) }
-    val groupKeys = model.sections.map { labelKey(it) to it.rows.map(::rowKey) }
+    val groupKeys = model.sections.map { listOf(labelKey(it)) + it.rows.map(::rowKey) }
     LaunchedEffect(scroll) {
         launch {
-            snapshotFlow {
-                val ks = liveKeys
-                if (ks.any { !heights.containsKey(it) }) null else Triple(ks, ks.map { heights[it] ?: 0 }, scroll.maxValue)
-            }.collect { snap ->
-                val (ks, hs, max) = snap ?: return@collect
-                val at = tops(ks, heights)
-                val viewTop =
-                    if (rest.atOpen) ks.indexOfLast { it.startsWith("label:") }.let { if (it < 0) 0 else at[it] }
-                    else rest.anchorKey?.let { k -> ks.indexOf(k).takeIf { it >= 0 }?.let { at[it] + rest.anchorOffset } } ?: (max - scroll.value)
-                val want = max - viewTop.coerceIn(0, max)
-                rest.keys = ks
-                rest.tops = at
-                rest.max = max
-                rest.applied = want
-                if (scroll.value != want) scroll.scrollTo(want)
-                shown = true
-            }
+            snapshotFlow { liveKeys.takeIf { ks -> ks.all { heights.containsKey(it) } }?.let { it to scroll.maxValue } }
+                .collect { snap ->
+                    val (ks, max) = snap ?: return@collect
+                    rest.place(scroll, heights, ks, max)
+                    shown = true
+                }
         }
-        // A resting list never has a section label half in view: after a scroll it settles with the label whole or gone,
-        // then keeps the row at its top.
         var moved = false
         snapshotFlow { scroll.isScrollInProgress to scroll.value }.collect { (moving, value) ->
-            if (rest.keys.isEmpty()) return@collect
-            if (moving) {
-                if (value != rest.applied) moved = true
-                return@collect
+            if (moving && value != rest.applied) moved = true
+            if (!moving && moved && rest.keys.isNotEmpty()) {
+                moved = false
+                rest.settle(scroll, heights)
             }
-            if (!moved) return@collect
-            moved = false
-            rest.atOpen = false
-            val spans = labelSpans(rest.keys, heights)
-            var viewTop = scroll.maxValue - value
-            val cut = spans.firstOrNull { viewTop > it.first && viewTop < it.last }
-            if (cut != null) {
-                viewTop = if (viewTop - cut.first < cut.last - viewTop) cut.first else cut.last
-                scroll.animateScrollTo(scroll.maxValue - viewTop)
-            }
-            val i = rest.keys.indices.lastOrNull { rest.tops[it] <= viewTop } ?: 0
-            rest.anchorKey = rest.keys[i]
-            rest.anchorOffset = viewTop - rest.tops[i]
-            rest.applied = scroll.value
         }
     }
     val fade = KitLampPanelDims.FADE.dp
@@ -451,11 +454,12 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
             .testTag(LAMP_PANEL_LIST_TAG)
             .layout { m, c ->
                 val known = keys.map { heights[it] ?: 0 }
-                val groups = listOf(heights[MORE_KEY] ?: 0) + groupKeys.map { (label, rows) -> (heights[label] ?: 0) + rows.sumOf { heights[it] ?: 0 } }
+                val groups = listOf(heights[MORE_KEY] ?: 0) + groupKeys.map { g -> g.sumOf { heights[it] ?: 0 } }
                 val room = if (c.hasBoundedHeight) c.maxHeight else Constraints.Infinity
+                val view = KitLampPanelRules.viewport(groups, room).coerceAtMost(room)
                 val h =
                     if (room == Constraints.Infinity) known.sum()
-                    else KitLampPanelRules.clearOfLabels(KitLampPanelRules.viewport(groups, room).coerceAtMost(room), known.sum(), labelSpans(keys, heights))
+                    else KitLampPanelRules.clearOfLabels(view, known.sum(), labelSpans(keys, heights))
                 val p = m.measure(c.copy(minHeight = h, maxHeight = h))
                 layout(p.width, h) { p.place(0, 0) }
             }
@@ -507,7 +511,10 @@ private fun Section(
 ) {
     KitText(
         section.title,
-        Modifier.onSizeChanged { onItemHeight(labelKey(section), it.height) }.padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp).testTag(LAMP_PANEL_HEADING_TAG),
+        Modifier
+            .onSizeChanged { onItemHeight(labelKey(section), it.height) }
+            .padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp)
+            .testTag(LAMP_PANEL_HEADING_TAG),
         role = TypeRole.Label,
         tone = if (section.group == KitLampGroup.NeedsYou) TextTone.Attention else TextTone.Secondary,
         kind = KitTextKind.Frame,
