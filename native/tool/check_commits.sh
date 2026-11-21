@@ -19,6 +19,9 @@
 # Range mode only (it needs the changed files): a commit that changes only tests or docs carries no Change-Class
 # (plan 02 §9.1 content rules, memory change-class-values).
 # OC_COMMIT_HUMAN=1 skips only the Co-Authored-By rule (a person committing by hand).
+# The release script's own bump commit is accepted as it is, and only when ALL of this holds: not a merge; subject
+# exactly `build(release): native X.Y.Z+N` (an optional " [skip ci]"); a `Release-Tag: vX.Y.Z+N` line naming the same
+# version; and it changes only native/version.properties and native/BUILD_NUMBERS.md (scripts/native-release.sh --go).
 # Exit: 0 all pass, 1 a rule failed (each problem printed), 2 cannot check (bad refs, no git).
 set -uo pipefail
 
@@ -100,6 +103,19 @@ base="$(oc_resolve_base "${1:-}")" || oc_die2 "unknown base '${1:-${OC_BASE:-nat
 head="${2:-HEAD}"
 head_sha="$(git -C "$top" rev-parse --verify --quiet "$head^{commit}")" || oc_die2 "unknown head: $head"
 
+# The release script's bump commit (see the header): exact subject, a matching Release-Tag, and only the two version files.
+release_tag=""
+release_bump() {
+  local sha="$1" subject="$2" version files
+  [[ "$subject" =~ ^build\(release\):\ native\ ([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)(\ \[skip\ ci\])?$ ]] || return 1
+  version="${BASH_REMATCH[1]}"
+  git -C "$top" log -1 --format=%B "$sha" | grep -qxF "Release-Tag: v$version" || return 1
+  files="$(git -C "$top" diff-tree --no-commit-id --name-only -r "$sha")"
+  [[ -n "$files" ]] || return 1
+  grep -vqxE 'native/version\.properties|native/BUILD_NUMBERS\.md' <<<"$files" && return 1
+  release_tag="v$version"
+}
+
 status=0 count=0
 while read -r sha parents; do
   [[ -z "$sha" ]] && continue
@@ -107,6 +123,9 @@ while read -r sha parents; do
   is_merge=0; [[ $(wc -w <<<"$parents") -gt 1 ]] && is_merge=1
   subject="$(git -C "$top" log -1 --format=%s "$sha")"
   label="${sha:0:8} ${subject:0:60}"
+  if ((!is_merge)) && release_bump "$sha" "$subject"; then
+    echo "$label: the release script's own bump commit (Release-Tag $release_tag): accepted"; continue
+  fi
   git -C "$top" log -1 --format=%B "$sha" | check_message "$label" "$is_merge" || status=1
   if ((!is_merge)) && git -C "$top" log -1 --format=%B "$sha" | grep -qi '^Change-Class:'; then
     # Test-only or docs-only commits carry no Change-Class.
