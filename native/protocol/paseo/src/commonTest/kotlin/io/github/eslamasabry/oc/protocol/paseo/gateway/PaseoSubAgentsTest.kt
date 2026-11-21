@@ -60,6 +60,7 @@ class PaseoSubAgentsTest {
     @Test
     fun `B-AGENT-165 a sub-agent is its conversation's child, and its card opens it`() = runTest {
         val h = ready()
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
         h.daemon.push("agent_stream", stream("a1", agentCall("running"), seq = 1))
         h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor()))
         h.pump()
@@ -177,8 +178,11 @@ class PaseoSubAgentsTest {
             "agent.provider_subagents.list.response" to
                 jsonOf("parentAgentId" to "a1", "subagents" to listOf(descriptor()), "error" to null)
         }
+        // Its turn is running now, so the helper's "running" is believed.
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        h.pump()
         val ops = PaseoOperations(h.gateway)
-        // Nothing pushed and the history never read: the neutral read asks the helper itself.
+        // Nothing else pushed and the history never read: the neutral read asks the helper itself.
         val agents = ops.subAgents(SessionId("a1")).ok()
         val one = agents.single()
         assertEquals(sub, one.id.raw)

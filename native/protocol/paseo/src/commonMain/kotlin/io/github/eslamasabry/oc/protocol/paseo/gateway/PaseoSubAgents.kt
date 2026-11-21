@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.protocol.paseo.gateway
 
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.SessionTime
@@ -111,10 +113,19 @@ internal fun PaseoGateway.upsertSubagent(descriptor: JsonObject) {
     sessions[id] = session
     emit(GatewayEvent.SessionUpserted(session))
     val known = statuses[id] != null
-    val status = if (descriptor.str("status") == "running") SessionStatus.Busy else SessionStatus.Idle
+    // F41: "running" is the helper's stored word, and it outlives the process behind it (the helper's own store keeps a
+    // sub-agent running through every restart). It is believed only while the conversation that started it is itself
+    // running now (a turn, or a fresh record); otherwise the sub-agent was cut and reads as stopped, never Working.
+    val running = descriptor.str("status") == "running"
+    val live = running && subagentParentRunning(parentApp, nested?.let(::paseoSubagentSessionId))
+    val status = if (live) SessionStatus.Busy else SessionStatus.Idle
     if (statuses[id] != status) {
         emitStatus(id, status)
-        if (status == SessionStatus.Idle && known) emit(GatewayEvent.RunEnded(SessionId(id), io.github.eslamasabry.oc.core.domain.events.RunOutcome.Succeeded))
+        if (status == SessionStatus.Idle && known) {
+            val outcome =
+                if (running) RunOutcome.Interrupted(InterruptReason.Shutdown) else RunOutcome.Succeeded
+            emit(GatewayEvent.RunEnded(SessionId(id), outcome))
+        }
     }
     val callId = descriptor.str("toolCallId")?.takeIf { it.isNotEmpty() } ?: return
     val before = subagentBook.byCall[callId]
@@ -212,3 +223,18 @@ internal suspend fun PaseoGateway.readSubagentMessages(id: String): ImmutableLis
 /** The sub-agent sessions of [parent] this gateway knows. */
 internal fun PaseoGateway.subagentChildren(parent: String): ImmutableList<Session> =
     subagentBook.subagents.keys.mapNotNull { sessions[it] }.filter { it.parentId?.raw == parent }.toImmutableList()
+
+/** Whether the conversation that owns a sub-agent runs now: its turn, or a status the app still believes. */
+private fun PaseoGateway.subagentParentRunning(parentApp: String, nestedParent: String?): Boolean {
+    val owner = nestedParent ?: parentApp
+    return owner in awaitingTurn || owner in turnActive || statuses[owner] == SessionStatus.Busy
+}
+
+/** A conversation's run was cut (the helper started again under it): its sub-agents still marked Busy were cut with it. */
+internal fun PaseoGateway.endCutSubagents(parentApp: String) {
+    for ((id, sub) in subagentBook.subagents.entries.toList()) {
+        if (app(sub.parentReal) != parentApp || statuses[id] != SessionStatus.Busy) continue
+        emitStatus(id, SessionStatus.Idle)
+        emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Interrupted(InterruptReason.Shutdown)))
+    }
+}

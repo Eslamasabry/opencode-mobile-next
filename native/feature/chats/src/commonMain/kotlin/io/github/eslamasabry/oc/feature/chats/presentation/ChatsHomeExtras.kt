@@ -295,6 +295,10 @@ public class PhoneStopWatch(
     public suspend fun observe(stoppedByPerson: Boolean, onThisPhone: ProfileId?) {
         val before = wasStopped
         wasStopped = stoppedByPerson
-        if (stoppedByPerson && before != true && onThisPhone != null) disconnect(onThisPhone)
+        if (stoppedByPerson && before != true && onThisPhone != null) {
+            // The runs the stop cut are the person's own stop: marked before the connection (and what it knew) goes.
+            cutRuns(onThisPhone)
+            disconnect(onThisPhone)
+        }
     }
 }

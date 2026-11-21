@@ -116,7 +116,7 @@ class AppChatsHome(
 
     // The person's Stop of this phone's OpenCode closes the connection to it, so the pill and every screen stop
     // reading "Connected".
-    private val stopWatch = PhoneStopWatch { profile -> runtime.disconnect(profile) }
+    private val stopWatch = PhoneStopWatch(cutRuns = { profile -> runtime.markRunsStopped(profile) }) { profile -> runtime.disconnect(profile) }
 
     init {
         scope.launch {

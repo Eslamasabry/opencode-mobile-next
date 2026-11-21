@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionRunOutcome
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.security.AddressRules
@@ -1432,6 +1433,18 @@ anySourceLoaded = true
         // A pressed row is about to open: its history may be read in full (issue 147, HistoryOpenGateway).
         session.server.facet<io.github.eslamasabry.oc.core.domain.HistoryOpenGateway>()?.historyOpened(ref.sessionId)
         session.reads.prefetch(ref.sessionId)
+    }
+
+    /**
+     * The person stopped this phone's server: every conversation it was running is cut by that stop, so Home, the
+     * light and the turn's foot say "Stopped" (the person's own), never "Done". The server's own word is gone with it.
+     */
+    internal fun markRunsStopped(id: ProfileId) {
+        val busy =
+            listings[id]?.value?.statuses?.filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }?.keys
+                ?: return
+        val delivery = (registry.live.value[id] as? ChatGraphAccessors)?.chatDelivery ?: return
+        delivery.markCutByStop(busy.map { ConversationRef(id, it) })
     }
 
     override suspend fun disconnect(id: ProfileId): Outcome<Unit> {

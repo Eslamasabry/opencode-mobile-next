@@ -2321,6 +2321,7 @@ public class PaseoGateway(
                 val outcome =
                     if (lost) RunOutcome.Interrupted(InterruptReason.Shutdown) else RunOutcome.Succeeded
                 emit(GatewayEvent.RunEnded(SessionId(id), outcome))
+                if (lost) endCutSubagents(id)
             }
         }
         drafts.remove(id)
@@ -2345,6 +2346,7 @@ public class PaseoGateway(
             return
         emitStatus(id, SessionStatus.Idle)
         emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Interrupted(InterruptReason.Shutdown)))
+        endCutSubagents(id)
     }
 
     private fun cancelRecordBusyExpiry() {

@@ -123,6 +123,11 @@ public class ConnectionDelivery(
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
 
+    /** The person's Stop of the whole server cut these runs: each is "stopped", like a Stop pressed on its turn. */
+    public fun markCutByStop(refs: Collection<ConversationRef>) {
+        for (ref in refs) stoppedMemory?.add(ref) ?: stopped.update { it + ref }
+    }
+
     private suspend fun admission(profile: ServerProfile): Outcome<Unit> {
         for (check in interactiveSendChecks) {
             val result = check.check(profile)
