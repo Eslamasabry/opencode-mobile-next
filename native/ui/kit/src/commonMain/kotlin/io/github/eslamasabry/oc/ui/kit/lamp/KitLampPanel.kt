@@ -529,8 +529,12 @@ private fun PanelItems(
             }
         }
     }
-    model.sections.forEach { section -> Section(section, model.editing, words, actions, onHeight) }
+    val accentKey = lampAccentKey(model.sections)
+    model.sections.forEach { section -> Section(section, model.editing, words, actions, onHeight, accentKey) }
 }
+
+/** The key of the first row that asks something, top to bottom: the one row whose answer is accented. */
+internal fun lampAccentKey(sections: List<KitLampSection>): Any? = sections.firstNotNullOfOrNull { s -> s.rows.firstOrNull { it.request != null }?.key }
 
 @Composable
 private fun Section(
@@ -539,6 +543,7 @@ private fun Section(
     words: KitLampPanelWords,
     actions: KitLampPanelActions,
     onItemHeight: (key: String, height: Int) -> Unit,
+    accentKey: Any?,
 ) {
     KitText(
         section.title,
@@ -561,7 +566,7 @@ private fun Section(
             words = words.reorder,
         ) { row, handle ->
             Column(Modifier.onSizeChanged { onItemHeight(rowKey(row), it.height) }) {
-                LampBlock(row, editing = true, words, actions, handle)
+                LampBlock(row, editing = true, words, actions, handle, primary = row.key == accentKey)
                 if (row != section.rows.last()) RowDivider()
             }
         }
@@ -569,7 +574,7 @@ private fun Section(
         section.rows.forEachIndexed { i, row ->
             androidx.compose.runtime.key(row.key) {
                 Column(Modifier.onSizeChanged { onItemHeight(rowKey(row), it.height) }) {
-                    LampBlock(row, editing, words, actions, null)
+                    LampBlock(row, editing, words, actions, null, primary = row.key == accentKey)
                     if (i < section.rows.size - 1) RowDivider()
                 }
             }
@@ -584,10 +589,10 @@ private fun RowDivider() {
 
 /** A conversation, with its sub-agents as one step-tree block when it has any. */
 @Composable
-private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWords, actions: KitLampPanelActions, handle: (@Composable () -> Unit)?) {
+private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWords, actions: KitLampPanelActions, handle: (@Composable () -> Unit)?, primary: Boolean) {
     val kind = row.steps
     if (kind == null || row.children.isEmpty()) {
-        LampRowView(row, editing, words, actions, handle, null)
+        LampRowView(row, editing, words, actions, handle, null, primary)
         return
     }
     val tree = rememberKitStepTreeState()
@@ -606,7 +611,7 @@ private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWord
                 onHoldEnd = { actions.onHoldEnd(row.key, it) },
             ),
         state = tree,
-    ) { LampRowView(row, editing, words, actions, handle, this) }
+    ) { LampRowView(row, editing, words, actions, handle, this, primary) }
 }
 
 /**
@@ -621,6 +626,7 @@ private fun LampRowView(
     actions: KitLampPanelActions,
     handle: (@Composable () -> Unit)?,
     tree: KitStepTreeScope?,
+    primary: Boolean,
 ) {
     val asking = row.request != null && !editing
     Column(Modifier.fillMaxWidth().testTag(LAMP_ROW_TAG)) {
@@ -695,6 +701,7 @@ private fun LampRowView(
                     onUndo = { actions.onUndo(row.key, null) },
                     onHoldEnd = { actions.onHoldEnd(row.key, null) },
                     showWords = false,
+                    primary = primary,
                 )
             row.stopping != null && !editing ->
                 KitReceipt(
