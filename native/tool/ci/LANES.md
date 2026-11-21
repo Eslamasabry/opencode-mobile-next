@@ -154,7 +154,7 @@ which `scripts/native-release.sh` reads through `release_verdict.py`. The newest
 
 Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
 `known_failures.txt`, or is quarantined. `known_failures.txt` can only shrink (`KnownFailuresCeiling` in `test_gate.py`) and a
-line may name one test (`<module> :: <Class> > <test>`, exact). `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
+line may name one test (`<module> :: <Class> > <test>`, exact). Replacing a class line by exact lines of that same class is a narrowing and passes the ceiling; a line for another class, a wider line, or an exact line of a class that had no class line is refused. `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
 
 ## Self-hosted runner (`oc-native`)
 

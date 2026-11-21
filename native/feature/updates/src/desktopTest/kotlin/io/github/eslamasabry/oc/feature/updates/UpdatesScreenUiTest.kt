@@ -123,7 +123,9 @@ class UpdatesScreenUiTest {
     @Test
     fun `B-MIGR-012 available shows the version, its size and Update`() = runComposeUiTest {
         val actions = page(available)
-        onNodeWithText("2.2.0 is ready · 39 MB").assertExists()
+        // The size reads the decimal megabyte Android shows (3d4953e58c): the fixture bytes over 1,000,000, rounded up.
+        val megabytes = kotlin.math.ceil(APK_SIZE / 1_000_000.0).toLong()
+        onNodeWithText("2.2.0 is ready · $megabytes MB").assertExists()
         onNodeWithText("Check GitHub for new versions").assertExists()
         onNodeWithText("The app asks GitHub for the latest version number and sends nothing about you.").assertExists()
         onNodeWithText("What's new").performScrollTo().assertExists()

@@ -421,9 +421,11 @@ class AgentPinsParityTest {
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
         assertEquals("/home/oc/.local/share/oc-paseo/0.16.1-d5317553e538", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        // 2.1.321, 2.1.327 and 2.1.327 moved after the freeze (Fable 5.2 needs 2.1.321 or newer): the freeze set plus all three.
+        // 2.1.321, 2.1.325 and 2.1.327 moved after the freeze (Fable 5.2 needs 2.1.321 or newer), and 2.1.330 was
+        // proven on a phone on 2026-11-21: the freeze set plus all four.
         assertEquals(
-            Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList() + listOf("2.1.321", "2.1.325", "2.1.327"),
+            Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList() +
+                listOf("2.1.321", "2.1.325", "2.1.327", "2.1.330"),
             pins.claudeCodeTestedVersions,
         )
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
