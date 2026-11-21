@@ -299,7 +299,6 @@ class KnownFailuresCeiling(unittest.TestCase):
     from CEILING (the ceiling then stays lower for good)."""
     CEILING = {
         '* :: *.rb.*GateTest',
-        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest',
     }
 
     # The classes that had a class-level line on the base of the narrowing work (2026-11-21). Frozen: an exact test line
@@ -328,6 +327,10 @@ class KnownFailuresCeiling(unittest.TestCase):
     }
     # Exact test lines allowed today (they replace class lines; they can only shrink too).
     EXACT_CEILING = {
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2_1280x800',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_1280x800',
         'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone',
     }
 
