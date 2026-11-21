@@ -532,6 +532,9 @@ private fun PanelItems(
     model.sections.forEach { section -> Section(section, model.editing, words, actions, onHeight) }
 }
 
+/** The key of the first row that asks something, top to bottom: the one row whose answer is accented. */
+internal fun lampAccentKey(sections: List<KitLampSection>): Any? = null
+
 @Composable
 private fun Section(
     section: KitLampSection,

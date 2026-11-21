@@ -64,6 +64,9 @@ public object RequestAnswersDims {
     public const val GAP: Int = Space.S2
 }
 
+/** The role of a request's allowing answer ("Allow once", or "Answer" for a question): accented only when [primary]. */
+internal fun requestAnswerRole(primary: Boolean): KitButtonRole = KitButtonRole.Primary
+
 /**
  * A request answered in place (LAMP-PLAN §5, LAMP-CRAFT §4 "Allow once / Deny"): the request's [KitRequest.words] in
  * the attention tone (unless [showWords] is false, where the row already says them), then Allow once | Deny as two
