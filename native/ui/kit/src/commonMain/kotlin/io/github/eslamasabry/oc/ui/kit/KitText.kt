@@ -61,6 +61,12 @@ public fun KitText(
      * than the room at this size, the words shrink just enough to keep it whole ([kitWholeWords]).
      */
     wholeWords: Boolean = false,
+    /**
+     * Frame text whose words the person or a server wrote (a conversation's title in the bar): the line takes the words'
+     * own direction, so an English title in an Arabic bar reads left to right and its "…" closes the words (E-4). The
+     * frame size is kept.
+     */
+    ownDirection: Boolean = false,
 ) {
     // pageTitle / sectionLabel are role hints; the head typography resolves the role alone.
     val base = LocalKitTypography.current.style(role)
@@ -80,7 +86,8 @@ public fun KitText(
     val style =
         base.copy(
             color = kitToneOnGlass(tone),
-            textDirection = if (kind == KitTextKind.Reading) TextDirection.Content else TextDirection.Unspecified,
+            textDirection =
+                if (kind == KitTextKind.Reading || ownDirection) TextDirection.Content else TextDirection.Unspecified,
             textAlign = textAlign ?: TextAlign.Start,
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
         )
