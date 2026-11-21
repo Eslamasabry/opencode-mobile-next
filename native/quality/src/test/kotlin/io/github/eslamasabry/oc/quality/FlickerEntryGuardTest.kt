@@ -25,9 +25,9 @@ class FlickerEntryGuardTest {
     private val ceilings =
         mapOf(
             "feature/chat" to 330,
-            // 217 - 73: family 10 (the chip line's first frame) went with its fix; the +2 of HomeStageSpokenNameTest
-            // (adopted after the freeze, families 10, 11) are in that count
-            "feature/chats" to 144,
+            // 217 - 149: the logo loader every scene now has took 82 (family 11, 2 of 13, 2 of 16); the chip line's
+            // first-pass layout took 67 of family 10. Six of family 10 remain, named in the baseline.
+            "feature/chats" to 68,
         )
 
     /** Test files in recorded modules that may start Compose themselves (path from the native root to reason). */
