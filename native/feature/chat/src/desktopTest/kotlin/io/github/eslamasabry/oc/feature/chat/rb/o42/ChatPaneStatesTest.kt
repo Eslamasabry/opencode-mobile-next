@@ -10,7 +10,6 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.semantics.SemanticsActions
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.feature.chat.E20Scene
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatPane
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.math.abs
@@ -38,7 +38,7 @@ class ChatPaneStatesTest {
 
     @Test
     fun `E1 the conversation and the composer are 700 dp plus gutters wide and centred on a wide window`() =
-        runDesktopComposeUiTest(1280, 800) {
+        kitUiTest(1280, 800) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(scene.live()) } }
             waitForIdle()
@@ -51,7 +51,7 @@ class ChatPaneStatesTest {
         }
 
     @Test
-    fun `E1 a phone keeps the full width`() = runDesktopComposeUiTest(412, 915) {
+    fun `E1 a phone keeps the full width`() = kitUiTest(412, 915) {
         val scene = ChatScene()
         setContent { E20Scene { scene.Screen(scene.live()) } }
         waitForIdle()
@@ -62,7 +62,7 @@ class ChatPaneStatesTest {
     // Owner 2026-11-14 (a loading conversation was a top bar and nothing else): was "... and no composer". The message
     // box stands in its place while the conversation loads, so the page keeps its shape and nothing moves when it has.
     fun `E3 first load shows two placeholder turns at the bottom over the message box, which keeps its place`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             var state by mutableStateOf(scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf()))
             setContent { E20Scene { scene.Screen(state) } }
@@ -84,7 +84,7 @@ class ChatPaneStatesTest {
 
     @Test
     fun `E4 could not load is a centred page with the cable, Report a problem and Details, without a composer`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent {
                 E20Scene { scene.Screen(scene.live().copy(phase = ChatPhase.Failed(Failure.Unexpected()), rows = persistentListOf())) }
@@ -100,7 +100,7 @@ class ChatPaneStatesTest {
         }
 
     @Test
-    fun `E2 find sits over the composer, which stays`() = runDesktopComposeUiTest(412, 915) {
+    fun `E2 find sits over the composer, which stays`() = kitUiTest(412, 915) {
         val scene = ChatScene()
         setContent { E20Scene { scene.Screen(scene.live().copy(find = FindUi("total", 2, 0, null, 1, false))) } }
         waitForIdle()
@@ -111,7 +111,7 @@ class ChatPaneStatesTest {
 
     @Test
     fun `E5 at the window's root the title starts 16 dp inside the header capsule and has no chevron`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(scene.live()) } }
             waitForIdle()
@@ -129,7 +129,7 @@ class ChatPaneStatesTest {
         }
 
     @Test
-    fun `E5 opened from somewhere the chat keeps Back, and a known branch shows on the project line`() = runDesktopComposeUiTest(412, 915) {
+    fun `E5 opened from somewhere the chat keeps Back, and a known branch shows on the project line`() = kitUiTest(412, 915) {
         val scene = ChatScene()
         setContent { E20Scene { scene.Screen(scene.live(), canGoBack = true, branch = "main") } }
         waitForIdle()

@@ -10,7 +10,6 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscript
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -71,7 +71,7 @@ class Audit1RowsPlacedTest {
 
     @Test
     fun `AUDIT1-03 a row that arrives or leaves never lies over its neighbour on any frame`() =
-        runComposeUiTest {
+        kitUiTest {
             var state by mutableStateOf(stateOf(*rows(second = false)))
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Full), localeTag = "en") {

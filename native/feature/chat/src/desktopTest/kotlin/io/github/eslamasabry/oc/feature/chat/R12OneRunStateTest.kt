@@ -7,7 +7,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.InterruptReason
@@ -37,6 +36,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -119,7 +119,7 @@ class R12OneRunStateTest {
     // D1 "steps only" (owner 2026-11-14): was "the card says it, the transcript adds no waiting line of its own". The
     // step that waits now says so on its own row (d1-waiting: the ask is answered right under it); the promise kept is
     // that it is said once: no live line, no second waiting line of the transcript's own.
-    fun `R12 waiting for the decision - the waiting step says it once, the transcript adds no waiting line of its own`() = runComposeUiTest {
+    fun `R12 waiting for the decision - the waiting step says it once, the transcript adds no waiting line of its own`() = kitUiTest {
         val facts = facts(waitingForYou = true)
         assertEquals(WorkLineState.WaitingForYou, facts.work["m1"]?.state)
         show(screen(facts, LiveTurnUi(stopping = false)), facts)
@@ -128,7 +128,7 @@ class R12OneRunStateTest {
     }
 
     @Test
-    fun `R12 stopping while the card still waits - the tail says Stopping once and nothing waits`() = runComposeUiTest {
+    fun `R12 stopping while the card still waits - the tail says Stopping once and nothing waits`() = kitUiTest {
         val facts = facts(waitingForYou = true)
         show(screen(facts, LiveTurnUi(stopping = true)), facts)
         onAllNodesWithText("Stopping", useUnmergedTree = true).assertCountEquals(1)
@@ -136,7 +136,7 @@ class R12OneRunStateTest {
     }
 
     @Test
-    fun `R12 stopped - the footer says Stopped once, no Stopping and no waiting`() = runComposeUiTest {
+    fun `R12 stopped - the footer says Stopped once, no Stopping and no waiting`() = kitUiTest {
         val facts = facts(waitingForYou = false, stoppedAfter = true)
         show(screen(facts, live = null, footer = true), facts)
         onAllNodesWithText("Stopping", useUnmergedTree = true).assertCountEquals(0)
@@ -144,7 +144,7 @@ class R12OneRunStateTest {
     }
 
     @Test
-    fun `R12 working - after the decision is sent the live line says what the turn does, never waiting`() = runComposeUiTest {
+    fun `R12 working - after the decision is sent the live line says what the turn does, never waiting`() = kitUiTest {
         val facts = facts(waitingForYou = false)
         assertEquals(WorkLineState.Running, facts.work["m1"]?.state)
         show(screen(facts, LiveTurnUi(stopping = false)), facts)

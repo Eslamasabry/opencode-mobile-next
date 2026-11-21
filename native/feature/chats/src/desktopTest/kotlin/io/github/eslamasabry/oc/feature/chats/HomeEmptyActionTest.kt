@@ -13,7 +13,6 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -28,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -46,7 +46,7 @@ import kotlinx.collections.immutable.persistentSetOf
 @OptIn(ExperimentalTestApi::class)
 class HomeEmptyActionTest {
     @Test
-    fun `the empty home keeps New conversation on screen under a tall notice`() = runComposeUiTest {
+    fun `the empty home keeps New conversation on screen under a tall notice`() = kitUiTest {
         setContent {
             ChatEnvironment {
                 KitTheme(appearance = KitAppearance(motion = MotionLevel.Off), platform = DesktopKitPlatform(), localeTag = "en") {
@@ -69,7 +69,7 @@ class HomeEmptyActionTest {
     }
 
     @Test
-    fun `B-243 a list that was not read says so and offers Try again, never the first-run words`() = runComposeUiTest {
+    fun `B-243 a list that was not read says so and offers Try again, never the first-run words`() = kitUiTest {
         val actions = object : RecordingChatsActions() { override fun retryList() { calls += "retry list" } }
         setContent {
             ChatEnvironment {

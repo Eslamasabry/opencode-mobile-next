@@ -19,7 +19,6 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -36,6 +35,7 @@ import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -138,7 +138,7 @@ class EdgeDockUndoTapTest {
     fun `B-DOCK-UNDO-03 the same under Glass with full motion, as on the phone`() =
         undoOverTheReply(KitAppearance(motion = MotionLevel.Full, style = Style.Glass), stillFrame = false)
 
-    private fun undoOverTheReply(appearance: KitAppearance, stillFrame: Boolean) = runComposeUiTest {
+    private fun undoOverTheReply(appearance: KitAppearance, stillFrame: Boolean) = kitUiTest {
         // Full motion keeps something moving: step the clock instead of waiting for idle.
         mainClock.autoAdvance = false
         val port = Port(entries())

@@ -24,7 +24,6 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
@@ -35,6 +34,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -180,7 +180,7 @@ class MicInBoxComposerTest {
 
     @Test
     fun `B-MEDIA-067 the chat box hosts the recorder in place of the plus and chips, Send keeps its place`() =
-        runComposeUiTest {
+        kitUiTest {
         val on = mutableStateOf(false)
         val actions = Actions()
         val voice = Voice(on)
@@ -219,7 +219,7 @@ class MicInBoxComposerTest {
     }
 
     @Test
-    fun `B-MEDIA-068 the note after dictation sits inside the box above the words`() = runComposeUiTest {
+    fun `B-MEDIA-068 the note after dictation sits inside the box above the words`() = kitUiTest {
         val on = mutableStateOf(false)
         val note = mutableStateOf(true)
         setContent { Scene(Actions(), Voice(on, note)) }
@@ -231,7 +231,7 @@ class MicInBoxComposerTest {
     }
 
     @Test
-    fun `B-MEDIA-069 at 360 dp and text 1_3 the recorder row and Send fit inside the box`() = runComposeUiTest {
+    fun `B-MEDIA-069 at 360 dp and text 1_3 the recorder row and Send fit inside the box`() = kitUiTest {
         val on = mutableStateOf(true)
         setContent { Scene(Actions(), Voice(on), fontScale = 1.3f) }
         waitForIdle()
@@ -246,7 +246,7 @@ class MicInBoxComposerTest {
 
     @Test
     fun `B-MEDIA-074 words still forming are drawn quieter in the message field, confirmed ones normal`() =
-        runComposeUiTest {
+        kitUiTest {
             val on = mutableStateOf(true)
             val voice = Voice(on, streaming = "Whats next hello wor")
             setContent { Scene(Actions(), voice) }

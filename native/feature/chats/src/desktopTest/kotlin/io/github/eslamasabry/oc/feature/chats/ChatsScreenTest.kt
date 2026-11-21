@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats
 
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.math.abs
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.onRoot
@@ -16,7 +17,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionTime
@@ -74,7 +74,7 @@ class ChatsScreenTest {
 
     @Test
     fun `B-NAV-037 B15 the home has no bottom bar, and the gear word says Settings and opens it`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
             onNodeWithText("Conversations").assertExists()
@@ -90,7 +90,7 @@ class ChatsScreenTest {
 
     @Test
     fun `B-NAV-037 the server pill names the server and its state and opens the one-tap switcher`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             val phone =
                 ChatsListSourceUi(ProfileId("p1"), "On this phone", shown = true, main = true, onThisPhone = true, unreachable = false)
@@ -118,7 +118,7 @@ class ChatsScreenTest {
 
     @Test
     fun `PARITY-B-217 the home list reads itself again on a pull, and not while its server still opens`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             var state by androidx.compose.runtime.mutableStateOf(ui(*rows))
             setContent { Themed { ChatsScreen(state, actions) } }
@@ -145,7 +145,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-NAV-27 G3 the empty home is Flutter's calm page with New conversation as its one button`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(), actions) } }
             onNodeWithText("No conversations yet").assertExists()
@@ -169,7 +169,7 @@ class ChatsScreenTest {
         )
 
     @Test
-    fun `NEW-BLOCKED the phone's own server turned off is one card with Start, not two`() = runComposeUiTest {
+    fun `NEW-BLOCKED the phone's own server turned off is one card with Start, not two`() = kitUiTest {
         val actions = RecordingChatsActions()
         setContent {
             Themed {
@@ -179,14 +179,48 @@ class ChatsScreenTest {
                 )
             }
         }
-        onAllNodesWithText("OpenCode on this phone is off").assertCountEquals(1)
-        onAllNodesWithText("Start OpenCode on this phone").assertCountEquals(1)
+        onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
+        onAllNodesWithText("Start OpenCode").assertCountEquals(1)
         onAllNodesWithText("Dismiss").assertCountEquals(0)
         onAllNodesWithText("Restart OpenCode").assertCountEquals(0)
+        // The person's own stop is never read as a failure.
+        onAllNodesWithText("answering", substring = true).assertCountEquals(0)
     }
 
     @Test
-    fun `NEW-BLOCKED a computer that does not answer is one card that says nothing was started, with Try again`() = runComposeUiTest {
+    fun `B-HOME-215 a stopped phone in the list says so with Start OpenCode, no failure`() =
+        kitUiTest {
+            val actions = RecordingChatsActions()
+            val phone =
+                ChatsListSourceUi(
+                    ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true,
+                    unreachable = false, stoppedByPerson = true,
+                )
+            val home = ChatsHomeExtraState(sources = persistentListOf(phone))
+            setContent { Themed { ChatsScreen(ui(*rows).copy(home = home), actions) } }
+            onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
+            onAllNodesWithText("answering", substring = true).assertCountEquals(0)
+            onAllNodesWithText("Try again").assertCountEquals(0)
+            onNodeWithText("Start OpenCode").performClick()
+            assertEquals(listOf("start p1"), actions.calls)
+        }
+
+    @Test
+    fun `B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering`() =
+        kitUiTest {
+            val phone =
+                ChatsListSourceUi(
+                    ProfileId("p1"), "This phone", shown = true, main = false, onThisPhone = true, unreachable = true,
+                )
+            val home = ChatsHomeExtraState(sources = persistentListOf(phone))
+            setContent { Themed { ChatsScreen(ui(*rows).copy(home = home), RecordingChatsActions()) } }
+            onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(0)
+            onAllNodesWithText("isn't answering", substring = true).assertCountEquals(1)
+            onAllNodesWithText("Try again").assertCountEquals(1)
+        }
+
+    @Test
+    fun `NEW-BLOCKED a computer that does not answer is one card that says nothing was started, with Try again`() = kitUiTest {
         setContent {
             Themed {
                 ChatsScreen(
@@ -203,7 +237,7 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `NEW-BLOCKED a server that is only still opening gets the small notice`() = runComposeUiTest {
+    fun `NEW-BLOCKED a server that is only still opening gets the small notice`() = kitUiTest {
         val opening =
             io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
                 io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Connecting,
@@ -214,7 +248,7 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `PHONE-OFF the new-conversation page says the server is off and offers Start, never Please wait`() = runComposeUiTest {
+    fun `PHONE-OFF the new-conversation page says the server is off and offers Start, never Please wait`() = kitUiTest {
         val calls = mutableListOf<String>()
         val phone = io.github.eslamasabry.oc.core.common.ids.ProfileId("phone")
         val actions =
@@ -254,15 +288,15 @@ class ChatsScreenTest {
                 phoneOff = true,
             )
         setContent { Themed { io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen(state, actions) } }
-        onAllNodesWithText("OpenCode on this phone is off").assertCountEquals(1)
+        onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
         onAllNodesWithText("Please wait for the current action.").assertCountEquals(0)
-        onNodeWithText("Start OpenCode on this phone").performClick()
+        onNodeWithText("Start OpenCode").performClick()
         assertEquals(listOf("start"), calls)
     }
 
     @Test
     fun `SCREENS-NAV-27 G3 the calm words sit above the middle and the button at the bottom`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Themed { ChatsScreen(ui(), RecordingChatsActions()) } }
             val root = onRoot().fetchSemanticsNode().boundsInRoot
             val words = onNodeWithText("No conversations yet").fetchSemanticsNode().boundsInRoot
@@ -277,7 +311,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-NAV-27 G3 Running with nothing running says so and offers Show all, with the foot bar's + for New conversation`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             val state =
                 ChatsState.build(
@@ -300,7 +334,7 @@ class ChatsScreenTest {
 
     @Test
     fun `I147-ROW-002 an old agent conversation's row reads like any other, with no sentence beside its title`() =
-        runComposeUiTest {
+        kitUiTest {
             val old = item("ag", "/work/habits", at = 9_000, title = "Build the habit tracker", unseen = true)
                 .copy(agentId = "antigravity", needsNewChat = true)
             setContent { Themed { ChatsScreen(ui(old), RecordingChatsActions()) } }
@@ -313,7 +347,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-NAV-27 G2 one row follows the next with only its hairline between them`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions()) } }
             val first = onNodeWithContentDescription("Fix the reconnect loop", substring = true).fetchSemanticsNode().boundsInRoot
             val second = onNodeWithContentDescription("Theme packs", substring = true).fetchSemanticsNode().boundsInRoot
@@ -324,7 +358,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-NAV-27 G1 the page alone draws no bar, as Flutter's home leaves the bar to the shell`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions(), shellBar = false) } }
             onNodeWithText("Conversations").assertExists()
             onAllNodesWithContentDescription("Search").assertCountEquals(0)
@@ -334,14 +368,14 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `B-NAV-037 without a server-management door there is no dead gear`() = runComposeUiTest {
+    fun `B-NAV-037 without a server-management door there is no dead gear`() = kitUiTest {
         setContent { Themed { ChatsScreen(ui(*rows, settings = false), RecordingChatsActions()) } }
         onAllNodesWithContentDescription("Settings").assertCountEquals(0)
     }
 
     @Test
     fun `A1-HOME-06 rows sit under Right now and Recent with cleaned titles and one status word`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
             onNodeWithText("Right now").assertExists()
@@ -368,7 +402,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-NAV-27 Search, Running, the needs-you line and the project chip reach their intents`() =
-        runComposeUiTest {
+        kitUiTest {
             // Flutter chats_home_screen.dart (2.1.4): search sits on the shell bar, "N need you" under the title
             // opens the Inbox, and projects are one chip that opens the project sheet.
             val actions = RecordingChatsActions()
@@ -383,7 +417,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-NAV-27 an empty server offers New conversation once, in the empty state`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(), actions) } }
             onNodeWithText("No conversations yet").assertExists()
@@ -396,7 +430,7 @@ class ChatsScreenTest {
 
     @Test
     fun `B-CHAT-094 the brief rows show above the list and Continue dismisses them`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             val sessions =
                 listOf(
@@ -425,7 +459,7 @@ class ChatsScreenTest {
 
     @Test
     fun `B-CHAT-095 finding 5 an unsupported read state says nothing at all (owner 2026-11-11)`() =
-        runComposeUiTest {
+        kitUiTest {
             val unknown =
                 ReturnBrief.build(
                     emptyList(),
@@ -444,7 +478,7 @@ class ChatsScreenTest {
 
     @Test
     fun `a server that lists one project names it on the projects chip and shows no notice about it`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Themed { ChatsScreen(ui(item("a")).copy(onlyProject = "new"), RecordingChatsActions()) } }
             onNodeWithText("Showing conversations in", substring = true).assertDoesNotExist()
             onNodeWithText("This server can't list all projects", substring = true).assertDoesNotExist()
@@ -455,7 +489,7 @@ class ChatsScreenTest {
 
     @Test
     fun `a phone agent at its plan limit says try again later and opens that agent's page`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = RecordingChatsActions()
             val limit =
                 io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice(
@@ -474,7 +508,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `B-CHAT-093 finding 5 overflow has a visible filtered-list action`() = runComposeUiTest {
+    fun `B-CHAT-093 finding 5 overflow has a visible filtered-list action`() = kitUiTest {
         val actions = RecordingChatsActions()
         val brief =
             ReturnBrief.build(
@@ -503,7 +537,7 @@ class ChatsScreenTest {
 
     @Test
     fun `B-CHAT-095 finding 5 partial inventory explains uncertainty alongside known rows`() =
-        runComposeUiTest {
+        kitUiTest {
             val brief =
                 ReturnBrief.build(
                     listOf(
@@ -529,7 +563,7 @@ class ChatsScreenTest {
 
     @Test
     fun `SCREENS-ROWS-01 an agent with no name reads Another agent, not the conversation's title`() =
-        runComposeUiTest {
+        kitUiTest {
             val mystery = item("m", title = "Tidy the logs").copy(agentId = "hermes")
             // Two agents in the list, so each row says whose it is (P-021).
             setContent { Themed { ChatsScreen(ui(mystery, item("o", title = "Other")), RecordingChatsActions()) } }
@@ -538,7 +572,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `P-021 rows name their agent only when the list holds more than one`() = runComposeUiTest {
+    fun `P-021 rows name their agent only when the list holds more than one`() = kitUiTest {
         val mixed = arrayOf(item("c", title = "Port the parser").copy(agentId = "codex"), item("o", title = "Other"))
         setContent { Themed { ChatsScreen(ui(*mixed), RecordingChatsActions()) } }
         onNodeWithContentDescription("Port the parser, Codex", substring = true).assertExists()
@@ -546,7 +580,7 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `P-021 the finished group is headed like Right now and Recent`() = runComposeUiTest {
+    fun `P-021 the finished group is headed like Right now and Recent`() = kitUiTest {
         val brief =
             ReturnBrief.build(
                 listOf(Session(SessionId("old"), directory = "/work/api", time = SessionTime(idleMs = 10))),
@@ -562,14 +596,14 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `P-021 no finished rows, no heading`() = runComposeUiTest {
+    fun `P-021 no finished rows, no heading`() = kitUiTest {
         setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions()) } }
         onAllNodesWithText("Since you were away").assertCountEquals(0)
     }
 
     @Test
     fun `P-023 the connections chip opens its choices with the same chevron as the project chip`() =
-        runComposeUiTest {
+        kitUiTest {
             val phone = ChatsListSourceUi(ProfileId("p1"), "On this phone", shown = true, main = true, onThisPhone = true, unreachable = false)
             val laptop = ChatsListSourceUi(ProfileId("p2"), "Laptop", shown = false, main = false, onThisPhone = false, unreachable = false)
             val actions = RecordingChatsActions()
@@ -582,7 +616,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `B-NAV-037 an archive that failed says so and the notice can be closed`() = runComposeUiTest {
+    fun `B-NAV-037 an archive that failed says so and the notice can be closed`() = kitUiTest {
         val actions = RecordingChatsActions()
         setContent {
             Themed {

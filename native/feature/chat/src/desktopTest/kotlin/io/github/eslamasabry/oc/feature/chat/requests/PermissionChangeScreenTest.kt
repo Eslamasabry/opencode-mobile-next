@@ -12,7 +12,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -28,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -155,7 +155,7 @@ class PermissionChangeScreenTest {
     }
 
     @Test
-    fun `B-CHAT-REV1-001 a new file's card says Create and shows its first lines before the answers`() = runComposeUiTest {
+    fun `B-CHAT-REV1-001 a new file's card says Create and shows its first lines before the answers`() = kitUiTest {
         setContent { Slot(RequestSlotUi(newFile(listOf("hello from the agent")))) }
         onNode(reads("Create e9.txt?")).assertIsDisplayed()
         // A file that does not exist yet says so (F-015): "New file: e9.txt", not "The change to e9.txt".
@@ -167,7 +167,7 @@ class PermissionChangeScreenTest {
     }
 
     @Test
-    fun `B-CHAT-REV1-002 an edit's card shows the removed and the added line`() = runComposeUiTest {
+    fun `B-CHAT-REV1-002 an edit's card shows the removed and the added line`() = kitUiTest {
         setContent { Slot(RequestSlotUi(edited)) }
         onNode(describes("The change to src/e2.txt"), useUnmergedTree = true).assertExists()
         for (line in listOf("the old line", "the new line"))
@@ -179,7 +179,7 @@ class PermissionChangeScreenTest {
 
     @Test
     fun `B-CHAT-REV1-003 a long new file shows a few lines and Show all opens Details with the whole change`() =
-        runComposeUiTest {
+        kitUiTest {
             val lines = (1..20).map { "line number $it of the new file" }
             setContent { Slot(RequestSlotUi(newFile(lines))) }
             assertTrue(
@@ -212,7 +212,7 @@ class PermissionChangeScreenTest {
 
     @Test
     fun `B-CHAT-REV1-004 a request that names only a path says the agent did not say what it will write`() =
-        runComposeUiTest {
+        kitUiTest {
             // OpenCode 2 through Paseo 0.15.3 asks with a name and a path and nothing else.
             val bare = card("p3", "shade-probe.txt", JsonObject(mapOf("filePath" to JsonPrimitive("shade-probe.txt"))))
             setContent { Slot(RequestSlotUi(bare)) }

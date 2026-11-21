@@ -152,6 +152,10 @@ internal open class RecordingChatsActions : ChatsActions {
         calls += "retry ${profile.raw}"
     }
 
+    override fun startPhoneServer(profile: ProfileId) {
+        calls += "start ${profile.raw}"
+    }
+
     override fun connectComputer() {
         calls += "computer"
     }

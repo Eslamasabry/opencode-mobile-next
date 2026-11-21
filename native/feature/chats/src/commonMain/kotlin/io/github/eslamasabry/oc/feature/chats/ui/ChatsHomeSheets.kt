@@ -90,7 +90,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
                     is SourcesChipLabel.Starting ->
                         stringResource(
                             when (chip.kind) {
-                                AppStart.Agents, AppStart.AgentsUpdating -> Res.string.connectionAgentStarting
+                                AppStart.Agents, AppStart.AgentsUpdating -> Res.string.stageStartingHelper
                                 AppStart.Phone -> Res.string.connectStartingPhone
                             }
                         )
@@ -334,6 +334,7 @@ private fun ServerSwitcher(
                         SwitcherServerState.Connected -> stringResource(Res.string.serverRowConnected)
                         SwitcherServerState.Connecting -> stringResource(Res.string.e7WorkspaceConnecting)
                         SwitcherServerState.NotAnswering -> stringResource(Res.string.serverSwitcherNotAnswering)
+                        SwitcherServerState.Stopped -> stringResource(Res.string.phoneStoppedByYou)
                         SwitcherServerState.Saved ->
                             stringResource(if (server.onThisPhone) Res.string.chatsSourcesOnPhone else Res.string.chatsSourcesElsewhere)
                     }
@@ -418,6 +419,13 @@ private fun ServerSwitcher(
                                 io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
                                     stringResource(Res.string.kitTryAgain),
                                     { actions.retrySource(server.profile) },
+                                )
+                            )
+                        server.state == SwitcherServerState.Stopped && !busy ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.phoneServerCardStartOpenCode),
+                                    { actions.startPhoneServer(server.profile) },
                                 )
                             )
                         else -> KitRowTrailing.None
@@ -565,17 +573,18 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, block
             DiagnosisAction.Retry, null -> retry
         }
     KitStateView(
-        kind = KitStateKind.Error,
+        // The person's own stop is a calm state, not an error face.
+        kind = if (opening.phoneOff) KitStateKind.Calm else KitStateKind.Error,
         title =
             when {
-                opening.phoneOff -> stringResource(Res.string.homePhoneOffTitle)
+                opening.phoneOff -> stringResource(Res.string.phoneStoppedByYou)
                 words != null -> words.title
                 else -> stringResource(Res.string.homeOpeningFailed, openingNameShown(opening))
             },
         // After a tap on New conversation the card also says that nothing was started, so there is one card, not two.
         body =
             when {
-                opening.phoneOff -> stringResource(Res.string.thisPhoneAnswerOffLine)
+                opening.phoneOff -> null
                 blocked -> stringResource(Res.string.homeNewBlockedBody, openingNameShown(opening))
                 words != null -> words.body
                 else -> stringResource(Res.string.homeOpeningFailedBody)
@@ -583,7 +592,8 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, block
         failure = if (opening.phoneOff) null else opening.failure,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)
-                if (opening.phoneOff) KitAction(stringResource(Res.string.homePhoneOffStart), actions::startOpeningPhoneServer)
+                if (opening.phoneOff)
+                    KitAction(stringResource(Res.string.phoneServerCardStartOpenCode), actions::startOpeningPhoneServer)
                 else leadAction
             else null,
         // The way to try again stays one tap away when something else leads (a sign-in is fixed where it is typed).

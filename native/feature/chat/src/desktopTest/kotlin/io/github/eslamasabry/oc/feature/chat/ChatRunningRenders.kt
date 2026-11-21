@@ -17,7 +17,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -55,6 +54,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -272,7 +272,7 @@ class ChatRunningRenders {
 
     private fun shoot(scene: Scene, style: Style, name: String, setup: ComposeUiTest.() -> Unit = {}) {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        kitUiTest(WIDTH, HEIGHT) {
             setContent { Screen(scene, style, facts(scene, NOW), still = true) }
             waitForIdle()
             setup()
@@ -302,7 +302,7 @@ class ChatRunningRenders {
     fun `chat running motion frames`() {
         val dir = out?.let { File(it, "frames").also(File::mkdirs) } ?: return
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        kitUiTest(WIDTH, HEIGHT) {
             var facts by mutableStateOf(facts(Scene.CommandsSteps, NOW))
             mainClock.autoAdvance = false
             setContent { Screen(Scene.CommandsSteps, Style.Solid, facts, still = false) }

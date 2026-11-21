@@ -21,12 +21,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.down
 import androidx.compose.ui.test.up
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.ui.FOLD_ANCHOR_HOLD_MS
 import io.github.eslamasabry.oc.feature.chat.ui.FoldAnchor
 import io.github.eslamasabry.oc.feature.chat.ui.foldAnchor
 import io.github.eslamasabry.oc.feature.chat.ui.rememberFoldAnchor
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,7 +42,7 @@ class S8FoldAnchorTest {
     private fun headerTopAfterOpening(anchored: Boolean): Pair<Float, Float> {
         var before = 0f
         var after = 0f
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             setContent {
                 val lazy = rememberLazyListState()
                 val anchor = rememberFoldAnchor()
@@ -85,7 +85,7 @@ class S8FoldAnchorTest {
 
     @Test
     fun `a touch on a row does not recompose the list, and the hold still lets go after its time`() {
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             var runs = 0
             var held: FoldAnchor? = null
             setContent {

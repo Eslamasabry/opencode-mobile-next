@@ -12,7 +12,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -27,6 +26,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -110,7 +110,7 @@ class TurnFailSignInTest {
 
     @Test
     fun `B-AGENT-189 a turn that failed on a lapsed sign-in says the sign-in sentence alone, not also carry on`() =
-        runComposeUiTest {
+        kitUiTest {
             val p = block(RecordingNavigator())
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
             val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
@@ -125,7 +125,7 @@ class TurnFailSignInTest {
 
     @Test
     fun `B-AGENT-189 the turn failure block has one button, Sign in again, and no providers or model detour`() =
-        runComposeUiTest {
+        kitUiTest {
             val p = block(RecordingNavigator())
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
             val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
@@ -142,7 +142,7 @@ class TurnFailSignInTest {
 
     @Test
     fun `B-AGENT-189 pressing Sign in again on the turn failure opens that agent's sign-in`() =
-        runComposeUiTest {
+        kitUiTest {
             val nav = RecordingNavigator()
             val p = block(nav)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -158,7 +158,7 @@ class TurnFailSignInTest {
 
     @Test
     fun `B-AGENT-189 Details on the turn failure opens and holds the agent's own text`() =
-        runComposeUiTest {
+        kitUiTest {
             val p = block(RecordingNavigator())
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
             val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
@@ -178,7 +178,7 @@ class TurnFailSignInTest {
     @Test
     fun `B-AGENT-189 render the turn failure block at 360 dp, text 1_0 and 1_3`() {
         for (scale in listOf(1.0f, 1.3f)) {
-            androidx.compose.ui.test.v2.runDesktopComposeUiTest(1080, 1900) {
+            kitUiTest(1080, 1900) {
                 val p = block(RecordingNavigator())
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
                 val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)

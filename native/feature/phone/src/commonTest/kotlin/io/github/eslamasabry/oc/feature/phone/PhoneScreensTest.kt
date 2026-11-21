@@ -156,6 +156,34 @@ class PhoneScreensTest {
         }
 
     @Test
+    fun `B-SET-274 This phone after the person's stop says so and offers Start OpenCode`() =
+        runComposeUiTest {
+            val calls = Calls()
+            val facts =
+                io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts(
+                    status =
+                        io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus(
+                            installed = true,
+                            phase = io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase.Ready,
+                        ),
+                    stoppedByPerson = true,
+                )
+            val state = io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerState.of(facts)
+            val ui =
+                ThisPhoneUi(
+                    answer = io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneAnswers.of(state, facts),
+                    serverRows = persistentListOf(),
+                )
+            setContent { Themed { ThisPhoneScreen(ui, calls) } }
+            onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(1)
+            onAllNodesWithText("The server didn't start").assertCountEquals(0)
+            onAllNodesWithText("The server didn’t start").assertCountEquals(0)
+            onAllNodesWithText("Start again").assertCountEquals(0)
+            onNodeWithText("Start OpenCode").performClick()
+            assertEquals(listOf("act Start"), calls.seen.filterNot { it.startsWith("shown") })
+        }
+
+    @Test
     fun `plan 07 F01 a running server's rows name their object`() =
         runComposeUiTest {
             val calls = Calls()

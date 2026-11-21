@@ -14,8 +14,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runComposeUiTest
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Redacted
@@ -34,6 +32,7 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -117,7 +116,7 @@ class ExpiredSignInBubbleTest {
 
     @Test
     fun `B-AGENT-189 an expired Claude Code sign-in is said once, names the agent and offers Sign in again`() =
-        runComposeUiTest {
+        kitUiTest {
             val nav = RecordingNavigator()
             val (p, world) = screen(nav, Failure.ComputerDidNotAnswer(Redacted(ownerText)), Outside(owner))
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -141,7 +140,7 @@ class ExpiredSignInBubbleTest {
 
     @Test
     fun `B-CHAT-071 a failed message in view is said by its block alone, not again by a banner`() =
-        runComposeUiTest {
+        kitUiTest {
             val nav = RecordingNavigator()
             val (p, _) = screen(nav, Failure.Unknown(), Outside(null))
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -156,7 +155,7 @@ class ExpiredSignInBubbleTest {
 
     @Test
     fun `B-AGENT-189 a failed reach on this phone names the phone's agents, never a computer`() =
-        runComposeUiTest {
+        kitUiTest {
             val nav = RecordingNavigator()
             val (p, _) = screen(nav, Failure.ComputerDidNotAnswer(), Outside(owner))
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -171,7 +170,7 @@ class ExpiredSignInBubbleTest {
 
     @Test
     fun `B-AGENT-189 away from this phone the same failure still says the computer`() =
-        runComposeUiTest {
+        kitUiTest {
             val nav = RecordingNavigator()
             val (p, _) = screen(nav, Failure.ComputerDidNotAnswer(), Outside(null))
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -190,7 +189,7 @@ class ExpiredSignInBubbleTest {
                 "getaddrinfo ENOTFOUND api.anthropic.com" to "Check the internet connection on this phone",
                 "ENOSPC: no space left on device" to "This phone is out of storage space.",
             )) {
-            runComposeUiTest {
+            kitUiTest {
                 val world = AgentWorld(ref)
                 world.transcript.value =
                     stateOf(
@@ -220,7 +219,7 @@ class ExpiredSignInBubbleTest {
     @Test
     fun `B-AGENT-189 render the expired sign-in send failure at 360 dp, today and new`() {
         for ((name, runtime) in listOf("today" to null, "new" to "claude")) {
-            runDesktopComposeUiTest(1080, 1500) {
+            kitUiTest(1080, 1500) {
                 val world = if (runtime == null) FakeChatWorld(ref) else AgentWorld(ref)
                 world.pending.value =
                     persistentListOf(

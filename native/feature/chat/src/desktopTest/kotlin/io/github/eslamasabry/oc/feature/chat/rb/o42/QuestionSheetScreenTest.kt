@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat.rb.o42
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.PendingQuestion
@@ -14,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.QuestionSheet
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatQuestionSheet
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceGroup
@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
 class QuestionSheetScreenTest {
-    @Test fun `B-CHAT-072 kit choice group exposes selected checks and does not select disabled choices`() = runComposeUiTest {
+    @Test fun `B-CHAT-072 kit choice group exposes selected checks and does not select disabled choices`() = kitUiTest {
         val chosen = mutableListOf<String>()
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
@@ -42,7 +42,7 @@ class QuestionSheetScreenTest {
         assertEquals(listOf("staging"), chosen)
     }
 
-    @Test fun `B-CHAT-072 own answer is visible immediately and choosing a radio answer clears its text`() = runComposeUiTest {
+    @Test fun `B-CHAT-072 own answer is visible immediately and choosing a radio answer clears its text`() = kitUiTest {
         val prompt = QuestionPrompt("Deploy target", "Where should the release build go first?", false, true, false,
             persistentListOf(QuestionChoice("Staging", "Test environment"), QuestionChoice("Production", "Live users")), false)
         val question = PendingQuestion(RequestId("q_deploy"), SessionId("ses_release"), persistentListOf(prompt))

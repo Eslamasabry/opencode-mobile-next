@@ -986,6 +986,7 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
                             it,
                             role = TypeRole.Secondary,
                             tone = TextTone.Secondary,
+                            tabular = true,
                         )
                     }
             }
@@ -1010,7 +1011,7 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
                     )
                 ) {
                     Spacer(Modifier.height((Space.S1 / 2f).dp)) // F: lib/ui/kit/kit_sheet.dart:604
-                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true)
                 }
             }
     }

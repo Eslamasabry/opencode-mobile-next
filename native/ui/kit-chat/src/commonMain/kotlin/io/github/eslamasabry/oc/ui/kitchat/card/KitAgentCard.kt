@@ -618,6 +618,7 @@ public fun KitCardBody(
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
                                 kind = KitTextKind.Frame,
+                                tabular = true,
                             )
                         }
                         Box(Modifier.fillMaxWidth().height(Space.S1.dp).clip(KitShapeId.Pill.shape()).background(colors.surface2)) {

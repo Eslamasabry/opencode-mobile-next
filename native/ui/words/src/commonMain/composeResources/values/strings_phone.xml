@@ -163,6 +163,8 @@
     <string name="termuxProcsStopGroupTeamRestart">You can start the team again from AI Team.</string>
     <string name="phoneServerCardDisconnect">Disconnect from %1$s</string>
     <string name="phoneServerCardStartOpenCode">Start OpenCode</string>
+    <!-- The person's own Stop: the one sentence every surface says (Home, the chat, Settings, the switcher). -->
+    <string name="phoneStoppedByYou">You stopped OpenCode on this phone</string>
     <string name="phoneServerCardStopOpenCode">Stop OpenCode on this phone</string>
     <string name="phoneServerCardShowServerLog">Show server log</string>
     <string name="phoneServerCardOpenTerminal">Open terminal</string>
@@ -390,6 +392,7 @@
     <string name="settingsV3UseMyDefaultDone">Reset on %1$s to your own choices: %2$s.</string>
     <string name="phoneSetupStageRetrying">Interrupted. Trying again</string>
     <string name="phoneSetupStageCompat">Trying again in compatibility mode</string>
+    <string name="phoneSetupStageCheckingLinux">Checking Linux on this phone…</string>
     <string name="linuxMgrRow">Linux</string>
     <string name="linuxMgrRunning">Running</string>
     <string name="linuxMgrRunningDetail">What runs inside Linux, and stopping it</string>
@@ -896,7 +899,7 @@
     <string name="linuxMgrResetBackUpFirst">Back up first</string>
     <string name="thermalGuardSaveFailed">Couldn't save heat protection. Try again.</string>
     <string name="phoneDownloadWaitingOpenCode">OpenCode update waiting for Wi-Fi · about %1$d MB</string>
-    <string name="phoneDownloadWaitingHelper">Agents helper update waiting for Wi-Fi · about %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Agent helper update waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadWaitingOpenCodeHelper">OpenCode update and Agent helper waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadReadyReply">OpenCode update ready · installs when no reply is running</string>
     <string name="phoneDownloadReadyPhone">OpenCode update ready · installs when the phone server is ready</string>
@@ -912,13 +915,13 @@
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 agent update waiting for Wi-Fi · about %1$d MB</string>
     <string name="phoneDownloadRunningOpenCode">Updating OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Updating the agents helper</string>
+    <string name="phoneDownloadRunningHelper">Updating the agent helper</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">The OpenCode update didn't finish.</string>
-    <string name="phoneDownloadFailedHelper">The agents helper update didn't finish.</string>
+    <string name="phoneDownloadFailedHelper">The agent helper update didn't finish.</string>
     <string name="phoneDownloadAskTitle">Download about %1$d MB on mobile data?</string>
     <string name="phoneDownloadAskBodyOpenCode">This is the OpenCode update for this phone. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
-    <string name="phoneDownloadAskBodyHelper">This is the update for the agents helper on this phone. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
+    <string name="phoneDownloadAskBodyHelper">This is the update for the agent helper on this phone. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">This is the OpenCode update and the Agent helper it needs. It counts against your data plan. Waiting for Wi-Fi keeps it for later.</string>
     <string name="phoneDownloadAskNow">Download now</string>
     <string name="phoneDownloadAskWait">Wait for Wi-Fi</string>

@@ -961,6 +961,11 @@ public class ChatsViewModel(
         }
     }
 
+    override fun startPhoneServer(profile: ProfileId) {
+        if (state.value.home.sources.none { it.profile == profile && it.onThisPhone }) return
+        viewModelScope.launch { home.startPhoneServer(profile) }
+    }
+
     override fun retryOpening() {
         viewModelScope.launch { home.retryOpening() }
     }

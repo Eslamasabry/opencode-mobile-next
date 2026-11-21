@@ -5,10 +5,10 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.queuedKeepForReview
 import io.github.eslamasabry.oc.ui.words.res.queuedResendConfirm
@@ -35,7 +35,7 @@ class UnconfirmedSendAgainTest {
 
     @Test
     fun `Send again on an unconfirmed bubble asks first and resends only when confirmed`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(ui(scene)) } }
             waitForIdle()
@@ -51,7 +51,7 @@ class UnconfirmedSendAgainTest {
 
     @Test
     fun `keeping it for review sends nothing`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(ui(scene)) } }
             waitForIdle()

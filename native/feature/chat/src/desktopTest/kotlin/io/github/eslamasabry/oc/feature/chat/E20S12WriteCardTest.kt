@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.chat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
@@ -12,6 +11,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolOutputView
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.compareGolden
 import io.github.eslamasabry.oc.feature.chat.ui.ToolStepBody
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
@@ -74,7 +74,7 @@ class E20S12WriteCardTest {
     fun `E20-S12 an opened Write stacks its path, code and Show all output on the card's text edge`() {
         val step = writeStep()
         for (frame in frames) for (scale in listOf(1f, 1.3f)) {
-            runDesktopComposeUiTest(frame.width, frame.height) {
+            kitUiTest(frame.width, frame.height) {
                 setContent { E20Scene(scale) { WriteRow(step, opened = true) } }
                 waitForIdle()
                 val where = "${frame.name} dp at ${scale}x"
@@ -102,13 +102,13 @@ class E20S12WriteCardTest {
                 Triple("e20-s12-write-expanded-360", true, 1f),
                 Triple("e20-s12-write-expanded-360-1.3x", true, 1.3f),
             )) {
-            runDesktopComposeUiTest(360, 760) {
+            kitUiTest(360, 760) {
                 setContent { E20Scene(scale) { WriteRow(step, opened) } }
                 waitForIdle()
                 compareGolden(name)
             }
         }
-        runDesktopComposeUiTest(600, 760) {
+        kitUiTest(600, 760) {
             setContent { E20Scene { WriteRow(step, opened = true) } }
             waitForIdle()
             compareGolden("e20-s12-write-expanded-600")

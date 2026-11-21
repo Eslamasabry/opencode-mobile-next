@@ -1,8 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.rb.o42
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.notes.*
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -23,7 +23,7 @@ class NoteScreenTest {
         override fun removeNote() { removed++ }
         override fun reloadNote() {}
     }
-    @Test fun unchangedSavedNoteHasDeleteButNoSave() = runComposeUiTest {
+    @Test fun unchangedSavedNoteHasDeleteButNoSave() = kitUiTest {
         val actions = Actions()
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(visible = true, ready = true, draft = "Run the checks", saved = "Run the checks"), actions) } }
         onNodeWithTag("kit-page-overlay").assertExists()
@@ -31,11 +31,11 @@ class NoteScreenTest {
         onNodeWithText("Delete saved note").performClick()
         assertEquals(1, actions.removed)
     }
-    @Test fun hiddenEditorDoesNotLeaveAModalInTheTree() = runComposeUiTest {
+    @Test fun hiddenEditorDoesNotLeaveAModalInTheTree() = kitUiTest {
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(), Actions()) } }
         onNodeWithTag("kit-page-overlay").assertDoesNotExist()
     }
-    @Test fun discardUsesTheNoteGlyphAndKeepsEditingWithoutLosingTheDraft() = runComposeUiTest {
+    @Test fun discardUsesTheNoteGlyphAndKeepsEditingWithoutLosingTheDraft() = kitUiTest {
         val actions = Actions()
         setContent {
             KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {

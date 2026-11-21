@@ -1014,4 +1014,6 @@
     <string name="phoneDownloadAgentsOnly__eq1">تحديث واحد للوكلاء ينتظر Wi-Fi · نحو %1$d ميغابايت</string>
     <string name="phoneDownloadWaitingOpenCodeHelper">تحديث OpenCode ومساعد الوكلاء ينتظران Wi-Fi · نحو %1$d ميغابايت</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">هذا تحديث OpenCode ومساعد الوكلاء الذي يحتاجه. يُحسب من باقة بياناتك. الانتظار حتى Wi-Fi يؤجّله إلى وقت لاحق.</string>
+    <string name="phoneStoppedByYou">أوقفتَ OpenCode على هذا الهاتف</string>
+    <string name="phoneSetupStageCheckingLinux">جارٍ فحص Linux على هذا الهاتف…</string>
 </resources>

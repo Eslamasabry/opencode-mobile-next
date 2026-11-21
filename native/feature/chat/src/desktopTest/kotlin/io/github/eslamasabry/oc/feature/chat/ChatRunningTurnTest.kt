@@ -14,7 +14,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -50,6 +49,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -141,7 +141,7 @@ class ChatRunningTurnTest {
     // steps stay in view while the turn runs, the running one on the rail, and the live line under them says the agent
     // works and for how long without naming that step a second time.
     fun `B-CHAT-063 while a step runs the steps stay in view and the live line says how long the turn has run`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val state = running(WorkLineRow("work:m1", "m1", calls = 2, failed = 0, state = WorkState.Running), prompt("m1", "fix the build"))
             setContent { Root { ChatScreen(state, actions, composerSlot, facts = runningFacts()) } }
@@ -160,7 +160,7 @@ class ChatRunningTurnTest {
 
     @Test
     fun `B-CHAT-063 an opened thought says its first line once, the rest under it`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val thought = "The fetch failed.\nThe race is in the bloc, so the test waits on the settled total."
             val part = Part("r1", "m2", sid, PartType.Reasoning, "reasoning", text = thought, ended = true)
@@ -174,7 +174,7 @@ class ChatRunningTurnTest {
 
     @Test
     fun `audit 1 a thought the reading does not know folds under Thought and never prints its words`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val thought = "User asks to create file. Previous write attempts were declined."
             val state = running(ThoughtRow("thought:m2/r1", "m1", thought, thought), prompt("m1", "make a file"))
@@ -193,7 +193,7 @@ class ChatRunningTurnTest {
     // Owner 2026-11-14 ("no new bar or row level"): in every style the box holds its controls; nothing rides above it.
     // Was: "Stop is the chip at the end of the strip, never in the message box".
     fun `B-CHAT-006 while a reply runs Stop is in the message box, and no strip rides above it`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions =
                 object : BasicComposerActions {
                     override fun draftChanged(text: String) {}
@@ -213,7 +213,7 @@ class ChatRunningTurnTest {
 
     @Test
     fun `audit 1 the model chip says the model's name only, free or not, as the list and the home do`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions =
                 object : BasicComposerActions {
                     override fun draftChanged(text: String) {}

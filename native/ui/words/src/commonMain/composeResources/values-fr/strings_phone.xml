@@ -916,16 +916,16 @@
     <string name="thisPhoneRestartingRow">Redémarrage. Cela prend en général moins d’une minute…</string>
     <string name="linuxMgrProblemNotAnswering">Linux met beaucoup de temps à répondre. Réessayez dans un instant.</string>
     <string name="phoneDownloadWaitingOpenCode">Mise à jour d’OpenCode en attente de Wi-Fi · environ %1$d Mo</string>
-    <string name="phoneDownloadWaitingHelper">Mise à jour de l’assistant des agents en attente de Wi-Fi · environ %1$d Mo</string>
+    <string name="phoneDownloadWaitingHelper">Mise à jour de l’assistant d’agent en attente de Wi-Fi · environ %1$d Mo</string>
     <string name="phoneDownloadOnMobile">Télécharger avec les données mobiles</string>
     <string name="phoneDownloadRunningOpenCode">Mise à jour d’OpenCode</string>
-    <string name="phoneDownloadRunningHelper">Mise à jour de l’assistant des agents</string>
+    <string name="phoneDownloadRunningHelper">Mise à jour de l’assistant d’agent</string>
     <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
     <string name="phoneDownloadFailedOpenCode">La mise à jour d’OpenCode ne s’est pas terminée.</string>
-    <string name="phoneDownloadFailedHelper">La mise à jour de l’assistant des agents ne s’est pas terminée.</string>
+    <string name="phoneDownloadFailedHelper">La mise à jour de l’assistant d’agent ne s’est pas terminée.</string>
     <string name="phoneDownloadAskTitle">Télécharger environ %1$d Mo avec les données mobiles\u00A0?</string>
     <string name="phoneDownloadAskBodyOpenCode">C’est la mise à jour d’OpenCode pour ce téléphone. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
-    <string name="phoneDownloadAskBodyHelper">C’est la mise à jour de l’assistant des agents de ce téléphone. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
+    <string name="phoneDownloadAskBodyHelper">C’est la mise à jour de l’assistant d’agent de ce téléphone. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
     <string name="phoneDownloadAskNow">Télécharger maintenant</string>
     <string name="phoneDownloadAskWait">Attendre le Wi-Fi</string>
     <string name="phoneDownloadReadyReply">Mise à jour d’OpenCode prête · s’installe quand aucune réponse n’est en cours</string>
@@ -942,6 +942,8 @@
         <item quantity="other">%1$d mises à jour d’agents en attente de Wi-Fi · environ %2$d Mo</item>
     </plurals>
     <string name="phoneDownloadAgentsOnly__eq1">1 mise à jour d’agents en attente de Wi-Fi · environ %1$d Mo</string>
-    <string name="phoneDownloadWaitingOpenCodeHelper">Mise à jour d’OpenCode et de l’assistant des agents en attente de Wi-Fi · environ %1$d Mo</string>
-    <string name="phoneDownloadAskBodyOpenCodeHelper">C’est la mise à jour d’OpenCode et de l’assistant des agents dont il a besoin. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
+    <string name="phoneDownloadWaitingOpenCodeHelper">Mise à jour d’OpenCode et de l’assistant d’agent en attente de Wi-Fi · environ %1$d Mo</string>
+    <string name="phoneDownloadAskBodyOpenCodeHelper">C’est la mise à jour d’OpenCode et de l’assistant d’agent dont il a besoin. Elle compte dans votre forfait de données. Attendre le Wi-Fi la garde pour plus tard.</string>
+    <string name="phoneStoppedByYou">Vous avez arrêté OpenCode sur ce téléphone</string>
+    <string name="phoneSetupStageCheckingLinux">Vérification de Linux sur ce téléphone…</string>
 </resources>

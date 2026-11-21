@@ -6,7 +6,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -63,7 +63,7 @@ class NewConversationLayoutBTest {
         )
 
     private fun check(width: Int, visibleHeight: Int, lines: Int, fontScale: Float = 1f, actions: Recording = Recording()) =
-        runDesktopComposeUiTest(width, visibleHeight) {
+        kitUiTest(width, visibleHeight) {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
@@ -97,7 +97,7 @@ class NewConversationLayoutBTest {
     @Test
     fun `I147-FIRST-RUN layout B the where-line opens the project sheet and the box chip the agent sheet`() {
         val actions = Recording()
-        runDesktopComposeUiTest(360, 780) {
+        kitUiTest(360, 780) {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(ui(1), actions)

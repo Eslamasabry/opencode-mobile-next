@@ -21,7 +21,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
@@ -35,6 +34,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
@@ -78,7 +78,7 @@ class DockUndoRoomTest {
         }
     }
 
-    private fun run(rowCount: Int, body: androidx.compose.ui.test.ComposeUiTest.(RoomDock) -> Unit) = runComposeUiTest {
+    private fun run(rowCount: Int, body: androidx.compose.ui.test.ComposeUiTest.(RoomDock) -> Unit) = kitUiTest {
         mainClock.autoAdvance = false
         val rows =
             persistentListOf(

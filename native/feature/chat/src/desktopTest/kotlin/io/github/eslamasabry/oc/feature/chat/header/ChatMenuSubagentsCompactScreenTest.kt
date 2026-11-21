@@ -4,7 +4,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ContinueChoice
@@ -14,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -94,7 +94,7 @@ class ChatMenuSubagentsCompactScreenTest {
     }
 
     @Test
-    fun `S30-CHAT-003 Go to lists Subagents and choosing it asks the header to open them`() = runComposeUiTest {
+    fun `S30-CHAT-003 Go to lists Subagents and choosing it asks the header to open them`() = kitUiTest {
         val actions = Actions()
         setContent { Bar(actions) {} }
         onNodeWithText("Go to").performClick()
@@ -104,7 +104,7 @@ class ChatMenuSubagentsCompactScreenTest {
     }
 
     @Test
-    fun `S30-CHAT-003 More lists Compact context and choosing it opens the chat's own confirm`() = runComposeUiTest {
+    fun `S30-CHAT-003 More lists Compact context and choosing it opens the chat's own confirm`() = kitUiTest {
         val actions = Actions()
         var compacts = 0
         setContent { Bar(actions) { compacts++ } }

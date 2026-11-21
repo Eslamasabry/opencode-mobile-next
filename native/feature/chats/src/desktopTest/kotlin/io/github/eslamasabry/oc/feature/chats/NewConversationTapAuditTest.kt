@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.TapAudit
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -98,7 +98,7 @@ class NewConversationTapAuditTest {
         val found = ArrayList<TapAudit.Offender>()
         for ((name, ui) in states()) {
             val audit = TapAudit(name)
-            runDesktopComposeUiTest(412, 915) {
+            kitUiTest(412, 915) {
                 setContent {
                     KitTheme(
                         platform = DesktopKitPlatform(),

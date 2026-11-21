@@ -4,7 +4,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import io.github.eslamasabry.oc.feature.chat.E20Scene
@@ -16,6 +15,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
 import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.NetworkWhy
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 
@@ -32,7 +32,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-1 unknown content shows the kit placeholder and Connecting to the agent with the working mark`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val state = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf(), status = waiting)
             setContent { E20Scene { scene.Screen(state, agentName = "Claude Code") } }
@@ -43,7 +43,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-2 saved turns in memory show at once with no placeholder, and the status still says Connecting`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val state = scene.live().copy(status = waiting)
             setContent { E20Scene { scene.Screen(state, agentName = "Claude Code") } }
@@ -54,7 +54,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-3 connected shows the conversation with no placeholder and no working mark`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(scene.live(), agentName = "Claude Code") } }
             onAllNodesWithTag("chat-loading", useUnmergedTree = true).assertCountEquals(0)
@@ -63,7 +63,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-4 a wait that is spent says the agent is not answering, with Restart, and nothing is working`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val failure = Failure.Network(NetworkWhy.Refused)
             val spent =
@@ -80,7 +80,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-5 a sign-in wait is not a working wait`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val state =
                 scene.live().copy(
@@ -94,7 +94,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-6 the wait ending in the conversation moves neither the header nor the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val live = scene.live()
             var state by androidx.compose.runtime.mutableStateOf(live.copy(phase = ChatPhase.Loading, rows = persistentListOf(), status = waiting))
@@ -111,7 +111,7 @@ class ConnectingAliveTest {
 
     @Test
     fun `CA-7 the wait ending in not answering moves neither the header nor the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val live = scene.live()
             var state by androidx.compose.runtime.mutableStateOf(live.copy(phase = ChatPhase.Loading, rows = persistentListOf(), status = waiting))

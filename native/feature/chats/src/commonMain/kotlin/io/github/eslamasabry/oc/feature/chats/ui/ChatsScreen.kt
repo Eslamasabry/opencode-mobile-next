@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxHeight
+import io.github.eslamasabry.oc.ui.words.res.setupHeartbeatLine
+import io.github.eslamasabry.oc.ui.words.res.termuxProcsMemoryMb
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunningBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunning
 import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
@@ -41,6 +43,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionUi
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStartOpenCode
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopped
+import io.github.eslamasabry.oc.ui.words.res.phoneStoppedByYou
 import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeConnectComputer
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
@@ -464,6 +469,23 @@ public fun ChatsScreen(
             // Flutter shows only "{servers} isn't answering" (chatsHomeUnreachableShort); the longer "conversations
             // aren't shown" is its screen-reader label, because the visible list may still hold remembered rows.
             // One notice at a time: the first connection that did not answer; the next shows once this one is back.
+            val phoneStopped = HomeNotices.phoneStopped(state)
+            if (shownNotice == HomeNoticeKind.PhoneStopped) phoneStopped.take(1).forEach { source ->
+                item(key = "phone-stopped-${source.profile.raw}", contentType = "phone-stopped") {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        KitNotice(
+                            message = stringResource(Res.string.phoneStoppedByYou),
+                            actions =
+                                listOf(
+                                    KitLineAction(
+                                        stringResource(Res.string.phoneServerCardStartOpenCode),
+                                        { actions.startPhoneServer(source.profile) },
+                                    )
+                                ),
+                        )
+                    }
+                }
+            }
             val unreachable = HomeNotices.unreachable(state)
             if (shownNotice == HomeNoticeKind.ServerUnreachable) unreachable.take(1).forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
@@ -770,6 +792,7 @@ private fun ConnectionStatusPill(
             HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
             HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
             HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
+            HomeConnectionState.Stopped -> Res.string.phoneServerCardStopped
         }
     )
     val switchLabel = stringResource(Res.string.serverSwitcherOpen)
@@ -779,6 +802,7 @@ private fun ConnectionStatusPill(
             HomeConnectionState.Connected -> KitConnectionTone.Ok
             HomeConnectionState.Connecting -> KitConnectionTone.Working
             HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
+            HomeConnectionState.Stopped -> KitConnectionTone.Off
         },
         // The dot says connected; a word only when it is not.
         word = status.takeUnless { state == HomeConnectionState.Connected },
@@ -1391,11 +1415,18 @@ private fun homeRunningStatus(
         )
     // The agent being installed, by its own name, when the agents' update says which.
     val named = download.name?.let { stringResource(Res.string.agentsUpdatingAgent, it) } ?: what
+    val size = phase.sizeMb ?: download.megabytes.takeIf { download.kind == HomeDownloadKind.OpenCode }
+    val message = when {
+        phase.percent != null -> stringResource(Res.string.phoneDownloadRunningPercent, named, phase.percent)
+        size != null ->
+            stringResource(Res.string.setupHeartbeatLine, named, stringResource(Res.string.termuxProcsMemoryMb, size))
+        else -> named
+    }
     return KitStatus(
         kind = KitStatusKind.Work,
         id = "phone-download:${download.kind.name}",
         // Numbers only: the kit's working mark stands still when the person turned motion off.
-        message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, named, it) } ?: named,
+        message = message,
         tone = StatusTone.Progress,
         working = true,
         wait = KitWaitKind.Downloading.takeIf { phase.percent != null },

@@ -15,7 +15,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
@@ -33,6 +32,8 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiOptions
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -116,7 +117,7 @@ class MessageMenuOnBubbleRenders {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val states = presenter.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
         // runSkikoComposeUiTest honours its timeout (runDesktopComposeUiTest keeps a minute, too short for Glass here).
-        runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = timeout) {
+        kitUiTest(WIDTH, HEIGHT, options = KitUiOptions(timeout = timeout)) {
             setContent {
                 val state by states.collectAsState()
                 CompositionLocalProvider(LocalDensity provides Density(DENSITY, scale)) {

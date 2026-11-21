@@ -14,8 +14,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.test.v2.runComposeUiTest
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -33,6 +31,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -94,7 +93,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE a ready folder in the phone's storage is named in full once, with Why opening the help`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(state(folder, PhoneFolderReach.Ready), Actions())
@@ -110,7 +109,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE a project in the app's own folder gets no such line`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(state("/root/projects/shop", null), Actions())
@@ -121,7 +120,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE without access the notice offers to allow it, and the action is the page's own`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
@@ -135,7 +134,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE while the restart runs the notice says so and its button cannot be tapped again`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
@@ -152,7 +151,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-WAIT while OpenCode waits for its reply the notice says it restarts when the reply ends`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(
@@ -173,7 +172,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE once the restart is done the page says so`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(
@@ -187,7 +186,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE while the folder is being checked Start says so`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(state(folder, null).copy(checkingPhoneFolder = true), Actions())
@@ -198,7 +197,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE in the phone's storage the create row makes a folder here, not a project with Git`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(
@@ -214,7 +213,7 @@ class NewConversationPhoneFolderScreenTest {
 
     @Test
     fun `I147-STORAGE the name for a folder in the phone's storage says where it goes and adds no Git`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     NewConversationScreen(
@@ -240,7 +239,7 @@ class NewConversationPhoneFolderScreenTest {
         try {
             for ((locale, scale, expected) in cases) {
                 Locale.setDefault(Locale.forLanguageTag(locale))
-                runDesktopComposeUiTest(360 * 3, 780 * 3) {
+                kitUiTest(360 * 3, 780 * 3) {
                     setContent {
                         CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
                             KitTheme(

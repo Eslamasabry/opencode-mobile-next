@@ -12,7 +12,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
@@ -46,6 +45,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -276,7 +276,7 @@ class StepsTreeTest {
 
     @Test
     fun `D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost`() =
-        runComposeUiTest {
+        kitUiTest {
             val opened = mutableListOf<String>()
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screen(), actions, composer, facts = facts(), onOpenSession = { opened += it }) } }
@@ -306,7 +306,7 @@ class StepsTreeTest {
 
     @Test
     fun `D1-SCREEN-002 a reply with no counted tokens or cost ends on its short footer`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screen(), actions, composer, facts = facts(turn(cost = 0.0, tokens = Tokens()))) } }
             onNodeWithText("1m 13s", substring = true).assertExists()
@@ -356,7 +356,7 @@ class StepsTreeTest {
 
     @Test
     fun `D1-ASK-002 the waiting step carries Allow once and Deny in place, with no card, and the slot above the box stays empty`() =
-        runComposeUiTest {
+        kitUiTest {
             val facts = TurnFactsPresenter(FixedClock).present(runningEditFeed(), 58_000, waitingForYou = true)
             val answers = Answers()
             val state =

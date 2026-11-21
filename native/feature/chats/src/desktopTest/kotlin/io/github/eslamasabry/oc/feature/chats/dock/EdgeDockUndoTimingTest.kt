@@ -22,7 +22,6 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -41,6 +40,7 @@ import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
@@ -204,7 +204,7 @@ class EdgeDockUndoTimingTest {
 
     @Test
     fun `B-DOCK-UNDO-T1 removed from its long-press card, Undo tapped in the bar's first frame brings the ring back`() =
-        runComposeUiTest {
+        kitUiTest {
             val port = Port(entries(), DockPlacement())
             val taps = Taps()
             chat(port, taps)
@@ -228,7 +228,7 @@ class EdgeDockUndoTimingTest {
 
     @Test
     fun `B-DOCK-UNDO-T2 where the dock's foot lies under Undo a tap there never starts a new conversation too`() =
-        runComposeUiTest {
+        kitUiTest {
             // The dock at the foot of its room, as with seven rings on the phone: its "+" band reaches under the bar.
             val port = Port(entries(), DockPlacement(DockSide.End, 1f))
             val taps = Taps()

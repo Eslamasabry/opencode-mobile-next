@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.E20Goldens.compareGolden
 import io.github.eslamasabry.oc.feature.chat.ui.durationWords
 import io.github.eslamasabry.oc.feature.chat.ui.shownStepDurationMs
 import io.github.eslamasabry.oc.feature.chat.ui.stepRowSubject
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 class E20S14ToolRowsTest {
     @Test
     fun `E20-S14 the time and the chevron share the title's line at its end`() {
-        for (scale in listOf(1f, 1.3f)) runDesktopComposeUiTest(360, 400) {
+        for (scale in listOf(1f, 1.3f)) kitUiTest(360, 400) {
             setContent {
                 E20Scene(scale) {
                     KitToolRow(
@@ -57,7 +57,7 @@ class E20S14ToolRowsTest {
         val pending =
             ToolState(ToolStatus.Pending, inputRaw = """{"filePath":"/repo/app/src/main/Checkout.kt","content":"pack""")
         val pendingOut = toolOutputView(pending, "write")
-        runDesktopComposeUiTest(360, 420) {
+        kitUiTest(360, 420) {
             setContent {
                 E20Scene {
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp)) {

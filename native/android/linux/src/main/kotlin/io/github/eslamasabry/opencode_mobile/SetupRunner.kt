@@ -222,6 +222,7 @@ class SetupRunner private constructor(private val context: Context) {
         val writer = Thread({ flushLoop() }, "oc-setup-writer").apply { isDaemon = true }
         var failure: String? = null
         var logOpened = false
+        var probedInJob = false
         try {
             writer.start()
             for (spec in specs) {
@@ -265,9 +266,15 @@ class SetupRunner private constructor(private val context: Context) {
                 writeNow()
                 val error = try {
                     when {
-                        spec.native -> runNative(spec, component)
+                        spec.native -> runNative(spec, component).also { if (it == null) probedInJob = true }
                         spec.step -> waitForStep(spec, component)
-                        else -> runScriptRetrying(spec, component)
+                        else -> {
+                            val probeError = if (probedInJob) null else {
+                                probedInJob = true
+                                probeLinux(spec, component, freshInstall = false)
+                            }
+                            probeError ?: runScriptRetrying(spec, component)
+                        }
                     }
                 } catch (error: SetupPersistenceException) {
                     throw error
@@ -383,8 +390,39 @@ class SetupRunner private constructor(private val context: Context) {
             },
         )
         if (cancelled) return "cancelled"
+        val probeError = probeLinux(spec, component, freshInstall = true)
+        if (probeError != null) return probeError
         event(component, SetupProtocol.Event.Version(BuiltinLinux.VERSION))
         return null
+    }
+
+    private fun probeLinux(spec: Spec, component: SetupComponentStatus, freshInstall: Boolean): String? {
+        val cached = if (freshInstall) null else linux.consumeRecentProotProbe()
+        val result =
+            cached
+                ?: run {
+                    val probeLabel = spec.labels["probe"] ?: LinuxProotProbe.STAGE_FALLBACK
+                    val compatLabel = spec.labels["compat"] ?: "Trying again in compatibility mode"
+                    linux.probeProotLiveness(
+                        isCancelled = { cancelled },
+                        onStage = { compatRetry ->
+                            val label = if (compatRetry) compatLabel else probeLabel
+                            logLine("==> $label")
+                            event(component, SetupProtocol.Event.Stage(label))
+                        },
+                    )
+                }
+        return when (result) {
+            is LinuxProotProbe.Result.Ready -> {
+                logLine(result.detailLine)
+                null
+            }
+            LinuxProotProbe.Result.Cancelled -> "cancelled"
+            is LinuxProotProbe.Result.Failed -> {
+                logLine(result.detailLine)
+                result.failure
+            }
+        }
     }
 
     /**
@@ -413,7 +451,7 @@ class SetupRunner private constructor(private val context: Context) {
      */
     private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? {
         var attempt = 1
-        var compatible = false
+        var compatible = linux.serverCompat()
         while (true) {
             try {
                 lastExitCode = null

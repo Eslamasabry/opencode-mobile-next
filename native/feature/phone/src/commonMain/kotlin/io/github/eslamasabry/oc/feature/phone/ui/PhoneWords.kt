@@ -62,6 +62,7 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerChecking
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerGaveUp
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerInstallFailed
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerNotSetUp
+import io.github.eslamasabry.oc.ui.words.res.phoneStoppedByYou
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerOff
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerOffLine
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRecovery
@@ -85,7 +86,7 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStorage
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneExportProjects
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneInstallAgain
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneSetUp
-import io.github.eslamasabry.oc.ui.words.res.thisPhoneStart
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStartOpenCode
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneStartAgain
 import org.jetbrains.compose.resources.stringResource
 
@@ -116,6 +117,7 @@ internal fun AnswerHeadline.words(): String =
             AnswerHeadline.Running -> Res.string.thisPhoneAnswerRunning
             AnswerHeadline.NotAnswering -> Res.string.phoneServerRowNotAnswering
             AnswerHeadline.Off -> Res.string.thisPhoneAnswerOff
+            AnswerHeadline.StoppedByYou -> Res.string.phoneStoppedByYou
             AnswerHeadline.AndroidClosed -> Res.string.thisPhoneAnswerAndroidClosed
             AnswerHeadline.StoppedItself -> Res.string.thisPhoneAnswerStoppedItself
             AnswerHeadline.Restarting -> Res.string.thisPhoneAnswerRestarting
@@ -180,7 +182,7 @@ internal fun PhoneAct.words(): String =
             when (this) {
                 PhoneAct.SetUp -> Res.string.thisPhoneSetUp
                 PhoneAct.SetUpAgain -> Res.string.thisPhoneInstallAgain
-                PhoneAct.Start -> Res.string.thisPhoneStart
+                PhoneAct.Start -> Res.string.phoneServerCardStartOpenCode
                 PhoneAct.StartAgain -> Res.string.thisPhoneStartAgain
                 PhoneAct.RestartNow -> Res.string.thisPhoneAnswerRestartNow
                 PhoneAct.OpenAppSettings -> Res.string.e7SetupOpenAppSettings

@@ -898,4 +898,6 @@
     <string name="phoneDownloadAgentsOnly__eq1">1 pembaruan agen menunggu Wi-Fi · sekitar %1$d MB</string>
     <string name="phoneDownloadWaitingOpenCodeHelper">Pembaruan OpenCode dan pembantu agen menunggu Wi-Fi · sekitar %1$d MB</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">Ini pembaruan OpenCode dan pembantu agen yang dibutuhkannya. Dihitung dalam paket data Anda. Menunggu Wi-Fi menyimpannya untuk nanti.</string>
+    <string name="phoneStoppedByYou">Anda menghentikan OpenCode di ponsel ini</string>
+    <string name="phoneSetupStageCheckingLinux">Memeriksa Linux di ponsel ini…</string>
 </resources>
