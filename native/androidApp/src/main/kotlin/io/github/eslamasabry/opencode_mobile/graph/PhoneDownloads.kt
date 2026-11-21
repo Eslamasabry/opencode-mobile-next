@@ -277,7 +277,12 @@ class PhoneDownloads(
  * (decimal MB). OpenCode and the shared parts have their own lines and are not counted. Null when none waits, when the
  * network is free, or when a size is unknown (a total with a hole would be a guess).
  */
-internal fun heldAgentsOf(offer: AgentUpdateOffer?, running: AgentId? = null): HomeHeldAgents? {
+internal fun heldAgentsOf(
+    offer: AgentUpdateOffer?,
+    running: AgentId? = null,
+    liveNetwork: AgentUpdateNetwork? = null,
+    consented: (AgentId) -> Boolean = { false },
+): HomeHeldAgents? {
     val waiting = offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }
     val held =
         waiting?.items.orEmpty().filter {

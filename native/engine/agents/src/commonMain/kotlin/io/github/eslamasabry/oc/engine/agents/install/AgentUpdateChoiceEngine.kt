@@ -123,6 +123,12 @@ public class AgentUpdateChoiceEngine(
         snapshot.answered && snapshot.items.any { it.id == id && it.choice == AgentUpdateChoice.Update }
     } == true
 
+    /** True while [id]'s update was chosen on a sheet that said mobile data and has not started yet (M1-C). */
+    public fun mobileYes(id: AgentId): Boolean = false
+
+    /** [id]'s install started: its sheet yes is spent. */
+    public fun spendMobileYes(id: AgentId) {}
+
     /** OpenCode waits for the shared parts (Node.js, the helper) that the sheet's offer still lists. */
     public val openCodeNeedsShared: Boolean
         get() = state.value?.items.orEmpty().any { it.neededWhen != null }

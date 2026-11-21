@@ -63,6 +63,15 @@ public interface AgentUpdateHost {
      */
     public suspend fun read()
 
+    /**
+     * The person's yes on a sheet that said mobile data and showed the size covers [agent]'s install over it (M1-C).
+     * Only the items that sheet named; nothing else gains it.
+     */
+    public fun meteredYes(agent: AgentId): Boolean = false
+
+    /** The install of [agent] started: its yes from the sheet is spent. */
+    public fun spendMeteredYes(agent: AgentId) {}
+
     /** The installed agents in catalog order; empty when none is installed or nothing is known yet. */
     public val installed: List<AgentId>
 
