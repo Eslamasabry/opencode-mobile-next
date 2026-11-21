@@ -8,7 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock
@@ -19,6 +18,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -44,7 +44,7 @@ class HomeNoEdgeDockTest {
                 "live" to base,
             )
         for ((label, state) in states) {
-            runDesktopComposeUiTest(360, 640) {
+            kitUiTest(360, 640) {
                 Locale.setDefault(Locale.forLanguageTag("en"))
                 var dockComposed = false
                 val spy =

@@ -4,12 +4,12 @@ import androidx.compose.ui.test.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.*
 import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlinx.collections.immutable.persistentListOf
@@ -37,7 +37,7 @@ class RelationsScreenTest {
         override fun confirmStop() { stops++ }
     }
 
-    @Test fun `C33 needs you says the status once and refresh keeps the existing action`() = runComposeUiTest {
+    @Test fun `C33 needs you says the status once and refresh keeps the existing action`() = kitUiTest {
         val actions = Actions()
         val parent = RelationRow(SessionId("parent"), "Main conversation", true, true, RelationStatus.Idle, null, false, null)
         val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.NeedsYou, null, false, null)
@@ -56,7 +56,7 @@ class RelationsScreenTest {
         onNode(hasContentDescription(refresh) or hasText(refresh)).performClick()
         assertEquals(1, actions.refreshes)
     }
-    @Test fun `B-AGENT-221 stopping a subagent asks first and leaves Keep running available`() = runComposeUiTest {
+    @Test fun `B-AGENT-221 stopping a subagent asks first and leaves Keep running available`() = kitUiTest {
         val actions = Actions()
         val parent = RelationRow(SessionId("parent"), "Main conversation", true, true, RelationStatus.Idle, null, false, null)
         val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.Working, null, false, null)
@@ -73,7 +73,7 @@ class RelationsScreenTest {
         assertEquals(0, actions.stops)
     }
 
-    @Test fun `C33 menu selection retains the reviewed child until Pin reads it`() = runComposeUiTest {
+    @Test fun `C33 menu selection retains the reviewed child until Pin reads it`() = kitUiTest {
         val parent = RelationRow(SessionId("parent"), "Main conversation", true, true, RelationStatus.Idle, null, false, null)
         val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.Working, null, false, null)
         var state by mutableStateOf(SessionRelationsUi(loading = false, parent = parent, children = persistentListOf(child), canPin = true))

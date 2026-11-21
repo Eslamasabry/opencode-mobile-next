@@ -9,7 +9,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -22,6 +21,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
@@ -53,7 +53,7 @@ class R8ComposerFollowsKeyboardTest {
     private val keyboard: Dp = 300.dp
 
     @Test
-    fun `R8 the message box follows the bottom inset down when the keyboard goes, and keeps no keyboard room`() = runComposeUiTest {
+    fun `R8 the message box follows the bottom inset down when the keyboard goes, and keeps no keyboard room`() = kitUiTest {
         val bottom = mutableStateOf(keyboard)
         val state =
             ChatUi.loading(Ref).copy(title = "Native chat", phase = ChatPhase.Live, rows = persistentListOf(prompt("m1", "say hi")))

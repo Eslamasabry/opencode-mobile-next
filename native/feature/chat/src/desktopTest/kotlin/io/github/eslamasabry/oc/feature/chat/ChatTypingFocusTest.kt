@@ -51,11 +51,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
@@ -150,7 +150,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `P79 Find opened while typing takes the keyboard and the message box keeps its words`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = show()
             composer().performClick()
             waitForIdle()
@@ -164,7 +164,7 @@ class ChatTypingFocusTest {
         }
 
     @Test
-    fun `P79 Find opened while nothing has focus takes the keyboard`() = runDesktopComposeUiTest(412, 915) {
+    fun `P79 Find opened while nothing has focus takes the keyboard`() = kitUiTest(412, 915) {
         val screen = show()
         openFind(screen)
         findField().assertIsFocused()
@@ -175,7 +175,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `P79 a tap into Find's field takes the keyboard while the page holds no focus`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = show()
             openFind(screen)
             // As after the keyboard went away or a send: focus back in the park, nothing on the page focused.
@@ -192,7 +192,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `P79 a tap from the message box into Find's field moves the keyboard there`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = show()
             openFind(screen)
             composer().performClick()
@@ -208,7 +208,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `P79 closing Find gives the message box its focus back only if it had it`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = show()
             composer().performClick()
             waitForIdle()
@@ -226,7 +226,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `N-55 a letter typed with nothing focused still lands in the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             strayKey()
             composer().assertIsFocused()
@@ -234,7 +234,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `P80 the model sheet opened while typing releases the message box and a stray key never reaches it`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             composer().performClick()
             waitForIdle()
@@ -250,7 +250,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `a sheet opened while typing takes the message box's focus and gives it back when it closes`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             composer().performClick()
             waitForIdle()
@@ -284,7 +284,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `Tab with nothing focused goes to the page's controls, not into the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             // One plain stop on the page itself (as on the park), then the first control.
             val seen = walk(FocusDirection.Next, 2)
@@ -294,7 +294,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `Tab from the message box reaches the controls above it, round the page`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             composer().performClick()
             waitForIdle()
@@ -318,7 +318,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `Shift+Tab from the message box goes round the same controls as Tab`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             // Long enough for several laps either way; each direction must reach every control the other does (with
             // the page handing every arrival to the box, Tab skipped the controls before it, Shift+Tab those after it).
@@ -330,7 +330,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `N-55 a letter typed after a Tab still lands in the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             walk(FocusDirection.Next, 1)
             strayKey()
@@ -344,7 +344,7 @@ class ChatTypingFocusTest {
      */
     @Test
     fun `N-55 a letter key pressed on the page's own stop after a Tab moves focus into the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             show()
             walk(FocusDirection.Next, 1)
             composer().assertIsNotFocused()
@@ -379,7 +379,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `the dock's rename field takes the first typing, not the message box`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val dock = RenameDock()
             val live = scene.live()
@@ -406,7 +406,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `Find opened as a sheet closes keeps its focus when the sheet hands the message box back`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = show()
             composer().performClick()
             waitForIdle()
@@ -427,7 +427,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `a sheet's row that closes the sheet and opens Find leaves the next typing in Find`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = show()
             composer().performClick()
             waitForIdle()
@@ -450,7 +450,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `the dock's rename field takes the first typing right after a sheet closed`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val dock = RenameDock()
             val live = scene.live()
@@ -509,7 +509,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `the rename dialog keeps its own field focused and Cancel gives the message box its focus back`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = showWithHeader()
             composer().performClick()
             waitForIdle()
@@ -532,7 +532,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `the conversation's menu opening and closing moves no focus, from the message box or from Find`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = showWithHeader()
             composer().performClick()
             waitForIdle()
@@ -593,7 +593,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `B11 Find opened while the message box has focus takes typed keys, the box stays as it was`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val screen = Screen(scene, scene.live())
             setContent { E20Scene { ShellPark { scene.Screen(screen.ui) } } }
@@ -617,7 +617,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `ring rename the dock's rename field takes typed keys, the box stays as it was`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val dock = RenameDock()
             val live = scene.live()
@@ -647,7 +647,7 @@ class ChatTypingFocusTest {
 
     @Test
     fun `B11 device case the box focused earlier, the menu opened and closed, then Find takes typed keys`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val screen = HeaderScreen(ChatScene())
             setContent {
                 E20Scene {

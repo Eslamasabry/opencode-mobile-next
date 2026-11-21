@@ -9,7 +9,6 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -25,6 +24,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -54,7 +54,7 @@ class NewConversationNoticeWholeTest {
     }
 
     private fun scene(keyboardDp: Int) =
-        runDesktopComposeUiTest(360, 780) {
+        kitUiTest(360, 780) {
             val dir = "/storage/emulated/0/octest"
             val ui =
                 NewConversationUi(
@@ -100,7 +100,7 @@ class NewConversationNoticeWholeTest {
     @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 340 dp keyboard`() = scene(340)
 
     private fun boxScrollsWithNotice(reach: PhoneFolderReach, shares: Boolean) =
-        runDesktopComposeUiTest(360, 780) {
+        kitUiTest(360, 780) {
             val dir = "/storage/emulated/0/octest"
             val ui =
                 NewConversationUi(

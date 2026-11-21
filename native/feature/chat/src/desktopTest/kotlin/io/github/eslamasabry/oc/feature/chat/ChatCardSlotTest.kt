@@ -11,7 +11,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.cards.AgentCard
 import io.github.eslamasabry.oc.engine.cards.CardAgent
@@ -36,6 +35,7 @@ import io.github.eslamasabry.oc.feature.chat.cards.ChatTurnCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
@@ -110,7 +110,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 a choice card shows its words and one tap answers with that option`() = runComposeUiTest {
+    fun `B-CHAT-004 a choice card shows its words and one tap answers with that option`() = kitUiTest {
         val host = Host(entry(card(input(choice))))
         setContent { Root(host) { ChatTurnCards("t1") } }
         // The heading is read as one announcement (kitRequestHeading); its caption and title are drawn words under it.
@@ -121,7 +121,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 a held answer collapses to its words and Undo takes it back`() = runComposeUiTest {
+    fun `B-CHAT-004 a held answer collapses to its words and Undo takes it back`() = kitUiTest {
         val host = Host(entry(card(input(choice)), delivery = CardDelivery.Held, summary = "SQLite"))
         setContent { Root(host) { ChatTurnCards("t1") } }
         onNodeWithText("SQLite").assertIsDisplayed()
@@ -130,7 +130,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 confirm buttons name their verb and danger asks for the same answer once`() = runComposeUiTest {
+    fun `B-CHAT-004 confirm buttons name their verb and danger asks for the same answer once`() = kitUiTest {
         val host = Host(entry(card(input(mapOf("kind" to "confirm")))))
         setContent { Root(host) { ChatTurnCards("t1") } }
         onNodeWithText("Cancel").assertIsDisplayed()
@@ -139,7 +139,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 a form holds Send until required fields are filled, then sends typed values`() = runComposeUiTest {
+    fun `B-CHAT-004 a form holds Send until required fields are filled, then sends typed values`() = kitUiTest {
         val form =
             mapOf(
                 "kind" to "form",
@@ -171,7 +171,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 an answered card is a receipt that opens read-only, a passed-over one says Not answered`() = runComposeUiTest {
+    fun `B-CHAT-004 an answered card is a receipt that opens read-only, a passed-over one says Not answered`() = kitUiTest {
         val body = listOf(mapOf("type" to "text", "text" to "Two options"))
         val answered = Host(entry(card(input(choice, body)), state = CardState.Answered, summary = "Postgres"))
         setContent { Root(answered) { ChatTurnCards("t1") } }
@@ -184,7 +184,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-052 a card that cannot be confirmed is read-only and offers the visible way to turn cards on`() = runComposeUiTest {
+    fun `B-CHAT-052 a card that cannot be confirmed is read-only and offers the visible way to turn cards on`() = kitUiTest {
         val host = Host(entry(card(input(choice)), state = CardState.Unknown), available = false)
         setContent { Root(host) { ChatTurnCards("t1") } }
         onNodeWithText("We can't tell yet whether this card was answered. It updates when the conversation does.").assertIsDisplayed()
@@ -194,14 +194,14 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 controls wait while the agent works and say why`() = runComposeUiTest {
+    fun `B-CHAT-004 controls wait while the agent works and say why`() = kitUiTest {
         val host = Host(entry(card(input(choice))), busy = true)
         setContent { Root(host) { ChatTurnCards("t1") } }
         onNodeWithTag("kit-agent-card-option-pg").assertIsNotEnabled()
     }
 
     @Test
-    fun `B-CHAT-030 an unreadable card is one plain line with the reason under Details`() = runComposeUiTest {
+    fun `B-CHAT-030 an unreadable card is one plain line with the reason under Details`() = kitUiTest {
         val host = Host(CardEntry("call", "m", "t1", CardParse.Unreadable(CardProblem.SecretField), CardState.Unknown, CardDelivery.Idle, null, null))
         setContent { Root(host) { ChatTurnCards("t1") } }
         onNodeWithText("This card couldn't be shown").assertIsDisplayed()
@@ -210,7 +210,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-004 a report card shows its body and a link goes out only after a tap, naming its host`() = runComposeUiTest {
+    fun `B-CHAT-004 a report card shows its body and a link goes out only after a tap, naming its host`() = kitUiTest {
         val body = listOf(mapOf("type" to "link", "label" to "Docs", "url" to "https://example.com/docs"), mapOf("type" to "progress", "label" to "Build", "value" to 0.5))
         val host = Host(entry(card(input(null, body, title = "Status")), state = CardState.Report))
         setContent { Root(host) { ChatTurnCards("t1") } }
@@ -222,7 +222,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-037 cards of another turn are not drawn under this one`() = runComposeUiTest {
+    fun `B-CHAT-037 cards of another turn are not drawn under this one`() = kitUiTest {
         val host = Host(entry(card(input(choice))))
         setContent { Root(host) { ChatTurnCards("other-turn") } }
         onNodeWithText("Pick a database").assertDoesNotExistCompat()
@@ -240,7 +240,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-034 the Cards page says Off by default and the switch asks for the change`() = runComposeUiTest {
+    fun `B-CHAT-034 the Cards page says Off by default and the switch asks for the change`() = kitUiTest {
         val calls = ArrayList<Pair<String, Boolean>>()
         val actions =
             object : CardsSettingsActions {
@@ -258,7 +258,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-035 the status names the agents of this connection in plain words`() = runComposeUiTest {
+    fun `B-CHAT-035 the status names the agents of this connection in plain words`() = kitUiTest {
         val ui =
             CardsSettingsUi(
                 persistentListOf(
@@ -276,7 +276,7 @@ class ChatCardSlotTest {
     }
 
     @Test
-    fun `B-CHAT-054 every chart series is drawn and the summary names kind, series, points and the highest value`() = runComposeUiTest {
+    fun `B-CHAT-054 every chart series is drawn and the summary names kind, series, points and the highest value`() = kitUiTest {
         val chart =
             mapOf(
                 "type" to "chart",

@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscript
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
@@ -16,6 +15,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -50,7 +50,7 @@ class ChatScrollRestoreTest {
 
     @Test
     fun `09-7_3 a reader's place and follow choice survive leaving the chat and coming back`() =
-        runComposeUiTest {
+        kitUiTest {
             // The Nav3 entry decorator keeps each entry's saveable state in a SaveableStateHolder; rotation saves
             // the same registry into the Activity's bundle.
             var shown by mutableStateOf(true)

@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
@@ -80,7 +80,7 @@ class OneStatusSlotRenders {
         Locale.setDefault(Locale.forLanguageTag("en"))
         for (style in listOf(Style.Solid, Style.Glass)) {
             for (scale in listOf(1.0f, 1.3f)) {
-                runDesktopComposeUiTest(945, 1400) {
+                kitUiTest(945, 1400) {
                     var pending: ImmutableList<PendingSend> by
                         mutableStateOf(persistentListOf(PendingSend(1L, ask, PendingState.Sending)))
                     var live by mutableStateOf<LiveTurnUi?>(null)

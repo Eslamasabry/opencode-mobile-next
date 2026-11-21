@@ -10,7 +10,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.picture
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import java.io.ByteArrayOutputStream
 import java.util.Base64
 import javax.imageio.ImageIO
@@ -98,7 +98,7 @@ class ChipEffortOnceTest {
         chrome: ComposerChrome = this.chrome,
         check: ComposeUiTest.() -> Unit,
     ) =
-        runDesktopComposeUiTest(360, 200) {
+        kitUiTest(360, 200) {
             setContent {
                 E20Scene(scale = scale, locale = locale) {
                     Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { BasicComposer(state, Actions(), chrome) }

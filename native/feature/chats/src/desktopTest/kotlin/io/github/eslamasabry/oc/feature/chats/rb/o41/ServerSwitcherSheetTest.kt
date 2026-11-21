@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
@@ -13,6 +12,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ServerSwitcherUi
 import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherServerState
 import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherServerUi
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsHomeSheets
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -32,7 +32,7 @@ class ServerSwitcherSheetTest {
             )
         )
 
-    @Test fun `PARITY-B-235 the sheet lists every server with its state, a tap switches and Add a server adds`() = runComposeUiTest {
+    @Test fun `PARITY-B-235 the sheet lists every server with its state, a tap switches and Add a server adds`() = kitUiTest {
         val actions = RecordingChatsActions()
         setContent {
             // The app's root provides the redactor (KitChatEnvironment); the harness does the same.
@@ -52,7 +52,7 @@ class ServerSwitcherSheetTest {
         assertEquals(listOf("switch work", "retry down", "addServer"), actions.calls)
     }
 
-    @Test fun `PARITY-B-235 while one server opens the others wait and it says Connecting`() = runComposeUiTest {
+    @Test fun `PARITY-B-235 while one server opens the others wait and it says Connecting`() = kitUiTest {
         val actions = RecordingChatsActions()
         setContent {
             ChatEnvironment {

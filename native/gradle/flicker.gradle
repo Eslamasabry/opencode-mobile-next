@@ -1,0 +1,26 @@
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.testing.Test
+
+// The frame recorder's settings for this module's UI tests (kitUiTest, ui/gate .../flicker/KitUiTest.kt):
+// - mode: -Poc.flicker=report|fail-new|fail|off; unset (auto): fail-new when the module has flicker-baseline.tsv,
+//   report otherwise;
+// - the module's baseline (a test input, so a changed baseline runs the tests again);
+// - where findings go: build/flicker always; on CI also native/reports/flicker-<module>-<pid>.json, which the job prints
+//   into its log as an OC-VERDICT line (artifacts may be refused, the log stays readable).
+def flickerBaseline = layout.projectDirectory.file('flicker-baseline.tsv').asFile
+def flickerMode = providers.gradleProperty('oc.flicker').orElse('auto').get()
+def flickerDir = layout.buildDirectory.dir('flicker').get().asFile.absolutePath
+def flickerOut = providers.environmentVariable('CI').isPresent() ?
+    rootProject.layout.projectDirectory.dir('reports').asFile.absolutePath : ''
+def flickerModule = project.path
+
+tasks.withType(Test).configureEach {
+    systemProperty 'oc.flicker.mode', flickerMode
+    systemProperty 'oc.flicker.baseline', flickerBaseline.absolutePath
+    systemProperty 'oc.flicker.dir', flickerDir
+    systemProperty 'oc.flicker.module', flickerModule
+    if (!flickerOut.isEmpty()) {
+        systemProperty 'oc.flicker.out', flickerOut
+    }
+    inputs.files(flickerBaseline).withPropertyName('flickerBaseline').withPathSensitivity(PathSensitivity.RELATIVE)
+}

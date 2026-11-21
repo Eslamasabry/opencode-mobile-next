@@ -10,7 +10,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
@@ -25,6 +24,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -93,7 +93,7 @@ class AgentsStartHomeRenders {
 
     private fun shoot(name: String, style: Style, fontScale: Float) {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(900, 2000) {
+        kitUiTest(900, 2000) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
                     ChatEnvironment {

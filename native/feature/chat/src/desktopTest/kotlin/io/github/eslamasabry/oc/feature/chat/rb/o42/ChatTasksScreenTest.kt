@@ -4,13 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.tasks.presentation.ChatTask
 import io.github.eslamasabry.oc.feature.chat.tasks.presentation.ChatTaskList
 import io.github.eslamasabry.oc.feature.chat.tasks.presentation.ChatTaskStatus
 import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 class ChatTasksScreenTest {
     @Test
     fun `C01 task sheet keeps cancelled tasks outside the tracked count and closes without mutation`() =
-        runComposeUiTest {
+        kitUiTest {
             var closes = 0
             val tasks =
                 ChatTaskList(
@@ -55,7 +55,7 @@ class ChatTasksScreenTest {
 
     @Test
     fun `C01 kit task mark stops when the agent stops while retaining the task status`() =
-        runComposeUiTest {
+        kitUiTest {
             var running by mutableStateOf(true)
             setContent {
                 KitTheme(

@@ -9,7 +9,6 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -22,6 +21,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
 import io.github.eslamasabry.oc.feature.chat.ui.openChatFromNotification
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -73,7 +73,7 @@ class ChatBackExactLineTest {
 
     @Test
     fun `B-407 back to the same entry lands on the row and offset the person last saw`() =
-        runComposeUiTest {
+        kitUiTest {
             ScrollPlaceStore.clear()
             var shown by mutableStateOf(true)
             lateinit var list: TranscriptListState
@@ -106,7 +106,7 @@ class ChatBackExactLineTest {
 
     @Test
     fun `B-407 a reader following the newest row lands where they were when rows arrived while away`() =
-        runComposeUiTest {
+        kitUiTest {
             ScrollPlaceStore.clear()
             var shown by mutableStateOf(true)
             var rows by mutableStateOf(turns(20))
@@ -141,7 +141,7 @@ class ChatBackExactLineTest {
 
     @Test
     fun `B-407 a conversation left scrolled up and opened again from Home returns to the same row and offset`() =
-        runComposeUiTest {
+        kitUiTest {
             ScrollPlaceStore.clear()
             var entry by mutableStateOf("entry-1")
             var shown by mutableStateOf(true)
@@ -189,7 +189,7 @@ class ChatBackExactLineTest {
 
     @Test
     fun `B-407 a conversation left while following opens on the newest row when opened again`() =
-        runComposeUiTest {
+        kitUiTest {
             ScrollPlaceStore.clear()
             var entry by mutableStateOf("entry-1")
             var shown by mutableStateOf(true)
@@ -222,7 +222,7 @@ class ChatBackExactLineTest {
 
     @Test
     fun `B-407 a reply notification opens a scrolled up conversation on the new reply`() =
-        runComposeUiTest {
+        kitUiTest {
             ScrollPlaceStore.clear()
             var entry by mutableStateOf("entry-1")
             var shown by mutableStateOf(true)
@@ -279,7 +279,7 @@ class ChatBackExactLineTest {
 
     @Test
     fun `B-407 a reply notification for the visible conversation jumps to newest every time`() =
-        runComposeUiTest {
+        kitUiTest {
             ScrollPlaceStore.clear()
             var rows by mutableStateOf(turns(20))
             lateinit var list: TranscriptListState

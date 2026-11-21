@@ -12,11 +12,11 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -34,7 +34,7 @@ internal object Looks {
     fun shoot(name: String, advanceMs: Long = 1_000, fontScale: Float = 1f, setup: ComposeUiTest.() -> Unit = {}, content: @Composable (dark: Boolean) -> Unit) {
         Locale.setDefault(Locale.forLanguageTag("en"))
         for (dark in listOf(false, true)) {
-            runDesktopComposeUiTest(1081, 2402) {
+            kitUiTest(1081, 2402) {
                 setContent {
                   CompositionLocalProvider(LocalDensity provides Density(2.625f, fontScale)) {
                    ChatEnvironment {

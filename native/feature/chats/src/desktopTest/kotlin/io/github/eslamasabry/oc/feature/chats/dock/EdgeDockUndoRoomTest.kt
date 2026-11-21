@@ -12,7 +12,6 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -27,6 +26,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -108,7 +108,7 @@ class EdgeDockUndoRoomTest {
             .fetchSemanticsNodes()
 
     @Test
-    fun `B-DOCK-UNDO-07 the host reports the Undo bar's height while an offer stands and 0 after`() = runComposeUiTest {
+    fun `B-DOCK-UNDO-07 the host reports the Undo bar's height while an offer stands and 0 after`() = kitUiTest {
         mainClock.autoAdvance = false
         val port = Port(entries())
         val heights = mutableListOf<Int>()

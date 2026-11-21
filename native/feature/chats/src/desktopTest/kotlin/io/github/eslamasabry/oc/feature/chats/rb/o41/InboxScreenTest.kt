@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.agents.feed.FeedPermission
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
 import io.github.eslamasabry.oc.feature.chats.Themed
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsInboxScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.state.KitInboxEmptyAnswer
@@ -43,7 +43,7 @@ private fun spoken(words: String) = SemanticsMatcher("says \"$words\"") { node -
 
 @OptIn(ExperimentalTestApi::class)
 class InboxScreenTest {
-    @Test fun `B-KIT-011 inbox permission answers are independent from opening the conversation`() = runComposeUiTest {
+    @Test fun `B-KIT-011 inbox permission answers are independent from opening the conversation`() = kitUiTest {
         var opened = 0
         var allowed = 0
         var rejected = 0
@@ -67,7 +67,7 @@ class InboxScreenTest {
         onNodeWithText("Allow once").assertIsNotEnabled()
     }
 
-    @Test fun `B-KIT-011 Inbox dispatches the displayed permission and excludes an in-flight answer from its count`() = runComposeUiTest {
+    @Test fun `B-KIT-011 Inbox dispatches the displayed permission and excludes an in-flight answer from its count`() = kitUiTest {
         val recorded = RecordingChatsActions()
         val answers = mutableListOf<Pair<String, Boolean>>()
         val actions = object : ChatsActions by recorded {
@@ -89,7 +89,7 @@ class InboxScreenTest {
         onNode(spoken("Open Checkout")).performClick()
         assertEquals(listOf("open one"), recorded.calls)
     }
-    @Test fun `B-KIT-003 Inbox answer caps large type on a narrow page and offers retry for an unread source`() = runComposeUiTest {
+    @Test fun `B-KIT-003 Inbox answer caps large type on a narrow page and offers retry for an unread source`() = kitUiTest {
         var retries = 0
         setContent {
             Themed {

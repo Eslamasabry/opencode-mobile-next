@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTrayRules
@@ -13,6 +12,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -96,7 +96,7 @@ class E20S20ComposerTrayTest {
 
     @Test
     fun `E20-S20 plus opens one row of four, without paste, reuse, commands, send later, clear or voice`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Theme { BasicComposer(ui(), Actions(), chrome(commands = {})) } }
             onNodeWithTag("kit-composer-tray").assertDoesNotExist()
             onNodeWithContentDescription("Attach and more").performClick()
@@ -116,7 +116,7 @@ class E20S20ComposerTrayTest {
         }
 
     @Test
-    fun `E20-S20 Camera in the tray runs the camera capture and closes the tray`() = runComposeUiTest {
+    fun `E20-S20 Camera in the tray runs the camera capture and closes the tray`() = kitUiTest {
         val actions = Actions()
         setContent { Theme { BasicComposer(ui(), actions, chrome()) } }
         onNodeWithTag("chat-attach-button").performClick()
@@ -127,7 +127,7 @@ class E20S20ComposerTrayTest {
     }
 
     @Test
-    fun `E20-S20 while a send runs Photos, Camera and File are off, More still opens`() = runComposeUiTest {
+    fun `E20-S20 while a send runs Photos, Camera and File are off, More still opens`() = kitUiTest {
         val actions = Actions()
         setContent { Theme { BasicComposer(ui(sending = true), actions, chrome()) } }
         onNodeWithTag("chat-attach-button").performClick()
@@ -141,7 +141,7 @@ class E20S20ComposerTrayTest {
 
     @Test
     fun `E20-S20 a server that takes no files has no tray, plus opens the tools list and says why`() =
-        runComposeUiTest {
+        kitUiTest {
             setContent { Theme { BasicComposer(ui(attachments = false), Actions(), chrome(commands = {})) } }
             onNodeWithTag("chat-attach-button").performClick()
             onNodeWithTag("kit-composer-tray").assertDoesNotExist()
@@ -151,7 +151,7 @@ class E20S20ComposerTrayTest {
         }
 
     @Test
-    fun `E20-S20 More lists commands, then the prompt shelf, and does not repeat the tray`() = runComposeUiTest {
+    fun `E20-S20 More lists commands, then the prompt shelf, and does not repeat the tray`() = kitUiTest {
         var commands = 0
         val actions = Actions()
         setContent {

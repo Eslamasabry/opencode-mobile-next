@@ -15,7 +15,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -26,6 +25,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -121,7 +121,7 @@ class ModelSheetThinkingTest {
 
     @Test
     fun `B-CHAT-073 Thinking stands above the search field and the model list`() =
-        runDesktopComposeUiTest(360, 800) {
+        kitUiTest(360, 800) {
             setContent { Scene(1f, withThinker()) }
             onNodeWithContentDescription("Model").performClick()
             waitForIdle()
@@ -134,7 +134,7 @@ class ModelSheetThinkingTest {
 
     @Test
     fun `B-CHAT-073 Thinking stays where it is while the model list scrolls`() =
-        runDesktopComposeUiTest(360, 800) {
+        kitUiTest(360, 800) {
             setContent { Scene(1f, withThinker()) }
             onNodeWithContentDescription("Model").performClick()
             waitForIdle()
@@ -147,7 +147,7 @@ class ModelSheetThinkingTest {
 
     @Test
     fun `B-CHAT-073 a model without thinking levels has no Thinking row`() =
-        runDesktopComposeUiTest(360, 800) {
+        kitUiTest(360, 800) {
             setContent { Scene(1f, ComposerModels(choices = fillers + plain, selected = plain)) }
             onNodeWithContentDescription("Model").performClick()
             waitForIdle()
@@ -156,7 +156,7 @@ class ModelSheetThinkingTest {
         }
 
     private fun noChipCut(fontScale: Float) =
-        runDesktopComposeUiTest(360, 800) {
+        kitUiTest(360, 800) {
             setContent { Scene(fontScale, withThinker()) }
             onNodeWithContentDescription("Model").performClick()
             waitForIdle()
@@ -179,7 +179,7 @@ class ModelSheetThinkingTest {
     @Test
     fun `B-CHAT-073 render the model sheet at 360 dp, text 1_0 and 1_3`() {
         for (scale in listOf(1.0f, 1.3f)) {
-            runDesktopComposeUiTest(1080, 2200) {
+            kitUiTest(1080, 2200) {
                 setContent {
                     CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
                         KitTheme(

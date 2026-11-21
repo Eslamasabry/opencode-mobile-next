@@ -10,7 +10,6 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -34,7 +34,7 @@ import kotlinx.collections.immutable.toImmutableList
 class HomeSignedOutRowTest {
     private fun words(ui: ChatsUi): String {
         var out = ""
-        runDesktopComposeUiTest(412, 1200) {
+        kitUiTest(412, 1200) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
                     ChatEnvironment {

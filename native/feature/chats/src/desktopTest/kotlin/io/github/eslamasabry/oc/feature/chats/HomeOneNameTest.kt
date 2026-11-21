@@ -12,7 +12,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -29,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -90,7 +90,7 @@ class HomeOneNameTest {
 
     @Test
     fun `HOME-NAME-001 This phone's own server saved under an old name is This phone on the pill and the opening card`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val opening =
                 ChatsOpeningUi(ChatsOpeningPhase.Failed, "This device (Termux)", profile = phone, onThisPhone = true)
             show(ui(listOf(ChatsListSourceUi(phone, "This device (Termux)", shown = true, main = true, onThisPhone = true, unreachable = true)), opening))
@@ -101,7 +101,7 @@ class HomeOneNameTest {
 
     @Test
     fun `HOME-NAME-002 in Arabic the notice names This phone as the pill does, never in English`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             show(
                 ui(
                     listOf(
@@ -117,7 +117,7 @@ class HomeOneNameTest {
 
     @Test
     fun `HOME-NAME-003 guard - a computer keeps the name it was saved under`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "Office PC", profile = office, onThisPhone = false)
             show(ui(listOf(ChatsListSourceUi(office, "Office PC", shown = true, main = true, onThisPhone = false, unreachable = false)), opening))
             assertTrue(pill().startsWith("Office PC, "), "pill: ${pill()}")

@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats.rb.o41
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
 class SourceSwitchTest {
-    @Test fun `B04 always shown source has an explanation instead of an actionable switch`() = runComposeUiTest {
+    @Test fun `B04 always shown source has an explanation instead of an actionable switch`() = kitUiTest {
         var flips = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {

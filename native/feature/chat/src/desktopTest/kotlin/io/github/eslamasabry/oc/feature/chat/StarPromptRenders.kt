@@ -17,7 +17,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -55,6 +54,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -159,7 +159,7 @@ class StarPromptRenders {
 
     private fun shoot(style: Style, dark: Boolean, name: String, tag: String = "en") {
         Locale.setDefault(Locale.forLanguageTag(tag))
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        kitUiTest(WIDTH, HEIGHT) {
             setContent { Screen(style, dark, ask = true, tag = tag) }
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
@@ -172,7 +172,7 @@ class StarPromptRenders {
 
     @Test
     fun `B-STAR-018 the ask is its own card at rest and never rides a running turn`() {
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        kitUiTest(WIDTH, HEIGHT) {
             var running by mutableStateOf(false)
             setContent { Screen(Style.Solid, dark = true, ask = true, tag = "en", running = running) }
             waitForIdle()

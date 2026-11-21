@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.compareGolden
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.math.abs
 import kotlin.test.assertFalse
@@ -88,7 +88,7 @@ class E20S11ComposerChipsTest {
         })
 
     private fun scene(width: Int, locale: String, check: androidx.compose.ui.test.ComposeUiTest.() -> Unit) =
-        runDesktopComposeUiTest(width, 360) {
+        kitUiTest(width, 360) {
             setContent {
                 E20Scene(locale = locale) {
                     Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {

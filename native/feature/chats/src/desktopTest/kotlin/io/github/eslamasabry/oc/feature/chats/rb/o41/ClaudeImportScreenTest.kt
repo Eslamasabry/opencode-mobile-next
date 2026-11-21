@@ -2,13 +2,13 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.domain.ImportableConversations
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.ClaudeImportBody
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlinx.collections.immutable.persistentListOf
@@ -35,7 +35,7 @@ class ClaudeImportScreenTest {
         override fun retryLoad() {}
     }
 
-    @Test fun `B11 empty import list shows its state without a selection introduction`() = runComposeUiTest {
+    @Test fun `B11 empty import list shows its state without a selection introduction`() = kitUiTest {
         setContent { KitTheme(platform = DesktopKitPlatform()) { Column {
             ClaudeImportBody(NewConversationUi(imports = ImportableConversations(persistentListOf())), Actions())
         } } }
@@ -43,7 +43,7 @@ class ClaudeImportScreenTest {
         onNodeWithText("Pick a conversation", substring = true).assertDoesNotExist()
     }
 
-    @Test fun `B11 load failure retries listing without attempting an import`() = runComposeUiTest {
+    @Test fun `B11 load failure retries listing without attempting an import`() = kitUiTest {
         val actions = Actions()
         setContent { KitTheme(platform = DesktopKitPlatform()) { Column {
             ClaudeImportBody(NewConversationUi(importFailed = true), actions)
@@ -54,7 +54,7 @@ class ClaudeImportScreenTest {
         assertEquals(null, actions.imported)
     }
 
-    @Test fun `B11 import row shows its folder and dispatches the displayed item`() = runComposeUiTest {
+    @Test fun `B11 import row shows its folder and dispatches the displayed item`() = kitUiTest {
         val item = ImportableConversation("claude", "opaque-handle", "/work/shop/", Instant.fromEpochMilliseconds(0), title = "Fix checkout")
         val actions = Actions()
         setContent { KitTheme(platform = DesktopKitPlatform()) { Column {

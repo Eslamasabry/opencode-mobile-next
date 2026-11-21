@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -19,6 +18,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -57,7 +57,7 @@ class NewConversationFillTest {
         )
 
     @Test
-    fun `one starter fills the box, a second replaces it and the clear after Start empties it`() = runComposeUiTest {
+    fun `one starter fills the box, a second replaces it and the clear after Start empties it`() = kitUiTest {
         var state by mutableStateOf(base)
         setContent {
             KitTheme(

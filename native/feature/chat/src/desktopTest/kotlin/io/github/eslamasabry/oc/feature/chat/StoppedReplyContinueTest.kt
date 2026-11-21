@@ -4,13 +4,13 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote
 import io.github.eslamasabry.oc.feature.chat.presentation.stopNote
 import io.github.eslamasabry.oc.feature.chat.ui.TurnEndNote
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -32,7 +32,7 @@ class StoppedReplyContinueTest {
     }
 
     @Test
-    fun `B-CHAT-111 a paused reply shows Continue this reply and tapping it asks to continue`() = runComposeUiTest {
+    fun `B-CHAT-111 a paused reply shows Continue this reply and tapping it asks to continue`() = kitUiTest {
         var continued = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {
@@ -45,7 +45,7 @@ class StoppedReplyContinueTest {
     }
 
     @Test
-    fun `B-CHAT-111 a replaced reply is said but has no Continue`() = runComposeUiTest {
+    fun `B-CHAT-111 a replaced reply is said but has no Continue`() = kitUiTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {
                 TurnEndNote(TurnEndNote.Superseded, onContinue = {})

@@ -4,8 +4,8 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class ChatFloatingScreenTest {
     @Test
     fun `B-CHAT-EDGE-015 on the real chat the capsule keeps the same margin on both sides and holds the project line`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(scene.live(), canGoBack = true, projectName = "IPTV_King") } }
             waitForIdle()
@@ -42,7 +42,7 @@ class ChatFloatingScreenTest {
     @Test
     fun `B-CHAT-EDGE-021 the capsule's second line carries the project and the place, as the live header builds it`() {
         for (place in listOf("This phone", "Home server")) {
-            runDesktopComposeUiTest(412, 915) {
+            kitUiTest(412, 915) {
                 val scene = ChatScene()
                 setContent { E20Scene { scene.Screen(scene.live(), canGoBack = true, projectName = "IPTV_King", serverName = place) } }
                 waitForIdle()
@@ -56,7 +56,7 @@ class ChatFloatingScreenTest {
 
     @Test
     fun `B-CHAT-EDGE-022 a header with no place set shows no place, so the 021 check does tell the two apart`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(scene.live(), canGoBack = true, projectName = "IPTV_King", serverName = null) } }
             waitForIdle()

@@ -6,7 +6,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import java.io.File
@@ -91,7 +91,7 @@ class NewConversationThinkingRenders {
 
     private fun shoot(mode: AppearanceMode, name: String) {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(945, 2100) {
+        kitUiTest(945, 2100) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(2.625f)) {
                     KitTheme(

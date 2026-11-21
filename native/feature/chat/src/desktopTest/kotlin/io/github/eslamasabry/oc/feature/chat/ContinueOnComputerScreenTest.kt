@@ -5,7 +5,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeCli
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeCommand
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -87,7 +87,7 @@ class ContinueOnComputerScreenTest {
         }
 
     @Test
-    fun `B-AGENT-227 Continue on computer shows the whole resume command and Copy command copies it`() = runComposeUiTest {
+    fun `B-AGENT-227 Continue on computer shows the whole resume command and Copy command copies it`() = kitUiTest {
         val actions = Actions()
         show(ui("/home/me/app"), actions)
         onNodeWithText("Continue on computer").assertIsDisplayed()
@@ -99,13 +99,13 @@ class ContinueOnComputerScreenTest {
     }
 
     @Test
-    fun `B-AGENT-228 a cloud workspace conversation explains why there is no command`() = runComposeUiTest {
+    fun `B-AGENT-228 a cloud workspace conversation explains why there is no command`() = kitUiTest {
         show(ui("/srv/app", workspace = "wrk_1"), Actions())
         onNodeWithText("This conversation runs inside a cloud environment", substring = true).assertIsDisplayed()
     }
 
     @Test
-    fun `B-AGENT-228 a conversation without a reported folder says so in plain words`() = runComposeUiTest {
+    fun `B-AGENT-228 a conversation without a reported folder says so in plain words`() = kitUiTest {
         show(ui(null), Actions())
         onNodeWithText("did not report a project folder", substring = true).assertIsDisplayed()
     }
