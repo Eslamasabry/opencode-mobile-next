@@ -251,7 +251,7 @@
       "providerId": "kilo",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "7.8.32",
+        "version": "7.8.27",
         "executable": "kilo",
         "launchArgs": [
           "acp"
@@ -262,20 +262,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.32.tgz",
-            "sha256": "ef6c6384d319fd19bf2d7c731c99f32d83e15ed5732955358ca6420292cde447",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.27.tgz",
+            "sha256": "992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4",
             "format": "tarGz",
             "member": "package/bin/kilo",
-            "downloadBytes": 83986745,
-            "installedBytes": 264227832
+            "downloadBytes": 83530144,
+            "installedBytes": 258198520
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.32.tgz",
-            "sha256": "d37d2822060210cf9069ec7548f8866c737b391f46f0d24653c3049064b4c9dd",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.27.tgz",
+            "sha256": "1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b",
             "format": "tarGz",
             "member": "package/bin/kilo",
-            "downloadBytes": 84585073,
-            "installedBytes": 265234608
+            "downloadBytes": 84123912,
+            "installedBytes": 259201200
           }
         }
       }

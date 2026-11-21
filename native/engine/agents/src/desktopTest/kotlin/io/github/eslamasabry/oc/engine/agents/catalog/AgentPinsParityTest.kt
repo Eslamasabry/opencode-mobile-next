@@ -315,30 +315,30 @@ class AgentPinsParityTest {
         // Moved after the freeze. Each SHA-256 is of the registry tarball, whose sha512 equals dist.integrity;
         // installedBytes is the member's size.
         val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("kilo"))!!.recipe!!
-        assertEquals("7.8.32", recipe.version)
+        assertEquals("7.8.27", recipe.version)
         assertEquals("kilo", recipe.executable)
         assertEquals(listOf("acp"), recipe.launchArgs)
         assertEquals(listOf("auth", "login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
             "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/" +
-                "cli-linux-arm64-7.8.32.tgz",
+                "cli-linux-arm64-7.8.27.tgz",
             arm.url,
         )
-        assertEquals("ef6c6384d319fd19bf2d7c731c99f32d83e15ed5732955358ca6420292cde447", arm.sha256)
-        assertEquals(83986745L, arm.downloadBytes)
-        assertEquals(264227832L, arm.installedBytes)
+        assertEquals("992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4", arm.sha256)
+        assertEquals(83530144L, arm.downloadBytes)
+        assertEquals(258198520L, arm.installedBytes)
         assertEquals("package/bin/kilo", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
             "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/" +
-                "cli-linux-x64-7.8.32.tgz",
+                "cli-linux-x64-7.8.27.tgz",
             x64.url,
         )
-        assertEquals("d37d2822060210cf9069ec7548f8866c737b391f46f0d24653c3049064b4c9dd", x64.sha256)
-        assertEquals(84585073L, x64.downloadBytes)
-        assertEquals(265234608L, x64.installedBytes)
+        assertEquals("1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b", x64.sha256)
+        assertEquals(84123912L, x64.downloadBytes)
+        assertEquals(259201200L, x64.installedBytes)
         assertEquals("package/bin/kilo", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }

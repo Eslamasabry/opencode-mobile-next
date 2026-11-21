@@ -144,7 +144,7 @@ class AgentCatalogTest {
         val cline = catalog.byId(AgentId("cline"))!!
         assertEquals(AgentRoute.AcpPaseo, kilo.route)
         assertEquals(AgentRoute.AcpPaseo, cline.route)
-        assertEquals("7.8.32", kilo.recipe!!.version)
+        assertEquals("7.8.27", kilo.recipe!!.version)
         assertEquals("3.0.74", cline.recipe!!.version)
         assertEquals(listOf("acp"), kilo.recipe!!.launchArgs)
         assertEquals(listOf("--acp"), cline.recipe!!.launchArgs)
