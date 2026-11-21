@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentCapabilities
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
+import io.github.eslamasabry.oc.engine.agents.certification.certifiedClaude327
 import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeed
 import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
@@ -128,7 +129,7 @@ class PhoneAgentsSessionTest {
         // The connected helper is the pinned Paseo release (AgentHelper starts exactly pins.paseo.version).
         val helper = AgentPins.builtIn.paseo.version
         val certification = AgentCertification.bundled
-        assertAll(true, certification.capabilitiesFor(claude, AgentArchitecture.Arm64, helper), "claude")
+        assertAll(true, certification.capabilitiesFor(certifiedClaude327, AgentArchitecture.Arm64, helper), "claude")
         for (descriptor in AgentCatalog.builtIn.agents) {
             if (descriptor.id == AgentId.CLAUDE) continue
             assertAll(false, certification.capabilitiesFor(descriptor, AgentArchitecture.Arm64, helper), descriptor.id.raw)

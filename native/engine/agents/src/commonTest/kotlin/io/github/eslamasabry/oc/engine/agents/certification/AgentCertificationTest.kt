@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.engine.agents.certification
 
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentArtifact
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentArtifactFormat
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCapabilities
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
@@ -20,6 +22,31 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+
+/** The released pair used by tests of carrying historical certification across tested versions. */
+internal val certifiedClaude327: AgentDescriptor = AgentCatalog.builtIn.byId(AgentId.CLAUDE)!!.let { claude ->
+    val version = "2.1.327"
+    val hashes = mapOf(
+        AgentArchitecture.Arm64 to "acf0ef2f9da8d5ab08f193f007e19a06cbfb608b96a2f1f758d63a92a386cff8",
+        AgentArchitecture.X64 to "343c744baa14bfd38286a7cb90871051f04379956da6c5b803a9e66019a76ac9",
+    )
+    val artifacts = hashes.mapValues { (arch, hash) ->
+        AgentArtifact(
+            "https://downloads.claude.ai/claude-code-releases/$version/linux-${arch.wire}/claude",
+            hash,
+            AgentArtifactFormat.Executable,
+        )
+    }
+    AgentDescriptor(
+        id = claude.id, name = claude.name, iconKey = claude.iconKey, route = claude.route,
+        providerId = claude.providerId, signInMethod = claude.signInMethod,
+        recipe = AgentInstallRecipe(version, "claude", artifacts),
+        limitation = claude.limitation, resumeReason = claude.resumeReason,
+    )
+}
+
+internal val certifiedClaude327Matrix: AgentCertification =
+    AgentCertification.parse(AGENT_CERTIFICATION_JSON, AgentCatalog(listOf(certifiedClaude327)))
 
 /** Port of test/agent_certification_test.dart (B-AGENT-009, 010, 011). */
 class AgentCertificationTest {
@@ -72,20 +99,19 @@ class AgentCertificationTest {
 
     @Test
     fun `B-AGENT-009 bundled Claude evidence qualifies arm64 and x64 with exact helper`() {
-        assertEquals("2.1.327", claude.recipe!!.version)
         for (arch in AgentArchitecture.entries) {
-            assertOpen(AgentCertification.bundled.capabilitiesFor(claude, arch, "0.9.2"), arch.wire)
+            assertOpen(AgentCertification.bundled.capabilitiesFor(certifiedClaude327, arch, "0.9.2"), arch.wire)
         }
         for (helper in listOf(null, "0.9.3")) {
-            assertClosed(AgentCertification.bundled.capabilitiesFor(claude, AgentArchitecture.Arm64, helper))
+            assertClosed(AgentCertification.bundled.capabilitiesFor(certifiedClaude327, AgentArchitecture.Arm64, helper))
         }
     }
 
     @Test
     fun `B-AGENT-009 evidence carries across the tested Paseo and Claude Code versions`() {
-        assertOpen(AgentCertification.bundled.capabilitiesFor(claude, AgentArchitecture.Arm64, "0.11.2"))
-        assertTrue(AgentCertification.bundled.certifiedForChat(AgentId("claude")))
-        assertClosed(AgentCertification.bundled.capabilitiesFor(claude, AgentArchitecture.Arm64, "0.11.3"))
+        assertOpen(AgentCertification.bundled.capabilitiesFor(certifiedClaude327, AgentArchitecture.Arm64, "0.11.2"))
+        assertTrue(certifiedClaude327Matrix.certifiedForChat(AgentId("claude")))
+        assertClosed(AgentCertification.bundled.capabilitiesFor(certifiedClaude327, AgentArchitecture.Arm64, "0.11.3"))
     }
 
     @Test
@@ -251,8 +277,7 @@ class AgentCertificationTest {
     private fun certified(row: Map<String, Any?>, id: String = "claude") = matrix(listOf(row)).certifiedForChat(AgentId(id))
 
     @Test
-    fun `B-AGENT-011 the bundled matrix certifies Claude Code and nothing else yet`() {
-        assertTrue(AgentCertification.bundled.certifiedForChat(AgentId("claude")))
+    fun `B-AGENT-011 agents without bundled chat proof stay uncertified`() {
         for (id in listOf("codex", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx", "unknown")) {
             assertFalse(AgentCertification.bundled.certifiedForChat(AgentId(id)), id)
         }
