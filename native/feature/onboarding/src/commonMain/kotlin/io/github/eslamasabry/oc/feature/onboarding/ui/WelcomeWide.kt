@@ -68,7 +68,7 @@ internal fun WelcomeWideBody(
         Column(
             Modifier.fillMaxSize()
                 .verticalScroll(kitPageScrollState())
-                .padding(top = Space.S6.dp, bottom = Space.S6.dp),
+                .padding(top = (Space.S6 + Space.S2).dp, bottom = Space.S6.dp),
         ) {
             KitHeroQuestion(
                 stringResource(Res.string.firstRunWhereQuestion),
@@ -112,7 +112,7 @@ internal fun WelcomeWideBody(
                 Spacer(Modifier.height(Space.S3.dp))
                 KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
             }
-            Spacer(Modifier.height(Space.S5.dp))
+            Spacer(Modifier.height(Space.S6.dp))
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
@@ -120,7 +120,7 @@ internal fun WelcomeWideBody(
             ) {
                 FlowRow(
                     Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
                     KitButton(
@@ -154,4 +154,4 @@ internal fun WelcomeWideBody(
     }
 }
 
-private const val WIDE_CHOICE_MIN_HEIGHT_DP = 176
+private const val WIDE_CHOICE_MIN_HEIGHT_DP = 224

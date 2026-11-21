@@ -78,7 +78,7 @@ internal fun WideTwoColumnFrame(
         Box(
             Modifier.fillMaxWidth()
                 .then(viewportModifier)
-                .padding(top = Space.S4.dp, bottom = Space.S6.dp),
+                .padding(top = Space.S6.dp, bottom = Space.S6.dp),
             contentAlignment = Alignment.TopStart,
         ) {
             Row(
