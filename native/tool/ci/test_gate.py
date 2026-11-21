@@ -320,6 +320,17 @@ class KnownFailuresCeiling(unittest.TestCase):
         'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest',
     }
 
+    # The classes that had a class-level line on the base of the narrowing work (2026-11-21). Frozen: an exact test line
+    # may exist only for one of these, so a class that never had a line can not get one by the back door.
+    BASE_CLASSES = {c for c in CEILING if not c.startswith('*')}
+    # Exact test lines allowed today (they replace class lines; they can only shrink too).
+    EXACT_CEILING = set()
+
+    @staticmethod
+    def violations(heads, ceiling, base_classes, exact_ceiling):
+        """What in `heads` (the lines of known_failures.txt, reason cut off) the list may not hold."""
+        return sorted(set(heads) - set(ceiling))
+
     @staticmethod
     def entries():
         out = []
@@ -331,7 +342,7 @@ class KnownFailuresCeiling(unittest.TestCase):
         return out
 
     def test_no_line_was_added_or_widened(self):
-        added = sorted({h for h, _ in self.entries()} - self.CEILING)
+        added = self.violations([h for h, _ in self.entries()], self.CEILING, self.BASE_CLASSES, self.EXACT_CEILING)
         self.assertEqual(added, [], 'known_failures.txt may only shrink: fix the failing test instead of listing it. New or '
                                     'changed lines: ' + '; '.join(added))
 
@@ -351,6 +362,39 @@ class KnownFailuresCeiling(unittest.TestCase):
         text = ' '.join(h for h, _ in self.entries())
         self.assertNotIn('ConversationDraftsTest', text)
         self.assertNotIn('E06RequestCardsTest', text)
+
+    NARROW_CLASS = 'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest'
+    OTHER_CLASS = 'feature/chats :: io.github.eslamasabry.oc.feature.chats.BrandNewTest'
+    EXACT_A = NARROW_CLASS + ' > N1 B-KIT-029 first'
+    EXACT_B = NARROW_CLASS + ' > N1 B-KIT-029 second'
+
+    def check(self, heads, exact=()):
+        return self.violations(heads, {self.NARROW_CLASS, '* :: *.rb.*GateTest'}, {self.NARROW_CLASS}, set(exact))
+
+    def test_B_CI_314_replacing_a_class_line_by_its_exact_tests_is_a_narrowing(self):
+        self.assertEqual(self.check(['* :: *.rb.*GateTest', self.EXACT_A, self.EXACT_B], exact=[self.EXACT_A, self.EXACT_B]), [])
+
+    def test_B_CI_315_a_new_line_for_another_class_is_refused(self):
+        refused = self.check(['* :: *.rb.*GateTest', self.EXACT_A, self.OTHER_CLASS], exact=[self.EXACT_A])
+        self.assertEqual(refused, [self.OTHER_CLASS])
+        exact_elsewhere = self.OTHER_CLASS + ' > breaks'  # an exact line whose class had no class line on the base
+        self.assertEqual(self.check([self.EXACT_A, exact_elsewhere], exact=[self.EXACT_A, exact_elsewhere]), [exact_elsewhere])
+
+    def test_B_CI_316_a_widening_is_refused(self):
+        extra = self.NARROW_CLASS + ' > N1 B-KIT-029 third'  # more than the audited exact lines
+        self.assertEqual(self.check([self.EXACT_A, extra], exact=[self.EXACT_A]), [extra])
+        self.assertEqual(self.check([self.NARROW_CLASS + '*']), [self.NARROW_CLASS + '*'])  # a wider pattern for the class
+
+    def test_B_CI_317_a_class_narrowed_to_exact_lines_goes_red_on_a_third_test(self):
+        cls = f'{PKG}.ui.kit.PartADesktopTest'
+        known = f'ui/kit :: {cls} > first breaks | planted\nui/kit :: {cls} > second breaks | planted\n'
+        log = TEST_FAILED_LOG.replace('feature:chats', 'ui:kit')
+        code, md = run_gate(log, ':ui:kit:desktopTest', [('ui/kit', cls, ('first breaks', 'second breaks'))], known=known)
+        self.assertEqual(code, 0, md)  # the two listed ones stay noise
+        code, md = run_gate(log, ':ui:kit:desktopTest', [('ui/kit', cls, ('first breaks', 'second breaks', 'third breaks'))], known=known)
+        self.assertEqual(code, 1, md)  # a third test of the class turns the verdict red
+        self.assertIn('third breaks', md)
+        self.assertNotIn('`ui/kit :: ' + cls + ' > first breaks`', md)
 
 
 class AndroidUnit(unittest.TestCase):
