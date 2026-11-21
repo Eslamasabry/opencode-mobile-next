@@ -137,10 +137,6 @@ public fun KitButton(
     destructive: Boolean = false,
     /** A quiet (tertiary) button whose words are the kit's warning ink: the destructive answer beside a filled safe one. */
     danger: Boolean = false,
-    /**
-     * Kept for callers; ignored. Compact width (360 dp at normal text): an action's words are never cut, so a label
-     * that does not fit on one line wraps onto as many as it needs and the button grows taller (never an ellipsis).
-     */
     maxLines: Int = 2,
     semanticsLabel: String? = null,
     enabled: KitEnabled = KitEnabled.Enabled,
@@ -371,9 +367,6 @@ internal fun kitTertiaryUnderlined(): Boolean = LocalKitStyle.current.spec.token
 /** The text action's words against the ground and the page's surface. */
 private const val TERTIARY_CONTRAST = 4.6
 
-/** A button's label wraps onto every line it needs: an action is never ended in an ellipsis. */
-private const val ALL_LINES = Int.MAX_VALUE
-
 /** The app theme's filled button side padding (Dart `filledButtonTheme`). */
 private const val FILLED_SIDE_PAD_DP = 16 // F: lib/ui/app_theme.dart:370
 private const val FILLED_VERTICAL_PAD_DP = 12 // F: lib/ui/app_theme.dart:370
@@ -443,17 +436,17 @@ public fun KitButton(
 }
 
 @Composable
-private fun KitButtonWords(label: String, color: Color, @Suppress("UNUSED_PARAMETER") maxLines: Int, shortcut: String?, role: KitButtonRole) {
+private fun KitButtonWords(label: String, color: Color, maxLines: Int, shortcut: String?, role: KitButtonRole) {
     // Tone is resolved by the caller's eased colour; KitText takes a tone, so the words draw
     // through a tone-free path.
     val window = LocalKitWindow.current
     // Visual language §5: the shortcut shows on a fine pointer, from the expanded window up.
     if (shortcut == null || !window.finePointer || !window.cls.isWide) {
-        KitTextColored(label, color, ALL_LINES, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined())
+        KitTextColored(label, color, maxLines, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined())
         return
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f, fill = false)) { KitTextColored(label, color, ALL_LINES, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined()) }
+        Box(Modifier.weight(1f, fill = false)) { KitTextColored(label, color, maxLines, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined()) }
         Spacer(Modifier.width(Space.S1.dp))
         // Mono, text3 on a tertiary button and the button's own words otherwise; always left to right.
         val mono = LocalKitTypography.current.style(TypeRole.Mono)
@@ -505,7 +498,7 @@ private fun ButtonLine(text: String, style: androidx.compose.ui.text.TextStyle, 
             },
         style = style,
         maxLines = maxLines,
-        overflow = if (maxLines == ALL_LINES) TextOverflow.Clip else TextOverflow.Ellipsis,
+        overflow = TextOverflow.Ellipsis,
         onTextLayout = {
             exact[0] = if (it.lineCount == 1 && !it.hasVisualOverflow) it.multiParagraph.getLineRight(0) - it.multiParagraph.getLineLeft(0) else 0f
         },
