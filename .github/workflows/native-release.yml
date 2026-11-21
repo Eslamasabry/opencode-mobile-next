@@ -77,6 +77,9 @@ jobs:
           ref: refs/tags/${{ inputs.tag }}
           fetch-depth: 0
 
+      - name: Require device-tested agent pins
+        run: python3 -I native/tool/qa/check_tested_pins.py
+
       - name: Require the tag to match version.properties and master
         id: version
         env:

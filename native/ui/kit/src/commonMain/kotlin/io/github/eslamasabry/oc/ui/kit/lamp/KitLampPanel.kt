@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.lamp
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,9 +17,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,6 +89,7 @@ import io.github.eslamasabry.oc.ui.kit.status.rememberKitStepTreeState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import kotlin.math.abs
 
 /** The list's groups (LAMP-PLAN §5); the caller orders them top → bottom, Needs you last, by the thumb. */
 public enum class KitLampGroup { Pinned, Recent, Done, Working, Failed, NeedsYou }
@@ -258,6 +264,16 @@ public object KitLampPanelRules {
         return if (kept >= room * KitLampPanelDims.CUT_MIN_SHARE) kept else room
     }
 
+    /**
+     * The list's height [h] of [total], bottom-aligned, trimmed when its top edge would fall inside a section label (a
+     * `top..bottom` span from the list's top): the label is then fully out, never half in view.
+     */
+    internal fun clearOfLabels(h: Int, total: Int, labels: List<IntRange>): Int {
+        val cut = total - h
+        val hit = labels.firstOrNull { cut > it.first && cut < it.last }
+        return if (h >= total || hit == null) h else total - hit.last
+    }
+
     /** The scrim's strength behind the open panel, by style (LAMP-CRAFT §6). */
     public fun scrimAlpha(style: Style, dark: Boolean): Float =
         when (style) {
@@ -272,7 +288,7 @@ public object KitLampPanelRules {
 
 /**
  * The edge light's list (LAMP-PLAN §5, LAMP-CRAFT §4-5): "Conversations" with Edit / Done on its baseline and "You are
- * in “‹title›”"; the groups filled from the bottom (Needs you by the thumb), opening scrolled to the bottom, a 16 dp
+ * in “‹title›”"; the groups filled from the bottom (Needs you by the thumb), opening at the top of the last group, a 16 dp
  * fade at a cut edge only while there is more past it, the top cut on a group boundary; conversation rows with their
  * mark, title (two lines) with time, server and pin, the state word, the newest line or the request in amber, Allow
  * once / Deny or Answer…, the 44 dp stop square, held receipts; sub-agents as a step tree under their row; in Edit:
@@ -328,65 +344,213 @@ private fun PanelHeader(model: KitLampPanelModel, words: KitLampPanelWords, acti
     }
 }
 
-/** The groups, bottom-filled, scrolling from the bottom, faded at a cut edge while there is more past it. */
+/** The list's items in order: the "more" block, then each section's label and its rows, each under a stable key. */
+private fun listKeys(model: KitLampPanelModel): List<String> =
+    listOf(MORE_KEY) + model.sections.flatMap { s -> listOf(labelKey(s)) + s.rows.map { rowKey(it) } }
+
+private const val MORE_KEY = "more"
+
+private fun labelKey(section: KitLampSection) = "label:${section.group}"
+
+private fun rowKey(row: KitLampRow) = "row:${row.key}"
+
+/** Where the list rests and what it keeps in place; plain state for [PanelList]'s one collector. */
+private class PanelRest {
+    /** True until the person scrolls: the list sits at the top of its last (Needs you) group. */
+    var atOpen = true
+    var anchorKey: String? = null
+    var anchorOffset = 0
+    var applied = -1
+    var keys: List<String> = emptyList()
+    var tops: IntArray = IntArray(0)
+    var max = 0
+
+    /** Puts the list where it belongs for the items now known: the opening place, or the row it holds. */
+    suspend fun place(scroll: ScrollState, heights: Map<String, Int>, ks: List<String>, max: Int) {
+        val at = tops(ks, heights)
+        val held = anchorKey?.let { k -> ks.indexOf(k).takeIf { it >= 0 }?.let { at[it] + anchorOffset } }
+        val viewTop =
+            if (atOpen) ks.indexOfLast { it.startsWith("label:") }.let { if (it < 0) 0 else at[it] }
+            else held ?: (max - scroll.value)
+        val want = max - viewTop.coerceIn(0, max)
+        keys = ks
+        tops = at
+        this.max = max
+        applied = want
+        if (scroll.value != want) scroll.scrollTo(want)
+    }
+
+    /** After a scroll: settle with a label whole or gone, then keep the row at the top. */
+    suspend fun settle(scroll: ScrollState, heights: Map<String, Int>) {
+        atOpen = false
+        var viewTop = scroll.maxValue - scroll.value
+        val cut = labelSpans(keys, heights).firstOrNull { viewTop > it.first && viewTop < it.last }
+        if (cut != null) {
+            viewTop = if (viewTop - cut.first < cut.last - viewTop) cut.first else cut.last
+            scroll.animateScrollTo(scroll.maxValue - viewTop)
+        }
+        val i = keys.indices.lastOrNull { tops[it] <= viewTop } ?: 0
+        anchorKey = keys[i]
+        anchorOffset = viewTop - tops[i]
+        applied = scroll.value
+    }
+}
+
+private fun tops(keys: List<String>, heights: Map<String, Int>): IntArray {
+    val out = IntArray(keys.size)
+    var at = 0
+    keys.forEachIndexed { i, k ->
+        out[i] = at
+        at += heights[k] ?: 0
+    }
+    return out
+}
+
+/** Where each section label lies in the list (px from its top), as `top..bottom`. */
+private fun labelSpans(keys: List<String>, heights: Map<String, Int>): List<IntRange> {
+    val at = tops(keys, heights)
+    return keys.indices.filter { keys[it].startsWith("label:") }.map { at[it]..at[it] + (heights[keys[it]] ?: 0) }
+}
+
+/**
+ * The groups, bottom-filled; the panel opens at the top of its last group (Needs you) with its label and first request
+ * whole, never scrolled to the buttons; what does not fit is reached by scrolling down. A request that arrives while it
+ * is open takes its place and the rows the person is looking at stay where they are. Faded at a cut edge while there is
+ * more past it.
+ */
 @Composable
 private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, actions: KitLampPanelActions, modifier: Modifier) {
     val scroll = rememberScrollState()
-    val heights = remember { mutableStateMapOf<Int, Int>() }
-    val parts = 1 + model.sections.size
-    val fade = KitLampPanelDims.FADE.dp
+    // One height per item, by key, so the viewport and the resting scroll can land on an item's edge: a label is never
+    // half in view, and a row keeps its place when others come and go.
+    val heights = remember { mutableStateMapOf<String, Int>() }
+    val keys = listKeys(model)
+    val liveKeys by rememberUpdatedState(keys)
+    val rest = remember { PanelRest() }
+    var shown by remember { mutableStateOf(false) }
+    val groupKeys = model.sections.map { listOf(labelKey(it)) + it.rows.map(::rowKey) }
+    LaunchedEffect(scroll) {
+        launch {
+            snapshotFlow { liveKeys.takeIf { ks -> ks.all { heights.containsKey(it) } }?.let { it to scroll.maxValue } }
+                .collect { snap ->
+                    val (ks, max) = snap ?: return@collect
+                    rest.place(scroll, heights, ks, max)
+                    shown = true
+                }
+        }
+        var moved = false
+        snapshotFlow { scroll.isScrollInProgress to scroll.value }.collect { (moving, value) ->
+            if (moving && value != rest.applied) moved = true
+            if (!moving && moved && rest.keys.isNotEmpty()) {
+                moved = false
+                rest.settle(scroll, heights)
+            }
+        }
+    }
     Box(
         modifier
             .fillMaxWidth()
             .testTag(LAMP_PANEL_LIST_TAG)
             .layout { m, c ->
-                val known = (0 until parts).map { heights[it] ?: 0 }
-                val room = if (c.hasBoundedHeight) c.maxHeight else Constraints.Infinity
-                val h = if (room == Constraints.Infinity) known.sum() else KitLampPanelRules.viewport(known, room).coerceAtMost(room)
+                val h = listHeight(keys, groupKeys, heights, c)
                 val p = m.measure(c.copy(minHeight = h, maxHeight = h))
                 layout(p.width, h) { p.place(0, 0) }
             }
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .drawWithContent {
-                drawContent()
-                // Reverse scrolling: 0 is the bottom. More above while not at the top; more below while scrolled up.
-                val above = scroll.value < scroll.maxValue
-                val below = scroll.value > 0
-                if (!above && !below) return@drawWithContent
-                val f = (fade.toPx() / size.height).coerceIn(0f, 0.5f)
-                val top = if (above) Color.Transparent else Color.Black
-                val bottom = if (below) Color.Transparent else Color.Black
-                drawRect(Brush.verticalGradient(0f to top, f to Color.Black, 1f - f to Color.Black, 1f to bottom), blendMode = BlendMode.DstIn)
-            },
+            .graphicsLayer {
+                compositingStrategy = CompositingStrategy.Offscreen
+                // Not drawn until it has taken its opening place, so it never shows scrolled to the bottom for a frame.
+                alpha = if (shown) 1f else 0f
+            }
+            .fadeAtCutEdges(scroll),
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(scroll, reverseScrolling = true)) {
-            Column(Modifier.fillMaxWidth().onSizeChanged { heights[0] = it.height }) {
-                if (model.more > 0) {
-                    Box(
-                        Modifier.fillMaxWidth().heightIn(min = KitLampPanelDims.FOOTER_H.dp).kitTappable(onClick = actions.onAll, role = KitTappableRole.Row).padding(horizontal = Space.S4.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) { KitText(words.more(model.more), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 2) }
-                }
-                if (model.sections.isEmpty() && model.hidden.isEmpty()) {
-                    Box(Modifier.fillMaxWidth().padding(Space.S4.dp), contentAlignment = Alignment.Center) {
-                        KitText(words.empty, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-                    }
-                }
-            }
-            model.sections.forEachIndexed { i, section ->
-                Column(Modifier.fillMaxWidth().onSizeChanged { heights[i + 1] = it.height }) {
-                    Section(section, model.editing, words, actions)
-                }
-            }
+            PanelItems(model, words, actions) { key, height -> heights[key] = height }
         }
     }
 }
 
+/** The list's height in [c]: the groups that fit, trimmed so no section label is cut by its top edge. */
+private fun listHeight(
+    keys: List<String>,
+    groupKeys: List<List<String>>,
+    heights: Map<String, Int>,
+    c: Constraints,
+): Int {
+    val known = keys.map { heights[it] ?: 0 }
+    if (!c.hasBoundedHeight) return known.sum()
+    val groups = listOf(heights[MORE_KEY] ?: 0) + groupKeys.map { g -> g.sumOf { heights[it] ?: 0 } }
+    val view = KitLampPanelRules.viewport(groups, c.maxHeight).coerceAtMost(c.maxHeight)
+    return KitLampPanelRules.clearOfLabels(view, known.sum(), labelSpans(keys, heights))
+}
+
+/** A fade at a cut edge while there is more past it. Reverse scrolling: 0 is the bottom. */
+private fun Modifier.fadeAtCutEdges(scroll: ScrollState): Modifier =
+    drawWithContent {
+        drawContent()
+        val above = scroll.value < scroll.maxValue
+        val below = scroll.value > 0
+        if (!above && !below) return@drawWithContent
+        val f = (KitLampPanelDims.FADE.dp.toPx() / size.height).coerceIn(0f, 0.5f)
+        val top = if (above) Color.Transparent else Color.Black
+        val bottom = if (below) Color.Transparent else Color.Black
+        val brush = Brush.verticalGradient(0f to top, f to Color.Black, 1f - f to Color.Black, 1f to bottom)
+        drawRect(brush, blendMode = BlendMode.DstIn)
+    }
+
 @Composable
-private fun Section(section: KitLampSection, editing: Boolean, words: KitLampPanelWords, actions: KitLampPanelActions) {
+private fun PanelItems(
+    model: KitLampPanelModel,
+    words: KitLampPanelWords,
+    actions: KitLampPanelActions,
+    onHeight: (key: String, height: Int) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().onSizeChanged { onHeight(MORE_KEY, it.height) }) {
+        if (model.more > 0) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = KitLampPanelDims.FOOTER_H.dp)
+                    .kitTappable(onClick = actions.onAll, role = KitTappableRole.Row)
+                    .padding(horizontal = Space.S4.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                KitText(
+                    words.more(model.more),
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                    kind = KitTextKind.Frame,
+                    maxLines = 2,
+                )
+            }
+        }
+        if (model.sections.isEmpty() && model.hidden.isEmpty()) {
+            Box(Modifier.fillMaxWidth().padding(Space.S4.dp), contentAlignment = Alignment.Center) {
+                KitText(words.empty, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+            }
+        }
+    }
+    val accentKey = lampAccentKey(model.sections)
+    model.sections.forEach { section -> Section(section, model.editing, words, actions, onHeight, accentKey) }
+}
+
+/** The key of the first row that asks something, top to bottom: the one row whose answer is accented. */
+internal fun lampAccentKey(sections: List<KitLampSection>): Any? = sections.firstNotNullOfOrNull { s -> s.rows.firstOrNull { it.request != null }?.key }
+
+@Composable
+private fun Section(
+    section: KitLampSection,
+    editing: Boolean,
+    words: KitLampPanelWords,
+    actions: KitLampPanelActions,
+    onItemHeight: (key: String, height: Int) -> Unit,
+    accentKey: Any?,
+) {
     KitText(
         section.title,
-        Modifier.padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp).testTag(LAMP_PANEL_HEADING_TAG),
+        Modifier
+            .onSizeChanged { onItemHeight(labelKey(section), it.height) }
+            .padding(start = Space.S4.dp, end = Space.S4.dp, top = Space.S3.dp, bottom = Space.S1.dp)
+            .testTag(LAMP_PANEL_HEADING_TAG),
         role = TypeRole.Label,
         tone = if (section.group == KitLampGroup.NeedsYou) TextTone.Attention else TextTone.Secondary,
         kind = KitTextKind.Frame,
@@ -401,15 +565,19 @@ private fun Section(section: KitLampSection, editing: Boolean, words: KitLampPan
             onMove = actions.onReorderPinned,
             words = words.reorder,
         ) { row, handle ->
-            Column {
-                LampBlock(row, editing = true, words, actions, handle)
+            Column(Modifier.onSizeChanged { onItemHeight(rowKey(row), it.height) }) {
+                LampBlock(row, editing = true, words, actions, handle, primary = row.key == accentKey)
                 if (row != section.rows.last()) RowDivider()
             }
         }
     } else {
         section.rows.forEachIndexed { i, row ->
-            androidx.compose.runtime.key(row.key) { LampBlock(row, editing, words, actions, null) }
-            if (i < section.rows.size - 1) RowDivider()
+            androidx.compose.runtime.key(row.key) {
+                Column(Modifier.onSizeChanged { onItemHeight(rowKey(row), it.height) }) {
+                    LampBlock(row, editing, words, actions, null, primary = row.key == accentKey)
+                    if (i < section.rows.size - 1) RowDivider()
+                }
+            }
         }
     }
 }
@@ -421,10 +589,10 @@ private fun RowDivider() {
 
 /** A conversation, with its sub-agents as one step-tree block when it has any. */
 @Composable
-private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWords, actions: KitLampPanelActions, handle: (@Composable () -> Unit)?) {
+private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWords, actions: KitLampPanelActions, handle: (@Composable () -> Unit)?, primary: Boolean) {
     val kind = row.steps
     if (kind == null || row.children.isEmpty()) {
-        LampRowView(row, editing, words, actions, handle, null)
+        LampRowView(row, editing, words, actions, handle, null, primary)
         return
     }
     val tree = rememberKitStepTreeState()
@@ -443,7 +611,7 @@ private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWord
                 onHoldEnd = { actions.onHoldEnd(row.key, it) },
             ),
         state = tree,
-    ) { LampRowView(row, editing, words, actions, handle, this) }
+    ) { LampRowView(row, editing, words, actions, handle, this, primary) }
 }
 
 /**
@@ -458,6 +626,7 @@ private fun LampRowView(
     actions: KitLampPanelActions,
     handle: (@Composable () -> Unit)?,
     tree: KitStepTreeScope?,
+    primary: Boolean,
 ) {
     val asking = row.request != null && !editing
     Column(Modifier.fillMaxWidth().testTag(LAMP_ROW_TAG)) {
@@ -532,6 +701,7 @@ private fun LampRowView(
                     onUndo = { actions.onUndo(row.key, null) },
                     onHoldEnd = { actions.onHoldEnd(row.key, null) },
                     showWords = false,
+                    primary = primary,
                 )
             row.stopping != null && !editing ->
                 KitReceipt(

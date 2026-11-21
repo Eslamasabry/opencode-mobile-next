@@ -90,6 +90,7 @@ git fetch --quiet "$REMOTE" "$RELEASE_BRANCH" || cannot "cannot fetch $REMOTE/$R
 [[ "$(git rev-parse HEAD)" == "$(git rev-parse FETCH_HEAD)" ]] ||
   fail "$RELEASE_BRANCH is not synchronized with $REMOTE/$RELEASE_BRANCH (pull or push first)."
 
+python3 -I "$NATIVE/tool/qa/check_tested_pins.py"
 prop() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*\([^[:space:]#]*\).*/\1/p" "$NATIVE/version.properties" | tail -n 1; }
 NAME="$(prop versionName)"
 CURRENT="$(prop versionCode)"

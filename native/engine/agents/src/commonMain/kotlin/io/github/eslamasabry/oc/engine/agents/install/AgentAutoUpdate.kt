@@ -63,6 +63,15 @@ public interface AgentUpdateHost {
      */
     public suspend fun read()
 
+    /**
+     * The person's yes on a sheet that said mobile data and showed the size covers [agent]'s install over it (M1-C).
+     * Only the items that sheet named; nothing else gains it.
+     */
+    public fun meteredYes(agent: AgentId): Boolean = false
+
+    /** The install of [agent] started: its yes from the sheet is spent. */
+    public fun spendMeteredYes(agent: AgentId) {}
+
     /** The installed agents in catalog order; empty when none is installed or nothing is known yet. */
     public val installed: List<AgentId>
 
@@ -217,7 +226,8 @@ public class AgentAutoUpdater(
     /** A call found a look running: that look checks this before it lets go, so the call is never lost. */
     @kotlin.concurrent.Volatile private var lookAgain = false
 
-    private fun metered(): Boolean = host.metered && !meteredAllowed
+    private fun metered(target: AgentId?): Boolean =
+        host.metered && !meteredAllowed && !(target != null && host.meteredYes(target))
     private val state = MutableStateFlow(AgentUpdateDecision(AgentUpdateStep.NotLooked))
 
     public val decision: StateFlow<AgentUpdateDecision> = state.asStateFlow()
@@ -259,6 +269,7 @@ public class AgentAutoUpdater(
             if (jobs.update(target)) {
                 attempted += "$key/${target.raw}"
                 attempted += "$key/$HELPER"
+                host.spendMeteredYes(target)
                 // Spends the yes this start used; a yes that came during the start stays for the next look.
                 if (yes == yesCount) meteredAllowed = false
                 busyStreak = 0
@@ -362,7 +373,7 @@ public class AgentAutoUpdater(
                 setupRunning = running,
                 switchPending = host.switchPending,
                 installProblem = problem,
-                metered = metered(),
+                metered = metered(target),
                 attemptedThisRun = false,
             )
         if (explain) {
@@ -390,7 +401,7 @@ public class AgentAutoUpdater(
                 running -> AgentUpdateStep.WaitingSetup
                 host.switchPending -> AgentUpdateStep.WaitingSwitch
                 problem -> AgentUpdateStep.WaitingSetup
-                metered() -> AgentUpdateStep.WaitingMetered
+                metered(target) -> AgentUpdateStep.WaitingMetered
                 busy -> AgentUpdateStep.WaitingAgentsBusy
                 else -> return
             }

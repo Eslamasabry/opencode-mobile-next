@@ -79,7 +79,7 @@ class Gate(unittest.TestCase):
                "Execution failed for task ':ui:kit:testAndroidHostTest'.\n"
                "> There were failing tests. See the report at: file:///x\n")
         code, md = run_gate(log, ':ui:kit:verifyRoborazziAndroidHostTest',
-                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('known picture difference',))])
+                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop]',))])
         self.assertEqual(code, 0, md)
         self.assertIn('known noise', md)
 
@@ -188,9 +188,10 @@ class Gate(unittest.TestCase):
         self.assertIn('feature/usage: no test results', md)
 
     def test_known_test_class_failure_is_pass(self):
-        cls = f'{PKG}.feature.usage.LimitsScreenTest'  # listed in known_failures.txt
+        cls = f'{PKG}.feature.usage.LimitsScreenTest'  # a class line, planted: the real list holds none for it any more
         log = TEST_FAILED_LOG.replace('feature:chats', 'feature:usage')
-        code, md = run_gate(log, ':feature:usage:desktopTest', [('feature/usage', cls, ('a provider without limits',))])
+        code, md = run_gate(log, ':feature:usage:desktopTest', [('feature/usage', cls, ('a provider without limits',))],
+                            known=f'feature/usage :: {cls} | planted\n')
         self.assertEqual(code, 0, md)
         self.assertIn('known noise', md)
 
@@ -298,6 +299,11 @@ class KnownFailuresCeiling(unittest.TestCase):
     from CEILING (the ceiling then stays lower for good)."""
     CEILING = {
         '* :: *.rb.*GateTest',
+    }
+
+    # The classes that had a class-level line on the base of the narrowing work (2026-11-21). Frozen: an exact test line
+    # may exist only for one of these, so a class that never had a line can not get one by the back door.
+    BASE_CLASSES = {
         'engine/runtime :: io.github.eslamasabry.oc.engine.runtime.install.VerbatimScriptsTest',
         'feature/background :: io.github.eslamasabry.oc.feature.background.BackgroundScreenUiTest',
         'feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ServerSwitcherSheetTest',
@@ -319,6 +325,29 @@ class KnownFailuresCeiling(unittest.TestCase):
         'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTextHaloParityTest',
         'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest',
     }
+    # Exact test lines allowed today (they replace class lines; they can only shrink too).
+    EXACT_CEILING = {
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2_1280x800[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_1280x800[desktop]',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop]',
+    }
+
+    @staticmethod
+    def violations(heads, ceiling, base_classes, exact_ceiling):
+        """What in `heads` (the lines of known_failures.txt, reason cut off) the list may not hold. A class-level line must
+        be on the ceiling. An exact test line ("<module> :: <Class> > <test>") narrows a class line and is allowed only
+        when its class had a class-level line on the base AND the line itself is on the exact ceiling; any other new
+        line (another class, a wider one, a class that never had a line) is refused."""
+        out = set()
+        for head in heads:
+            if ' > ' in head:
+                if head.split(' > ', 1)[0] not in base_classes or head not in exact_ceiling:
+                    out.add(head)
+            elif head not in ceiling:
+                out.add(head)
+        return sorted(out)
 
     @staticmethod
     def entries():
@@ -331,12 +360,12 @@ class KnownFailuresCeiling(unittest.TestCase):
         return out
 
     def test_no_line_was_added_or_widened(self):
-        added = sorted({h for h, _ in self.entries()} - self.CEILING)
+        added = self.violations([h for h, _ in self.entries()], self.CEILING, self.BASE_CLASSES, self.EXACT_CEILING)
         self.assertEqual(added, [], 'known_failures.txt may only shrink: fix the failing test instead of listing it. New or '
                                     'changed lines: ' + '; '.join(added))
 
     def test_the_ceiling_follows_every_deletion(self):
-        gone = sorted(self.CEILING - {h for h, _ in self.entries()})
+        gone = sorted((self.CEILING | self.EXACT_CEILING) - {h for h, _ in self.entries()})
         self.assertEqual(gone, [], 'these lines were deleted from known_failures.txt: delete them from CEILING in '
                                    'test_gate.py too, so the list cannot grow back: ' + '; '.join(gone))
 
@@ -351,6 +380,55 @@ class KnownFailuresCeiling(unittest.TestCase):
         text = ' '.join(h for h, _ in self.entries())
         self.assertNotIn('ConversationDraftsTest', text)
         self.assertNotIn('E06RequestCardsTest', text)
+
+    NARROW_CLASS = 'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest'
+    OTHER_CLASS = 'feature/chats :: io.github.eslamasabry.oc.feature.chats.BrandNewTest'
+    EXACT_A = NARROW_CLASS + ' > N1 B-KIT-029 first'
+    EXACT_B = NARROW_CLASS + ' > N1 B-KIT-029 second'
+
+    def check(self, heads, exact=()):
+        return self.violations(heads, {self.NARROW_CLASS, '* :: *.rb.*GateTest'}, {self.NARROW_CLASS}, set(exact))
+
+    def test_B_CI_314_replacing_a_class_line_by_its_exact_tests_is_a_narrowing(self):
+        self.assertEqual(self.check(['* :: *.rb.*GateTest', self.EXACT_A, self.EXACT_B], exact=[self.EXACT_A, self.EXACT_B]), [])
+
+    def test_B_CI_315_a_new_line_for_another_class_is_refused(self):
+        refused = self.check(['* :: *.rb.*GateTest', self.EXACT_A, self.OTHER_CLASS], exact=[self.EXACT_A])
+        self.assertEqual(refused, [self.OTHER_CLASS])
+        exact_elsewhere = self.OTHER_CLASS + ' > breaks'  # an exact line whose class had no class line on the base
+        self.assertEqual(self.check([self.EXACT_A, exact_elsewhere], exact=[self.EXACT_A, exact_elsewhere]), [exact_elsewhere])
+
+    def test_B_CI_316_a_widening_is_refused(self):
+        extra = self.NARROW_CLASS + ' > N1 B-KIT-029 third'  # more than the audited exact lines
+        self.assertEqual(self.check([self.EXACT_A, extra], exact=[self.EXACT_A]), [extra])
+        self.assertEqual(self.check([self.NARROW_CLASS + '*']), [self.NARROW_CLASS + '*'])  # a wider pattern for the class
+
+    def test_B_CI_317_a_class_narrowed_to_exact_lines_goes_red_on_a_third_test(self):
+        cls = f'{PKG}.ui.kit.PartADesktopTest'
+        known = f'ui/kit :: {cls} > first breaks | planted\nui/kit :: {cls} > second breaks | planted\n'
+        log = TEST_FAILED_LOG.replace('feature:chats', 'ui:kit')
+        code, md = run_gate(log, ':ui:kit:desktopTest', [('ui/kit', cls, ('first breaks', 'second breaks'))], known=known)
+        self.assertEqual(code, 0, md)  # the two listed ones stay noise
+        code, md = run_gate(log, ':ui:kit:desktopTest', [('ui/kit', cls, ('first breaks', 'second breaks', 'third breaks'))], known=known)
+        self.assertEqual(code, 1, md)  # a third test of the class turns the verdict red
+        self.assertIn('third breaks', md)
+        self.assertNotIn('`ui/kit :: ' + cls + ' > first breaks`', md)
+
+    def test_B_CI_318_a_stale_excuse_line_is_printed_in_the_summary(self):
+        cls = f'{PKG}.ui.kit.PartADesktopTest'
+        live = f'ui/kit :: {cls} > still breaks | planted live'
+        stale_exact = f'ui/kit :: {cls} > was fixed | planted stale'
+        stale_class = f'ui/kit :: {PKG}.ui.kit.GoneTest | planted stale class'
+        not_run = f'feature/usage :: {PKG}.feature.usage.LimitsScreenTest | planted, its module is not in this run'
+        log = TEST_FAILED_LOG.replace('feature:chats', 'ui:kit')
+        code, md = run_gate(log, ':ui:kit:desktopTest', [('ui/kit', cls, ('still breaks',))],
+                            known='\n'.join([live, stale_exact, stale_class, not_run, '* :: *.rb.*GateTest | picture gates']) + '\n')
+        self.assertEqual(code, 0, md)  # a stale line never turns a run red by itself: it is seen, then deleted
+        self.assertIn('STALE KNOWN-FAILURE LINE: ' + stale_exact, md)
+        self.assertIn('STALE KNOWN-FAILURE LINE: ' + stale_class, md)
+        self.assertNotIn(live, md)
+        self.assertNotIn('LimitsScreenTest', md)
+        self.assertNotIn('GateTest', md)
 
 
 class AndroidUnit(unittest.TestCase):

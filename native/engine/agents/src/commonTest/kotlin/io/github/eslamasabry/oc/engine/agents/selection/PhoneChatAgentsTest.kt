@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.agents.selection
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.certification.certifiedClaude327Matrix
 import io.github.eslamasabry.oc.engine.agents.host.AgentHostProblem
 import io.github.eslamasabry.oc.engine.agents.host.agentHostProblem
 import io.github.eslamasabry.oc.engine.agents.testing.FakeAgentPrefs
@@ -22,11 +23,11 @@ class PhoneChatAgentsTest {
 
     @Test
     fun `PHONE-CHAT a ready certified agent is a choice, a certified one with a way forward is set up`() {
-        val ready = PhoneChatAgents.offer(listOf(fact(claude, ready = true)), AgentId.OPENCODE)
+        val ready = PhoneChatAgents.offer(listOf(fact(claude, ready = true)), AgentId.OPENCODE, certifiedClaude327Matrix)
         assertEquals(listOf(claude), ready.choices.map { it.id })
         assertEquals(emptyList(), ready.needsSetup.map { it.id })
 
-        val signedOut = PhoneChatAgents.offer(listOf(fact(claude, ready = false, fixable = true)), AgentId.OPENCODE)
+        val signedOut = PhoneChatAgents.offer(listOf(fact(claude, ready = false, fixable = true)), AgentId.OPENCODE, certifiedClaude327Matrix)
         assertEquals(emptyList(), signedOut.choices.map { it.id })
         assertEquals(listOf(claude), signedOut.needsSetup.map { it.id }, "a dimmed row that opens its setup")
     }

@@ -318,6 +318,8 @@ public fun KitTopBar(
                 // Flutter's chat header: a long title takes a second line before it ends in "…" beside the chevron.
                 maxLines = if (LocalKitHeaderCapsule.current) 1 else 2,
                 pageTitle = true,
+                // E-4: a conversation's title reads in its own direction, so its "…" closes the words.
+                ownDirection = true,
             )
             if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
         }
