@@ -27,7 +27,8 @@ internal const val AGENT_PINS_JSON: String = """{
     "2.1.319",
     "2.1.321",
     "2.1.325",
-    "2.1.327"
+    "2.1.327",
+    "2.1.330"
   ],
   "paseoTestedVersions": [
     "0.9.2",

@@ -98,6 +98,9 @@ class PhoneUpdateChoices(
             engine.startIfChosen(id, start)
         }
 
+    /** The yes on a sheet that said mobile data covers this agent's install (M1-C); spent when it starts. */
+    internal val mobile get() = engine.mobile
+
     /** OpenCode's update waits for the shared parts (Node.js, the helper) the offer still lists. */
     internal val openCodeNeedsShared: Boolean get() = engine.openCodeNeedsShared
 

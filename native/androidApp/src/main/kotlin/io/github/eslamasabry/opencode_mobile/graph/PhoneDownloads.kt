@@ -80,6 +80,9 @@ class PhoneDownloads(
 
     /** The network has been read at least once: until then "waiting for Wi-Fi" is not said (it is not known yet). */
     private val networkRead = MutableStateFlow(false)
+
+    /** The network as last read (null before the first read): Home's line follows it, not the offer's older copy. */
+    internal val liveNetwork = MutableStateFlow<SetupNetwork?>(null)
     @Volatile private var started = false
 
     /** The phone is on a network that is free to download over; false for mobile data, unknown and offline. */
@@ -107,11 +110,13 @@ class PhoneDownloads(
         started = true
         scope.launch(dispatchers.io) {
             now = network.current()
+            liveNetwork.value = now
             networkRead.value = true
         }
         scope.launch(dispatchers.io) {
             network.changes.collect {
                 now = it
+                liveNetwork.value = it
                 networkRead.value = true
             }
         }
@@ -205,7 +210,10 @@ class PhoneDownloads(
                 )
             }
             .combine(sharedRunning) { rows, shared -> if (shared == null) rows else listOf(shared) }
-            .combine(agentStatus.choices.offer) { rows, offer ->
+            .combine(agentStatus.choices.offer) { rows, read -> rows to read }
+            .combine(liveNetwork) { (rows, read), live ->
+                // The offer keeps the network of its last read; the line says the live one.
+                val offer = if (read != null && live != null) read.copy(network = live.asOfferNetwork()) else read
                 val withHelper =
                     if (offer?.neededGoesAhead == true && offer.network != AgentUpdateNetwork.Unmetered &&
                         rows.none { it.kind == HomeDownloadKind.Helper }) {
@@ -222,7 +230,7 @@ class PhoneDownloads(
                 // Agents chosen on the sheet that wait for Wi-Fi join this row (a second sentence, or the line).
                 HomeDownloadMapping.withHeldAgents(
                     HomeDownloadMapping.openCodeWithHelper(named, openCodeWithHelperMb(offer)),
-                    heldAgentsOf(offer, running),
+                    heldAgentsOf(offer, running, consented = agentStatus.choices.mobile::covers),
                 )
             }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
@@ -277,12 +285,18 @@ class PhoneDownloads(
  * (decimal MB). OpenCode and the shared parts have their own lines and are not counted. Null when none waits, when the
  * network is free, or when a size is unknown (a total with a hole would be a guess).
  */
-internal fun heldAgentsOf(offer: AgentUpdateOffer?, running: AgentId? = null): HomeHeldAgents? {
-    val waiting = offer?.takeIf { it.answered && it.network != AgentUpdateNetwork.Unmetered }
+internal fun heldAgentsOf(
+    offer: AgentUpdateOffer?,
+    running: AgentId? = null,
+    liveNetwork: AgentUpdateNetwork? = null,
+    consented: (AgentId) -> Boolean = { false },
+): HomeHeldAgents? {
+    val net = liveNetwork ?: offer?.network
+    val waiting = offer?.takeIf { it.answered && net != AgentUpdateNetwork.Unmetered }
     val held =
         waiting?.items.orEmpty().filter {
             it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE && it.id != running &&
-                it.choice == AgentUpdateChoice.Update
+                it.choice == AgentUpdateChoice.Update && !consented(it.id)
         }
     val bytes = held.map { it.downloadBytes }
     return if (held.isEmpty() || bytes.any { it == null }) null
@@ -388,3 +402,10 @@ internal fun sharedDownloadFact(job: SetupJobRecord, parts: List<AgentUpdateItem
         name = item?.name,
     )
 }
+
+private fun SetupNetwork.asOfferNetwork(): AgentUpdateNetwork =
+    when (this) {
+        SetupNetwork.Unmetered -> AgentUpdateNetwork.Unmetered
+        SetupNetwork.Metered -> AgentUpdateNetwork.Metered
+        else -> AgentUpdateNetwork.Unknown
+    }
