@@ -14,7 +14,9 @@ Always real, never noise:
   * a selected module that produced no test results;
   * a failing test in a gate module (HARD_MODULES) or a drift / Konsist / detekt / lint class (HARD_CLASS), whatever
     the lists or the base say.
-A known_failures.txt line that excuses nothing in a run whose module ran is printed as `STALE KNOWN-FAILURE LINE: <line>` (delete it).
+A known_failures.txt line that excuses nothing although its class really ran is printed as `STALE KNOWN-FAILURE LINE:
+<line>` (delete it). An exact test line is judged only when its class appears in the run's reports: a fast lane skips
+whole classes with the goldens, and their lines are not judged.
 Noise (does not fail): an individual failing test class that also fails in the base reports, matches
 tool/ci/known_failures.txt (one test "<module> :: <class> > <test>", exact; or fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
 failures can be absorbed this way.
@@ -95,8 +97,11 @@ def is_known(f):
 
 
 def stale_known_lines():
-    """known_failures.txt lines that excuse nothing in this run although their module ran: delete them. Printed, never
-    a failure by itself. Pattern lines ("* :: ...", picture gates that only some lanes run) are skipped."""
+    """known_failures.txt lines that excuse nothing although their test really ran: delete them. Printed, never a
+    failure by itself. An exact line ("<module> :: <class> > <test>") is judged only when its class appears in the
+    reports too: a fast lane skips whole classes with the goldens (-PskipGoldens=true), and their lines are not
+    judged. Pattern lines ("* :: ...") are skipped; a class line is stale when its module ran and nothing of the
+    class failed."""
     ran = {m for s in shards for m, (n, _) in s.get('modules', {}).items() if n}
     out = []
     try:
@@ -112,6 +117,9 @@ def stale_known_lines():
         if mod not in ran:
             continue
         if ' > ' in head:
+            cls = head.split(' > ')[0]  # "<module> :: <class>"
+            if not any(f['id'].split(' > ')[0] == cls for f in failed):
+                continue  # the class is not in the reports at all (skipped, filtered): the line is not judged
             hit = any(f['id'] == head for f in failed)
         else:
             hit = any(f['id'].startswith(head + ' > ') for f in failed)
