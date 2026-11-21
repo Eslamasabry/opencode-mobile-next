@@ -64,6 +64,9 @@ public object RequestAnswersDims {
     public const val GAP: Int = Space.S2
 }
 
+/** The role of a request's allowing answer ("Allow once", or "Answer" for a question): accented only when [primary]. */
+internal fun requestAnswerRole(primary: Boolean): KitButtonRole = if (primary) KitButtonRole.Primary else KitButtonRole.Secondary
+
 /**
  * A request answered in place (LAMP-PLAN §5, LAMP-CRAFT §4 "Allow once / Deny"): the request's [KitRequest.words] in
  * the attention tone (unless [showWords] is false, where the row already says them), then Allow once | Deny as two
@@ -71,6 +74,7 @@ public object RequestAnswersDims {
  * [KitHaptic.Commit]; the caller holds the answer and passes [held]: the buttons cross-fade into the receipt "‹label› ·
  * Undo", the check growing from MARK_FROM (`KitSwap.grows`), its fill draining over HELD_ANSWER. Undo calls [onUndo];
  * the drained end calls [onHoldEnd] (the caller's hold sends; closing the list sends at once there).
+ * [primary] false = the allowing answer is not accented (another row on the surface holds the accent)
  *
  * States: asking (permission / question), held (receipt with countdown)
  * Text: frame (the request's words Secondary in Attention; buttons Button)
@@ -91,6 +95,7 @@ public fun KitRequestAnswers(
     onUndo: () -> Unit = {},
     onHoldEnd: () -> Unit = {},
     showWords: Boolean = true,
+    primary: Boolean = true,
 ) {
     val specs = KitMotion.specs
     Column(modifier.kitMaxWidth(CapRole.Reading), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -120,7 +125,7 @@ public fun KitRequestAnswers(
                     words.answer,
                     onAnswer,
                     Modifier.fillMaxWidth().heightIn(min = RequestAnswersDims.BUTTON_H.dp),
-                    role = KitButtonRole.Primary,
+                    role = requestAnswerRole(primary),
                     semanticsLabel = words.answerOn(target),
                 )
             } else {
@@ -129,7 +134,7 @@ public fun KitRequestAnswers(
                         words.allowOnce,
                         onAllow,
                         Modifier.heightIn(min = RequestAnswersDims.BUTTON_H.dp),
-                        role = KitButtonRole.Primary,
+                        role = requestAnswerRole(primary),
                         semanticsLabel = words.allowOn(target),
                         haptic = KitHaptic.Commit,
                     )
