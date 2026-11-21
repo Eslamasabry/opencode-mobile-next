@@ -27,6 +27,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -388,7 +389,15 @@ class PartADesktopTest {
         }
         val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).fetchSemanticsNode().size.width / density.density
         assertTrue(title >= 90f, "title is $title dp wide")
-        onNodeWithText("Context 34 % used").assertExists()
+        // Which long actions stay beside the title depends on their measured width (the font), so the row's proof is
+        // the rule's outcome: the overflow affordance exists, and whatever stays fits whole on one line.
+        onNodeWithText("more").assertExists()
+        listOf("Context 34 % used", "Git changes").forEach { label ->
+            if (onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()) {
+                val layout = textLayoutOf(label)
+                assertTrue(!layout.hasVisualOverflow && layout.lineCount == 1, "$label fits whole beside the title")
+            }
+        }
     }
 
     @Test
