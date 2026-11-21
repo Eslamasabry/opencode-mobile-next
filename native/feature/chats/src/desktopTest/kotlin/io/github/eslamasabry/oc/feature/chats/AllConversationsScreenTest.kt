@@ -8,7 +8,6 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
 import io.github.eslamasabry.oc.feature.chats.presentation.DeleteUndoUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsAllScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -97,7 +97,7 @@ class AllConversationsScreenTest {
         )
 
     @Test
-    fun `SCREENS-NAV-34 rows open by tap and Load more conversations is a visible row`() = runComposeUiTest {
+    fun `SCREENS-NAV-34 rows open by tap and Load more conversations is a visible row`() = kitUiTest {
         val actions = Recording()
         setContent { Themed { ChatsAllScreen(list, actions) } }
         onNodeWithText("All conversations").assertExists()
@@ -109,7 +109,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `SCREENS-NAV-34 Select is a visible way to the row acts, and select mode names its count and acts`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Recording()
             setContent { Themed { ChatsAllScreen(list, actions) } }
             onNodeWithText("Select").performClick()
@@ -118,7 +118,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `SCREENS-NAV-34 in select mode the bottom offers Rename, Archive and Delete for the chosen rows`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Recording()
             val selecting =
                 list.copy(
@@ -138,7 +138,7 @@ class AllConversationsScreenTest {
         }
 
     @Test
-    fun `SCREENS-NAV-34 a delete offers Undo naming the conversation`() = runComposeUiTest {
+    fun `SCREENS-NAV-34 a delete offers Undo naming the conversation`() = kitUiTest {
         val actions = Recording()
         setContent {
             Themed { ChatsAllScreen(list.copy(undo = DeleteUndoUi(1, 1, RowTitle.Text("Theme packs"))), actions) }
@@ -150,7 +150,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `SCREENS-NAV-34 a failed older page keeps a visible Try again and never shows raw error text`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Recording()
             setContent {
                 Themed { ChatsAllScreen(list.copy(loadMoreFailure = Failure.Network(NetworkWhy.Offline)), actions) }
@@ -161,7 +161,7 @@ class AllConversationsScreenTest {
         }
 
     @Test
-    fun `SCREENS-NAV-34 no server connected offers Servers instead of an empty list`() = runComposeUiTest {
+    fun `SCREENS-NAV-34 no server connected offers Servers instead of an empty list`() = kitUiTest {
         val actions = Recording()
         setContent { Themed { ChatsAllScreen(AllConversationsUi(phase = AllPhase.NoServer), actions) } }
         onNodeWithText("No server connected").assertExists()
@@ -175,7 +175,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `SCREENS-NAV-34 a search with no loaded match still offers Load more while older pages remain`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Recording()
             setContent { Themed { ChatsAllScreen(noMatch, actions) } }
             onNodeWithText("No matching conversations").assertExists()
@@ -185,7 +185,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `SCREENS-NAV-34 while an older page is loading the loading bar shows progress, not Load more`() =
-        runComposeUiTest {
+        kitUiTest {
             // Flutter global_sessions_screen.dart:1005 offers the button only when not loading more.
             setContent { Themed { ChatsAllScreen(noMatch.copy(loadingMore = true), Recording()) } }
             onNodeWithText("No matching conversations").assertExists()
@@ -193,7 +193,7 @@ class AllConversationsScreenTest {
         }
 
     @Test
-    fun `SCREENS-NAV-34 a failed older page under a filter with no match keeps its Try again`() = runComposeUiTest {
+    fun `SCREENS-NAV-34 a failed older page under a filter with no match keeps its Try again`() = kitUiTest {
         val actions = Recording()
         setContent {
             Themed { ChatsAllScreen(noMatch.copy(loadMoreFailure = Failure.Network(NetworkWhy.Offline)), actions) }
@@ -205,7 +205,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `SCREENS-NAV-34 reaching the end keeps asking for older pages as each one arrives without a match`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Recording()
             var state by mutableStateOf(noMatch)
             setContent { Themed { ChatsAllScreen(state, actions) } }

@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.rb.o42
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
 import io.github.eslamasabry.oc.feature.chat.RecordingNavigator
 import io.github.eslamasabry.oc.feature.chat.Immediate
@@ -12,6 +11,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.ui.TranscriptFindBar
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalTestApi::class)
 class FindBarTest {
-    @Test fun `C02 opening find selects the query and navigating releases the editor focus`() = runComposeUiTest {
+    @Test fun `C02 opening find selects the query and navigating releases the editor focus`() = kitUiTest {
         val calls = mutableListOf<String>()
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         val actions = object : ChatActions by presenter {
@@ -42,7 +42,7 @@ class FindBarTest {
         assertEquals(listOf("next"), calls)
     }
 
-    @Test fun `C02 searching history cannot activate its disabled notice action`() = runComposeUiTest {
+    @Test fun `C02 searching history cannot activate its disabled notice action`() = kitUiTest {
         var calls = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
@@ -57,7 +57,7 @@ class FindBarTest {
         assertEquals(0, calls)
     }
 
-    @Test fun emptySearchHidesNavigationAndCloseLeavesFind() = runComposeUiTest {
+    @Test fun emptySearchHidesNavigationAndCloseLeavesFind() = kitUiTest {
         val calls = mutableListOf<String?>()
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         val actions = object : ChatActions by presenter {
@@ -73,7 +73,7 @@ class FindBarTest {
         assertEquals(listOf<String?>(null), calls)
     }
 
-    @Test fun `B-CHAT-FIND-01 find is one row, its count inside the field, no excerpt row`() = runComposeUiTest {
+    @Test fun `B-CHAT-FIND-01 find is one row, its count inside the field, no excerpt row`() = kitUiTest {
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
@@ -98,7 +98,7 @@ class FindBarTest {
         onNodeWithContentDescription("Clear search").assertDoesNotExist()
     }
 
-    @Test fun noMatchesDisablesBothDirections() = runComposeUiTest {
+    @Test fun noMatchesDisablesBothDirections() = kitUiTest {
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {

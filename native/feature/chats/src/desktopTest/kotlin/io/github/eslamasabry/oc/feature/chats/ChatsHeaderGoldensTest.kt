@@ -11,13 +11,13 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlinx.collections.immutable.persistentListOf
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -95,7 +95,7 @@ class ChatsHeaderGoldensTest {
             Locale.setDefault(Locale.forLanguageTag(variant.locale))
             val state: ChatsUi = withConnection(mixed(claude = false), variant.server, variant.state)
             var failure: String? = null
-            runDesktopComposeUiTest(360, 640) {
+            kitUiTest(360, 640) {
                 setContent {
                     CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                         ChatEnvironment {

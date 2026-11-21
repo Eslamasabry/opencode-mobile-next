@@ -12,9 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.E20Scene
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowHost
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
 import kotlinx.collections.immutable.persistentListOf
@@ -38,7 +38,7 @@ class OpeningSkeletonTest {
 
     @Test
     fun `OCP-04 an unknown conversation shows no skeleton while its page arrives, then the skeleton`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val loading = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())
             mainClock.autoAdvance = false

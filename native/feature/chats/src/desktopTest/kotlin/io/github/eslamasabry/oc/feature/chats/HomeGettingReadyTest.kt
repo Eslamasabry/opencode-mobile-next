@@ -14,7 +14,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -33,6 +32,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -150,7 +150,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `HOME-READY-001 replay install - no row rings while the agents start, every row keeps its time`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val show = home(starting)
             // OW2: the wait is named ONCE, in Home's status line; no row rings or says anything of its own.
             for (title in listOf("Tidy the docs demo README", "Refactor the sync worker")) {
@@ -170,7 +170,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `HOME-READY-002 guard - This phone's OpenCode opening or starting keeps its rows' times, no mark`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             // This phone is the main server and still opening: the pill carries that wait; its rows keep their times.
             val opening =
                 starting.let {
@@ -193,7 +193,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `HOME-READY-003 guard - an agent update puts no word or ring on the rows, and a failed source shows times`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val show = home(ui(phoneSource(), agentsSource(starting = AppStart.AgentsUpdating)))
             assertTrue("12 min ago" in rowsOf("Tidy the docs demo README").single())
             val rows = spoken("kit-recent-row")
@@ -205,7 +205,7 @@ class HomeGettingReadyTest {
 
     @Test
     fun `B-HOME-227 a source that did not start is said once in a notice with Try again, never on the rows`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val said = "The agents on this phone didn't start"
             // Waiting is not failing: while the helper starts the notice is not shown.
             val show = home(ui(phoneSource(), agentsSource(starting = AppStart.Agents)))

@@ -4,7 +4,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -15,6 +14,7 @@ import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -59,7 +59,7 @@ class AgentSetUpBubbleTest {
 
     @Test
     fun `B-AGENT-113 a send that needs its agent set up says so once and opens the set-up terminal`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene(outside = outside)
             val bubble =
                 PendingSend(7L, "fix the tests", PendingState.Failed, failure, setUp = AgentSetUpNeed("qwen", "Qwen Code"))
@@ -77,7 +77,7 @@ class AgentSetUpBubbleTest {
 
     @Test
     fun `B-AGENT-113 a plain failure keeps Not sent and Try again`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene(outside = outside)
             val bubble = PendingSend(7L, "fix the tests", PendingState.Failed, failure)
             setContent { E20Scene { scene.Screen(scene.live().copy(pending = persistentListOf(bubble))) } }

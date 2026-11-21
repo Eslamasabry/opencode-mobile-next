@@ -9,7 +9,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.BackgroundWorkSupport
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTask
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.runningWorkAction
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -80,7 +80,7 @@ class RunningWorkSheetTest {
 
     @Test
     fun `B-CHAT-TASKS-009 a server that reports no background work says so, and says it cannot move work there`() =
-        runComposeUiTest {
+        kitUiTest {
             sheet(ChatWorkModel(World(BackgroundWorkSupport.Unavailable), Immediate::launch))
             onNodeWithText("This server doesn't report work that runs in the background.").assertIsDisplayed()
             onNodeWithText("This server can't move a running reply's work to the background.").assertIsDisplayed()
@@ -88,7 +88,7 @@ class RunningWorkSheetTest {
         }
 
     @Test
-    fun `B-CHAT-TASKS-010 nothing running says so and still leads to the sub-agents`() = runComposeUiTest {
+    fun `B-CHAT-TASKS-010 nothing running says so and still leads to the sub-agents`() = kitUiTest {
         var opened = 0
         sheet(ChatWorkModel(World(BackgroundWorkSupport.Unavailable), Immediate::launch), subagents = true, onShowSubagents = { opened++ })
         onNodeWithText("Nothing running").assertIsDisplayed()
@@ -98,7 +98,7 @@ class RunningWorkSheetTest {
 
     @Test
     fun `B-CHAT-TASKS-011 work the stream reports is listed by name and time and goes to the step that started it`() =
-        runComposeUiTest {
+        kitUiTest {
             val task = BackgroundTask(callId = "call-1", messageId = "a1", sinceMs = 60_000L, name = "build_release.sh")
             var shown: BackgroundTask? = null
             sheet(
@@ -116,7 +116,7 @@ class RunningWorkSheetTest {
         }
 
     @Test
-    fun `B-CHAT-TASKS-012 the … entry is always there, with the count while work runs`() = runComposeUiTest {
+    fun `B-CHAT-TASKS-012 the … entry is always there, with the count while work runs`() = kitUiTest {
         val seen = arrayOfNulls<KitLineAction>(3)
         setContent {
             Root {

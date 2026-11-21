@@ -4,11 +4,11 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote
 import io.github.eslamasabry.oc.feature.chat.ui.TurnEndNote
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -20,7 +20,7 @@ class B8CutOffLineTest {
     private val line = "The connection dropped before this reply finished."
 
     @Test
-    fun `B8 a reply lost before any words says so and offers Send again, which sends the prompt again`() = runComposeUiTest {
+    fun `B8 a reply lost before any words says so and offers Send again, which sends the prompt again`() = kitUiTest {
         var sent = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {
@@ -35,7 +35,7 @@ class B8CutOffLineTest {
     }
 
     @Test
-    fun `B8 a reply lost after some words says so and offers Continue this reply`() = runComposeUiTest {
+    fun `B8 a reply lost after some words says so and offers Continue this reply`() = kitUiTest {
         var continued = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {

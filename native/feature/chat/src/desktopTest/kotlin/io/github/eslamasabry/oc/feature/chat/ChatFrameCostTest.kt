@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.gate.FrameCost
 import io.github.eslamasabry.oc.ui.gate.FrameMeter
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.gate.summary
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -124,7 +124,7 @@ class ChatFrameCostTest {
         val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
         lateinit var out: Pair<List<FrameCost>, List<FrameCost>>
         try {
-            runDesktopComposeUiTest(W / shrink, H / shrink) {
+            kitUiTest(W / shrink, H / shrink) {
                 mainClock.autoAdvance = false
                 val meter = FrameMeter.attach(this)
                 setContent {

@@ -2,12 +2,12 @@ package io.github.eslamasabry.oc.feature.chat.rb.o42
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.E20Scene
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
 import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
@@ -16,7 +16,7 @@ import kotlinx.collections.immutable.persistentListOf
 @OptIn(ExperimentalTestApi::class)
 class StageWordsLineTest {
     private fun words(wait: ChatServerWait, agent: String?, expected: String) =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val state =
                 scene.live().copy(

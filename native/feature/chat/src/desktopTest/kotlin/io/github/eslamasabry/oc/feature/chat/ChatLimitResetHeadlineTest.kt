@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -90,27 +90,27 @@ class ChatLimitResetHeadlineTest {
     }
 
     @Test
-    fun `SIGNIN-C-1 a limit's headline carries the reset on a 12 hour clock`() = runComposeUiTest {
+    fun `SIGNIN-C-1 a limit's headline carries the reset on a 12 hour clock`() = kitUiTest {
         show(phone("MMM d, h:mm a"), sentence, said)
         onNodeWithText("Plan limit reached · resets Nov 20, 5:00 AM").assertExists()
         onNodeWithText("This model's usage limit is reached for now.").assertDoesNotExist()
     }
 
     @Test
-    fun `SIGNIN-C-2 and on a 24 hour clock`() = runComposeUiTest {
+    fun `SIGNIN-C-2 and on a 24 hour clock`() = kitUiTest {
         show(phone("MMM d, HH:mm"), sentence, said)
         onNodeWithText("Plan limit reached · resets Nov 20, 05:00").assertExists()
     }
 
     @Test
-    fun `SIGNIN-C-3 a limit with no reset keeps today's headline`() = runComposeUiTest {
+    fun `SIGNIN-C-3 a limit with no reset keeps today's headline`() = kitUiTest {
         show(phone("MMM d, h:mm a"), "You've reached your usage limit", said)
         onNodeWithText("This model's usage limit is reached for now.").assertExists()
         onNodeWithText("· resets", substring = true).assertDoesNotExist()
     }
 
     @Test
-    fun `SIGNIN-C-4 a reply with no time keeps today's headline`() = runComposeUiTest {
+    fun `SIGNIN-C-4 a reply with no time keeps today's headline`() = kitUiTest {
         show(phone("MMM d, h:mm a"), sentence, null)
         onNodeWithText("This model's usage limit is reached for now.").assertExists()
     }

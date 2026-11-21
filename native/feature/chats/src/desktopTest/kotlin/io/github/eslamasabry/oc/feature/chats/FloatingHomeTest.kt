@@ -27,7 +27,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -47,6 +46,7 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
@@ -173,7 +173,7 @@ class FloatingHomeTest {
         act: ComposeUiTest.() -> Unit = {},
     ): Seen {
         lateinit var seen: Seen
-        runDesktopComposeUiTest((width * SCALE).toInt(), (H * SCALE).toInt()) {
+        kitUiTest((width * SCALE).toInt(), (H * SCALE).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(SCALE, 1f)) {
                     ChatEnvironment {

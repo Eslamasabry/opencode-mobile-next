@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
@@ -19,6 +18,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -101,7 +101,7 @@ class NewConversationNotConfirmedTest {
 
     @Test
     fun `SIGNIN-N-1 a not-confirmed agent's row says so and a tap asks again, it does not open set-up`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             val actions = Actions()
             val row = claude.copy(signInNeeded = true, signInNotConfirmed = true)
             show(ui(needsSetup = listOf(row), choices = emptyList(), sheet = NewConversationSheet.Agents), actions)
@@ -113,7 +113,7 @@ class NewConversationNotConfirmedTest {
         }
 
     @Test
-    fun `SIGNIN-N-2 an agent at its limit says the limit, not Set up`() = runDesktopComposeUiTest(360, 900) {
+    fun `SIGNIN-N-2 an agent at its limit says the limit, not Set up`() = kitUiTest(360, 900) {
         val row = claude.copy(limitReached = true, limitResets = "Nov 20, 1:00 AM")
         show(ui(needsSetup = listOf(row), choices = emptyList(), sheet = NewConversationSheet.Agents), Actions())
         onNodeWithText("Plan limit reached · resets Nov 20, 1:00 AM").assertExists()
@@ -121,7 +121,7 @@ class NewConversationNotConfirmedTest {
     }
 
     @Test
-    fun `SIGNIN-N-3 a start refused as not ready offers to check the agent again`() = runDesktopComposeUiTest(360, 900) {
+    fun `SIGNIN-N-3 a start refused as not ready offers to check the agent again`() = kitUiTest(360, 900) {
         val actions = Actions()
         val refused = Failure.ComputerDidNotAnswer(Redactor().details("Provider claude is not ready (unavailable)"))
         show(ui(failure = refused, starting = true), actions)

@@ -6,10 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.feature.chat.ui.rememberBottomInsetOpen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -25,7 +25,7 @@ class InsetOpenRecompositionTest {
     }
 
     @Test
-    fun theReaderRecomposesWhenTheKeyboardOpensAndCloses_notOnEveryFrameBetween() = runDesktopComposeUiTest {
+    fun theReaderRecomposesWhenTheKeyboardOpensAndCloses_notOnEveryFrameBetween() = kitUiTest {
         val insets = MovingInsets()
         var runs = 0
         var open = false

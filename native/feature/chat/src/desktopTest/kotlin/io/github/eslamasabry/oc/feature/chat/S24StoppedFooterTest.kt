@@ -7,7 +7,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -22,6 +21,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -70,7 +70,7 @@ class S24StoppedFooterTest {
     // The real list item wraps a reply block in a clickable box (message actions) that starts at the list edge; the
     // text sits one page gutter inside it. Measure the TEXT (unmerged node), not the merged clickable box.
     @Test
-    fun `B-CHAT-S24-70 the Stopped note lines up with the reply text, not 40 dp in`() = runComposeUiTest {
+    fun `B-CHAT-S24-70 the Stopped note lines up with the reply text, not 40 dp in`() = kitUiTest {
         host(LayoutDirection.Ltr)
         val reply = onNodeWithText("Here is the start of the answer", substring = true, useUnmergedTree = true).getBoundsInRoot().left
         val note = onNodeWithTag("chat-turn-footer-note", useUnmergedTree = true).getBoundsInRoot().left
@@ -80,7 +80,7 @@ class S24StoppedFooterTest {
     }
 
     @Test
-    fun `B-CHAT-S24-71 in a right-to-left chat the note and the reply text share the start edge`() = runComposeUiTest {
+    fun `B-CHAT-S24-71 in a right-to-left chat the note and the reply text share the start edge`() = kitUiTest {
         host(LayoutDirection.Rtl)
         val width = onNodeWithTag("chat-turn-footer", useUnmergedTree = true).getBoundsInRoot()
         val reply = onNodeWithText("Here is the start of the answer", substring = true, useUnmergedTree = true).getBoundsInRoot().right

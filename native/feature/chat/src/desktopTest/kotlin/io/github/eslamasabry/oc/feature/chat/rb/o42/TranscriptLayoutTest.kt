@@ -3,10 +3,10 @@ package io.github.eslamasabry.oc.feature.chat.rb.o42
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class TranscriptLayoutTest {
     // C-002 (parity audit 2026-11-07): Flutter's reversed list rests a short chat on the composer, not under the header.
-    @Test fun shortHistorySitsOnTheBottomAndKeepsReadingOrder() = runComposeUiTest {
+    @Test fun shortHistorySitsOnTheBottomAndKeepsReadingOrder() = kitUiTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
                 KitTranscriptList(rememberTranscriptListState(), "reply", "Latest", KitMotionLevel.Off, Modifier.height(600.dp)) {

@@ -64,7 +64,8 @@ class PixelTickerGateTest {
 
     @Test
     fun `BG-CPU-GATE no UI file gains a raw delay loop, new ones wait through the visibility tick`() {
-        val files = BuildRestGates.production(root, "ui", "feature")
+        // ui/gate is test-only (ModuleRules.testOnly): its loops run on a test's virtual clock and never in the app.
+        val files = BuildRestGates.production(root, "ui", "feature").filterKeys { !it.startsWith("ui/gate/") }
         assertTrue(files.size > 200, "scanned ${files.size} files")
         val over =
             files.mapNotNull { (path, text) ->

@@ -12,7 +12,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -29,6 +28,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedReque
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -93,7 +93,7 @@ class PermissionNoteFastTypingTest {
 
     @Test
     fun `A1-TYPE-004 sixty letters typed fast into the Details note stay in order and go with Deny`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Recording()
             val slot = mutableStateOf(RequestSlotUi(card(0)))
             setContent {

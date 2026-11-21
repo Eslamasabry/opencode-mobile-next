@@ -12,7 +12,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -24,6 +23,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AuroraImage
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
@@ -71,7 +71,7 @@ class LoadingPicturesTest {
     }
 
     private fun shot(name: String, style: Style, dark: Boolean, live: String?) =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene()
             val state = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())
             val appearance =

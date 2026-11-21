@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.runtime.setValue
@@ -22,7 +23,6 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.math.abs
 import kotlin.test.assertFalse
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -111,7 +111,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-011 every row says what it did in plain words, tools by name, the words whole, and a run opens in place`() =
-        runDesktopComposeUiTest(412, 2600) {
+        kitUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
             // Activated without a finger (no row is held, P-010: STEPS-CRAFT-018), so what opens grows into view.
@@ -140,7 +140,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-012 a finished turn is exactly one row, and the folded list ends right where that row does`() =
-        runDesktopComposeUiTest(412, 2600) {
+        kitUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
             waitForIdle()
@@ -162,7 +162,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-013 a running run leads with what runs now and keeps its count`() =
-        runDesktopComposeUiTest(412, 2600) {
+        kitUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = StepsCraftScene.runningFacts()) } }
             waitForIdle()
@@ -176,7 +176,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-014 a tap on a run opens its steps in place under it, with the motion on`() =
-        runDesktopComposeUiTest(412, 2600) {
+        kitUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             mainClock.autoAdvance = false
             setContent { Root(MotionLevel.Full) { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
@@ -218,7 +218,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-016 every time ends on one right edge, with or without a chevron`() =
-        runDesktopComposeUiTest(412, 2600) {
+        kitUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
             activate("chat-work-summary")
@@ -236,7 +236,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-017 a step arriving as older rows fold behind the fold row is one movement, never shrinking`() =
-        runDesktopComposeUiTest(412, 1200) {
+        kitUiTest(412, 1200) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var arrived by mutableStateOf(false)
             mainClock.autoAdvance = false
@@ -276,7 +276,7 @@ class StepsCraftTest {
 
     @Test
     fun `STEPS-CRAFT-018 a finished turn's row stays under the finger as it opens, folding it brings the reply back`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             mainClock.autoAdvance = false
             setContent {

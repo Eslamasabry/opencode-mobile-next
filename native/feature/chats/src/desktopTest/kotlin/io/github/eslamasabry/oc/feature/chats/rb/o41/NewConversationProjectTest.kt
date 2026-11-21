@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -12,6 +11,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -62,7 +62,7 @@ class NewConversationProjectTest {
 
     @Test
     fun `B07 New project sits under the recent projects and asks for a name`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val setup =
                 NewConversationSetup(
@@ -101,7 +101,7 @@ class NewConversationProjectTest {
 
     @Test
     fun `B07 project picker starts from the loaded project and preserves current typing`() =
-        runComposeUiTest {
+        kitUiTest {
             var state by mutableStateOf(NewConversationUi())
             val actions = Actions()
             setContent {

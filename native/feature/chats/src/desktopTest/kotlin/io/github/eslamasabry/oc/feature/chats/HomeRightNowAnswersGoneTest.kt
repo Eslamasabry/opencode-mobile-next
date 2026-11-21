@@ -10,7 +10,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -26,6 +25,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.answersGoneKey
 import io.github.eslamasabry.oc.feature.chats.ui.carriesAnswers
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -66,7 +66,7 @@ class HomeRightNowAnswersGoneTest {
     }
 
     @Test
-    fun `P69 Right now shrinks to its row once the answers under it are gone`() = runComposeUiTest {
+    fun `P69 Right now shrinks to its row once the answers under it are gone`() = kitUiTest {
         var ui by mutableStateOf(ChatsUi(phase = ChatsPhase.List, rightNow = persistentListOf(asking)))
         mainClock.autoAdvance = false
         setContent {

@@ -24,9 +24,9 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.percentOffset
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiOptions
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.time.Duration.Companion.minutes
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -139,7 +139,7 @@ class StepsCraftPicturesTest {
     }
 
     private fun shot(look: Look, moment: Moment) =
-        runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
+        kitUiTest(WIDTH, HEIGHT, options = KitUiOptions(timeout = SCENE_TIMEOUT)) {
             mainClock.autoAdvance = false
             // Glass draws a frame in seconds on a runner without a GPU, and with the drag to the build run and that run
             // opened the Glass scene walked through some 270 frames: twelve minutes were not enough. With motion off it
@@ -194,7 +194,7 @@ class StepsCraftPicturesTest {
 
     @Test
     fun glassDarkContourFoldOpeningStrip() =
-        runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
+        kitUiTest(WIDTH, HEIGHT, options = KitUiOptions(timeout = SCENE_TIMEOUT)) {
             mainClock.autoAdvance = false
             screen(Look.GlassDarkContour, running = false)
             mainClock.advanceTimeBy(SETTLE)
@@ -211,7 +211,7 @@ class StepsCraftPicturesTest {
 
     @Test
     fun glassDarkContourStepArrivingStrip() =
-        runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
+        kitUiTest(WIDTH, HEIGHT, options = KitUiOptions(timeout = SCENE_TIMEOUT)) {
             var arrived by mutableStateOf(false)
             mainClock.autoAdvance = false
             screen(Look.GlassDarkContour, running = true, arrived = { arrived })

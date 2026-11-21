@@ -8,7 +8,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsHomeSheets
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -33,7 +33,7 @@ class SourceChoicesFailureTest {
             ChatsListSourceUi(ProfileId("termux"), "This device (Termux)", shown = true, main = false, onThisPhone = true, unreachable = true),
         )
 
-    @Test fun `an unreachable server is said on its own row only, with no sheet-level error`() = runComposeUiTest {
+    @Test fun `an unreachable server is said on its own row only, with no sheet-level error`() = kitUiTest {
         val actions = RecordingChatsActions()
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
@@ -47,7 +47,7 @@ class SourceChoicesFailureTest {
         onNodeWithTag("kit-notice-error").assertDoesNotExist()
     }
 
-    @Test fun `a failure to save is one compact notice with its details folded and one copy action`() = runComposeUiTest {
+    @Test fun `a failure to save is one compact notice with its details folded and one copy action`() = kitUiTest {
         val failure = Failure.StorageRefused(Redactor().details("OpenGateway · Storage · Refused"))
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {

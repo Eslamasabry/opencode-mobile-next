@@ -12,7 +12,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -26,6 +25,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -39,7 +39,7 @@ import kotlinx.collections.immutable.toImmutableList
 class HomeInlineActionTest {
     @Test
     fun `Mark all seen has a face of its own like Try again, not bare bold words`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             Locale.setDefault(Locale.ENGLISH)
             val brief =
                 ReturnBrief.build(

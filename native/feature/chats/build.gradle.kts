@@ -34,3 +34,6 @@ tasks.withType<Test>().configureEach {
 }
 
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
+
+// The frame recorder for this module's UI tests (kitUiTest): mode, baseline, where findings go.
+apply(from = rootProject.file("gradle/flicker.gradle"))

@@ -10,7 +10,6 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import io.github.eslamasabry.oc.core.common.Failure
@@ -27,6 +26,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewModel
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -136,7 +136,7 @@ class NewConversationFastTypingTest {
 
     @Test
     fun `A1-TYPE-003 sixty letters typed fast while the page gets ready reach the New conversation field in order`() =
-        runComposeUiTest {
+        kitUiTest {
             val host = SlowHost().apply { drafts[dir] = "older words" }
             val vm = NewConversationViewModel(ChatsRoute.New(phone), host, Nav(), Clock.System, ListenedReports())
             setContent {
