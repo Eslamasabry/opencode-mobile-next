@@ -62,9 +62,9 @@ public fun KitText(
      */
     wholeWords: Boolean = false,
     /**
-     * Frame text whose words the person or a server wrote (a conversation's title in the bar): the line takes the words'
-     * own direction, so an English title in an Arabic bar reads left to right and its "…" closes the words (E-4). The
-     * frame size is kept.
+     * Frame text whose words a person or a server wrote (a conversation's title in the bar): the line takes the
+     * words' own direction, so an English title in an Arabic bar reads left to right and its "…" closes the words
+     * (E-4). The frame size is kept.
      */
     ownDirection: Boolean = false,
 ) {
@@ -86,8 +86,7 @@ public fun KitText(
     val style =
         base.copy(
             color = kitToneOnGlass(tone),
-            textDirection =
-                if (kind == KitTextKind.Reading || ownDirection) TextDirection.Content else TextDirection.Unspecified,
+            textDirection = textDirectionOf(kind, ownDirection),
             textAlign = textAlign ?: TextAlign.Start,
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
         )
@@ -127,6 +126,13 @@ public fun KitText(
         )
     }
 }
+
+/**
+ * Reading text, and frame text a person or a server wrote, take the words' own direction; other frame text takes
+ * the page's.
+ */
+private fun textDirectionOf(kind: KitTextKind, ownDirection: Boolean) =
+    if (kind == KitTextKind.Reading || ownDirection) TextDirection.Content else TextDirection.Unspecified
 
 /** [KitText]'s `wholeWords`: the shrink-to-whole-words size rule when asked for, else none. */
 private fun wholeWordsSize(on: Boolean, size: androidx.compose.ui.unit.TextUnit) = if (on) kitWholeWords(size) else null
