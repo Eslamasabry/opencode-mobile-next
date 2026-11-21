@@ -387,4 +387,41 @@ class ChatsStateTest {
             ),
         )
     }
+
+    @Test
+    fun `B-STOP-CUT-002 a stopped text-only reply in Since you were away reads Stopped, never Done`() {
+        val cut =
+            Session(
+                SessionId("text-only"),
+                title = "Lighthouse story",
+                directory = "/work/api",
+                lastRunOutcome = io.github.eslamasabry.oc.core.model.SessionRunOutcome.Succeeded,
+                time = SessionTime(createdMs = 1_000, updatedMs = 2_000, idleMs = 2_000),
+            )
+        val listing =
+            io.github.eslamasabry.oc.engine.agents.feed.OpenCodeListing(
+                sessions = listOf(cut),
+                finishedUnseen = setOf(cut.id),
+                stoppedByPerson = setOf(cut.id),
+            )
+        val source =
+            io.github.eslamasabry.oc.engine.agents.feed.OpenCodeChatFeedSource(
+                P1,
+                null,
+                kotlinx.coroutines.flow.MutableStateFlow(listing),
+                locationKey = BRIEF_SCOPE.location,
+            )
+        val brief =
+            ReturnBrief.build(
+                listOf(cut),
+                readStateKnown = true,
+                inventoryPartial = false,
+                isUnread = { true },
+                isBusy = { false },
+                blockerOf = { null },
+                scope = BRIEF_SCOPE,
+            )
+        val ui = build(*source.current().items.toTypedArray(), brief = brief)
+        assertEquals(RowStatus.Stopped, ui.brief?.rows?.single()?.status)
+    }
 }

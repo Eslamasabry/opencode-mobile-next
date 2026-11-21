@@ -158,4 +158,14 @@ class DockFeedTest {
         )
         assertEquals(setOf(SessionId("a"), SessionId("b")), read.busy)
     }
+
+    @Test
+    fun `B-STOP-CUT-003 a stopped text-only run never reads Done in the Edge light`() {
+        val after =
+            DockModel.empty()
+                .reduce(DockEvent.RunStarted(ref))
+                .reduce(DockEvent.RunEnded(ref, DockRunEnd.Succeeded))
+                .reduce(DockEvent.RunEnded(ref, DockRunEnd.Stopped))
+        assertEquals(DockState.Idle, after.ui.entries.single().state, "a stop clears Finished so the light never says Done")
+    }
 }
