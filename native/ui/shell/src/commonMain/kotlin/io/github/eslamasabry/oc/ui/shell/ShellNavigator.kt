@@ -85,7 +85,7 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
 
     internal fun publish() {
         mutableTop.value = stack?.lastOrNull() as? AppRoute
-        mutableListShown.value = beside && stack?.let { ShellPanes.layoutOf(it) } != null
+        mutableListShown.value = beside && stack?.let { ShellPanes.layoutOf(it) }?.pair?.rest != null
     }
 
     private fun mutate(change: (MutableList<NavKey>) -> Unit) {
@@ -106,8 +106,20 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
     override fun open(route: AppRoute): Unit = mutate { s ->
         when {
             route.motion == RouteMotion.Root -> s.replaceWith(route)
-            s.lastOrNull() != route -> s.add(route)
+            s.lastOrNull() != route -> if (!replaceBeside(s, route)) s.add(route)
         }
+    }
+
+    /**
+     * A page opened while another stands beside its list (Settings: a row of the list tapped with a page open) takes
+     * that page's place, so the stack never grows per tap and Back returns to the list. False when no page stands
+     * beside a list now: it opens as on a phone.
+     */
+    private fun replaceBeside(s: MutableList<NavKey>, route: AppRoute): Boolean {
+        if (!beside) return false
+        val layout = ShellPanes.layoutOf(s)?.takeIf { it.detail && it.pair.isDetail(route) } ?: return false
+        s.rewrite(s.subList(0, layout.listIndex + 1).toList() + route)
+        return true
     }
 
     override fun openChat(ref: ConversationRef, focusComposer: Boolean): Unit = mutate { s ->

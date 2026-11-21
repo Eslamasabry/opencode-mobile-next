@@ -187,7 +187,8 @@ private fun ShellWide(
     content: @Composable () -> Unit,
 ) {
     val top = backStack.lastOrNull() as? AppRoute
-    val panes = beside && ShellPanes.layoutOf(backStack) != null
+    // Only a list with a resting page (Home) is the navigation itself; Settings beside its pages keeps its rail place.
+    val panes = beside && ShellPanes.layoutOf(backStack)?.pair?.rest != null
     ShellRailFrame(
         top = if (panes) null else top,
         onSelect = { destination ->
