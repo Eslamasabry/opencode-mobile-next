@@ -57,7 +57,7 @@ public class AgentUpdateChoiceEngine(
         state.value = decisions.offer(inventory, reviewing)
         val offered = state.value
         sharedConsent =
-            if (allowed(AgentId.OPENCODE)) sharedConsent.intersect(offered?.sharedPins().orEmpty()) else emptySet()
+            if (allowed(AgentId.OPENCODE)) sharedConsent.intersect(offered?.sharedPins.orEmpty()) else emptySet()
         return offered
     }
 
@@ -145,12 +145,10 @@ public class AgentUpdateChoiceEngine(
         val current = state.value ?: return@withLock false
         val targets = current.items.filter { it.neededWhen != null }.map { it.id to it.fromVersion }
         if (targets.isEmpty() || targets == sharedAttempt) return@withLock false
-        val pins = current.sharedPins()
+        val pins = current.sharedPins
         if (alongsideAgents && meteredAllowed && allowed(AgentId.OPENCODE)) sharedConsent = pins
         val approved = sharedConsent.containsAll(pins)
-        val canDownload =
-            current.network == AgentUpdateNetwork.Unmetered || approved || (meteredAllowed && !alongsideAgents)
-        val eligible = canDownload && current.sharedEligible(approved)
+        val eligible = current.sharedEligible(approved, meteredAllowed && !alongsideAgents)
         (eligible && !host.busy() && start()).also { started ->
             if (started) {
                 sharedAttempt = targets
@@ -160,15 +158,16 @@ public class AgentUpdateChoiceEngine(
     }
 }
 
-private fun AgentUpdateOffer.sharedEligible(approved: Boolean): Boolean {
+private fun AgentUpdateOffer.sharedEligible(approved: Boolean, helperConsent: Boolean): Boolean {
+    if (network != AgentUpdateNetwork.Unmetered && !approved && !helperConsent) return false
     val updates = items.filter { it.choice == AgentUpdateChoice.Update }
     val needed = neededGoesAhead || (updates.any { it.id == AgentId.OPENCODE } &&
         items.any { it.neededWhen == AgentNeedRule.WithAnyUpdate })
     return needed && (approved || updates.none { it.id != AgentId.OPENCODE })
 }
 
-private fun AgentUpdateOffer.sharedPins(): Set<Pair<AgentId, String>> =
-    items.filter { it.neededWhen != null }.map { it.id to it.toVersion }.toSet()
+private val AgentUpdateOffer.sharedPins: Set<Pair<AgentId, String>>
+    get() = items.filter { it.neededWhen != null }.map { it.id to it.toVersion }.toSet()
 
 /** Why an update did not start when it was asked to; the first condition that says no. */
 internal enum class StartRefusal { NotChosen, NeedsSharedParts, WorkRunning, StartRefused }
