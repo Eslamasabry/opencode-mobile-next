@@ -1365,8 +1365,9 @@ private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsAction
                 kind = KitStatusKind.Update,
                 id = "phone-download:Agents",
                 message = homeAgentsOnlyWords(phase.held),
-                // They start by themselves on Wi-Fi: nothing to tap, and no mobile-data choice for them.
+                // They start by themselves on Wi-Fi; on mobile data the tap is the yes for exactly these agents.
                 tone = StatusTone.Neutral,
+                action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
             )
         is HomeDownloadPhase.Running -> homeRunningStatus(download, phase, actions)
         is HomeDownloadPhase.Held ->

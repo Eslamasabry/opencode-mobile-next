@@ -255,6 +255,20 @@ class PhoneDownloads(
         }
     }
 
+    override fun downloadHeldAgents() {
+        val offer = agentStatus.choices.offer.value
+        val live = liveNetwork.value?.asOfferNetwork()
+        val shown = if (offer != null && live != null) offer.copy(network = live) else offer
+        val running =
+            phones.state.value.installation?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }?.id
+                ?.let { AgentId(it) }
+        // Exactly the agents (and versions) the line names; nothing else gains the yes.
+        val named = heldAgentVersionsOf(shown, running, agentStatus.choices.mobile::covers)
+        if (named.isEmpty()) return
+        agentStatus.choices.mobile.grant(named)
+        agents?.lookNow()
+    }
+
     override fun tryAgain(kind: HomeDownloadKind): Boolean {
         if (metered) return false
         scope.launch(dispatchers.io) { run(kind) }
@@ -291,16 +305,31 @@ internal fun heldAgentsOf(
     liveNetwork: AgentUpdateNetwork? = null,
     consented: (AgentId) -> Boolean = { false },
 ): HomeHeldAgents? {
-    val net = liveNetwork ?: offer?.network
-    val waiting = offer?.takeIf { it.answered && net != AgentUpdateNetwork.Unmetered }
-    val held =
-        waiting?.items.orEmpty().filter {
-            it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE && it.id != running &&
-                it.choice == AgentUpdateChoice.Update && !consented(it.id)
-        }
+    val held = heldItems(offer, running, liveNetwork, consented)
     val bytes = held.map { it.downloadBytes }
     return if (held.isEmpty() || bytes.any { it == null }) null
     else HomeHeldAgents(held.size, HomeDownloadSizes.roundedMb(bytes.sumOf { it ?: 0L }))
+}
+
+/** The (agent, version) pairs the agents-only line names: the same filter as [heldAgentsOf]. */
+internal fun heldAgentVersionsOf(
+    offer: AgentUpdateOffer?,
+    running: AgentId? = null,
+    consented: (AgentId) -> Boolean = { false },
+): Map<AgentId, String> = heldItems(offer, running, null, consented).associate { it.id to it.toVersion }
+
+private fun heldItems(
+    offer: AgentUpdateOffer?,
+    running: AgentId?,
+    liveNetwork: AgentUpdateNetwork?,
+    consented: (AgentId) -> Boolean,
+): List<AgentUpdateItem> {
+    val net = liveNetwork ?: offer?.network
+    val waiting = offer?.takeIf { it.answered && net != AgentUpdateNetwork.Unmetered }
+    return waiting?.items.orEmpty().filter {
+        it.group == AgentUpdateGroup.Optional && it.id != AgentId.OPENCODE && it.id != running &&
+            it.choice == AgentUpdateChoice.Update && !consented(it.id)
+    }
 }
 
 /**
@@ -409,10 +438,3 @@ private fun SetupNetwork.asOfferNetwork(): AgentUpdateNetwork =
         SetupNetwork.Metered -> AgentUpdateNetwork.Metered
         else -> AgentUpdateNetwork.Unknown
     }
-
-/** The (agent, version) pairs the agents-only line names: the same filter as [heldAgentsOf]. */
-internal fun heldAgentVersionsOf(
-    offer: AgentUpdateOffer?,
-    running: AgentId? = null,
-    consented: (AgentId) -> Boolean = { false },
-): Map<AgentId, String> = emptyMap()

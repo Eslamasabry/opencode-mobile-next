@@ -75,7 +75,9 @@ public class ChatsViewModel(
         when (shown.phase) {
             HomeDownloadPhase.Waiting -> downloadAskFor.value = shown.kind
             HomeDownloadPhase.Failed -> if (!downloads.tryAgain(shown.kind)) downloadAskFor.value = shown.kind
-            is HomeDownloadPhase.Running, is HomeDownloadPhase.Held, is HomeDownloadPhase.AgentsWaiting -> Unit
+            // The line names the agents and their size: the tap is the yes for exactly those, with no second ask.
+            is HomeDownloadPhase.AgentsWaiting -> downloads.downloadHeldAgents()
+            is HomeDownloadPhase.Running, is HomeDownloadPhase.Held -> Unit
         }
     }
 

@@ -99,6 +99,12 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) { safely { updater.changed() } }
     }
 
+    /** A yes was given on Home's agents line: the updater looks now, not at the next 30 s look. */
+    fun lookNow() {
+        val updater = updaterRef ?: return
+        appScope.launch(dispatchers.io) { safely { updater.changed() } }
+    }
+
     @Volatile private var updaterRef: AgentAutoUpdater? = null
     private val snapshot =
         SpacedSnapshot({ SystemClock.elapsedRealtime() }) {
