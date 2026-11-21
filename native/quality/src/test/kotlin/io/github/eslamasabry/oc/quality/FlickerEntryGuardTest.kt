@@ -25,8 +25,8 @@ class FlickerEntryGuardTest {
     private val ceilings =
         mapOf(
             "feature/chat" to 330,
-            // +2: HomeStageSpokenNameTest adopted after the freeze (families 10, 11)
-            "feature/chats" to 217,
+            // 217 - 82: family 11 (and 2 + 2 of families 13, 16) went with the logo loader every scene now has
+            "feature/chats" to 135,
         )
 
     /** Test files in recorded modules that may start Compose themselves (path from the native root to reason). */

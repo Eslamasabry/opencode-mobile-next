@@ -8,38 +8,23 @@ AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a r
 AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a restart	JUMP	#kit-screen-header	13
 AgentUpdateChainTest.B-UPD-005 the update button explains low space and enables when the reading fits	JUMP	Not now	17
 AgentUpdateHomeRenders.renders of Home with the agents' update running and the update sheet, at 360 dp	FIRST	#kit-filter-chips	10
-AgentUpdateHomeRenders.renders of Home with the agents' update running and the update sheet, at 360 dp	JUMP	Theme packs	11
 AgentUpdateNoRoomRenders.renders of the update sheet with too little room and of Home with its update lines, at 360 dp	FIRST	#kit-filter-chips	10
-AgentUpdateNoRoomRenders.renders of the update sheet with too little room and of Home with its update lines, at 360 dp	JUMP	Theme packs	11
 AgentsStartHomeRenders.renders of Home while the agents start	BLINK	+#	10
-AgentsStartHomeRenders.renders of Home while the agents start	FIRST	Hi test	11
-AgentsStartHomeRenders.renders of Home while the agents start	JUMP	Hi test	11
 AllConversationsScreenTest.B12 paging control yields to loading and returns after the read	ABA	Load more conversations	13
 AllConversationsScreenTest.B12 paging control yields to loading and returns after the read	BLINK	Load more conversations	13
 AllConversationsScreenTest.SCREENS-NAV-34 reaching the end keeps asking for older pages as each one arrives without a match	ABA	Load more conversations	13
 AllConversationsScreenTest.SCREENS-NAV-34 reaching the end keeps asking for older pages as each one arrives without a match	BLINK	Refresh	13
 BriefPlacementTest.B15 a brief request retains the feed's in-flight answer guard	FIRST	#kit-filter-chips	10
 BriefPlacementTest.aConversationInTheReturnBriefIsSaidOnce	FIRST	#kit-filter-chips	10
-ChatsHeaderGoldensTest.the top shows the title row and one chip row	FIRST	Theme packs	11
-ChatsHeaderGoldensTest.the top shows the title row and one chip row	JUMP	Theme packs	11
 ChatsScreenTest.A1-HOME-06 rows sit under Right now and Recent with cleaned titles and one status word	FIRST	#kit-filter-chips	10
-ChatsScreenTest.A1-HOME-06 rows sit under Right now and Recent with cleaned titles and one status word	JUMP	Theme packs	11
 ChatsScreenTest.B-CHAT-093 finding 5 overflow has a visible filtered-list action	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-CHAT-093 finding 5 overflow has a visible filtered-list action	JUMP	Chat s#	11
 ChatsScreenTest.B-CHAT-094 the brief rows show above the list and Continue dismisses them	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-CHAT-094 the brief rows show above the list and Continue dismisses them	JUMP	New conversation	13
 ChatsScreenTest.B-CHAT-095 finding 5 partial inventory explains uncertainty alongside known rows	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-CHAT-095 finding 5 partial inventory explains uncertainty alongside known rows	JUMP	Chat known	11
 ChatsScreenTest.B-NAV-037 B15 the home has no bottom bar, and the gear word says Settings and opens it	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-NAV-037 B15 the home has no bottom bar, and the gear word says Settings and opens it	JUMP	Theme packs	11
 ChatsScreenTest.B-NAV-037 an archive that failed says so and the notice can be closed	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-NAV-037 an archive that failed says so and the notice can be closed	JUMP	Theme packs	11
 ChatsScreenTest.B-NAV-037 the server pill names the server and its state and opens the one-tap switcher	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-NAV-037 the server pill names the server and its state and opens the one-tap switcher	JUMP	Theme packs	11
 ChatsScreenTest.B-NAV-037 without a server-management door there is no dead gear	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-NAV-037 without a server-management door there is no dead gear	JUMP	Theme packs	11
 ChatsScreenTest.I147-ROW-002 an old agent conversation's row reads like any other, with no sentence beside its title	FIRST	#kit-filter-chips	10
-ChatsScreenTest.I147-ROW-002 an old agent conversation's row reads like any other, with no sentence beside its title	JUMP	Build the habit tracker	11
 ChatsScreenTest.NEW-BLOCKED a computer that does not answer is one card that says nothing was started, with Try again	FIRST	No conversations yet	13
 ChatsScreenTest.NEW-BLOCKED a computer that does not answer is one card that says nothing was started, with Try again	JUMP	No conversations yet	13
 ChatsScreenTest.NEW-BLOCKED a server that is only still opening gets the small notice	FIRST	No conversations yet	13
@@ -47,30 +32,19 @@ ChatsScreenTest.NEW-BLOCKED a server that is only still opening gets the small n
 ChatsScreenTest.NEW-BLOCKED the phone's own server turned off is one card with Start, not two	FIRST	No conversations yet	13
 ChatsScreenTest.NEW-BLOCKED the phone's own server turned off is one card with Start, not two	JUMP	No conversations yet	13
 ChatsScreenTest.P-021 no finished rows, no heading	FIRST	#kit-filter-chips	10
-ChatsScreenTest.P-021 no finished rows, no heading	JUMP	Theme packs	11
 ChatsScreenTest.P-021 rows name their agent only when the list holds more than one	FIRST	#kit-filter-chips	10
-ChatsScreenTest.P-021 rows name their agent only when the list holds more than one	JUMP	Port the parser	11
 ChatsScreenTest.P-021 the finished group is headed like Right now and Recent	FIRST	#kit-filter-chips	10
-ChatsScreenTest.P-021 the finished group is headed like Right now and Recent	JUMP	New conversation	13
 ChatsScreenTest.P-023 the connections chip opens its choices with the same chevron as the project chip	FIRST	#kit-filter-chips	10
-ChatsScreenTest.P-023 the connections chip opens its choices with the same chevron as the project chip	JUMP	Theme packs	11
 ChatsScreenTest.PARITY-B-217 the home list reads itself again on a pull, and not while its server still opens	FIRST	#kit-filter-chips	10
 ChatsScreenTest.PARITY-B-217 the home list reads itself again on a pull, and not while its server still opens	JUMP	#kit-filter-chips	10
-ChatsScreenTest.PARITY-B-217 the home list reads itself again on a pull, and not while its server still opens	JUMP	Theme packs	11
 ChatsScreenTest.SCREENS-NAV-27 G1 the page alone draws no bar, as Flutter's home leaves the bar to the shell	FIRST	#kit-filter-chips	10
-ChatsScreenTest.SCREENS-NAV-27 G1 the page alone draws no bar, as Flutter's home leaves the bar to the shell	JUMP	Theme packs	11
 ChatsScreenTest.SCREENS-NAV-27 G2 one row follows the next with only its hairline between them	FIRST	#kit-filter-chips	10
-ChatsScreenTest.SCREENS-NAV-27 G2 one row follows the next with only its hairline between them	JUMP	Theme packs	11
 ChatsScreenTest.SCREENS-NAV-27 G3 Running with nothing running says so and offers Show all, with the foot bar's + for New conversation	FIRST	#kit-filter-chips	10
 ChatsScreenTest.SCREENS-NAV-27 Search, Running, the needs-you line and the project chip reach their intents	BLINK	Search	10
 ChatsScreenTest.SCREENS-NAV-27 Search, Running, the needs-you line and the project chip reach their intents	FIRST	#kit-filter-chips	10
-ChatsScreenTest.SCREENS-NAV-27 Search, Running, the needs-you line and the project chip reach their intents	JUMP	Theme packs	11
 ChatsScreenTest.SCREENS-ROWS-01 an agent with no name reads Another agent, not the conversation's title	FIRST	#kit-filter-chips	10
-ChatsScreenTest.SCREENS-ROWS-01 an agent with no name reads Another agent, not the conversation's title	JUMP	Other	11
 ChatsScreenTest.a phone agent at its plan limit says try again later and opens that agent's page	FIRST	#kit-filter-chips	10
-ChatsScreenTest.a phone agent at its plan limit says try again later and opens that agent's page	JUMP	Chat a	11
 ChatsScreenTest.a server that lists one project names it on the projects chip and shows no notice about it	FIRST	#kit-filter-chips	10
-ChatsScreenTest.a server that lists one project names it on the projects chip and shows no notice about it	JUMP	Chat a	11
 E05S22HomeExitBannerGoldenTest.E05-S22 the home app-closed line shows its restart glyph and Keep it running	FIRST	#kit-filter-chips	10
 EdgeDockUndoRoomTest.B-DOCK-UNDO-07 the host reports the Undo bar's height while an offer stands and 0 after	ABA	Gamma	18
 EdgeDockUndoRoomTest.B-DOCK-UNDO-07 the host reports the Undo bar's height while an offer stands and 0 after	JUMP	Beta	18
@@ -93,15 +67,10 @@ EdgeDockUndoTimingTest.B-DOCK-UNDO-T2 where the dock's foot lies under Undo a ta
 FloatingHomeTest.B-HOME-FLOAT-001 under the lens the title and the chips float with no pane, and the list rests where it did	FIRST	#kit-filter-chips	10
 FloatingHomeTest.B-HOME-FLOAT-001 under the lens the title and the chips float with no pane, and the list rests where it did	FIRST	#kit-screen-header	13
 FloatingHomeTest.B-HOME-FLOAT-001 under the lens the title and the chips float with no pane, and the list rests where it did	JUMP	#kit-screen-header	13
-FloatingHomeTest.B-HOME-FLOAT-001 under the lens the title and the chips float with no pane, and the list rests where it did	JUMP	Explain this project	11
 HeldAgentsHomeRendersTest.B-DL-408 renders of Home with agent updates held for Wi-Fi, at 360 dp	FIRST	#kit-filter-chips	10
-HeldAgentsHomeRendersTest.B-DL-408 renders of Home with agent updates held for Wi-Fi, at 360 dp	JUMP	Theme packs	11
 HomeAlwaysAllowTest.PARITY-B-224 Always allow asks first, naming the command and the project	FIRST	#kit-filter-chips	10
-HomeAlwaysAllowTest.PARITY-B-224 Always allow asks first, naming the command and the project	JUMP	Theme packs	11
 HomeAlwaysAllowTest.PARITY-B-224 the row offers Allow once, Reject and Always allow, each its own answer	FIRST	#kit-filter-chips	10
-HomeAlwaysAllowTest.PARITY-B-224 the row offers Allow once, Reject and Always allow, each its own answer	JUMP	Theme packs	11
 HomeAlwaysAllowTest.PARITY-B-224 where the server keeps no grants the row offers no Always allow	FIRST	#kit-filter-chips	10
-HomeAlwaysAllowTest.PARITY-B-224 where the server keeps no grants the row offers no Always allow	JUMP	Theme packs	11
 HomeArchiveUndoPlaceTest.P19 a swipe toward the line's end archives, the other way does not move the row or act	FIRST	#kit-filter-chips	10
 HomeBackExitScreenTest.E05-S21 a sheet open on the list closes before the guard	FIRST	#kit-filter-chips	10
 HomeBackExitScreenTest.E05-S21 after the window the hint folds away and back starts over	ABA	#kit-screen-status	13
@@ -114,9 +83,7 @@ HomeBackExitScreenTest.E05-S21 under the shell's toast slot the hint is a toast 
 HomeColdStartTapTest.COLD-TAP-010 a tap on plus at any frame of the first second opens New conversation exactly once	ABA	#kit-screen	19
 HomeColdStartTapTest.COLD-TAP-010 a tap on plus at any frame of the first second opens New conversation exactly once	JUMP	#kit-row-panel	13
 HomeColdStartTapTest.COLD-TAP-011 a tap kept while the server opens says New conversation is on its way until it opens	BLINK	#kit-notice	15
-HomeColdStartTapTest.COLD-TAP-011 a tap kept while the server opens says New conversation is on its way until it opens	FIRST	Chat s#	11
 HomeColdStartTapTest.COLD-TAP-011 a tap kept while the server opens says New conversation is on its way until it opens	JUMP	#kit-row-panel	13
-HomeColdStartTapTest.COLD-TAP-011 a tap kept while the server opens says New conversation is on its way until it opens	JUMP	Chat s#	11
 HomeColdStartTapTest.COLD-TAP-012 a tap on plus at any frame from 1 s to 2 s opens New conversation exactly once	ABA	#kit-screen	19
 HomeColdStartTapTest.COLD-TAP-012 a tap on plus at any frame from 1 s to 2 s opens New conversation exactly once	JUMP	#kit-row-panel	13
 HomeColdStartTapTest.COLD-TAP-013 a tap on plus at any frame from 2 s to 3 s, across the server's answer, opens New conversation exactly once	ABA	#kit-screen	19
@@ -124,97 +91,48 @@ HomeColdStartTapTest.COLD-TAP-013 a tap on plus at any frame from 2 s to 3 s, ac
 HomeColdStartTapTest.COLD-TAP-013 a tap on plus at any frame from 2 s to 3 s, across the server's answer, opens New conversation exactly once	BLINK	#kit-notice	15
 HomeColdStartTapTest.COLD-TAP-013 a tap on plus at any frame from 2 s to 3 s, across the server's answer, opens New conversation exactly once	JUMP	#kit-row-panel	13
 HomeDownloadLineTest.B-HOME-211 on a list the waiting update is a status line of its own above the lists, with its action	FIRST	#kit-filter-chips	10
-HomeDownloadLineTest.B-HOME-211 on a list the waiting update is a status line of its own above the lists, with its action	JUMP	Theme packs	11
 HomeDownloadLineTest.B-HOME-211 while the helper starts its words stay with Recent and the waiting update is its own line	FIRST	#kit-filter-chips	10
-HomeDownloadLineTest.B-HOME-211 while the helper starts its words stay with Recent and the waiting update is its own line	JUMP	Theme packs	11
 HomeEmptyActionTest.the empty home keeps New conversation on screen under a tall notice	FIRST	No conversations yet	13
 HomeEmptyActionTest.the empty home keeps New conversation on screen under a tall notice	JUMP	No conversations yet	13
 HomeFootBarTest.RC1-HOME-001 connected, the + sits in the foot bar under the rows	FIRST	#kit-filter-chips	10
-HomeFootBarTest.RC1-HOME-001 connected, the + sits in the foot bar under the rows	JUMP	Fix the reconnect loop	11
 HomeFootBarTest.RC1-HOME-002 while the server opens, the saved rows keep the + in the foot bar	FIRST	#kit-filter-chips	10
-HomeFootBarTest.RC1-HOME-002 while the server opens, the saved rows keep the + in the foot bar	JUMP	Fix the reconnect loop	11
 HomeFootBarTest.RC1-HOME-003 a server that is not answering keeps the + in the foot bar	FIRST	#kit-filter-chips	10
-HomeFootBarTest.RC1-HOME-003 a server that is not answering keeps the + in the foot bar	JUMP	Fix the reconnect loop	11
-HomeFootBarTest.RC1-HOME-004 before the saved servers are read the + is already in the foot bar	FIRST	Fix the reconnect loop	11
-HomeFootBarTest.RC1-HOME-004 before the saved servers are read the + is already in the foot bar	JUMP	Fix the reconnect loop	11
 HomeFootBarTest.RC1-HOME-006 a filter that matches nothing keeps the + in the foot bar	FIRST	#kit-filter-chips	10
 HomeFooterTest.All conversations and the plus are one bar from margin to margin	FIRST	#kit-filter-chips	10
 HomeFooterTest.the list ends above the foot bar and its last row is whole at the end	FIRST	#kit-filter-chips	10
-HomeFooterTest.while the server opens the plus keeps its place beside the link	FIRST	Theme packs	11
-HomeFooterTest.while the server opens the plus keeps its place beside the link	JUMP	Theme packs	11
-HomeGettingReadyTest.B-HOME-227 a source that did not start is said once in a notice with Try again, never on the rows	FIRST	Tidy the docs demo README	11
 HomeGettingReadyTest.B-HOME-227 a source that did not start is said once in a notice with Try again, never on the rows	JUMP	#kit-row-panel	13
-HomeGettingReadyTest.B-HOME-227 a source that did not start is said once in a notice with Try again, never on the rows	JUMP	Tidy the docs demo README	11
-HomeGettingReadyTest.HOME-READY-001 replay install - no row rings while the agents start, every row keeps its time	FIRST	Tidy the docs demo README	11
-HomeGettingReadyTest.HOME-READY-001 replay install - no row rings while the agents start, every row keeps its time	JUMP	Tidy the docs demo README	11
-HomeGettingReadyTest.HOME-READY-002 guard - This phone's OpenCode opening or starting keeps its rows' times, no mark	FIRST	Tidy the docs demo README	11
-HomeGettingReadyTest.HOME-READY-002 guard - This phone's OpenCode opening or starting keeps its rows' times, no mark	JUMP	Tidy the docs demo README	11
-HomeGettingReadyTest.HOME-READY-003 guard - an agent update puts no word or ring on the rows, and a failed source shows times	FIRST	Tidy the docs demo README	11
 HomeGettingReadyTest.HOME-READY-003 guard - an agent update puts no word or ring on the rows, and a failed source shows times	JUMP	#kit-row-panel	13
-HomeGettingReadyTest.HOME-READY-003 guard - an agent update puts no word or ring on the rows, and a failed source shows times	JUMP	Tidy the docs demo README	11
 HomeInlineActionTest.Mark all seen has a face of its own like Try again, not bare bold words	FIRST	#kit-filter-chips	10
-HomeInlineActionTest.Mark all seen has a face of its own like Try again, not bare bold words	JUMP	Chat old	11
 HomeJankScreenTest.JANK-HOME-4 a row that becomes archivable is the same row, not a rebuilt one	FIRST	#kit-filter-chips	10
 HomeJankScreenTest.JANK-HOME-5 the filter chips stay put when the connection arrives beside them	FIRST	#kit-filter-chips	10
 HomeJankScreenTest.JANK-HOME-5 the filter chips stay put when the connection arrives beside them	JUMP	#kit-filter-chips	10
 HomeNoEdgeDockTest.B-LAMP-004 Home never composes HomeEdgeDock or KitEdgeDock while connecting or live	FIRST	#kit-filter-chips	10
-HomeNoEdgeDockTest.B-LAMP-004 Home never composes HomeEdgeDock or KitEdgeDock while connecting or live	FIRST	Theme packs	11
-HomeNoEdgeDockTest.B-LAMP-004 Home never composes HomeEdgeDock or KitEdgeDock while connecting or live	JUMP	Theme packs	11
-HomeOneNameTest.HOME-NAME-001 This phone's own server saved under an old name is This phone on the pill and the opening card	FIRST	Chat s#	11
-HomeOneNameTest.HOME-NAME-001 This phone's own server saved under an old name is This phone on the pill and the opening card	JUMP	Chat s#	11
-HomeOneNameTest.HOME-NAME-002 in Arabic the notice names This phone as the pill does, never in English	FIRST	Chat s#	11
-HomeOneNameTest.HOME-NAME-002 in Arabic the notice names This phone as the pill does, never in English	JUMP	Chat s#	11
-HomeOneNameTest.HOME-NAME-003 guard - a computer keeps the name it was saved under	FIRST	Chat s#	11
-HomeOneNameTest.HOME-NAME-003 guard - a computer keeps the name it was saved under	JUMP	Chat s#	11
 HomeSignedOutRowTest.a failed run of a signed-out agent says Sign in needed, a failed run of a signed-in one still says Failed	FIRST	#kit-filter-chips	10
-HomeSignedOutRowTest.a failed run of a signed-out agent says Sign in needed, a failed run of a signed-in one still says Failed	JUMP	Theme packs	11
 HomeStageSpokenNameTest.B-HOME-240 the starting-helper stage is spoken with the same words it shows	FIRST	#kit-filter-chips	10
-HomeStageSpokenNameTest.B-HOME-240 the starting-helper stage is spoken with the same words it shows	JUMP	Chat a	11
 HomeStatusSteadyTest.B-HOME-222 the helper's two stages read with the same words	FIRST	#kit-filter-chips	10
-HomeStatusSteadyTest.B-HOME-222 the helper's two stages read with the same words	JUMP	Theme packs	11
 HomeTapAuditTest.every control on the home page answers its first tap in every state	FIRST	#kit-filter-chips	10
-HomeTapAuditTest.every control on the home page answers its first tap in every state	JUMP	Theme packs	11
 LooksCaptureTest.home	FIRST	#kit-filter-chips	10
-LooksCaptureTest.home	JUMP	Add dark mode to settings	11
-LooksCaptureTest.homeOneAgentWithBrief	FIRST	Rate limit the upload endpoint	11
-LooksCaptureTest.homeOneAgentWithBrief	JUMP	Rate limit the upload endpoint	11
 NewConversationFastTypingTest.A1-TYPE-003 sixty letters typed fast while the page gets ready reach the New conversation field in order	JUMP	Where it runs: kept · This phone. Opens the project and conn	16
 NewConversationFillTest.one starter fills the box, a second replaces it and the clear after Start empties it	ABA	Ways to start	16
 NewConversationFillTest.one starter fills the box, a second replaces it and the clear after Start empties it	ABA	What would you like to build?	16
 NewConversationNoticeKeyboardTest.a blocking notice hands its main action to the bottom block at 400 dp, keyboard up	FIRST	#chats-new-field	16
-NewConversationNoticeKeyboardTest.a blocking notice hands its main action to the bottom block at 400 dp, keyboard up	JUMP	OpenCode Server default	16
 NewConversationNoticeKeyboardTest.a blocking notice hands its main action to the bottom block at 460 dp, keyboard up	FIRST	#chats-new-field	16
-NewConversationNoticeKeyboardTest.a blocking notice hands its main action to the bottom block at 460 dp, keyboard up	JUMP	OpenCode Server default	16
 NewConversationNoticeWholeTest.I147-NOTICE a blocking notice shares the page's scroll with the box, so the notice is not squeezed	FIRST	Ways to start	16
 NewConversationProjectTest.B07 project picker starts from the loaded project and preserves current typing	ABA	Close	19
 NewConversationProjectTest.B07 project picker starts from the loaded project and preserves current typing	JUMP	#kit-sheet	19
 NewConversationTapAuditTest.every control on the New conversation page answers its first tap in every state	FIRST	#kit-sheet	19
 NewConversationTapAuditTest.every control on the New conversation page answers its first tap in every state	JUMP	#kit-sheet	19
 S10HomeGoldensTest.B-CHATS-161 E20-S24 B-CHATS-162 home with mixed rows	FIRST	#kit-filter-chips	10
-S10HomeGoldensTest.B-CHATS-161 E20-S24 B-CHATS-162 home with mixed rows	FIRST	Theme packs	11
-S10HomeGoldensTest.B-CHATS-161 E20-S24 B-CHATS-162 home with mixed rows	JUMP	Theme packs	11
 S10HomeScreenTest.A1-HOME-07 the rows lie on a grouped panel in Solid too, whose lists used to run flat	FIRST	#kit-filter-chips	10
-S10HomeScreenTest.A1-HOME-07 the rows lie on a grouped panel in Solid too, whose lists used to run flat	JUMP	Theme packs	11
 S10HomeScreenTest.A1-HOME-08 a live row says Working once, and a waiting one says Needs you	FIRST	#kit-filter-chips	10
-S10HomeScreenTest.A1-HOME-08 a live row says Working once, and a waiting one says Needs you	JUMP	Theme packs	11
 S10HomeScreenTest.A1-HOME-09 rows draw no project tile and no branch, and one agent kind is not said on each row	FIRST	#kit-filter-chips	10
-S10HomeScreenTest.A1-HOME-09 rows draw no project tile and no branch, and one agent kind is not said on each row	JUMP	Theme packs	11
 S10HomeScreenTest.A1-HOME-10 the list ends with All conversations and its count, which opens the whole list	FIRST	#kit-filter-chips	10
-S10HomeScreenTest.A1-HOME-10 the list ends with All conversations and its count, which opens the whole list	JUMP	Theme packs	11
 S10HomeScreenTest.A1-HOME-17 P-107 All conversations shares the New conversation button's line in the foot bar, never under it	FIRST	#kit-filter-chips	10
 S10HomeScreenTest.B-CHATS-161 with two agent kinds each row names its agent	FIRST	#kit-filter-chips	10
-S10HomeScreenTest.B-CHATS-161 with two agent kinds each row names its agent	JUMP	Theme packs	11
 S10HomeScreenTest.B-FB-050 a section another feature places shows under the notes, above Right now	FIRST	#kit-filter-chips	10
-S10HomeScreenTest.B-FB-050 a section another feature places shows under the notes, above Right now	JUMP	Theme packs	11
 UpdateLinePhasesRendersTest.B-HOME-213 renders of the update line naming the part that runs	FIRST	#kit-filter-chips	10
-UpdateLinePhasesRendersTest.B-HOME-213 renders of the update line naming the part that runs	JUMP	Theme packs	11
 UpdateWaitHomeRendersTest.B-HOME-212 renders of Home with the update waiting, at 360 dp	FIRST	#kit-filter-chips	10
-UpdateWaitHomeRendersTest.B-HOME-212 renders of Home with the update waiting, at 360 dp	JUMP	Theme packs	11
 ChatsScreenTest.B-HOME-215 a stopped phone in the list says so with Start OpenCode, no failure	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-HOME-215 a stopped phone in the list says so with Start OpenCode, no failure	JUMP	Theme packs	11
 ChatsScreenTest.B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering	FIRST	#kit-filter-chips	10
-ChatsScreenTest.B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering	JUMP	Theme packs	11
 OwnStopHomeRenders.renders of Home after the person's own stop	ABA	#kit-chip-chevron	10
 OwnStopHomeRenders.renders of Home after the person's own stop	BLINK	+#	10
-OwnStopHomeRenders.renders of Home after the person's own stop	FIRST	Theme packs	11
-OwnStopHomeRenders.renders of Home after the person's own stop	JUMP	Theme packs	11
