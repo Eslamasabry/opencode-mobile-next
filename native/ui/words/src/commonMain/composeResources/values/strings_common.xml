@@ -110,6 +110,7 @@
     <string name="workspaceDismissNotice">Dismiss</string>
     <string name="onboardingSetupGuide">Setup guide</string>
     <string name="onboardingTermuxSetup">On this phone</string>
+    <string name="onboardingTermuxSetupTablet">On this tablet</string>
     <string name="workBackgroundRequested">Background work requested. Status will update when the server reports it.</string>
     <string name="e7PermissionAction7">Use %1$s</string>
     <string name="e7GlossaryMcpExplanation">Model Context Protocol. Small add-on servers that give the agent extra tools, like a browser, a database, or a design tool. You connect them once and every conversation can use them.</string>

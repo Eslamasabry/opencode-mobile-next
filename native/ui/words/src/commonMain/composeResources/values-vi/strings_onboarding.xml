@@ -299,4 +299,6 @@
     <string name="browserProbeTimeout">Kết nối đã hết thời gian chờ. Hãy kiểm tra địa chỉ và xem máy chủ có truy cập được từ trình duyệt này không.</string>
     <string name="phoneSetupStartStepsNoTime">Cài đặt, đặt tên dự án, bắt đầu một cuộc trò chuyện</string>
     <string name="phoneSetupPreflightSpaceNumbers">Việc thiết lập cần khoảng %1$s trống. Điện thoại này còn %2$s.</string>
+    <string name="tabletSetupStartScreenTitle">Trên máy tính bảng này</string>
+    <string name="welcomeTabletSetUp">Thiết lập trên máy tính bảng này</string>
 </resources>

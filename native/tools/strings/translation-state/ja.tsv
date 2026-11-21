@@ -8594,6 +8594,7 @@ onboardingSaveChanges	1e93a0833d
 onboardingSaveConnect	0a4623302d
 onboardingSetupGuide	0e9ce7acbd
 onboardingTermuxSetup	30451c91d1
+onboardingTermuxSetupTablet	6587216802
 openCode1Unsupported	da2df50c56
 openCode1UnsupportedTitle	9453747022
 openCode2HostInstall	3e5de64506
@@ -11829,6 +11830,7 @@ storageRestartFailedBody	d01e85c932
 storageRestartFailedTitle	84873eaa80
 storageRestartPause	f3fc489d03
 storageRestartTitle	1bbe8e7136
+tabletSetupStartScreenTitle	6587216802
 tailscaleAddressDetail	1af5cee87a
 tailscaleAddressError	3fdf562bea
 tailscaleAddressLabel	07dad9302a
@@ -14335,6 +14337,7 @@ welcomePhoneReady	187c1def87
 welcomePhoneSetUp	9e9309801e
 welcomePhoneSettingUp	f11eb80634
 welcomePhoneStopped	2ea37f4a6c
+welcomeTabletSetUp	146ab558cc
 whatsNew220Agents	5580e08ef9
 whatsNew220LargeText	f4d2bfc6d6
 whatsNew220PasteImages	c5ccef606e

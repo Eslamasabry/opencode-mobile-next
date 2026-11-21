@@ -2,22 +2,18 @@ package io.github.eslamasabry.oc.feature.phonesetup.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.text.Numbers
@@ -30,7 +26,6 @@ import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
@@ -67,43 +62,32 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * Shared wide-window (Expanded+, >= 840 dp) two-column frame for [PhoneSetupScreen] and [SetupJourneyScreen]:
- * places the page title directly above the two reading-capped columns in one vertically centred composition.
+ * places the two reading-capped columns TOP-aligned right under the top bar (whose title sits in the Back row),
+ * with no vertical centring so dynamic lines never shift the layout.
  */
 @Composable
 internal fun WideTwoColumnFrame(
-    pageTitle: String,
-    verticalAlignment: Alignment.Vertical,
     start: @Composable () -> Unit,
     end: @Composable () -> Unit,
     viewportModifier: Modifier = Modifier,
 ) {
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val viewportHeight = maxHeight
-        Box(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
-            Box(
-                Modifier.fillMaxWidth()
-                    .heightIn(min = viewportHeight)
-                    .then(viewportModifier)
-                    .padding(top = Space.S2.dp, bottom = Space.S6.dp),
-                contentAlignment = Alignment.Center,
+    Box(
+        Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
+        contentAlignment = Alignment.TopStart,
+    ) {
+        Box(
+            Modifier.fillMaxWidth()
+                .then(viewportModifier)
+                .padding(top = Space.S4.dp, bottom = Space.S6.dp),
+            contentAlignment = Alignment.TopStart,
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
+                verticalAlignment = Alignment.Top,
             ) {
-                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S5.dp)) {
-                    KitText(
-                        pageTitle,
-                        Modifier.semantics { heading() },
-                        role = TypeRole.LargeTitle,
-                        kind = KitTextKind.Frame,
-                        pageTitle = true,
-                    )
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Space.S6.dp),
-                        verticalAlignment = verticalAlignment,
-                    ) {
-                        Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { start() }
-                        Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { end() }
-                    }
-                }
+                Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { start() }
+                Box(Modifier.weight(1f).kitMaxWidth(CapRole.Reading, CapAlign.Start)) { end() }
             }
         }
     }

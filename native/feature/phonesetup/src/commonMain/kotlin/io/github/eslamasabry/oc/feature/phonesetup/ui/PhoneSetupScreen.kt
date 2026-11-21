@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.domain.capabilities.DeviceClass
+import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentState
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupComponentIds
@@ -112,6 +114,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartPromise
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartPromiseNoSize
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartReadyBody
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartScreenTitle
+import io.github.eslamasabry.oc.ui.words.res.tabletSetupStartScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartSetUp
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartTitle
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewBytes
@@ -136,18 +139,25 @@ import org.jetbrains.compose.resources.stringResource
  * (B-LINUX-203, B-SEC-166), Continue and Stop.
  */
 @Composable
-public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
+public fun PhoneSetupScreen(
+    state: PhoneSetupUi,
+    actions: PhoneSetupActions,
+    deviceClass: DeviceClass = PlatformCapabilities.currentDeviceClass,
+) {
     val progress = state.progress
     val wide = LocalKitWindow.current.cls.isWide
     val pageTitle =
         stringResource(
-            if (progress == null) Res.string.phoneSetupStartScreenTitle
-            else Res.string.phoneSetupProgressTitle
+            when {
+                progress != null -> Res.string.phoneSetupProgressTitle
+                deviceClass == DeviceClass.Tablet -> Res.string.tabletSetupStartScreenTitle
+                else -> Res.string.phoneSetupStartScreenTitle
+            }
         )
     KitScreen(
         topBar = {
             KitTopBar(
-                title = if (wide) "" else pageTitle,
+                title = pageTitle,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -159,8 +169,6 @@ public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
     ) {
         if (wide) {
             WideTwoColumnFrame(
-                pageTitle = pageTitle,
-                verticalAlignment = Alignment.Top,
                 start = {
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                         if (progress == null) Start(state, actions, wide = true)

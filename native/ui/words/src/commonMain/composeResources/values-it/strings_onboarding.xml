@@ -307,4 +307,6 @@
     <string name="phoneSetupRingDetailsTitle">Dettagli della configurazione</string>
     <string name="browserTransportFailure">Il browser non è riuscito a raggiungere il server. Controlla l'indirizzo e che il server sia in esecuzione. Un server su una origine diversa deve consentire l'origine di questa pagina (CORS), e una pagina caricata via https non può usare un server http:// o ws://.</string>
     <string name="browserProbeTimeout">Connessione scaduta. Controlla l'indirizzo e che il server sia raggiungibile da questo browser.</string>
+    <string name="tabletSetupStartScreenTitle">Su questo tablet</string>
+    <string name="welcomeTabletSetUp">Configura su questo tablet</string>
 </resources>

@@ -723,4 +723,5 @@
     <string name="connectAgentNeedsSignIn">Seu agente precisa que você entre. Abra Agentes e toque em Entrar; a conversa abre depois disso.</string>
     <string name="kitChipsMore">Mostrar mais filtros</string>
     <string name="kitChipsFirst">Mostrar os primeiros filtros</string>
+    <string name="onboardingTermuxSetupTablet">Neste tablet</string>
 </resources>

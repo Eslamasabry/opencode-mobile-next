@@ -700,4 +700,5 @@
     <string name="connectAgentNeedsSignIn">Tác nhân cần bạn đăng nhập. Mở Tác nhân và nhấn Đăng nhập; cuộc trò chuyện sẽ mở sau đó.</string>
     <string name="kitChipsMore">Hiện thêm bộ lọc</string>
     <string name="kitChipsFirst">Hiện các bộ lọc đầu tiên</string>
+    <string name="onboardingTermuxSetupTablet">Trên máy tính bảng này</string>
 </resources>

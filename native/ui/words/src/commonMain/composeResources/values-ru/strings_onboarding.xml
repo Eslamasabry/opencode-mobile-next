@@ -312,4 +312,6 @@
     <string name="browserProbeTimeout">Время подключения истекло. Проверьте адрес и то, что сервер доступен из этого браузера.</string>
     <string name="phoneSetupStartStepsNoTime">Установка, название проекта, первый чат</string>
     <string name="phoneSetupPreflightSpaceNumbers">Для настройки нужно около %1$s свободного места. На этом телефоне доступно %2$s.</string>
+    <string name="tabletSetupStartScreenTitle">На этом планшете</string>
+    <string name="welcomeTabletSetUp">Настроить на этом планшете</string>
 </resources>

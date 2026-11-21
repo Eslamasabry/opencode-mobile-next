@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.eslamasabry.oc.core.domain.capabilities.DeviceClass
+import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.feature.onboarding.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -33,6 +35,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitHeroQuestion
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -50,7 +53,11 @@ public fun WelcomeScreen(actions: WelcomeActions) {
  * the view model, so it survives leaving and coming back; "Connect to my computer" goes straight to the server editor.
  */
 @Composable
-public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
+public fun WelcomeScreen(
+    state: WelcomeUi,
+    actions: WelcomeActions,
+    deviceClass: DeviceClass = PlatformCapabilities.currentDeviceClass,
+) {
     LifecycleStartEffect(actions) {
         actions.refresh()
         onStopOrDispose {}
@@ -59,8 +66,25 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
     val working = KitEnabled.of(!phone.working, stringResource(Res.string.r40SetupWorking))
     // Off the phone path the computer is the only answer, chosen.
     val chosen = if (phone.available) state.place else WelcomePlace.Computer
+    val wide = LocalKitWindow.current.cls.isWide
+    val tablet = deviceClass == DeviceClass.Tablet
+    val deviceChoiceTitle =
+        stringResource(if (tablet) Res.string.onboardingTermuxSetupTablet else Res.string.onboardingTermuxSetup)
+    val deviceSupporting = phoneLine(phone)
+    val primaryLabel =
+        stringResource(
+            if (chosen == WelcomePlace.Computer) Res.string.welcomeComputerConnect
+            else
+                when (phone.phase) {
+                    WelcomeSetupPhase.Idle ->
+                        if (tablet) Res.string.welcomeTabletSetUp else Res.string.welcomePhoneSetUp
+                    WelcomeSetupPhase.Running -> Res.string.phoneSetupOpenWelcomeShowProgress
+                    WelcomeSetupPhase.Stopped -> Res.string.welcomePhoneContinue
+                    WelcomeSetupPhase.Done -> Res.string.welcomePhoneOpen
+                }
+        )
     KitScreen(
-        width = KitScreenWidth.Reading,
+        width = if (wide) KitScreenWidth.Full else KitScreenWidth.Reading,
         page = true,
         // Flutter's welcome sits under the product bar; its menu's ways out are here as the bar's actions.
         topBar = {
@@ -84,80 +108,84 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
                     ),
             )
         },
-        edges = KitScreenEdges.Bleed,
+        edges = if (wide) KitScreenEdges.Gutter else KitScreenEdges.Bleed,
     ) {
-        Column(Modifier.fillMaxSize().testTag("welcome-body")) {
-            Column(
-                Modifier.weight(1f).verticalScroll(kitPageScrollState()).padding(horizontal = Space.S4.dp),
-            ) {
-                // Air above the question (Flutter: space6 + space6).
-                Spacer(Modifier.height((Space.S6 + Space.S6).dp))
-                KitHeroQuestion(stringResource(Res.string.firstRunWhereQuestion), Modifier.testTag("welcome-question"))
-                Spacer(Modifier.height((Space.S6 + Space.S2).dp))
-                KitChoiceCards(Modifier.testTag("welcome-choices")) {
-                    if (phone.available)
+        if (wide) {
+            WelcomeWideBody(
+                phone = phone,
+                chosen = chosen,
+                working = working,
+                tablet = tablet,
+                deviceChoiceTitle = deviceChoiceTitle,
+                deviceSupporting = deviceSupporting,
+                primaryLabel = primaryLabel,
+                actions = actions,
+            )
+        } else {
+            Column(Modifier.fillMaxSize().testTag("welcome-body")) {
+                Column(
+                    Modifier.weight(1f).verticalScroll(kitPageScrollState()).padding(horizontal = Space.S4.dp),
+                ) {
+                    // Air above the question (Flutter: space6 + space6).
+                    Spacer(Modifier.height((Space.S6 + Space.S6).dp))
+                    KitHeroQuestion(stringResource(Res.string.firstRunWhereQuestion), Modifier.testTag("welcome-question"))
+                    Spacer(Modifier.height((Space.S6 + Space.S2).dp))
+                    KitChoiceCards(Modifier.testTag("welcome-choices")) {
+                        if (phone.available)
+                            KitChoiceCard(
+                                title = deviceChoiceTitle,
+                                selected = chosen == WelcomePlace.Phone,
+                                onSelect = { if (working.isEnabled) actions.select(WelcomePlace.Phone) },
+                                supporting = deviceSupporting,
+                                icon = if (tablet) KitIcons.tablet else KitIcons.phone,
+                                busy = phone.working,
+                            )
                         KitChoiceCard(
-                            title = stringResource(Res.string.onboardingTermuxSetup),
-                            selected = chosen == WelcomePlace.Phone,
-                            onSelect = { if (working.isEnabled) actions.select(WelcomePlace.Phone) },
-                            supporting = phoneLine(phone),
-                            icon = KitIcons.phone,
-                            busy = phone.working,
+                            title = stringResource(Res.string.firstRunOnComputer),
+                            selected = chosen == WelcomePlace.Computer,
+                            onSelect = { if (working.isEnabled) actions.select(WelcomePlace.Computer) },
+                            supporting = stringResource(Res.string.welcomeComputerLine),
+                            icon = KitIcons.computer,
                         )
-                    KitChoiceCard(
-                        title = stringResource(Res.string.firstRunOnComputer),
-                        selected = chosen == WelcomePlace.Computer,
-                        onSelect = { if (working.isEnabled) actions.select(WelcomePlace.Computer) },
-                        supporting = stringResource(Res.string.welcomeComputerLine),
-                        icon = KitIcons.computer,
-                    )
-                }
-                if (phone.failure != null) {
+                    }
+                    if (phone.failure != null) {
+                        Spacer(Modifier.height(Space.S2.dp))
+                        KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
+                    }
+                    // The quiet ways in, under the answers they sit beside.
                     Spacer(Modifier.height(Space.S2.dp))
-                    KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
-                }
-                // The quiet ways in, under the answers they sit beside.
-                Spacer(Modifier.height(Space.S2.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
-                    KitButton(
-                        stringResource(Res.string.firstRunJustShowMe),
-                        actions::showDemo,
-                        role = KitButtonRole.Tertiary,
-                        enabled = working,
-                    )
-                    if (phone.available)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                         KitButton(
-                            stringResource(Res.string.welcomeMoreWays),
-                            actions::moreWays,
+                            stringResource(Res.string.firstRunJustShowMe),
+                            actions::showDemo,
                             role = KitButtonRole.Tertiary,
                             enabled = working,
                         )
+                        if (phone.available)
+                            KitButton(
+                                stringResource(Res.string.welcomeMoreWays),
+                                actions::moreWays,
+                                role = KitButtonRole.Tertiary,
+                                enabled = working,
+                            )
+                    }
+                    Spacer(Modifier.height(Space.S4.dp))
                 }
-                Spacer(Modifier.height(Space.S4.dp))
-            }
-            // The one main action at the thumb, naming the chosen answer.
-            Box(
-                Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                KitButton(
-                    stringResource(
-                        if (chosen == WelcomePlace.Computer) Res.string.welcomeComputerConnect
-                        else
-                            when (phone.phase) {
-                                WelcomeSetupPhase.Idle -> Res.string.welcomePhoneSetUp
-                                WelcomeSetupPhase.Running -> Res.string.phoneSetupOpenWelcomeShowProgress
-                                WelcomeSetupPhase.Stopped -> Res.string.welcomePhoneContinue
-                                WelcomeSetupPhase.Done -> Res.string.welcomePhoneOpen
-                            }
-                    ),
-                    if (chosen == WelcomePlace.Computer) actions::connect else actions::begin,
-                    modifier = Modifier.testTag("welcome-primary"),
-                    enabled = working,
-                    working = phone.working,
-                    fullWidth = true,
-                    hero = true,
-                )
+                // The one main action at the thumb, naming the chosen answer.
+                Box(
+                    Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    KitButton(
+                        primaryLabel,
+                        if (chosen == WelcomePlace.Computer) actions::connect else actions::begin,
+                        modifier = Modifier.testTag("welcome-primary"),
+                        enabled = working,
+                        working = phone.working,
+                        fullWidth = true,
+                        hero = true,
+                    )
+                }
             }
         }
     }

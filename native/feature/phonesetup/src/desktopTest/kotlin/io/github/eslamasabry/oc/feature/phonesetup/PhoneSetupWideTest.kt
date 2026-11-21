@@ -11,11 +11,15 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.unit.DpRect
+import io.github.eslamasabry.oc.core.domain.capabilities.DeviceClass
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentState
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupPreflightResult
@@ -51,7 +55,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 
-/** Wide-window behavior tests for PhoneSetupScreen and SetupJourneyScreen (B-SET-300..304). */
+/** Wide-window behavior tests for PhoneSetupScreen and SetupJourneyScreen (B-SET-300..306). */
 @OptIn(ExperimentalTestApi::class)
 class PhoneSetupWideTest {
     private var previousLocale: Locale = Locale.getDefault()
@@ -119,7 +123,7 @@ class PhoneSetupWideTest {
             downloadBytes = 350_000_000,
         )
 
-    private fun journeyRunningUi() =
+    private fun journeyRunningUi(etaSeconds: Int? = 180, jobId: String = "journey-test-1", transport: SetupTransport = SetupTransport.Wifi) =
         SetupJourneyUi(
             checking = false,
             options = SetupOptions(journeyRegistry, emptySet(), SetupDeviceInfo(listOf("arm64-v8a"), 8192, 10_000_000_000)),
@@ -135,12 +139,12 @@ class PhoneSetupWideTest {
                         ),
                     overall = 0.48,
                     current = "node",
-                    etaSeconds = 180,
-                    jobId = "journey-test-1",
+                    etaSeconds = etaSeconds,
+                    jobId = jobId,
                     activity = SetupActivity.Downloading,
                     stepElapsedSeconds = 18,
                 ),
-            transport = SetupTransport.Wifi,
+            transport = transport,
         )
 
     private fun showContentAt(widthDp: Int, heightDp: Int, content: @Composable () -> Unit, block: ComposeUiTest.() -> Unit) {
@@ -162,8 +166,13 @@ class PhoneSetupWideTest {
         }
     }
 
-    private fun showAt(widthDp: Int, heightDp: Int, state: PhoneSetupUi, block: ComposeUiTest.() -> Unit) =
-        showContentAt(widthDp, heightDp, { PhoneSetupScreen(state, NoActions) }, block)
+    private fun showAt(
+        widthDp: Int,
+        heightDp: Int,
+        state: PhoneSetupUi,
+        deviceClass: DeviceClass = DeviceClass.Phone,
+        block: ComposeUiTest.() -> Unit,
+    ) = showContentAt(widthDp, heightDp, { PhoneSetupScreen(state, NoActions, deviceClass = deviceClass) }, block)
 
     private fun ComposeUiTest.assertDoneMarkDrawn(rowName: String) {
         val doneRow =
@@ -246,18 +255,27 @@ class PhoneSetupWideTest {
     }
 
     @Test
-    fun `B-SET-303 title and action on the content's edge at 1280`() {
+    fun `B-SET-303 title sits in the Back arrow row and columns start near the top at 1280`() {
         showAt(1280, 800, startUi()) {
-            val title = onNodeWithText("On this phone").getBoundsInRoot()
+            val back = onNodeWithTag("kit-top-bar-exit").getBoundsInRoot()
+            val title = onNodeWithTag("kit-top-bar-title").getBoundsInRoot()
+            val bar = onNodeWithTag("kit-top-bar").getBoundsInRoot()
             val content = onNodeWithText("Run a coding agent right here").getBoundsInRoot()
             val action = onNodeWithText("Set up OpenCode on this phone").getBoundsInRoot()
+            val backCenterY = (back.top.value + back.bottom.value) / 2f
+            val titleCenterY = (title.top.value + title.bottom.value) / 2f
             assertTrue(
-                abs(title.left.value - content.left.value) <= 1f,
-                "Expected title left (${title.left}) == content left (${content.left})",
+                abs(backCenterY - titleCenterY) <= 12f && title.left.value >= back.right.value - 1f,
+                "Expected title ($title) beside Back ($back) in the same row",
             )
             assertTrue(
                 abs(action.left.value - content.left.value) <= 1f,
                 "Expected action left (${action.left}) == content left (${content.left})",
+            )
+            // Columns start near the top bar rather than vertically centred in the 800 dp viewport.
+            assertTrue(
+                content.top.value - bar.bottom.value <= 260f,
+                "Expected top-aligned columns near top bar ($bar), got content=$content",
             )
         }
     }
@@ -268,9 +286,21 @@ class PhoneSetupWideTest {
             val stage = onNodeWithText("Downloading Node.js").getBoundsInRoot()
             val pause = onNodeWithText("Pause setup").getBoundsInRoot()
             val part = onNodeWithText("Linux base").getBoundsInRoot()
+            val bar = onNodeWithTag("kit-top-bar").getBoundsInRoot()
+            val back = onNodeWithTag("kit-top-bar-exit").getBoundsInRoot()
+            val title = onNodeWithTag("kit-top-bar-title").getBoundsInRoot()
+            assertTrue(
+                abs((back.top.value + back.bottom.value) / 2f - (title.top.value + title.bottom.value) / 2f) <= 12f,
+                "Expected journey title ($title) in Back arrow row ($back)",
+            )
             assertTrue(
                 part.left.value > 640f && stage.right.value < part.left.value && pause.right.value < part.left.value,
                 "Expected ring stage ($stage) and Pause ($pause) on left column beside parts ($part) on right",
+            )
+            // Top-aligned columns: right panel starts directly under the top bar (not vertically centred).
+            assertTrue(
+                part.top.value - bar.bottom.value <= 160f,
+                "Expected top-aligned parts column near top bar ($bar), got part=$part",
             )
             onNodeWithText("2 of 4 done").assertExists()
             assertDoneMarkDrawn("Linux base")
@@ -279,6 +309,61 @@ class PhoneSetupWideTest {
             onNodeWithText("Downloading Node.js").assertExists()
             onNodeWithText("Pause setup").assertExists()
             onAllNodesWithText("Linux base").assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `B-SET-305 journey ring and Pause bounds do not move when time-left appears at 1280`() {
+        var ringBefore: DpRect? = null
+        var pauseBefore: DpRect? = null
+        showContentAt(
+            1280,
+            800,
+            { SetupJourneyScreen(journeyRunningUi(etaSeconds = null, jobId = "bset305-no-eta", transport = SetupTransport.Unknown), NoJourneyActions) },
+        ) {
+            ringBefore = onNode(hasContentDescription("Setup progress", substring = true)).getBoundsInRoot()
+            pauseBefore = onNodeWithText("Pause setup").getBoundsInRoot()
+        }
+        var ringAfter: DpRect? = null
+        var pauseAfter: DpRect? = null
+        showContentAt(
+            1280,
+            800,
+            { SetupJourneyScreen(journeyRunningUi(etaSeconds = 180, jobId = "bset305-with-eta", transport = SetupTransport.Unknown), NoJourneyActions) },
+        ) {
+            onNodeWithText("About 2 min left", substring = true).assertExists()
+            ringAfter = onNode(hasContentDescription("Setup progress", substring = true)).getBoundsInRoot()
+            pauseAfter = onNodeWithText("Pause setup").getBoundsInRoot()
+        }
+        assertTrue(
+            ringBefore == ringAfter && pauseBefore == pauseAfter,
+            "Ring or Pause moved when time-left appeared: ring $ringBefore -> $ringAfter, pause $pauseBefore -> $pauseAfter",
+        )
+    }
+
+    @Test
+    fun `B-SET-306 setup screens title a tablet as On this tablet and keep phone title on a phone`() {
+        showAt(1280, 800, startUi(), deviceClass = DeviceClass.Tablet) {
+            onNodeWithText("On this tablet").assertExists()
+        }
+        showContentAt(
+            1280,
+            800,
+            {
+                SetupJourneyScreen(
+                    SetupJourneyUi(
+                        checking = false,
+                        options = SetupOptions(journeyRegistry, emptySet(), SetupDeviceInfo(listOf("arm64-v8a"), 8192, 10_000_000_000)),
+                    ),
+                    NoJourneyActions,
+                    deviceClass = DeviceClass.Tablet,
+                )
+            },
+        ) {
+            onNodeWithText("On this tablet").assertExists()
+        }
+        showAt(1280, 800, startUi(), deviceClass = DeviceClass.Phone) {
+            onNodeWithText("On this phone").assertExists()
         }
     }
 }

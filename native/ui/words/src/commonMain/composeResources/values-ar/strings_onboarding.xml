@@ -320,4 +320,6 @@
     <string name="phoneSetupRingDetailsTitle">تفاصيل الإعداد</string>
     <string name="browserTransportFailure">تعذّر على المتصفح الوصول إلى الخادم. تحقق من العنوان ومن أن الخادم يعمل. يجب أن يسمح الخادم الموجود على أصل مختلف بأصل هذه الصفحة (CORS)، ولا تستطيع صفحة محمّلة عبر https استخدام خادم http:// أو ws://.</string>
     <string name="browserProbeTimeout">انتهت مهلة الاتصال. تحقق من العنوان ومن أن الخادم يمكن الوصول إليه من هذا المتصفح.</string>
+    <string name="tabletSetupStartScreenTitle">على هذا الجهاز اللوحي</string>
+    <string name="welcomeTabletSetUp">الإعداد على هذا الجهاز اللوحي</string>
 </resources>

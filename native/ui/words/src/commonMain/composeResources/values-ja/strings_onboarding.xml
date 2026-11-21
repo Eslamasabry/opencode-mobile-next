@@ -298,4 +298,6 @@
     <string name="phoneSetupRingDetailsTitle">セットアップの詳細</string>
     <string name="browserTransportFailure">ブラウザからサーバーに接続できませんでした。アドレスと、サーバーが起動していることを確認してください。異なるオリジンのサーバーはこのページのオリジン（CORS）を許可する必要があり、httpsで開いたページではhttp://やws://のサーバーは使えません。</string>
     <string name="browserProbeTimeout">接続がタイムアウトしました。アドレスと、このブラウザからサーバーに接続できることを確認してください。</string>
+    <string name="tabletSetupStartScreenTitle">このタブレット上で</string>
+    <string name="welcomeTabletSetUp">このタブレットで設定</string>
 </resources>

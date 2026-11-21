@@ -308,4 +308,6 @@
     <string name="browserProbeTimeout">A conexão demorou demais. Confira o endereço e se o servidor pode ser alcançado a partir deste navegador.</string>
     <string name="phoneSetupStartStepsNoTime">Instale, dê um nome a um projeto, inicie uma conversa</string>
     <string name="phoneSetupPreflightSpaceNumbers">A configuração precisa de cerca de %1$s livres. Este celular tem %2$s.</string>
+    <string name="tabletSetupStartScreenTitle">Neste tablet</string>
+    <string name="welcomeTabletSetUp">Configurar neste tablet</string>
 </resources>

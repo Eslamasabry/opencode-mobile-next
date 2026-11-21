@@ -14,6 +14,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
+import io.github.eslamasabry.oc.core.domain.capabilities.DeviceClass
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentState
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupPreflightResult
@@ -90,15 +91,27 @@ class BigScreenPhoneSetupRenders {
             Shot("split", 600, 800, 1f, ""),
             Shot("tabp", 800, 1280, 1f, ""),
             Shot("exp840", 840, 800, 1f, ""),
+            Shot("tab1024", 1024, 768, 1f, ""),
+            Shot("tabl", 1280, 800, 1f, ""),
+            Shot("tabl", 1280, 800, 1.3f, "-t13"),
+        )
+
+    private val tabletShots =
+        listOf(
             Shot("tabl", 1280, 800, 1f, ""),
             Shot("tabl", 1280, 800, 1.3f, "-t13"),
         )
 
     private val out = File("build/bigscreen").also { it.mkdirs() }
 
-    private fun shoot(name: String, after: ComposeUiTest.() -> Unit = {}, content: @Composable () -> Unit) {
+    private fun shoot(
+        name: String,
+        list: List<Shot> = shots,
+        after: ComposeUiTest.() -> Unit = {},
+        content: @Composable () -> Unit,
+    ) {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        for (s in shots) {
+        for (s in list) {
             runCatching {
                 runDesktopComposeUiTest(s.w * 2, s.h * 2) {
                     setContent {
@@ -160,6 +173,19 @@ class BigScreenPhoneSetupRenders {
                     downloadBytes = 350_000_000,
                 ),
                 NoActions,
+                deviceClass = DeviceClass.Phone,
+            )
+        }
+        shoot("phonesetup-start-tablet", tabletShots) {
+            PhoneSetupScreen(
+                PhoneSetupUi(
+                    checking = false,
+                    preflight = SetupPreflightResult.Ok,
+                    items = items,
+                    downloadBytes = 350_000_000,
+                ),
+                NoActions,
+                deviceClass = DeviceClass.Tablet,
             )
         }
         val running =
@@ -210,6 +236,34 @@ class BigScreenPhoneSetupRenders {
         shoot("phonesetup-done") {
             PhoneSetupScreen(PhoneSetupUi(checking = false, items = items, progress = done), NoActions)
         }
+        val journeyRunningNoEta =
+            JourneySetupProgress(
+                state = JourneySetupState.Running,
+                components =
+                    listOf(
+                        JourneyComponentProgress("linux", JourneyComponentState.Done, bytesDone = 30_000_000, bytesTotal = 30_000_000),
+                        JourneyComponentProgress("essentials", JourneyComponentState.Done, bytesDone = 45_000_000, bytesTotal = 45_000_000),
+                        JourneyComponentProgress("node", JourneyComponentState.Running, stage = "Downloading Node.js", bytesDone = 24_000_000, bytesTotal = 58_000_000),
+                        JourneyComponentProgress("opencode", JourneyComponentState.Pending),
+                    ),
+                overall = 0.48,
+                current = "node",
+                etaSeconds = null,
+                jobId = "journey-render-no-eta",
+                activity = SetupActivity.Downloading,
+                stepElapsedSeconds = 18,
+            )
+        shoot("phonesetup-journey-waiting-no-eta") {
+            SetupJourneyScreen(
+                SetupJourneyUi(
+                    checking = false,
+                    options = journeyOptions,
+                    progress = journeyRunningNoEta,
+                    transport = SetupTransport.Unknown,
+                ),
+                NoJourneyActions,
+            )
+        }
         val journeyRunning =
             JourneySetupProgress(
                 state = JourneySetupState.Running,
@@ -233,7 +287,30 @@ class BigScreenPhoneSetupRenders {
                     checking = false,
                     options = journeyOptions,
                     progress = journeyRunning,
-                    transport = SetupTransport.Wifi,
+                    transport = SetupTransport.Unknown,
+                ),
+                NoJourneyActions,
+            )
+        }
+        val journeyDone =
+            JourneySetupProgress(
+                state = JourneySetupState.Done,
+                components =
+                    listOf(
+                        JourneyComponentProgress("linux", JourneyComponentState.Done, bytesDone = 30_000_000, bytesTotal = 30_000_000),
+                        JourneyComponentProgress("essentials", JourneyComponentState.Done, bytesDone = 45_000_000, bytesTotal = 45_000_000),
+                        JourneyComponentProgress("node", JourneyComponentState.Done, bytesDone = 58_000_000, bytesTotal = 58_000_000),
+                        JourneyComponentProgress("opencode", JourneyComponentState.Done, bytesDone = 75_000_000, bytesTotal = 75_000_000),
+                    ),
+                overall = 1.0,
+                jobId = "journey-render-done",
+            )
+        shoot("phonesetup-journey-done") {
+            SetupJourneyScreen(
+                SetupJourneyUi(
+                    checking = false,
+                    options = journeyOptions,
+                    progress = journeyDone,
                 ),
                 NoJourneyActions,
             )

@@ -299,4 +299,6 @@
     <string name="browserProbeTimeout">Koneksi kehabisan waktu. Periksa alamatnya, dan pastikan server dapat dijangkau dari browser ini.</string>
     <string name="phoneSetupStartStepsNoTime">Pasang, beri nama proyek, mulai percakapan</string>
     <string name="phoneSetupPreflightSpaceNumbers">Penyiapan membutuhkan sekitar %1$s ruang kosong. Ponsel ini punya %2$s.</string>
+    <string name="tabletSetupStartScreenTitle">Di tablet ini</string>
+    <string name="welcomeTabletSetUp">Siapkan di tablet ini</string>
 </resources>

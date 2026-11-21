@@ -201,6 +201,7 @@
     <string name="phoneSetupReadyCreateFailed">The project could not be created: %1$s</string>
     <string name="phoneSetupReadyOpenFailed">The project could not be opened: %1$s</string>
     <string name="phoneSetupStartScreenTitle">On this phone</string>
+    <string name="tabletSetupStartScreenTitle">On this tablet</string>
     <string name="phoneSetupStartHeadline">Run a coding agent right here</string>
     <string name="phoneSetupStartPromise">No computer and no other apps. ~%1$s to download the first time.</string>
     <string name="phoneSetupStartPromiseNoSize">No computer and no other apps.</string>
@@ -276,6 +277,7 @@
     <string name="serverTrustCertificateValidityError">The server certificate is expired or not yet valid. Ask the server owner to renew it or check the device clock before reconnecting.</string>
     <string name="welcomePhoneCost">%1$s · %2$s download</string>
     <string name="welcomePhoneSetUp">Set up on this phone</string>
+    <string name="welcomeTabletSetUp">Set up on this tablet</string>
     <string name="welcomePhoneSettingUp">Setting up · %1$d%</string>
     <string name="welcomePhoneStopped">Setup is %1$d% done</string>
     <string name="welcomePhoneContinue">Continue setup</string>

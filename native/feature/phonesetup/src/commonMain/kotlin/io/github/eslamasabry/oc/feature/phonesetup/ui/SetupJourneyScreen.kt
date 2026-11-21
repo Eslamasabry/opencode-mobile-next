@@ -23,7 +23,11 @@ import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.row.KitLockedRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import androidx.compose.ui.platform.LocalDensity
+import io.github.eslamasabry.oc.core.domain.capabilities.DeviceClass
+import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -96,7 +100,11 @@ internal fun journeyBody(state: SetupJourneyUi): JourneyBody =
 
 /** One durable setup, with dependency-aware first-install and add-tools choices. */
 @Composable
-public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyActions) {
+public fun SetupJourneyScreen(
+    state: SetupJourneyUi,
+    actions: SetupJourneyActions,
+    deviceClass: DeviceClass = PlatformCapabilities.currentDeviceClass,
+) {
     LifecycleStartEffect(actions) {
         actions.retry()
         onStopOrDispose {}
@@ -112,11 +120,11 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         }
     val wide = LocalKitWindow.current.cls.isWide
     val wideJob = wide && !state.checking && journeyBody(state) == JourneyBody.Job
-    val barTitle = journeyTitle(state)
+    val barTitle = journeyTitle(state, deviceClass)
     KitScreen(
         topBar = {
             KitTopBar(
-                if (wideJob) "" else barTitle,
+                barTitle,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -134,7 +142,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             when (journeyBody(state)) {
                 JourneyBody.Nothing -> Unit
                 JourneyBody.Hero -> StartHero(state, actions)
-                JourneyBody.Job -> Job(state, actions, wide = wideJob, pageTitle = barTitle)
+                JourneyBody.Job -> Job(state, actions, wide = wideJob)
             }
         }
         KitSheet(
@@ -200,11 +208,14 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
 
 /** The persisted job names its additions, in job order, even after the app is reopened. */
 @Composable
-private fun journeyTitle(state: SetupJourneyUi): String {
+private fun journeyTitle(state: SetupJourneyUi, deviceClass: DeviceClass = DeviceClass.Phone): String {
     if (state.adding && state.progress.adding.isEmpty())
         return stringResource(Res.string.settingsV3ThisPhone)
     if (state.progress.adding.isEmpty())
-        return stringResource(Res.string.phoneSetupStartScreenTitle)
+        return stringResource(
+            if (deviceClass == DeviceClass.Tablet) Res.string.tabletSetupStartScreenTitle
+            else Res.string.phoneSetupStartScreenTitle
+        )
     // F: lib/builtin/setup/setup_engine/progress_helpers.dart:335-356
     val names =
         state.progress.adding.flatMap { id ->
@@ -545,7 +556,6 @@ private fun Job(
     state: SetupJourneyUi,
     actions: SetupJourneyActions,
     wide: Boolean = false,
-    pageTitle: String = "",
 ) {
     val progress = state.progress
     var detailsOpen by remember { mutableStateOf(false) }
@@ -687,37 +697,54 @@ private fun Job(
                         downloading = caption != null,
                         transport = state.transport,
                     )
-            if (costParts.isNotEmpty()) {
+            val costReserved = wide && running
+            val costLineHeight =
+                if (costReserved) {
+                    with(LocalDensity.current) {
+                        LocalKitTypography.current.style(TypeRole.RowTitle).lineHeight.toDp()
+                    }
+                } else {
+                    0.dp
+                }
+            val costSlotShown = costReserved || costParts.isNotEmpty()
+            if (costSlotShown) {
                 Spacer(Modifier.height(topGap))
-                // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
-                val cost =
-                    costParts
-                        .map { part ->
-                            when (part) {
-                                RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
-                                is RingCostPart.Minutes ->
-                                    org.jetbrains.compose.resources.pluralStringResource(
-                                        Res.plurals.phoneSetupRingMinutesLeft,
-                                        part.minutes,
-                                        part.minutes,
-                                    )
-                                RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
-                                RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
-                            }
-                        }
-                        .joinToString(" · ")
-                KitText(
-                    cost,
-                    Modifier.testTag("phone-setup-progress-cost"),
-                    role = TypeRole.RowTitle,
-                    tone = TextTone.Secondary,
-                    textAlign = TextAlign.Center,
-                )
+                Box(
+                    if (costReserved) Modifier.heightIn(min = costLineHeight) else Modifier,
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (costParts.isNotEmpty()) {
+                        // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
+                        val cost =
+                            costParts
+                                .map { part ->
+                                    when (part) {
+                                        RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
+                                        is RingCostPart.Minutes ->
+                                            org.jetbrains.compose.resources.pluralStringResource(
+                                                Res.plurals.phoneSetupRingMinutesLeft,
+                                                part.minutes,
+                                                part.minutes,
+                                            )
+                                        RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
+                                        RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
+                                    }
+                                }
+                                .joinToString(" · ")
+                        KitText(
+                            cost,
+                            Modifier.testTag("phone-setup-progress-cost"),
+                            role = TypeRole.RowTitle,
+                            tone = TextTone.Secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
             }
             val clock = progress.stepElapsedSeconds
             if (running && clock != null) {
                 // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
-                Spacer(Modifier.height(if (costParts.isEmpty()) topGap else Space.S2.dp))
+                Spacer(Modifier.height(if (!costSlotShown) topGap else Space.S2.dp))
                 val doing = progress.activity?.let { activityWords(it) }
                 // The clock is the current step's own: the words say so.
                 val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
@@ -743,7 +770,7 @@ private fun Job(
                 }
             }
             if (note != null) {
-                Spacer(Modifier.height(if (costParts.isEmpty() && clock == null) topGap else Space.S2.dp))
+                Spacer(Modifier.height(if (!costSlotShown && clock == null) topGap else Space.S2.dp))
                 KitText(
                     note,
                     if (wide) Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp) else Modifier.widthIn(max = 320.dp),
@@ -779,8 +806,6 @@ private fun Job(
     if (wide) {
         val gutter = LocalKitTokens.current.gutter.dp
         WideTwoColumnFrame(
-            pageTitle = pageTitle,
-            verticalAlignment = Alignment.CenterVertically,
             viewportModifier = Modifier.padding(horizontal = gutter).testTag("setup-progress-viewport"),
             start = ringBody,
             end = {
