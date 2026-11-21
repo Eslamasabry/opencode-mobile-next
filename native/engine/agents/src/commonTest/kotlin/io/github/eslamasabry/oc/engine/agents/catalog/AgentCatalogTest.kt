@@ -126,7 +126,7 @@ class AgentCatalogTest {
         assertEquals(AgentSignInMethod.ApiKeyHost, catalog.byId(AgentId("qwen"))!!.signInMethod)
         assertEquals(listOf("--acp"), catalog.byId(AgentId("gemini"))!!.recipe!!.launchArgs)
         assertEquals(AgentArtifactFormat.NpmTarGz, catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format)
-        assertEquals("2.1.327", catalog.byId(AgentId("claude"))!!.recipe!!.version)
+        assertEquals("2.1.330", catalog.byId(AgentId("claude"))!!.recipe!!.version)
         assertEquals(listOf("auth", "login", "--claudeai"), catalog.byId(AgentId("claude"))!!.recipe!!.signInArgs)
         assertEquals(AgentLimitation.NeedsPhoneCheck, catalog.byId(AgentId("claude"))!!.limitation)
         assertEquals(AgentLimitation.GooseProvider, catalog.byId(AgentId("goose"))!!.limitation)
@@ -144,7 +144,7 @@ class AgentCatalogTest {
         val cline = catalog.byId(AgentId("cline"))!!
         assertEquals(AgentRoute.AcpPaseo, kilo.route)
         assertEquals(AgentRoute.AcpPaseo, cline.route)
-        assertEquals("7.8.27", kilo.recipe!!.version)
+        assertEquals("7.8.32", kilo.recipe!!.version)
         assertEquals("3.0.74", cline.recipe!!.version)
         assertEquals(listOf("acp"), kilo.recipe!!.launchArgs)
         assertEquals(listOf("--acp"), cline.recipe!!.launchArgs)

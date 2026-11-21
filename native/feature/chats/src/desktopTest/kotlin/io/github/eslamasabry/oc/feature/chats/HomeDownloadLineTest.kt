@@ -105,12 +105,20 @@ class HomeDownloadLineTest {
     }
 
     @Test
-    fun `B-DL-407 only agents held is its own line with no mobile-data action`() = kitUiTest {
+    fun `B-DL-407 only agents held is its own line`() = kitUiTest {
         val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 660)))
         setContent { Home(home(fact)) }
         waitForIdle()
         onNodeWithText("3 agent updates waiting for Wi-Fi · about 660 MB").assertExists()
-        assertEquals(0, onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun `B-DL-444 the agents-only waiting line offers Download on mobile data and its tap is the yes`() = kitUiTest {
+        val fact = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 660)))
+        setContent { Home(home(fact)) }
+        waitForIdle()
+        onNodeWithText("Download on mobile data").performClick()
+        assertEquals(listOf("act"), actions.calls)
     }
 
     @Test

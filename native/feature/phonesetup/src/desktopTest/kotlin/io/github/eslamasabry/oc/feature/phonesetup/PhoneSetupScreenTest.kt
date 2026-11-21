@@ -250,27 +250,29 @@ class PhoneSetupScreenTest {
     }
 
     @Test
-    fun `B-LINUX-201 a finished job says OpenCode is ready and opens it`() {
+    fun `B-LINUX-201 a finished job says OpenCode is ready and its action opens a new conversation`() {
         val actions = Recorder()
         val done = SetupProgress(state = SetupState.Done, components = emptyList(), overall = 1.0, jobId = "setup-1")
         check = {
             onNodeWithText("OpenCode is ready").assertExists()
             onNodeWithText("100%").assertExists()
-            onNodeWithText("Open").performClick()
+            // Since d9e30fbf02 a finished setup's primary is "New conversation", not "Open". Tapping it records the one
+            // action that leaves setup for a new conversation.
+            onNodeWithText("New conversation").performClick()
         }
         show(PhoneSetupUi(checking = false, items = items, progress = done), actions)
         assertEquals(listOf("done"), actions.calls)
     }
 
     @Test
-    fun `B-109 the finished job's Open reaches the screen's end edge, not a narrow button at the start`() {
+    fun `B-109 the finished job's primary reaches the screen's end edge, not a narrow button at the start`() {
         val actions = Recorder()
         val done = SetupProgress(state = SetupState.Done, components = emptyList(), overall = 1.0, jobId = "setup-1")
         check = {
-            val open = onNodeWithText("Open").getBoundsInRoot()
+            val open = onNodeWithText("New conversation").getBoundsInRoot()
             // The action block puts the primary at the end (full width on a phone); before B-109 it sat at the start
             // edge as wide as its word.
-            assertTrue(open.right >= 412.dp - 32.dp, "Open at $open")
+            assertTrue(open.right >= 412.dp - 32.dp, "New conversation at $open")
         }
         showInPhoneWindow(PhoneSetupUi(checking = false, items = items, progress = done), actions)
     }

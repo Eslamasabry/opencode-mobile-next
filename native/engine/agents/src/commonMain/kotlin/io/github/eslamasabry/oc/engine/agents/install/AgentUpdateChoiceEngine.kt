@@ -97,7 +97,14 @@ public class AgentUpdateChoiceEngine(
         val staleRow = selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }
         if (selected.size != choices.size || staleRow) return@withLock stale()
         if (!host.fits(snapshot, selected)) return@withLock Failure.Media(MediaProblem.DownloadNoSpace).failed()
-        val saved = save(selected)
+        // The yes on a sheet that said mobile data and showed the size is the consent for exactly these updates.
+        val yes =
+            if (snapshot.network == AgentUpdateNetwork.Metered) {
+                selected.filter { it.choice == AgentUpdateChoice.Update }.associate { it.id to it.toVersion }
+            } else {
+                emptyMap()
+            }
+        val saved = save(selected, yes)
         if (saved is Outcome.Failed) return@withLock saved
         if (selected.any { it.choice != AgentUpdateChoice.Keep } && host.busy()) return@withLock busy()
         val removals = selected.filter { it.choice == AgentUpdateChoice.Remove }
@@ -110,8 +117,13 @@ public class AgentUpdateChoiceEngine(
         ).ok()
     }
 
-    private suspend fun save(items: List<AgentUpdateItem>): Outcome<Unit> = decisions.save(items).also {
+    private suspend fun save(
+        items: List<AgentUpdateItem>,
+        yes: Map<AgentId, String> = emptyMap(),
+    ): Outcome<Unit> = decisions.save(items).also {
         if (it is Outcome.Ok) {
+            // Set before the offer changes, so the look that the change wakes already sees the yes.
+            mobile.record(yes)
             reviewing = false
             sharedConsent = emptySet()
             sharedAttempt = emptyList()
@@ -122,6 +134,9 @@ public class AgentUpdateChoiceEngine(
     public fun allowed(id: AgentId): Boolean = state.value?.let { snapshot ->
         snapshot.answered && snapshot.items.any { it.id == id && it.choice == AgentUpdateChoice.Update }
     } == true
+
+    /** The sheet's yes for mobile data, per agent (M1-C): [MobileConsent.covers] and [MobileConsent.spend]. */
+    public val mobile: MobileConsent = MobileConsent { state.value }
 
     /** OpenCode waits for the shared parts (Node.js, the helper) that the sheet's offer still lists. */
     public val openCodeNeedsShared: Boolean

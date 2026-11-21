@@ -69,3 +69,44 @@ class HeldAgentsTest {
         assertNull(openCodeWithHelperMb(null))
     }
 }
+
+/** M1-C: Home's held-agents line follows the live network and the sheet's yes. */
+class HeldAgentsLiveTest {
+    private fun item(id: String) =
+        AgentUpdateItem(
+            id = AgentId(id), name = id, fromVersion = "1", toVersion = "2", downloadBytes = 200_000_000L,
+            installedBytes = null, group = AgentUpdateGroup.Optional, keepAllowed = true, removeAllowed = true,
+            notKeptReason = null, choice = AgentUpdateChoice.Update, neededWhen = null,
+        )
+
+    private val offer =
+        AgentUpdateOffer(
+            "k", listOf(item("claude"), item("codex"), item("gemini")), AgentUpdateNetwork.Metered, null,
+            false, false, true,
+        )
+
+    @Test
+    fun `B-DL-442 when the network turns free the line stops saying waiting for Wi-Fi at once`() {
+        // The offer still carries the network of its last read; the live network is what counts.
+        assertNull(heldAgentsOf(offer, liveNetwork = AgentUpdateNetwork.Unmetered))
+        assertEquals(HomeHeldAgents(3, 600), heldAgentsOf(offer, liveNetwork = AgentUpdateNetwork.Metered))
+    }
+
+    @Test
+    fun `B-DL-443 agents the sheet's yes covers are not held, the others still are`() {
+        assertNull(heldAgentsOf(offer, consented = { true }))
+        assertEquals(HomeHeldAgents(1, 200), heldAgentsOf(offer, consented = { it.raw != "gemini" }))
+    }
+
+    @Test
+    fun `B-DL-447 the yes names the same agents and versions as the line, no more`() {
+        assertEquals(
+            mapOf(AgentId("claude") to "2", AgentId("gemini") to "2"),
+            heldAgentVersionsOf(offer, consented = { it.raw == "codex" }),
+        )
+        assertEquals(
+            mapOf(AgentId("codex") to "2"),
+            heldAgentVersionsOf(offer, running = AgentId("claude"), consented = { it.raw == "gemini" }),
+        )
+    }
+}
