@@ -142,6 +142,9 @@ public enum class AnswerHeadline {
     Running,
     NotAnswering,
     Off,
+
+    /** The person stopped it: "You stopped OpenCode on this phone". A state of its own, never a failure. */
+    StoppedByYou,
     AndroidClosed,
     StoppedItself,
     Restarting,
@@ -312,11 +315,13 @@ public object ThisPhoneAnswers {
                 )
             is PhoneServerState.Stopped ->
                 when {
+                    // A start the person asked for that failed still says so (B-LINUX-037); the person's stop itself
+                    // no longer writes a start problem (the connection gate answers StoppedByPerson).
                     failedStart != null && failedStart.isFailure() -> startFailed()
                     state.by == StoppedBy.Person ->
                         ThisPhoneAnswer(
                             AnswerTone.Off,
-                            AnswerHeadline.Off,
+                            AnswerHeadline.StoppedByYou,
                             AnswerLine.StaysOff,
                             PhoneAct.Start,
                         )

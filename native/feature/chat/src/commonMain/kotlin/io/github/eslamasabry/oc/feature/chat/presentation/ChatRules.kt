@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.RowKind
+import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
 import io.github.eslamasabry.oc.engine.transcript.state.RunFacts
 import io.github.eslamasabry.oc.engine.transcript.state.RunOutcome
 import io.github.eslamasabry.oc.engine.transcript.state.ThoughtRow
@@ -474,7 +475,15 @@ public data class LinkRetryFacts(
         get() = retryAtMs?.let { at -> ((at - nowMs).coerceAtLeast(0) + 999).div(1000).toInt() }
 
     public fun line(id: String, kind: ChatStatusKind): ChatStatusUi =
-        ChatStatusUi(id, kind, stopped, retryInSeconds = secondsLeft, canRestart = onThisPhone, serverWait = serverWait)
+        ChatStatusUi(
+            id,
+            kind,
+            stopped,
+            // The person's own stop has no retry and no countdown: it is a state, not a failure.
+            retryInSeconds = secondsLeft.takeUnless { serverWait == ChatServerWait.StoppedByPerson },
+            canRestart = onThisPhone,
+            serverWait = serverWait,
+        )
 
     public companion object {
         public val None: LinkRetryFacts = LinkRetryFacts()

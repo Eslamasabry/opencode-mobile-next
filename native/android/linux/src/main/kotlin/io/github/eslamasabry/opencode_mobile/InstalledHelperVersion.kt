@@ -14,6 +14,18 @@ internal object InstalledHelperVersion {
 
     fun read(rootfs: File, fallback: () -> String?): String? = fromPackage(rootfs) ?: fallback()
 
+    /**
+     * The folder name of the app-installed helper (`<version>-<lock hash>`), or null for any other layout. It names
+     * the pin, so what is kept per pin (the esbuild cache) starts over when the pin moves.
+     */
+    fun installName(rootfs: File): String? = try {
+        val bin = PhoneAgentPaths.resolve(rootfs, "home/oc/.local/bin")
+        val target = Files.readSymbolicLink(File(bin, "paseo").toPath()).toString()
+        installedLink.matchEntire(target)?.groupValues?.get(1)?.substringAfterLast('/')
+    } catch (_: Exception) {
+        null
+    }
+
     private fun fromPackage(rootfs: File): String? = try {
         val bin = PhoneAgentPaths.resolve(rootfs, "home/oc/.local/bin")
         val target = Files.readSymbolicLink(File(bin, "paseo").toPath()).toString()

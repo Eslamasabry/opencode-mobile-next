@@ -95,6 +95,8 @@ public data class ChatsListSourceUi(
      * "This device (Termux)" profile nagged on every open after the move from the old app).
      */
     val selfRun: Boolean = false,
+    /** This phone's own OpenCode, stopped by the person (not running): "You stopped OpenCode on this phone". */
+    val stoppedByPerson: Boolean = false,
 )
 
 public data class ChatsHomeExtraState(

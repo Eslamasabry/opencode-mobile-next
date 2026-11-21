@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
  * binds it over the phone server's one start path; without a binding (desktop, tests) no
  * conversation's server is on this phone and Restart is never offered.
  */
-public interface ChatPhoneServer {
+public interface ChatPhoneServer : ChatPhoneStart {
     /** True when [profile] is the server this phone runs (the built-in Linux one). */
     public fun runsHere(profile: ProfileId): Boolean
 
@@ -71,6 +71,12 @@ public interface ChatPhoneServer {
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
 }
 
+/** Starting this phone's OpenCode after the person stopped it ("Start OpenCode"): no question first. */
+public interface ChatPhoneStart {
+    public suspend fun start(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+}
+
 /** Issue 147: a conversation's folder in this phone's storage, as the side that works in it finds it now. */
 public enum class ChatPhoneFolder {
     Ready,
@@ -115,6 +121,9 @@ public enum class PhoneServerWait {
 
     /** A phone agent needs the person to sign in; its conversations wait for that and say so. */
     AgentNeedsSignIn,
+
+    /** The person stopped this phone's OpenCode: a state of its own, not a wait and not a failure. */
+    StoppedByPerson,
 }
 
 private val NotWaiting: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)

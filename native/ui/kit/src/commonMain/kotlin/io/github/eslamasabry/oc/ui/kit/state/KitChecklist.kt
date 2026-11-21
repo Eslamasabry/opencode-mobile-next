@@ -283,7 +283,13 @@ private fun Compact(
             ) {
                 StepMarkSlot(step)
                 Spacer(Modifier.width(Space.S3.dp))
-                KitText(line, Modifier.weight(1f).testTag("kit-checklist-compact-line"), role = TypeRole.Label, maxLines = 2) // F: lib/ui/kit/kit_checklist.dart:303
+                KitText(
+                    line,
+                    Modifier.weight(1f).testTag("kit-checklist-compact-line"),
+                    role = TypeRole.Label,
+                    maxLines = 2, // F: lib/ui/kit/kit_checklist.dart:303
+                    tabular = true,
+                )
             }
         }
         KitReveal(unfolded) { Full(steps, slow, since, progress, estimate, cost, stop, resume, log, onSlow, announce = false) }

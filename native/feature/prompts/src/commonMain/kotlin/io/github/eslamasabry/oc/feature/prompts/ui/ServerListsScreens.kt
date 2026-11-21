@@ -226,7 +226,7 @@ public fun TasksScreen(state: TasksUi, actions: TasksActions) {
                     )
                 } else {
                     val (done, tracked) = TaskRules.progress(phase.items)
-                    KitText(stringResource(Res.string.mobileTasksProgress, done, tracked))
+                    KitText(stringResource(Res.string.mobileTasksProgress, done, tracked), tabular = true)
                     KitSwitchRow(
                         title = stringResource(Res.string.mobileTasksUnfinished),
                         checked = state.unfinishedOnly,

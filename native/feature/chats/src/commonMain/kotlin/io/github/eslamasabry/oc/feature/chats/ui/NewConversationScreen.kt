@@ -153,7 +153,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     val preparing = state.wait == NewConversationWait.Preparing
     val gettingReady =
         stringResource(if (state.preparingSlow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
-    val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
+    val phoneOffWords = stringResource(Res.string.phoneStoppedByYou)
     val unconfirmedWords = unconfirmedWords(state)
     val phoneFolderWords = phoneFolderWords(state)
     // Issue 147: a notice that BLOCKS starting hands its primary action to the pinned bottom block, in Start's place: one main
@@ -395,11 +395,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             message = stringResource(Res.string.thisPhoneAnswerOffLine),
                             modifier = inset,
                             title = phoneOffWords,
-                            tone = StatusTone.Failure,
                             actions =
                                 listOf(
                                     KitLineAction(
-                                        stringResource(Res.string.homePhoneOffStart),
+                                        stringResource(Res.string.phoneServerCardStartOpenCode),
                                         actions::startPhoneServer,
                                     )
                                 ),

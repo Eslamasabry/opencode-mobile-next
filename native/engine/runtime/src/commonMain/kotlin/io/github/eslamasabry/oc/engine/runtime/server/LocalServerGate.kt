@@ -12,15 +12,22 @@ public enum class LocalServerWait {
     /** The server answered: the first connection may be made. */
     Ready,
 
-    /** It never answered, even after the one restart (or the person had stopped it). Show Start again with Details. */
+    /** It never answered, even after the one restart. Show Start again with Details. */
     NotAnswering,
+
+    /**
+     * The person stopped it (This phone, the notification's Stop). Not a failure: no start problem, no retry, no
+     * countdown; the surfaces say "You stopped OpenCode on this phone" with Start OpenCode.
+     */
+    StoppedByPerson,
 }
 
 /**
  * Phase 0 (first reply): the first connection to This phone is not attempted until the phone's own server answers a
  * health check, so a connection made seconds after setup or an app start is not "refused" (5 of 35 installs). It
  * polls with backoff for [firstWait]; if the server never answers it restarts it ONCE (via [restart]) and waits
- * [afterRestartWait] more. Nothing else restarts it: a server the person stopped is left alone ([mayWait] false).
+ * [afterRestartWait] more. Nothing else restarts it: a server the person stopped is left alone ([mayWait] false;
+ * [stoppedByPerson] true makes its own result).
  *
  * [onWaiting] is true while the plain "Starting this phone's server…" state should show, false when the wait ends.
  * Nothing here carries output, a password or a URL; the Details text stays with the failure the caller builds.
@@ -41,9 +48,12 @@ public class LocalServerGate(
      */
     private val booting: suspend (ProfileId) -> Duration = { Duration.ZERO },
 ) {
+    /** Why [mayWait] said no: true when the person stopped the server (a stop is a state, not a failure). */
+    public var stoppedByPerson: suspend (ProfileId) -> Boolean = { false }
+
     public suspend fun awaitReady(profile: ProfileId): LocalServerWait {
         if (up(profile)) return LocalServerWait.Ready
-        if (!mayWait(profile)) return LocalServerWait.NotAnswering
+        if (!mayWait(profile)) return refused(profile)
         onWaiting(profile, true)
         try {
             if (pollUntil(profile, firstWait)) return LocalServerWait.Ready
@@ -51,13 +61,16 @@ public class LocalServerGate(
             val young = booting(profile)
             if (young > Duration.ZERO && pollUntil(profile, young)) return LocalServerWait.Ready
             // The person may have stopped it meanwhile: never start what they stopped.
-            if (!mayWait(profile)) return LocalServerWait.NotAnswering
+            if (!mayWait(profile)) return refused(profile)
             if (restart(profile) && pollUntil(profile, afterRestartWait)) return LocalServerWait.Ready
             return LocalServerWait.NotAnswering
         } finally {
             onWaiting(profile, false)
         }
     }
+
+    private suspend fun refused(profile: ProfileId): LocalServerWait =
+        if (stoppedByPerson(profile)) LocalServerWait.StoppedByPerson else LocalServerWait.NotAnswering
 
     private suspend fun up(profile: ProfileId): Boolean = probe(profile) != ProbeAnswer.NoAnswer
 

@@ -78,9 +78,27 @@ class PhoneServerStateTest {
         val facts = PhoneServerFacts(status = installed, stoppedByPerson = true, recovery = RecoveryFacts.Waiting(1, null))
         assertEquals(PhoneServerState.Stopped(StoppedBy.Person), derive(facts))
         val answer = ThisPhoneAnswers.of(derive(facts), facts)
-        assertEquals(AnswerHeadline.Off, answer.headline)
+        assertEquals(AnswerHeadline.StoppedByYou, answer.headline)
         assertEquals(AnswerLine.StaysOff, answer.line)
         assertEquals(PhoneAct.Start, answer.primary)
+    }
+
+    @Test
+    fun `B-SET-272 after the person's own stop This phone says so and is no failure, with nothing to retry`() {
+        val facts = PhoneServerFacts(status = installed, stoppedByPerson = true)
+        val answer = ThisPhoneAnswers.of(derive(facts), facts)
+        assertEquals(AnswerHeadline.StoppedByYou, answer.headline)
+        assertEquals(AnswerTone.Off, answer.tone)
+        assertEquals(AnswerLine.StaysOff, answer.line)
+        assertEquals(PhoneAct.Start, answer.primary)
+    }
+
+    @Test
+    fun `B-SET-273 a server that stopped by itself and then failed to start keeps its failure`() {
+        val facts = PhoneServerFacts(status = installed, stoppedByPerson = false, startProblem = StartProblem.TimedOut)
+        val answer = ThisPhoneAnswers.of(derive(facts), facts)
+        assertEquals(AnswerHeadline.StartFailed, answer.headline)
+        assertEquals(PhoneAct.StartAgain, answer.primary)
     }
 
     @Test
