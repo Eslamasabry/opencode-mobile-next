@@ -9,7 +9,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.math.abs
@@ -88,7 +88,7 @@ class E20S08ComposerCraftTest {
         ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = rowChips)
 
     @Test
-    fun `E20-S08 phrase chips show the phrases only on one row`() = runComposeUiTest {
+    fun `E20-S08 phrase chips show the phrases only on one row`() = kitUiTest {
         val phrases = listOf("Continue", "Run the tests", "Commit this", "Explain the last change")
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(phrases = phrases), Actions(), chrome()) } } }
         // No "Hide <phrase>" chip beside each phrase: hiding is the chip's long-press menu.
@@ -105,7 +105,7 @@ class E20S08ComposerCraftTest {
     }
 
     @Test
-    fun `E20-S08 the approval chip is never scrolled under the mic or Send`() = runComposeUiTest {
+    fun `E20-S08 the approval chip is never scrolled under the mic or Send`() = kitUiTest {
         val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
         val withChip = chrome {
             // The real approval chip's part (header/ui/ApprovalChip.kt, Flutter `_AutoApprovalIndicator`).

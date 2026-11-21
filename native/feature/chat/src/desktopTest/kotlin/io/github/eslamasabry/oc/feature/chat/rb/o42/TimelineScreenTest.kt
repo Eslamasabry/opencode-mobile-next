@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
 import io.github.eslamasabry.oc.feature.chat.Immediate
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TimelineEntryUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTimelineSheet
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -32,7 +32,7 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class TimelineScreenTest {
-    @Test fun `C03 timeline fork is a separate glyph target and never also jumps`() = runComposeUiTest {
+    @Test fun `C03 timeline fork is a separate glyph target and never also jumps`() = kitUiTest {
         val selections = mutableListOf<Pair<String, Boolean>>()
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         val actions = object : ChatActions by presenter {
@@ -56,7 +56,7 @@ class TimelineScreenTest {
         assertEquals(listOf("prompt" to true, "prompt" to false), selections)
     }
 
-    @Test fun `C03 kit row disables its glyph action with the row`() = runComposeUiTest {
+    @Test fun `C03 kit row disables its glyph action with the row`() = kitUiTest {
         var calls = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
@@ -70,7 +70,7 @@ class TimelineScreenTest {
         assertEquals(0, calls)
     }
 
-    @Test fun `C03 timeline filters before the search announcement settles`() = runComposeUiTest {
+    @Test fun `C03 timeline filters before the search announcement settles`() = kitUiTest {
         val queries = mutableListOf<String>()
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         val actions = object : ChatActions by presenter {
@@ -91,7 +91,7 @@ class TimelineScreenTest {
         assertEquals(listOf("checkout"), queries)
     }
 
-    @Test fun `C03 kit row permits the timeline's two line preview at normal text size`() = runComposeUiTest {
+    @Test fun `C03 kit row permits the timeline's two line preview at normal text size`() = kitUiTest {
         val title = "A long message preview that needs more than one line in this narrow timeline"
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {

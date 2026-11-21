@@ -6,7 +6,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -57,7 +57,7 @@ class ChatScreenHostTest {
 
     @Test
     fun `B-NAV-005 a real chat entry renders with kit assertions and no enclosing modal host`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val state = ChatUi.loading(Ref).copy(title = "Native chat", phase = ChatPhase.Live)
             setContent { Root { ChatScreen(state, actions, composer) } }
@@ -67,7 +67,7 @@ class ChatScreenHostTest {
 
     @Test
     fun `B-NAV-005 the chat owns its confirmation host and leaving dispatches the rendered action`() =
-        runComposeUiTest {
+        kitUiTest {
             val world = FakeChatWorld()
             val nav = RecordingNavigator()
             val actions = ChatPresenter(world, nav, Immediate)
@@ -82,7 +82,7 @@ class ChatScreenHostTest {
 
     @Test
     fun `B-NAV-020 the chat top bar has a visible Git action that opens the Git page`() =
-        runComposeUiTest {
+        kitUiTest {
             val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var opened = 0
             val actions =

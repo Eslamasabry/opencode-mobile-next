@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -55,7 +55,7 @@ class HomeJankScreenTest {
         }
 
     @Test
-    fun `JANK-HOME-4 a row that becomes archivable is the same row, not a rebuilt one`() = runComposeUiTest {
+    fun `JANK-HOME-4 a row that becomes archivable is the same row, not a rebuilt one`() = kitUiTest {
         var state by mutableStateOf(base)
         show { state }
         waitForIdle()
@@ -66,7 +66,7 @@ class HomeJankScreenTest {
     }
 
     @Test
-    fun `JANK-HOME-5 the filter chips stay put when the connection arrives beside them`() = runComposeUiTest {
+    fun `JANK-HOME-5 the filter chips stay put when the connection arrives beside them`() = kitUiTest {
         var state by mutableStateOf(base.copy(home = ChatsHomeExtraState(known = true)))
         show { state }
         waitForIdle()

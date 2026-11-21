@@ -4,7 +4,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ContinueChoice
@@ -14,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -60,7 +60,7 @@ class GoToScheduleScreenTest {
     }
 
     @Test
-    fun `B-163 Go to lists Schedule a prompt and choosing it opens the scheduled prompts`() = runComposeUiTest {
+    fun `B-163 Go to lists Schedule a prompt and choosing it opens the scheduled prompts`() = kitUiTest {
         val actions = Actions()
         val state =
             ChatHeaderUi(

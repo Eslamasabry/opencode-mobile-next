@@ -9,7 +9,6 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.InterruptReason
@@ -39,6 +38,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -131,7 +131,7 @@ class StoppedOnceScreenTest {
 
     @Test
     // D1: was "... and its work line says 1 step"; the turn's work is its step, in view, and "Stopped" is said once.
-    fun `a live stopped turn with one step says Stopped once and shows its step`() = runComposeUiTest {
+    fun `a live stopped turn with one step says Stopped once and shows its step`() = kitUiTest {
         show(stepRows, listOf(ask, reply(step)), live = true)
         onAllNodesWithText("Stopped", useUnmergedTree = true).assertCountEquals(1)
         onAllNodesWithTag("chat-step-t-read", useUnmergedTree = true).assertCountEquals(1)
@@ -139,7 +139,7 @@ class StoppedOnceScreenTest {
     }
 
     @Test
-    fun `the same turn reopened draws the same lines`() = runComposeUiTest {
+    fun `the same turn reopened draws the same lines`() = kitUiTest {
         show(stepRows, listOf(ask, reply(step)), live = false)
         onAllNodesWithText("Stopped", useUnmergedTree = true).assertCountEquals(1)
         onAllNodesWithTag("chat-step-t-read", useUnmergedTree = true).assertCountEquals(1)
@@ -147,7 +147,7 @@ class StoppedOnceScreenTest {
     }
 
     @Test
-    fun `words that streamed before Stop stay, and one Stopped follows them`() = runComposeUiTest {
+    fun `words that streamed before Stop stay, and one Stopped follows them`() = kitUiTest {
         val words = Part("x2", "m2", sid, PartType.Text, "text", text = "The Nile flows north.")
         val rows =
             persistentListOf<TranscriptRow>(

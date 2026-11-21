@@ -10,7 +10,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
@@ -35,6 +34,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -177,7 +177,7 @@ class R2DeclinedNotEditedTest {
         }
 
     @Test
-    fun `R2 gate - on screen the refused write's line reads 1 step, never Edited 1 file`() = runComposeUiTest {
+    fun `R2 gate - on screen the refused write's line reads 1 step, never Edited 1 file`() = kitUiTest {
         val facts =
             facts(
                 tool("t1", "write", ToolStatus.Error, mapOf("filePath" to "/root/projects/e2.txt", "content" to "x"), note),

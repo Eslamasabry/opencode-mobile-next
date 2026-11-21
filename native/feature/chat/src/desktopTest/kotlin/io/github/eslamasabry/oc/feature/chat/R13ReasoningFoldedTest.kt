@@ -8,7 +8,6 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
@@ -28,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -96,7 +96,7 @@ class R13ReasoningFoldedTest {
     }
 
     @Test
-    fun `R13 a turn whose only work is a thought folds it under one Thought line`() = runComposeUiTest {
+    fun `R13 a turn whose only work is a thought folds it under one Thought line`() = kitUiTest {
         show(reasoningExpanded = false, thinking)
         onAllNodesWithText("Respond briefly", substring = true, useUnmergedTree = true).assertCountEquals(0)
         onAllNodesWithText("Thought", useUnmergedTree = true).assertCountEquals(1)
@@ -111,7 +111,7 @@ class R13ReasoningFoldedTest {
     // D1 "steps only" (owner 2026-11-14): was "with Show reasoning on the thought is still inside the fold, and two
     // thoughts share one line". There is no summary line any more: each thought is its own "Thought" step on the turn's
     // rail, opened as the person's Show reasoning says, and never loose in the reply area (always inside the step list).
-    fun `R13 with Show reasoning on each thought opens on its own Thought step, never loose in the reply`() = runComposeUiTest {
+    fun `R13 with Show reasoning on each thought opens on its own Thought step, never loose in the reply`() = kitUiTest {
         show(reasoningExpanded = true, thinking, "Keep it to one word.")
         onAllNodesWithText("Thought", useUnmergedTree = true).assertCountEquals(2)
         val inSteps = androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line"))

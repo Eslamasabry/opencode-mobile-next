@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -25,6 +24,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -67,7 +67,7 @@ class S8RequestSlotMotionTest {
     private var height = 0
 
     private fun leaving(motion: MotionLevel, check: androidx.compose.ui.test.ComposeUiTest.(full: Int) -> Unit) =
-        runDesktopComposeUiTest(412, 900) {
+        kitUiTest(412, 900) {
             var cards by mutableStateOf<List<RequestCardUi>>(listOf(permission("p1", "npm test", CardState.Waiting)))
             setContent {
                 KitTheme(

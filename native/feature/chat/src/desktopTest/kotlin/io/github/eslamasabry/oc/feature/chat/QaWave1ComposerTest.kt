@@ -9,7 +9,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -20,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
@@ -89,7 +89,7 @@ class QaWave1ComposerTest {
         )
 
     @Test
-    fun `B8 QA wave1 while a reply runs the message box keeps the full width`() = runComposeUiTest {
+    fun `B8 QA wave1 while a reply runs the message box keeps the full width`() = kitUiTest {
         setContent { Theme { Box(Modifier.width(360.dp).testTag("composer-width")) { BasicComposer(ui(), Actions(), chrome(busy = true)) } } }
         // Owner 2026-11-14 ("no new bar or row level"): the box holds its own controls in every style; Stop sits at the
         // end of the words' row for the whole running turn and nothing rides above or beside the box. With words typed
@@ -114,7 +114,7 @@ class QaWave1ComposerTest {
     }
 
     @Test
-    fun `B6 QA wave1 an empty message box is one line tall, not three`() = runComposeUiTest {
+    fun `B6 QA wave1 an empty message box is one line tall, not three`() = kitUiTest {
         setContent {
             Theme {
                 Box(Modifier.width(360.dp)) {
@@ -136,7 +136,7 @@ class QaWave1ComposerTest {
     }
 
     @Test
-    fun `B6 QA wave4 the message box has no label row above it and names itself inside`() = runComposeUiTest {
+    fun `B6 QA wave4 the message box has no label row above it and names itself inside`() = kitUiTest {
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(steers = false), Actions(), chrome(busy = false)) } } }
         // "Ask OpenCode…" (804ce6713, Flutter `chatUiAskAgent`) shows once, inside the empty box
         // (placeholder), not as a row of its own above it.
@@ -148,7 +148,7 @@ class QaWave1ComposerTest {
     }
 
     @Test
-    fun `N2 QA wave4 a long model name never pushes the approval chip off the row`() = runComposeUiTest {
+    fun `N2 QA wave4 a long model name never pushes the approval chip off the row`() = kitUiTest {
         val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
         val withChip =
             ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = {
@@ -179,7 +179,7 @@ class QaWave1ComposerTest {
     }
 
     @Test
-    fun `B13 QA wave4 before the session is read the chip never claims Server default`() = runComposeUiTest {
+    fun `B13 QA wave4 before the session is read the chip never claims Server default`() = kitUiTest {
         var models by androidx.compose.runtime.mutableStateOf(ComposerModels())
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(models = models), Actions(), chrome(busy = false)) } } }
         onAllNodesWithText("Server default", useUnmergedTree = true).assertCountEquals(0)
@@ -189,7 +189,7 @@ class QaWave1ComposerTest {
     }
 
     @Test
-    fun `B3 QA wave1 the picker groups models under their provider and tells equal names apart`() = runComposeUiTest {
+    fun `B3 QA wave1 the picker groups models under their provider and tells equal names apart`() = kitUiTest {
         val zai = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash", true, providerName = "Z.AI Coding Plan")
         val other = ComposerModel("openrouter", "glm-5.3-flash", "GLM-5.3-Flash", true, providerName = "OpenRouter")
         val terra = ComposerModel("openai", "gpt-6.1-terra", "GPT-6.1 Terra", true, providerName = "OpenAI")

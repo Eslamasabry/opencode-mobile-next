@@ -15,7 +15,6 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -25,6 +24,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -79,7 +79,7 @@ class F1ComposerOneRowTest {
     // Owner 2026-11-14 ("no new bar or row level"): the box holds its own controls in every style, as the Glass slab
     // does. Was: "F1 the idle box is one row and the chips sit on a strip above it" (Flutter's layout).
     @Test
-    fun `F1 the idle box holds its controls - the words on top, the plus, the chips and Send in one row under them`() = runComposeUiTest {
+    fun `F1 the idle box holds its controls - the words on top, the plus, the chips and Send in one row under them`() = kitUiTest {
         setContent { Scene() }
         waitForIdle()
         // The tag sits inside the face's S1 padding: the face is 4 dp larger on every side.
@@ -107,7 +107,7 @@ class F1ComposerOneRowTest {
     }
 
     @Test
-    fun `F1 words past one line take the whole width and move the controls below`() = runComposeUiTest {
+    fun `F1 words past one line take the whole width and move the controls below`() = kitUiTest {
         setContent { Scene() }
         onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("chat-composer-field")), useUnmergedTree = true)
             .performTextInput(LONG_WORDS)

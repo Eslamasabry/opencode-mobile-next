@@ -13,7 +13,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -36,6 +35,7 @@ import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
@@ -75,7 +75,7 @@ class WaitingDecisionVisibleTest {
     }
 
     private fun run(queued: Boolean, inSlot: Boolean = false, check: androidx.compose.ui.test.ComposeUiTest.() -> Unit) =
-        runDesktopComposeUiTest(360, 780) {
+        kitUiTest(360, 780) {
             val facts = TurnFactsPresenter(FixedClock).present(runningEditFeed(), 58_000, waitingForYou = true)
             val scene = ChatScene()
             var withQueued by mutableStateOf(false)

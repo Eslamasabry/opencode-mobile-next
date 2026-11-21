@@ -10,7 +10,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventDispatcherOwner
@@ -28,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.feature.chats.ui.homeBackExitStatus
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -104,7 +104,7 @@ class HomeBackExitScreenTest {
      * arrow. Under the shell's toast slot it is the window's toast: the list does not move, and no arrow comes with it.
      */
     @Test
-    fun `E05-S21 under the shell's toast slot the hint is a toast and the list does not move`() = runComposeUiTest {
+    fun `E05-S21 under the shell's toast slot the hint is a toast and the list does not move`() = kitUiTest {
         val toasts = KitToastState()
         setContent { Home(root = true, toasts = toasts) }
         waitForIdle()
@@ -124,7 +124,7 @@ class HomeBackExitScreenTest {
         onAllNodesWithText(HINT).fetchSemanticsNodes().isNotEmpty()
 
     @Test
-    fun `E05-S21 first back on the list shows the hint and a second inside 2 s leaves`() = runComposeUiTest {
+    fun `E05-S21 first back on the list shows the hint and a second inside 2 s leaves`() = kitUiTest {
         setContent { Home(root = true) }
         waitForIdle()
         mainClock.autoAdvance = false
@@ -138,7 +138,7 @@ class HomeBackExitScreenTest {
     }
 
     @Test
-    fun `E05-S21 after the window the hint folds away and back starts over`() = runComposeUiTest {
+    fun `E05-S21 after the window the hint folds away and back starts over`() = kitUiTest {
         setContent { Home(root = true) }
         waitForIdle()
         mainClock.autoAdvance = false
@@ -154,7 +154,7 @@ class HomeBackExitScreenTest {
     }
 
     @Test
-    fun `E05-S21 a sheet open on the list closes before the guard`() = runComposeUiTest {
+    fun `E05-S21 a sheet open on the list closes before the guard`() = kitUiTest {
         var open by mutableStateOf(true)
         setContent {
             Home(root = true) { KitSheet(open, { open = false }, "Filter") { KitText("Projects") } }
@@ -168,7 +168,7 @@ class HomeBackExitScreenTest {
     }
 
     @Test
-    fun `E05-S21 the guard holds Back only on the bare list`() = runComposeUiTest {
+    fun `E05-S21 the guard holds Back only on the bare list`() = kitUiTest {
         setContent { Home(root = false) }
         waitForIdle()
         runOnIdle { back.press() }
@@ -179,7 +179,7 @@ class HomeBackExitScreenTest {
 
     @Test
     fun `JANK-HOME-2 pushing a page over the list does not recompose what hosts the guard, and Back is released`() =
-        runComposeUiTest {
+        kitUiTest {
             var onTop by mutableStateOf(true)
             var hostPasses = 0
             setContent {

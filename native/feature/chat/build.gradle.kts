@@ -55,3 +55,6 @@ tasks.withType<Test>().configureEach {
         testLogging.showStandardStreams = true
     }
 }
+
+// The frame recorder for this module's UI tests (kitUiTest): mode, baseline, where findings go.
+apply(from = rootProject.file("gradle/flicker.gradle"))

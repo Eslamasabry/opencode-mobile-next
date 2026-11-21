@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.ComposerLimitNotice
 import io.github.eslamasabry.oc.engine.integrations.usage.ComposerLimitPresenter
@@ -40,6 +39,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -135,7 +135,7 @@ class S25ComposerLimitStripTest {
 
     @Test
     fun `B-181-001 the strip shows at 80 percent with its reset, and View usage opens Usage for this server`() =
-        runComposeUiTest {
+        kitUiTest {
             val opened = mutableListOf<String>()
             setContent { Composer(limits(MutableStateFlow(claude(80.0)), opened)) }
             onNodeWithText("Approaching limit").assertIsDisplayed()
@@ -145,7 +145,7 @@ class S25ComposerLimitStripTest {
         }
 
     @Test
-    fun `B-181-002 the cross hides the strip`() = runComposeUiTest {
+    fun `B-181-002 the cross hides the strip`() = kitUiTest {
         setContent { Composer(limits(MutableStateFlow(claude(92.0)))) }
         onNodeWithText("Approaching limit").assertIsDisplayed()
         onNodeWithContentDescription("Dismiss").performClick()
@@ -154,7 +154,7 @@ class S25ComposerLimitStripTest {
     }
 
     @Test
-    fun `B-181-003 no readings, or a window under 80 percent, shows no strip`() = runComposeUiTest {
+    fun `B-181-003 no readings, or a window under 80 percent, shows no strip`() = kitUiTest {
         val snapshot = MutableStateFlow(UsageSnapshot())
         setContent { Composer(limits(snapshot)) }
         waitForIdle()
@@ -175,7 +175,7 @@ class S25ComposerLimitStripTest {
     fun `B-181-004 desktop render of the whole composer with the strip`() {
         val out = java.io.File(System.getProperty("user.dir"), "../../../looks-out/s24-limit").also { it.mkdirs() }
         val scale = 2.625f
-        androidx.compose.ui.test.v2.runDesktopComposeUiTest((412 * scale).toInt(), (220 * scale).toInt()) {
+        kitUiTest((412 * scale).toInt(), (220 * scale).toInt()) {
             setContent {
                 androidx.compose.runtime.CompositionLocalProvider(
                     androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(scale)

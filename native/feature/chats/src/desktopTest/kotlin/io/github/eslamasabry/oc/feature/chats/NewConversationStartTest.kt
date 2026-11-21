@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -14,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -51,14 +51,14 @@ class NewConversationStartTest {
     }
 
     @Test
-    fun `NEW-WAIT while preparing Start is off and says Getting ready, never the generic wait line`() = runComposeUiTest {
+    fun `NEW-WAIT while preparing Start is off and says Getting ready, never the generic wait line`() = kitUiTest {
         setContent { Themed { NewConversationScreen(NewConversationUi(servers = server, profile = profile, busy = true), Actions) } }
         assertTrue(onAllNodesWithText("Getting ready…").fetchSemanticsNodes().isNotEmpty())
         onAllNodesWithText("Please wait for the current action.").assertCountEquals(0)
     }
 
     @Test
-    fun `NEW-WAIT an empty prompt on a ready page asks for the prompt, not a wait`() = runComposeUiTest {
+    fun `NEW-WAIT an empty prompt on a ready page asks for the prompt, not a wait`() = kitUiTest {
         setContent { Themed { NewConversationScreen(NewConversationUi(servers = server, profile = profile, setup = setup, directory = "/root/projects/a"), Actions) } }
         onAllNodesWithText("Getting ready…").assertCountEquals(0)
         onAllNodesWithText("Please wait for the current action.").assertCountEquals(0)

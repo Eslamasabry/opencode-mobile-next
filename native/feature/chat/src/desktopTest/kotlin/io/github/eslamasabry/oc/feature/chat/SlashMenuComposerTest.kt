@@ -12,7 +12,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -22,6 +21,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -91,7 +91,7 @@ class SlashMenuComposerTest {
 
     @Test
     fun `S30-CHAT-002 a slash lists app actions five at most, then Show all opens the Commands sheet`() =
-        runComposeUiTest {
+        kitUiTest {
             show(Actions())
             type("/")
             onNodeWithTag("chat-slash-menu").assertIsDisplayed()
@@ -103,7 +103,7 @@ class SlashMenuComposerTest {
         }
 
     @Test
-    fun `S30-CHAT-002 an app action leaves the box and runs, a server command fills the box`() = runComposeUiTest {
+    fun `S30-CHAT-002 an app action leaves the box and runs, a server command fills the box`() = kitUiTest {
         val actions = Actions()
         show(actions)
         type("/appr")

@@ -15,7 +15,6 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
@@ -41,6 +40,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.GraphChatWorlds
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -109,7 +109,7 @@ class FastTypingKeepsEveryLetterTest {
         )
     }
 
-    private fun typeIntoComposer(wholeBox: Boolean) = runComposeUiTest {
+    private fun typeIntoComposer(wholeBox: Boolean) = kitUiTest {
         val job = SupervisorJob()
         val app = AppCoroutineScope(job + Dispatchers.Default)
         try {

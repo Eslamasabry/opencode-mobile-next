@@ -9,7 +9,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -33,7 +33,7 @@ class HomeStatusSteadyTest {
 
     @Test
     fun `B-HOME-221 a status line that arrives does not drop the list by its whole height in one frame`() =
-        runComposeUiTest {
+        kitUiTest {
             var state by mutableStateOf(mixed())
             mainClock.autoAdvance = false
             setContent {
@@ -67,7 +67,7 @@ class HomeStatusSteadyTest {
         }
 
     @Test
-    fun `B-HOME-222 the helper's two stages read with the same words`() = runComposeUiTest {
+    fun `B-HOME-222 the helper's two stages read with the same words`() = kitUiTest {
         var stage by mutableStateOf(HomeStage.Helper)
         setContent {
             ChatEnvironment {

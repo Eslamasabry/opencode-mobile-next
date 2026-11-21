@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.compareGolden
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.picture
@@ -76,7 +76,7 @@ class E20S13ChatHeaderTest {
 
     @Test
     fun `E20-S13 Back sits on the title's row and the line right under the title`() {
-        for (scale in listOf(1f, 1.3f)) runDesktopComposeUiTest(360, 800) {
+        for (scale in listOf(1f, 1.3f)) kitUiTest(360, 800) {
             setContent { E20Scene(scale) { Header() } }
             waitForIdle()
             val back = boundsOfTag("kit-top-bar-exit")
@@ -99,7 +99,7 @@ class E20S13ChatHeaderTest {
     @Test
     fun `E20-S13 nothing in the transcript shows through any part of the header, Glass included`() {
         val red = Color(0xFFFF0000)
-        for (style in listOf(Style.Solid, Style.Glass)) runDesktopComposeUiTest(360, 800) {
+        for (style in listOf(Style.Solid, Style.Glass)) kitUiTest(360, 800) {
             setContent { E20Scene(style = style) { Page(red, words = false) } }
             waitForIdle()
             val header = boundsOfTag("kit-top-bar")
@@ -118,7 +118,7 @@ class E20S13ChatHeaderTest {
 
     @Test
     fun `E20-S13 the header over a scrolled list, as a golden`() {
-        for (dark in listOf(false, true)) runDesktopComposeUiTest(360, 640) {
+        for (dark in listOf(false, true)) kitUiTest(360, 640) {
             setContent { E20Scene(dark = dark) { Page(Color(0xFF8AB4F8), words = true) } }
             waitForIdle()
             compareGolden("e20-s13-header-scrolled-${if (dark) "dark" else "light"}")

@@ -10,7 +10,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
@@ -112,7 +112,7 @@ class OneStatusSlotTest {
 
     @Test
     fun `B-CHAT-307 the pending bubble stays where it is when the run starts and when the server row takes over`() =
-        runComposeUiTest {
+        kitUiTest {
             var live by mutableStateOf<LiveTurnUi?>(null)
             var sent by mutableStateOf(pending)
             var rows by mutableStateOf<List<TranscriptRow>>(emptyList())
@@ -141,7 +141,7 @@ class OneStatusSlotTest {
 
     @Test
     fun `B-CHAT-308 there is exactly one status line under the bubble in every frame of the first send`() =
-        runComposeUiTest {
+        kitUiTest {
             var live by mutableStateOf<LiveTurnUi?>(null)
             var sent by mutableStateOf(pending)
             var rows by mutableStateOf<List<TranscriptRow>>(emptyList())

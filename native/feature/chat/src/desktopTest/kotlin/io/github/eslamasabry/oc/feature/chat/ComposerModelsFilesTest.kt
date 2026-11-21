@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -122,7 +122,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_3 the model button names the server default until a verified model is chosen`() =
-        runComposeUiTest {
+        kitUiTest {
             // QA wave 4 B13: once the server confirmed the session uses its default (before that the chip claims nothing).
             setContent { Theme { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) } }
             onNodeWithContentDescription("Model").assertExists()
@@ -131,7 +131,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_3 a chosen model appears on the button only from the published selection`() =
-        runComposeUiTest {
+        kitUiTest {
             val state =
                 mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big), selected = big)))
             setContent { Theme { BasicComposer(state.value, Actions(), chrome) } }
@@ -141,7 +141,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_3 the model sheet loads on open and a failed load offers plain-word retry`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val state = mutableStateOf(ui())
             setContent { Theme { KitSheetHost { BasicComposer(state.value, actions, chrome) } } }
@@ -159,7 +159,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `09-10_3 the model sheet shows loading and empty copy`() = runComposeUiTest {
+    fun `09-10_3 the model sheet shows loading and empty copy`() = kitUiTest {
         val actions = Actions()
         val state = mutableStateOf(ui(models = ComposerModels(loading = true)))
         setContent { Theme { KitSheetHost { BasicComposer(state.value, actions, chrome) } } }
@@ -172,7 +172,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_3 a model choice closes the sheet only after the world verified it`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions().apply { selectResult = false }
             val state = mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big))))
             setContent { Theme { KitSheetHost { BasicComposer(state.value, actions, chrome) } } }
@@ -189,7 +189,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_6 attached files show their names with an explicit remove control`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val draft = DraftFacts(attachments = listOf(file("notes.txt"), file("more.txt")))
             setContent { Theme { BasicComposer(ui(draft = draft), actions, chrome) } }
@@ -205,7 +205,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_6 the plus is never a dead control and opens the tray when files are its only choice`() =
-        runComposeUiTest {
+        kitUiTest {
             // Flutter's composer plus always opens (attachments are gated on the server's capability, not on the
             // chosen model, chat_attachments.dart). E20-S20: with files the only choice it opens Flutter's tray,
             // File and More, and File opens the picker.
@@ -225,7 +225,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `LOAD-6 while the conversation loads the box keeps its words and Send waits for the load`() = runComposeUiTest {
+    fun `LOAD-6 while the conversation loads the box keeps its words and Send waits for the load`() = kitUiTest {
         val actions = Actions()
         val loading = mutableStateOf(true)
         val loadingChrome =
@@ -241,7 +241,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `09-10_2 a running pick keeps Send off and files alone can send`() = runComposeUiTest {
+    fun `09-10_2 a running pick keeps Send off and files alone can send`() = kitUiTest {
         val actions = Actions()
         val state = mutableStateOf(ui(pickingFile = true))
         setContent { Theme { BasicComposer(state.value, actions, chrome) } }
@@ -253,7 +253,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `09-10_6 attachment failures use plain words with dismiss and retry`() = runComposeUiTest {
+    fun `09-10_6 attachment failures use plain words with dismiss and retry`() = kitUiTest {
         val actions = Actions()
         val state =
             mutableStateOf(ui(attachmentFailure = Failure.Media(MediaProblem.AttachmentTooLarge)))
@@ -268,7 +268,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `09-10_3 Arabic copy renders for the model control and the sheet title`() =
-        runComposeUiTest {
+        kitUiTest {
             val before = Locale.getDefault()
             Locale.setDefault(Locale.forLanguageTag("ar"))
             try {
@@ -294,7 +294,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `B-AGENT-172 the model sheet offers the chosen model's thinking levels and the agents`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val models =
                 ComposerModels(
@@ -329,7 +329,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-NAV-034 a refused model change says so in plain words`() = runComposeUiTest {
+    fun `B-NAV-034 a refused model change says so in plain words`() = kitUiTest {
         val models =
             ComposerModels(
                 choices = listOf(mini),
@@ -343,7 +343,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `B-CHAT-009 the tray offers Photos, File and More where the platform offers them, never a paste button`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val state =
                 ui().copy(
@@ -369,7 +369,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `B-144 restored words with a held-back file say so in plain words, not Draft not saved`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val draft =
                 DraftFacts(
@@ -387,7 +387,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-151 the Add tray opens Saved prompts where 2_1_4 kept them`() = runComposeUiTest {
+    fun `B-151 the Add tray opens Saved prompts where 2_1_4 kept them`() = kitUiTest {
         var opened = 0
         val withPrompts =
             ComposerChrome(
@@ -407,7 +407,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `B-151 no Saved prompts row where the chat offers none`() = runComposeUiTest {
+    fun `B-151 no Saved prompts row where the chat offers none`() = kitUiTest {
         setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), chrome) } } }
         onNodeWithTag("chat-attach-button").performClick()
         onNodeWithText("Saved prompts").assertDoesNotExist()
@@ -415,7 +415,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `B-NAV-049 a slash field lists server commands and a tap fills the command`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val state =
                 mutableStateOf(
@@ -433,7 +433,7 @@ class ComposerModelsFilesTest {
 
     @Test
     fun `B-CHAT-087 an at-word lists project files and a tap inserts and stages the file`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             val state = ui().copy(fileMatches = listOf("src/main.kt"))
             setContent { Theme { BasicComposer(state, actions, chrome) } }
@@ -445,7 +445,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-016 files show the on-device draft note in Arabic too`() = runComposeUiTest {
+    fun `B-STATE-016 files show the on-device draft note in Arabic too`() = kitUiTest {
         val before = Locale.getDefault()
         Locale.setDefault(Locale.forLanguageTag("ar"))
         try {

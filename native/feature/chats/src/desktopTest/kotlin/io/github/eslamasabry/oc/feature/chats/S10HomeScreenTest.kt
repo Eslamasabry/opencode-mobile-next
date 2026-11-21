@@ -25,7 +25,6 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.unit.Density
@@ -46,6 +45,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
@@ -96,7 +96,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `E20-S24 a swipe row at rest draws no face of its own, so the page shows through`() =
-        runDesktopComposeUiTest(200, 100) {
+        kitUiTest(200, 100) {
             val page = Color(0xFFFF00FF)
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
@@ -117,7 +117,7 @@ class S10HomeScreenTest {
     fun `A1-HOME-07 the rows lie on a grouped panel in Solid too, whose lists used to run flat`() {
         // Soft's panels share the page's colour (only their shadows lift them), so the fill is told apart in Solid.
         val style = Style.Solid
-        runDesktopComposeUiTest(360, 1200) {
+        kitUiTest(360, 1200) {
                 home(mixed(), style = style)
                 val image = onRoot().captureToImage().toAwtImage()
                 val last = onNode(hasContentDescriptionContaining("Write the notes")).getBoundsInRoot()
@@ -132,7 +132,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `A1-HOME-17 P-107 All conversations shares the New conversation button's line in the foot bar, never under it`() =
-        runDesktopComposeUiTest(360, 640) {
+        kitUiTest(360, 640) {
             home(mixed(extra = 12))
             val list = SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo)
             onNode(list).performTouchInput { swipeUp() }
@@ -147,7 +147,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `A1-HOME-08 a live row says Working once, and a waiting one says Needs you`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             home(mixed())
             // A1: the state word sits under the time in plain coloured text, said once.
             val live = onNode(hasContentDescriptionContaining("Fix the reconnect loop")).fetchSemanticsNode()
@@ -159,7 +159,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `A1-HOME-09 rows draw no project tile and no branch, and one agent kind is not said on each row`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             home(mixed())
             // Owner 2026-11-08: no icons in boxes; the project is a small dot and its name when several are listed.
             assertEquals(0, onAllNodesWithTag("kit-project-tile", useUnmergedTree = true).fetchSemanticsNodes().size)
@@ -173,7 +173,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `B-CHATS-161 with two agent kinds each row names its agent`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             home(mixed(claude = true))
             assertTrue(onAllNodes(hasContentDescriptionContaining("Claude Code")).fetchSemanticsNodes().isNotEmpty())
             assertTrue(onAllNodes(hasContentDescriptionContaining("OpenCode")).fetchSemanticsNodes().isNotEmpty())
@@ -181,7 +181,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `A1-HOME-10 the list ends with All conversations and its count, which opens the whole list`() =
-        runDesktopComposeUiTest(360, 1200) {
+        kitUiTest(360, 1200) {
             val actions = RecordingChatsActions()
             home(mixed().copy(usage = HomeUsageLimit("Claude Code", 34)), actions)
             listOf("Projects", "Activity", "Usage").forEach { onAllNodesWithText(it).assertCountEquals(0) }
@@ -207,7 +207,7 @@ class S10HomeScreenTest {
 
     @Test
     fun `B-FB-050 a section another feature places shows under the notes, above Right now`() =
-        runDesktopComposeUiTest(360, 900) {
+        kitUiTest(360, 900) {
             home(mixed(), sections = listOf({ io.github.eslamasabry.oc.ui.kit.KitText("Memory section") }))
             val memory = onNodeWithText("Memory section").getBoundsInRoot()
             val today = onNodeWithText("Right now").getBoundsInRoot()

@@ -8,7 +8,6 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -36,7 +36,7 @@ class ComposerTypingBodyTest {
     }
 
     @Test
-    fun `typing twenty plain characters reruns the composer body only when a fact flips`() = runComposeUiTest {
+    fun `typing twenty plain characters reruns the composer body only when a fact flips`() = kitUiTest {
         var bodyRuns = 0
         // chrome.requestWaiting() is read once per pass of BasicComposer's own body.
         val chrome =

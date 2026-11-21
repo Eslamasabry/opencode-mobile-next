@@ -14,7 +14,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerPromptEditor
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
@@ -111,7 +111,7 @@ class PromptEditorInGrownChatTest {
         )
 
     @Test
-    fun `opening the prompt editor from Prompt tools in a chat opened from its row`() = runComposeUiTest {
+    fun `opening the prompt editor from Prompt tools in a chat opened from its row`() = kitUiTest {
         val actions = Actions()
         val chrome = ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false })
         setContent {

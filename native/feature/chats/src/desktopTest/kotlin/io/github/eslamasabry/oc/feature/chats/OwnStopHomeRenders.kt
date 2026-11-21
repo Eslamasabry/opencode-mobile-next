@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
@@ -42,7 +42,7 @@ class OwnStopHomeRenders {
 
     private fun shoot(name: String, state: ChatsUi, style: Style, fontScale: Float) {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        runDesktopComposeUiTest(900, 2000) {
+        kitUiTest(900, 2000) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
                     ChatEnvironment {

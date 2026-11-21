@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.text.NumberSymbols
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -13,6 +12,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnMetadataUi
 import io.github.eslamasabry.oc.feature.chat.ui.TurnMetadata
 import io.github.eslamasabry.oc.feature.chat.ui.replyFooterWords
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
@@ -56,7 +56,7 @@ class ReplyFooterBidiTest {
             override fun messageTime(createdMs: Long, nowMs: Long): String = "8:36 PM"
         }
         val metadata = completedReplyFacts.reading.metadata.getValue("u1")
-        runComposeUiTest {
+        kitUiTest {
             setContent {
                 KitTheme(platform = platform, localeTag = tag) {
                     CompositionLocalProvider(LocalKitRedactor provides Redactor()) {

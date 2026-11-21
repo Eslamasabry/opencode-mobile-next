@@ -3,13 +3,13 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.AllConversationsPagingTail
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsAllScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -79,7 +79,7 @@ class AllConversationsScreenTest {
     }
 
     @Test
-    fun `B12 active empty state offers refresh`() = runComposeUiTest {
+    fun `B12 active empty state offers refresh`() = kitUiTest {
         val actions = Actions()
         setContent {
             KitTheme(
@@ -95,7 +95,7 @@ class AllConversationsScreenTest {
     }
 
     @Test
-    fun `B12 paging control yields to loading and returns after the read`() = runComposeUiTest {
+    fun `B12 paging control yields to loading and returns after the read`() = kitUiTest {
         var state by
             androidx.compose.runtime.mutableStateOf(
                 AllConversationsUi(phase = AllPhase.List, canLoadMore = true)
@@ -121,7 +121,7 @@ class AllConversationsScreenTest {
     }
 
     @Test
-    fun `B12 failed paging retains retry even without an exposed cursor`() = runComposeUiTest {
+    fun `B12 failed paging retains retry even without an exposed cursor`() = kitUiTest {
         var calls = 0
         setContent {
             KitTheme(
@@ -146,7 +146,7 @@ class AllConversationsScreenTest {
 
     @Test
     fun `B12 project choices move to the search menu and archived remains a visible segment`() =
-        runComposeUiTest {
+        kitUiTest {
             val actions = Actions()
             setContent {
                 KitTheme(
@@ -178,7 +178,7 @@ class AllConversationsScreenTest {
         }
 
     @Test
-    fun `B12 clearing an archived search leaves the other filters alone`() = runComposeUiTest {
+    fun `B12 clearing an archived search leaves the other filters alone`() = kitUiTest {
         val actions = Actions()
         setContent {
             KitTheme(

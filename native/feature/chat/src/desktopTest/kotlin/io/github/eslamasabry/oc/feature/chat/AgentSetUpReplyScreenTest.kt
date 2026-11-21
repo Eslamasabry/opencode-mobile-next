@@ -4,7 +4,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
@@ -13,6 +12,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -60,7 +60,7 @@ class AgentSetUpReplyScreenTest {
 
     @Test
     fun `B-AGENT-113 omp's failed first answer says it needs setting up and opens its set-up`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene(outside = outside)
             val ui =
                 scene.live().copy(
@@ -79,7 +79,7 @@ class AgentSetUpReplyScreenTest {
 
     @Test
     fun `B-AGENT-113 a failed reply without that need keeps today's words`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene(outside = outside)
             setContent { E20Scene { scene.Screen(scene.live().copy(rows = rows)) } }
             waitForIdle()

@@ -5,7 +5,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerToolsChoices
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerToolsSheet
 import io.github.eslamasabry.oc.feature.chat.composer.TrayItem
@@ -14,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -28,7 +28,7 @@ import org.jetbrains.skia.Image
 @OptIn(ExperimentalTestApi::class)
 class PromptToolsSpacingTest {
     @Test
-    fun `Prompt tools groups are one kit gap apart`() = runComposeUiTest {
+    fun `Prompt tools groups are one kit gap apart`() = kitUiTest {
         val choices =
             ComposerToolsChoices(
                 state = BasicComposerUi(available = true, sending = false, steers = false, draft = DraftFacts(), targetKey = "p/s", filesAvailable = true, attachKinds = setOf(AttachKind.Photos), attachmentsSupported = true, imagesOnly = false),

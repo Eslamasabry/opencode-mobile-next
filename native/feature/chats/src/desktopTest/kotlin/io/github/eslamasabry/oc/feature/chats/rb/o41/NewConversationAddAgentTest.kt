@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.rb.o41
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -9,6 +8,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
@@ -66,7 +66,7 @@ class NewConversationAddAgentTest {
         }
 
     @Test
-    fun `B-NAV-050 with no extra agents Add an agent leads the list and opens agent setup`() = runComposeUiTest {
+    fun `B-NAV-050 with no extra agents Add an agent leads the list and opens agent setup`() = kitUiTest {
         val actions = Actions()
         show(ui(emptyList()), actions)
         onNodeWithText("Add an agent").assertExists()
@@ -78,7 +78,7 @@ class NewConversationAddAgentTest {
     }
 
     @Test
-    fun `B-NAV-050 with agents installed Add an agent sits in the first rows, right after the default`() = runComposeUiTest {
+    fun `B-NAV-050 with agents installed Add an agent sits in the first rows, right after the default`() = kitUiTest {
         val actions = Actions()
         show(ui(listOf("claude", "codex")), actions)
         val default = onNodeWithText("OpenCode").fetchSemanticsNode().boundsInRoot.top
@@ -88,7 +88,7 @@ class NewConversationAddAgentTest {
     }
 
     @Test
-    fun `B-NAV-050 Add an agent is in Arabic words in Arabic`() = runComposeUiTest {
+    fun `B-NAV-050 Add an agent is in Arabic words in Arabic`() = kitUiTest {
         val previous = java.util.Locale.getDefault()
         java.util.Locale.setDefault(java.util.Locale.forLanguageTag("ar"))
         try {
@@ -101,7 +101,7 @@ class NewConversationAddAgentTest {
     }
 
     @Test
-    fun `B-098 coming back with the agent sheet open does not raise the keyboard over it`() = runComposeUiTest {
+    fun `B-098 coming back with the agent sheet open does not raise the keyboard over it`() = kitUiTest {
         show(ui(listOf("claude")), Actions())
         waitForIdle()
         // The open sheet hides the page behind it from the merged tree (a screen reader reads only the sheet), so the
@@ -110,7 +110,7 @@ class NewConversationAddAgentTest {
     }
 
     @Test
-    fun `B-098 with no sheet open the field still takes focus`() = runComposeUiTest {
+    fun `B-098 with no sheet open the field still takes focus`() = kitUiTest {
         show(ui(listOf("claude")).copy(sheet = null), Actions())
         waitForIdle()
         onNode(hasSetTextAction()).assertIsFocused()

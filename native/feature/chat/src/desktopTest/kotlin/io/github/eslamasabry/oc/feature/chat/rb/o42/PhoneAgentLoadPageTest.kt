@@ -6,7 +6,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -17,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatLoadAgent
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
@@ -60,7 +60,7 @@ class PhoneAgentLoadPageTest {
         val agents = AgentCatalog.builtIn.agents.filter { it.runsOnPhoneHost }
         for (agent in agents) {
             for (failure in listOf(Failure.NotFound(), Failure.Network(NetworkWhy.Offline))) {
-                runDesktopComposeUiTest(412, 915) {
+                kitUiTest(412, 915) {
                     val scene = ChatScene(outside = outside)
                     val phase = ChatPhase.Failed(failure, ChatLoadAgent(agent.name, agent.id.raw))
                     setContent { E20Scene { scene.Screen(scene.live().copy(phase = phase, rows = persistentListOf())) } }
@@ -83,7 +83,7 @@ class PhoneAgentLoadPageTest {
 
     @Test
     fun `OMP-OPEN-10 a phone agents' conversation whose agent is unknown speaks of the phone's agents, never OpenCode`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val scene = ChatScene(outside = outside)
             val phase = ChatPhase.Failed(Failure.NotFound(), ChatLoadAgent(null, null))
             setContent { E20Scene { scene.Screen(scene.live().copy(phase = phase, rows = persistentListOf())) } }

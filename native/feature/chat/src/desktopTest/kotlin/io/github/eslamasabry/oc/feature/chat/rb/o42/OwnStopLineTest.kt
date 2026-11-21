@@ -4,7 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.feature.chat.E20Scene
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
@@ -31,7 +31,7 @@ class OwnStopLineTest {
 
     @Test
     fun `B-CHAT-309 after the person's stop the line says it and offers Start OpenCode`() =
-        runDesktopComposeUiTest(412, 915) {
+        kitUiTest(412, 915) {
             val world = Phone()
             val scene = ChatScene(world = world)
             // A link that dropped with a retry scheduled: before the fix this read "isn't answering / trying again".
