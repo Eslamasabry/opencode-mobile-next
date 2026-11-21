@@ -406,6 +406,22 @@ class KnownFailuresCeiling(unittest.TestCase):
         self.assertIn('third breaks', md)
         self.assertNotIn('`ui/kit :: ' + cls + ' > first breaks`', md)
 
+    def test_B_CI_318_a_stale_excuse_line_is_printed_in_the_summary(self):
+        cls = f'{PKG}.ui.kit.PartADesktopTest'
+        live = f'ui/kit :: {cls} > still breaks | planted live'
+        stale_exact = f'ui/kit :: {cls} > was fixed | planted stale'
+        stale_class = f'ui/kit :: {PKG}.ui.kit.GoneTest | planted stale class'
+        not_run = f'feature/usage :: {PKG}.feature.usage.LimitsScreenTest | planted, its module is not in this run'
+        log = TEST_FAILED_LOG.replace('feature:chats', 'ui:kit')
+        code, md = run_gate(log, ':ui:kit:desktopTest', [('ui/kit', cls, ('still breaks',))],
+                            known='\n'.join([live, stale_exact, stale_class, not_run, '* :: *.rb.*GateTest | picture gates']) + '\n')
+        self.assertEqual(code, 0, md)  # a stale line never turns a run red by itself: it is seen, then deleted
+        self.assertIn('STALE KNOWN-FAILURE LINE: ' + stale_exact, md)
+        self.assertIn('STALE KNOWN-FAILURE LINE: ' + stale_class, md)
+        self.assertNotIn(live, md)
+        self.assertNotIn('LimitsScreenTest', md)
+        self.assertNotIn('GateTest', md)
+
 
 class AndroidUnit(unittest.TestCase):
     """The Android library unit tests count in the verdict (the android-unit job's own report)."""
