@@ -8,6 +8,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.CatalogProvider
+import io.github.eslamasabry.oc.core.model.CatalogSnapshot
 import io.github.eslamasabry.oc.core.model.IntegrationInfo
 import io.github.eslamasabry.oc.core.model.IntegrationMethodInfo
 import io.github.eslamasabry.oc.core.model.ServerLocation
@@ -162,7 +164,13 @@ class CustomProviderTest {
     private fun listing(vararg ids: String): Outcome<ImmutableList<IntegrationInfo>> =
         Outcome.Ok(ids.map(::row).toImmutableList())
 
-    private fun TestScope.session(host: CustomProviderHost?, listings: Server, owned: Boolean = true): LibrarySession {
+    private fun TestScope.session(
+        host: CustomProviderHost?,
+        listings: Server,
+        owned: Boolean = true,
+        catalog: CatalogSnapshot? = null,
+    ): LibrarySession {
+        val noCatalog = CatalogSnapshot(persistentListOf(), persistentListOf(), persistentListOf())
         val source =
             object : LibrarySource {
                 override val profile = ProfileId("p")
@@ -173,6 +181,8 @@ class CustomProviderTest {
                 override val operations: ServerOperationsGateway =
                     object : FakeOperationsGateway() {
                         override suspend fun integrations() = listings.next()
+
+                        override suspend fun catalog() = Outcome.Ok(catalog ?: noCatalog)
                     }
                 override val customProviders = host
 
@@ -276,6 +286,45 @@ class CustomProviderTest {
         val silent =
             session(host, Server(listOf(Outcome.Failed(Failure.Network(NetworkWhy.Refused))))).addCustomProvider(good)
         assertEquals(CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, "Network · Refused"), silent)
+        assertTrue(host.written.isEmpty())
+    }
+
+    // ---- issue 152: a declaration the settings file still holds under an id no list shows
+
+    @Test
+    fun `B-LIB-311 adding an id that is declared but not shown replaces the old declaration`() = runTest {
+        val host = Host()
+        // Nothing shows my-box: the server lists no row, none is kept and the catalog holds no such id. Only the
+        // settings file can still hold it, left by a delete that could not remove it, so the writer is told to
+        // replace instead of refusing.
+        val outcome = session(host, Server(listOf(listing()))).addCustomProvider(good)
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, outcome)
+        val written = host.written.single()
+        assertEquals("my-box", written.providerId)
+        assertTrue("\"replaceDeclared\":true" in written.input(), "the writer is told to replace")
+    }
+
+    @Test
+    fun `B-LIB-312 adding an id that is shown in the list is still refused`() = runTest {
+        val host = Host()
+        val taken = session(host, Server(listOf(listing("my-box")))).addCustomProvider(good)
+        assertEquals(CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)), taken)
+        assertTrue(host.written.isEmpty())
+    }
+
+    @Test
+    fun `B-LIB-314 a catalog id is still refused even when it is not shown`() = runTest {
+        val host = Host()
+        val disabled =
+            CatalogSnapshot(
+                persistentListOf(CatalogProvider("my-box", "My box", enabled = false, integrationId = null)),
+                persistentListOf(),
+                persistentListOf(),
+            )
+        val library = session(host, Server(listOf(listing())), catalog = disabled)
+        library.refresh()
+        val refused = library.addCustomProvider(good)
+        assertEquals(CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)), refused)
         assertTrue(host.written.isEmpty())
     }
 }

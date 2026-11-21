@@ -12,8 +12,10 @@ import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * Pull request 142, ported: the real settings writer of [CustomProviderScript] (the Python text the phone runs, taken
@@ -104,6 +106,15 @@ try: main()""",
         assertEquals(before, file.readText(), "a refused write leaves the file as it was")
     }
 
+    /** The run's stdin when the engine has decided a declaration left in the file may be replaced (issue 152). */
+    private fun replaceInput(declared: CustomProviderDeclaration = declaration()): String =
+        buildJsonObject {
+                put("id", declared.providerId)
+                put("block", declared.block)
+                put("replaceDeclared", true)
+            }
+            .toString()
+
     @Test
     fun `PR142-12 the declaration is data, never code - quotes and shell words land in the file as typed`() {
         config.mkdirs()
@@ -148,6 +159,63 @@ try: main()""",
         assertEquals(0, write())
         val first = file.readText()
         assertRefused(CustomProviderWrite.AlreadyDeclared.code, first) { write(declaration(name = "Other").input()) }
+    }
+
+    @Test
+    fun `B-LIB-311 adding an id that is declared but not shown replaces the old declaration`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
+                """"settings":{"baseURL":"http://old.example:9000/v1"},"models":{"old-model":{}}}}}"""
+        )
+        assertEquals(0, write(replaceInput()))
+        assertEquals(declaration().block, json().getValue("providers").jsonObject.getValue("my-box").jsonObject)
+    }
+
+    @Test
+    fun `B-LIB-313 the file's other content survives a replace`() {
+        config.mkdirs()
+        file.writeText(
+            """{"keep":42,"mcp":{"servers":{"oc-ui":{"type":"local"}}},"providers":{""" +
+                """"my-box":{"name":"Old box","settings":{"baseURL":"http://old.example:9000/v1"}},""" +
+                """"other":{"name":"Other","npm":"no"}}}"""
+        )
+        val before = json()
+        assertEquals(0, write(replaceInput()))
+        val after = json()
+        assertEquals(before.getValue("keep").toString(), after.getValue("keep").toString())
+        assertEquals(before.getValue("mcp").toString(), after.getValue("mcp").toString())
+        assertEquals(
+            before.getValue("providers").jsonObject.getValue("other").toString(),
+            after.getValue("providers").jsonObject.getValue("other").toString(),
+        )
+        assertEquals(declaration().block, after.getValue("providers").jsonObject.getValue("my-box").jsonObject)
+    }
+
+    @Test
+    fun `B-LIB-315 without the replace input the script still refuses a declared id`() {
+        config.mkdirs()
+        file.writeText("""{"keep":1,"providers":{"my-box":{"name":"Old box"}}}""")
+        val block = declaration().block
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", block)
+                    }
+                    .toString()
+            )
+        }
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", block)
+                        put("replaceDeclared", false)
+                    }
+                    .toString()
+            )
+        }
     }
 
     @Test
