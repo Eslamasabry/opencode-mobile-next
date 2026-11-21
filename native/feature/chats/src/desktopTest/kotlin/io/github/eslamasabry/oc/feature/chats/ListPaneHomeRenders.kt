@@ -299,6 +299,40 @@ class ListPaneHomeRenders {
             }
         }
 
+    /** S3 polish: the list pane with a notice (under the title row) and many rows (the foot clear of the +). */
+    @Test
+    fun polishHomePane() {
+        val notice =
+            io.github.eslamasabry.oc.ui.kit.status.KitStatus(
+                io.github.eslamasabry.oc.ui.kit.status.KitStatusKind.AppStopped,
+                "The app was closed in the background, so OpenCode stopped. It is running again.",
+            )
+        for (w in listOf(320, 360, 420)) {
+            shoot("polish-home-pane-${w}x800", w, 800) {
+                KitPaneWindow(Modifier.fillMaxSize()) {
+                    CompositionLocalProvider(LocalOpenBeside provides ChatRoute(ConversationRef(P1, SessionId("checkout")))) {
+                        ChatsScreen(homeState(), RecordingChatsActions(), appStatus = notice)
+                    }
+                }
+            }
+        }
+    }
+
+    /** S3 polish: New conversation resting in the pages pane at each window's width (Start as wide as the box). */
+    @Test
+    fun polishNewPane() {
+        for ((w, h) in listOf(920 to 800, 704 to 768, 520 to 800, 1000 to 1280)) {
+            shoot("polish-new-pane-${w}x$h", w, h) {
+                KitPaneWindow(Modifier.fillMaxSize()) {
+                    CompositionLocalProvider(
+                        LocalKitPaneColumn provides KitPaneColumn.PAGE_MAX_DP.dp,
+                        LocalRestingBeside provides true,
+                    ) { NewConversationScreen(newUi.copy(text = ""), NewActions) }
+                }
+            }
+        }
+    }
+
     /** The pages pane at rest: New conversation in 920 dp, at the pane's start, no Close. */
     @Test
     fun newConversationPane() =

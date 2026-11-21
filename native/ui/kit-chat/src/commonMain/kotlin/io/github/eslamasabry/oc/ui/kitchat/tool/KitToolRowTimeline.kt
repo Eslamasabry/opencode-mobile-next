@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitMonoCut
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
@@ -258,7 +259,7 @@ internal fun TimelineStep(
     RailNode(
         box = m.stepLine,
         top = 0.dp,
-        modifier = modifier.widthIn(max = 700.dp), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
+        modifier = modifier.widthIn(max = kitConversationCap()), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth; the pane column beside a list
         half = if (outlined) null else railGlyphHalf(m),
         node = { KitToolNode(view, m.glyph, onRail = true) },
     ) {
@@ -376,7 +377,7 @@ public fun KitStepFold(
     RailNode(
         box = m.stepLine,
         top = 0.dp,
-        modifier = modifier.widthIn(max = 700.dp), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
+        modifier = modifier.widthIn(max = kitConversationCap()), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth; the pane column beside a list
         half = if (icon != null) railGlyphHalf(m) else 3.dp,
         node = {
             // The steps' own node: the glyph bare, at the size every step's glyph has.

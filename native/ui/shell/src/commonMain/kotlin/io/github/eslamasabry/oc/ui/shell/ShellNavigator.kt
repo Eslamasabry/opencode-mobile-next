@@ -104,7 +104,11 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
     }
 
     override fun open(route: AppRoute): Unit = mutate { s ->
+        // Beside a list a plain New conversation is the resting page: the open page closes and it shows, the list stays
+        // (no page over both panes, no keyboard: only a tap in the box asks for it).
+        val closesDetail = beside && ShellPanes.layoutOf(s)?.let { it.detail && it.pair.isRest(route) } == true
         when {
+            closesDetail -> s.removeAt(s.lastIndex)
             route.motion == RouteMotion.Root -> s.replaceWith(route)
             s.lastOrNull() != route -> s.add(route)
         }

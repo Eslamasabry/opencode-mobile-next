@@ -140,7 +140,9 @@ public fun KitTopBar(
     /** The subtitle's state colour (Dart `subtitleTone`): neutral is secondary, progress the accent, ok green. */
     subtitleTone: StatusTone = StatusTone.Neutral,
 ) {
-    // Big screens: in a pane beside a list the list is the way back, so the bar draws no Back (a Close stays).
+    // Big screens: in a pane beside a list the list is the way back, so the bar draws no Back (a Close stays). Its
+    // compact block (title and line close together) stays as it is with a Back (B-NAV-234).
+    val backGoneBeside = exit == KitTopBarExit.Back && LocalKitPaneColumn.current != null
     @Suppress("NAME_SHADOWING")
     val exit = if (exit == KitTopBarExit.Back && LocalKitPaneColumn.current != null) KitTopBarExit.None else exit
     val colors = LocalKitColors.current
@@ -372,14 +374,15 @@ public fun KitTopBar(
                         }
                     }
                 }
-        if (back && backBesideTitle) {
+        if ((back || backGoneBeside) && backBesideTitle) {
             // E20-S13: one block. Back, then the title with its line tight under it (the kit's 2 dp step), then the
             // actions; Back and the actions centre on the block.
             Row(
-                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).testTag("kit-top-bar-compact"),
+                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).testTag("kit-top-bar-compact")
+                    .then(if (back) Modifier else Modifier.padding(start = titleStart)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
+                if (back) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
                 // Large text: the block outgrows the 48 dp row and its 4 dp step is all that is left above the words (audit
                 // 2: at 1.3x the title's first line sat 15 px under the bar's rim); keep the roomier step there.
                 Column(Modifier.weight(1f).padding(vertical = if (kitFontScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {

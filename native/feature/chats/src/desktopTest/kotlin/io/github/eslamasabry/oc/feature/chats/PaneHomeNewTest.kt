@@ -22,6 +22,17 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
+import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import kotlinx.collections.immutable.toImmutableList
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
@@ -266,7 +277,68 @@ class PaneHomeNewTest {
         }
     }
 
+    @Test
+    fun `B-NAV-222 beside the list Start is as wide as the box it belongs to`() {
+        runComposeUiTest {
+            show(920, beside = true, resting = true) { NewConversationScreen(newUi, NewActions) }
+            val box = onNodeWithTag("chats-new-field").getBoundsInRoot()
+            val start = onNodeWithText("Start").getBoundsInRoot()
+            assertTrue(abs(start.left.value - box.left.value) <= 1f, "Start starts with the box (${start.left} / ${box.left})")
+            assertTrue(abs(start.right.value - box.right.value) <= 1f, "Start ends with the box (${start.right} / ${box.right})")
+        }
+        // A phone keeps the button as it is: held to the control cap.
+        runComposeUiTest {
+            show(1280, beside = false, resting = false) { NewConversationScreen(newUi, NewActions) }
+            val start = onNodeWithText("Start").getBoundsInRoot()
+            assertTrue(start.right.value - start.left.value <= 520f, "one page: Start keeps its cap ($start)")
+        }
+    }
+
+    @Test
+    fun `B-NAV-233 beside a page the notice sits under the pane's title row`() {
+        val home = ChatsUi(phase = ChatsPhase.List)
+        val notice = KitStatus(KitStatusKind.AppStopped, "The app was closed in the background")
+        runComposeUiTest {
+            show(360, beside = false, resting = false, open = ChatRoute(ConversationRef(p1, SessionId("s1")))) {
+                ChatsScreen(home, RecordingChatsActions(), appStatus = notice)
+            }
+            val title = onNodeWithText("Conversations").getBoundsInRoot()
+            val line = onNodeWithText("The app was closed in the background", substring = true).getBoundsInRoot()
+            assertTrue(line.top.value >= title.bottom.value - 1f, "the notice (${line.top}) is under the title (${title.bottom})")
+        }
+    }
+
+    @Test
+    fun `B-NAV-236 beside a page the list ends with room for the plus`() {
+        val rows = (0 until 30).map { item("r$it", at = NOW_MS - it * 60_000L, title = "Row $it") }
+        val state =
+            ChatsState.build(
+                ChatFeedSnapshot(rows.toImmutableList()),
+                ReturnBrief.None,
+                ChatsFilters(),
+                startOfTodayMs = NOW_MS - 12 * 3_600_000L,
+                settingsAvailable = true,
+                nowMs = NOW_MS,
+            )
+        runComposeUiTest {
+            show(360, beside = false, resting = false, open = ChatRoute(ConversationRef(p1, SessionId("s1")))) {
+                ChatsScreen(state, RecordingChatsActions())
+            }
+            // Scroll to the very end, then read the lowest row title still on screen.
+            repeat(12) {
+                onAllNodes(hasScrollToNodeAction()).onFirst().performTouchInput { swipeUp() }
+                waitForIdle()
+            }
+            val rowNodes = onAllNodes(hasText("Row ", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
+            assertTrue(rowNodes.isNotEmpty(), "rows on screen: " + onAllNodes(androidx.compose.ui.test.isRoot()).fetchSemanticsNodes().first().let { r -> r.children.joinToString { it.config.toString().take(80) } })
+            val lowest = rowNodes.maxOf { it.boundsInRoot.bottom }
+            val plus = onNode(hasContentDescription("New conversation")).getBoundsInRoot()
+            assertTrue(lowest <= plus.top.value, "the last row ($lowest) ends above the + (${plus.top})")
+        }
+    }
+
     private companion object {
+        const val NOW_MS = 1_800_000_000_000L
         const val KEYBOARD_SETTLE_MS = 1_000L
     }
 }

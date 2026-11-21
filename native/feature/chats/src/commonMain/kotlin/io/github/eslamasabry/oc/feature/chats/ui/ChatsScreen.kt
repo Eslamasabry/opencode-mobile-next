@@ -156,6 +156,7 @@ import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusLineFold
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAgentsMore__eq1
@@ -332,6 +333,14 @@ public fun ChatsScreen(
     val needsLine =
         if (state.needsYou == 0) null
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
+    val homeStatus: KitStatus? =
+        backExit
+            ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition }
+            ?: downloadStatus.takeIf { !downloadInList }
+    val inPane = openBeside != null
+    // Beside a page the round + floats over the list's foot: the list ends with room for it, so the last row scrolls
+    // clear of the button and its fade (B-NAV-236). A phone's foot bar is the frame's own block: no extra room.
+    val fabRoom = if (inPane && footBar && !newBeside) 56.dp + Space.S3.dp else 0.dp
     KitScreen(
         // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
         // the connection pill beside the filters. Glass step 4: where the lens is drawn the two rows float over the list,
@@ -342,15 +351,22 @@ public fun ChatsScreen(
             // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox.
             // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
             // as much under it when no "need you" line (whose own target gives that air) follows.
-            KitPageHeading(
-                stringResource(Res.string.chatsHomeTitle),
-                Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
-                line = needsLine,
-                onLine = actions::showInbox,
-                actions = if (!shellBar) null else ({
-                    barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
-                }),
-            )
+            val heading: @Composable () -> Unit = {
+                KitPageHeading(
+                    stringResource(Res.string.chatsHomeTitle),
+                    Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
+                    line = needsLine,
+                    onLine = actions::showInbox,
+                    actions = if (!shellBar) null else ({
+                        barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
+                    }),
+                )
+            }
+            // Beside a page (two panes) the notice sits under the pane's title row, never above it (B-NAV-233).
+            if (inPane) Column {
+                heading()
+                KitStatusLineFold(homeStatus)
+            } else heading()
         },
         // E20-S27: framed without the bar too, so the page lies on one continuous ground behind heading and list.
         page = true,
@@ -402,10 +418,7 @@ public fun ChatsScreen(
                             state.home.opening?.phase != ChatsOpeningPhase.Failed,
                 )
             }),
-        status =
-            backExit
-                ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition }
-                ?: downloadStatus.takeIf { !downloadInList },
+        status = if (inPane) null else homeStatus,
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -430,7 +443,7 @@ public fun ChatsScreen(
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
             // The foot bar is the frame's own block under the list; under Glass the list runs on under its pane and the
             // frame's chrome room keeps the last row above it at rest.
-            contentPadding = PaddingValues(bottom = kitScreenChromePadding().calculateBottomPadding() + if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NotRead || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp),
+            contentPadding = PaddingValues(bottom = kitScreenChromePadding().calculateBottomPadding() + if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NotRead || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp + fabRoom),
         ) {
             // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->

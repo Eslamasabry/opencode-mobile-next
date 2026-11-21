@@ -150,6 +150,11 @@ public fun KitButton(
     hero: Boolean = false,
     expand: Boolean = true,
     shortcut: String? = null,
+    /**
+     * Big screens: the button fills the column it stands in, past the control cap, so a hero Start is as wide as the box
+     * above it. Off (the default) it is the phone's button, capped as every control is.
+     */
+    fillColumn: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitButton: a button needs words (B-KIT-011)" }
     kitAssert(enabled !is KitEnabled.Disabled || enabled.reason.isNotBlank()) {
@@ -248,9 +253,9 @@ public fun KitButton(
             // edges exactly instead (E20-S09: the bleed then hit the control cap and shifted it off the gutter).
             (if (role == KitButtonRole.Tertiary && !hero && !LocalKitStackedAction.current) Modifier.kitBleed(pad.dp)
             else Modifier)
-                .kitMaxWidth(CapRole.Control)
+                .then(if (fillColumn) Modifier else Modifier.kitMaxWidth(CapRole.Control))
                 .then(modifier)
-                .then(if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
+                .then(if (hero && fillColumn) Modifier.fillMaxWidth() else if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
                 .heightIn(min = minHeight.dp)
                 .widthIn(min = if (role == KitButtonRole.Tertiary || !expand) tokens.minTarget.dp else 0.dp)
                 .graphicsLayer {
@@ -417,6 +422,7 @@ public fun KitButton(
     fullWidth: Boolean = false,
     hero: Boolean = false,
     expand: Boolean = true,
+    fillColumn: Boolean = false,
 ) {
     val run = action.onClick
     kitAssert(run != null || !action.enabled.isEnabled) {
@@ -439,6 +445,7 @@ public fun KitButton(
         hero = hero,
         expand = expand,
         shortcut = action.shortcut,
+        fillColumn = fillColumn,
     )
 }
 

@@ -320,6 +320,29 @@ class ShellListPaneTest {
     }
 
     @Test
+    fun `B-NAV-232 the plus beside an open conversation puts New conversation in the detail pane`() {
+        at(1280, 800) { p ->
+            open(3)
+            onNodeWithText("transcript s3").assertIsDisplayed()
+            runOnIdle { p.navigator.open(ChatsRoute.New(profile = null)) }
+            waitForIdle()
+            assertEquals(listOf(ChatsRoute.Home), p.navigator.snapshot(), "New is not a page over both panes")
+            onNodeWithText("Row 0").assertIsDisplayed()
+            onNodeWithText(NEW_PAGE).assertIsDisplayed()
+            onNodeWithText("transcript s3").assertDoesNotExist()
+            assertEquals(null, p.navigator.top.value?.let { it as? ChatsRoute.New }, "no New page on top of the stack")
+        }
+        // Under 840 dp it is as today: one page over the conversation.
+        at(800, 1280) { p ->
+            open(3)
+            runOnIdle { p.navigator.open(ChatsRoute.New(profile = null)) }
+            waitForIdle()
+            assertTrue(p.navigator.snapshot().last() is ChatsRoute.New)
+            onNodeWithText("Row 0").assertDoesNotExist()
+        }
+    }
+
+    @Test
     fun `B-NAV-213 rotation keeps the open conversation`() =
         at(1280, 1280, window = KitWindowInfo(1280f, 800f)) { p ->
             open(4)

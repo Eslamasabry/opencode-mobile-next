@@ -64,6 +64,8 @@ internal class ShellPanePair(
     val isList: (NavKey) -> Boolean,
     val isDetail: (NavKey) -> Boolean,
     val rest: () -> NavKey,
+    /** A route that asks for what the resting page already is (the list's +): opened beside a page it closes that page. */
+    val isRest: (NavKey) -> Boolean = { false },
 )
 
 /**
@@ -143,6 +145,10 @@ internal object ShellPanes {
                 isList = { it == ChatsRoute.Home },
                 isDetail = { it is ChatRoute },
                 rest = { ChatsRoute.New(profile = null) },
+                isRest = {
+                    it is ChatsRoute.New && it.profile == null && it.draftKey == null && it.initialText.isEmpty() &&
+                        it.reportKey == null && it.phoneAgent == null && it.directory == null
+                },
             ),
         )
 

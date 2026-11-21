@@ -298,6 +298,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             action = phoneMain,
                             modifier = Modifier.fillMaxWidth().testTag("chats-new-main-action"),
                             hero = true,
+                            fillColumn = beside,
                         )
                     else KitButton(
                         action =
@@ -314,6 +315,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             ),
                         modifier = Modifier.fillMaxWidth(),
                         hero = true,
+                        // Beside the list Start is as wide as the box it belongs to.
+                        fillColumn = beside,
                     )
                 }
             },
