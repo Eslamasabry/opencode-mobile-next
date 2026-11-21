@@ -46,7 +46,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -622,10 +621,7 @@ private object TopBarActions {
                 letterSpacing = (base.letterSpacing.value * scale).sp,
                 fontFeatureSettings = "tnum",
             )
-        val measurer =
-            CompositionLocalProvider(LocalDensity provides frameDensity) {
-                rememberTextMeasurer()
-            }
+        val measurer = rememberTextMeasurer()
         return with(frameDensity) {
             val minTargetPx = tokens.minTarget.dp.roundToPx()
             val padPx = (Space.S3 + Space.S3).dp.roundToPx()
@@ -641,6 +637,7 @@ private object TopBarActions {
                                     style,
                                     softWrap = false,
                                     maxLines = 1,
+                                    density = frameDensity,
                                 )
                                 .size
                                 .width
