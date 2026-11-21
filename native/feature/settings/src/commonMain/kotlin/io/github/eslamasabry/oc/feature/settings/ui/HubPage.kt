@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
+import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
 import io.github.eslamasabry.oc.ui.words.res.settingsHubDetailEmpty
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -111,7 +112,10 @@ internal fun HubPage(
                 actions = actions,
                 scroll = scroll,
             ) {
-                HubBody(state, actions)
+                // Standing beside a page opened from it (big screens, shell pane): the group whose rows that page
+                // came from stays marked, as it was in the wide two-pane view.
+                val beside = LocalOpenBeside.current != null
+                HubBody(state, actions, selected = if (beside) state.firstGroup?.id else null)
             }
         }
     }
@@ -174,6 +178,48 @@ private fun SettingsPanes(
                 icon = KitIcons.search,
             )
         },
+    )
+}
+
+/**
+ * Settings on a wide window with an in-module page open (Privacy, Notifications, About, ...): the list the page came
+ * from stands at the start (the open group's rows with this page's row marked, else the groups), the page fills the
+ * rest. Back from the page is the page's own: it returns to the group's two panes.
+ */
+@Composable
+internal fun SettingsPagePanes(
+    state: SettingsUi,
+    actions: SettingsActions,
+    page: SettingsPage,
+    onExit: (() -> Unit)?,
+    listScroll: ScrollState,
+    detail: @Composable () -> Unit,
+) {
+    val listGroup = state.listGroup
+    KitPaneScreen(
+        topBar = {
+            KitTopBar(
+                title = settingsTitle(),
+                exit = if (onExit != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = onExit,
+                backBesideTitle = true,
+            )
+        },
+        list = {
+            Column(
+                Modifier.fillMaxSize()
+                    .testTag("settings-list-pane")
+                    .verticalScroll(listScroll.also { KitReportPageScroll(it) })
+                    .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+            ) {
+                if (listGroup != null)
+                    GroupBody(state.copy(group = listGroup), actions, SettingsPage.Group(listGroup.id), openPage = page)
+                else HubBody(state, actions, selected = (state.stack.lastOrNull { it is SettingsPage.Group } as? SettingsPage.Group)?.id)
+            }
+        },
+        detail = { Box(Modifier.fillMaxSize().testTag("settings-detail-pane")) { detail() } },
+        emptyDetail = {},
     )
 }
 
@@ -401,6 +447,8 @@ private fun ColumnScope.GroupBody(
     state: SettingsUi,
     actions: SettingsActions,
     page: SettingsPage.Group,
+    /** The page open beside this list (big screens): its row is marked. */
+    openPage: SettingsPage? = null,
 ) {
     var languageOpen by rememberSaveable(page.id) { mutableStateOf(false) }
     var otherOpen by rememberSaveable(page.id) { mutableStateOf(false) }
@@ -442,10 +490,12 @@ private fun ColumnScope.GroupBody(
             val title = rowWords(row.id)
             val request = remember(row.id) { BringIntoViewRequester() }
             val focused = state.focusedRow == row.id
+            // The page open beside this list: its row is the chosen one.
+            val open = openPage != null && (row.door as? SettingsDoor.Page)?.page == openPage
             LaunchedEffect(focused) { if (focused) request.bringIntoView() }
             val rowModifier =
                 Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
-                    selected = focused
+                    selected = focused || open
                 }
             when {
                 row.door is SettingsDoor.Choice ->
@@ -469,7 +519,7 @@ private fun ColumnScope.GroupBody(
                     KitRow(
                         title = title,
                         modifier = rowModifier,
-                        selected = focused,
+                        selected = focused || open,
                         leading = KitRowLeading.Glyph(rowGlyph(row.id)),
                         trailing =
                             rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
