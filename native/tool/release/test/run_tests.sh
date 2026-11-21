@@ -217,6 +217,16 @@ new_release_repo() {
   git init -q -b master .
   git config user.name "Test Bot"; git config user.email "12345+bot@users.noreply.github.com"; git config commit.gpgsign false
   cp "$ROOT/scripts/native-release.sh" scripts/
+  mkdir -p native/tool/qa native/engine/agents/pins
+  cp "$NATIVE/tool/qa/check_tested_pins.py" native/tool/qa/
+  cat >native/engine/agents/pins/agent-pins.json <<PINS
+{
+  "agents": [{"id": "claude", "recipe": {"version": "${2:-2.1.327}"}}],
+  "claudeCodeTestedVersions": ["2.1.327"],
+  "paseo": {"version": "0.16.1"},
+  "paseoTestedVersions": ["0.16.1"]
+}
+PINS
   cp "$NATIVE/tool/version_code.sh" native/tool/; cp -r "$NATIVE/tool/lib" native/tool/lib
   cp "$NATIVE/tool/release/identity_gate.sh" native/tool/release/
   mkdir -p native/tool/ci && cp "$NATIVE/tool/ci/release_verdict.py" native/tool/ci/
@@ -247,6 +257,11 @@ pass_smoke() { # pass_smoke <repo> [versionCode]
     "$sha" "${2:-10010}" >"$OC_SMOKE_RESULT_DIR/smoke-$sha.json"
 }
 REL_TRAILER_CHECK() { [[ "$(git -C "$R" rev-list --count HEAD)" == 1 && -z "$(git -C "$R" tag)" && -z "$(git -C "$R" status --porcelain)" ]]; }
+
+UNTESTED="$(new_release_repo 3.0.0 2.1.330)"
+expect "an untested Claude pin stops the release dry run" 1 bash "$UNTESTED/scripts/native-release.sh" --no-build
+check "the refusal identifies the pinned version and the required proof" has \
+  "Claude Code 2.1.330 is pinned but not in the tested list: prove it on a device, then add it"
 
 R="$(new_release_repo)"
 expect "E01-S05 a dry run without a device smoke result is refused" 1 bash "$R/scripts/native-release.sh" --no-build
