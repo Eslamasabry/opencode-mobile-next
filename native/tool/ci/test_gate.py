@@ -328,8 +328,18 @@ class KnownFailuresCeiling(unittest.TestCase):
 
     @staticmethod
     def violations(heads, ceiling, base_classes, exact_ceiling):
-        """What in `heads` (the lines of known_failures.txt, reason cut off) the list may not hold."""
-        return sorted(set(heads) - set(ceiling))
+        """What in `heads` (the lines of known_failures.txt, reason cut off) the list may not hold. A class-level line must
+        be on the ceiling. An exact test line ("<module> :: <Class> > <test>") narrows a class line and is allowed only
+        when its class had a class-level line on the base AND the line itself is on the exact ceiling; any other new
+        line (another class, a wider one, a class that never had a line) is refused."""
+        out = set()
+        for head in heads:
+            if ' > ' in head:
+                if head.split(' > ', 1)[0] not in base_classes or head not in exact_ceiling:
+                    out.add(head)
+            elif head not in ceiling:
+                out.add(head)
+        return sorted(out)
 
     @staticmethod
     def entries():
@@ -347,7 +357,7 @@ class KnownFailuresCeiling(unittest.TestCase):
                                     'changed lines: ' + '; '.join(added))
 
     def test_the_ceiling_follows_every_deletion(self):
-        gone = sorted(self.CEILING - {h for h, _ in self.entries()})
+        gone = sorted((self.CEILING | self.EXACT_CEILING) - {h for h, _ in self.entries()})
         self.assertEqual(gone, [], 'these lines were deleted from known_failures.txt: delete them from CEILING in '
                                    'test_gate.py too, so the list cannot grow back: ' + '; '.join(gone))
 

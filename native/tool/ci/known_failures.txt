@@ -1,8 +1,9 @@
 # Known-noise failures: a failing test matching a line here does not make Native CI red (tool/ci/summary.py gates on
 # anything else). This list can only SHRINK: tool/ci/test_gate.py (KnownFailuresCeiling) fails when a line is added or
 # widened, so fix the test and delete its line, never add a line for a regression. A line is either
-#   <module> :: <fully.qualified.Class> > <test name> | <reason>   one test, compared exactly (the form any new line
-#                                                                  would have to take, and even then it is refused), or
+#   <module> :: <fully.qualified.Class> > <test name> | <reason>   one test, compared exactly. Allowed only as the
+#                                                                  narrowing of a class line that was on the list
+#                                                                  (BASE_CLASSES in test_gate.py); a new class is refused, or
 #   <fnmatch on "<module> :: <fully.qualified.Class>"> | <reason>  a whole class: only what is below, shrink-only.
 # The tests still run and are listed in the run summary. Generated from CI runs 42510361705 (fast) and the full lane.
 # ConversationDraftsTest, E06RequestCardsTest (their 2 + 2 failures were fixed by the draft-opening and file-ask changes:
