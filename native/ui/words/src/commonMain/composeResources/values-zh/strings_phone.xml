@@ -900,4 +900,5 @@
     <string name="phoneDownloadWaitingOpenCodeHelper">OpenCode 和智能体辅助程序的更新正在等待 Wi-Fi · 约 %1$d MB</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">这是 OpenCode 的更新，以及它需要的智能体辅助程序，会消耗你的流量套餐。等待 Wi-Fi 会把它们留到之后。</string>
     <string name="phoneStoppedByYou">你已停止此手机上的 OpenCode</string>
+    <string name="phoneSetupStageCheckingLinux">正在检查这部手机上的 Linux…</string>
 </resources>

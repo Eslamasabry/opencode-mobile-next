@@ -63,4 +63,53 @@ class SetupWiringTest {
         assertTrue(stopped is Outcome.Ok)
         assertEquals(1, calls)
     }
+
+    @Test
+    fun `B-SETUP-007 check host skips 120s check when liveness probe fails in both modes`() {
+        var checkRan = false
+        val failed = NativeSetupHost.runChecked(
+            probeReady = { false },
+            runCheck = {
+                checkRan = true
+                io.github.eslamasabry.oc.engine.runtime.setup.SetupCheckRun(0, "ok")
+            },
+        )
+        assertFalse(checkRan)
+        assertEquals(-1, failed.exitCode)
+        assertEquals("", failed.output)
+
+        val passed = NativeSetupHost.runChecked(
+            probeReady = { true },
+            runCheck = {
+                checkRan = true
+                io.github.eslamasabry.oc.engine.runtime.setup.SetupCheckRun(0, "::oc-check-end essentials 0")
+            },
+        )
+        assertTrue(checkRan)
+        assertEquals(0, passed.exitCode)
+    }
+
+    @Test
+    fun `B-SETUP-008 setup spec carries probe and compat labels without changing default labels`() {
+        val base =
+            SetupStepSpec(
+                id = "linux",
+                weight = 15,
+                data = emptyMap(),
+                native = true,
+                labels = mapOf("unpack" to "Unpacking"),
+            )
+        val enriched =
+            NativeSetupHost.spec(
+                base,
+                extraLabels =
+                    mapOf(
+                        "probe" to "Checking Linux on this phone…",
+                        "compat" to "Trying again in compatibility mode",
+                    ),
+            )
+        assertEquals("Unpacking", enriched.labels["unpack"])
+        assertEquals("Checking Linux on this phone…", enriched.labels["probe"])
+        assertEquals("Trying again in compatibility mode", enriched.labels["compat"])
+    }
 }

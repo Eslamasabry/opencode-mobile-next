@@ -898,4 +898,5 @@
     <string name="phoneDownloadWaitingOpenCodeHelper">OpenCodeとエージェントヘルパーのアップデートがWi-Fi待ち · 約%1$dMB</string>
     <string name="phoneDownloadAskBodyOpenCodeHelper">OpenCodeのアップデートと、それに必要なエージェントヘルパーです。データ通信量を消費します。Wi-Fi待ちにすると後でダウンロードされます。</string>
     <string name="phoneStoppedByYou">このスマートフォンのOpenCodeを停止しました</string>
+    <string name="phoneSetupStageCheckingLinux">このスマートフォンでLinuxを確認中…</string>
 </resources>

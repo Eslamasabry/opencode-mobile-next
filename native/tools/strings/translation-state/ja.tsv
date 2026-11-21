@@ -9018,6 +9018,7 @@ phoneSetupRingStoppedNote	982d1768aa
 phoneSetupRingUnderMinute	b7dc55d10a
 phoneSetupRingUnpacking	da21810cbd
 phoneSetupRingWifi	7e30f3cc04
+phoneSetupStageCheckingLinux	b6cfadebe3
 phoneSetupStageCompat	e8b8d94a6d
 phoneSetupStageDownloadingLinux	7ace074675
 phoneSetupStageRetrying	2a77eeb45b
