@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
@@ -124,8 +125,9 @@ public class ConnectionDelivery(
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
 
     /** The person's Stop of the whole server cut these runs: each is "stopped", like a Stop pressed on its turn. */
-    public fun markCutByStop(refs: Collection<ConversationRef>) {
+    public suspend fun markCutByStop(refs: Collection<ConversationRef>) {
         for (ref in refs) stoppedMemory?.add(ref) ?: stopped.update { it + ref }
+        stoppedMemory?.settled()
     }
 
     private suspend fun admission(profile: ServerProfile): Outcome<Unit> {
@@ -374,6 +376,12 @@ public class ConnectionDelivery(
         val request =
             SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
         return if (insteadOfDraft) engine.sendInsteadOfDraft(request) else engine.send(request)
+    }
+
+    public companion object {
+        /** Saved session ids whose newest turn the person stopped on [profile] (readable while offline). */
+        public fun readStoppedByPerson(store: KeyValueStore, profile: ProfileId): Set<SessionId> =
+            StoppedTurnMemory.readIds(store, profile)
     }
 }
 

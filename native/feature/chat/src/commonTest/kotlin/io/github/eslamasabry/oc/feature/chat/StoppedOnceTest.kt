@@ -138,5 +138,11 @@ class StoppedOnceTest {
         keeper.idle()
         val facts = TurnFactsPresenter(FixedClock).present(keeper.feed.value, 5_000)
         assertEquals(TurnEndNote.Stopped, facts.reading.endNotes["m1"])
+        // A reply whose own footer already says Stopped still adds no duplicate closing line.
+        val alreadyStopped = TurnFeedKeeper(sid)
+        alreadyStopped.stoppedByPerson(true)
+        alreadyStopped.history(listOf(prompt(), stoppedReply(words)), newest = true)
+        alreadyStopped.idle()
+        assertNull(TurnFactsPresenter(FixedClock).present(alreadyStopped.feed.value, 5_000).reading.endNotes["m1"])
     }
 }

@@ -219,8 +219,12 @@ public sealed interface DockEvent {
     /** A reconcile read of every waiting request of one server: replaces what the dock believed about it. */
     public data class RequestsRead(val profile: ProfileId, val bySession: Map<SessionId, Set<String>>) : DockEvent
 
-    /** A reconcile read of the busy sessions of one server. */
-    public data class StatusesRead(val profile: ProfileId, val busy: Set<SessionId>) : DockEvent
+    /** A reconcile read of the busy sessions of one server, plus any runs stopped by the person. */
+    public data class StatusesRead(
+        val profile: ProfileId,
+        val busy: Set<SessionId>,
+        val stopped: Set<SessionId> = emptySet(),
+    ) : DockEvent
 
     /** The session record says its last run failed. Only a conversation sitting in the dock as Finished is raised by it (the
      * run end event said idle, the record knows better); one that is not in the dock, or was seen, is never brought back. */
@@ -460,7 +464,7 @@ public class DockModel private constructor(private val s: Snapshot) {
             return when (end) {
                 DockRunEnd.Failed ->
                     if (onScreen) base.copy(outcome = Outcome.None) else alerted(base).copy(outcome = Outcome.Failed)
-                DockRunEnd.Stopped -> base
+                DockRunEnd.Stopped -> base.copy(outcome = Outcome.None)
                 // A success never replaces a failure the person has not seen.
                 DockRunEnd.Succeeded ->
                     when {
@@ -657,8 +661,9 @@ public class DockModel private constructor(private val s: Snapshot) {
                 if (busyNow && !t.busy) {
                     next = next.withTracked(t.ref) { it.copy(busy = true, outcome = Outcome.None) }
                 } else if (!busyNow && t.busy) {
-                    // The end was missed (the stream is volatile); the server says idle, so it finished.
-                    next = next.ifTracked(t.ref) { ended(it, DockRunEnd.Succeeded) }
+                    // The end was missed (the stream is volatile); a person's stop stays quiet, else it finished.
+                    val end = if (t.ref.sessionId in e.stopped) DockRunEnd.Stopped else DockRunEnd.Succeeded
+                    next = next.ifTracked(t.ref) { ended(it, end) }
                 }
             }
             for (session in e.busy) {

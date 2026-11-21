@@ -133,6 +133,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private var readingBusy = false
     private var readingOutcome: RunOutcome? = null
     private var readingIdleSaid = false
+    private var readingStoppedByPerson = false
     private var reading = TranscriptReadingUi()
     private var sessionKey = "turn"
     private var lastLink: ChatLink? = null
@@ -215,13 +216,15 @@ public class TurnFactsPresenter(private val clock: Clock) {
             readingSnapshot !== snapshot ||
                 readingBusy != feed.busy ||
                 readingOutcome != outcome ||
-                readingIdleSaid != idleSaid
+                readingIdleSaid != idleSaid ||
+                readingStoppedByPerson != feed.stoppedByPerson
         ) {
-            reading = transcriptReading(snapshot, feed.busy, outcome, idleSaid)
+            reading = transcriptReading(snapshot, feed.busy, outcome, idleSaid, feed.stoppedByPerson)
             readingSnapshot = snapshot
             readingBusy = feed.busy
             readingOutcome = outcome
             readingIdleSaid = idleSaid
+            readingStoppedByPerson = feed.stoppedByPerson
         }
         val stopped = outcome is RunOutcome.Interrupted
         // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.

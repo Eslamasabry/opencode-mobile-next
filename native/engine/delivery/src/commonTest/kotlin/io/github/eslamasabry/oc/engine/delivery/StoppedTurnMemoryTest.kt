@@ -23,4 +23,16 @@ class StoppedTurnMemoryTest {
         val again = World(disk, this)
         assertTrue(StoppedTurnMemory(again.kv, again.lanes.app, P1, backgroundScope).refs.value.isEmpty())
     }
+
+    @Test
+    fun `B-STOP-CUT-005 persisted stop ids are readable while the connection is offline`() = runTest {
+        val disk = Disk()
+        val first = World(disk, this)
+        val memory = StoppedTurnMemory(first.kv, first.lanes.app, P1, backgroundScope)
+        memory.add(REF)
+        memory.settled()
+
+        val offline = World(disk, this)
+        assertEquals(setOf(REF.sessionId), ConnectionDelivery.readStoppedByPerson(offline.kv, P1))
+    }
 }

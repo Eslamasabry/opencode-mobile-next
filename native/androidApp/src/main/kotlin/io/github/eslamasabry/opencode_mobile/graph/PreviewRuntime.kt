@@ -46,6 +46,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
+/** Window after a busy session ends in which a phone-server Stop still claims it as cut. */
+private const val RECENT_CUT_MS = 10_000L
+
 /**
  * Saved server -> live graph -> conversations. No production Flutter adoption is performed here.
  */
@@ -126,6 +129,7 @@ class PreviewRuntime(
     private val requestRevision = mutableMapOf<ProfileId, Long>()
     private val runRevision = mutableMapOf<ProfileId, Long>()
     private val failedRuns = mutableMapOf<ProfileId, MutableSet<SessionId>>()
+    private val recentlyEnded = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
     private val sessionSignals = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
     private val runSignals = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
     private val requests = mutableMapOf<ProfileId, MutableMap<Pair<String, String>, SessionId>>()
@@ -967,6 +971,11 @@ class PreviewRuntime(
             failed: Boolean? = null,
             outcome: SessionRunOutcome? = null,
         ) {
+            val wasBusy =
+                listing.value.statuses[session].let { it == SessionStatus.Busy || it == SessionStatus.Retry }
+            if (status == SessionStatus.Busy || status == SessionStatus.Retry) recentlyEnded[id]?.remove(session)
+            else if (wasBusy && status == SessionStatus.Idle)
+                recentlyEnded.getOrPut(id) { mutableMapOf() }[session] = clock.now().toEpochMilliseconds()
             val next = (runRevision[id] ?: 0) + 1
             runRevision[id] = next
             runSignals.getOrPut(id) { mutableMapOf() }[session] = next
@@ -1439,12 +1448,16 @@ anySourceLoaded = true
      * The person stopped this phone's server: every conversation it was running is cut by that stop, so Home, the
      * light and the turn's foot say "Stopped" (the person's own), never "Done". The server's own word is gone with it.
      */
-    internal fun markRunsStopped(id: ProfileId) {
+    internal suspend fun markRunsStopped(id: ProfileId) {
         val busy =
             listings[id]?.value?.statuses?.filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }?.keys
-                ?: return
+                .orEmpty()
+        val cutoff = clock.now().toEpochMilliseconds() - RECENT_CUT_MS
+        val recent = recentlyEnded[id].orEmpty().filterValues { it >= cutoff }.keys
+        val cut = busy + recent
+        if (cut.isEmpty()) return
         val delivery = (registry.live.value[id] as? ChatGraphAccessors)?.chatDelivery ?: return
-        delivery.markCutByStop(busy.map { ConversationRef(id, it) })
+        delivery.markCutByStop(cut.map { ConversationRef(id, it) })
     }
 
     override suspend fun disconnect(id: ProfileId): Outcome<Unit> {
@@ -1463,6 +1476,7 @@ anySourceLoaded = true
         runSignals.remove(id)
         sessionSignals.remove(id)
         failedRuns.remove(id)
+        recentlyEnded.remove(id)
         requests.remove(id)
         listings.remove(id)
         seededListings.remove(id)

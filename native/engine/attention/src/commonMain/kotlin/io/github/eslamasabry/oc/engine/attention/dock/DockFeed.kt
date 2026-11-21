@@ -56,9 +56,18 @@ public object DockFeed {
     private const val GLOBAL_FORM = "global"
     private val TODO_TOOLS = setOf("todowrite", "todo")
 
-    public fun events(profile: ProfileId, event: GatewayEvent, children: DockChildSource = SubAgentChildSource): List<DockEvent> = base(profile, event) + children.links(profile, event)
+    public fun events(
+        profile: ProfileId,
+        event: GatewayEvent,
+        children: DockChildSource = SubAgentChildSource,
+        stoppedByPerson: (ConversationRef) -> Boolean = { false },
+    ): List<DockEvent> = base(profile, event, stoppedByPerson) + children.links(profile, event)
 
-    private fun base(profile: ProfileId, event: GatewayEvent): List<DockEvent> {
+    private fun base(
+        profile: ProfileId,
+        event: GatewayEvent,
+        stoppedByPerson: (ConversationRef) -> Boolean,
+    ): List<DockEvent> {
         fun ref(session: SessionId) = ConversationRef(profile, session)
         return when (event) {
             is GatewayEvent.SessionUpserted ->
@@ -71,17 +80,20 @@ public object DockFeed {
             is GatewayEvent.SessionDeleted -> listOf(DockEvent.Deleted(ref(event.sessionId)))
             is GatewayEvent.RunStarted -> listOf(DockEvent.RunStarted(ref(event.sessionId)))
             is GatewayEvent.RunRetrying -> listOf(DockEvent.RunStarted(ref(event.sessionId)))
-            is GatewayEvent.RunEnded ->
+            is GatewayEvent.RunEnded -> {
+                val target = ref(event.sessionId)
                 listOf(
                     DockEvent.RunEnded(
-                        ref(event.sessionId),
+                        target,
                         when (event.outcome) {
                             is RunOutcome.Failed -> DockRunEnd.Failed
                             is RunOutcome.Interrupted -> DockRunEnd.Stopped
-                            RunOutcome.Succeeded, RunOutcome.Idle -> DockRunEnd.Succeeded
+                            RunOutcome.Succeeded, RunOutcome.Idle ->
+                                if (stoppedByPerson(target)) DockRunEnd.Stopped else DockRunEnd.Succeeded
                         },
                     ),
                 )
+            }
             is GatewayEvent.MessageUpserted ->
                 // The agent that answered names the ring's mark when the session record has not said.
                 event.message.agent?.takeIf { it.isNotBlank() && event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
@@ -118,10 +130,15 @@ public object DockFeed {
         return DockEvent.RequestsRead(profile, by)
     }
 
-    public fun statusesRead(profile: ProfileId, statuses: Map<SessionId, SessionStatus>): DockEvent.StatusesRead =
+    public fun statusesRead(
+        profile: ProfileId,
+        statuses: Map<SessionId, SessionStatus>,
+        stopped: Set<SessionId> = emptySet(),
+    ): DockEvent.StatusesRead =
         DockEvent.StatusesRead(
             profile,
             statuses.filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }.keys,
+            stopped,
         )
 
     private fun partEvents(profile: ProfileId, part: Part): List<DockEvent> {

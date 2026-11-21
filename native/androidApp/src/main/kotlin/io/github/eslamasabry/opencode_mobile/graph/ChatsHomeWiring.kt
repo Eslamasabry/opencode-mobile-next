@@ -522,6 +522,11 @@ class AppChatsHome(
         if (data["scope"] != inventoryScope(owner)) return emptyList()
         val rows = data["rows"] as? List<*> ?: return emptyList()
         if (rows.size > 100) return emptyList()
+        val stopped =
+            io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery.readStoppedByPerson(
+                stores.prefs,
+                owner.id,
+            )
         return rows
             .mapNotNull { value ->
                 val row = value as? Map<*, *> ?: return@mapNotNull null
@@ -546,6 +551,7 @@ class AppChatsHome(
                     agentLabel = row["agentLabel"] as? String,
                     sourceLabel = row["srcLabel"] as? String,
                     locationKey = row["loc"] as? String,
+                    stoppedByPerson = SessionId(id) in stopped,
                 )
             }
             .distinctBy { it.identity }
