@@ -52,7 +52,10 @@ class StoppedTurnMemoryTest {
         assertEquals(setOf(REF.sessionId), ConnectionDelivery.readStoppedByPerson(offline.kv, P1))
     }
 
-    /** The delivery over a real store, with the store kept for the offline read ([ConnectionDelivery.running] is where a session status arrives). */
+    /**
+     * The delivery over a real store, with the store kept for the offline read
+     * ([ConnectionDelivery.running] is where a session status arrives).
+     */
     private fun TestScope.stoppedRunDelivery(
         disk: Disk,
         server: FakeServerGateway = FakeServerGateway(listOf(Session(S1))),

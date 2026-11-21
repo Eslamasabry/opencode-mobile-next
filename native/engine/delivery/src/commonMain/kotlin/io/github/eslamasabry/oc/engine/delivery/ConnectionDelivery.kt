@@ -123,7 +123,10 @@ public class ConnectionDelivery(
     private val stopped = stoppedMemory?.refs ?: MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
 
-    /** A Stop this app asked and the server has not shown the end of yet (its busy statuses are the same run, not a newer one). */
+    /**
+     * A Stop this app asked and the server has not shown the end of yet (its busy statuses are the same
+     * run, not a newer one).
+     */
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
 
     /** The person's Stop of the whole server cut these runs: each is "stopped", like a Stop pressed on its turn. */
