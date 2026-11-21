@@ -12,7 +12,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -223,7 +223,7 @@ class ListPaneHomeRenders {
         Locale.setDefault(Locale.forLanguageTag("en"))
         try {
             val platform = DesktopKitPlatform()
-            runDesktopComposeUiTest(wDp * 2, hDp * 2) {
+            kitUiTest(wDp * 2, hDp * 2) {
                 setContent {
                     CompositionLocalProvider(
                         LocalDensity provides Density(2f, 1f),

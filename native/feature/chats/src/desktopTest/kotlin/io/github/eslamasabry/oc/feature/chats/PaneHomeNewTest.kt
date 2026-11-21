@@ -15,7 +15,7 @@ import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -147,7 +147,7 @@ class PaneHomeNewTest {
 
     @Test
     fun `B-NAV-220 beside the list the start box fills its pane between the gutters`() {
-        runComposeUiTest {
+        kitUiTest {
             show(920, beside = true, resting = true) { NewConversationScreen(newUi, NewActions) }
             val box = onNodeWithTag("chats-new-field").getBoundsInRoot()
             assertTrue(abs(box.left.value - gutter) <= 1f, "the box starts at the pane's gutter (${box.left})")
@@ -157,7 +157,7 @@ class PaneHomeNewTest {
             )
         }
         // A phone (or one page on any window): the box keeps the conversation's cap, as before.
-        runComposeUiTest {
+        kitUiTest {
             show(1280, beside = false, resting = false) { NewConversationScreen(newUi, NewActions) }
             val box = onNodeWithTag("chats-new-field").getBoundsInRoot()
             assertTrue(box.right.value - box.left.value <= 700f + 1f, "one page: the box is held to 700 dp ($box)")
@@ -165,7 +165,7 @@ class PaneHomeNewTest {
     }
 
     @Test
-    fun `B-NAV-221 beside the list the title starts where the box starts`() = runComposeUiTest {
+    fun `B-NAV-221 beside the list the title starts where the box starts`() = kitUiTest {
         show(920, beside = true, resting = true) { NewConversationScreen(newUi, NewActions) }
         val title = onNodeWithText("New conversation").getBoundsInRoot()
         val box = onNodeWithTag("chats-new-field").getBoundsInRoot()
@@ -174,11 +174,11 @@ class PaneHomeNewTest {
 
     @Test
     fun `B-NAV-223 the resting New conversation has no Close, one opened over a conversation keeps it`() {
-        runComposeUiTest {
+        kitUiTest {
             show(920, beside = true, resting = true) { NewConversationScreen(newUi, NewActions) }
             assertEquals(0, count(hasContentDescription("Close")), "nothing to close to beside the list")
         }
-        runComposeUiTest {
+        kitUiTest {
             show(412, beside = false, resting = false) { NewConversationScreen(newUi, NewActions) }
             assertEquals(1, count(hasContentDescription("Close")), "opened as a page, it closes")
         }
@@ -187,13 +187,13 @@ class PaneHomeNewTest {
     @Test
     fun `B-NAV-228 the resting New conversation does not take focus, so no keyboard comes up by itself`() {
         val typing = isFocused() and hasSetTextAction()
-        runComposeUiTest {
+        kitUiTest {
             show(920, beside = true, resting = true) { NewConversationScreen(newUi, NewActions) }
             mainClock.advanceTimeBy(KEYBOARD_SETTLE_MS)
             waitForIdle()
             assertEquals(0, count(typing), "resting beside the list, the box waits for a tap")
         }
-        runComposeUiTest {
+        kitUiTest {
             show(412, beside = false, resting = false) { NewConversationScreen(newUi, NewActions) }
             mainClock.advanceTimeBy(KEYBOARD_SETTLE_MS)
             waitForIdle()
@@ -210,7 +210,7 @@ class PaneHomeNewTest {
                     told += resting
                 }
             }
-        runComposeUiTest {
+        kitUiTest {
             show(920, beside = true, resting = true) { NewConversationScreen(newUi, actions) }
             assertEquals(true, told.lastOrNull(), "resting beside the list")
         }
@@ -219,7 +219,7 @@ class PaneHomeNewTest {
     @Test
     fun `B-NAV-224 with New conversation beside the list the list shows no second New conversation`() {
         val home = ChatsUi(phase = ChatsPhase.List)
-        runComposeUiTest {
+        kitUiTest {
             show(
                 360,
                 beside = false,
@@ -232,13 +232,13 @@ class PaneHomeNewTest {
                 "the + is not shown beside New conversation",
             )
         }
-        runComposeUiTest {
+        kitUiTest {
             show(360, beside = false, resting = false, open = ChatRoute(ConversationRef(p1, SessionId("s1")))) {
                 ChatsScreen(home, RecordingChatsActions())
             }
             assertEquals(1, count(hasContentDescription("New conversation")), "beside a conversation the + stays")
         }
-        runComposeUiTest {
+        kitUiTest {
             show(360, beside = false, resting = false) { ChatsScreen(home, RecordingChatsActions()) }
             assertEquals(1, count(hasContentDescription("New conversation")), "a phone keeps its +")
         }
@@ -247,7 +247,7 @@ class PaneHomeNewTest {
     @Test
     fun `B-NAV-225 the empty list beside a page is one quiet line and the way to a computer`() {
         val empty = ChatsUi(phase = ChatsPhase.Empty)
-        runComposeUiTest {
+        kitUiTest {
             show(
                 360,
                 beside = false,
@@ -259,7 +259,7 @@ class PaneHomeNewTest {
             assertEquals(0, count(hasText("New conversation")), "New conversation is the page beside it")
             assertEquals(1, count(hasText("Connect a computer")))
         }
-        runComposeUiTest {
+        kitUiTest {
             show(360, beside = false, resting = false) { ChatsScreen(empty, RecordingChatsActions()) }
             assertEquals(1, count(hasText("agent gets to work", substring = true)), "a phone keeps today's empty page")
             assertEquals(1, count(hasText("New conversation")))

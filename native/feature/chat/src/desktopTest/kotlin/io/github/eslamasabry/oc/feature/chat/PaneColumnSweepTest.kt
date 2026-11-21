@@ -13,7 +13,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -74,7 +74,7 @@ class PaneColumnSweepTest {
 
     @Test
     fun `B-NAV-230 one column fills the pane at every width, two equal margins only past its cap`() =
-        runDesktopComposeUiTest(WIDEST + 40, 900) {
+        kitUiTest(WIDEST + 40, 900) {
             val pane = mutableIntStateOf(NARROWEST)
             show(pane, column = true)
             var offset: Float? = null
@@ -113,7 +113,7 @@ class PaneColumnSweepTest {
 
     @Test
     fun `B-NAV-229 beside the list the header draws no Back, on one page it does`() {
-        runDesktopComposeUiTest(1000, 900) {
+        kitUiTest(1000, 900) {
             show(mutableIntStateOf(920), column = true)
             val back = hasContentDescription("Back") and hasTestTag("kit-top-bar-exit")
             assertEquals(
@@ -122,7 +122,7 @@ class PaneColumnSweepTest {
                 "the list is the way back",
             )
         }
-        runDesktopComposeUiTest(1000, 900) {
+        kitUiTest(1000, 900) {
             show(mutableIntStateOf(412), column = false)
             val back = hasContentDescription("Back") and hasTestTag("kit-top-bar-exit")
             assertEquals(
