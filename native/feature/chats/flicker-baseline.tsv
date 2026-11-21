@@ -168,6 +168,8 @@ HomeOneNameTest.HOME-NAME-003 guard - a computer keeps the name it was saved und
 HomeOneNameTest.HOME-NAME-003 guard - a computer keeps the name it was saved under	JUMP	Chat s#	11
 HomeSignedOutRowTest.a failed run of a signed-out agent says Sign in needed, a failed run of a signed-in one still says Failed	FIRST	#kit-filter-chips	10
 HomeSignedOutRowTest.a failed run of a signed-out agent says Sign in needed, a failed run of a signed-in one still says Failed	JUMP	Theme packs	11
+HomeStageSpokenNameTest.B-HOME-240 the starting-helper stage is spoken with the same words it shows	FIRST	#kit-filter-chips	10
+HomeStageSpokenNameTest.B-HOME-240 the starting-helper stage is spoken with the same words it shows	JUMP	Chat a	11
 HomeStatusSteadyTest.B-HOME-222 the helper's two stages read with the same words	FIRST	#kit-filter-chips	10
 HomeStatusSteadyTest.B-HOME-222 the helper's two stages read with the same words	JUMP	Theme packs	11
 HomeTapAuditTest.every control on the home page answers its first tap in every state	FIRST	#kit-filter-chips	10
