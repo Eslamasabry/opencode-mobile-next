@@ -392,6 +392,58 @@ class PartADesktopTest {
     }
 
     @Test
+    fun `B-KIT-029 four text actions at 360 dp keep the first if it fits and move the rest to overflow whole`() =
+        runComposeUiTest {
+            var first by mutableStateOf("Copy patch")
+            val rest = listOf("Copy updated file", "Show surrounding lines", "Add TranscriptEntryRenderer.kt to prompt")
+            setContent {
+                Themed {
+                    InWindow(360, 800) {
+                        KitScreen(
+                            topBar = {
+                                val acts = (listOf(first) + rest).map { KitLineAction(it, {}) }
+                                KitTopBar(
+                                    "TranscriptEntryRenderer.kt",
+                                    exit = KitTopBarExit.Back,
+                                    exitLabel = "Back",
+                                    onExit = {},
+                                    actions = acts,
+                                )
+                            },
+                        ) { Box(Modifier.size(10.dp)) }
+                    }
+                }
+            }
+            val titleNode = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true)
+            val titleWithFirst = titleNode.fetchSemanticsNode().size.width / density.density
+            assertTrue(titleWithFirst >= 90f, "title is $titleWithFirst dp wide")
+            val firstLayout = textLayoutOf("Copy patch")
+            assertTrue(!firstLayout.hasVisualOverflow && firstLayout.lineCount == 1, "first action fits whole")
+            rest.forEach { onNodeWithText(it).assertDoesNotExist() }
+            onNodeWithTag("kit-top-bar-more").performClick()
+            waitForIdle()
+            val tops3 = rest.map { label ->
+                assertTrue(!textLayoutOf(label).hasVisualOverflow, "$label is whole in the overflow")
+                onNodeWithText(label, useUnmergedTree = true).getBoundsInRoot().top
+            }
+            assertEquals(tops3.sorted(), tops3, "overflow keeps the caller's order")
+
+            titleNode.performClick()
+            first = "Add main.kt to the conversation prompt"
+            waitForIdle()
+            val titleWithNone = titleNode.fetchSemanticsNode().size.width / density.density
+            assertTrue(titleWithNone >= 90f, "title is $titleWithNone dp wide")
+            (listOf(first) + rest).forEach { onNodeWithText(it).assertDoesNotExist() }
+            onNodeWithTag("kit-top-bar-more").performClick()
+            waitForIdle()
+            val tops4 = (listOf(first) + rest).map { label ->
+                assertTrue(!textLayoutOf(label).hasVisualOverflow, "$label is whole in the overflow")
+                onNodeWithText(label, useUnmergedTree = true).getBoundsInRoot().top
+            }
+            assertEquals(tops4.sorted(), tops4, "overflow keeps all four in the caller's order")
+        }
+
+    @Test
     fun `B-KIT-029 hidden actions without an overflow break the bar's rule`() = runComposeUiTest {
         assertFailsWith<KitRuleBroken> {
             setContent { Themed { InWindow(412, 800) { KitTopBar(w.conversations, actions = (1..3).map { KitLineAction("A$it", {}) }) } } }
@@ -620,6 +672,13 @@ class PartADesktopTest {
     private fun androidx.compose.ui.test.ComposeUiTest.textLayout(tag: String): TextLayoutResult {
         val results = mutableListOf<TextLayoutResult>()
         onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action!!(results)
+        return results.first()
+    }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.textLayoutOf(text: String): TextLayoutResult {
+        val results = mutableListOf<TextLayoutResult>()
+        val node = onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+        node.config[SemanticsActions.GetTextLayoutResult].action!!(results)
         return results.first()
     }
 }

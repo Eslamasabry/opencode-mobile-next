@@ -46,8 +46,17 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.sp
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import androidx.compose.foundation.layout.size
@@ -61,10 +70,14 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitBrandMark
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouBadge
 import io.github.eslamasabry.oc.ui.kit.state.kitNeedsYouSpan
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSwitchProject
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSwitchServer
@@ -197,29 +210,39 @@ public fun KitTopBar(
         }
         return
     }
-    val shown = actions.take(limit)
-    val hidden = actions.drop(limit)
+    val hasBack = exit == KitTopBarExit.Back && onExit != null
+    val hasClose = exit == KitTopBarExit.Close && onExit != null
+    val leadDp =
+        if (hasBack) FlutterKitTokens.TEXT_RAIL + Space.S1
+        else tokens.gutter + Space.S1 + if (hasClose) tokens.minTarget + Space.S1 else 0
+    val (shown, hidden) = TopBarActions.split(actions, limit, more != null, leadDp)
+    val textOverflowed = shown.size < actions.take(limit).size
     kitAssert(exit == KitTopBarExit.None || (exitLabel != null && onExit != null)) {
         "KitTopBar: an exit needs its label and action"
     }
     kitAssert(onTitleTap == null || !titleTapLabel.isNullOrBlank()) {
         "KitTopBar: a switcher title says what it does"
     }
-    kitAssert(hidden.isEmpty() || more != null) {
-        "KitTopBar: ${hidden.size} actions past the bar's limit need the overflow"
+    kitAssert(actions.size <= limit || textOverflowed || more != null) {
+        "KitTopBar: ${actions.size - limit} actions past the bar's limit need the overflow"
     }
-    val icons = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
+    val compact = window.cls == WindowClass.Compact
+    val icons = compact || window.cls == WindowClass.Medium
     val actionRow: @Composable () -> Unit = {
         if (shown.isNotEmpty()) {
+            val rowModifier =
+                if (compact) Modifier
+                else
+                    Modifier.layout { measurable, constraints ->
+                        val cap =
+                            (constraints.maxWidth * (if (large) LARGE_ACTIONS_SHARE else ACTIONS_SHARE))
+                                .toInt()
+                                .coerceAtLeast(constraints.minWidth)
+                        val placeable = measurable.measure(constraints.copy(maxWidth = cap))
+                        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                    }
             Row(
-                Modifier.layout { measurable, constraints ->
-                    val cap =
-                        (constraints.maxWidth * (if (large) LARGE_ACTIONS_SHARE else ACTIONS_SHARE))
-                            .toInt()
-                            .coerceAtLeast(constraints.minWidth)
-                    val placeable = measurable.measure(constraints.copy(maxWidth = cap))
-                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                },
+                rowModifier,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 shown.forEach { action ->
@@ -233,14 +256,17 @@ public fun KitTopBar(
                             enabled = KitEnabled.of(action.enabled, action.disabledReason),
                         )
                     } else {
-                        // QA wave 4 N1: inline actions never take more than their share of the bar, so the
-                        // title always keeps room. One line, ending in "…", never broken inside a word.
-                        KitInlineAction(action, Modifier.weight(1f, fill = false), maxLines = 1)
+                        val itemMod = if (compact) Modifier else Modifier.weight(1f, fill = false)
+                        KitInlineAction(action, itemMod, maxLines = 1)
                     }
                 }
             }
         }
-        if (hidden.isNotEmpty() || more != null) more?.invoke(hidden)
+        if (more != null) {
+            more.invoke(hidden)
+        } else if (hidden.isNotEmpty()) {
+            TopBarActions.More(hidden)
+        }
     }
     if (large) {
         Column(
@@ -294,7 +320,7 @@ public fun KitTopBar(
     val titleRole = TopBarTitle.role(switcher = onTitleTap != null)
     val titleRow: @Composable () -> Unit = {
         Row(
-            Modifier.padding(horizontal = Space.S2.dp),
+            Modifier.padding(start = Space.S2.dp, end = if (oneRowBack) 0.dp else Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
@@ -521,7 +547,7 @@ private fun BackBar(
         val actionsP = actionsM.map { it.measure(loose) }
         val exitW = exitP.maxOfOrNull { it.width } ?: 0
         val actionsW = actionsP.maxOfOrNull { it.width } ?: 0
-        val gap = if (actionsW > 0) Space.S2.dp.roundToPx() else 0 // F: kit_top_bar.dart:394
+        val gap = if (actionsW > 0) 0 else Space.S2.dp.roundToPx()
         val end = Space.S1.dp.roundToPx() // F: kit_top_bar.dart:446 (_endRoom without a last glyph)
         // The title row pads its words by space 2 itself: its box starts that much before the 56 dp text rail.
         // The title row's own 8 dp start padding may lie over Back's last 4 dp of empty target edge.
@@ -565,6 +591,104 @@ private fun BackBar(
 
 /** From this text scale the compact bar keeps a step of space2, not space1, above and below its words. */
 private const val LARGE_BAR_SCALE = 1.2f
+
+/** The minimum width (dp) the bar title keeps on a compact window beside text actions. */
+private const val MIN_TITLE_WIDTH_DP = 90
+
+private object TopBarActions {
+    @Composable
+    fun split(
+        actions: List<KitLineAction>,
+        limit: Int,
+        hasMore: Boolean,
+        leadDp: Int,
+    ): Pair<List<KitLineAction>, List<KitLineAction>> {
+        val window = LocalKitWindow.current
+        val candidates = actions.take(limit)
+        if (window.cls != WindowClass.Compact || candidates.none { it.icon == null }) {
+            return candidates to actions.drop(limit)
+        }
+        val tokens = LocalKitTokens.current
+        val app = LocalKitAppDensity.current ?: LocalDensity.current
+        val frameDensity = Density(app.density, 1f)
+        val base = LocalKitTypography.current.style(TypeRole.Button)
+        val specSp = base.fontSize.value
+        val target = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
+        val scale = target / specSp
+        val style =
+            base.copy(
+                fontSize = target.sp,
+                lineHeight = (base.lineHeight.value * scale).sp,
+                letterSpacing = (base.letterSpacing.value * scale).sp,
+                fontFeatureSettings = "tnum",
+            )
+        val measurer =
+            CompositionLocalProvider(LocalDensity provides frameDensity) {
+                rememberTextMeasurer()
+            }
+        return with(frameDensity) {
+            val minTargetPx = tokens.minTarget.dp.roundToPx()
+            val padPx = (Space.S3 + Space.S3).dp.roundToPx()
+            val roomPx = (window.widthDp.dp - leadDp.dp - MIN_TITLE_WIDTH_DP.dp).roundToPx()
+            val widths =
+                candidates.map { action ->
+                    if (action.icon != null) minTargetPx
+                    else {
+                        val wordsPx =
+                            measurer
+                                .measure(
+                                    AnnotatedString(action.label),
+                                    style,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                )
+                                .size
+                                .width
+                        maxOf(minTargetPx, wordsPx + padPx)
+                    }
+                }
+            var kept = 0
+            for (k in candidates.size downTo 1) {
+                val overflowPx = if (k < actions.size || hasMore) minTargetPx else 0
+                if (widths.take(k).sum() <= roomPx - overflowPx) {
+                    kept = k
+                    break
+                }
+            }
+            actions.take(kept) to actions.drop(kept)
+        }
+    }
+
+    @Composable
+    fun More(hidden: List<KitLineAction>) {
+        var open by remember { mutableStateOf(false) }
+        val moreLabel = stringResource(Res.string.kitTopBarMore)
+        KitMenu(
+            expanded = open,
+            items =
+                hidden.map { action ->
+                    KitMenuItem(
+                        label = action.label,
+                        onSelect = {
+                            open = false
+                            action.onClick()
+                        },
+                        icon = action.icon,
+                        enabled = KitEnabled.of(action.enabled, action.disabledReason),
+                    )
+                },
+            onDismissRequest = { open = false },
+            title = moreLabel,
+        ) {
+            KitIconButton(
+                icon = KitIcons.more,
+                label = moreLabel,
+                onClick = { open = true },
+                modifier = Modifier.testTag("kit-top-bar-more"),
+            )
+        }
+    }
+}
 
 /** The most of the bar's free width the inline actions may take (QA wave 4 N1). */
 private const val ACTIONS_SHARE = 0.5f
