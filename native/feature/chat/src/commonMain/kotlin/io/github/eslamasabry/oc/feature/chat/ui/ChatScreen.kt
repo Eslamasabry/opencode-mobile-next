@@ -396,13 +396,13 @@ public fun ChatScreen(
     onHintTyped: (seq: Long) -> Unit = {},
     onBackNoteShown: (seq: Long) -> Unit = {},
 ) {
-    var commandsOpen by remember(state.ref) { mutableStateOf(false) }
+    var commandsOpen by rememberSaveable(state.ref) { mutableStateOf(false) }
     val slashCommands =
         remember(state.ref) {
             mutableStateOf<List<io.github.eslamasabry.oc.feature.chat.composer.ComposerSlashCommand>>(emptyList())
         }
-    var workOpen by remember(state.ref) { mutableStateOf(false) }
-    var connectionDetails by remember(state.ref) { mutableStateOf(false) }
+    var workOpen by rememberSaveable(state.ref) { mutableStateOf(false) }
+    var connectionDetails by rememberSaveable(state.ref) { mutableStateOf(false) }
     fun openConnectionDetails() {
         connectionDetails = true
     }
@@ -410,17 +410,17 @@ public fun ChatScreen(
         remember(state.ref) {
             mutableStateOf<io.github.eslamasabry.oc.feature.chat.composer.InsertRequest?>(null)
         }
-    var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
+    var commandInsertId by rememberSaveable(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
     var modelCycle by remember(state.ref) { mutableStateOf<io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest?>(null) }
     var editorRequest by remember(state.ref) { mutableStateOf<Long?>(null) }
     var sentPicture by remember(state.ref) { mutableStateOf<PictureRequest?>(null) }
-    var pictureSeq by remember(state.ref) { mutableStateOf(0L) }
+    var pictureSeq by rememberSaveable(state.ref) { mutableStateOf(0L) }
     var codeReader by remember(state.ref) { mutableStateOf<KitMdBlock.Code?>(null) }
     val folds = rememberTranscriptFolds()
     var contextOpen by rememberSaveable { mutableStateOf(false) }
-    var tasksOpen by remember(state.ref) { mutableStateOf(false) }
-    var barMenuOpen by remember(state.ref) { mutableStateOf(false) }
+    var tasksOpen by rememberSaveable(state.ref) { mutableStateOf(false) }
+    var barMenuOpen by rememberSaveable(state.ref) { mutableStateOf(false) }
     val startState by rememberUpdatedState(start)
     val currentStartActions by rememberUpdatedState(startActions)
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
