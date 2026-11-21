@@ -90,7 +90,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
                     is SourcesChipLabel.Starting ->
                         stringResource(
                             when (chip.kind) {
-                                AppStart.Agents, AppStart.AgentsUpdating -> Res.string.connectionAgentStarting
+                                AppStart.Agents, AppStart.AgentsUpdating -> Res.string.stageStartingHelper
                                 AppStart.Phone -> Res.string.connectStartingPhone
                             }
                         )
