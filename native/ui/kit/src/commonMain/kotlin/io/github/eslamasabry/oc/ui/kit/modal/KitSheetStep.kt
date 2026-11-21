@@ -18,8 +18,8 @@ import io.github.eslamasabry.oc.ui.kit.motion.pace
 
 /**
  * A sheet's second view replacing the first in place (Dart `KitSheetStep`; plan 08 §5.5): no sheet on a sheet. The
- * discard question, a confirmation step or a sub-choice swaps in: the old view fades out over QUICK, the new one in over
- * STANDARD, and the sheet's height follows on `Spatial`, clipped (a sheet is not a scrolling list, so Fold is allowed).
+ * discard question, a confirmation step or a sub-choice swaps in: the old view fades out over QUICK, the new one in
+ * over STANDARD, and the sheet's height follows on `Spatial`, clipped (a sheet is not a scrolling list, so Fold is allowed).
  * The leaving view is picture only.
  *
  * States: one per step
