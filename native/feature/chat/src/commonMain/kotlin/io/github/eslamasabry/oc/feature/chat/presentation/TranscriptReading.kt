@@ -135,8 +135,6 @@ internal fun transcriptReading(
     outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome? = null,
     /** B8: the server said nothing runs ([io.github.eslamasabry.oc.feature.chat.world.TurnFeed.idleSaid]). */
     idleSaid: Boolean = false,
-    /** Whether this app's stop memory marks the conversation's newest run as stopped by the person. */
-    stoppedByPerson: Boolean = false,
 ): TranscriptReadingUi {
     val details = LinkedHashMap<String, TranscriptDetailUi>()
     val hidden = HashSet<String>()
@@ -209,16 +207,13 @@ internal fun transcriptReading(
                         outcome.reason == io.github.eslamasabry.oc.core.domain.events.InterruptReason.User) &&
                     io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) &&
                     noWordsAfterLastStep(assistants)
-            val last = assistants.lastOrNull()?.info
-            val userStopped = prompt != null && !command && !compact && stoppedByPerson
             if (declined) endNotes[turn.turnId] = TurnEndNote.Declined
-            else if (userStopped) {
-                if (!replyStopped(last)) endNotes[turn.turnId] = TurnEndNote.Stopped
-            } else if (cutOff)
+            else if (cutOff)
                 endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
             else if (prompt != null && !command && !compact && serverStop != null && said)
                 endNotes[turn.turnId] = serverStop
-            if (!declined && !userStopped && !cutOff && prompt != null && !command && !compact && !said) {
+            if (!declined && !cutOff && prompt != null && !command && !compact && !said) {
+                val last = assistants.lastOrNull()?.info
                 val end =
                     when {
                         // One source for the turn's end: a reply that says it was stopped marks its own footer
@@ -437,3 +432,36 @@ private fun passingWords(text: String): Boolean {
 private fun isReply(message: io.github.eslamasabry.oc.core.model.transcript.MessageWithParts): Boolean =
     message.info.modelId != null ||
         message.parts.any { it.type != PartType.Notice && it.type != PartType.Switch && it.type != PartType.Compaction }
+
+private fun userStopEligible(
+    turn: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn,
+    endNote: TurnEndNote?,
+): Boolean {
+    if (endNote == TurnEndNote.Declined) return false
+    val prompt =
+        turn.messages.firstOrNull { m ->
+            m.info.role == Role.User && m.parts.any { it.type == PartType.Text }
+        }
+    val compact = turn.messages.any { m -> m.parts.any { it.type == PartType.Compaction } }
+    val command = prompt?.parts?.any { it.type == PartType.Text && it.text.trimStart().startsWith('/') } == true
+    return prompt != null && !compact && !command
+}
+
+/**
+ * Applies the app's own stop memory to the newest ended turn: a text-only reply cut by Stop that the server saved as
+ * finished still reads Stopped in its foot, without duplicating an already aborted reply's footer.
+ */
+internal fun withPersonStop(
+    reading: TranscriptReadingUi,
+    snapshot: LedgerSnapshot,
+    busy: Boolean,
+    stoppedByPerson: Boolean,
+): TranscriptReadingUi {
+    val turn = if (busy || !stoppedByPerson) null else snapshot.turns.lastOrNull()
+    if (turn == null || !userStopEligible(turn, reading.endNotes[turn.turnId])) return reading
+    val last = turn.messages.lastOrNull { it.info.role == Role.Assistant }?.info
+    val next =
+        if (replyStopped(last)) reading.endNotes - turn.turnId
+        else reading.endNotes + (turn.turnId to TurnEndNote.Stopped)
+    return if (next == reading.endNotes) reading else reading.copy(endNotes = next)
+}

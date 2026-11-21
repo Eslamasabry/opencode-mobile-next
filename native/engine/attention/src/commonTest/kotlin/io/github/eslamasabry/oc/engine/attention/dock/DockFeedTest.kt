@@ -166,16 +166,28 @@ class DockFeedTest {
                 .reduce(DockEvent.RunStarted(ref))
                 .reduce(DockEvent.RunEnded(ref, DockRunEnd.Succeeded))
                 .reduce(DockEvent.RunEnded(ref, DockRunEnd.Stopped))
-        assertEquals(DockState.Idle, after.ui.entries.single().state, "a stop clears Finished so the light never says Done")
+        assertEquals(
+            DockState.Idle,
+            after.ui.entries.single().state,
+            "a stop clears Finished so the light never says Done",
+        )
         val direct =
             listOf(GatewayEvent.RunStarted(s), GatewayEvent.RunEnded(s, RunOutcome.Succeeded))
                 .flatMap { DockFeed.events(p, it, stoppedByPerson = { target -> target == ref }) }
                 .fold(DockModel.empty()) { m, e -> m.reduce(e) }
-        assertEquals(DockState.Idle, direct.ui.entries.single().state, "RunEnded(Succeeded) on a stopped run stays Idle")
+        assertEquals(
+            DockState.Idle,
+            direct.ui.entries.single().state,
+            "RunEnded(Succeeded) on a stopped run stays Idle",
+        )
         val reconciled =
             DockModel.empty()
                 .reduce(DockEvent.RunStarted(ref))
                 .reduce(DockFeed.statusesRead(p, emptyMap(), stopped = setOf(s)))
-        assertEquals(DockState.Idle, reconciled.ui.entries.single().state, "reconcile on a stopped run stays Idle")
+        assertEquals(
+            DockState.Idle,
+            reconciled.ui.entries.single().state,
+            "reconcile on a stopped run stays Idle",
+        )
     }
 }

@@ -212,14 +212,16 @@ public class TurnFactsPresenter(private val clock: Clock) {
         val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
         // B8: a reply waiting on the person (a request card) is never cut off, whatever the status said.
         val idleSaid = feed.idleSaid && !waitingForYou
-        if (
-            readingSnapshot !== snapshot ||
-                readingBusy != feed.busy ||
-                readingOutcome != outcome ||
-                readingIdleSaid != idleSaid ||
-                readingStoppedByPerson != feed.stoppedByPerson
-        ) {
-            reading = transcriptReading(snapshot, feed.busy, outcome, idleSaid, feed.stoppedByPerson)
+        val coreChanged = readingSnapshot !== snapshot || readingBusy != feed.busy || readingOutcome != outcome
+        val stopChanged = readingIdleSaid != idleSaid || readingStoppedByPerson != feed.stoppedByPerson
+        if (coreChanged || stopChanged) {
+            reading =
+                withPersonStop(
+                    transcriptReading(snapshot, feed.busy, outcome, idleSaid),
+                    snapshot,
+                    feed.busy,
+                    feed.stoppedByPerson,
+                )
             readingSnapshot = snapshot
             readingBusy = feed.busy
             readingOutcome = outcome

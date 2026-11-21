@@ -61,13 +61,14 @@ public object DockFeed {
         event: GatewayEvent,
         children: DockChildSource = SubAgentChildSource,
         stoppedByPerson: (ConversationRef) -> Boolean = { false },
-    ): List<DockEvent> = base(profile, event, stoppedByPerson) + children.links(profile, event)
+    ): List<DockEvent> =
+        base(profile, event).map { e ->
+            if (e is DockEvent.RunEnded && e.end == DockRunEnd.Succeeded && stoppedByPerson(e.ref)) {
+                e.copy(end = DockRunEnd.Stopped)
+            } else e
+        } + children.links(profile, event)
 
-    private fun base(
-        profile: ProfileId,
-        event: GatewayEvent,
-        stoppedByPerson: (ConversationRef) -> Boolean,
-    ): List<DockEvent> {
+    private fun base(profile: ProfileId, event: GatewayEvent): List<DockEvent> {
         fun ref(session: SessionId) = ConversationRef(profile, session)
         return when (event) {
             is GatewayEvent.SessionUpserted ->
@@ -80,20 +81,17 @@ public object DockFeed {
             is GatewayEvent.SessionDeleted -> listOf(DockEvent.Deleted(ref(event.sessionId)))
             is GatewayEvent.RunStarted -> listOf(DockEvent.RunStarted(ref(event.sessionId)))
             is GatewayEvent.RunRetrying -> listOf(DockEvent.RunStarted(ref(event.sessionId)))
-            is GatewayEvent.RunEnded -> {
-                val target = ref(event.sessionId)
+            is GatewayEvent.RunEnded ->
                 listOf(
                     DockEvent.RunEnded(
-                        target,
+                        ref(event.sessionId),
                         when (event.outcome) {
                             is RunOutcome.Failed -> DockRunEnd.Failed
                             is RunOutcome.Interrupted -> DockRunEnd.Stopped
-                            RunOutcome.Succeeded, RunOutcome.Idle ->
-                                if (stoppedByPerson(target)) DockRunEnd.Stopped else DockRunEnd.Succeeded
+                            RunOutcome.Succeeded, RunOutcome.Idle -> DockRunEnd.Succeeded
                         },
                     ),
                 )
-            }
             is GatewayEvent.MessageUpserted ->
                 // The agent that answered names the ring's mark when the session record has not said.
                 event.message.agent?.takeIf { it.isNotBlank() && event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
