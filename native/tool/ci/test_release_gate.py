@@ -41,9 +41,16 @@ class ReleaseGate(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         t = self.tmp
-        for rel in ('scripts/native-release.sh', 'native/version.properties', 'native/tool/ci/release_verdict.py'):
+        for rel in ('scripts/native-release.sh', 'native/version.properties', 'native/tool/ci/release_verdict.py',
+                    'native/tool/qa/check_tested_pins.py'):
             os.makedirs(os.path.join(t, 'work', os.path.dirname(rel)), exist_ok=True)
             shutil.copy(os.path.join(REPO, rel), os.path.join(t, 'work', rel))
+        # The release script's tested-pin gate reads the pins: plant pins whose Claude Code and Paseo ARE in their tested
+        # lists, so these tests judge the rest of the script (scripts/native-release.sh's own harness proves the gate).
+        pins = os.path.join(t, 'work/native/engine/agents/pins/agent-pins.json')
+        os.makedirs(os.path.dirname(pins), exist_ok=True)
+        json.dump({'agents': [{'id': 'claude', 'recipe': {'version': '1.0.0'}}], 'claudeCodeTestedVersions': ['1.0.0'],
+                   'paseo': {'version': '0.1.0'}, 'paseoTestedVersions': ['0.1.0']}, open(pins, 'w'))
         vc = os.path.join(t, 'work/native/tool/version_code.sh')
         # The allocator's answer for a release: the next multiple of ten above the tree's versionCode (a fixed number
         # goes stale as soon as a build number passes it, as 10061 did).

@@ -14,6 +14,7 @@ Always real, never noise:
   * a selected module that produced no test results;
   * a failing test in a gate module (HARD_MODULES) or a drift / Konsist / detekt / lint class (HARD_CLASS), whatever
     the lists or the base say.
+A known_failures.txt line that excuses nothing in a run whose module ran is printed as `STALE KNOWN-FAILURE LINE: <line>` (delete it).
 Noise (does not fail): an individual failing test class that also fails in the base reports, matches
 tool/ci/known_failures.txt (one test "<module> :: <class> > <test>", exact; or fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
 failures can be absorbed this way.
@@ -93,6 +94,33 @@ def is_known(f):
     return False
 
 
+def stale_known_lines():
+    """known_failures.txt lines that excuse nothing in this run although their module ran: delete them. Printed, never
+    a failure by itself. Pattern lines ("* :: ...", picture gates that only some lanes run) are skipped."""
+    ran = {m for s in shards for m, (n, _) in s.get('modules', {}).items() if n}
+    out = []
+    try:
+        lines = open(os.path.join(here, 'known_failures.txt')).read().splitlines()
+    except OSError:
+        return out
+    for raw in lines:
+        raw = raw.strip()
+        head = raw.split('|')[0].strip()
+        if not raw or raw.startswith('#') or head.startswith('*') or ' :: ' not in head:
+            continue
+        mod = head.split(' :: ')[0]
+        if mod not in ran:
+            continue
+        if ' > ' in head:
+            hit = any(f['id'] == head for f in failed)
+        else:
+            hit = any(f['id'].startswith(head + ' > ') for f in failed)
+        if not hit:
+            out.append(raw)
+    return out
+
+
+stale_known = stale_known_lines()
 new = [f for f in failed if is_hard(f) or (f['id'] not in base_failed and not is_known(f))]
 known = [f for f in failed if f not in new]
 real = [f'{s["name"]}: {r}' for s in shards for r in s.get('real_failures', [])]
@@ -274,6 +302,8 @@ for r in reasons[:12]:
 if len(reasons) > 12:
     print(f'- ... {len(reasons) - 12} more reasons')
 print(f'\n{guards_skipped} guards skipped (references not fetched)')
+for line in stale_known:
+    print(f'\nSTALE KNOWN-FAILURE LINE: {line}')
 print('\n| step | result |\n|---|---|')
 for k, v in rows:
     print(f'| {k} | {v} |')
