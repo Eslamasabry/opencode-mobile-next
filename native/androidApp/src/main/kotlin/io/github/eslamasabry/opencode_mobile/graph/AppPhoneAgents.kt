@@ -222,8 +222,18 @@ class AppPhoneAgents(
     /** The stores are loaded before the updater reads the owner and the kept facts (they load lazily). */
     internal suspend fun warmForUpdate(): Boolean = stores.warm() is Outcome.Ok
 
+    /**
+     * The note the status line keeps between reads: its kind, the one agent it names, and every agent the current run
+     * of updates finished, in the order they finished.
+     */
+    private data class KeptNote(
+        val note: PhoneAgentUpdateNote? = null,
+        val agent: String? = null,
+        val updated: List<String> = emptyList(),
+    )
+
     /** What the automatic update says on the Agents page's status line; kept so every read's state carries it. */
-    @Volatile private var updateNote: Pair<PhoneAgentUpdateNote?, String?> = null to null
+    @Volatile private var updateNote: KeptNote = KeptNote()
 
     /** The updater's last decision, as the status line words it ([PhoneAgentsState.updateNote]). */
     internal fun setUpdateNote(decision: AgentUpdateDecision) {
@@ -243,13 +253,28 @@ class AppPhoneAgents(
                 AgentUpdateStep.Refused,
                 AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
             }
-        updateNote = note to name
-        mutable.update { it.copy(updateNote = note, updateAgentName = name) }
+        // The Updated note names every agent this run of updates finished, in the order they finished: an install that
+        // starts keeps the run going, any other decision starts it over.
+        val updated =
+            when (decision.step) {
+                AgentUpdateStep.Updated -> updateNote.updated + listOfNotNull(name)
+                AgentUpdateStep.Updating -> updateNote.updated
+                else -> emptyList()
+            }
+        updateNote = KeptNote(note, name, updated)
+        mutable.update {
+            it.copy(updateNote = note, updateAgentName = name, updatedAgentNames = updated.toImmutableList())
+        }
     }
 
     /** The state with the updater's note; a signed-out agent is the more important thing to say once the update is done. */
     private fun withUpdateNote(state: PhoneAgentsState): PhoneAgentsState {
-        val base = withOwnAgents(state).copy(updateNote = updateNote.first, updateAgentName = updateNote.second)
+        val base =
+            withOwnAgents(state).copy(
+                updateNote = updateNote.note,
+                updateAgentName = updateNote.agent,
+                updatedAgentNames = updateNote.updated.toImmutableList(),
+            )
         val needs = base.agents.firstOrNull { it.status == PhoneAgentStatus.SignInNeeded && !it.signInCheckFailed }
         return if (needs != null && (base.updateNote == null || base.updateNote == PhoneAgentUpdateNote.Updated))
             base.copy(updateNote = PhoneAgentUpdateNote.NeedsSignIn, updateAgentName = needs.name)
