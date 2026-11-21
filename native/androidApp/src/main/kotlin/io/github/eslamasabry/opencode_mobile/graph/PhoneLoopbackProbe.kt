@@ -55,8 +55,8 @@ internal object PhoneLoopbackProbe {
     }
 
     /**
-     * At most [max] bytes as text. minSdk 26: InputStream.readNBytes is API 33, and on Android 8-12 its missing method is
-     * an Error that `catch (e: Exception)` does not catch.
+     * At most [max] bytes as text. minSdk 26: InputStream.readNBytes is API 33, and on Android 8-12 its missing
+     * method is an Error that `catch (e: Exception)` does not catch.
      */
     private fun readAtMost(input: java.io.InputStream, max: Int): String {
         val buffer = ByteArray(max)
