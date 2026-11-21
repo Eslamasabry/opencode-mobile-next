@@ -29,7 +29,8 @@ public sealed interface HomeDownloadPhase {
 
     /**
      * Only agent updates wait for Wi-Fi (chosen on the sheet, held on mobile data; they start by themselves on Wi-Fi).
-     * No own line (OpenCode, the helper) is waiting, so this is the whole line; its action is the yes for exactly these agents.
+     * No own line (OpenCode, the helper) is waiting, so this is the whole line; its action is the yes for exactly
+     * these agents.
      */
     public data class AgentsWaiting(val held: HomeHeldAgents) : HomeDownloadPhase
 

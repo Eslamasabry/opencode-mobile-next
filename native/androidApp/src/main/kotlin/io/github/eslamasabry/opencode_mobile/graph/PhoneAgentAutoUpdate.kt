@@ -77,6 +77,7 @@ class PhoneAgentAutoUpdate(
             appScope.launch(dispatchers.io) { safely(observe) }
         }
     }
+    private val postUpdate by lazy { HelperPostUpdate(app, phones, helper, runtime) { log.i(it) } }
 
     /**
      * The person chose Download now on mobile data (Home's ask): the pending install runs on this network, once, and
@@ -339,7 +340,7 @@ class PhoneAgentAutoUpdate(
             when (installation?.phase) {
                 PhoneAgentInstallPhase.Installing -> Unit
                 PhoneAgentInstallPhase.Done -> {
-                    if (reloadAfter.remove(agent)) reloadHelper() else restartOlderHelper()
+                    if (reloadAfter.remove(agent)) postUpdate.reload() else postUpdate.restartOlder()
                     phones.noteHelperInPlace()
                     phones.markUpdating(null)
                     downloads.helperShort.value = null
@@ -357,7 +358,7 @@ class PhoneAgentAutoUpdate(
                             return
                         }
                         else -> {
-                            restartOlderHelper()
+                            postUpdate.restartOlder()
                             // Ended with no record and no job of ours running: judged by what the folder holds now,
                             // never left started (an agent still behind is given back for another try).
                             updaterRef?.settle(agent, AgentUpdateStep.Failed)
@@ -411,64 +412,6 @@ class PhoneAgentAutoUpdate(
 
     private val reloadAfter = java.util.concurrent.ConcurrentHashMap.newKeySet<AgentId>()
 
-    /**
-     * After a same-version reinstall: the helper is stopped with the guarded stop (refused while a turn runs) and
-     * started again, so every conversation of that agent runs the new files; while a turn runs it tries again every
-     * 15 s (up to two hours). A helper that does not run starts with the new files anyway.
-     */
-    private suspend fun reloadHelper() {
-        val owner = phones.state.value.owner ?: return
-        val linux = BuiltinLinux.get(app)
-        val reload =
-            io.github.eslamasabry.oc.engine.agents.providers.HelperReload(
-                running = {
-                    try {
-                        linux.agentHost.status(owner.raw)["running"] == true
-                    } catch (e: kotlinx.coroutines.CancellationException) {
-                        throw e
-                    } catch (_: Exception) {
-                        false
-                    }
-                },
-                busy = { runtime.agentWorkBusy() },
-                stopGuarded = {
-                    try {
-                        linux.agentHost.stop(owner.raw, guardedForUpdate = true)
-                        true
-                    } catch (e: kotlinx.coroutines.CancellationException) {
-                        throw e
-                    } catch (_: Exception) {
-                        false
-                    }
-                },
-                start = { helper.checkHelper() },
-            )
-        repeat(RELOAD_TRIES) {
-            if (reload.tryNow()) {
-                log.i { "helper started again after a reinstall" }
-                return
-            }
-            delay(RELOAD_EVERY.seconds)
-        }
-    }
-
-    private suspend fun restartOlderHelper() {
-        val facts = phones.updateFacts() ?: return
-        val pinned = AgentPins.builtIn.paseo.version
-        if (!facts.helperRunning) {
-            // The helper is not up (it was not running, or the update kept it from starting): start it the way any
-            // connect does, so the agents' conversations connect again without a tap. It needs the app in front;
-            // otherwise the next connect starts it.
-            val started = helper.checkHelper()
-            log.i { "helper start after the update ${if (started is Outcome.Ok) "done" else "refused"}" }
-            return
-        }
-        if (facts.helperVersion == null || facts.helperVersion == pinned) return
-        // Refused while work runs: the older helper then keeps running and the next start brings the pinned one.
-        val answer = helper.restartForUpdate()
-        log.i { "helper restart ${if (answer is Outcome.Ok) "done" else "refused"}" }
-    }
-
     private companion object {
         const val FIRST_LOOK = 45L
 
@@ -480,8 +423,6 @@ class PhoneAgentAutoUpdate(
         const val WAIT_EVERY = 5L
         const val UNSTARTED_GRACE = 2L
         const val WAIT_STEPS = 180
-        const val RELOAD_EVERY = 15L
-        const val RELOAD_TRIES = 480
     }
 }
 
@@ -625,6 +566,75 @@ private class SharedUpdateJobs(
             }
         } finally {
             downloads.sharedRunning.value = null
+        }
+    }
+}
+
+private const val RELOAD_EVERY = 15L
+private const val RELOAD_TRIES = 480
+
+/** Reloads or restarts the agent helper after an agent update finishes. */
+private class HelperPostUpdate(
+    private val app: Application,
+    private val phones: AppPhoneAgents,
+    private val helper: AppLocalAgentHostStarter,
+    private val runtime: BuiltinRuntime,
+    private val log: (() -> String) -> Unit,
+) {
+    /**
+     * After a same-version reinstall: the helper is stopped with the guarded stop (refused while a turn runs) and
+     * started again, so every conversation of that agent runs the new files; while a turn runs it tries again every
+     * 15 s (up to two hours). A helper that does not run starts with the new files anyway.
+     */
+    suspend fun reload() {
+        val owner = phones.state.value.owner ?: return
+        val linux = BuiltinLinux.get(app)
+        val reload =
+            io.github.eslamasabry.oc.engine.agents.providers.HelperReload(
+                running = {
+                    try {
+                        linux.agentHost.status(owner.raw)["running"] == true
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        false
+                    }
+                },
+                busy = { runtime.agentWorkBusy() },
+                stopGuarded = {
+                    try {
+                        linux.agentHost.stop(owner.raw, guardedForUpdate = true)
+                        true
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        false
+                    }
+                },
+                start = { helper.checkHelper() },
+            )
+        repeat(RELOAD_TRIES) {
+            if (reload.tryNow()) {
+                log { "helper started again after a reinstall" }
+                return
+            }
+            delay(RELOAD_EVERY.seconds)
+        }
+    }
+
+    suspend fun restartOlder() {
+        val facts = phones.updateFacts() ?: return
+        val pinned = AgentPins.builtIn.paseo.version
+        if (!facts.helperRunning) {
+            // The helper is not up (it was not running, or the update kept it from starting): start it the way any
+            // connect does, so the agents' conversations connect again without a tap. It needs the app in front;
+            // otherwise the next connect starts it.
+            val started = helper.checkHelper()
+            log { "helper start after the update ${if (started is Outcome.Ok) "done" else "refused"}" }
+        } else if (facts.helperVersion != null && facts.helperVersion != pinned) {
+            // Refused while work runs: the older helper then keeps running and the next start brings the pinned one.
+            val answer = helper.restartForUpdate()
+            log { "helper restart ${if (answer is Outcome.Ok) "done" else "refused"}" }
         }
     }
 }
