@@ -1,5 +1,6 @@
 # Flicker findings that were there when feature/chats moved onto kitUiTest (report run, 2026-11-21). One line per
 # <Class.test> <RULE> <words> <family>. Only shrinks: a line goes with its fix, in the fix's commit. Empty at the cut.
+# Family #1 is unverified: it may be the harness (the first frame is drawn before the box's room is measured); the device read on 10114/10116 found F1b held.
 A1HomeRendersTest.A1-HOME-16 render Glass and Solid, dark and light, with running, needs-you and more than five recent	FIRST	#kit-filter-chips	10
 AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a restart	ABA	#kit-sheet-scrim	19
 AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a restart	ABA	Connect a computer	17

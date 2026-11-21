@@ -1,5 +1,6 @@
 # Flicker findings that were there when feature/chat moved onto kitUiTest (report run, 2026-11-21). One line per
 # <Class.test> <RULE> <words> <family>. Only shrinks: a line goes with its fix, in the fix's commit. Empty at the cut.
+# Family #1 is unverified: it may be the harness (the first frame is drawn before the box's room is measured); the device read on 10114/10116 found F1b held.
 ActiveContextScreenTest.C32 list labels and filtering follow every keystroke	JUMP	Filter	27
 ActiveContextScreenTest.C32 opens content first with copy and collapsed technical details	ABA	Active context	27
 Audit1RowsPlacedTest.AUDIT1-03 a row that arrives or leaves never lies over its neighbour on any frame	ABA	answer three	22
