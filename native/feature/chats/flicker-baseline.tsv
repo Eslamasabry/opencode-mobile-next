@@ -207,3 +207,11 @@ UpdateLinePhasesRendersTest.B-HOME-213 renders of the update line naming the par
 UpdateLinePhasesRendersTest.B-HOME-213 renders of the update line naming the part that runs	JUMP	Theme packs	11
 UpdateWaitHomeRendersTest.B-HOME-212 renders of Home with the update waiting, at 360 dp	FIRST	#kit-filter-chips	10
 UpdateWaitHomeRendersTest.B-HOME-212 renders of Home with the update waiting, at 360 dp	JUMP	Theme packs	11
+ChatsScreenTest.B-HOME-215 a stopped phone in the list says so with Start OpenCode, no failure	FIRST	#kit-filter-chips	10
+ChatsScreenTest.B-HOME-215 a stopped phone in the list says so with Start OpenCode, no failure	JUMP	Theme packs	11
+ChatsScreenTest.B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering	FIRST	#kit-filter-chips	10
+ChatsScreenTest.B-HOME-216 a phone that stopped by itself keeps Try again and isn't answering	JUMP	Theme packs	11
+OwnStopHomeRenders.renders of Home after the person's own stop	ABA	#kit-chip-chevron	10
+OwnStopHomeRenders.renders of Home after the person's own stop	BLINK	+#	10
+OwnStopHomeRenders.renders of Home after the person's own stop	FIRST	Theme packs	11
+OwnStopHomeRenders.renders of Home after the person's own stop	JUMP	Theme packs	11
