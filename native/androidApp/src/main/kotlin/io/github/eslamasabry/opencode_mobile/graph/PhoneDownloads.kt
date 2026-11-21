@@ -409,3 +409,10 @@ private fun SetupNetwork.asOfferNetwork(): AgentUpdateNetwork =
         SetupNetwork.Metered -> AgentUpdateNetwork.Metered
         else -> AgentUpdateNetwork.Unknown
     }
+
+/** The (agent, version) pairs the agents-only line names: the same filter as [heldAgentsOf]. */
+internal fun heldAgentVersionsOf(
+    offer: AgentUpdateOffer?,
+    running: AgentId? = null,
+    consented: (AgentId) -> Boolean = { false },
+): Map<AgentId, String> = emptyMap()

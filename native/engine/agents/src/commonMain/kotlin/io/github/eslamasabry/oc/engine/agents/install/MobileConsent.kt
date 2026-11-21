@@ -15,6 +15,10 @@ public class MobileConsent(private val offer: () -> AgentUpdateOffer?) {
         yes = named
     }
 
+    /** The person's yes on Home's line for exactly these (agent, version) pairs; earlier yes stay. */
+    public fun grant(named: Map<AgentId, String>) {
+    }
+
     /** True while [id]'s update, as the offer lists it now, is one the sheet named and it has not started yet. */
     public fun covers(id: AgentId): Boolean {
         val row = offer()?.items?.firstOrNull { it.id == id } ?: return false

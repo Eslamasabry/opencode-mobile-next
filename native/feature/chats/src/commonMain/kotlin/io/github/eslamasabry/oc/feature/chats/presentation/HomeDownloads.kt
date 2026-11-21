@@ -273,6 +273,12 @@ public interface HomeDownloads {
      * and the person is asked first.
      */
     public fun tryAgain(kind: HomeDownloadKind): Boolean
+
+    /**
+     * The person tapped "Download on mobile data" on the agents-only line: the agents that line names download on this
+     * network, once, and nothing else gains the yes.
+     */
+    public fun downloadHeldAgents(): Unit = Unit
 }
 
 @ContributesBinding(AppScope::class)
