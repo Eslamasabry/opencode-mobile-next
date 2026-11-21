@@ -207,7 +207,7 @@ private fun SkikoComposeUiTest.field(name: String): Any =
 private val DeviceLikeLogos =
     KitLogoLoader { id, _ ->
         if (id in KNOWN_MARKS) {
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\">" +
+            "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\">" +
                 "<g fill=\"currentColor\"><path d=\"M16 6H8v12h8V6zm4 16H4V2h16v20z\"></path></g></svg>"
         } else {
             null
