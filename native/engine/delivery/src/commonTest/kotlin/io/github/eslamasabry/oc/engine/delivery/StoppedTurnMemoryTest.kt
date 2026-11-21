@@ -106,13 +106,14 @@ class StoppedTurnMemoryTest {
         d.running(REF, busy = false)
         assertTrue(REF in d.stoppedByPerson.value, "no newer run: the stop still speaks")
 
-        // The turn this app sees running, then the person's own Stop of it.
+        // The turn this app sees running, then the person's own Stop of it: its wind-down is not a newer run.
         d.running(REF, busy = true)
         d.engine!!.stopTurn(REF)
         d.running(REF, busy = true) // the stopped run still winding down
         assertTrue(REF in d.stoppedByPerson.value, "the run being stopped is not a newer run")
         d.running(REF, busy = false) // it ends
         assertTrue(REF in d.stoppedByPerson.value, "the person's stop still names how it ended")
+        testScheduler.runCurrent()
         assertTrue(
             REF.sessionId in ConnectionDelivery.readStoppedByPerson(store, P1),
             "and it is still on disk",

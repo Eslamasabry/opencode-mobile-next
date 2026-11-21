@@ -122,6 +122,8 @@ public class ConnectionDelivery(
     private val stoppedMemory = stores.singleOrNull()?.let { StoppedTurnMemory(it.store, it.lanes.app, profile.id, scope) }
     private val stopped = stoppedMemory?.refs ?: MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
+
+    /** A Stop this app asked and the server has not shown the end of yet (its busy statuses are the same run, not a newer one). */
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
 
     /** The person's Stop of the whole server cut these runs: each is "stopped", like a Stop pressed on its turn. */
@@ -333,7 +335,14 @@ public class ConnectionDelivery(
     public fun running(ref: ConversationRef, busy: Boolean) {
         runRecovery?.running(ref.sessionId, busy)
         running.update { if (busy) it + ref else it - ref }
-        if (!busy) engine?.turnEnded(ref)
+        if (busy) {
+            // The live truth wins: a busy status the server reports now is a run the person's stored stop did not
+            // cut, unless this app's own Stop is still winding that same run down (requestedStop).
+            if (ref !in requestedStop.value) stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
+        } else {
+            requestedStop.update { it - ref }
+            engine?.turnEnded(ref)
+        }
     }
 
     /**
