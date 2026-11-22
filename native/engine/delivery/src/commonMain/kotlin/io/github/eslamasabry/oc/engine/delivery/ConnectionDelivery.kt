@@ -195,6 +195,10 @@ public class ConnectionDelivery(
                     stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
                     requestedStop.update { it - ref }
                 }
+
+                override fun stopAnswered(ref: ConversationRef, endedSomething: Boolean) {
+                    if (!endedSomething) requestedStop.update { it - ref }
+                }
             },
             clock,
             scope,

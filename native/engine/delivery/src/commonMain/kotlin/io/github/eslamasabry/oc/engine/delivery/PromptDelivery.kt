@@ -365,6 +365,9 @@ public class PromptDelivery(
                 is Outcome.Ok ->
                     if (stopped.value == StopResult.Uncertain) {
                         return Failure.Refused(RefusalReason.DispatchUncertain).failed()
+                    } else if (stopped.value == StopResult.NothingRunning) {
+                        // Nothing runs, so no RunEnded retires the wind-down guard: the answer does it now.
+                        stopMemory.stopAnswered(ref, endedSomething = false)
                     }
             }
             if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
@@ -849,6 +852,9 @@ public class PromptDelivery(
             is Outcome.Ok -> {
                 // Nothing was running: nobody stopped anything, so an idle conversation (a parent whose sub-agent
                 // works) must not read "Stopped" for how its last turn ended. An earlier real Stop stays recorded.
+                // Whatever was stopped before, nothing runs now and no RunEnded will retire the wind-down guard,
+                // so the answer itself does — a later run started elsewhere is not excused.
+                if (r.value == StopResult.NothingRunning) stopMemory.stopAnswered(ref, endedSomething = false)
                 if (r.value == StopResult.NothingRunning && !markedBefore) stopMemory.clearStoppedByPerson(ref)
                 Unit.ok()
             }
