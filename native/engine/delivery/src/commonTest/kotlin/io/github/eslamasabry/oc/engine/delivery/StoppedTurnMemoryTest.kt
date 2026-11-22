@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.delivery
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.data.kv.PrefsKeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ProfileTrust
 import io.github.eslamasabry.oc.core.model.ServerOrigin
@@ -122,4 +123,37 @@ class StoppedTurnMemoryTest {
             "and it is still on disk",
         )
     }
+
+    @Test
+    fun `B-STOP-CUT-007 a busy status the server streams clears the stored stop with no chat open`() =
+        runTest {
+            val server = FakeServerGateway(listOf(Session(S1)))
+            val (d, store) = stoppedRunDelivery(Disk(), server)
+            testScheduler.runCurrent()
+            d.markCutByStop(listOf(REF))
+            assertTrue(REF in d.stoppedByPerson.value, "the person's own stop is stored first")
+
+            // A running turn this app did not send (a schedule, another device) with no chat screen
+            // open: only the streamed busy event tells the delivery about it.
+            server.events.emit(GatewayEvent.RunStarted(REF.sessionId))
+            testScheduler.runCurrent()
+            assertFalse(
+                REF in d.stoppedByPerson.value,
+                "the streamed busy status clears the stored stop",
+            )
+            assertTrue(
+                ConnectionDelivery.readStoppedByPerson(store, P1).isEmpty(),
+                "the stored stop is gone from disk too",
+            )
+
+            // The wind-down of this app's own Stop is not a newer run: the stop it asked stays.
+            d.markCutByStop(listOf(REF))
+            d.engine!!.stopTurn(REF)
+            server.events.emit(GatewayEvent.RunStarted(REF.sessionId))
+            testScheduler.runCurrent()
+            assertTrue(
+                REF in d.stoppedByPerson.value,
+                "the run being stopped is not a newer run",
+            )
+        }
 }
