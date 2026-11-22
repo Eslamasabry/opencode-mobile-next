@@ -201,8 +201,8 @@ private fun SkikoComposeUiTest.field(name: String): Any =
 
 /**
  * The logo loader a device has, for a test scene: a KNOWN agent or provider finds its mark at once, an unknown id finds
- * none (as the app's loader answers from its bundled marks). Without it every scene gave the 28 dp mark slot back, which
- * a device keeps for the agents it knows (flicker family 11, the harness half).
+ * none (as the app's loader answers from its bundled marks). Without it every scene gave the 28 dp mark slot back,
+ * which a device keeps for the agents it knows (flicker family 11, the harness half).
  */
 internal val DeviceLikeLogos =
     KitLogoLoader { id, _ ->

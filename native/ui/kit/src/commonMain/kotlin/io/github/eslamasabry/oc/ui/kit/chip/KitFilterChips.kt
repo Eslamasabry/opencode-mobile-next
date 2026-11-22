@@ -156,9 +156,9 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private
     var after by mutableStateOf(0)
 
     /**
-     * [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. Read by the
-     * row's own layout in the pass that laid the chips out (never carried through state: a state written while measuring
-     * is read a frame later, so the first frame drew a narrower line than the second).
+     * [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. Read by
+     * the row's own layout in the pass that laid the chips out (never carried through state: a state written while
+     * measuring is read a frame later, so the first frame drew a narrower line than the second).
      */
     fun tail(): Int = if (restWhole && sizes.isNotEmpty()) (roomPx - sizes.last()).coerceAtLeast(0) else 0
 
