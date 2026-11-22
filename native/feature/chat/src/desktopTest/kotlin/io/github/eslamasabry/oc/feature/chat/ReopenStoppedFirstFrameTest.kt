@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -23,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -36,9 +36,12 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 
 /**
@@ -62,9 +65,20 @@ class ReopenStoppedFirstFrameTest {
         val world: FakeChatWorld,
         val running: TranscriptState,
         val stopped: TranscriptState,
-        val collecting: MutableState<Boolean>,
+        val states: StateFlow<ChatUi>,
+        val held: MutableState<ChatUi>,
         val scope: CoroutineScope,
-    )
+    ) {
+        var job: Job? = null
+
+        /**
+         * The page comes back: the collect restarts outside composition, before the next frame is
+         * drawn, the way repeatOnLifecycle starts it when the screen becomes visible again.
+         */
+        fun back() {
+            job = scope.launch { states.collect { held.value = it } }
+        }
+    }
 
     private fun androidx.compose.ui.test.ComposeUiTest.reopenedChat(): Reopened {
         mainClock.autoAdvance = false
@@ -89,7 +103,6 @@ class ReopenStoppedFirstFrameTest {
         // stands for "the 5 s have passed", so every return from the background starts sharing again.
         val states = p.states(scope, StandardTestDispatcher(), SharingStarted.WhileSubscribed(0))
         val held = mutableStateOf(states.value)
-        val collecting = mutableStateOf(true)
         setContent {
             KitTheme(
                 platform = DesktopKitPlatform(),
@@ -101,21 +114,21 @@ class ReopenStoppedFirstFrameTest {
                     LocalKitRedactor provides Redactor(),
                     LocalLayoutDirection provides LayoutDirection.Ltr,
                 ) {
-                    // The screen's own collectAsStateWithLifecycle: while it is away the page stops
-                    // collecting, as the background does.
-                    LaunchedEffect(collecting.value) {
-                        if (collecting.value) states.collect { held.value = it }
-                    }
                     ChatScreen(held.value, p, composer)
                 }
             }
         }
-        return Reopened(world, running, stopped, collecting, scope)
+        val chat = Reopened(world, running, stopped, states, held, scope)
+        // The first collect starts outside composition too, as the lifecycle does when the screen
+        // first becomes visible: before a frame is drawn, never as a keyed composition effect.
+        chat.back()
+        return chat
     }
 
-    /** The page goes to the background: the collecting stops and two frames pass. */
+    /** The page goes to the background: the collect's job is cancelled and two frames pass. */
     private fun androidx.compose.ui.test.ComposeUiTest.away(chat: Reopened) {
-        chat.collecting.value = false
+        chat.job?.cancel()
+        chat.job = null
         mainClock.advanceTimeByFrame()
         mainClock.advanceTimeByFrame()
     }
@@ -132,7 +145,7 @@ class ReopenStoppedFirstFrameTest {
                 onNodeWithTag("chat-live-line", useUnmergedTree = true).assertExists()
                 away(chat)
                 chat.world.transcript.value = chat.stopped
-                chat.collecting.value = true
+                chat.back()
                 repeat(30) {
                     mainClock.advanceTimeByFrame()
                     onAllNodesWithTag("chat-live-line", useUnmergedTree = true).assertCountEquals(0)
@@ -142,7 +155,7 @@ class ReopenStoppedFirstFrameTest {
                 // Both ways: a run that went back to running while the page was away is drawn at once.
                 away(chat)
                 chat.world.transcript.value = chat.running
-                chat.collecting.value = true
+                chat.back()
                 repeat(30) {
                     mainClock.advanceTimeByFrame()
                     onNodeWithText("composer: busy").assertExists()
@@ -163,7 +176,7 @@ class ReopenStoppedFirstFrameTest {
                 onNodeWithText("composer: busy").assertExists()
                 away(chat)
                 chat.world.transcript.value = chat.stopped
-                chat.collecting.value = true
+                chat.back()
                 var frame1 = -1f
                 repeat(30) { i ->
                     mainClock.advanceTimeByFrame()
