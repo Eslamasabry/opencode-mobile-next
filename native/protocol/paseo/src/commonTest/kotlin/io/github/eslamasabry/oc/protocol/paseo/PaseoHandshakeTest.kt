@@ -115,7 +115,7 @@ class PaseoHandshakeTest {
 
     @Test
     fun `B-PROTO-071 the old and new daemons and the previous and current Claude Code pins are accepted`() {
-        val tested = listOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0", "0.15.3", "0.15.4", "0.16.1", "0.17.1")
+        val tested = listOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0", "0.15.3", "0.15.4", "0.16.1", "0.17.2")
         for (v in tested) assertTrue(PaseoTestedVersions.paseoSupports(v), v)
         val untested = listOf("0.13.0", "0.13.1", "0.14.1", "0.11.3", "0.9.3", "0.16.0", "0.16.2", "0.17.0", "0.17.2", null)
         for (v in untested) assertFalse(PaseoTestedVersions.paseoSupports(v), "$v")

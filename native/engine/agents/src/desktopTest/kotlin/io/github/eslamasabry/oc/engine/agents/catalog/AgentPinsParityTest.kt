@@ -435,7 +435,7 @@ class AgentPinsParityTest {
             "nodeX64Sha256" to "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2",
         )
         fun dartConst(name: String) = node.getValue(name)
-        // Paseo moved to 0.17.1 (via 0.16.1, 0.15.4) after the Flutter freeze (B-193): the pins equal the install script's own checks.
+        // Paseo moved to 0.17.2 (via 0.17.1, 0.16.1, 0.15.4) after the Flutter freeze (B-193): the pins equal the install script's own checks.
         assertEquals(PaseoPhoneScripts.VERSION, pins.paseo.version)
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, pins.paseo.packageLockSha256)
         assertEquals(PaseoPhoneScripts.CLI_SHA256, pins.paseo.cliSha256)
@@ -444,7 +444,7 @@ class AgentPinsParityTest {
         assertEquals(dartConst("nodeVersion"), pins.node.version)
         assertEquals(dartConst("nodeArm64Sha256"), pins.node.sha256[AgentArchitecture.Arm64])
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
-        assertEquals("/home/oc/.local/share/oc-paseo/0.17.1-e642771add42", PaseoPhoneScripts.INSTALL_DIRECTORY)
+        assertEquals("/home/oc/.local/share/oc-paseo/0.17.2-c2f1fbbb755a", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
         // 2.1.321, 2.1.325 and 2.1.327 moved after the freeze (Fable 5.2 needs 2.1.321 or newer), and 2.1.330 was
         // proven on a phone on 2026-11-21: the freeze set plus all four.

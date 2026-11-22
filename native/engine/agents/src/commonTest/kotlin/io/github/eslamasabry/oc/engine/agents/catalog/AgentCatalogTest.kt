@@ -165,9 +165,9 @@ class AgentCatalogTest {
     @Test
     fun `B-AGENT-008 shared helper pins are the verified Paseo, lock and Node`() {
         val pins = AgentPins.builtIn
-        assertEquals("0.17.1", pins.paseo.version)
-        assertEquals("e642771add423fc02ab1bdeeaf435966af72e4a55acd692c3ebe2d6c5e6d1bad", pins.paseo.packageLockSha256)
-        assertEquals("/home/oc/.local/share/oc-paseo/0.17.1-e642771add42", pins.paseo.installDirectory)
+        assertEquals("0.17.2", pins.paseo.version)
+        assertEquals("c2f1fbbb755ad26a434c0d61b12b2710b8bba7e226167b7b76f8aacb8d1984bd", pins.paseo.packageLockSha256)
+        assertEquals("/home/oc/.local/share/oc-paseo/0.17.2-c2f1fbbb755a", pins.paseo.installDirectory)
         assertEquals("v24.22.3", pins.node.version)
         val nodeArm64 = "261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8"
         val nodeX64 = "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2"
