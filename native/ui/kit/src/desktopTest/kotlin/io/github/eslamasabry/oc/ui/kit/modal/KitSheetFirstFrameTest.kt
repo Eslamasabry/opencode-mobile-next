@@ -93,6 +93,11 @@ class KitSheetFirstFrameTest {
                 "the sheet that came back does not rise again: its top is at $firstTop in the first frame and at " +
                     "${sheetTop()} once settled",
             )
+            assertTrue(
+                onAllNodesWithText("the page under the sheet").fetchSemanticsNodes().isEmpty(),
+                "the page under the sheet stays cleared while the sheet that came back is up",
+            )
+            assertTrue(KitModalOpen.isOpen, "the sheet that came back with the rebuilt screen counts as an open modal")
         }
 
     @Test
