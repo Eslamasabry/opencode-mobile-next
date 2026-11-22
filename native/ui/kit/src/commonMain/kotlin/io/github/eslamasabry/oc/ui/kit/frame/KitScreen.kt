@@ -338,8 +338,9 @@ public fun KitScreen(
     // What the bottom block says it is (one pane of glass: KitReportBottomSlab), kept across the frame's two layouts.
     val bottomState = remember { KitScreenBottom() }
     val window = LocalKitWindow.current
-    // Big screens: a Reading page fills up to the List cap (960) instead of a 720 column with two bands; in a pane beside
-    // a list the pane's column ([LocalKitPaneColumn]) grows it to the pane. Under 600 dp (Compact) nothing is capped.
+    // Big screens: a Reading page fills up to the List cap (960) instead of a 720 column with two bands;
+    // in a pane beside a list the pane's column ([LocalKitPaneColumn]) grows it to the pane. Under 600 dp
+    // (Compact) nothing is capped.
     val cap =
         if (window.cls == WindowClass.Compact) CapRole.Fill
         else if (width == KitScreenWidth.Reading) CapRole.List
@@ -863,7 +864,8 @@ public fun KitScreen(
                                     Box(Modifier.fillMaxWidth().padding(horizontal = kitPageGutter()).testTag("kit-pinned-below")) { belowPart() }
                                 }
                             } else if (cap.capDp == null) stackTop()
-                            // Big screens: the header shares the body's edges (title, Back, actions on the body's gutter).
+                            // Big screens: the header shares the body's edges (title, Back, actions on the
+                            // body's gutter).
                             else Box(Modifier.fillMaxWidth().kitMaxWidth(cap)) { stackTop() }
                         }
                     }
@@ -1284,7 +1286,8 @@ private fun Panes(
                     // Dart _Centred(paneDetailMaxWidth, fill: true): the pane's view takes the whole pane, so an
                     // empty state centres in it.
                     // The detail takes the rest of the window up to the page's column cap, then two equal margins: no
-                    // dead gutter beside the list. Its page is its own window, so the frame inside reads the pane's width.
+                    // dead gutter beside the list. Its page is its own window, so the frame inside reads
+                    // the pane's width.
                     io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumnPage(Modifier.fillMaxSize()) {
                         (detail ?: emptyDetail)()
                     }

@@ -52,7 +52,12 @@ class SharedFrameFillTest {
             LocalDensity provides Density(1f),
             LocalKitScreenInsets provides WindowInsets(),
         ) {
-            KitTheme(appearance = KitAppearance(motion = MotionLevel.Off), platform = FakeKitPlatform(), localeTag = "en", stillFrame = true) {
+            KitTheme(
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                platform = FakeKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
                 CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(wide, 800f)) {
                     KitScreen(
                         page = true,
@@ -88,15 +93,23 @@ class SharedFrameFillTest {
     private fun gutterOf(sample: Sample) = if (sample.edges == KitScreenEdges.Gutter) GUTTER else 0f
 
     @Test
-    fun `B-KIT-310 a Reading page fills its window up to the cap, then two equal margins, header on the body's edges`() {
+    fun `B-KIT-310 a Reading page fills its window up to the cap, then two equal margins, header on the body's edges`()
+    {
         for (sample in Sample.entries) {
             for (w in 600..1700 step 40) {
                 val (bar, row) = bounds(sample, w)
                 val at = "${sample.name} at $w dp"
                 val g = gutterOf(sample)
-                // The header and the body share one pair of edges (the body is the header's box less the gutter it keeps).
-                assertTrue(abs(row.left.value - bar.left.value - g) <= 1f, "$at: header left ${bar.left} body left ${row.left}")
-                assertTrue(abs(bar.right.value - row.right.value - g) <= 1f, "$at: header right ${bar.right} body right ${row.right}")
+                // The header and the body share one pair of edges (the body is the header's box less the
+                // gutter it keeps).
+                assertTrue(
+                    abs(row.left.value - bar.left.value - g) <= 1f,
+                    "$at: header left ${bar.left} body left ${row.left}",
+                )
+                assertTrue(
+                    abs(bar.right.value - row.right.value - g) <= 1f,
+                    "$at: header right ${bar.right} body right ${row.right}",
+                )
                 val left = bar.left.value
                 val right = w - bar.right.value
                 if (w <= CAP) {
@@ -116,8 +129,14 @@ class SharedFrameFillTest {
                 val (bar, row) = bounds(sample, w, inPane = true)
                 val at = "${sample.name} pane $w dp"
                 val g = gutterOf(sample)
-                assertTrue(abs(row.left.value - bar.left.value - g) <= 1f, "$at: header left ${bar.left} body left ${row.left}")
-                assertTrue(abs(bar.right.value - row.right.value - g) <= 1f, "$at: header right ${bar.right} body right ${row.right}")
+                assertTrue(
+                    abs(row.left.value - bar.left.value - g) <= 1f,
+                    "$at: header left ${bar.left} body left ${row.left}",
+                )
+                assertTrue(
+                    abs(bar.right.value - row.right.value - g) <= 1f,
+                    "$at: header right ${bar.right} body right ${row.right}",
+                )
                 val left = bar.left.value
                 val right = w - bar.right.value
                 if (w <= PAGE_CAP) {
