@@ -102,6 +102,9 @@ public sealed interface LibrarySheet {
 
     /** Pull request 142: declare an endpoint the catalog does not list (or say why this server cannot). */
     public data object AddProvider : LibrarySheet
+
+    /** Edit a provider this app declared (DESIGN 2A): the same form with the id fixed and the values filled in. */
+    public data class EditProvider(val id: String) : LibrarySheet
 }
 
 public data class LibraryUi(
@@ -194,8 +197,20 @@ public interface LibraryActions {
     /** Save on the add-a-provider sheet: problems show only now, then the declaration is written. */
     public fun addProvider(draft: CustomProviderDraft)
 
-    /** Restart this phone's OpenCode so it loads the saved provider. */
-    public fun restartForProvider()
+    /** The Replace answer of the add sheet's question (4A): the write replaces the app-written entry. */
+    public fun replaceProvider(draft: CustomProviderDraft)
+
+    /** Keep editing after the Replace question (4A): nothing was written. */
+    public fun keepEditingProvider()
+
+    /** Save on the edit sheet: the id stays the provider's own, the rest is what was typed. */
+    public fun saveProviderEdit(draft: CustomProviderDraft)
+
+    /** The Remove answer on a provider sheet: the key first, then the settings entry. */
+    public fun removeProvider(provider: IntegrationInfo)
+
+    /** Restart this phone's OpenCode so it loads (or forgets) the saved provider. */
+    public fun restartForProvider(id: String)
 }
 
 @AssistedInject
@@ -269,7 +284,20 @@ public class LibraryViewModel(
                 skillConversation = null,
                 skillConversationRef = null,
                 customProvider =
-                    if (sheet == LibrarySheet.AddProvider) CustomProviderUi() else it.customProvider,
+                    when (sheet) {
+                        LibrarySheet.AddProvider -> CustomProviderUi()
+                        is LibrarySheet.EditProvider -> {
+                            val entry =
+                                mutable.value.inventory.declared.firstOrNull { d -> d.id == sheet.id }
+                            CustomProviderUi(
+                                stage = CustomProviderStage.Editing,
+                                mode = CustomProviderMode.Edit,
+                                name = entry?.name ?: sheet.id,
+                                providerId = sheet.id,
+                            )
+                        }
+                        else -> it.customProvider,
+                    },
             )
         }
         if (sheet == LibrarySheet.Registry && registryStore == null)
@@ -332,6 +360,14 @@ public class LibraryViewModel(
     }
 
     override fun addProvider(draft: CustomProviderDraft) {
+        saveProvider(draft, replaceConfirmed = false)
+    }
+
+    override fun replaceProvider(draft: CustomProviderDraft) {
+        saveProvider(draft, replaceConfirmed = true)
+    }
+
+    private fun saveProvider(draft: CustomProviderDraft, replaceConfirmed: Boolean) {
         val library = session
         val problems = draft.problems(shownProviderIds(mutable.value.inventory))
         when {
@@ -352,23 +388,84 @@ public class LibraryViewModel(
                             ),
                     )
                 }
-                customProviderStep { library.addCustomProvider(draft) }
+                customProviderStep {
+                    library.addCustomProvider(draft, replaceConfirmed = replaceConfirmed)
+                }
             }
         }
     }
 
-    override fun restartForProvider() {
+    override fun keepEditingProvider() {
+        if (mutable.value.customProvider.stage != CustomProviderStage.AskReplace) return
+        mutable.update { it.copy(customProvider = it.customProvider.copy(stage = CustomProviderStage.Form)) }
+    }
+
+    override fun saveProviderEdit(draft: CustomProviderDraft) {
         val library = session
-        val id = mutable.value.customProvider.providerId
+        val id = (mutable.value.sheet as? LibrarySheet.EditProvider)?.id
+            ?: mutable.value.customProvider.providerId
+        when {
+            library == null || mutable.value.working || id.isEmpty() -> Unit
+            else -> {
+                mutable.update {
+                    it.copy(
+                        working = true,
+                        customProvider =
+                            CustomProviderUi(
+                                stage = CustomProviderStage.Saving,
+                                mode = CustomProviderMode.Edit,
+                                name = draft.name.trim(),
+                                providerId = id,
+                            ),
+                    )
+                }
+                customProviderStep { library.editCustomProvider(id, draft) }
+            }
+        }
+    }
+
+    override fun removeProvider(provider: IntegrationInfo) {
+        val library = session
+        if (library == null || mutable.value.working) return
+        mutable.update {
+            it.copy(
+                working = true,
+                customProvider =
+                    CustomProviderUi(
+                        stage = CustomProviderStage.Removing,
+                        mode = CustomProviderMode.Remove,
+                        name = provider.name,
+                        providerId = provider.id,
+                    ),
+            )
+        }
+        customProviderStep { library.removeCustomProvider(provider.id) }
+    }
+
+    override fun restartForProvider(id: String) {
+        val library = session
+        val ui = mutable.value.customProvider
+        val expectGone = ui.mode == CustomProviderMode.Remove
+        val name =
+            ui.name.ifEmpty {
+                val inventory = mutable.value.inventory
+                inventory.declared.firstOrNull { it.id == id }?.name
+                    ?: inventory.providers.firstOrNull { it.id == id }?.name.orEmpty()
+            }
         if (library != null && !mutable.value.working && id.isNotEmpty()) {
             mutable.update {
                 it.copy(
                     working = true,
                     customProvider =
-                        it.customProvider.copy(stage = CustomProviderStage.Restarting, refusal = null, detail = null),
+                        ui.copy(
+                            stage = CustomProviderStage.Restarting,
+                            name = name,
+                            refusal = null,
+                            detail = null,
+                        ),
                 )
             }
-            customProviderStep { library.restartForCustomProvider(id) }
+            customProviderStep { library.restartForCustomProvider(id, expectGone = expectGone) }
         }
     }
 

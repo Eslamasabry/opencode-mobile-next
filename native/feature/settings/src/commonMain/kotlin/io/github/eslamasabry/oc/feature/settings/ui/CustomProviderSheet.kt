@@ -184,7 +184,7 @@ private fun CustomProviderResult(state: LibraryUi, ui: CustomProviderUi, actions
     val restart =
         KitAction(
             stringResource(Res.string.nlibCustomRestart),
-            actions::restartForProvider,
+            { actions.restartForProvider(ui.providerId) },
             working = ui.stage == CustomProviderStage.Restarting,
         )
     val addKey =

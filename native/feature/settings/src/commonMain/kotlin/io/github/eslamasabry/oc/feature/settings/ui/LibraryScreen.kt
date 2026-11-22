@@ -639,6 +639,7 @@ private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: Lib
                 }
             LibrarySheet.Registry -> LibraryRegistrySheet(state, actions)
             LibrarySheet.AddProvider -> CustomProviderSheet(state, actions)
+            is LibrarySheet.EditProvider -> Unit
             is LibrarySheet.RegistryNode ->
                 KitSheet(
                     true,
