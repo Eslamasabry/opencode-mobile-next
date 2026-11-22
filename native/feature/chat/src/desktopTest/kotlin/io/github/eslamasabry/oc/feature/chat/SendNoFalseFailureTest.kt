@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.Allow
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -60,6 +61,26 @@ import kotlinx.collections.immutable.toImmutableList
 @OptIn(ExperimentalTestApi::class)
 class SendNoFalseFailureTest {
     private val sid = Ref.sessionId.raw
+
+    private val rowArrives = "a row arrives and pushes the content: intended"
+
+    private val twoPrompts =
+        setOf(
+            Allow.jump("kit-prompt-bubble", rowArrives),
+            Allow.jump("second ask", rowArrives),
+            Allow.jump("first ask", rowArrives),
+            Allow.first("second ask", rowArrives),
+            Allow.first("first ask", rowArrives),
+        )
+
+    private val noticeAndPrompt =
+        setOf(
+            Allow.jump("kit-prompt-bubble", rowArrives),
+            Allow.jump("second ask", rowArrives),
+            Allow.first("second ask", rowArrives),
+            Allow.jump("Instructions updated", rowArrives),
+            Allow.first("Instructions updated", rowArrives),
+        )
 
     private object FixedClock : Clock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
@@ -147,7 +168,7 @@ class SendNoFalseFailureTest {
     }
 
     @Test
-    fun `B-CHAT-320 a second send shows no failure card before its run starts`() = kitUiTest {
+    fun `B-CHAT-320 a second send shows no failure card before its run starts`() = kitUiTest(allow = twoPrompts) {
         val k = endedChat(RunOutcome.Idle)
         var facts by mutableStateOf(present(k))
         show(sends()) { facts }
@@ -163,7 +184,7 @@ class SendNoFalseFailureTest {
     }
 
     @Test
-    fun `B-CHAT-321 a run that ends with no reply shows the card and keeps it`() = kitUiTest {
+    fun `B-CHAT-321 a run that ends with no reply shows the card and keeps it`() = kitUiTest(allow = twoPrompts) {
         val k = endedChat(RunOutcome.Idle)
         var facts by mutableStateOf(present(k))
         show(sends()) { facts }
@@ -181,7 +202,8 @@ class SendNoFalseFailureTest {
     }
 
     @Test
-    fun `B-CHAT-322 a send after a stopped run shows no Stopped line before its run starts`() = kitUiTest {
+    fun `B-CHAT-322 a send after a stopped run shows no Stopped line before its run starts`() =
+        kitUiTest(allow = twoPrompts) {
         val k = endedChat(RunOutcome.Interrupted(InterruptReason.User))
         var facts by mutableStateOf(present(k))
         show(sends()) { facts }
@@ -203,7 +225,8 @@ class SendNoFalseFailureTest {
     }
 
     @Test
-    fun `B-CHAT-323 the live instructions notice reads Instructions updated, never Server message`() = kitUiTest {
+    fun `B-CHAT-323 the live instructions notice reads Instructions updated, never Server message`() =
+        kitUiTest(allow = noticeAndPrompt) {
         val key = "notice:msg_x/notice-msg_x"
         val part =
             Part(

@@ -212,7 +212,7 @@ internal fun transcriptReading(
                 endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
             else if (prompt != null && !command && !compact && serverStop != null && said)
                 endNotes[turn.turnId] = serverStop
-            if (!declined && !cutOff && prompt != null && !command && !compact && !said) {
+            if (idleSaid && !declined && !cutOff && prompt != null && !command && !compact && !said) {
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {
