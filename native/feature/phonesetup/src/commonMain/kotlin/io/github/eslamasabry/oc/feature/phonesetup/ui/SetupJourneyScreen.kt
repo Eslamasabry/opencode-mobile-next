@@ -2,18 +2,25 @@ package io.github.eslamasabry.oc.feature.phonesetup.ui
 
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.style.TextAlign
+import io.github.eslamasabry.oc.ui.design.layout.Layout
+import io.github.eslamasabry.oc.ui.kit.setup.*
+import androidx.compose.foundation.rememberScrollState
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.RingCostPart
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupRingCost
+import io.github.eslamasabry.oc.engine.runtime.setup.*
+import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
-import androidx.compose.ui.text.style.TextAlign
-import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.kit.setup.*
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
@@ -27,18 +34,15 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.BatteryOpen
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.BatteryStep
-import io.github.eslamasabry.oc.feature.phonesetup.presentation.RingCostPart
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupMaker
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SystemKill
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SystemKillMessage
-import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupRingCost
 import androidx.compose.foundation.layout.Arrangement
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
@@ -52,7 +56,6 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.core.common.text.Numbers
-import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyActions
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -68,12 +71,9 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
-import io.github.eslamasabry.oc.ui.kit.state.*
-import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
@@ -112,6 +112,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         }
     val wide = LocalKitWindow.current.cls.isWide
     val wideJob = wide && !state.checking && journeyBody(state) == JourneyBody.Job
+    val beforeJob = idle || state.customizing || state.checking
     val barTitle = journeyTitle(state)
     KitScreen(
         topBar = {
@@ -124,7 +125,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         },
         width = if (wideJob) KitScreenWidth.Full else KitScreenWidth.Reading,
         loading = state.checking,
-        bottom = if (idle || state.customizing || state.checking || wideJob) null else ({ JobAction(state, actions) }),
+        bottom = if (beforeJob || wideJob) null else ({ JobAction(state, actions) }),
         edges = KitScreenEdges.Bleed,
     ) {
         if (state.checking) {
@@ -557,245 +558,11 @@ private fun Job(
         remember(progress.jobId ?: rows.joinToString { it.id }) {
             progress.jobId?.let { journeyMemory(it) } ?: JourneyProgressMemory()
         }
-    fun finished(row: ComponentProgress) =
-        row.state == ComponentState.Done || row.state == ComponentState.Skipped
-    val done = rows.count(::finished)
-    var current =
-        rows
-            .indexOfFirst {
-                it.state == ComponentState.Running ||
-                    it.state == ComponentState.Checking ||
-                    it.state == ComponentState.Failed
-            }
-            .let { found ->
-                if (found >= 0) found
-                else rows.indexOfFirst { it.id == progress.current && !finished(it) }
-            }
-    val halted = progress.canContinue
-    if (current < 0 && halted) current = rows.indexOfFirst { !finished(it) }
-    val row = rows.getOrNull(current)
-    val checking =
-        rows.isNotEmpty() &&
-            rows.all { it.state == ComponentState.Checking || finished(it) } &&
-            rows.any { it.state == ComponentState.Checking }
-    // One bar for the whole setup: it only moves forward across steps and stages. A step's own download arc used to
-    // be the ring, so it read 100% when the download ended and 29% when the unpacking began.
-    val measuredSteps = if (!halted && memory.measured(row) != null) memory.overall(progress) else null
-    // When the downloads have a known size the ring follows the bytes, so it and the line under it are one measure.
-    val measured = measuredSteps?.let { steps -> memory.followBytes(rows, state.bytes) ?: steps }
-    val eta = memory.eta(progress, state.options?.components.orEmpty())
-    val subject =
-        row?.let { currentRow ->
-                if (currentRow.id == SetupComponentIds.ESSENTIALS)
-                    stringResource(Res.string.phoneSetupEssentialsShort)
-                else
-                    itemTitle(
-                        currentRow.id,
-                        state.options
-                            ?.components
-                            ?.firstOrNull { it.id == currentRow.id }
-                            ?.shortTitle ?: currentRow.id,
-                    )
-            }
-            .orEmpty()
-    val unpacking = stringResource(Res.string.phoneSetupStageUnpackingLinux)
-    val title =
-        when (progress.state) {
-            SetupState.Done -> stringResource(Res.string.setupProgressViewDone)
-            SetupState.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
-            SetupState.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
-            SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingPausedTitle)
-            else ->
-                when {
-                    checking -> stringResource(Res.string.phoneSetupRingChecking)
-                    row == null || row.state == ComponentState.Pending ->
-                        stringResource(Res.string.setupProgressViewGettingStarted)
-                    row.id == SetupComponentIds.START ->
-                        stringResource(Res.string.phoneSetupStageStarting)
-                    row.stage?.let {
-                        it == unpacking ||
-                            Regex("unpack|extract", RegexOption.IGNORE_CASE).containsMatchIn(it)
-                    } == true -> stringResource(Res.string.phoneSetupRingUnpacking, subject)
-                    ((row.bytesTotal ?: 0) > (row.bytesDone ?: 0)) ||
-                        row.stage?.let {
-                            Regex("download|fetch", RegexOption.IGNORE_CASE).containsMatchIn(it)
-                        } == true -> stringResource(Res.string.phoneSetupRingDownloading, subject)
-                    else -> stringResource(Res.string.phoneSetupRingInstalling, subject)
-                }
-        }
-    val note =
-        when (progress.state) {
-            // Flutter: the promise of a notification only when the app may post one.
-            SetupState.Running,
-            SetupState.Idle ->
-                stringResource(
-                    if (state.canNotify) Res.string.phoneSetupRingSafeToLeave else Res.string.phoneSetupRingSafeToLeaveQuiet
-                )
-            SetupState.Failed,
-            SetupState.Interrupted ->
-                state.systemKill?.let { killWords(it) }
-                    ?: if (progress.state == SetupState.Failed) journeyFailure(state)
-                    else stringResource(Res.string.phoneSetupRingStoppedNote)
-            SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
-            SetupState.Done -> null
-        }
-    // The download as the home page promised it: all the steps' bytes, not this step's own (0 of 30 MB for a
-    // download the home page called 208 MB).
-    val wholeBytes = if (measured != null && row?.bytesDone != null) memory.bytes(rows, state.bytes) else null
-    val caption =
-        if (wholeBytes != null) {
-            val (received, total) = SetupProgressRules.formatBytePair(wholeBytes.first, wholeBytes.second)
-            stringResource(
-                Res.string.setupProgressViewBytes,
-                "\u2066$received\u2069",
-                "\u2066$total\u2069",
-            )
-        } else null
     val ringBody: @Composable () -> Unit = {
-        val topGap = if (wide) Space.S5.dp else Space.S6.dp
-        Column(
-            Modifier.fillMaxWidth()
-                .testTag("setup-progress-body")
-                .then(if (wide) Modifier else Modifier.padding(horizontal = Space.S5.dp, vertical = Space.S6.dp)),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            KitProgressRing(
-                title,
-                stringResource(Res.string.setupProgressViewOverallLabel),
-                value = measured,
-                done = done,
-                of = rows.size,
-                finished = progress.state == SetupState.Done,
-                halted = halted,
-                caption = caption,
-                trail =
-                    rows.mapIndexed { index, step ->
-                        when {
-                            finished(step) -> KitTrailMark.Done
-                            index == current && !checking -> KitTrailMark.Current
-                            else -> KitTrailMark.Waiting
-                        }
-                    },
-            )
-            val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
-            val costParts =
-                if (!running) emptyList()
-                else
-                    SetupRingCost.parts(
-                        eta,
-                        lastStep = rows.none { it.state == ComponentState.Pending },
-                        downloading = caption != null,
-                        transport = state.transport,
-                    )
-            if (costParts.isNotEmpty()) {
-                Spacer(Modifier.height(topGap))
-                // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
-                val cost =
-                    costParts
-                        .map { part ->
-                            when (part) {
-                                RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
-                                is RingCostPart.Minutes ->
-                                    org.jetbrains.compose.resources.pluralStringResource(
-                                        Res.plurals.phoneSetupRingMinutesLeft,
-                                        part.minutes,
-                                        part.minutes,
-                                    )
-                                RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
-                                RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
-                            }
-                        }
-                        .joinToString(" · ")
-                KitText(
-                    cost,
-                    Modifier.testTag("phone-setup-progress-cost"),
-                    role = TypeRole.RowTitle,
-                    tone = TextTone.Secondary,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            val clock = progress.stepElapsedSeconds
-            if (running && clock != null) {
-                // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
-                Spacer(Modifier.height(if (costParts.isEmpty()) topGap else Space.S2.dp))
-                val doing = progress.activity?.let { activityWords(it) }
-                // The clock is the current step's own: the words say so.
-                val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
-                KitText(
-                    if (doing != null) {
-                        stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
-                    } else {
-                        stepClock
-                    },
-                    Modifier.testTag("phone-setup-progress-heartbeat"),
-                    role = TypeRole.RowTitle,
-                    tone = TextTone.Secondary,
-                    textAlign = TextAlign.Center,
-                )
-                if ((progress.quietSeconds ?: 0) >= 30) {
-                    Spacer(Modifier.height(Space.S1.dp))
-                    KitText(
-                        stringResource(Res.string.setupHeartbeatQuiet),
-                        role = TypeRole.Secondary,
-                        tone = TextTone.Tertiary,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-            if (note != null) {
-                Spacer(Modifier.height(if (costParts.isEmpty() && clock == null) topGap else Space.S2.dp))
-                KitText(
-                    note,
-                    if (wide) Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp) else Modifier.widthIn(max = 320.dp),
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Tertiary,
-                    textAlign = TextAlign.Center,
-                ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
-            }
-            if (!wide) {
-                Spacer(Modifier.height(Space.S3.dp))
-                KitButton(
-                    stringResource(Res.string.kitDetails),
-                    { detailsOpen = true },
-                    role = KitButtonRole.Tertiary,
-                )
-            }
-            BatteryCardNotice(state, actions)
-            if (
-                state.failure != null &&
-                    state.confirmStop == null &&
-                    !state.confirmRemoveVoice
-            ) {
-                if (wide) Spacer(Modifier.height(Space.S3.dp))
-                KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
-            }
-            if (wide) {
-                Box(Modifier.padding(top = Space.S5.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
-                    JobAction(state, actions)
-                }
-            }
-        }
+        RingBodyPane(state, actions, memory, wide, onOpenDetails = { detailsOpen = true })
     }
     if (wide) {
-        val gutter = LocalKitTokens.current.gutter.dp
-        WideTwoColumnFrame(
-            pageTitle = pageTitle,
-            verticalAlignment = Alignment.CenterVertically,
-            viewportModifier = Modifier.padding(horizontal = gutter).testTag("setup-progress-viewport"),
-            start = ringBody,
-            end = {
-                WidePartsPanel(
-                    items = wideJourneyParts(state, rows),
-                    showDoneCount = true,
-                    showStoppedNote =
-                        progress.canContinue &&
-                            progress.state == SetupState.Failed &&
-                            state.systemKill == null &&
-                            !nodeCannotRun(progress),
-                    details = state.details,
-                )
-            },
-        )
+        WideJobPane(state, pageTitle, ringBody)
         return
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -819,89 +586,76 @@ private fun Job(
             }
         }
     }
-    KitSheet(
-        visible = detailsOpen,
-        onDismissRequest = { detailsOpen = false },
-        title = stringResource(Res.string.phoneSetupRingDetailsTitle),
-    ) {
-        Column(Modifier.fillMaxWidth()) {
-            rows.forEachIndexed { index, component ->
-                val measured =
-                    if ((component.bytesTotal ?: 0) > 0 && component.bytesDone != null) {
-                        val (received, total) =
-                            SetupProgressRules.formatBytePair(
-                                component.bytesDone!!,
-                                component.bytesTotal!!,
-                            )
-                        stringResource(Res.string.setupProgressViewBytes, received, total)
-                    } else
-                        component.percent?.let {
-                            stringResource(
-                                Res.string.setupProgressViewPercent,
-                                it.coerceIn(0.0, 100.0).toInt(),
-                            )
-                        }
-                val stage =
-                    component.stage?.let { setupMessageWords(it) }
-                        ?: if (component.state == ComponentState.Checking)
-                            stringResource(Res.string.setupProgressViewChecking)
-                        else null
-                val supporting =
-                    when (component.state) {
-                        ComponentState.Done,
-                        ComponentState.Skipped -> component.version
-                        ComponentState.Failed -> runtimeProblem(component.error ?: progress.error)
-                        ComponentState.Pending -> null
-                        else ->
-                            when {
-                                stage != null && measured != null ->
-                                    stringResource(
-                                        Res.string.setupProgressViewStageMeasured,
-                                        stage,
-                                        measured,
-                                    )
-                                else ->
-                                    measured
-                                        ?: stage
-                                        ?: stringResource(Res.string.setupProgressViewStarting)
-                            }
-                    }
-                // A download whose share is known: the Downloading mark in the working arc's place.
-                val running = component.state == ComponentState.Running
-                val share = component.fraction?.toFloat()?.coerceIn(0f, 1f)?.takeIf { running }
-                KitWaitMarkHere(KitWaitKind.Downloading.takeIf { share != null }, share ?: 0f) {
-                KitChecklistStep(
-                    itemTitle(
-                        component.id,
-                        state.options?.components?.firstOrNull { it.id == component.id }?.title
-                            ?: component.id,
-                    ),
-                    state =
-                        when (component.state) {
-                            ComponentState.Done,
-                            ComponentState.Skipped -> KitStepState.Done
-                            ComponentState.Running,
-                            ComponentState.Checking -> KitStepState.Working
-                            ComponentState.Failed -> KitStepState.Failed
-                            ComponentState.Pending -> KitStepState.Waiting
-                        },
-                    index = index + 1,
-                    total = rows.size,
-                    supporting = supporting,
-                )
-                }
-            }
-            KitDetailsFold(
-                label = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.kitCopyDetails),
-                text = state.details,
+    JobDetailsSheet(state, rows, progress, detailsOpen) { detailsOpen = false }
+}
+
+/** The wide two-column frame of the setup job: the ring at the start, the parts panel at the end. */
+@Composable
+private fun WideJobPane(
+    state: SetupJourneyUi,
+    pageTitle: String,
+    ringBody: @Composable () -> Unit,
+) {
+    val progress = state.progress
+    val rows =
+        progress.components.ifEmpty {
+            state.install.map { ComponentProgress(it.id, ComponentState.Pending) }
+        }
+    val gutter = LocalKitTokens.current.gutter.dp
+    WideTwoColumnFrame(
+        pageTitle = pageTitle,
+        verticalAlignment = Alignment.CenterVertically,
+        viewportModifier = Modifier.padding(horizontal = gutter).testTag("setup-progress-viewport"),
+        start = ringBody,
+        end = {
+            WidePartsPanel(
+                items = wideJourneyParts(state, rows),
+                showDoneCount = true,
+                showStoppedNote =
+                    progress.canContinue &&
+                        progress.state == SetupState.Failed &&
+                        state.systemKill == null &&
+                        !nodeCannotRun(progress),
+                details = state.details,
             )
+        },
+    )
+}
+
+/** The cards under the ring's lines: the details fold (narrow), the battery note, failure, and the wide action. */
+@Composable
+internal fun RingTailCards(
+    state: SetupJourneyUi,
+    actions: SetupJourneyActions,
+    wide: Boolean,
+    onOpenDetails: () -> Unit,
+) {
+    if (!wide) {
+        Spacer(Modifier.height(Space.S3.dp))
+        KitButton(
+            stringResource(Res.string.kitDetails),
+            onOpenDetails,
+            role = KitButtonRole.Tertiary,
+        )
+    }
+    BatteryCardNotice(state, actions)
+    if (
+        state.failure != null &&
+            state.confirmStop == null &&
+            !state.confirmRemoveVoice
+    ) {
+        if (wide) Spacer(Modifier.height(Space.S3.dp))
+        KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
+    }
+    if (wide) {
+        Box(Modifier.padding(top = Space.S5.dp).widthIn(max = Layout.CONTROL_MAX_WIDTH.dp)) {
+            JobAction(state, actions)
         }
     }
 }
 
 @Composable
-private fun wideJourneyParts(
+internal fun wideJourneyParts(
     state: SetupJourneyUi,
     rows: List<ComponentProgress>,
 ): List<WidePartItem> =
@@ -937,7 +691,7 @@ private fun wideJourneyParts(
 private const val JOURNEY_PERCENT_MAX = 100.0
 
 @Composable
-private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
+internal fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
     // Node.js cannot run on this phone (#117): Continue would only fail again, so the way on is a computer.
     val cannotRun = nodeCannotRun(state.progress)
     KitReveal(cannotRun) {
@@ -1053,7 +807,7 @@ private fun ReadyProject(state: SetupJourneyUi, actions: SetupJourneyActions) {
 }
 
 @Composable
-private fun activityWords(activity: SetupActivity): String =
+internal fun activityWords(activity: SetupActivity): String =
     stringResource(
         when (activity) {
             SetupActivity.Downloading -> Res.string.setupActivityDownloading
@@ -1185,41 +939,8 @@ internal class JourneyProgressMemory {
     }
 }
 
-/** The job answer uses Flutter's ownership/network/known-reason/stage fallback order. */
 @Composable
-private fun journeyFailure(state: SetupJourneyUi): String {
-    val progress = state.progress
-    val failed = progress.components.filter { it.state == ComponentState.Failed }
-    val errors = listOfNotNull(progress.error) + failed.mapNotNull { it.error }
-    if (SetupError.OwnershipUnknown in errors)
-        return stringResource(Res.string.inAppServerOwnershipRecoveryBody)
-    if (errors.any { it == SetupError.NoInternet || it is SetupError.Offline })
-        return stringResource(Res.string.setupProgressViewNoInternet)
-    val row = failed.firstOrNull()
-    val error = row?.error ?: progress.error
-    if (
-        error != null &&
-            error !in setOf(SetupError.Unexpected, SetupError.HostRefused, SetupError.HostMismatch)
-    )
-        return runtimeProblem(error)
-    // F: lib/ui/widgets/setup_progress_view.dart:144-167
-    if (row != null) {
-        return row.stage?.let {
-            stringResource(Res.string.setupProgressViewFailedDuring, setupMessageWords(it))
-        } ?: stringResource(Res.string.setupProgressViewFailedStep)
-    }
-    val current =
-        progress.current ?: return stringResource(Res.string.setupProgressViewFailedUnknown)
-    val component = state.options?.components?.firstOrNull { it.id == current }
-    val title =
-        if (current == SetupComponentIds.ESSENTIALS)
-            stringResource(Res.string.phoneSetupEssentialsShort)
-        else itemTitle(current, component?.shortTitle ?: current)
-    return stringResource(Res.string.setupProgressViewFailedAt, title)
-}
-
-@Composable
-private fun killWords(kill: SystemKill): String =
+internal fun killWords(kill: SystemKill): String =
     stringResource(
         when (kill.message) {
             SystemKillMessage.Closed -> Res.string.setupKilled
@@ -1232,7 +953,7 @@ private fun killWords(kill: SystemKill): String =
  * the buttons open the app's settings page and, where this maker has one, its Autostart or battery screen.
  */
 @Composable
-private fun BatteryCardNotice(state: SetupJourneyUi, actions: SetupJourneyActions) {
+internal fun BatteryCardNotice(state: SetupJourneyUi, actions: SetupJourneyActions) {
     val card = state.batteryCard ?: return
     val steps =
         card.steps.map {
@@ -1269,30 +990,6 @@ private fun BatteryCardNotice(state: SetupJourneyUi, actions: SetupJourneyAction
         actions = listOfNotNull(app, maker),
     )
 }
-
-@Composable
-private fun runtimeProblem(error: SetupError?): String =
-    when (error) {
-        is SetupError.NoSpace -> stringResource(Res.string.phoneSetupErrorNoSpace, error.title)
-        is SetupError.Offline -> stringResource(Res.string.phoneSetupErrorOffline, error.title)
-        is SetupError.Checksum -> stringResource(Res.string.phoneSetupErrorChecksum, error.title)
-        is SetupError.Install -> stringResource(Res.string.phoneSetupErrorInstall, error.title)
-        SetupError.NoInternet -> stringResource(Res.string.phoneSetupErrorNoInternet)
-        SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
-        is SetupError.PortBusy -> stringResource(Res.string.phoneServerPortBusy, error.port.toString())
-        SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
-        SetupError.OwnershipUnknown -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
-        SetupError.StatusUnreadable -> stringResource(Res.string.setupRbStatusUnreadable)
-        SetupError.ToolsUncheckable -> stringResource(Res.string.setupRbToolsUncheckable)
-        SetupError.PersistenceFailure -> stringResource(Res.string.linuxSetupSavedFailed)
-        SetupError.Interrupted -> stringResource(Res.string.phoneSetupErrorInterrupted)
-        is SetupError.StepTimedOut -> stringResource(Res.string.setupStepTimedOut, error.title)
-        SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
-        SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
-        SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
-        SetupError.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
-        else -> stringResource(Res.string.setupProgressViewFailedUnknown)
-    }
 
 @Composable
 internal fun journeySize(bytes: Long): String =

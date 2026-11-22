@@ -53,31 +53,31 @@ import kotlinx.collections.immutable.persistentListOf
 @OptIn(ExperimentalTestApi::class)
 class BigScreenPhoneSetupRenders {
     private object NoActions : PhoneSetupActions {
-        override fun back() {}
-        override fun setUp() {}
-        override fun continueSetup() {}
-        override fun askStop() {}
-        override fun keepGoing() {}
-        override fun stop() {}
-        override fun openStorage() {}
-        override fun done() {}
+        override fun back() = Unit
+        override fun setUp() = Unit
+        override fun continueSetup() = Unit
+        override fun askStop() = Unit
+        override fun keepGoing() = Unit
+        override fun stop() = Unit
+        override fun openStorage() = Unit
+        override fun done() = Unit
     }
 
     private object NoJourneyActions : SetupJourneyActions {
-        override fun back() {}
-        override fun retry() {}
-        override fun toggle(id: String, checked: Boolean) {}
-        override fun accept() {}
-        override fun start() {}
-        override fun customize() {}
-        override fun continueSetup() {}
-        override fun askStop() {}
-        override fun cancelConfirm() {}
-        override fun confirmStop() {}
-        override fun askRemoveVoice() {}
-        override fun confirmRemoveVoice() {}
-        override fun openStorage() {}
-        override fun done() {}
+        override fun back() = Unit
+        override fun retry() = Unit
+        override fun toggle(id: String, checked: Boolean) = Unit
+        override fun accept() = Unit
+        override fun start() = Unit
+        override fun customize() = Unit
+        override fun continueSetup() = Unit
+        override fun askStop() = Unit
+        override fun cancelConfirm() = Unit
+        override fun confirmStop() = Unit
+        override fun askRemoveVoice() = Unit
+        override fun confirmRemoveVoice() = Unit
+        override fun openStorage() = Unit
+        override fun done() = Unit
     }
 
     private class Shot(val key: String, val w: Int, val h: Int, val scale: Float, val suffix: String)
@@ -120,9 +120,16 @@ class BigScreenPhoneSetupRenders {
                     waitForIdle()
                     after()
                     waitForIdle()
-                    ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$name-${s.key}${s.suffix}.png"))
+                    ImageIO.write(
+                        onRoot().captureToImage().toAwtImage(),
+                        "png", File(out, "$name-${s.key}${s.suffix}.png")
+                    )
                 }
-            }.onFailure { println("RENDERFAIL $name ${s.key}${s.suffix} ${it::class.simpleName}: ${it.message?.take(200)}") }
+            }.onFailure {
+                println(
+                    "RENDERFAIL $name ${s.key}${s.suffix} ${it::class.simpleName}: ${it.message?.take(200)}"
+                )
+            }
         }
     }
 
@@ -136,10 +143,22 @@ class BigScreenPhoneSetupRenders {
 
     private val journeyRegistry =
         listOf(
-            JourneySetupComponent("linux", "Linux base", "Linux base", "true", "", required = true, estimatedSeconds = 20, downloadBytes = 30_000_000),
-            JourneySetupComponent("essentials", "Git, SSH and certificates", "Git and SSH", "true", "true", dependsOn = listOf("linux"), required = true, estimatedSeconds = 40, downloadBytes = 45_000_000),
-            JourneySetupComponent("node", "Node.js", "Node.js", "true", "true", dependsOn = listOf("essentials"), required = true, estimatedSeconds = 40, downloadBytes = 58_000_000),
-            JourneySetupComponent("opencode", "OpenCode", "OpenCode", "true", "true", dependsOn = listOf("node"), required = true, estimatedSeconds = 90, downloadBytes = 75_000_000),
+            JourneySetupComponent(
+                "linux", "Linux base", "Linux base", "true", "", required = true, estimatedSeconds = 20,
+                downloadBytes = 30_000_000,
+            ),
+            JourneySetupComponent(
+                "essentials", "Git, SSH and certificates", "Git and SSH", "true", "true", dependsOn = listOf("linux"),
+                required = true, estimatedSeconds = 40, downloadBytes = 45_000_000,
+            ),
+            JourneySetupComponent(
+                "node", "Node.js", "Node.js", "true", "true", dependsOn = listOf("essentials"), required = true,
+                estimatedSeconds = 40, downloadBytes = 58_000_000,
+            ),
+            JourneySetupComponent(
+                "opencode", "OpenCode", "OpenCode", "true", "true", dependsOn = listOf("node"), required = true,
+                estimatedSeconds = 90, downloadBytes = 75_000_000,
+            ),
         )
 
     private val journeyOptions =
@@ -162,71 +181,19 @@ class BigScreenPhoneSetupRenders {
                 NoActions,
             )
         }
-        val running =
-            SetupProgress(
-                state = SetupState.Running,
-                components =
-                    listOf(
-                        ComponentProgress("linux", ComponentState.Done),
-                        ComponentProgress("node", ComponentState.Running, stage = "Installing Node.js"),
-                    ),
-                overall = 0.42,
-                current = "node",
-                jobId = "setup-1",
-                etaSeconds = 240,
-            )
+        val running = renderRunning()
         shoot("phonesetup-waiting") {
             PhoneSetupScreen(PhoneSetupUi(checking = false, items = items, progress = running), NoActions)
         }
-        val failed =
-            SetupProgress(
-                state = SetupState.Failed,
-                components =
-                    listOf(
-                        ComponentProgress("linux", ComponentState.Done),
-                        ComponentProgress("opencode", ComponentState.Failed),
-                    ),
-                overall = 0.6,
-                error = SetupProblem.Offline("OpenCode"),
-                logTail = "curl: (6) Could not resolve host",
-                jobId = "setup-1",
-            )
+        val failed = renderFailed()
         shoot("phonesetup-failed") {
             PhoneSetupScreen(PhoneSetupUi(checking = false, items = items, progress = failed), NoActions)
         }
-        val done =
-            SetupProgress(
-                state = SetupState.Done,
-                components =
-                    listOf(
-                        ComponentProgress("linux", ComponentState.Done),
-                        ComponentProgress("essentials", ComponentState.Done),
-                        ComponentProgress("node", ComponentState.Done),
-                        ComponentProgress("opencode", ComponentState.Done),
-                    ),
-                overall = 1.0,
-                jobId = "setup-1",
-            )
+        val done = renderDone()
         shoot("phonesetup-done") {
             PhoneSetupScreen(PhoneSetupUi(checking = false, items = items, progress = done), NoActions)
         }
-        val journeyRunning =
-            JourneySetupProgress(
-                state = JourneySetupState.Running,
-                components =
-                    listOf(
-                        JourneyComponentProgress("linux", JourneyComponentState.Done, bytesDone = 30_000_000, bytesTotal = 30_000_000),
-                        JourneyComponentProgress("essentials", JourneyComponentState.Done, bytesDone = 45_000_000, bytesTotal = 45_000_000),
-                        JourneyComponentProgress("node", JourneyComponentState.Running, stage = "Downloading Node.js", bytesDone = 24_000_000, bytesTotal = 58_000_000),
-                        JourneyComponentProgress("opencode", JourneyComponentState.Pending),
-                    ),
-                overall = 0.48,
-                current = "node",
-                etaSeconds = 180,
-                jobId = "journey-render-1",
-                activity = SetupActivity.Downloading,
-                stepElapsedSeconds = 18,
-            )
+        val journeyRunning = renderJourneyRunning()
         shoot("phonesetup-journey-waiting") {
             SetupJourneyScreen(
                 SetupJourneyUi(
@@ -238,21 +205,7 @@ class BigScreenPhoneSetupRenders {
                 NoJourneyActions,
             )
         }
-        val journeyFailed =
-            JourneySetupProgress(
-                state = JourneySetupState.Failed,
-                components =
-                    listOf(
-                        JourneyComponentProgress("linux", JourneyComponentState.Done),
-                        JourneyComponentProgress("essentials", JourneyComponentState.Done),
-                        JourneyComponentProgress("node", JourneyComponentState.Failed, error = SetupError.Offline("Node.js")),
-                        JourneyComponentProgress("opencode", JourneyComponentState.Pending),
-                    ),
-                overall = 0.48,
-                current = "node",
-                error = SetupError.Offline("Node.js"),
-                jobId = "journey-render-2",
-            )
+        val journeyFailed = renderJourneyFailed()
         shoot("phonesetup-journey-failed") {
             SetupJourneyScreen(
                 SetupJourneyUi(
@@ -264,4 +217,90 @@ class BigScreenPhoneSetupRenders {
             )
         }
     }
+
+    private fun renderRunning(): SetupProgress =
+        SetupProgress(
+            state = SetupState.Running,
+            components =
+                listOf(
+                    ComponentProgress("linux", ComponentState.Done),
+                    ComponentProgress("node", ComponentState.Running, stage = "Installing Node.js"),
+                ),
+            overall = 0.42,
+            current = "node",
+            jobId = "setup-1",
+            etaSeconds = 240,
+        )
+
+    private fun renderFailed(): SetupProgress =
+        SetupProgress(
+            state = SetupState.Failed,
+            components =
+                listOf(
+                    ComponentProgress("linux", ComponentState.Done),
+                    ComponentProgress("opencode", ComponentState.Failed),
+                ),
+            overall = 0.6,
+            error = SetupProblem.Offline("OpenCode"),
+            logTail = "curl: (6) Could not resolve host",
+            jobId = "setup-1",
+        )
+
+    private fun renderDone(): SetupProgress =
+        SetupProgress(
+            state = SetupState.Done,
+            components =
+                listOf(
+                    ComponentProgress("linux", ComponentState.Done),
+                    ComponentProgress("essentials", ComponentState.Done),
+                    ComponentProgress("node", ComponentState.Done),
+                    ComponentProgress("opencode", ComponentState.Done),
+                ),
+            overall = 1.0,
+            jobId = "setup-1",
+        )
+
+    private fun renderJourneyRunning(): JourneySetupProgress =
+        JourneySetupProgress(
+            state = JourneySetupState.Running,
+            components =
+                listOf(
+                    JourneyComponentProgress(
+                        "linux", JourneyComponentState.Done, bytesDone = 30_000_000, bytesTotal = 30_000_000,
+                    ),
+                    JourneyComponentProgress(
+                        "essentials", JourneyComponentState.Done, bytesDone = 45_000_000, bytesTotal = 45_000_000,
+                    ),
+                    JourneyComponentProgress(
+                        "node", JourneyComponentState.Running, stage = "Downloading Node.js",
+                        bytesDone = 24_000_000, bytesTotal = 58_000_000,
+                    ),
+                    JourneyComponentProgress("opencode", JourneyComponentState.Pending),
+                ),
+            overall = 0.48,
+            current = "node",
+            etaSeconds = 180,
+            jobId = "journey-render-1",
+            activity = SetupActivity.Downloading,
+            stepElapsedSeconds = 18,
+        )
+
+    private fun renderJourneyFailed(): JourneySetupProgress =
+        JourneySetupProgress(
+            state = JourneySetupState.Failed,
+            components =
+                listOf(
+                    JourneyComponentProgress("linux", JourneyComponentState.Done),
+                    JourneyComponentProgress("essentials", JourneyComponentState.Done),
+                    JourneyComponentProgress(
+                        "node", JourneyComponentState.Failed, error = SetupError.Offline("Node.js"),
+                    ),
+                    JourneyComponentProgress("opencode", JourneyComponentState.Pending),
+                ),
+            overall = 0.48,
+            current = "node",
+            error = SetupError.Offline("Node.js"),
+            jobId = "journey-render-2",
+        )
+
 }

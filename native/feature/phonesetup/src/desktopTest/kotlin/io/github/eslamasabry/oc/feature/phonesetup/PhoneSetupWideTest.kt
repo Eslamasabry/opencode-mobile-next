@@ -68,31 +68,31 @@ class PhoneSetupWideTest {
     }
 
     private object NoActions : PhoneSetupActions {
-        override fun back() {}
-        override fun setUp() {}
-        override fun continueSetup() {}
-        override fun askStop() {}
-        override fun keepGoing() {}
-        override fun stop() {}
-        override fun openStorage() {}
-        override fun done() {}
+        override fun back() = Unit
+        override fun setUp() = Unit
+        override fun continueSetup() = Unit
+        override fun askStop() = Unit
+        override fun keepGoing() = Unit
+        override fun stop() = Unit
+        override fun openStorage() = Unit
+        override fun done() = Unit
     }
 
     private object NoJourneyActions : SetupJourneyActions {
-        override fun back() {}
-        override fun retry() {}
-        override fun toggle(id: String, checked: Boolean) {}
-        override fun accept() {}
-        override fun start() {}
-        override fun customize() {}
-        override fun continueSetup() {}
-        override fun askStop() {}
-        override fun cancelConfirm() {}
-        override fun confirmStop() {}
-        override fun askRemoveVoice() {}
-        override fun confirmRemoveVoice() {}
-        override fun openStorage() {}
-        override fun done() {}
+        override fun back() = Unit
+        override fun retry() = Unit
+        override fun toggle(id: String, checked: Boolean) = Unit
+        override fun accept() = Unit
+        override fun start() = Unit
+        override fun customize() = Unit
+        override fun continueSetup() = Unit
+        override fun askStop() = Unit
+        override fun cancelConfirm() = Unit
+        override fun confirmStop() = Unit
+        override fun askRemoveVoice() = Unit
+        override fun confirmRemoveVoice() = Unit
+        override fun openStorage() = Unit
+        override fun done() = Unit
     }
 
     private val items =
@@ -105,10 +105,22 @@ class PhoneSetupWideTest {
 
     private val journeyRegistry =
         listOf(
-            JourneySetupComponent("linux", "Linux base", "Linux base", "true", "", required = true, estimatedSeconds = 20, downloadBytes = 30_000_000),
-            JourneySetupComponent("essentials", "Git, SSH and certificates", "Git and SSH", "true", "true", dependsOn = listOf("linux"), required = true, estimatedSeconds = 40, downloadBytes = 45_000_000),
-            JourneySetupComponent("node", "Node.js", "Node.js", "true", "true", dependsOn = listOf("essentials"), required = true, estimatedSeconds = 40, downloadBytes = 58_000_000),
-            JourneySetupComponent("opencode", "OpenCode", "OpenCode", "true", "true", dependsOn = listOf("node"), required = true, estimatedSeconds = 90, downloadBytes = 75_000_000),
+            JourneySetupComponent(
+                "linux", "Linux base", "Linux base", "true", "", required = true, estimatedSeconds = 20,
+                downloadBytes = 30_000_000,
+            ),
+            JourneySetupComponent(
+                "essentials", "Git, SSH and certificates", "Git and SSH", "true", "true", dependsOn = listOf("linux"),
+                required = true, estimatedSeconds = 40, downloadBytes = 45_000_000,
+            ),
+            JourneySetupComponent(
+                "node", "Node.js", "Node.js", "true", "true", dependsOn = listOf("essentials"), required = true,
+                estimatedSeconds = 40, downloadBytes = 58_000_000,
+            ),
+            JourneySetupComponent(
+                "opencode", "OpenCode", "OpenCode", "true", "true", dependsOn = listOf("node"), required = true,
+                estimatedSeconds = 90, downloadBytes = 75_000_000,
+            ),
         )
 
     private fun startUi() =
@@ -122,15 +134,26 @@ class PhoneSetupWideTest {
     private fun journeyRunningUi() =
         SetupJourneyUi(
             checking = false,
-            options = SetupOptions(journeyRegistry, emptySet(), SetupDeviceInfo(listOf("arm64-v8a"), 8192, 10_000_000_000)),
+            options =
+                SetupOptions(
+                    journeyRegistry, emptySet(), SetupDeviceInfo(listOf("arm64-v8a"), 8192, 10_000_000_000)
+                ),
             progress =
                 JourneySetupProgress(
                     state = JourneySetupState.Running,
                     components =
                         listOf(
-                            JourneyComponentProgress("linux", JourneyComponentState.Done, bytesDone = 30_000_000, bytesTotal = 30_000_000),
-                            JourneyComponentProgress("essentials", JourneyComponentState.Done, bytesDone = 45_000_000, bytesTotal = 45_000_000),
-                            JourneyComponentProgress("node", JourneyComponentState.Running, stage = "Downloading Node.js", bytesDone = 24_000_000, bytesTotal = 58_000_000),
+                            JourneyComponentProgress(
+                                "linux", JourneyComponentState.Done, bytesDone = 30_000_000, bytesTotal = 30_000_000,
+                            ),
+                            JourneyComponentProgress(
+                                "essentials", JourneyComponentState.Done, bytesDone = 45_000_000,
+                                bytesTotal = 45_000_000,
+                            ),
+                            JourneyComponentProgress(
+                                "node", JourneyComponentState.Running, stage = "Downloading Node.js",
+                                bytesDone = 24_000_000, bytesTotal = 58_000_000,
+                            ),
                             JourneyComponentProgress("opencode", JourneyComponentState.Pending),
                         ),
                     overall = 0.48,
@@ -143,7 +166,9 @@ class PhoneSetupWideTest {
             transport = SetupTransport.Wifi,
         )
 
-    private fun showContentAt(widthDp: Int, heightDp: Int, content: @Composable () -> Unit, block: ComposeUiTest.() -> Unit) {
+    private fun showContentAt(
+        widthDp: Int, heightDp: Int, content: @Composable () -> Unit, block: ComposeUiTest.() -> Unit
+    ) {
         runDesktopComposeUiTest(widthDp, heightDp) {
             setContent {
                 KitTheme(
@@ -190,7 +215,8 @@ class PhoneSetupWideTest {
         }
         assertTrue(
             inkPixels >= 16,
-            "Expected a visible done mark in the leading slot of the $rowName row ($rowBounds), found $inkPixels ink pixels",
+            "Expected a visible done mark in the leading slot of the $rowName row ($rowBounds), found " +
+                "$inkPixels ink pixels",
         )
     }
 

@@ -228,15 +228,7 @@ private fun WidePartRow(item: WidePartItem) {
         }
     val state =
         if (item.status == WidePartStatus.Working) KitRowState(word = null, tone = KitRowStateTone.Running) else null
-    val meta =
-        when (item.status) {
-            WidePartStatus.Start -> null
-            WidePartStatus.Done -> stringResource(Res.string.kitMarkDone)
-            WidePartStatus.Working ->
-                listOfNotNull(stringResource(Res.string.kitMarkWorking), item.progressNote).joinToString(" · ")
-            WidePartStatus.Failed -> stringResource(Res.string.kitMarkFailed)
-            WidePartStatus.Waiting -> stringResource(Res.string.kitMarkWaiting)
-        }
+    val meta = widePartMeta(item)
     KitRow(
         title = item.title,
         supporting = componentWhy(item.id),
@@ -247,6 +239,18 @@ private fun WidePartRow(item: WidePartItem) {
         supportingMaxLines = 2,
     )
 }
+
+/** The trailing mark of a wide part: its done/working/failed/waiting word, with any progress note. */
+@Composable
+private fun widePartMeta(item: WidePartItem): String? =
+    when (item.status) {
+        WidePartStatus.Start -> null
+        WidePartStatus.Done -> stringResource(Res.string.kitMarkDone)
+        WidePartStatus.Working ->
+            listOfNotNull(stringResource(Res.string.kitMarkWorking), item.progressNote).joinToString(" · ")
+        WidePartStatus.Failed -> stringResource(Res.string.kitMarkFailed)
+        WidePartStatus.Waiting -> stringResource(Res.string.kitMarkWaiting)
+    }
 
 @Composable
 internal fun componentWhy(id: String): String? =
