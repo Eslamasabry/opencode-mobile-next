@@ -204,7 +204,7 @@ private fun SkikoComposeUiTest.field(name: String): Any =
  * none (as the app's loader answers from its bundled marks). Without it every scene gave the 28 dp mark slot back, which
  * a device keeps for the agents it knows (flicker family 11, the harness half).
  */
-private val DeviceLikeLogos =
+internal val DeviceLikeLogos =
     KitLogoLoader { id, _ ->
         if (id in KNOWN_MARKS) {
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\">" +
