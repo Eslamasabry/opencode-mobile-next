@@ -30,17 +30,26 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceTile
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.addServerReadyOpen
+import io.github.eslamasabry.oc.ui.words.res.agentAccountTitle
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveAction
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
+import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
+import io.github.eslamasabry.oc.ui.words.res.connectionServerAddress
+import io.github.eslamasabry.oc.ui.words.res.connectorCardRuns
+import io.github.eslamasabry.oc.ui.words.res.otherServerWorking
+import io.github.eslamasabry.oc.ui.words.res.otherServerWorking__eq1
+import io.github.eslamasabry.oc.ui.words.res.rows40Move
+import io.github.eslamasabry.oc.ui.words.res.rows40Waiting
+import io.github.eslamasabry.oc.ui.words.res.serverRowConnected
+import io.github.eslamasabry.oc.ui.words.res.serverRowQueuedWaiting
+import io.github.eslamasabry.oc.ui.words.res.serverRowQueuedWaiting__eq1
+import io.github.eslamasabry.oc.ui.words.res.serversEditNamed
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ConnectTo
+import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ServerSettings
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-
-/** The plain facts a wide detail panel is handed about the chosen server, built at the call site. */
-internal class WideServerDetailParts(
-    val server: SavedServer,
-    val displayName: String,
-    val kindLabel: String,
-    val secretNote: String?,
-    val phoneHost: Boolean,
-)
 
 /** The status word under the chosen server's name: connected, waiting, working or not connected. */
 @Composable
@@ -52,6 +61,15 @@ internal fun wideServerStatusText(connected: Boolean, waiting: Int, running: Int
         running > 0 -> pluralStringResource(Res.plurals.otherServerWorking, running, running)
         else -> stringResource(Res.string.settingsV3NotConnected)
     }
+
+/** The plain facts a wide detail panel is handed about the chosen server, built at the call site. */
+internal class WideServerDetailParts(
+    val server: SavedServer,
+    val displayName: String,
+    val kindLabel: String,
+    val secretNote: String?,
+    val phoneHost: Boolean,
+)
 
 /** The tone of the status word: accent when connected, primary when a row needs the person. */
 @Composable

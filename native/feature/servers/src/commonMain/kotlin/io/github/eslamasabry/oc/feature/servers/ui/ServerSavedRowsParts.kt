@@ -24,14 +24,19 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.kitServerSupporting
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentAccountTitle
+import io.github.eslamasabry.oc.ui.words.res.capsuleRemove
+import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
+import io.github.eslamasabry.oc.ui.words.res.connectionServerAddress
+import io.github.eslamasabry.oc.ui.words.res.e7SetupConnect
+import io.github.eslamasabry.oc.ui.words.res.e7SetupEdit
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.rows40Move
+import io.github.eslamasabry.oc.ui.words.res.serverRowDetailsTitle
+import io.github.eslamasabry.oc.ui.words.res.serverRowDetailsVersion
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ServerSettings
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-
-/** The plain parts a saved-server list is handed with: whether the phone hosts one, and which row is chosen. */
-internal class ServerSavedRowSelection(
-    val phoneHost: Boolean = false,
-    val selectedId: ProfileId? = null,
-)
 
 /** True when the saved server is this phone's own Linux (the row then hears it from the screen reader). */
 internal fun phoneOwnServer(server: SavedServer, phoneHost: Boolean): Boolean =
@@ -39,6 +44,12 @@ internal fun phoneOwnServer(server: SavedServer, phoneHost: Boolean): Boolean =
         PhoneServerCandidate(server.id.raw, server.address),
         if (phoneHost) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere,
     )
+
+/** The plain parts a saved-server list is handed with: whether the phone hosts one, and which row is chosen. */
+internal class ServerSavedRowSelection(
+    val phoneHost: Boolean = false,
+    val selectedId: ProfileId? = null,
+)
 
 /** The row's supporting line: the kind (when kinds differ), waiting/running counts and the secret note. */
 @Composable
