@@ -11,7 +11,7 @@
 # positional k % 8 dealing yields, laid out round-major (first task of every shard, then every second, ...), then
 # :quality:test and :quality:secTest last, so the workflow's positional picker reproduces that plan. The unconstrained
 # <index> <count> dealing may isolate one heavy task on its own shard; only this order carries the workflow's fixed
-# position-to-shard shape. Every count the plan picks (1, 2, 4, 8) divides 8, so a smaller count merges whole shards.
+# position-to-shard shape. Smaller counts (2, 4) apply only to a fast lane's list mode, whose order comes from fast_tasks.sh.
 # The workflow keeps :quality:secTest with :quality:test in one shard; never rotate it independently.
 set -euo pipefail
 idx=${1:?shard index (0-based)} count=${2:?shard count}
@@ -72,7 +72,8 @@ if count == 1 and idx == 0:
     # under the class sizes a positional k % 8 dealing yields (13,13,...,12 for 102 module tasks), laid out
     # round-major (first task of every shard, then every second, ...), the quality pair last. native-ci.yml deals
     # list positions k to shard k % n, so round-major order makes the picker of the workflow reproduce that plan
-    # with no workflow change, and every count the plan picks (1, 2, 4, 8) divides 8.
+    # with no workflow change. Smaller counts (2, 4) apply only to a fast lane's list mode, whose order comes from
+    # fast_tasks.sh.
     quality = [t for t in (":quality:test", ":quality:secTest") if t in tasks]
     items = [t for t in tasks if t not in quality]
     capacity = [-(-(len(items) - i) // 8) for i in range(8)]
