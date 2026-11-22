@@ -8,6 +8,9 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.CatalogProvider
+import io.github.eslamasabry.oc.core.model.CatalogSnapshot
+import io.github.eslamasabry.oc.core.model.IntegrationConnectionInfo
 import io.github.eslamasabry.oc.core.model.IntegrationInfo
 import io.github.eslamasabry.oc.core.model.IntegrationMethodInfo
 import io.github.eslamasabry.oc.core.model.ServerLocation
@@ -55,7 +58,7 @@ class CustomProviderTest {
         // Blank lines and a repeated id are dropped; the order typed is kept.
         assertEquals(listOf("llama-3", "qwen"), block.getValue("models").jsonObject.keys.toList())
         val input = Json.parseToJsonElement(declaration.input()).jsonObject
-        assertEquals(setOf("id", "block"), input.keys)
+        assertEquals(setOf("id", "block", "replaceDeclared", "requireDeclared"), input.keys)
         assertFalse(Regex("(?i)key|token|password|secret").containsMatchIn(declaration.input()))
     }
 
@@ -159,10 +162,27 @@ class CustomProviderTest {
             0,
         )
 
+    /** A row the list shows with a live credential connection: a provider a person is using. */
+    private fun connected(id: String) =
+        row(id).copy(
+            connections = persistentListOf(IntegrationConnectionInfo("credential", "c-1", "", null)),
+            connectionCount = 1,
+        )
+
     private fun listing(vararg ids: String): Outcome<ImmutableList<IntegrationInfo>> =
         Outcome.Ok(ids.map(::row).toImmutableList())
 
-    private fun TestScope.session(host: CustomProviderHost?, listings: Server, owned: Boolean = true): LibrarySession {
+    private fun rows(vararg entries: IntegrationInfo): Outcome<ImmutableList<IntegrationInfo>> =
+        Outcome.Ok(entries.toList().toImmutableList())
+
+    private fun TestScope.session(
+        host: CustomProviderHost?,
+        listings: Server,
+        owned: Boolean = true,
+        catalog: CatalogSnapshot? = null,
+        catalogAnswer: Outcome<CatalogSnapshot>? = null,
+    ): LibrarySession {
+        val noCatalog = CatalogSnapshot(persistentListOf(), persistentListOf(), persistentListOf())
         val source =
             object : LibrarySource {
                 override val profile = ProfileId("p")
@@ -173,6 +193,8 @@ class CustomProviderTest {
                 override val operations: ServerOperationsGateway =
                     object : FakeOperationsGateway() {
                         override suspend fun integrations() = listings.next()
+
+                        override suspend fun catalog() = catalogAnswer ?: Outcome.Ok(catalog ?: noCatalog)
                     }
                 override val customProviders = host
 
@@ -277,5 +299,146 @@ class CustomProviderTest {
             session(host, Server(listOf(Outcome.Failed(Failure.Network(NetworkWhy.Refused))))).addCustomProvider(good)
         assertEquals(CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, "Network · Refused"), silent)
         assertTrue(host.written.isEmpty())
+    }
+
+    // ---- issue 152: a declaration the settings file still holds under an id no list shows
+
+    @Test
+    fun `B-LIB-311 adding an id that is declared but not shown replaces the old declaration`() = runTest {
+        val host = Host()
+        // Nothing shows my-box: the server lists no row, none is kept and the catalog (loaded, and empty) holds no
+        // such id. Only the settings file can still hold it, left by a delete that could not remove it, so the
+        // writer is told to replace instead of refusing.
+        val library = session(host, Server(listOf(listing())))
+        library.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good))
+        val written = host.written.single()
+        assertEquals("my-box", written.providerId)
+        assertTrue("\"replaceDeclared\":true" in written.input(), "the writer is told to replace")
+    }
+
+    @Test
+    fun `B-LIB-312 adding an id that is shown in the list is still refused`() = runTest {
+        val host = Host()
+        val taken = session(host, Server(listOf(listing("my-box")))).addCustomProvider(good)
+        assertEquals(CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)), taken)
+        assertTrue(host.written.isEmpty())
+    }
+
+    @Test
+    fun `B-LIB-314 a catalog id is still refused even when it is not shown`() = runTest {
+        val host = Host()
+        val disabled =
+            CatalogSnapshot(
+                persistentListOf(CatalogProvider("my-box", "My box", enabled = false, integrationId = null)),
+                persistentListOf(),
+                persistentListOf(),
+            )
+        val library = session(host, Server(listOf(listing())), catalog = disabled)
+        library.refresh()
+        val refused = library.addCustomProvider(good)
+        assertEquals(CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)), refused)
+        assertTrue(host.written.isEmpty())
+    }
+
+    @Test
+    fun `B-LIB-318 a catalog that did not load sends no replace flag`() = runTest {
+        val failed = Host()
+        val unread =
+            session(
+                failed,
+                Server(listOf(listing())),
+                catalogAnswer = Outcome.Failed(Failure.Network(NetworkWhy.Refused)),
+            )
+        unread.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, unread.addCustomProvider(good))
+        assertFalse(failed.written.single().replaceDeclared)
+
+        val fresh = Host()
+        val neverLoaded = session(fresh, Server(listOf(listing())))
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, neverLoaded.addCustomProvider(good))
+        assertFalse(fresh.written.single().replaceDeclared)
+    }
+
+    // ---- issue 152: the server keeps listing a disconnected provider while the file holds its declaration
+
+    @Test
+    fun `B-LIB-319 a listed id with no connection, no catalog entry, is added and replaces it`() = runTest {
+        val host = Host()
+        // After Disconnect the server still lists my-box with zero connections (a scratch 2.2.6 server showed
+        // exactly that): only the settings file can still declare it, so the add goes through and the writer is
+        // told to replace - and to require a declared entry, since only the file knows whether it is there.
+        val library = session(host, Server(listOf(listing("my-box"))))
+        library.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good))
+        val input = host.written.single().input()
+        assertTrue("\"replaceDeclared\":true" in input, "the writer is told to replace")
+        assertTrue("\"requireDeclared\":true" in input, "the writer is told to require a declaration")
+    }
+
+    @Test
+    fun `B-LIB-325 a replaced declaration still asks for the restart`() = runTest {
+        val host = Host()
+        // However often the server is asked it keeps listing my-box (a real one does while the file holds the
+        // declaration), so the row being listed cannot mean the new address is live: the old one is served until
+        // a restart re-reads the file, and the add must still offer that restart, not call itself loaded.
+        val library = session(host, Server(listOf(listing("my-box"))))
+        library.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good))
+        assertTrue(host.written.single().requireDeclared, "the write was a replace")
+    }
+
+    @Test
+    fun `B-LIB-320 a listed id with a connection is still refused`() = runTest {
+        val host = Host()
+        val library = session(host, Server(listOf(rows(connected("my-box")), rows(connected("my-box")))))
+        library.refresh()
+        assertEquals(
+            CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)),
+            library.addCustomProvider(good),
+        )
+        assertTrue(host.written.isEmpty())
+    }
+
+    @Test
+    fun `B-LIB-321 a catalog id with no connection is still refused`() = runTest {
+        val host = Host()
+        val catalog =
+            CatalogSnapshot(
+                persistentListOf(CatalogProvider("my-box", "My box", enabled = false, integrationId = null)),
+                persistentListOf(),
+                persistentListOf(),
+            )
+        val library = session(host, Server(listOf(listing("my-box"), listing("my-box"))), catalog = catalog)
+        library.refresh()
+        assertEquals(
+            CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)),
+            library.addCustomProvider(good),
+        )
+        assertTrue(host.written.isEmpty())
+    }
+
+    @Test
+    fun `B-LIB-322 a listed id with no connection stays taken without a loaded catalog`() = runTest {
+        val failed = Host()
+        val unread =
+            session(
+                failed,
+                Server(listOf(listing("my-box"), listing("my-box"))),
+                catalogAnswer = Outcome.Failed(Failure.Network(NetworkWhy.Refused)),
+            )
+        unread.refresh()
+        assertEquals(
+            CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)),
+            unread.addCustomProvider(good),
+        )
+        val fresh = Host()
+        val neverLoaded = session(fresh, Server(listOf(listing("my-box"))))
+        assertEquals(
+            CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)),
+            neverLoaded.addCustomProvider(good),
+        )
+        assertTrue(failed.written.isEmpty())
+        assertTrue(fresh.written.isEmpty())
     }
 }

@@ -12,8 +12,10 @@ import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * Pull request 142, ported: the real settings writer of [CustomProviderScript] (the Python text the phone runs, taken
@@ -42,12 +44,11 @@ class CustomProviderScriptTest {
         return script.substring(start, script.indexOf("' '", start))
     }
 
-    private fun write(input: String = declaration().input(), foreign: String = ""): Int {
-        val harness =
-            program()
-                .replaceFirst(
-                    "try: main()",
-                    """
+    private fun harness(foreign: String = ""): String =
+        program()
+            .replaceFirst(
+                "try: main()",
+                """
 FOREIGN = ${JsonPrimitive(foreign)}
 import os as _os
 _os.getuid = lambda: 0
@@ -60,16 +61,34 @@ def _lstat(path, *args, **kwargs):
     return _os.stat_result(values)
 _os.lstat = _lstat
 try: main()""",
-                )
-        val process =
-            ProcessBuilder("/usr/bin/python3", "-I", "-c", harness, config.path, cards.path, "0")
+            )
+
+    private fun start(input: String, foreign: String, discard: Boolean): Process {
+        val builder =
+            ProcessBuilder("/usr/bin/python3", "-I", "-c", harness(foreign), config.path, cards.path, "0")
                 .directory(root)
-                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start()
+        if (discard) {
+            builder.redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            builder.redirectError(ProcessBuilder.Redirect.DISCARD)
+        }
+        val process = builder.start()
         process.outputStream.use { it.write(input.encodeToByteArray()) }
+        return process
+    }
+
+    private fun write(input: String = declaration().input(), foreign: String = ""): Int {
+        val process = start(input, foreign, discard = true)
         check(process.waitFor(60, TimeUnit.SECONDS)) { "the writer did not finish" }
         return process.exitValue()
+    }
+
+    /** The same run with its output captured: a refusal must print nothing, least of all a hand-written key. */
+    private fun writeCaptured(input: String = declaration().input()): Pair<Int, String> {
+        val process = start(input, "", discard = false)
+        val output =
+            process.inputStream.readBytes().decodeToString() + process.errorStream.readBytes().decodeToString()
+        check(process.waitFor(60, TimeUnit.SECONDS)) { "the writer did not finish" }
+        return process.exitValue() to output
     }
 
     /** Runs [block] while another process holds an exclusive lock on [lock]. */
@@ -103,6 +122,15 @@ try: main()""",
         assertEquals(code, run())
         assertEquals(before, file.readText(), "a refused write leaves the file as it was")
     }
+
+    /** The run's stdin when the engine has decided a declaration left in the file may be replaced (issue 152). */
+    private fun replaceInput(declared: CustomProviderDeclaration = declaration()): String =
+        buildJsonObject {
+                put("id", declared.providerId)
+                put("block", declared.block)
+                put("replaceDeclared", true)
+            }
+            .toString()
 
     @Test
     fun `PR142-12 the declaration is data, never code - quotes and shell words land in the file as typed`() {
@@ -148,6 +176,106 @@ try: main()""",
         assertEquals(0, write())
         val first = file.readText()
         assertRefused(CustomProviderWrite.AlreadyDeclared.code, first) { write(declaration(name = "Other").input()) }
+    }
+
+    @Test
+    fun `B-LIB-311 adding an id that is declared but not shown replaces the old declaration`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
+                """"settings":{"baseURL":"http://old.example:9000/v1"},"models":{"old-model":{}}}}}"""
+        )
+        assertEquals(0, write(replaceInput()))
+        assertEquals(declaration().block, json().getValue("providers").jsonObject.getValue("my-box").jsonObject)
+    }
+
+    @Test
+    fun `B-LIB-313 the file's other content survives a replace`() {
+        config.mkdirs()
+        file.writeText(
+            """{"keep":42,"mcp":{"servers":{"oc-ui":{"type":"local"}}},"providers":{""" +
+                """"my-box":{"name":"Old box","settings":{"baseURL":"http://old.example:9000/v1"}},""" +
+                """"other":{"name":"Other","npm":"no"}}}"""
+        )
+        val before = json()
+        assertEquals(0, write(replaceInput()))
+        val after = json()
+        assertEquals(before.getValue("keep").toString(), after.getValue("keep").toString())
+        assertEquals(before.getValue("mcp").toString(), after.getValue("mcp").toString())
+        assertEquals(
+            before.getValue("providers").jsonObject.getValue("other").toString(),
+            after.getValue("providers").jsonObject.getValue("other").toString(),
+        )
+        assertEquals(declaration().block, after.getValue("providers").jsonObject.getValue("my-box").jsonObject)
+    }
+
+    @Test
+    fun `B-LIB-315 without the replace input the script still refuses a declared id`() {
+        config.mkdirs()
+        file.writeText("""{"keep":1,"providers":{"my-box":{"name":"Old box"}}}""")
+        val block = declaration().block
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", block)
+                    }
+                    .toString()
+            )
+        }
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", block)
+                        put("replaceDeclared", false)
+                    }
+                    .toString()
+            )
+        }
+    }
+
+    @Test
+    fun `B-LIB-323 a run that requires a declaration refuses an id the file does not hold`() {
+        config.mkdirs()
+        file.writeText("""{"keep":1,"providers":{"other":{"name":"Other"}}}""")
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", declaration().block)
+                        put("replaceDeclared", true)
+                        put("requireDeclared", true)
+                    }
+                    .toString()
+            )
+        }
+    }
+
+    @Test
+    fun `B-LIB-316 an entry with one extra field is refused and left byte-for-byte unchanged`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
+                """"settings":{"baseURL":"http://old.example:9000/v1"},"models":{"old-model":{}},""" +
+                """"options":{"reasoning":true}}}}"""
+        )
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) { write(replaceInput()) }
+    }
+
+    @Test
+    fun `B-LIB-317 an entry with an inline key field is refused, unchanged, and echoed nowhere`() {
+        config.mkdirs()
+        val inline = "hand-written-inline-value"
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","settings":{"baseURL":"http://old.example:9000/v1",""" +
+                """"apiKey":"$inline"}}}}"""
+        )
+        val before = file.readText()
+        val (code, output) = writeCaptured(replaceInput())
+        assertEquals(CustomProviderWrite.AlreadyDeclared.code, code)
+        assertEquals(before, file.readText(), "a refused write leaves the file as it was")
+        assertFalse(inline in output, "a hand-written key is never echoed")
     }
 
     @Test
