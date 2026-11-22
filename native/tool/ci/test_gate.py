@@ -552,6 +552,54 @@ class Plan(unittest.TestCase):
         self.assertEqual((r['mode'], r['count'], r['total']), ('all', '8', '9'))
 
 
+def shard(index, count):
+    p = subprocess.run(['bash', os.path.join(HERE, 'shard_tasks.sh'), str(index), str(count)],
+                       capture_output=True, text=True, check=True)
+    return p.stdout.splitlines()
+
+
+def shard_weight(task):
+    """A module's weight: the number of lines containing @Test under its test source folders (src/*Test*/, at least 1)."""
+    module = task[1:].rsplit(':', 1)[0].replace(':', '/')
+    n = 0
+    src = os.path.join(HERE, '..', '..', module, 'src')
+    if os.path.isdir(src):
+        for d in sorted(os.listdir(src)):
+            if 'Test' in d:
+                for root, _, files in os.walk(os.path.join(src, d)):
+                    for f in files:
+                        with open(os.path.join(root, f), errors='replace') as fh:
+                            n += sum(1 for line in fh if '@Test' in line)
+    return max(n, 1)
+
+
+class Shards(unittest.TestCase):
+    """B-CI-320..322: the shard plan deals the module test tasks by @Test weight, not round-robin over the sorted list."""
+
+    def test_B_CI_320_every_test_task_lands_in_exactly_one_shard(self):
+        whole = shard(0, 1)
+        self.assertTrue(whole, 'the whole task list is empty')
+        for count in (1, 4, 8, 9):
+            dealt = [t for i in range(count) for t in shard(i, count)]
+            self.assertEqual(len(dealt), len(set(dealt)), f'count {count} deals a task twice')
+            self.assertEqual(sorted(dealt), sorted(whole), f'count {count} does not cover the whole task list')
+
+    def test_B_CI_321_the_shards_carry_near_equal_weight(self):
+        count = 9
+        weights = {t: shard_weight(t) for t in shard(0, 1)}
+        sums = [sum(weights[t] for t in shard(i, count)) for i in range(count)]
+        average = -(-sum(sums) // count)  # the average shard weight, rounded up
+        heaviest_task = max(weights.values())
+        # a task cannot be split, so the heaviest shard may hold one task heavier than a fair share, and no more
+        self.assertLessEqual(max(sums), max(heaviest_task, average + average // 4),
+                             'the heaviest shard carries more than the heaviest task or 1.25 x the average shard')
+
+    def test_B_CI_322_the_plan_is_the_same_twice(self):
+        for count in (4, 9):
+            self.assertEqual([shard(i, count) for i in range(count)], [shard(i, count) for i in range(count)],
+                             f'count {count} is not deterministic')
+
+
 class Workflow(unittest.TestCase):
     """The summary job's exit code is the run's verdict on every branch."""
 
