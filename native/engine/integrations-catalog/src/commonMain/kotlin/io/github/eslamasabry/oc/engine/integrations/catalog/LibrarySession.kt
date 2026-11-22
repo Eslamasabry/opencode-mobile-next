@@ -530,10 +530,14 @@ public class LibrarySession(
             rows is Outcome.Failed ->
                 CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
             declaration == null -> CustomProviderOutcome.Invalid(draft.problems(taken))
-            else ->
-                // The taken check above refused every id a list shows, so an entry the settings file still holds
-                // under this id is stranded (issue 152): the write replaces it instead of refusing.
-                written(declaration, host.write(declaration.copy(replaceDeclared = true)))
+            else -> {
+                // The taken check above refused every id a list shows, and only a catalog this session loaded
+                // proves the id is no catalog id either; with both, an entry the settings file still holds under
+                // this id is stranded (issue 152) and the write replaces it. Without a loaded catalog the write
+                // stays add-only, exactly as before: the file decides.
+                val replaceDeclared = mutable.value.catalog != null
+                written(declaration, host.write(declaration.copy(replaceDeclared = replaceDeclared)))
+            }
         }
     }
 
