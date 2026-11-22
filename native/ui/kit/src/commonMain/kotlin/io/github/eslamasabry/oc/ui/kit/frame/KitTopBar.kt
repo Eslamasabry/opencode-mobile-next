@@ -56,6 +56,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
@@ -125,6 +126,10 @@ public object TopBarTitle {
  * their whole labels fit in the room the title keeps — 90 dp at least on a compact window, its whole single
  * line on wider ones — and the rest go to [more] whole. [large] is a hub's bar: the title in the 28 sp large
  * size on its own line, the actions on the title's line at the end (or beside Back).
+ *
+ * A pushed page's bar (Back, the title and the actions on one row) keeps its 16 dp step between the title's
+ * words and the actions. The step gives way only where that is what keeps the title's words whole or one
+ * more action in the bar.
  *
  * States: default, subtitle, switcher, disabled (action) Text: frame Cap: Fill Motion: none Hidden:
  * none Replaces: KitTopBar (lib/ui/kit/kit_top_bar.dart)
@@ -322,7 +327,7 @@ public fun KitTopBar(
     val titleRole = TopBarTitle.role(switcher = onTitleTap != null)
     val titleRow: @Composable () -> Unit = {
         Row(
-            Modifier.padding(start = Space.S2.dp, end = if (oneRowBack) 0.dp else Space.S2.dp),
+            Modifier.padding(start = Space.S2.dp, end = if (oneRowBack && barFit.tight) 0.dp else Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
@@ -427,6 +432,9 @@ public fun KitTopBar(
             }
         } else if (back) {
             // No early return out of this block: leaving a composable lambda half way unwinds its groups by marker.
+            // The bar's half of the earlier 16 dp step (F: kit_top_bar.dart:394); the title row keeps the other 8 dp
+            // after its words. A tight bar gives both back to the title's words or to an action that fits thanks of it.
+            val stepped: @Composable () -> Unit = { Box(Modifier.padding(start = Space.S2.dp)) { actionRow() } }
             BackBar(
                 exit = { ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f) },
                 // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and it
@@ -446,7 +454,7 @@ public fun KitTopBar(
                         ) { u() }
                     }
                 },
-                actions = actionRow,
+                actions = if (barFit.tight) actionRow else stepped,
             )
         } else {
         Row(
@@ -597,6 +605,12 @@ private const val LARGE_BAR_SCALE = 1.2f
 /** The minimum width (dp) the bar title keeps on a compact window beside text actions. */
 private const val MIN_TITLE_WIDTH_DP = 90
 
+/**
+ * A one-row Back bar's step between the title's words and the actions: the title row's own 8 dp after its words and
+ * the bar's 8 dp after that box (the earlier spacing, F: kit_top_bar.dart:394).
+ */
+private val TITLE_ACTIONS_STEP = (Space.S2 + Space.S2).dp
+
 /** Any other bar's step between the title's box and the actions: its row's space1. */
 private val ROW_STEP = Space.S1.dp
 
@@ -611,8 +625,16 @@ private data class TopBarShape(
     val titleBesideActions: Boolean,
 )
 
-/** What the bar does with its actions: what stays beside the title and what the overflow holds. */
-private data class TopBarSplit(val shown: List<KitLineAction>, val hidden: List<KitLineAction>)
+/**
+ * What the bar does with its actions: what stays beside the title, what the overflow holds, and whether a one-row Back
+ * bar's step between the title and the actions gave way.
+ */
+private data class TopBarSplit(
+    val shown: List<KitLineAction>,
+    val hidden: List<KitLineAction>,
+    /** A one-row Back bar only: the step gave way because that kept the title's words whole or an action in the bar. */
+    val tight: Boolean,
+)
 
 /**
  * The measurer and the frame sizes a bar's words are laid out at: the size KitText gives frame text (the platform's
@@ -640,6 +662,20 @@ private class BarText(private val measurer: TextMeasurer, private val density: D
             .measure(AnnotatedString(words), style, softWrap = false, maxLines = 1, density = density)
             .size
             .width
+
+    /** Whether the words stay whole in [room] px, wrapped to their [lines]: never ending in an ellipsis. */
+    fun whole(words: String, style: TextStyle, room: Int, lines: Int): Boolean =
+        !measurer
+            .measure(
+                AnnotatedString(words),
+                style,
+                constraints = Constraints(maxWidth = room),
+                softWrap = true,
+                maxLines = lines,
+                overflow = TextOverflow.Ellipsis,
+                density = density,
+            )
+            .hasVisualOverflow
 
     /** Each action's whole width in px: a 48 dp icon button for a glyph drawn as one, else its padded words. */
     fun widths(candidates: List<KitLineAction>, glyphIsIcon: Boolean, style: TextStyle): List<Int> =
@@ -681,6 +717,14 @@ private class BarFit(
         }
         return 0
     }
+
+    /**
+     * The title's own room beside [k] actions and [step] px in a one-row Back bar: all the width that is neither the
+     * lead (the title's box starts 48 dp in, its words 8 dp after that, and the bar ends 4 dp after the actions), the
+     * actions and their overflow, nor the step.
+     */
+    fun titleRoom(k: Int, step: Int): Int =
+        (width - lead - widths.take(k).sum() - overflow(k) - step).coerceAtLeast(0)
 }
 
 private object TopBarActions {
@@ -689,6 +733,9 @@ private object TopBarActions {
      * on compact and medium windows; a wide window shows its words. A text action's words are never cut: the actions
      * stay, in the caller's order, while their whole labels fit in the room the title keeps, and the rest go to the
      * overflow, whole.
+     *
+     * A one-row Back bar keeps its earlier step between the title and the actions. The step gives way only where that
+     * is what keeps the title's words whole beside the actions that stay, or what lets one more action stay in the bar.
      */
     @Composable
     fun split(
@@ -701,7 +748,7 @@ private object TopBarActions {
         val window = LocalKitWindow.current
         val candidates = actions.take(limit)
         if (candidates.none { it.icon == null }) {
-            return TopBarSplit(candidates, actions.drop(limit))
+            return TopBarSplit(candidates, actions.drop(limit), tight = false)
         }
         val tokens = LocalKitTokens.current
         val app = LocalKitAppDensity.current ?: LocalDensity.current
@@ -713,6 +760,7 @@ private object TopBarActions {
         val titleRole = if (shape.largeTitle) TypeRole.LargeTitle else TypeRole.Headline
         val titleStyle = text.style(typography.style(titleRole), app)
         val words = kitTitleLine(title)
+        val lines = if (LocalKitHeaderCapsule.current) 1 else 2
         return with(frameDensity) {
             val glyphIsIcon = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
             val fit =
@@ -726,10 +774,14 @@ private object TopBarActions {
                 )
             val titleShare = text.titleShare(window.cls, words, titleStyle, shape.titleBesideActions)
             val room = fit.width - fit.lead - titleShare
-            // What the bar keeps between the title's box and the actions: a one-row Back bar keeps none of it here.
-            val step = (if (shape.oneRow) 0.dp else ROW_STEP).roundToPx()
-            val kept = fit.kept(room, step)
-            TopBarSplit(actions.take(kept), actions.drop(kept))
+            // What the bar keeps between the title's box and the actions: its earlier step, which a one-row Back bar
+            // may give back to a fit.
+            val step = (if (shape.oneRow) TITLE_ACTIONS_STEP else ROW_STEP).roundToPx()
+            val withStep = fit.kept(room, step)
+            val kept = if (shape.oneRow) fit.kept(room, 0) else withStep
+            val titleRoom = fit.titleRoom(withStep, step)
+            val whole = !shape.oneRow || text.whole(words, titleStyle, titleRoom, lines)
+            TopBarSplit(actions.take(kept), actions.drop(kept), tight = kept > withStep || !whole)
         }
     }
 
