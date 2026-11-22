@@ -527,7 +527,16 @@ private fun DiffHeader(
     Column(Modifier.fillMaxWidth().background(colors.ground).bottomRule(colors.hairline)) {
         if (compact) {
             Row(
-                Modifier.fillMaxWidth().padding(start = tokens.gutter.dp, top = Space.S1.dp, bottom = Space.S1.dp, end = if (file.binary) tokens.gutter.dp else Space.S3.dp).heightIn(min = tokens.minTarget.dp).testTag("diff-file-header"),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = tokens.gutter.dp,
+                        top = Space.S1.dp,
+                        bottom = Space.S1.dp,
+                        end = if (file.binary) tokens.gutter.dp else Space.S3.dp,
+                    )
+                    .heightIn(min = tokens.minTarget.dp)
+                    .testTag("diff-file-header"),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 FlowRow(
