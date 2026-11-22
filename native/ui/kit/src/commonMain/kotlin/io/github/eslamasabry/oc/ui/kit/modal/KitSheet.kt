@@ -43,6 +43,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -64,6 +65,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusRequester
@@ -74,6 +77,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollEdges
 import androidx.compose.ui.platform.testTag
@@ -370,7 +374,9 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             // that had focus gets it back only if (a) the page had it when the modal showed, (b) nothing on the page has taken it since,
             // and (c) the soft keyboard was up when the modal showed, or none was ever seen (a hardware keyboard, a
             // desktop): focus on a field brings the keyboard back, which the person had put away.
-            val modal = state.isShowing || state.isDialogShowing
+            // Read through a derived value: a restored sheet registers while this host is composing (its page came
+            // first), and what the host read before that must still reach it afterwards.
+            val modal by remember(state) { derivedStateOf { state.isShowing || state.isDialogShowing } }
             // Asked to show (entering or shown), not leaving; read live in the focus callbacks below.
             val holding = { state.shown.targetState || state.dialogShown.targetState }
             val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
@@ -401,8 +407,7 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                 }
             }
             Box(
-                (if (modal) Modifier.clearAndSetSemantics {}
-                else Modifier)
+                Modifier.clearedUnderModal(state, modal)
                     .onFocusChanged {
                         held.has = it.hasFocus
                         // Whatever asked for it (a requestFocus on a page field): the page takes no focus under a modal.
@@ -429,6 +434,47 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                 CompositionLocalProvider(LocalKitGrowTitle provides null, LocalKitLiquidOverModal provides true) { DialogLayer(state) }
             }
             Box(Modifier.zIndex(3f)) { MenuLayer(menus) }
+        }
+    }
+}
+
+/**
+ * The page's semantics are cleared while a sheet or a dialog of the host is showing. `cleared` is what the host
+ * composed; the node also reads the host when it joins the page, because a restored sheet registers during the
+ * composition that places the page (a rotation rebuilt the screen around the sheet), after the page: the page must be
+ * cleared in that first frame too.
+ */
+private fun Modifier.clearedUnderModal(host: KitSheetHostState, cleared: Boolean): Modifier =
+    this then ClearedUnderModalElement(host, cleared)
+
+private data class ClearedUnderModalElement(val host: KitSheetHostState, val cleared: Boolean) :
+    ModifierNodeElement<ClearedUnderModalNode>() {
+    override fun create(): ClearedUnderModalNode = ClearedUnderModalNode(host)
+
+    override fun update(node: ClearedUnderModalNode) {
+        node.host = host
+        node.clear(cleared || host.isShowing || host.isDialogShowing)
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitPageClearedUnderModal"
+        properties["cleared"] = cleared
+    }
+}
+
+private class ClearedUnderModalNode(var host: KitSheetHostState) : Modifier.Node(), DelegatingNode() {
+    private var clearing: Modifier.Node? = null
+
+    override fun onAttach() {
+        clear(host.isShowing || host.isDialogShowing)
+    }
+
+    fun clear(cleared: Boolean) {
+        if (cleared) {
+            if (clearing == null) clearing = delegate(Modifier.clearAndSetSemantics {})
+        } else {
+            clearing?.let { undelegate(it) }
+            clearing = null
         }
     }
 }
