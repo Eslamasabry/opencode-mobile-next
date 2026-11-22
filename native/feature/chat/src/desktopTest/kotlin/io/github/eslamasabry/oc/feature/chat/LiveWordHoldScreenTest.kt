@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -166,9 +167,9 @@ class LiveWordHoldScreenTest {
     fun `B-CHAT-320 the live word stays Writing through a pause between parts`() =
         screen(part1, ask) { s ->
             s.writing(3)
-            s.rows(s.part1Ended, s.ask)
+            s.rows(part1Ended, ask)
             s.writing(18)
-            s.rows(s.part2, s.part1Ended, s.ask)
+            s.rows(part2, part1Ended, ask)
             s.writing(6)
         }
 
@@ -176,7 +177,7 @@ class LiveWordHoldScreenTest {
     fun `B-CHAT-321 a reply that ends leaves with Writing never Thinking`() =
         screen(part1, ask) { s ->
             s.writing(3)
-            s.rows(s.part1Ended, s.ask)
+            s.rows(part1Ended, ask)
             s.writing(18)
             s.end()
             s.neverThinking(6)
@@ -187,7 +188,7 @@ class LiveWordHoldScreenTest {
     fun `B-CHAT-322 a real switch to thinking shows once the pause lasted`() =
         screen(part1, ask) { s ->
             s.writing(3)
-            s.rows(s.part1Ended, s.ask)
+            s.rows(part1Ended, ask)
             s.writing(3)
             s.tick(61_000)
             s.writing(3)
@@ -200,7 +201,7 @@ class LiveWordHoldScreenTest {
     fun `B-CHAT-323 writing shows at once after thinking`() =
         screen(ask) { s ->
             s.thinking(3)
-            s.rows(s.part1, s.ask)
+            s.rows(part1, ask)
             s.says("Writing")
         }
 }
