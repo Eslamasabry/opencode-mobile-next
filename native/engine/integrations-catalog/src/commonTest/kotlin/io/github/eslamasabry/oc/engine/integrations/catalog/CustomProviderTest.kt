@@ -172,8 +172,8 @@ class CustomProviderTest {
     private fun listing(vararg ids: String): Outcome<ImmutableList<IntegrationInfo>> =
         Outcome.Ok(ids.map(::row).toImmutableList())
 
-    private fun listing(vararg rows: IntegrationInfo): Outcome<ImmutableList<IntegrationInfo>> =
-        Outcome.Ok(rows.toList().toImmutableList())
+    private fun rows(vararg entries: IntegrationInfo): Outcome<ImmutableList<IntegrationInfo>> =
+        Outcome.Ok(entries.toList().toImmutableList())
 
     private fun TestScope.session(
         host: CustomProviderHost?,
@@ -379,7 +379,7 @@ class CustomProviderTest {
     @Test
     fun `B-LIB-320 a listed id with a connection is still refused`() = runTest {
         val host = Host()
-        val library = session(host, Server(listOf(listing(connected("my-box")), listing(connected("my-box")))))
+        val library = session(host, Server(listOf(rows(connected("my-box")), rows(connected("my-box")))))
         library.refresh()
         assertEquals(
             CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)),
