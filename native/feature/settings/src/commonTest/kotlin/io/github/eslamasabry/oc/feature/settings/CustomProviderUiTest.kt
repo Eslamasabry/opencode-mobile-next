@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.settings
 
 import io.github.eslamasabry.oc.core.model.CatalogProvider
 import io.github.eslamasabry.oc.core.model.CatalogSnapshot
+import io.github.eslamasabry.oc.core.model.IntegrationConnectionInfo
 import io.github.eslamasabry.oc.core.model.IntegrationInfo
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderField
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderOutcome
@@ -78,5 +79,34 @@ class CustomProviderUiTest {
                     ),
             )
         assertEquals(setOf("openai", "zen", "opencode"), shownProviderIds(inventory))
+    }
+
+    @Test
+    fun `B-LIB-324 the form leaves out a listed provider with no connection and no catalog id`() {
+        val inventory =
+            LibraryInventory(
+                providers =
+                    persistentListOf(
+                        IntegrationInfo("stranded", "Stranded", persistentListOf(), persistentListOf(), 0),
+                        IntegrationInfo(
+                            "live",
+                            "Live",
+                            persistentListOf(),
+                            persistentListOf(IntegrationConnectionInfo("credential", "c-1", "", null)),
+                            1,
+                        ),
+                        IntegrationInfo("zen", "Zen", persistentListOf(), persistentListOf(), 0),
+                    ),
+                catalog =
+                    CatalogSnapshot(
+                        persistentListOf(CatalogProvider("zen", "Zen", true, "opencode")),
+                        persistentListOf(),
+                        persistentListOf(),
+                    ),
+            )
+        // stranded is listed with no connection and the loaded catalog does not hold it, so only the settings file
+        // can: the form lets the id through and the engine's check decides. live carries a connection, and zen is a
+        // catalog id even with no connection: both stay refused.
+        assertEquals(setOf("live", "zen", "opencode"), shownProviderIds(inventory))
     }
 }

@@ -236,6 +236,23 @@ try: main()""",
     }
 
     @Test
+    fun `B-LIB-323 a run that requires a declaration refuses an id the file does not hold`() {
+        config.mkdirs()
+        file.writeText("""{"keep":1,"providers":{"other":{"name":"Other"}}}""")
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", declaration().block)
+                        put("replaceDeclared", true)
+                        put("requireDeclared", true)
+                    }
+                    .toString()
+            )
+        }
+    }
+
+    @Test
     fun `B-LIB-316 an entry with one extra field is refused and left byte-for-byte unchanged`() {
         config.mkdirs()
         file.writeText(
