@@ -146,3 +146,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10120 | build | 2026-11-21 | 3.0.1 release candidate build 2 |
 | 10130 | release | 2026-11-21 | native release 3.0.1+10130 (public lineage) |
 | 10131 | build | 2026-11-22 | 3.0.2 release candidate build |
+| 10132 | build | 2026-11-22 | interim 3.0.2 line with the agent pin moves (pins-302), not the candidate |
