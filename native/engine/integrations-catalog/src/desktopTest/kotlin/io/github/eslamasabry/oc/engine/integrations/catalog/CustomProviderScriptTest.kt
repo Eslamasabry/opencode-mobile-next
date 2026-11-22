@@ -44,12 +44,11 @@ class CustomProviderScriptTest {
         return script.substring(start, script.indexOf("' '", start))
     }
 
-    private fun write(input: String = declaration().input(), foreign: String = ""): Int {
-        val harness =
-            program()
-                .replaceFirst(
-                    "try: main()",
-                    """
+    private fun harness(foreign: String = ""): String =
+        program()
+            .replaceFirst(
+                "try: main()",
+                """
 FOREIGN = ${JsonPrimitive(foreign)}
 import os as _os
 _os.getuid = lambda: 0
@@ -62,16 +61,34 @@ def _lstat(path, *args, **kwargs):
     return _os.stat_result(values)
 _os.lstat = _lstat
 try: main()""",
-                )
-        val process =
-            ProcessBuilder("/usr/bin/python3", "-I", "-c", harness, config.path, cards.path, "0")
+            )
+
+    private fun start(input: String, foreign: String, discard: Boolean): Process {
+        val builder =
+            ProcessBuilder("/usr/bin/python3", "-I", "-c", harness(foreign), config.path, cards.path, "0")
                 .directory(root)
-                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start()
+        if (discard) {
+            builder.redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            builder.redirectError(ProcessBuilder.Redirect.DISCARD)
+        }
+        val process = builder.start()
         process.outputStream.use { it.write(input.encodeToByteArray()) }
+        return process
+    }
+
+    private fun write(input: String = declaration().input(), foreign: String = ""): Int {
+        val process = start(input, foreign, discard = true)
         check(process.waitFor(60, TimeUnit.SECONDS)) { "the writer did not finish" }
         return process.exitValue()
+    }
+
+    /** The same run with its output captured: a refusal must print nothing, least of all a hand-written key. */
+    private fun writeCaptured(input: String = declaration().input()): Pair<Int, String> {
+        val process = start(input, "", discard = false)
+        val output =
+            process.inputStream.readBytes().decodeToString() + process.errorStream.readBytes().decodeToString()
+        check(process.waitFor(60, TimeUnit.SECONDS)) { "the writer did not finish" }
+        return process.exitValue() to output
     }
 
     /** Runs [block] while another process holds an exclusive lock on [lock]. */
@@ -216,6 +233,32 @@ try: main()""",
                     .toString()
             )
         }
+    }
+
+    @Test
+    fun `B-LIB-316 an entry with one extra field is refused and left byte-for-byte unchanged`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
+                """"settings":{"baseURL":"http://old.example:9000/v1"},"models":{"old-model":{}},""" +
+                """"options":{"reasoning":true}}}}"""
+        )
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) { write(replaceInput()) }
+    }
+
+    @Test
+    fun `B-LIB-317 an entry with an inline key field is refused, unchanged, and echoed nowhere`() {
+        config.mkdirs()
+        val inline = "hand-written-inline-value"
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","settings":{"baseURL":"http://old.example:9000/v1",""" +
+                """"apiKey":"$inline"}}}}"""
+        )
+        val before = file.readText()
+        val (code, output) = writeCaptured(replaceInput())
+        assertEquals(CustomProviderWrite.AlreadyDeclared.code, code)
+        assertEquals(before, file.readText(), "a refused write leaves the file as it was")
+        assertFalse(inline in output, "a hand-written key is never echoed")
     }
 
     @Test

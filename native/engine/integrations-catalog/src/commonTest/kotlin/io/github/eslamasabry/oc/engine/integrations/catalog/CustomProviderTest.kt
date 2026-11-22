@@ -169,6 +169,7 @@ class CustomProviderTest {
         listings: Server,
         owned: Boolean = true,
         catalog: CatalogSnapshot? = null,
+        catalogAnswer: Outcome<CatalogSnapshot>? = null,
     ): LibrarySession {
         val noCatalog = CatalogSnapshot(persistentListOf(), persistentListOf(), persistentListOf())
         val source =
@@ -182,7 +183,7 @@ class CustomProviderTest {
                     object : FakeOperationsGateway() {
                         override suspend fun integrations() = listings.next()
 
-                        override suspend fun catalog() = Outcome.Ok(catalog ?: noCatalog)
+                        override suspend fun catalog() = catalogAnswer ?: Outcome.Ok(catalog ?: noCatalog)
                     }
                 override val customProviders = host
 
@@ -294,11 +295,12 @@ class CustomProviderTest {
     @Test
     fun `B-LIB-311 adding an id that is declared but not shown replaces the old declaration`() = runTest {
         val host = Host()
-        // Nothing shows my-box: the server lists no row, none is kept and the catalog holds no such id. Only the
-        // settings file can still hold it, left by a delete that could not remove it, so the writer is told to
-        // replace instead of refusing.
-        val outcome = session(host, Server(listOf(listing()))).addCustomProvider(good)
-        assertEquals(CustomProviderOutcome.SavedNotLoaded, outcome)
+        // Nothing shows my-box: the server lists no row, none is kept and the catalog (loaded, and empty) holds no
+        // such id. Only the settings file can still hold it, left by a delete that could not remove it, so the
+        // writer is told to replace instead of refusing.
+        val library = session(host, Server(listOf(listing())))
+        library.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good))
         val written = host.written.single()
         assertEquals("my-box", written.providerId)
         assertTrue("\"replaceDeclared\":true" in written.input(), "the writer is told to replace")
@@ -326,5 +328,24 @@ class CustomProviderTest {
         val refused = library.addCustomProvider(good)
         assertEquals(CustomProviderOutcome.Invalid(listOf(CustomProviderProblem.IdTaken)), refused)
         assertTrue(host.written.isEmpty())
+    }
+
+    @Test
+    fun `B-LIB-318 a catalog that did not load sends no replace flag`() = runTest {
+        val failed = Host()
+        val unread =
+            session(
+                failed,
+                Server(listOf(listing())),
+                catalogAnswer = Outcome.Failed(Failure.Network(NetworkWhy.Refused)),
+            )
+        unread.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, unread.addCustomProvider(good))
+        assertFalse(failed.written.single().replaceDeclared)
+
+        val fresh = Host()
+        val neverLoaded = session(fresh, Server(listOf(listing())))
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, neverLoaded.addCustomProvider(good))
+        assertFalse(fresh.written.single().replaceDeclared)
     }
 }
