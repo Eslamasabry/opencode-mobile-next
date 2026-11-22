@@ -45,6 +45,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingCommand
@@ -54,7 +55,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -62,6 +62,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Where the presenter runs a command's suspending half (the ViewModel's scope; tests start it in
@@ -265,13 +266,23 @@ public class ChatPresenter(
                 present(i, l, h)
             }
         val out = MutableStateFlow(current())
+        // Every START (the first open and every return) relaunches the upstream collect by hand:
+        // latest drops each restart after an inner was cancelled, so a return would keep a stale page.
+        var inner: Job? = null
         started
             .command(out.subscriptionCount)
             .distinctUntilChanged()
-            .latest { c ->
-                if (c == SharingCommand.START) upstream.onStart { emit(current()) } else emptyFlow()
+            .onEach { c ->
+                inner?.cancel()
+                inner =
+                    if (c == SharingCommand.START) {
+                        scope.launch {
+                            upstream.onStart { emit(current()) }.collect { out.value = it }
+                        }
+                    } else {
+                        null
+                    }
             }
-            .onEach { out.value = it }
             .launchIn(scope)
         return out.asStateFlow()
     }
