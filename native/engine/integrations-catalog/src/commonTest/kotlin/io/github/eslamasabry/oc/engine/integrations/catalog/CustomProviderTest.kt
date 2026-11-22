@@ -368,12 +368,24 @@ class CustomProviderTest {
         // After Disconnect the server still lists my-box with zero connections (a scratch 2.2.6 server showed
         // exactly that): only the settings file can still declare it, so the add goes through and the writer is
         // told to replace - and to require a declared entry, since only the file knows whether it is there.
-        val library = session(host, Server(listOf(listing("my-box"), listing("my-box"), listing("openai"))))
+        val library = session(host, Server(listOf(listing("my-box"))))
         library.refresh()
         assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good))
         val input = host.written.single().input()
         assertTrue("\"replaceDeclared\":true" in input, "the writer is told to replace")
         assertTrue("\"requireDeclared\":true" in input, "the writer is told to require a declaration")
+    }
+
+    @Test
+    fun `B-LIB-325 a replaced declaration still asks for the restart`() = runTest {
+        val host = Host()
+        // However often the server is asked it keeps listing my-box (a real one does while the file holds the
+        // declaration), so the row being listed cannot mean the new address is live: the old one is served until
+        // a restart re-reads the file, and the add must still offer that restart, not call itself loaded.
+        val library = session(host, Server(listOf(listing("my-box"))))
+        library.refresh()
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good))
+        assertTrue(host.written.single().requireDeclared, "the write was a replace")
     }
 
     @Test
