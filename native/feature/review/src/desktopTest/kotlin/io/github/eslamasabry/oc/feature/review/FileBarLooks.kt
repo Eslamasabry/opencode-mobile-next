@@ -36,11 +36,10 @@ import kotlin.test.assertTrue
 
 /**
  * B-KIT-029 on the real review FILE page (`FileDiffScreen` with all four text actions present): PNG pictures of its
- * bar, dark, in `build/looks` for a person to look at — 360 dp wide at text 1.0 and 1.3 and 840 dp wide, each once
- * with the overflow closed and once open. The layout is asserted where the fit rule lives (the compact widths): the
- * title keeps at least 90 dp, the overflow affordance exists, and no action shown beside the title or in the
- * overflow is cut. At 840 dp the window is Expanded: the bar holds all four actions inline and owns no overflow, so
- * that width is pictures only.
+ * bar, dark, in `build/looks` for a person to look at — 360 dp wide at text 1.0 and 1.3, 600 dp and 840 dp wide,
+ * each once with the overflow closed and once open. The layout is asserted too: on the phone widths the title keeps
+ * at least 90 dp, at 600 and 840 dp it keeps its whole single line, and no action shown — beside the title or in the
+ * open overflow — is cut, while every action is drawn somewhere.
  */
 @OptIn(ExperimentalTestApi::class)
 class FileBarLooks {
@@ -70,17 +69,21 @@ class FileBarLooks {
 
     @Test
     fun `B-KIT-029 the file page's bar keeps title room and whole actions at 360 dp text 1_0`() =
-        look(945, 1f, "file-bar-360-text1", overflow = true)
+        look(945, 1f, "file-bar-360-text1", phone = true)
 
     @Test
     fun `B-KIT-029 the file page's bar keeps title room and whole actions at 360 dp text 1_3`() =
-        look(945, 1.3f, "file-bar-360-text13", overflow = true)
+        look(945, 1.3f, "file-bar-360-text13", phone = true)
 
     @Test
-    fun `B-KIT-029 the file page's bar holds all four text actions inline at 840 dp`() =
-        look(2205, 1f, "file-bar-840", overflow = false)
+    fun `B-KIT-029 the file page's bar keeps its whole title and whole actions at 600 dp`() =
+        look(1575, 1f, "file-bar-600", phone = false)
 
-    private fun look(widthPx: Int, fontScale: Float, name: String, overflow: Boolean) {
+    @Test
+    fun `B-KIT-029 the file page's bar keeps its whole title and whole actions at 840 dp`() =
+        look(2205, 1f, "file-bar-840", phone = false)
+
+    private fun look(widthPx: Int, fontScale: Float, name: String, phone: Boolean) {
         Locale.setDefault(Locale.ENGLISH)
         runDesktopComposeUiTest(widthPx, 2100) {
             setContent {
@@ -97,34 +100,23 @@ class FileBarLooks {
                 }
             }
             waitForIdle()
-            titleKeepsItsRoom()
-            if (overflow) {
+            if (phone) titleKeepsItsRoom() else titleKeepsItsLine()
+            assertTrue(
+                onAllNodesWithTag("kit-top-bar-more").fetchSemanticsNodes().isNotEmpty(),
+                "some of the four actions do not fit beside the title at this width, so the bar owns an overflow",
+            )
+            labels.forEach { label -> ifShown(label) { layout -> wholeBesideTheTitle(label, layout) } }
+            shot(name)
+            onNodeWithTag("kit-top-bar-more").performClick()
+            waitForIdle()
+            labels.forEach { label ->
                 assertTrue(
-                    onAllNodesWithTag("kit-top-bar-more").fetchSemanticsNodes().isNotEmpty(),
-                    "four text actions cannot all sit beside the title at this width",
+                    onAllNodesWithText(label, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
+                    "$label is drawn somewhere: beside the title or in the bar's overflow",
                 )
-                labels.forEach { label -> ifShown(label) { layout -> wholeBesideTheTitle(label, layout) } }
-                shot(name)
-                onNodeWithTag("kit-top-bar-more").performClick()
-                waitForIdle()
-                labels.forEach { label -> ifShown(label) { layout -> wholeWhereShown(label, layout) } }
-                shot("$name-open")
-            } else {
-                labels.forEach { label ->
-                    assertTrue(
-                        onAllNodesWithText(label, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
-                        "$label sits in the bar at this width",
-                    )
-                }
-                assertTrue(
-                    onAllNodesWithTag("kit-top-bar-more").fetchSemanticsNodes().isEmpty(),
-                    "an Expanded window has no action limit, so this bar owns no overflow",
-                )
-                shot(name)
-                // An Expanded window has no action limit, so this bar owns no overflow to open; the open picture
-                // shows the bar as it is.
-                shot("$name-open")
+                wholeWhereShown(label, textLayoutOf(label))
             }
+            shot("$name-open")
         }
     }
 
@@ -134,10 +126,23 @@ class FileBarLooks {
         assertTrue(dp >= 90f, "the title keeps at least its minimum width: $dp dp")
     }
 
+    private fun ComposeUiTest.titleKeepsItsLine() {
+        val title = tagLayout("kit-top-bar-title")
+        val whole = !title.hasVisualOverflow && title.lineCount == 1
+        assertTrue(whole, "the title keeps its whole single line at this width")
+    }
+
     private fun ComposeUiTest.ifShown(label: String, check: (TextLayoutResult) -> Unit) {
         if (onAllNodesWithText(label, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
             check(textLayoutOf(label))
         }
+    }
+
+    private fun ComposeUiTest.tagLayout(tag: String): TextLayoutResult {
+        val results = mutableListOf<TextLayoutResult>()
+        onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsActions.GetTextLayoutResult].action!!(results)
+        return results.first()
     }
 
     private fun ComposeUiTest.textLayoutOf(text: String): TextLayoutResult {
