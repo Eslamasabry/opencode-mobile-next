@@ -67,10 +67,20 @@ class CustomProviderUiTest {
 
     @Test
     fun `PR142-23 the ids the page shows are refused before Save reaches the server`() {
+        // openai carries a connection, so it is a live provider; a no-connection row is the replaceable kind
+        // (B-LIB-324 below), not a refusal.
         val inventory =
             LibraryInventory(
                 providers =
-                    persistentListOf(IntegrationInfo("openai", "OpenAI", persistentListOf(), persistentListOf(), 0)),
+                    persistentListOf(
+                        IntegrationInfo(
+                            "openai",
+                            "OpenAI",
+                            persistentListOf(),
+                            persistentListOf(IntegrationConnectionInfo("credential", "c-1", "", null)),
+                            1,
+                        )
+                    ),
                 catalog =
                     CatalogSnapshot(
                         persistentListOf(CatalogProvider("zen", "Zen", true, "opencode")),
