@@ -19,12 +19,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/** The plain parts handed to [SettingsPagePanes]: the open page and the list pane's scroll. */
-internal class SettingsPagePanesParts(
-    val page: SettingsPage,
-    val listScroll: ScrollState,
-)
-
 /** The "Other conversations" sheet of a group's list, opened from the group's Choice row. */
 @Composable
 internal fun GroupOtherSheet(state: SettingsUi, actions: SettingsActions, open: Boolean, onClose: () -> Unit) {
@@ -42,6 +36,12 @@ internal fun GroupOtherSheet(state: SettingsUi, actions: SettingsActions, open: 
         }
     }
 }
+
+/** The plain parts handed to [SettingsPagePanes]: the open page and the list pane's scroll. */
+internal class SettingsPagePanesParts(
+    val page: SettingsPage,
+    val listScroll: ScrollState,
+)
 
 /** The language sheet of a group's list: picking a language closes it after the action runs. */
 @Composable
