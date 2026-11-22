@@ -296,10 +296,10 @@ def main():
     except Exception: fail(26)
     if not isinstance(payload, dict): fail(26)
     identity, block = payload.get("id"), payload.get("block")
-    replace = payload.get("replaceDeclared", False)
+    replace_entry = payload.get("replaceDeclared", False)
     if not isinstance(identity, str) or not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,63}", identity): fail(26)
     if not isinstance(block, dict) or set(block) != {"name", "package", "settings", "models"}: fail(26)
-    if not isinstance(replace, bool): fail(26)
+    if not isinstance(replace_entry, bool): fail(26)
     if not checked(folder, True): fail(20)
     locks = [hold(folder + "/.oc-provider.lock")]
     if checked(cards, True): locks.append(hold(cards + "/lock"))
@@ -313,7 +313,7 @@ def main():
         if not isinstance(config, dict): fail(21)
     providers = config.get("providers", {})
     if not isinstance(providers, dict): fail(21)
-    if identity in providers and not replace: fail(24)
+    if identity in providers and not replace_entry: fail(24)
     providers[identity] = block
     config["providers"] = providers
     data = (json.dumps(config, indent=2) + "\n").encode()
