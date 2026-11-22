@@ -1,45 +1,36 @@
 package io.github.eslamasabry.oc.feature.phonesetup.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.runtime.setup.ComponentProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupError
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupPreflight
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupPreflightResult
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgressRules
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
-import io.github.eslamasabry.oc.feature.phonesetup.presentation.RingCostPart
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyActions
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyUi
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupRingCost
-import io.github.eslamasabry.oc.ui.design.layout.Layout
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.setup.KitProgressRing
 import io.github.eslamasabry.oc.ui.kit.setup.KitTrailMark
 import io.github.eslamasabry.oc.ui.kit.state.KitChecklistStep
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStepState
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -61,42 +52,35 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoStart
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeWontRun
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorPackageRepair
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupEssentialsShort
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingChecking
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightLowMemoryBody
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightLowMemoryHeadline
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightLowSpaceBody
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightLowSpaceHeadline
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightMayBeSlow
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightOpenStorage
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightUnsupportedBody
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupPreflightUnsupportedHeadline
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingDetailsTitle
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingDownloading
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingInstalling
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingInterruptedTitle
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingMinutesLeft
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingMobileData
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingPausedTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingSafeToLeave
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingSafeToLeaveQuiet
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingStoppedNote
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingUnderMinute
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingUnpacking
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingWifi
-import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageStarting
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageUnpackingLinux
-import io.github.eslamasabry.oc.ui.words.res.setupHeartbeatLine
-import io.github.eslamasabry.oc.ui.words.res.setupHeartbeatQuiet
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewBytes
-import io.github.eslamasabry.oc.ui.words.res.setupProgressViewChecking
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewDone
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedAt
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedDuring
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedStep
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedUnknown
-import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewNoInternet
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewPercent
-import io.github.eslamasabry.oc.ui.words.res.setupProgressViewStageMeasured
-import io.github.eslamasabry.oc.ui.words.res.setupProgressViewStarting
 import io.github.eslamasabry.oc.ui.words.res.setupRbStatusUnreadable
 import io.github.eslamasabry.oc.ui.words.res.setupRbToolsUncheckable
-import io.github.eslamasabry.oc.ui.words.res.setupStepClock
 import io.github.eslamasabry.oc.ui.words.res.setupStepTimedOut
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
 
 /** The ring body of the setup job: the words and marks it needs, computed in one place. */
@@ -250,82 +234,6 @@ private fun wholeBytesCaption(
     )
 }
 
-/** The cost line under the ring (eta, last step, network), when there is one to say. */
-@Composable
-private fun JobCostLine(costParts: List<RingCostPart>, topGap: Dp) {
-    Spacer(Modifier.height(topGap))
-    // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
-    val cost =
-        costParts
-            .map { part ->
-                when (part) {
-                    RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
-                    is RingCostPart.Minutes ->
-                        org.jetbrains.compose.resources.pluralStringResource(
-                            Res.plurals.phoneSetupRingMinutesLeft,
-                            part.minutes,
-                            part.minutes,
-                        )
-                    RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
-                    RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
-                }
-            }
-            .joinToString(" · ")
-    KitText(
-        cost,
-        Modifier.testTag("phone-setup-progress-cost"),
-        role = TypeRole.RowTitle,
-        tone = TextTone.Secondary,
-        textAlign = TextAlign.Center,
-    )
-}
-
-/** The step clock line and the note under the ring, each only when it has something to say. */
-@Composable
-private fun JobBeatAndNote(progress: SetupProgress, note: String?, wide: Boolean, topGap: Dp, costEmpty: Boolean) {
-    val clock = progress.stepElapsedSeconds
-    val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
-    if (running && clock != null) {
-        // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
-        Spacer(Modifier.height(if (costEmpty) topGap else Space.S2.dp))
-        val doing = progress.activity?.let { activityWords(it) }
-        // The clock is the current step's own: the words say so.
-        val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
-        KitText(
-            if (doing != null) {
-                stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
-            } else {
-                stepClock
-            },
-            Modifier.testTag("phone-setup-progress-heartbeat"),
-            role = TypeRole.RowTitle,
-            tone = TextTone.Secondary,
-            textAlign = TextAlign.Center,
-        )
-        if ((progress.quietSeconds ?: 0) >= QUIET_SECONDS) {
-            Spacer(Modifier.height(Space.S1.dp))
-            KitText(
-                stringResource(Res.string.setupHeartbeatQuiet),
-                role = TypeRole.Secondary,
-                tone = TextTone.Tertiary,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
-    if (note != null) {
-        Spacer(Modifier.height(if (costEmpty && clock == null) topGap else Space.S2.dp))
-        KitText(
-            note,
-            if (wide) Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp) else Modifier.widthIn(max = 320.dp),
-            role = TypeRole.Secondary,
-            tone = TextTone.Tertiary,
-            textAlign = TextAlign.Center,
-        ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
-    }
-}
-
-private const val QUIET_SECONDS = 30
-
 /** The details sheet of the setup job: one line per step, then the technical details fold. */
 @Composable
 internal fun JobDetailsSheet(
@@ -449,3 +357,91 @@ private fun runtimeProblem(error: SetupError?): String =
         SetupError.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
         else -> stringResource(Res.string.setupProgressViewFailedUnknown)
     }
+
+@Composable
+internal fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
+    when (val check = state.preflight) {
+        is SetupPreflightResult.UnsupportedAbi ->
+            KitNotice(
+                title = stringResource(Res.string.phoneSetupPreflightUnsupportedHeadline),
+                message =
+                    stringResource(
+                        Res.string.phoneSetupPreflightUnsupportedBody,
+                        check.reportedAbi,
+                    ),
+                tone = StatusTone.Failure,
+            )
+        is SetupPreflightResult.LowMemory ->
+            KitNotice(
+                title = stringResource(Res.string.phoneSetupPreflightLowMemoryHeadline),
+                message =
+                    stringResource(
+                        Res.string.phoneSetupPreflightLowMemoryBody,
+                        Numbers.format(SetupPreflight.MINIMUM_MEMORY_MB),
+                        Numbers.format(check.totalMemoryMb),
+                    ),
+                tone = StatusTone.Failure,
+            )
+        is SetupPreflightResult.LowSpace ->
+            KitNotice(
+                title = stringResource(Res.string.phoneSetupPreflightLowSpaceHeadline),
+                message =
+                    stringResource(
+                        Res.string.phoneSetupPreflightLowSpaceBody,
+                        journeySize(check.bytesToFree),
+                    ),
+                tone = StatusTone.Failure,
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.phoneSetupPreflightOpenStorage),
+                            actions::openStorage,
+                        )
+                    ),
+            )
+        is SetupPreflightResult.MayBeSlow ->
+            KitNotice(
+                stringResource(
+                    Res.string.phoneSetupPreflightMayBeSlow,
+                    Numbers.format(check.totalMemoryMb),
+                )
+            )
+        else -> Unit
+    }
+}
+
+@Composable
+internal fun wideJourneyParts(
+    state: SetupJourneyUi,
+    rows: List<ComponentProgress>,
+): List<WidePartItem> =
+    rows.map { component ->
+        val fallback =
+            state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id
+        val total = component.bytesTotal
+        val done = component.bytesDone
+        val pct = component.percent?.takeIf { component.state == ComponentState.Running }
+        val progressNote =
+            when {
+                total != null && total > 0 && done != null -> {
+                    val (received, whole) = SetupProgressRules.formatBytePair(done, total)
+                    stringResource(Res.string.setupProgressViewBytes, received, whole)
+                }
+                pct != null ->
+                    stringResource(
+                        Res.string.setupProgressViewPercent,
+                        pct.coerceIn(0.0, JOURNEY_PERCENT_MAX).roundToInt(),
+                    )
+                else -> null
+            }
+        val status =
+            when (component.state) {
+                ComponentState.Done, ComponentState.Skipped -> WidePartStatus.Done
+                ComponentState.Running, ComponentState.Checking -> WidePartStatus.Working
+                ComponentState.Failed -> WidePartStatus.Failed
+                ComponentState.Pending -> WidePartStatus.Waiting
+            }
+        WidePartItem(component.id, itemTitle(component.id, fallback), status, progressNote)
+    }
+
+private const val JOURNEY_PERCENT_MAX = 100.0

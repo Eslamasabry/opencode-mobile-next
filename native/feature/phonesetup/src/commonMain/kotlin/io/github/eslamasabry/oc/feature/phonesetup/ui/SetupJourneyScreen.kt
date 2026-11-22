@@ -53,12 +53,12 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyActions
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyUi
-import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
@@ -74,7 +74,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
@@ -468,58 +467,6 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
 }
 
 @Composable
-private fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
-    when (val check = state.preflight) {
-        is SetupPreflightResult.UnsupportedAbi ->
-            KitNotice(
-                title = stringResource(Res.string.phoneSetupPreflightUnsupportedHeadline),
-                message =
-                    stringResource(
-                        Res.string.phoneSetupPreflightUnsupportedBody,
-                        check.reportedAbi,
-                    ),
-                tone = StatusTone.Failure,
-            )
-        is SetupPreflightResult.LowMemory ->
-            KitNotice(
-                title = stringResource(Res.string.phoneSetupPreflightLowMemoryHeadline),
-                message =
-                    stringResource(
-                        Res.string.phoneSetupPreflightLowMemoryBody,
-                        Numbers.format(SetupPreflight.MINIMUM_MEMORY_MB),
-                        Numbers.format(check.totalMemoryMb),
-                    ),
-                tone = StatusTone.Failure,
-            )
-        is SetupPreflightResult.LowSpace ->
-            KitNotice(
-                title = stringResource(Res.string.phoneSetupPreflightLowSpaceHeadline),
-                message =
-                    stringResource(
-                        Res.string.phoneSetupPreflightLowSpaceBody,
-                        journeySize(check.bytesToFree),
-                    ),
-                tone = StatusTone.Failure,
-                actions =
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.phoneSetupPreflightOpenStorage),
-                            actions::openStorage,
-                        )
-                    ),
-            )
-        is SetupPreflightResult.MayBeSlow ->
-            KitNotice(
-                stringResource(
-                    Res.string.phoneSetupPreflightMayBeSlow,
-                    Numbers.format(check.totalMemoryMb),
-                )
-            )
-        else -> Unit
-    }
-}
-
-@Composable
 private fun Job(
     state: SetupJourneyUi,
     actions: SetupJourneyActions,
@@ -632,38 +579,78 @@ internal fun RingTailCards(
     }
 }
 
+/** The cost line under the ring (eta, last step, network), when there is one to say. */
 @Composable
-internal fun wideJourneyParts(
-    state: SetupJourneyUi,
-    rows: List<ComponentProgress>,
-): List<WidePartItem> =
-    rows.map { component ->
-        val fallback =
-            state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id
-        val total = component.bytesTotal
-        val done = component.bytesDone
-        val pct = component.percent?.takeIf { component.state == ComponentState.Running }
-        val progressNote =
-            when {
-                total != null && total > 0 && done != null -> {
-                    val (received, whole) = SetupProgressRules.formatBytePair(done, total)
-                    stringResource(Res.string.setupProgressViewBytes, received, whole)
+internal fun JobCostLine(costParts: List<RingCostPart>, topGap: Dp) {
+    Spacer(Modifier.height(topGap))
+    // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
+    val cost =
+        costParts
+            .map { part ->
+                when (part) {
+                    RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
+                    is RingCostPart.Minutes ->
+                        org.jetbrains.compose.resources.pluralStringResource(
+                            Res.plurals.phoneSetupRingMinutesLeft,
+                            part.minutes,
+                            part.minutes,
+                        )
+                    RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
+                    RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
                 }
-                pct != null ->
-                    stringResource(
-                        Res.string.setupProgressViewPercent,
-                        pct.coerceIn(0.0, JOURNEY_PERCENT_MAX).roundToInt(),
-                    )
-                else -> null
             }
-        val status =
-            when (component.state) {
-                ComponentState.Done, ComponentState.Skipped -> WidePartStatus.Done
-                ComponentState.Running, ComponentState.Checking -> WidePartStatus.Working
-                ComponentState.Failed -> WidePartStatus.Failed
-                ComponentState.Pending -> WidePartStatus.Waiting
-            }
-        WidePartItem(component.id, itemTitle(component.id, fallback), status, progressNote)
-    }
+            .joinToString(" · ")
+    KitText(
+        cost,
+        Modifier.testTag("phone-setup-progress-cost"),
+        role = TypeRole.RowTitle,
+        tone = TextTone.Secondary,
+        textAlign = TextAlign.Center,
+    )
+}
 
-private const val JOURNEY_PERCENT_MAX = 100.0
+/** The step clock line and the note under the ring, each only when it has something to say. */
+@Composable
+internal fun JobBeatAndNote(progress: SetupProgress, note: String?, wide: Boolean, topGap: Dp, costEmpty: Boolean) {
+    val clock = progress.stepElapsedSeconds
+    val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
+    if (running && clock != null) {
+        // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
+        Spacer(Modifier.height(if (costEmpty) topGap else Space.S2.dp))
+        val doing = progress.activity?.let { activityWords(it) }
+        // The clock is the current step's own: the words say so.
+        val stepClock = stringResource(Res.string.setupStepClock, elapsedClock(clock))
+        KitText(
+            if (doing != null) {
+                stringResource(Res.string.setupHeartbeatLine, doing, stepClock)
+            } else {
+                stepClock
+            },
+            Modifier.testTag("phone-setup-progress-heartbeat"),
+            role = TypeRole.RowTitle,
+            tone = TextTone.Secondary,
+            textAlign = TextAlign.Center,
+        )
+        if ((progress.quietSeconds ?: 0) >= QUIET_SECONDS) {
+            Spacer(Modifier.height(Space.S1.dp))
+            KitText(
+                stringResource(Res.string.setupHeartbeatQuiet),
+                role = TypeRole.Secondary,
+                tone = TextTone.Tertiary,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+    if (note != null) {
+        Spacer(Modifier.height(if (costEmpty && clock == null) topGap else Space.S2.dp))
+        KitText(
+            note,
+            if (wide) Modifier.widthIn(max = Layout.CONTROL_MAX_WIDTH.dp) else Modifier.widthIn(max = 320.dp),
+            role = TypeRole.Secondary,
+            tone = TextTone.Tertiary,
+            textAlign = TextAlign.Center,
+        ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
+    }
+}
+
+private const val QUIET_SECONDS = 30
