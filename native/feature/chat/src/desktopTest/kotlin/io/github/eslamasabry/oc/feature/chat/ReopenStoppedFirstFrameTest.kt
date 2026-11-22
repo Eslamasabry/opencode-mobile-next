@@ -154,7 +154,7 @@ class ReopenStoppedFirstFrameTest {
         }
 
     @Test
-    fun `B-CHAT-421 the reopened stopped chat keeps its place: the Stopped note never moves`() =
+    fun `B-CHAT-421 the reopened stopped chat keeps its place - the Stopped note never moves`() =
         kitUiTest(412, 915) {
             val chat = reopenedChat()
             try {
