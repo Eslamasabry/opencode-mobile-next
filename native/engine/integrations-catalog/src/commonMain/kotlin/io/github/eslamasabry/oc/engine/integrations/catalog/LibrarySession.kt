@@ -530,7 +530,10 @@ public class LibrarySession(
             rows is Outcome.Failed ->
                 CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
             declaration == null -> CustomProviderOutcome.Invalid(draft.problems(taken))
-            else -> written(declaration, host.write(declaration))
+            else ->
+                // The taken check above refused every id a list shows, so an entry the settings file still holds
+                // under this id is stranded (issue 152): the write replaces it instead of refusing.
+                written(declaration, host.write(declaration.copy(replaceDeclared = true)))
         }
     }
 

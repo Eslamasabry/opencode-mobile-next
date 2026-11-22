@@ -109,13 +109,23 @@ private fun modelsProblem(ids: List<String>): CustomProviderProblem? =
 private fun modelInvalid(id: String): Boolean =
     id.length > CustomProviderDraft.MAX_MODEL || id.any { it <= ' ' || it == '#' || control(it) }
 
-/** The declared `providers.<providerId>` block: name, package, `settings.baseURL` and models. Never a key. */
-public data class CustomProviderDeclaration(val providerId: String, val name: String, val block: JsonObject) {
+/**
+ * The declared `providers.<providerId>` block: name, package, `settings.baseURL` and models. Never a key.
+ * [replaceDeclared] is the engine's decision (issue 152) that the settings file's entry under this id is stranded —
+ * no list shows the id — so the writer replaces it instead of refusing; the script never decides this itself.
+ */
+public data class CustomProviderDeclaration(
+    val providerId: String,
+    val name: String,
+    val block: JsonObject,
+    val replaceDeclared: Boolean = false,
+) {
     /** The run's stdin: the only place the person's words travel (never the script, a process argument). */
     public fun input(): String =
         buildJsonObject {
                 put("id", providerId)
                 put("block", block)
+                put("replaceDeclared", replaceDeclared)
             }
             .toString()
 }
@@ -193,7 +203,7 @@ public enum class CustomProviderWrite(public val code: Int) {
     Unsafe(code = 22),
     /** Another settings change holds the lock. */
     Busy(code = 23),
-    /** The file already declares this id. */
+    /** The file already declares this id and the run was not told to replace it. */
     AlreadyDeclared(code = 24),
     /** A hand-kept `opencode.jsonc` sits beside it; the app leaves hand-kept settings alone. */
     HandManaged(code = 25),
@@ -230,7 +240,7 @@ public object CustomProviderScript {
             "[ -x /usr/bin/python3 ] || exit 20\n" +
             "exec /usr/bin/python3 -I -c '" + PROGRAM + "' '" + CONFIG_DIR + "' '" + CARDS_DIR + "' 0 2>/dev/null\n"
 
-    /** argv: settings folder, card installer folder, the engine's uid. stdin: `{"id": …, "block": {…}}`. */
+    /** argv: settings folder, card installer folder, the engine's uid. stdin: `{"id": …, "block": {…}, "replaceDeclared": bool}`. */
     public const val PROGRAM: String =
         """import os, sys, json, stat, pathlib, tempfile, fcntl, re
 class Stop(Exception):
@@ -286,8 +296,10 @@ def main():
     except Exception: fail(26)
     if not isinstance(payload, dict): fail(26)
     identity, block = payload.get("id"), payload.get("block")
+    replace = payload.get("replaceDeclared", False)
     if not isinstance(identity, str) or not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,63}", identity): fail(26)
     if not isinstance(block, dict) or set(block) != {"name", "package", "settings", "models"}: fail(26)
+    if not isinstance(replace, bool): fail(26)
     if not checked(folder, True): fail(20)
     locks = [hold(folder + "/.oc-provider.lock")]
     if checked(cards, True): locks.append(hold(cards + "/lock"))
@@ -301,7 +313,7 @@ def main():
         if not isinstance(config, dict): fail(21)
     providers = config.get("providers", {})
     if not isinstance(providers, dict): fail(21)
-    if identity in providers: fail(24)
+    if identity in providers and not replace: fail(24)
     providers[identity] = block
     config["providers"] = providers
     data = (json.dumps(config, indent=2) + "\n").encode()
