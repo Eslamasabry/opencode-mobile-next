@@ -186,7 +186,7 @@ try: main()""",
     }
 
     @Test
-    fun `B-LIB-328 Edit replaces only with both flags; a hand-written entry exits 24 and stays byte-identical`() {
+    fun `B-LIB-328 Edit replaces only with both flags, and a hand-written entry exits 24 unchanged`() {
         config.mkdirs()
         file.writeText(
             """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
