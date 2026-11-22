@@ -47,18 +47,20 @@ import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingCommand
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 /**
@@ -255,13 +257,23 @@ public class ChatPresenter(
             .launchIn(scope)
         // S28 story 3: the undone line follows the session as well.
         val extra = feed.combine(world.undone) { f, u -> f to u }.combine(world.parent) { x, _ -> x }
-        return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
+        // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
+        // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
+        // after the first frame is drawn), and again on every return.
+        val upstream =
+            combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
                 present(i, l, h)
             }
-            // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
-            // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
-            // after the first frame is drawn).
-            .stateIn(scope, started, current())
+        val out = MutableStateFlow(current())
+        started
+            .command(out.subscriptionCount)
+            .distinctUntilChanged()
+            .latest { c ->
+                if (c == SharingCommand.START) upstream.onStart { emit(current()) } else emptyFlow()
+            }
+            .onEach { out.value = it }
+            .launchIn(scope)
+        return out.asStateFlow()
     }
 
     /**
