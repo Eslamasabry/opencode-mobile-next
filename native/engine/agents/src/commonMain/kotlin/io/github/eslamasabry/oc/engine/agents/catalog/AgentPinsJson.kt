@@ -224,7 +224,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "qwen",
       "signInMethod": "apiKeyHost",
       "recipe": {
-        "version": "0.28.0",
+        "version": "0.28.4",
         "executable": "qwen",
         "launchArgs": [
           "--acp"
@@ -232,20 +232,20 @@ internal const val AGENT_PINS_JSON: String = """{
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.0.tgz",
-            "sha256": "32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.4.tgz",
+            "sha256": "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5",
             "format": "npmTarGz",
             "member": "package/cli-entry.js",
-            "downloadBytes": 43527360,
-            "installedBytes": 158997434
+            "downloadBytes": 44773289,
+            "installedBytes": 162973081
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.0.tgz",
-            "sha256": "32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.4.tgz",
+            "sha256": "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5",
             "format": "npmTarGz",
             "member": "package/cli-entry.js",
-            "downloadBytes": 43527360,
-            "installedBytes": 158997434
+            "downloadBytes": 44773289,
+            "installedBytes": 162973081
           }
         }
       }

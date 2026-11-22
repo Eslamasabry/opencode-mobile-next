@@ -140,11 +140,11 @@ class CatalogInventoryTest {
             number("installedBytes", 246837648, 273240776),
         ),
         "qwen" to listOf(
-            text("0.26.4", "0.28.0"),
-            text("https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz", "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.0.tgz"),
-            text("a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89", "32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9"),
-            number("downloadBytes", 42796897, 43527360),
-            number("installedBytes", 154807157, 158997434),
+            text("0.26.4", "0.28.4"),
+            text("https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz", "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.4.tgz"),
+            text("a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89", "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5"),
+            number("downloadBytes", 42796897, 44773289),
+            number("installedBytes", 154807157, 162973081),
         ),
         "kilo" to listOf(
             text("7.8.18", "7.8.32"),

@@ -282,30 +282,30 @@ class AgentPinsParityTest {
         // Moved after the freeze. The SHA-256 is of the registry tarball, whose sha512 equals dist.integrity;
         // installedBytes is dist.unpackedSize.
         val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("qwen"))!!.recipe!!
-        assertEquals("0.28.0", recipe.version)
+        assertEquals("0.28.4", recipe.version)
         assertEquals("qwen", recipe.executable)
         assertEquals(listOf("--acp"), recipe.launchArgs)
         assertEquals(listOf(), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
             "https://registry.npmjs.org/@qwen-code/qwen-code/-/" +
-                "qwen-code-0.28.0.tgz",
+                "qwen-code-0.28.4.tgz",
             arm.url,
         )
-        assertEquals("32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9", arm.sha256)
-        assertEquals(43527360L, arm.downloadBytes)
-        assertEquals(158997434L, arm.installedBytes)
+        assertEquals("bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5", arm.sha256)
+        assertEquals(44773289L, arm.downloadBytes)
+        assertEquals(162973081L, arm.installedBytes)
         assertEquals("package/cli-entry.js", arm.archiveMember)
         assertEquals(AgentArtifactFormat.NpmTarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
             "https://registry.npmjs.org/@qwen-code/qwen-code/-/" +
-                "qwen-code-0.28.0.tgz",
+                "qwen-code-0.28.4.tgz",
             x64.url,
         )
-        assertEquals("32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9", x64.sha256)
-        assertEquals(43527360L, x64.downloadBytes)
-        assertEquals(158997434L, x64.installedBytes)
+        assertEquals("bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5", x64.sha256)
+        assertEquals(44773289L, x64.downloadBytes)
+        assertEquals(162973081L, x64.installedBytes)
         assertEquals("package/cli-entry.js", x64.archiveMember)
         assertEquals(AgentArtifactFormat.NpmTarGz, x64.format)
     }
