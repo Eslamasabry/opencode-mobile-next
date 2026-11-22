@@ -56,40 +56,40 @@ import kotlinx.collections.immutable.persistentMapOf
 class BigScreenServersRenders {
     private val actions =
         object : ServersActions {
-            override fun back() {}
-            override fun allowCleartext(allowed: Boolean, address: String) {}
-            override fun save(name: String, address: String, username: String, password: String) {}
-            override fun connect(id: ProfileId) {}
-            override fun create(id: ProfileId) {}
-            override fun remove(id: ProfileId) {}
+            override fun back() = Unit
+            override fun allowCleartext(allowed: Boolean, address: String) = Unit
+            override fun save(name: String, address: String, username: String, password: String) = Unit
+            override fun connect(id: ProfileId) = Unit
+            override fun create(id: ProfileId) = Unit
+            override fun remove(id: ProfileId) = Unit
         }
 
     private class Editor(val draft: ServerEditorInput? = null) : ServerEditorActions {
-        override fun keepDraft(input: ServerEditorInput) {}
+        override fun keepDraft(input: ServerEditorInput) = Unit
         override fun takeDraft(): ServerEditorInput? = draft
-        override fun refreshTailscale() {}
-        override fun openTailscale() {}
-        override fun installTailscale() {}
-        override fun back(dirty: Boolean) {}
-        override fun discard() {}
-        override fun keepEditing() {}
-        override fun step(step: ServerEditorStep) {}
-        override fun changed() {}
-        override fun check(input: ServerEditorInput) {}
-        override fun save(input: ServerEditorInput, anyway: Boolean) {}
-        override fun cancelCheck() {}
-        override fun inspect(address: String) {}
-        override fun dismissCertificate() {}
-        override fun scan() {}
-        override fun paste(text: String?) {}
+        override fun refreshTailscale() = Unit
+        override fun openTailscale() = Unit
+        override fun installTailscale() = Unit
+        override fun back(dirty: Boolean) = Unit
+        override fun discard() = Unit
+        override fun keepEditing() = Unit
+        override fun step(step: ServerEditorStep) = Unit
+        override fun changed() = Unit
+        override fun check(input: ServerEditorInput) = Unit
+        override fun save(input: ServerEditorInput, anyway: Boolean) = Unit
+        override fun cancelCheck() = Unit
+        override fun inspect(address: String) = Unit
+        override fun dismissCertificate() = Unit
+        override fun scan() = Unit
+        override fun paste(text: String?) = Unit
         override fun takePairing(): PairingFill? = null
-        override fun phone() {}
-        override fun agents() {}
-        override fun openReady() {}
-        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) {}
-        override fun stopFind() {}
-        override fun openAccessSettings() {}
-        override fun pickFound(finding: LanFinding) {}
+        override fun phone() = Unit
+        override fun agents() = Unit
+        override fun openReady() = Unit
+        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) = Unit
+        override fun stopFind() = Unit
+        override fun openAccessSettings() = Unit
+        override fun pickFound(finding: LanFinding) = Unit
     }
 
     private class Shot(val key: String, val w: Int, val h: Int, val scale: Float, val suffix: String)
@@ -132,14 +132,25 @@ class BigScreenServersRenders {
                     waitForIdle()
                     mainClock.advanceTimeBy(1_000)
                     waitForIdle()
-                    ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$name-${s.key}${s.suffix}.png"))
+                    ImageIO.write(
+                        onRoot().captureToImage().toAwtImage(),
+                        "png", File(out, "$name-${s.key}${s.suffix}.png")
+                    )
                 }
-            }.onFailure { println("RENDERFAIL $name ${s.key}${s.suffix} ${it::class.simpleName}: ${it.message?.take(200)}") }
+            }.onFailure {
+                println(
+                    "RENDERFAIL $name ${s.key}${s.suffix} ${it::class.simpleName}: ${it.message?.take(200)}"
+                )
+            }
         }
     }
 
     private val a = SavedServer(ProfileId("home"), "Home laptop", "https://laptop.example.net:4096", connected = true)
-    private val b = SavedServer(ProfileId("vps"), "Build server in the data centre for the nightly release jobs", "https://build-runner-eu-west-02.example.net:4096", connected = false)
+    private val b =
+        SavedServer(
+            ProfileId("vps"), "Build server in the data centre for the nightly release jobs",
+            "https://build-runner-eu-west-02.example.net:4096", connected = false
+        )
     private val c = SavedServer(ProfileId("phone"), "This phone", "http://127.0.0.1:4097", connected = false)
     private val d = SavedServer(ProfileId("desk"), "Office desktop", "https://desk.example.net:4096", connected = false)
     private val kind = BackendKind.entries.first()
@@ -178,18 +189,26 @@ class BigScreenServersRenders {
         )
 
     private fun draftOf(r: ServerEditorRecord) =
-        ServerEditorInput(r.id, r.name, r.address, r.username, r.backend, r.directory, null, true, r.tailscale, null, null, null)
+        ServerEditorInput(
+            r.id, r.name, r.address, r.username, r.backend, r.directory, null, true,
+            r.tailscale, null, null, null,
+        )
 
     @Test
     fun render() {
         val sink = KitSecretSink {}
         shoot("servers-list") {
-            CompositionLocalProvider(LocalKitSecretSink provides sink) { ServersScreen(listUi(), actions, onThisPhone = {}) }
+            CompositionLocalProvider(LocalKitSecretSink provides sink) {
+                ServersScreen(listUi(), actions, onThisPhone = {})
+            }
         }
         shoot("servers-page") {
             CompositionLocalProvider(LocalKitSecretSink provides sink) {
                 ServerEditorScreen(
-                    ServerEditorUi(step = ServerEditorStep.Ready, newServer = false, record = record, checked = ServerEditorProbe("2.2.6", listOf("opencode", "claude", "codex"))),
+                    ServerEditorUi(
+                        step = ServerEditorStep.Ready, newServer = false, record = record,
+                        checked = ServerEditorProbe("2.2.6", listOf("opencode", "claude", "codex"))
+                    ),
                     Editor(),
                 )
             }
@@ -197,7 +216,10 @@ class BigScreenServersRenders {
         shoot("servers-form") {
             CompositionLocalProvider(LocalKitSecretSink provides sink) {
                 ServerEditorScreen(
-                    ServerEditorUi(step = ServerEditorStep.Connect, newServer = false, connectOnSave = false, record = record, failedCheck = true, canScan = true, canTailscale = true),
+                    ServerEditorUi(
+                        step = ServerEditorStep.Connect, newServer = false, connectOnSave = false,
+                        record = record, failedCheck = true, canScan = true, canTailscale = true,
+                    ),
                     Editor(draftOf(record)),
                 )
             }
@@ -205,14 +227,24 @@ class BigScreenServersRenders {
         shoot("servers-form-pair") {
             CompositionLocalProvider(LocalKitSecretSink provides sink) {
                 ServerEditorScreen(
-                    ServerEditorUi(step = ServerEditorStep.Connect, newServer = true, canScan = true, canTailscale = true, pairingProblem = io.github.eslamasabry.oc.feature.servers.pairing.PairingProblem.NotJson),
+                    ServerEditorUi(
+                        step = ServerEditorStep.Connect, newServer = true, canScan = true,
+                        canTailscale = true,
+                        pairingProblem = io.github.eslamasabry.oc.feature.servers.pairing.PairingProblem.NotJson
+                    ),
                     Editor(),
                 )
             }
         }
         shoot("servers-failed") {
             CompositionLocalProvider(LocalKitSecretSink provides sink) {
-                ServersScreen(listUi(ServerIssue.ConnectFailed, Failure.Network(NetworkWhy.Dns, Redacted("OpenGateway - Network - Dns"))), actions, onThisPhone = {})
+                ServersScreen(
+                    listUi(
+                        ServerIssue.ConnectFailed,
+                        Failure.Network(NetworkWhy.Dns, Redacted("OpenGateway - Network - Dns"))
+                    ),
+                    actions, onThisPhone = {}
+                )
             }
         }
     }

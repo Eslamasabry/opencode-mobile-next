@@ -62,31 +62,31 @@ class ServersEditorWrapTest {
 
     private class Recorder : ServerEditorActions {
         val calls = mutableListOf<String>()
-        override fun keepDraft(input: ServerEditorInput) {}
+        override fun keepDraft(input: ServerEditorInput) = Unit
         override fun takeDraft(): ServerEditorInput? = null
-        override fun refreshTailscale() {}
-        override fun openTailscale() {}
-        override fun installTailscale() {}
-        override fun back(dirty: Boolean) {}
-        override fun discard() {}
-        override fun keepEditing() {}
-        override fun step(step: ServerEditorStep) {}
-        override fun changed() {}
+        override fun refreshTailscale() = Unit
+        override fun openTailscale() = Unit
+        override fun installTailscale() = Unit
+        override fun back(dirty: Boolean) = Unit
+        override fun discard() = Unit
+        override fun keepEditing() = Unit
+        override fun step(step: ServerEditorStep) = Unit
+        override fun changed() = Unit
         override fun check(input: ServerEditorInput) { calls += "check" }
         override fun save(input: ServerEditorInput, anyway: Boolean) { calls += "save anyway=$anyway" }
-        override fun cancelCheck() {}
-        override fun inspect(address: String) {}
-        override fun dismissCertificate() {}
-        override fun scan() {}
-        override fun paste(text: String?) {}
+        override fun cancelCheck() = Unit
+        override fun inspect(address: String) = Unit
+        override fun dismissCertificate() = Unit
+        override fun scan() = Unit
+        override fun paste(text: String?) = Unit
         override fun takePairing(): PairingFill? = null
-        override fun phone() {}
-        override fun agents() {}
-        override fun openReady() {}
-        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) {}
-        override fun stopFind() {}
-        override fun openAccessSettings() {}
-        override fun pickFound(finding: LanFinding) {}
+        override fun phone() = Unit
+        override fun agents() = Unit
+        override fun openReady() = Unit
+        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) = Unit
+        override fun stopFind() = Unit
+        override fun openAccessSettings() = Unit
+        override fun pickFound(finding: LanFinding) = Unit
     }
 
     private val record =
@@ -106,7 +106,9 @@ class ServersEditorWrapTest {
             serverVersion = "2.2.6",
         )
 
-    private fun showAt(widthDp: Int, ui: ServerEditorUi, actions: ServerEditorActions, block: ComposeUiTest.() -> Unit) {
+    private fun showAt(
+        widthDp: Int, ui: ServerEditorUi, actions: ServerEditorActions, block: ComposeUiTest.() -> Unit
+    ) {
         runDesktopComposeUiTest(widthDp, 800) {
             setContent {
                 CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) {
@@ -154,7 +156,10 @@ class ServersEditorWrapTest {
         val cases =
             listOf(
                 ServerEditorUi(step = ServerEditorStep.Connect, newServer = true, canScan = true),
-                ServerEditorUi(step = ServerEditorStep.Connect, newServer = false, connectOnSave = false, record = record, canScan = true),
+                ServerEditorUi(
+                    step = ServerEditorStep.Connect, newServer = false, connectOnSave = false,
+                    record = record, canScan = true,
+                ),
             )
         for (ui in cases) {
             val phone = seen(360, ui, words)
@@ -170,7 +175,10 @@ class ServersEditorWrapTest {
     @Test
     fun `B-SRV-306 the wide form keeps the pairing-problem notice and the fold back to pairing`() {
         val ui =
-            ServerEditorUi(step = ServerEditorStep.Connect, newServer = true, canScan = true, pairingProblem = PairingProblem.NotJson)
+            ServerEditorUi(
+                step = ServerEditorStep.Connect, newServer = true, canScan = true,
+                pairingProblem = PairingProblem.NotJson
+            )
         for (width in listOf(360, 1280)) {
             showAt(width, ui, Recorder()) {
                 assertEquals(true, has(pairingNotice), "the pairing notice at $width dp")

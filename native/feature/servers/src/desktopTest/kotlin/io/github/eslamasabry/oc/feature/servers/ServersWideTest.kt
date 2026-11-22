@@ -72,13 +72,13 @@ class ServersWideTest {
         var edited: ProfileId? = null
         var removed: ProfileId? = null
 
-        override fun back() {}
-        override fun allowCleartext(allowed: Boolean, address: String) {}
-        override fun save(name: String, address: String, username: String, password: String) {}
+        override fun back() = Unit
+        override fun allowCleartext(allowed: Boolean, address: String) = Unit
+        override fun save(name: String, address: String, username: String, password: String) = Unit
         override fun connect(id: ProfileId) {
             connected = id
         }
-        override fun create(id: ProfileId) {}
+        override fun create(id: ProfileId) = Unit
         override fun remove(id: ProfileId) {
             removed = id
         }
@@ -91,35 +91,41 @@ class ServersWideTest {
     }
 
     private class EditorActions(val draft: ServerEditorInput? = null) : ServerEditorActions {
-        override fun keepDraft(input: ServerEditorInput) {}
+        override fun keepDraft(input: ServerEditorInput) = Unit
         override fun takeDraft(): ServerEditorInput? = draft
-        override fun refreshTailscale() {}
-        override fun openTailscale() {}
-        override fun installTailscale() {}
-        override fun back(dirty: Boolean) {}
-        override fun discard() {}
-        override fun keepEditing() {}
-        override fun step(step: ServerEditorStep) {}
-        override fun changed() {}
-        override fun check(input: ServerEditorInput) {}
-        override fun save(input: ServerEditorInput, anyway: Boolean) {}
-        override fun cancelCheck() {}
-        override fun inspect(address: String) {}
-        override fun dismissCertificate() {}
-        override fun scan() {}
-        override fun paste(text: String?) {}
+        override fun refreshTailscale() = Unit
+        override fun openTailscale() = Unit
+        override fun installTailscale() = Unit
+        override fun back(dirty: Boolean) = Unit
+        override fun discard() = Unit
+        override fun keepEditing() = Unit
+        override fun step(step: ServerEditorStep) = Unit
+        override fun changed() = Unit
+        override fun check(input: ServerEditorInput) = Unit
+        override fun save(input: ServerEditorInput, anyway: Boolean) = Unit
+        override fun cancelCheck() = Unit
+        override fun inspect(address: String) = Unit
+        override fun dismissCertificate() = Unit
+        override fun scan() = Unit
+        override fun paste(text: String?) = Unit
         override fun takePairing(): PairingFill? = null
-        override fun phone() {}
-        override fun agents() {}
-        override fun openReady() {}
-        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) {}
-        override fun stopFind() {}
-        override fun openAccessSettings() {}
-        override fun pickFound(finding: LanFinding) {}
+        override fun phone() = Unit
+        override fun agents() = Unit
+        override fun openReady() = Unit
+        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) = Unit
+        override fun stopFind() = Unit
+        override fun openAccessSettings() = Unit
+        override fun pickFound(finding: LanFinding) = Unit
     }
 
-    private val home = SavedServer(ProfileId("home"), "Home laptop", "https://laptop.example.net:4096", connected = true)
-    private val desk = SavedServer(ProfileId("desk"), "Office desktop", "https://desk.example.net:4096", connected = false)
+    private val home =
+        SavedServer(
+            ProfileId("home"), "Home laptop", "https://laptop.example.net:4096", connected = true
+        )
+    private val desk =
+        SavedServer(
+            ProfileId("desk"), "Office desktop", "https://desk.example.net:4096", connected = false
+        )
     private val vps = SavedServer(ProfileId("vps"), "Build server", "https://build.example.net:4096", connected = false)
 
     private fun listUi() =
@@ -128,7 +134,10 @@ class ServersWideTest {
             rows =
                 ServerRowsState(
                     persistentMapOf(
-                        home.id to ServerRowFacts(BackendKind.OpenCode2, "2.1.1", "/home/dev/projects/oc_app", false, 0, 2, 0),
+                            home.id to
+                                ServerRowFacts(
+                                    BackendKind.OpenCode2, "2.1.1", "/home/dev/projects/oc_app", false, 0, 2, 0,
+                                ),
                         desk.id to ServerRowFacts(BackendKind.OpenCode2, "2.1.0", "/home/office", false, 3, 0, 1),
                         vps.id to ServerRowFacts(BackendKind.OpenCode2, "2.1.1", "/srv/build", false, 0, 0, 0),
                     ),
@@ -153,7 +162,10 @@ class ServersWideTest {
         )
 
     private fun draftOf(r: ServerEditorRecord) =
-        ServerEditorInput(r.id, r.name, r.address, r.username, r.backend, r.directory, null, true, r.tailscale, null, null, null)
+        ServerEditorInput(
+            r.id, r.name, r.address, r.username, r.backend, r.directory, null, true,
+            r.tailscale, null, null, null,
+        )
 
     private fun showAt(widthDp: Int, heightDp: Int, content: @Composable () -> Unit, block: ComposeUiTest.() -> Unit) {
         runDesktopComposeUiTest(widthDp, heightDp) {
@@ -214,53 +226,8 @@ class ServersWideTest {
                     "Expected Add server ($add) below list rows ($row) at ${width}dp",
                 )
             }
-            showAt(
-                width,
-                800,
-                {
-                    ServerEditorScreen(
-                        ServerEditorUi(
-                            step = ServerEditorStep.Ready,
-                            newServer = false,
-                            record = record,
-                            checked = ServerEditorProbe("2.2.6", listOf("opencode", "claude", "codex")),
-                        ),
-                        EditorActions(),
-                    )
-                },
-            ) {
-                onNodeWithText("Home laptop details").assertDoesNotExist()
-                val headline = onNodeWithText("Connected to Home laptop").getBoundsInRoot()
-                val open = onNodeWithText("Open conversations").getBoundsInRoot()
-                assertTrue(
-                    open.top.value > headline.bottom.value,
-                    "Expected single column at ${width}dp: headline=$headline, open=$open",
-                )
-            }
-            showAt(
-                width,
-                800,
-                {
-                    ServerEditorScreen(
-                        ServerEditorUi(
-                            step = ServerEditorStep.Connect,
-                            newServer = false,
-                            connectOnSave = false,
-                            record = record,
-                            canScan = true,
-                            canTailscale = true,
-                        ),
-                        EditorActions(draftOf(record)),
-                    )
-                },
-            ) {
-                val url = onNodeWithText("Server URL").getBoundsInRoot()
-                val check = onNodeWithText("Check connection").getBoundsInRoot()
-                assertTrue(
-                    check.top.value > url.bottom.value && abs(check.left.value - url.left.value) < 64f,
-                    "Expected single column form at ${width}dp: url=$url, check=$check",
-                )
-            }
+            narrowReadyAt(width)
+            narrowConnectAt(width)
         }
     }
 
@@ -367,3 +334,58 @@ class ServersWideTest {
         }
     }
 }
+
+    /** The editor's Ready page stays one column under 840 dp. */
+    private fun narrowReadyAt(width: Int) {
+    showAt(
+        width,
+        800,
+        {
+            ServerEditorScreen(
+                ServerEditorUi(
+                    step = ServerEditorStep.Ready,
+                    newServer = false,
+                    record = record,
+                    checked = ServerEditorProbe("2.2.6", listOf("opencode", "claude", "codex")),
+                ),
+                EditorActions(),
+            )
+        },
+    ) {
+        onNodeWithText("Home laptop details").assertDoesNotExist()
+        val headline = onNodeWithText("Connected to Home laptop").getBoundsInRoot()
+        val open = onNodeWithText("Open conversations").getBoundsInRoot()
+        assertTrue(
+            open.top.value > headline.bottom.value,
+            "Expected single column at ${width}dp: headline=$headline, open=$open",
+        )
+    }
+    }
+
+    /** The editor's Connect form stays one column under 840 dp. */
+    private fun narrowConnectAt(width: Int) {
+    showAt(
+        width,
+        800,
+        {
+            ServerEditorScreen(
+                ServerEditorUi(
+                    step = ServerEditorStep.Connect,
+                    newServer = false,
+                    connectOnSave = false,
+                    record = record,
+                    canScan = true,
+                    canTailscale = true,
+                ),
+                EditorActions(draftOf(record)),
+            )
+        },
+    ) {
+        val url = onNodeWithText("Server URL").getBoundsInRoot()
+        val check = onNodeWithText("Check connection").getBoundsInRoot()
+        assertTrue(
+            check.top.value > url.bottom.value && abs(check.left.value - url.left.value) < 64f,
+            "Expected single column form at ${width}dp: url=$url, check=$check",
+        )
+    }
+    }

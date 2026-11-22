@@ -37,8 +37,7 @@ internal fun ServerSavedRows(
     state: ServersUi,
     actions: ServersActions,
     enabled: KitEnabled,
-    phoneHost: Boolean = false,
-    selectedId: ProfileId? = null,
+    selection: ServerSavedRowSelection = ServerSavedRowSelection(),
     onSelect: ((ProfileId) -> Unit)? = null,
 ) {
     var detailsFor by remember { mutableStateOf<ProfileId?>(null) }
@@ -50,79 +49,13 @@ internal fun ServerSavedRows(
     KitRowGroup(leadingTiles = true) {
         ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
-            val phone =
-                PhoneOwnServers.isPhoneOwnServer(
-                    PhoneServerCandidate(server.id.raw, server.address),
-                    if (phoneHost) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere,
-                )
+            val phone = phoneOwnServer(server, selection.phoneHost)
             val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
             val kind = serverRowKindLabel(facts?.backend)
-            val secret = serverRowSecretNote(facts)
             val name = names[server.id] ?: server.name
-            val supporting =
-                kitServerSupporting(
-                    kind = if (showKind) kind else "",
-                    connected = server.connected,
-                    waiting = waiting,
-                    running = facts?.running ?: 0,
-                    secret = secret,
-                    queued = facts?.queued ?: 0,
-                )
-            val destination =
-                state.rows.moveDestination
-                    ?.takeIf { it != server.id }
-                    ?.let { id -> state.servers.firstOrNull { it.id == id } }
-            val items = buildList {
-                if (facts?.account == true)
-                    add(
-                        KitMenuItem(
-                            stringResource(Res.string.agentAccountTitle),
-                            { actions.openAccount(server.id) },
-                        )
-                    )
-                add(
-                    KitMenuItem(
-                        stringResource(Res.string.e7SetupConnect),
-                        { actions.connect(server.id) },
-                        enabled = enabled,
-                    )
-                )
-                if ((facts?.queued ?: 0) > 0 && destination != null)
-                    add(
-                        KitMenuItem(
-                            pluralStringResource(
-                                Res.plurals.rows40Move,
-                                facts!!.queued,
-                                facts.queued,
-                                destination.name,
-                            ),
-                            { actions.moveQueued(server.id) },
-                            enabled = enabled,
-                        )
-                    )
-                add(
-                    KitMenuItem(
-                        stringResource(Res.string.settingsV3ServerSettings),
-                        { actions.settings(server.id) },
-                    )
-                )
-                add(
-                    KitMenuItem(
-                        stringResource(Res.string.e7SetupEdit),
-                        { actions.edit(server.id) },
-                        enabled = enabled,
-                    )
-                )
-                add(KitMenuItem(stringResource(Res.string.kitDetails), { detailsFor = server.id }))
-                add(
-                    KitMenuItem(
-                        stringResource(Res.string.capsuleRemove),
-                        { actions.remove(server.id) },
-                        destructive = true,
-                        enabled = enabled,
-                    )
-                )
-            }
+            val supporting = serverSupportLine(showKind, kind, server, facts)
+            val items =
+                serverMenuItems(state, server, enabled, actions, onOpenDetails = { detailsFor = server.id })
             KitRow(
                 // The phone glyph is decorative, so a screen reader hears that this server is the phone's own.
                 modifier = if (phone) Modifier.semantics { stateDescription = thisPhone } else Modifier,
@@ -142,7 +75,7 @@ internal fun ServerSavedRows(
                         )
                     else null,
                 state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
-                selected = if (onSelect != null) server.id == selectedId else server.connected,
+                selected = if (onSelect != null) server.id == selection.selectedId else server.connected,
                 enabled = enabled.isEnabled,
                 disabledReason =
                     if (enabled.isEnabled) null
@@ -158,29 +91,7 @@ internal fun ServerSavedRows(
             )
         }
     }
-    val details = state.servers.firstOrNull { it.id == detailsFor }
-    KitSheet(
-        visible = details != null,
-        onDismissRequest = { detailsFor = null },
-        title =
-            details?.let { stringResource(Res.string.serverRowDetailsTitle, names[it.id] ?: it.name) }
-                ?: stringResource(Res.string.kitDetails),
-    ) {
-        details?.let {
-            KitText(stringResource(Res.string.connectionServerAddress), role = TypeRole.Label)
-            KitMonoText(it.address)
-            state.rows.facts[it.id]?.version?.takeIf(String::isNotBlank)?.let { version ->
-                Spacer(Modifier.height(Space.S3.dp))
-                KitText(stringResource(Res.string.serverRowDetailsVersion), role = TypeRole.Label)
-                KitMonoText(plainServerVersion(version))
-            }
-            state.rows.facts[it.id]?.directory?.takeIf(String::isNotBlank)?.let { directory ->
-                Spacer(Modifier.height(Space.S3.dp))
-                KitText(stringResource(Res.string.codexProjectFolder), role = TypeRole.Label)
-                KitMonoText(directory)
-            }
-        }
-    }
+    ServerDetailsSheet(state, names, detailsFor) { detailsFor = null }
 }
 
 /**

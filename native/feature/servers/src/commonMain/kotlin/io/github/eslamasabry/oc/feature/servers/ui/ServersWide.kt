@@ -140,182 +140,32 @@ internal fun ServersWideFrame(
 }
 
 /** Natural-height detail panel for the server chosen from the wide Servers list. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun WideServerDetailPanel(
-    server: SavedServer,
-    displayName: String,
-    kindLabel: String,
-    secretNote: String?,
+    parts: WideServerDetailParts,
     state: ServersUi,
     actions: ServersActions,
     enabled: KitEnabled,
-    phoneHost: Boolean,
 ) {
-    val facts = state.rows.facts[server.id]
-    val phone =
-        PhoneOwnServers.isPhoneOwnServer(
-            PhoneServerCandidate(server.id.raw, server.address),
-            if (phoneHost) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere,
-        )
-    val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
+    val facts = state.rows.facts[parts.server.id]
+    val phone = phoneOwnServer(parts.server, parts.phoneHost)
+    val waiting = if (parts.server.connected) 0 else (facts?.waiting ?: 0)
     val running = facts?.running ?: 0
     val queued = facts?.queued ?: 0
-    val statusText =
-        when {
-            server.connected -> stringResource(Res.string.serverRowConnected)
-            waiting > 0 -> pluralStringResource(Res.plurals.rows40Waiting, waiting, waiting)
-            running == 1 -> stringResource(Res.string.otherServerWorking__eq1)
-            running > 0 -> pluralStringResource(Res.plurals.otherServerWorking, running, running)
-            else -> stringResource(Res.string.settingsV3NotConnected)
-        }
-    val statusTone =
-        when {
-            server.connected -> TextTone.Accent
-            waiting > 0 -> TextTone.Primary
-            else -> TextTone.Secondary
-        }
+    val statusText = wideServerStatusText(parts.server.connected, waiting, running)
+    val statusTone = wideServerStatusTone(parts.server.connected, waiting)
     val version = facts?.version?.takeIf(String::isNotBlank)?.let(::plainServerVersion)
-    val runsValue = listOfNotNull(kindLabel, version).joinToString(" · ")
-    val activityNotes =
-        buildList {
-            if (running == 1) add(stringResource(Res.string.otherServerWorking__eq1))
-            else if (running > 0) add(pluralStringResource(Res.plurals.otherServerWorking, running, running))
-            if (waiting > 0) add(pluralStringResource(Res.plurals.rows40Waiting, waiting, waiting))
-            if (queued == 1) add(stringResource(Res.string.serverRowQueuedWaiting__eq1))
-            else if (queued > 0) add(pluralStringResource(Res.plurals.serverRowQueuedWaiting, queued, queued))
-            secretNote?.let(::add)
-        }
-    val destination =
-        state.rows.moveDestination
-            ?.takeIf { it != server.id }
-            ?.let { id -> state.servers.firstOrNull { it.id == id } }
-
+    val runsValue = listOfNotNull(parts.kindLabel, version).joinToString(" · ")
+    val activityNotes = wideServerActivityNotes(running, waiting, queued, parts.secretNote)
     KitSurfacePanel(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                KitSurfaceTile(
-                    icon = if (phone) KitIcons.phone else KitIcons.server,
-                    tone = if (server.connected) TextTone.Accent else TextTone.Secondary,
-                )
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitText(displayName, role = TypeRole.Headline, maxLines = 2)
-                    KitText(statusText, role = TypeRole.Label, tone = statusTone)
-                }
-            }
+            WideServerHeader(parts, phone, statusText, statusTone)
+            KitDivider()
+            WideServerFacts(parts.server, runsValue, facts, activityNotes)
             KitDivider()
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                WideFactRow(
-                    label = stringResource(Res.string.connectionServerAddress),
-                    value = server.address,
-                    mono = true,
-                )
-                KitDivider()
-                WideFactRow(
-                    label = stringResource(Res.string.connectorCardRuns),
-                    value = runsValue,
-                    mono = false,
-                )
-                facts?.directory?.takeIf(String::isNotBlank)?.let { dir ->
-                    KitDivider()
-                    WideFactRow(
-                        label = stringResource(Res.string.codexProjectFolder),
-                        value = dir,
-                        mono = true,
-                    )
-                }
-                if (activityNotes.isNotEmpty()) {
-                    KitDivider()
-                    WideFactRow(
-                        label = stringResource(Res.string.chatsHomeTitle),
-                        value = activityNotes.joinToString(" · "),
-                        mono = false,
-                    )
-                }
-            }
-            KitDivider()
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                val primaryLabel =
-                    when {
-                        state.newConversation || server.connected ->
-                            stringResource(Res.string.addServerReadyOpen, displayName)
-                        else -> stringResource(Res.string.settingsV3ConnectTo, displayName)
-                    }
-                val primaryClick: () -> Unit = {
-                    when {
-                        state.newConversation -> actions.create(server.id)
-                        server.connected -> actions.settings(server.id)
-                        else -> actions.connect(server.id)
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterStart) {
-                        Box(Modifier.kitMaxWidth(CapRole.Control, CapAlign.Start)) {
-                            KitButton(
-                                label = primaryLabel,
-                                onClick = primaryClick,
-                                role = KitButtonRole.Primary,
-                                enabled = enabled,
-                                fullWidth = true,
-                            )
-                        }
-                    }
-                    KitButton(
-                        label = stringResource(Res.string.serversEditNamed, displayName),
-                        onClick = { actions.edit(server.id) },
-                        role = KitButtonRole.Secondary,
-                        enabled = enabled,
-                        expand = false,
-                    )
-                }
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                    verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                    itemVerticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (!server.connected && !state.newConversation) {
-                        KitButton(
-                            label = stringResource(Res.string.settingsV3ServerSettings),
-                            onClick = { actions.settings(server.id) },
-                            role = KitButtonRole.Secondary,
-                            expand = false,
-                        )
-                    }
-                    if (queued > 0 && destination != null) {
-                        KitButton(
-                            label = pluralStringResource(Res.plurals.rows40Move, queued, queued, destination.name),
-                            onClick = { actions.moveQueued(server.id) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                            expand = false,
-                        )
-                    }
-                    if (facts?.account == true) {
-                        KitButton(
-                            label = stringResource(Res.string.agentAccountTitle),
-                            onClick = { actions.openAccount(server.id) },
-                            role = KitButtonRole.Secondary,
-                            expand = false,
-                        )
-                    }
-                    KitButton(
-                        label = stringResource(Res.string.agentsRemoveAction, displayName),
-                        onClick = { actions.remove(server.id) },
-                        role = KitButtonRole.Tertiary,
-                        danger = true,
-                        enabled = enabled,
-                        expand = false,
-                    )
-                }
+                WidePrimaryActions(parts, state, actions, enabled)
+                WideMoreActions(parts, state, facts, actions, enabled)
             }
         }
     }
@@ -405,18 +255,20 @@ internal fun WideFactRow(label: String, value: String, mono: Boolean) {
  * Right-hand panel of the wide server form: the facts the server told us once it is checked or ready, otherwise the
  * Tailscale guidance. It reads no field text beyond the address host and takes no secret.
  */
+/** The plain facts the wide server form's right-hand panel is handed, built at the call site. */
+internal class WideServerEditorFacts(
+    val step: ServerEditorStep,
+    val readyName: String,
+    val host: String?,
+    val version: String?,
+    val runtimes: List<String>,
+    val directory: String,
+)
+
 @Composable
-internal fun WideServerEditorDetails(
-    step: ServerEditorStep,
-    readyName: String,
-    host: String?,
-    version: String?,
-    runtimes: List<String>,
-    directory: String,
-    checked: Boolean,
-) {
-    if (step == ServerEditorStep.Ready || (checked && step == ServerEditorStep.Connect)) {
-        WideServerReadyDetailsPanel(readyName, host, version, runtimes, directory)
+internal fun WideServerEditorDetails(facts: WideServerEditorFacts, checked: Boolean) {
+    if (facts.step == ServerEditorStep.Ready || (checked && facts.step == ServerEditorStep.Connect)) {
+        WideServerReadyDetailsPanel(facts.readyName, facts.host, facts.version, facts.runtimes, facts.directory)
     } else {
         KitSurfacePanel(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {

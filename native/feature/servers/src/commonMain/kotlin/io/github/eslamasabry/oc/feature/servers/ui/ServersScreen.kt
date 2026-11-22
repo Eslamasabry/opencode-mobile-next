@@ -97,26 +97,37 @@ public fun ServersScreen(
             // A saved password or token that cannot be read or was refused is fixed where it is typed.
             val signIn = state.signIn?.let { id -> state.servers.firstOrNull { it.id == id } }
             val token = signIn?.let { state.rows.facts[it.id]?.backend }.let {
-                it == io.github.eslamasabry.oc.core.model.BackendKind.Codex || it == io.github.eslamasabry.oc.core.model.BackendKind.Paseo
+                it == io.github.eslamasabry.oc.core.model.BackendKind.Codex ||
+                    it == io.github.eslamasabry.oc.core.model.BackendKind.Paseo
             }
             val unreadable = signIn != null && state.failure is Failure.SecretUnavailable
             val enter = signIn?.let { server ->
                 io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
                     stringResource(
-                        if (!unreadable) (if (token) Res.string.updateConnectionToken else Res.string.e7BannerUpdatePassword)
+                        if (!unreadable)
+                            (if (token) Res.string.updateConnectionToken else Res.string.e7BannerUpdatePassword)
+                        else if (token) Res.string.connectionEnterToken else Res.string.connectionEnterPassword
                         else if (token) Res.string.connectionEnterToken else Res.string.connectionEnterPassword
                     ),
                     { actions.edit(server.id) },
                 )
             }
             KitErrorNotice(
-                if (unreadable) stringResource(if (token) Res.string.connectionTokenUnreadableDetails else Res.string.connectionPasswordUnreadableDetails)
+                if (unreadable)
+                    stringResource(
+                        if (token) Res.string.connectionTokenUnreadableDetails
+                        else Res.string.connectionPasswordUnreadableDetails
+                    )
                 else issueWords(issue, state.failure),
                 modifier = noticeModifier,
                 title = if (unreadable) stringResource(
-                    if (token) Res.string.connectionTokenUnreadable else Res.string.connectionPasswordUnreadable, signIn!!.name,
+                    if (token) Res.string.connectionTokenUnreadable
+                    else Res.string.connectionPasswordUnreadable,
+                    signIn!!.name,
                 ) else null,
-                failure = state.failure, detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails),
+                failure = state.failure,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
                 retry = guide ?: enter)
         }
     }
@@ -129,7 +140,11 @@ public fun ServersScreen(
                         name = stringResource(Res.string.openCodeConnectionLabel),
                         moreLabel = stringResource(Res.string.kitTopBarMore),
                         menu = listOf(
-                            KitMenuItem(stringResource(Res.string.e7LibraryReportABug), actions::reportProblem, KitIcons.bug),
+                            KitMenuItem(
+                                stringResource(Res.string.e7LibraryReportABug),
+                                actions::reportProblem,
+                                KitIcons.bug,
+                            ),
                         ),
                     )
                 else
@@ -163,10 +178,15 @@ public fun ServersScreen(
                     val primary = KitAction(
                         label = stringResource(if (empty && phoneChoice) Res.string.onboardingTermuxSetup
                             else if (empty) Res.string.welcomeComputerConnect else Res.string.e7SetupAddServer),
-                        onClick = if (empty && phoneChoice && onThisPhone != null) onThisPhone else ({ actions.edit(null) }),
+                        onClick =
+                            if (empty && phoneChoice && onThisPhone != null) onThisPhone
+                            else ({ actions.edit(null) }),
                         icon = if (empty) null else KitIcons.add, enabled = enabled,
                     )
-                    if (empty) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { KitButton(primary, fullWidth = true, hero = true) }
+                    if (empty)
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            KitButton(primary, fullWidth = true, hero = true)
+                        }
                     else KitActionBlock(primary = primary)
                 }),
             edges = if (wide) KitScreenEdges.Gutter else KitScreenEdges.Bleed,
@@ -174,7 +194,11 @@ public fun ServersScreen(
             if (wide) {
                 if (empty) {
                     val primary = KitAction(
-                        label = stringResource(if (phoneChoice) Res.string.onboardingTermuxSetup else Res.string.welcomeComputerConnect),
+                        label =
+                            stringResource(
+                                if (phoneChoice) Res.string.onboardingTermuxSetup
+                                else Res.string.welcomeComputerConnect
+                            ),
                         onClick = if (phoneChoice && onThisPhone != null) onThisPhone else ({ actions.edit(null) }),
                         enabled = enabled,
                     )
@@ -185,8 +209,19 @@ public fun ServersScreen(
                                 KitText(stringResource(Res.string.firstRunWhereQuestion), role = TypeRole.LargeTitle)
                                 KitButton(primary, fullWidth = true, hero = true)
                                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
-                                    KitButton(stringResource(Res.string.firstRunJustShowMe), actions::tryOffline, role = KitButtonRole.Tertiary, enabled = enabled)
-                                    if (onThisPhone != null) KitButton(stringResource(Res.string.welcomeMoreWays), onThisPhone, role = KitButtonRole.Tertiary, enabled = enabled)
+                                    KitButton(
+                                        stringResource(Res.string.firstRunJustShowMe),
+                                        actions::tryOffline,
+                                        role = KitButtonRole.Tertiary,
+                                        enabled = enabled,
+                                    )
+                                    if (onThisPhone != null)
+                                        KitButton(
+                                            stringResource(Res.string.welcomeMoreWays),
+                                            onThisPhone,
+                                            role = KitButtonRole.Tertiary,
+                                            enabled = enabled,
+                                        )
                                 }
                             }
                         },
@@ -199,8 +234,11 @@ public fun ServersScreen(
                                         icon = KitIcons.phone,
                                     )
                                     KitChoiceCard(
-                                        title = stringResource(Res.string.firstRunOnComputer), supporting = stringResource(Res.string.welcomeComputerLine),
-                                        selected = !phoneChoice, onSelect = { if (!state.busy) phoneChoice = false }, icon = KitIcons.computer,
+                                        title = stringResource(Res.string.firstRunOnComputer),
+                                        supporting = stringResource(Res.string.welcomeComputerLine),
+                                        selected = !phoneChoice,
+                                        onSelect = { if (!state.busy) phoneChoice = false },
+                                        icon = KitIcons.computer,
                                     )
                                 }
                             }
@@ -243,8 +281,11 @@ public fun ServersScreen(
                                             state = state,
                                             actions = actions,
                                             enabled = enabled,
-                                            phoneHost = onThisPhone != null,
-                                            selectedId = chosen.id,
+                                            selection =
+                                                ServerSavedRowSelection(
+                                                    phoneHost = onThisPhone != null,
+                                                    selectedId = chosen.id,
+                                                ),
                                             onSelect = { selectedRaw = it.raw },
                                         )
                                     }
@@ -253,14 +294,16 @@ public fun ServersScreen(
                         },
                         end = {
                             WideServerDetailPanel(
-                                server = chosen,
-                                displayName = names[chosen.id] ?: chosen.name,
-                                kindLabel = serverRowKindLabel(chosenFacts?.backend),
-                                secretNote = serverRowSecretNote(chosenFacts),
-                                state = state,
-                                actions = actions,
-                                enabled = enabled,
-                                phoneHost = onThisPhone != null,
+                                WideServerDetailParts(
+                                    chosen,
+                                    names[chosen.id] ?: chosen.name,
+                                    serverRowKindLabel(chosenFacts?.backend),
+                                    serverRowSecretNote(chosenFacts),
+                                    onThisPhone != null,
+                                ),
+                                state,
+                                actions,
+                                enabled,
                             )
                         },
                     )
@@ -269,7 +312,10 @@ public fun ServersScreen(
                 Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState())) {
                     issueBanner(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S1.dp))
                     if (empty) {
-                        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = (Space.S6 + Space.S6).dp)) {
+                        Column(
+                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                                .padding(top = (Space.S6 + Space.S6).dp)
+                        ) {
                             KitText(stringResource(Res.string.firstRunWhereQuestion), role = TypeRole.LargeTitle)
                             Spacer(Modifier.height((Space.S6 + Space.S2).dp))
                             KitChoiceCards {
@@ -279,19 +325,38 @@ public fun ServersScreen(
                                     icon = KitIcons.phone,
                                 )
                                 KitChoiceCard(
-                                    title = stringResource(Res.string.firstRunOnComputer), supporting = stringResource(Res.string.welcomeComputerLine),
-                                    selected = !phoneChoice, onSelect = { if (!state.busy) phoneChoice = false }, icon = KitIcons.computer,
+                                    title = stringResource(Res.string.firstRunOnComputer),
+                                    supporting = stringResource(Res.string.welcomeComputerLine),
+                                    selected = !phoneChoice,
+                                    onSelect = { if (!state.busy) phoneChoice = false },
+                                    icon = KitIcons.computer,
                                 )
                             }
                             Spacer(Modifier.height(Space.S2.dp))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
-                                KitButton(stringResource(Res.string.firstRunJustShowMe), actions::tryOffline, role = KitButtonRole.Tertiary, enabled = enabled)
-                                if (onThisPhone != null) KitButton(stringResource(Res.string.welcomeMoreWays), onThisPhone, role = KitButtonRole.Tertiary, enabled = enabled)
+                                KitButton(
+                                    stringResource(Res.string.firstRunJustShowMe),
+                                    actions::tryOffline,
+                                    role = KitButtonRole.Tertiary,
+                                    enabled = enabled,
+                                )
+                                if (onThisPhone != null)
+                                    KitButton(
+                                        stringResource(Res.string.welcomeMoreWays),
+                                        onThisPhone,
+                                        role = KitButtonRole.Tertiary,
+                                        enabled = enabled,
+                                    )
                             }
                         }
                     } else {
                         Spacer(Modifier.height(Space.S2.dp))
-                        ServerSavedRows(state, actions, enabled, phoneHost = onThisPhone != null)
+                        ServerSavedRows(
+                            state,
+                            actions,
+                            enabled,
+                            ServerSavedRowSelection(phoneHost = onThisPhone != null),
+                        )
                     }
                 }
             }
@@ -308,20 +373,41 @@ public fun ServersScreen(
                 }
             }, title = stringResource(Res.string.serversAdd), dismissible = !state.busy,
                 primary = io.github.eslamasabry.oc.ui.kit.KitAction(stringResource(Res.string.serversSave), {
-                    actions.save(arrivalName.text.toString(), arrivalAddress.text.toString(), arrivalUser.text.toString(), arrivalPassword.text.toString())
-                }, enabled = enabled, working = state.busy),
+                    actions.save(
+                        arrivalName.text.toString(),
+                        arrivalAddress.text.toString(),
+                        arrivalUser.text.toString(),
+                        arrivalPassword.text.toString()
+                    )
+                },
+                enabled = enabled,
+                working = state.busy,
+            ),
             ) {
-                // The existing arrivals contract supplies a fill, not an editor navigation target. Keep that memory-only
-                // handoff usable without putting a password in a route key or recreating a pairing payload.
+                // The existing arrivals contract supplies a fill, not an editor navigation target. Keep that
+                // memory-only handoff usable without putting a password in a route key or recreating a pairing.
                 KitField(arrivalName, stringResource(Res.string.serversName), enabled = enabled)
-                KitField(arrivalAddress, stringResource(Res.string.serversAddress), kind = KitFieldKind.Url, enabled = enabled)
+                KitField(
+                    arrivalAddress,
+                    stringResource(Res.string.serversAddress),
+                    kind = KitFieldKind.Url,
+                    enabled = enabled,
+                )
                 KitField(arrivalUser, stringResource(Res.string.serversUsername), enabled = enabled)
-                KitField(arrivalPassword, stringResource(Res.string.serversPassword), kind = KitFieldKind.Secret, enabled = enabled)
-                KitSwitchRow(title = stringResource(Res.string.serversCleartext), supporting = stringResource(Res.string.serversCleartextHelp),
+                KitField(
+                    arrivalPassword,
+                    stringResource(Res.string.serversPassword),
+                    kind = KitFieldKind.Secret,
+                    enabled = enabled,
+                )
+                KitSwitchRow(
+                    title = stringResource(Res.string.serversCleartext),
+                    supporting = stringResource(Res.string.serversCleartextHelp),
                     checked = state.cleartextAllowed, enabled = enabled,
                     onCheckedChange = { actions.allowCleartext(it, arrivalAddress.text.toString()) })
                 state.issue?.let { KitErrorNotice(issueWords(it, state.failure), failure = state.failure,
-                    detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails)) }
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails)) }
             }
             ConnectionCheckSheet(state.connectionCheck, actions)
         }

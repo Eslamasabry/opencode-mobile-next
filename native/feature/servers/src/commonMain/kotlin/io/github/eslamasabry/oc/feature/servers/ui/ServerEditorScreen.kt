@@ -455,15 +455,16 @@ public fun ServerEditorScreen(
             wideBottom = if (wide) primaryBottom else null,
             wideDetails = {
                 WideServerEditorDetails(
-                    step = state.step,
-                    readyName =
+                    WideServerEditorFacts(
+                        state.step,
                         state.record?.name?.ifBlank { null }
                             ?: name.text.toString().ifBlank { suggestedName },
-                    host = editorOrigin(address.text.toString())?.host,
-                    // The form's own facts line already says the version and tools; the panel adds the rest.
-                    version = null,
-                    runtimes = emptyList(),
-                    directory = directory.text.toString(),
+                        editorOrigin(address.text.toString())?.host,
+                        // The form's own facts line already says the version and tools; the panel adds the rest.
+                        null,
+                        emptyList(),
+                        directory.text.toString(),
+                    ),
                     checked = state.checked != null || state.step == ServerEditorStep.Ready,
                 )
             },
