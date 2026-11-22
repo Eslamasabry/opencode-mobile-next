@@ -78,6 +78,10 @@ class SendNoFalseFailureTest {
             Allow.jump("kit-prompt-bubble", rowArrives),
             Allow.jump("second ask", rowArrives),
             Allow.first("second ask", rowArrives),
+            Allow.jump("transcript-notice", rowArrives),
+            Allow.first("transcript-notice", rowArrives),
+            Allow.jump("kit-expand-row-header", rowArrives),
+            Allow.first("kit-expand-row-header", rowArrives),
             Allow.jump("Instructions updated", rowArrives),
             Allow.first("Instructions updated", rowArrives),
         )
