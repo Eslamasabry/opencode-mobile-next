@@ -102,7 +102,7 @@ class CatalogInventoryTest {
         // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
         // 2.1.327, Codex 0.170.0, Antigravity 1.5.11, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
-        // same agents' pins literally. Gemini CLI and Cline did not move.
+        // same agents' pins literally. Gemini CLI did not move.
         "claude" to listOf(
             text("2.1.319", "2.1.330"),
             text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.330/linux-arm64/claude"),
@@ -145,6 +145,17 @@ class CatalogInventoryTest {
             text("a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89", "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5"),
             number("downloadBytes", 42796897, 44773289),
             number("installedBytes", 154807157, 162973081),
+        ),
+        "cline" to listOf(
+            text("3.0.74", "3.0.75"),
+            text("https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz", "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.75.tgz"),
+            text("10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049", "8f20880bccb5c626d44c157c3dfa3916147be09cf3ebf6066fc7288f58288743"),
+            number("downloadBytes", 54812128, 55316566),
+            number("installedBytes", 162253096, 165464360),
+            text("https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz", "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.75.tgz"),
+            text("52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc", "e2fee40340a2bb248830f8e2a361e4b93b148a9ed90d246e69af3627176ea96d"),
+            number("downloadBytes", 55037574, 55550729),
+            number("installedBytes", 161793504, 165025248),
         ),
         "kilo" to listOf(
             text("7.8.18", "7.8.32"),

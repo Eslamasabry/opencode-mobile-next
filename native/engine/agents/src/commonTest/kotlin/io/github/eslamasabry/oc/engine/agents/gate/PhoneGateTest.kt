@@ -97,7 +97,11 @@ class PhoneGateTest {
         val lock = pins.paseo.packageLockSha256
         val flutter = gate("claude", "2.1.316", sha, "0.11.2", "other-lock", "v22.0.0")
         // The agent runs at the version the proof was given on, and that version is a tested one.
-        assertTrue(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
+        // It carries only while the pinned helper is itself tested: a pin not yet proved on a device is not listed.
+        assertEquals(
+            pins.paseo.version in pins.paseoTestedVersions,
+            PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.316"),
+        )
         assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.330"))
         assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.X64, pins, "2.1.316"))
         assertFalse(PhoneGate.qualifies(null, claude, AgentArchitecture.Arm64, pins, "2.1.316"))

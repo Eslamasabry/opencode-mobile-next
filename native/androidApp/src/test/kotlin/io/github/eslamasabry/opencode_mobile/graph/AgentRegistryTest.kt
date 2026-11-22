@@ -153,7 +153,11 @@ class AgentRegistryTest {
         assertFalse(PhoneAgentFacts.provenRuns(proof, "1.0.1", pins), "another version runs now")
         assertFalse(PhoneAgentFacts.provenRuns(proof, null, pins))
         val testedHelper = pins.paseoTestedVersions.first { it != pins.paseo.version }
-        assertTrue(PhoneAgentFacts.provenRuns(proof.copy(provenHelper = testedHelper), "1.0.0", pins))
+        // A tested helper's proof carries only while the pinned helper is tested too (a pin not yet proved is not).
+        assertEquals(
+            pins.paseo.version in pins.paseoTestedVersions,
+            PhoneAgentFacts.provenRuns(proof.copy(provenHelper = testedHelper), "1.0.0", pins),
+        )
         assertFalse(PhoneAgentFacts.provenRuns(proof.copy(provenHelper = "0.0.1"), "1.0.0", pins), "untested helper")
         assertFalse(PhoneAgentFacts.provenRuns(PhoneAgentFacts.Fact(false, "1.0.0", true), "1.0.0", pins), "no proof")
         // A record from before the proof was written: its pinned copy that ran is the proof.

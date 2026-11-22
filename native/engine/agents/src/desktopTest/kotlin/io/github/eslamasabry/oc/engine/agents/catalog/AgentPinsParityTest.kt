@@ -22,7 +22,7 @@ class AgentPinsParityTest {
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
     private val postFreeze =
-        setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen", "kilo")
+        setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen", "kilo", "cline")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -274,6 +274,31 @@ class AgentPinsParityTest {
         assertEquals(4769247L, x64.downloadBytes)
         assertEquals(8833664L, x64.installedBytes)
         assertEquals("fx", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Cline 3-0-75 pins equal the downloads checked on 2026-11-22`() {
+        // Moved after the freeze. Each SHA-256 is of the registry tarball, whose sha512 equals dist.integrity;
+        // installedBytes is the executable member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("cline"))!!.recipe!!
+        assertEquals("3.0.75", recipe.version)
+        assertEquals("cline", recipe.executable)
+        assertEquals(listOf("--acp"), recipe.launchArgs)
+        assertEquals(listOf("auth"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals("https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.75.tgz", arm.url)
+        assertEquals("8f20880bccb5c626d44c157c3dfa3916147be09cf3ebf6066fc7288f58288743", arm.sha256)
+        assertEquals(55316566L, arm.downloadBytes)
+        assertEquals(165464360L, arm.installedBytes)
+        assertEquals("package/bin/cline", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals("https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.75.tgz", x64.url)
+        assertEquals("e2fee40340a2bb248830f8e2a361e4b93b148a9ed90d246e69af3627176ea96d", x64.sha256)
+        assertEquals(55550729L, x64.downloadBytes)
+        assertEquals(165025248L, x64.installedBytes)
+        assertEquals("package/bin/cline", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
