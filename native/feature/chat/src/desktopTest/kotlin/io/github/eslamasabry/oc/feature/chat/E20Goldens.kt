@@ -87,6 +87,7 @@ internal object E20Goldens {
 }
 
 /** The real kit theme at density 1 and the given text [scale], on the page's ground. */
+@Suppress("LongParameterList") // the one scene door: every option arrives named, with its default
 @Composable
 internal fun E20Scene(
     scale: Float = 1f,
