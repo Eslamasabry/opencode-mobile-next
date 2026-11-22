@@ -1,8 +1,13 @@
 package io.github.eslamasabry.oc.engine.integrations.catalog
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
@@ -218,6 +223,8 @@ public enum class CustomProviderWrite(public val code: Int) {
     HandManaged(code = 25),
     /** The write itself failed, or the input was refused. */
     Failed(code = 26),
+    /** The file holds no entry under this id (the remove step). */
+    NoEntry(code = 27),
     ;
 
     public companion object {
@@ -244,6 +251,17 @@ public object CustomProviderScript {
 
     /** The card installer's OpenCode 2 folder; its `lock` serialises the two writers of the same file. */
     public const val CARDS_DIR: String = "/root/.oc-genui/openCode2"
+
+    /** The read step's whole stdin: the request names the step and nothing else. */
+    public const val READ_INPUT: String = """{"op":"read"}"""
+
+    /** The remove step's stdin for one id: the id travels on stdin only, never a command line. */
+    public fun removeInput(id: String): String =
+        buildJsonObject {
+                put("op", "remove")
+                put("id", id)
+            }
+            .toString()
 
     public fun script(): String =
         "set -eu\n" +
@@ -318,6 +336,7 @@ def main():
     try: payload = json.loads(raw)
     except Exception: fail(26)
     if not isinstance(payload, dict): fail(26)
+    if payload.get("op") is not None: fail(26)
     identity, block = payload.get("id"), payload.get("block")
     replace_entry = payload.get("replaceDeclared", False)
     require_declared = payload.get("requireDeclared", False)
@@ -360,9 +379,55 @@ public interface CustomProviderHost {
     /** Runs [CustomProviderScript] with [declaration] on stdin; the run's exit status, or a failed run. */
     public suspend fun write(declaration: CustomProviderDeclaration): Outcome<Int>
 
+    /**
+     * The read step: the run's exit status and its stdout (one JSON line per entry, the script's whole output).
+     * Never logged: a hand-written entry's values are not the app's to print.
+     */
+    public suspend fun read(): Outcome<Pair<Int, String>>
+
+    /** The remove step for one id on stdin; the run's exit status, or a failed run. */
+    public suspend fun remove(id: String): Outcome<Int>
+
     /** Restarts this phone's OpenCode through its one restart path (stop, then the manual start). */
     public suspend fun restart(): Outcome<Unit>
 }
+
+/**
+ * One `providers.<id>` entry as the read step reports it. A hand-written entry carries its id and
+ * [appShaped] false only: its values are not the app's to read, change or print.
+ */
+public data class DeclaredProvider(
+    val id: String,
+    val appShaped: Boolean,
+    val name: String? = null,
+    val baseUrl: String? = null,
+    val models: List<String> = emptyList(),
+)
+
+/** Parses the read step's output: one JSON object per line, sorted by id; a bad line is skipped. */
+public fun parseDeclaredProviders(output: String): List<DeclaredProvider> =
+    output
+        .lineSequence()
+        .mapNotNull { line ->
+            runCatching { Json.parseToJsonElement(line) }.getOrNull()
+        }
+        .mapNotNull { element ->
+            val entry = element as? JsonObject ?: return@mapNotNull null
+            val id = (entry["id"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+            val shaped = (entry["appShaped"] as? JsonPrimitive)?.booleanOrNull == true
+            if (!shaped) return@mapNotNull DeclaredProvider(id, appShaped = false)
+            DeclaredProvider(
+                id,
+                appShaped = true,
+                name = (entry["name"] as? JsonPrimitive)?.contentOrNull,
+                baseUrl = (entry["baseURL"] as? JsonPrimitive)?.contentOrNull,
+                models =
+                    (entry["models"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                        .orEmpty(),
+            )
+        }
+        .sortedBy { it.id }
+        .toList()
 
 /** Why nothing was saved. */
 public enum class CustomProviderRefusal {
@@ -378,10 +443,12 @@ public enum class CustomProviderRefusal {
     Unsafe,
     Busy,
     AlreadyDeclared,
+    /** The entry under this id is not one this app wrote (or is gone): hand-written settings are left alone. */
+    ChangedByHand,
     Failed,
 }
 
-/** Where an add (or its restart) ended. "Saved" and "loaded" are never one state. */
+/** Where an add, an edit or a remove (or its restart) ended. "Saved" and "loaded" are never one state. */
 public sealed interface CustomProviderOutcome {
     /** In the settings file, and the server lists it: its key comes next. */
     public data object Loaded : CustomProviderOutcome
@@ -389,11 +456,29 @@ public sealed interface CustomProviderOutcome {
     /** In the settings file; the running server has not picked it up by itself. */
     public data object SavedNotLoaded : CustomProviderOutcome
 
+    /** The id is already an app-written entry: Save asks before anything is written (4A). */
+    public data object NeedsReplaceAnswer : CustomProviderOutcome
+
     /** In the settings file; the restart failed ([detail] is a stable technical label). */
     public data class RestartFailed(val detail: String) : CustomProviderOutcome
 
     /** In the settings file; the server restarted and still does not list it. */
     public data object NotLoadedAfterRestart : CustomProviderOutcome
+
+    /** Removed from the settings file; the server still lists it until OpenCode restarts. */
+    public data object RemovedNotRestarted : CustomProviderOutcome
+
+    /**
+     * The saved key is gone but the entry stayed: the file write refused or failed
+     * ([detail] is a stable technical label). A second remove finishes the job.
+     */
+    public data class RemovePartial(val detail: String) : CustomProviderOutcome
+
+    /** Removed and the restarted server no longer lists it. */
+    public data object Removed : CustomProviderOutcome
+
+    /** Removed from the settings file, but the restarted server still lists it. */
+    public data object NotGoneAfterRestart : CustomProviderOutcome
 
     /** Nothing was changed. [detail] is a stable technical label for the Details fold, when there is one. */
     public data class Refused(val reason: CustomProviderRefusal, val detail: String? = null) : CustomProviderOutcome
@@ -412,4 +497,6 @@ internal fun CustomProviderWrite.refusal(): CustomProviderRefusal =
         CustomProviderWrite.Busy -> CustomProviderRefusal.Busy
         CustomProviderWrite.AlreadyDeclared -> CustomProviderRefusal.AlreadyDeclared
         CustomProviderWrite.HandManaged -> CustomProviderRefusal.HandManaged
+        // The entry is gone (27) or not the app's own shape (24) any more: a hand changed it.
+        CustomProviderWrite.NoEntry -> CustomProviderRefusal.ChangedByHand
     }

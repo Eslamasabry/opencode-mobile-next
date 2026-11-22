@@ -80,6 +80,15 @@ public enum class LibraryNotice {
     Ended,
 }
 
+/**
+ * The honest phases of a custom-provider restart: `restart()` is the phone host's one call (stop, then the manual
+ * start), so stop and start are not separate phases the app can report between.
+ */
+public enum class CustomProviderRestartPhase {
+    Restarting,
+    Checking,
+}
+
 public data class LibraryInventory(
     val loading: Boolean = true,
     val capabilities: ServerCapabilities? = null,
@@ -102,6 +111,10 @@ public data class LibraryInventory(
     val activeCredential: ImmutableMap<String, String?> = persistentMapOf(),
     /** True while the lists are the last-known ones, before the live read answers. */
     val fromKept: Boolean = false,
+    /** The `providers` entries the settings file holds on this phone; empty elsewhere, or when the read fails. */
+    val declared: ImmutableList<DeclaredProvider> = persistentListOf(),
+    /** While a custom-provider restart runs: its honest phase, so the sheet names the real stage. */
+    val customRestart: CustomProviderRestartPhase? = null,
 ) {
     /** A skeleton is only for a first-ever load: with kept lists the screen shows a quiet bar instead. */
     val coldLoading: Boolean
@@ -486,7 +499,10 @@ public class LibrarySession(
      * provider), writes the declaration into the server's own settings file, then gives the server a moment to load
      * it by itself. Never restarts on its own: a restart stops replies in progress, so the person asks for it.
      */
-    public suspend fun addCustomProvider(draft: CustomProviderDraft): CustomProviderOutcome = lane.withLock {
+    public suspend fun addCustomProvider(
+        draft: CustomProviderDraft,
+        replaceConfirmed: Boolean = false,
+    ): CustomProviderOutcome = lane.withLock {
         val src = current()
         val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
         val outcome =
@@ -499,8 +515,54 @@ public class LibrarySession(
         outcome
     }
 
-    /** Restarts this phone's OpenCode for a saved declaration, then waits for the server to list [providerId]. */
-    public suspend fun restartForCustomProvider(providerId: String): CustomProviderOutcome = lane.withLock {
+    /**
+     * Edit of a provider this app declared (DESIGN 2A): the id is fixed, the name, address and models come from
+     * [draft]. Only an app-written entry is replaced; a hand-written one is refused and never touched. The key is
+     * not read, written or disconnected here.
+     */
+    public suspend fun editCustomProvider(
+        providerId: String,
+        draft: CustomProviderDraft,
+    ): CustomProviderOutcome = lane.withLock {
+        val src = current()
+        val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
+        val outcome =
+            when {
+                src == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Changed)
+                host == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Unavailable)
+                else -> CustomProviderOutcome.Refused(CustomProviderRefusal.Failed)
+            }
+        if (src?.current() == true) refreshInside()
+        outcome
+    }
+
+    /**
+     * Remove of a provider this app declared: the read step must confirm an app-written entry, the saved key (when
+     * the row has one) is deleted first, then the entry leaves the settings file. The restart is the person's own
+     * choice ([restartForCustomProvider] with `expectGone`).
+     */
+    public suspend fun removeCustomProvider(providerId: String): CustomProviderOutcome = lane.withLock {
+        val src = current()
+        val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
+        val outcome =
+            when {
+                src == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Changed)
+                host == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Unavailable)
+                else -> CustomProviderOutcome.Refused(CustomProviderRefusal.Failed)
+            }
+        if (src?.current() == true) refreshInside()
+        outcome
+    }
+
+    /**
+     * Restarts this phone's OpenCode for a saved declaration, then waits for the server to list [providerId]; with
+     * [expectGone] (a remove) it waits for the list to come back WITHOUT the id, and only a list that answers
+     * counts.
+     */
+    public suspend fun restartForCustomProvider(
+        providerId: String,
+        expectGone: Boolean = false,
+    ): CustomProviderOutcome = lane.withLock {
         val src = current()
         val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
         val outcome =
