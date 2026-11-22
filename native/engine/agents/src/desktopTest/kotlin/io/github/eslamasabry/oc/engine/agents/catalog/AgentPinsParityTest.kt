@@ -90,30 +90,30 @@ class AgentPinsParityTest {
         assertEquals("antigravity", agent.providerId)
         assertEquals(AgentSignInMethod.BrowserOAuthHost, agent.signInMethod)
         assertEquals(AgentLimitation.AntigravityGoogleSignIn, agent.limitation)
-        assertEquals("1.5.13", recipe.version)
+        assertEquals("1.5.14", recipe.version)
         assertEquals("agy", recipe.executable)
         assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
         assertEquals(listOf("acp", "--login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/" +
                 "linux-arm/cli_linux_arm64.tar.gz",
             arm.url,
         )
-        assertEquals("36596ad8038531fd75f0e97b5ba8967a30f2fd67f8d9c61959d2e4761d7b215f", arm.sha256)
-        assertEquals(91596782L, arm.downloadBytes)
-        assertEquals(253711024L, arm.installedBytes)
+        assertEquals("e5f69a3123fac66974b303d9a201f381a0fb32b3ef869d9139da85d5caf67a2a", arm.sha256)
+        assertEquals(92116379L, arm.downloadBytes)
+        assertEquals(256070320L, arm.installedBytes)
         assertEquals("antigravity", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/" +
                 "linux-x64/cli_linux_x64.tar.gz",
             x64.url,
         )
-        assertEquals("7fa9cc6df0d09562693d637c406a86c1b0f52ab3364714b1fd2d79cc6060d4b2", x64.sha256)
-        assertEquals(100548668L, x64.downloadBytes)
-        assertEquals(270103240L, x64.installedBytes)
+        assertEquals("d58386322d2073e96b33f7cc32b4e9ae2db6228f58440369725967b2de48c7b5", x64.sha256)
+        assertEquals(101195950L, x64.downloadBytes)
+        assertEquals(273240776L, x64.installedBytes)
         // Gemini stays: the catalog only gains Antigravity.
         assertNotNull(AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("gemini")))
     }
@@ -348,30 +348,30 @@ class AgentPinsParityTest {
         // Moved after the freeze. Each SHA-256 is of the downloaded bytes, whose sha512 equals the release manifest's
         // value for that platform.
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("antigravity"))!!.recipe!!
-        assertEquals("1.5.13", recipe.version)
+        assertEquals("1.5.14", recipe.version)
         assertEquals("agy", recipe.executable)
         assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
         assertEquals(listOf("acp", "--login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/linux-arm/" +
                 "cli_linux_arm64.tar.gz",
             arm.url,
         )
-        assertEquals("36596ad8038531fd75f0e97b5ba8967a30f2fd67f8d9c61959d2e4761d7b215f", arm.sha256)
-        assertEquals(91596782L, arm.downloadBytes)
-        assertEquals(253711024L, arm.installedBytes)
+        assertEquals("e5f69a3123fac66974b303d9a201f381a0fb32b3ef869d9139da85d5caf67a2a", arm.sha256)
+        assertEquals(92116379L, arm.downloadBytes)
+        assertEquals(256070320L, arm.installedBytes)
         assertEquals("antigravity", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-x64/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/linux-x64/" +
                 "cli_linux_x64.tar.gz",
             x64.url,
         )
-        assertEquals("7fa9cc6df0d09562693d637c406a86c1b0f52ab3364714b1fd2d79cc6060d4b2", x64.sha256)
-        assertEquals(100548668L, x64.downloadBytes)
-        assertEquals(270103240L, x64.installedBytes)
+        assertEquals("d58386322d2073e96b33f7cc32b4e9ae2db6228f58440369725967b2de48c7b5", x64.sha256)
+        assertEquals(101195950L, x64.downloadBytes)
+        assertEquals(273240776L, x64.installedBytes)
         assertEquals("antigravity", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
