@@ -293,7 +293,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "cline",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "3.0.74",
+        "version": "3.0.75",
         "executable": "cline",
         "launchArgs": [
           "--acp"
@@ -303,20 +303,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz",
-            "sha256": "10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.75.tgz",
+            "sha256": "8f20880bccb5c626d44c157c3dfa3916147be09cf3ebf6066fc7288f58288743",
             "format": "tarGz",
             "member": "package/bin/cline",
-            "downloadBytes": 54812128,
-            "installedBytes": 162253096
+            "downloadBytes": 55316566,
+            "installedBytes": 165464360
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz",
-            "sha256": "52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.75.tgz",
+            "sha256": "e2fee40340a2bb248830f8e2a361e4b93b148a9ed90d246e69af3627176ea96d",
             "format": "tarGz",
             "member": "package/bin/cline",
-            "downloadBytes": 55037574,
-            "installedBytes": 161793504
+            "downloadBytes": 55550729,
+            "installedBytes": 165025248
           }
         }
       }

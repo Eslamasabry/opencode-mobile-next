@@ -145,7 +145,7 @@ class AgentCatalogTest {
         assertEquals(AgentRoute.AcpPaseo, kilo.route)
         assertEquals(AgentRoute.AcpPaseo, cline.route)
         assertEquals("7.8.32", kilo.recipe!!.version)
-        assertEquals("3.0.74", cline.recipe!!.version)
+        assertEquals("3.0.75", cline.recipe!!.version)
         assertEquals(listOf("acp"), kilo.recipe!!.launchArgs)
         assertEquals(listOf("--acp"), cline.recipe!!.launchArgs)
         assertEquals(listOf("auth", "login"), kilo.recipe!!.signInArgs)
