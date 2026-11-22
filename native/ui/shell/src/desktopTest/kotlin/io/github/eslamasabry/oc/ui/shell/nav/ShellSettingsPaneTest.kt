@@ -81,9 +81,21 @@ class ShellSettingsPaneTest {
                 openSeen = LocalOpenBeside.current
                 KitScreen(title = "Settings") {
                     KitText(HUB)
-                    KitButton("Open Servers", onClick = { navigator.open(ServersRoute.Home) }, modifier = Modifier.testTag("servers"))
-                    KitButton("Open Agents", onClick = { navigator.open(AgentsRoute.Home) }, modifier = Modifier.testTag("agents"))
-                    KitButton("Open Terminal", onClick = { navigator.open(TERMINAL_ROUTE) }, modifier = Modifier.testTag("terminal"))
+                    KitButton(
+                        "Open Servers",
+                        onClick = { navigator.open(ServersRoute.Home) },
+                        modifier = Modifier.testTag("servers"),
+                    )
+                    KitButton(
+                        "Open Agents",
+                        onClick = { navigator.open(AgentsRoute.Home) },
+                        modifier = Modifier.testTag("agents"),
+                    )
+                    KitButton(
+                        "Open Terminal",
+                        onClick = { navigator.open(TERMINAL_ROUTE) },
+                        modifier = Modifier.testTag("terminal"),
+                    )
                 }
             }
             entry<ServersRoute.Home> {
@@ -107,7 +119,11 @@ class ShellSettingsPaneTest {
                 LocalNavigationEventDispatcherOwner provides owner,
                 LocalDensity provides Density(1f),
             ) {
-                KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
+                KitTheme(
+                    appearance = KitAppearance(mode = AppearanceMode.Light),
+                    platform = platform,
+                    localeTag = "en",
+                ) {
                     NavShell(start = SettingsRoute.Home, deps = deps)
                 }
             }
@@ -158,7 +174,11 @@ class ShellSettingsPaneTest {
             tap("agents")
             onNodeWithText(AGENTS).assertIsDisplayed()
             onNodeWithText(SERVERS).assertDoesNotExist()
-            assertEquals(listOf(SettingsRoute.Home, AgentsRoute.Home), p.navigator.snapshot(), "the stack does not grow per tap")
+            assertEquals(
+                listOf(SettingsRoute.Home, AgentsRoute.Home),
+                p.navigator.snapshot(),
+                "the stack does not grow per tap",
+            )
             runOnIdle { p.back() }
             waitForIdle()
             assertEquals(listOf(SettingsRoute.Home), p.navigator.snapshot())

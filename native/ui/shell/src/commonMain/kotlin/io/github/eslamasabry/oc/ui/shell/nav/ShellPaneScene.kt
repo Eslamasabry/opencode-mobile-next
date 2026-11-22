@@ -266,12 +266,15 @@ private fun PanesRow(list: NavEntry<NavKey>, detail: NavEntry<NavKey>?, rest: Na
     val listWidth = ShellPanes.listWidth(LocalKitWindow.current.widthDp, LocalDensity.current.fontScale)
     val page = detail ?: rest
     val open = page?.metadata?.get(ShellPanes.ROUTE_KEY) as? NavKey
-    // A list with nothing open and no resting page (Settings' hub) fills the window as its own page. It stays in the same
-    // place of the same tree when a page opens beside it, so no page moves between parents (the lookahead rule).
+    // A list with nothing open and no resting page (Settings' hub) fills the window as its own page. It stays
+    // in the same place of the same tree when a page opens beside it, so no page moves between parents (the
+    // lookahead rule).
     val alone = page == null
     CompositionLocalProvider(LocalShellInPane provides true) {
         Row(Modifier.fillMaxSize().then(if (alone) Modifier else Modifier.typingLandsBeside(detailFocus))) {
-            KitPaneWindow(if (alone) Modifier.weight(1f).fillMaxHeight() else Modifier.width(listWidth.dp).fillMaxHeight()) {
+            KitPaneWindow(
+                if (alone) Modifier.weight(1f).fillMaxHeight() else Modifier.width(listWidth.dp).fillMaxHeight()
+            ) {
                 Box {
                     // The list shows the open page's row as the chosen one (and, with the resting page open, no second
                     // way to it).

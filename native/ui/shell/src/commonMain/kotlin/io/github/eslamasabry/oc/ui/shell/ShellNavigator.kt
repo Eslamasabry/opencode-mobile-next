@@ -116,8 +116,8 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
      * beside a list now: it opens as on a phone.
      */
     private fun replaceBeside(s: MutableList<NavKey>, route: AppRoute): Boolean {
-        if (!beside) return false
-        val layout = ShellPanes.layoutOf(s)?.takeIf { it.detail && it.pair.isDetail(route) } ?: return false
+        val layout = if (beside) ShellPanes.layoutOf(s)?.takeIf { it.detail && it.pair.isDetail(route) } else null
+        if (layout == null) return false
         s.rewrite(s.subList(0, layout.listIndex + 1).toList() + route)
         return true
     }
