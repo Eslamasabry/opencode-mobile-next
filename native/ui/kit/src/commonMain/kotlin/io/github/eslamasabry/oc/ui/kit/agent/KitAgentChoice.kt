@@ -242,7 +242,7 @@ internal fun AgentMark(slug: String, tint: Color, box: Dp, monogram: String? = n
  */
 @Composable
 private fun AgentMonogram(name: String, box: Dp) {
-    Box(Modifier.size(box), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(box).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
         // A stand-in for a picture, drawn in the picture's fixed box: frame text, so it stops growing at the frame cap
         // (1.3x) instead of outgrowing its box at the person's larger sizes (the audit saw a 52 dp box clip a 68 dp letter).
         KitText(agentMonogram(name), role = TypeRole.LargeTitle, tone = TextTone.Secondary, kind = io.github.eslamasabry.oc.ui.kit.KitTextKind.Frame, maxLines = 1)
