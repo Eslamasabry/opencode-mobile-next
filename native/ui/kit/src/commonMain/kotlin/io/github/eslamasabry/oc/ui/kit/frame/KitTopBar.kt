@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowPageTitle
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.kitTitleLine
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
@@ -52,6 +53,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
@@ -112,14 +115,16 @@ public object TopBarTitle {
 
 /**
  * The page's bar (Dart `KitTopBar`): the place in the person's words, one quiet line of state, Back
- * at the start or Close at the end, and the page's actions — at most 2 on compact and 3 on medium;
- * wide windows show them all. Actions past the window's limit go to [more], the one overflow (a
- * `KitRowMenu` from S1-KITA2); a bar with hidden actions and no [more] asserts in debug. Frame
- * text: it never grows past 1.3×, and the title wraps to two lines from 1.3×.
+ * at the start or Close at the end, and the page's actions — at most 2 on compact and 3 on medium.
+ * Actions past the window's limit, or too wide to stay whole beside the title, go to [more], the one
+ * overflow (a `KitRowMenu` from S1-KITA2); a bar with hidden actions and no [more] asserts in debug.
+ * Frame text: it never grows past 1.3×, and the title wraps to two lines from 1.3×.
  *
  * An action with an [KitLineAction.icon] is an icon button on phones and tablets (its words are what TalkBack says);
- * wide windows show the words. Words never break inside a word: one line, then "…". [large] is a hub's bar: the
- * title in the 28 sp large size on its own line, the actions on the title's line at the end (or beside Back).
+ * wide windows show the words. A text action's words are never cut: the actions stay beside the title while
+ * their whole labels fit in the room the title keeps — 90 dp at least on a compact window, its whole single
+ * line on wider ones — and the rest go to [more] whole. [large] is a hub's bar: the title in the 28 sp large
+ * size on its own line, the actions on the title's line at the end (or beside Back).
  *
  * States: default, subtitle, switcher, disabled (action) Text: frame Cap: Fill Motion: none Hidden:
  * none Replaces: KitTopBar (lib/ui/kit/kit_top_bar.dart)
@@ -214,7 +219,18 @@ public fun KitTopBar(
     val leadDp =
         if (hasBack) FlutterKitTokens.TEXT_RAIL + Space.S1
         else tokens.gutter + Space.S1 + if (hasClose) tokens.minTarget + Space.S1 else 0
-    val (shown, hidden) = TopBarActions.split(actions, limit, more != null, leadDp)
+    // Flutter's pushed page: Back, the title and the actions share one row (kit_top_bar.dart:346-420).
+    val oneRowBack = hasBack && !backBesideTitle && !large
+    val barFit =
+        TopBarActions.split(
+            actions,
+            limit,
+            more != null,
+            title,
+            TopBarShape(leadDp, large, oneRowBack, !(large && hasBack)),
+        )
+    val shown = barFit.shown
+    val hidden = barFit.hidden
     val textOverflowed = shown.size < actions.take(limit).size
     kitAssert(exit == KitTopBarExit.None || (exitLabel != null && onExit != null)) {
         "KitTopBar: an exit needs its label and action"
@@ -229,19 +245,9 @@ public fun KitTopBar(
     val icons = compact || window.cls == WindowClass.Medium
     val actionRow: @Composable () -> Unit = {
         if (shown.isNotEmpty()) {
-            val rowModifier =
-                if (compact) Modifier
-                else
-                    Modifier.layout { measurable, constraints ->
-                        val cap =
-                            (constraints.maxWidth * (if (large) LARGE_ACTIONS_SHARE else ACTIONS_SHARE))
-                                .toInt()
-                                .coerceAtLeast(constraints.minWidth)
-                        val placeable = measurable.measure(constraints.copy(maxWidth = cap))
-                        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                    }
+            // The split has already bounded these actions to the room their whole labels need beside the title,
+            // so the row lays each out at its full width: a label is never cut.
             Row(
-                rowModifier,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 shown.forEach { action ->
@@ -255,8 +261,7 @@ public fun KitTopBar(
                             enabled = KitEnabled.of(action.enabled, action.disabledReason),
                         )
                     } else {
-                        val itemMod = if (compact) Modifier else Modifier.weight(1f, fill = false)
-                        KitInlineAction(action, itemMod, maxLines = 1)
+                        KitInlineAction(action, maxLines = 1)
                     }
                 }
             }
@@ -313,9 +318,7 @@ public fun KitTopBar(
     }
     // The title starts on the page gutter (E20-S08: Back, when there is one, takes the line above); the project ·
     // branch line or the subtitle starts under the title's first letter, one left edge for both.
-    val back = exit == KitTopBarExit.Back && onExit != null
-    // Flutter's pushed page: Back, the title and the actions share one row (kit_top_bar.dart:346-420).
-    val oneRowBack = back && !backBesideTitle
+    val back = hasBack
     val titleRole = TopBarTitle.role(switcher = onTitleTap != null)
     val titleRow: @Composable () -> Unit = {
         Row(
@@ -542,7 +545,7 @@ private fun BackBar(
         val width = constraints.maxWidth
         val loose = Constraints(maxWidth = width)
         val exitP = exitM.map { it.measure(loose) }
-        // The actions cap their own share of the bar (ACTIONS_SHARE), so the title always keeps room.
+        // The split has already bounded the actions to the room their whole labels need beside the title.
         val actionsP = actionsM.map { it.measure(loose) }
         val exitW = exitP.maxOfOrNull { it.width } ?: 0
         val actionsW = actionsP.maxOfOrNull { it.width } ?: 0
@@ -594,65 +597,139 @@ private const val LARGE_BAR_SCALE = 1.2f
 /** The minimum width (dp) the bar title keeps on a compact window beside text actions. */
 private const val MIN_TITLE_WIDTH_DP = 90
 
+/** Any other bar's step between the title's box and the actions: its row's space1. */
+private val ROW_STEP = Space.S1.dp
+
+/** The bar a split works for. */
+private data class TopBarShape(
+    /** The room before the title's box: Back's 56 dp rail, or the gutter and, if any, a Close button. */
+    val leadDp: Int,
+    val largeTitle: Boolean,
+    /** Back, the title and the actions share one row, so the title and the actions share the room. */
+    val oneRow: Boolean,
+    /** Whether the actions sit beside the title at all (a large bar with Back keeps them on Back's own row). */
+    val titleBesideActions: Boolean,
+)
+
+/** What the bar does with its actions: what stays beside the title and what the overflow holds. */
+private data class TopBarSplit(val shown: List<KitLineAction>, val hidden: List<KitLineAction>)
+
+/**
+ * The measurer and the frame sizes a bar's words are laid out at: the size KitText gives frame text (the platform's
+ * size at the current scale, never past 1.3 × the spec).
+ */
+private class BarText(private val measurer: TextMeasurer, private val density: Density, val minTargetPx: Int) {
+    /** An inline action pads its words by 12 dp on each side. */
+    private val actionPadPx: Int = with(density) { (Space.S3 + Space.S3).dp.roundToPx() }
+
+    /** [base] as KitText sizes frame text. */
+    fun style(base: TextStyle, app: Density): TextStyle {
+        val specSp = base.fontSize.value
+        val target = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
+        val scale = target / specSp
+        return copy(
+            fontSize = target.sp,
+            lineHeight = (lineHeight.value * scale).sp,
+            letterSpacing = (letterSpacing.value * scale).sp,
+        )
+    }
+
+    /** The words on one line, unwrapped: as wide as KitText lays them out. */
+    fun width(words: String, style: TextStyle): Int =
+        measurer
+            .measure(AnnotatedString(words), style, softWrap = false, maxLines = 1, density = density)
+            .size
+            .width
+
+    /** Each action's whole width in px: a 48 dp icon button for a glyph drawn as one, else its padded words. */
+    fun widths(candidates: List<KitLineAction>, glyphIsIcon: Boolean, style: TextStyle): List<Int> =
+        candidates.map { action ->
+            if (action.icon != null && glyphIsIcon) minTargetPx
+            else maxOf(minTargetPx, width(action.label, style) + actionPadPx)
+        }
+
+    /**
+     * The title's share of the room in px: its minimum on a compact window (it may wrap), its whole single line on
+     * wider ones, and none where the actions do not sit beside it.
+     */
+    fun titleShare(cls: WindowClass, words: String, style: TextStyle, beside: Boolean): Int =
+        when {
+            !beside -> 0
+            cls == WindowClass.Compact -> with(density) { MIN_TITLE_WIDTH_DP.dp.roundToPx() }
+            else -> width(words, style)
+        }
+}
+
+/**
+ * One bar's measured pieces, in px: each action's whole width, and which of them fit beside the title's room.
+ */
+private class BarFit(
+    val width: Int,
+    val lead: Int,
+    private val minTarget: Int,
+    private val widths: List<Int>,
+    private val beyond: Int,
+    private val hasMore: Boolean,
+) {
+    /** The overflow's own place when [k] actions stay: none when every action stays and the caller brings no menu. */
+    private fun overflow(k: Int): Int = if (k < beyond || hasMore) minTarget else 0
+
+    /** The most of the actions that fit in [room] beside [step] px between them and the title's box. */
+    fun kept(room: Int, step: Int): Int {
+        for (k in widths.size downTo 1) {
+            if (widths.take(k).sum() + step + overflow(k) <= room) return k
+        }
+        return 0
+    }
+}
+
 private object TopBarActions {
+    /**
+     * Which actions stay beside the title and which go to the overflow. An action with a glyph is a 48 dp icon button
+     * on compact and medium windows; a wide window shows its words. A text action's words are never cut: the actions
+     * stay, in the caller's order, while their whole labels fit in the room the title keeps, and the rest go to the
+     * overflow, whole.
+     */
     @Composable
     fun split(
         actions: List<KitLineAction>,
         limit: Int,
         hasMore: Boolean,
-        leadDp: Int,
-    ): Pair<List<KitLineAction>, List<KitLineAction>> {
+        title: String,
+        shape: TopBarShape,
+    ): TopBarSplit {
         val window = LocalKitWindow.current
         val candidates = actions.take(limit)
-        if (window.cls != WindowClass.Compact || candidates.none { it.icon == null }) {
-            return candidates to actions.drop(limit)
+        if (candidates.none { it.icon == null }) {
+            return TopBarSplit(candidates, actions.drop(limit))
         }
         val tokens = LocalKitTokens.current
         val app = LocalKitAppDensity.current ?: LocalDensity.current
+        val typography = LocalKitTypography.current
         val frameDensity = Density(app.density, 1f)
-        val base = LocalKitTypography.current.style(TypeRole.Button)
-        val specSp = base.fontSize.value
-        val target = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
-        val scale = target / specSp
-        val style =
-            base.copy(
-                fontSize = target.sp,
-                lineHeight = (base.lineHeight.value * scale).sp,
-                letterSpacing = (base.letterSpacing.value * scale).sp,
-                fontFeatureSettings = "tnum",
-            )
-        val measurer = rememberTextMeasurer()
+        val minTargetPx = with(frameDensity) { tokens.minTarget.dp.roundToPx() }
+        val text = BarText(rememberTextMeasurer(), frameDensity, minTargetPx)
+        val labelStyle = text.style(typography.style(TypeRole.Button), app).copy(fontFeatureSettings = "tnum")
+        val titleRole = if (shape.largeTitle) TypeRole.LargeTitle else TypeRole.Headline
+        val titleStyle = text.style(typography.style(titleRole), app)
+        val words = kitTitleLine(title)
         return with(frameDensity) {
-            val minTargetPx = tokens.minTarget.dp.roundToPx()
-            val padPx = (Space.S3 + Space.S3).dp.roundToPx()
-            val roomPx = (window.widthDp.dp - leadDp.dp - MIN_TITLE_WIDTH_DP.dp).roundToPx()
-            val widths =
-                candidates.map { action ->
-                    if (action.icon != null) minTargetPx
-                    else {
-                        val wordsPx =
-                            measurer
-                                .measure(
-                                    AnnotatedString(action.label),
-                                    style,
-                                    softWrap = false,
-                                    maxLines = 1,
-                                    density = frameDensity,
-                                )
-                                .size
-                                .width
-                        maxOf(minTargetPx, wordsPx + padPx)
-                    }
-                }
-            var kept = 0
-            for (k in candidates.size downTo 1) {
-                val overflowPx = if (k < actions.size || hasMore) minTargetPx else 0
-                if (widths.take(k).sum() <= roomPx - overflowPx) {
-                    kept = k
-                    break
-                }
-            }
-            actions.take(kept) to actions.drop(kept)
+            val glyphIsIcon = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
+            val fit =
+                BarFit(
+                    width = window.widthDp.dp.roundToPx(),
+                    lead = shape.leadDp.dp.roundToPx(),
+                    minTarget = text.minTargetPx,
+                    widths = text.widths(candidates, glyphIsIcon, labelStyle),
+                    beyond = actions.size,
+                    hasMore = hasMore,
+                )
+            val titleShare = text.titleShare(window.cls, words, titleStyle, shape.titleBesideActions)
+            val room = fit.width - fit.lead - titleShare
+            // What the bar keeps between the title's box and the actions: a one-row Back bar keeps none of it here.
+            val step = (if (shape.oneRow) 0.dp else ROW_STEP).roundToPx()
+            val kept = fit.kept(room, step)
+            TopBarSplit(actions.take(kept), actions.drop(kept))
         }
     }
 
@@ -686,12 +763,6 @@ private object TopBarActions {
         }
     }
 }
-
-/** The most of the bar's free width the inline actions may take (QA wave 4 N1). */
-private const val ACTIONS_SHARE = 0.5f
-
-/** A large bar's actions sit beside a title that may wrap, so they may take a little more. */
-private const val LARGE_ACTIONS_SHARE = 0.55f
 
 /** The kit's tight title/subtitle step (a hub bar's title column): the line's words this far under the title's. */
 private val TITLE_LINE_GAP = 2.dp
