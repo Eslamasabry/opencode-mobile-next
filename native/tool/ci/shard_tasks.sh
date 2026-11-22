@@ -72,7 +72,7 @@ if count == 1 and idx == 0:
     # under the class sizes a positional k % 8 dealing yields (13,13,...,12 for 102 module tasks), laid out
     # round-major (first task of every shard, then every second, ...), the quality pair last. native-ci.yml deals
     # list positions k to shard k % n, so round-major order makes the picker of the workflow reproduce that plan
-    # with no workflow change. Smaller counts (2, 4) apply only to a fast lane's list mode, whose order comes from
+    # with no workflow change. Smaller counts (2, 4) apply only to fast-lane list mode, whose order comes from
     # fast_tasks.sh.
     quality = [t for t in (":quality:test", ":quality:secTest") if t in tasks]
     items = [t for t in tasks if t not in quality]
