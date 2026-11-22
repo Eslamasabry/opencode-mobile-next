@@ -209,7 +209,10 @@ public enum class CustomProviderWrite(public val code: Int) {
     Unsafe(code = 22),
     /** Another settings change holds the lock. */
     Busy(code = 23),
-    /** The file already declares this id and the run was not told to replace it, the entry is not this app's own shape, or a run that required a declared entry found none. */
+    /**
+     * The file already declares this id and the run was not told to replace it, the entry is not this app's own
+     * shape, or a run that required a declared entry found none.
+     */
     AlreadyDeclared(code = 24),
     /** A hand-kept `opencode.jsonc` sits beside it; the app leaves hand-kept settings alone. */
     HandManaged(code = 25),
@@ -249,7 +252,10 @@ public object CustomProviderScript {
             "[ -x /usr/bin/python3 ] || exit 20\n" +
             "exec /usr/bin/python3 -I -c '" + PROGRAM + "' '" + CONFIG_DIR + "' '" + CARDS_DIR + "' 0 2>/dev/null\n"
 
-    /** argv: settings folder, card installer folder, the engine's uid. stdin: `{"id": …, "block": {…}, "replaceDeclared": bool, "requireDeclared": bool}`. */
+    /**
+     * argv: settings folder, card installer folder, the engine's uid. stdin:
+     * `{"id": …, "block": {…}, "replaceDeclared": bool, "requireDeclared": bool}`.
+     */
     public const val PROGRAM: String =
         """import os, sys, json, stat, pathlib, tempfile, fcntl, re
 class Stop(Exception):
