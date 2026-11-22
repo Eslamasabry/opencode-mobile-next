@@ -333,59 +333,58 @@ class ServersWideTest {
             }
         }
     }
-}
-
     /** The editor's Ready page stays one column under 840 dp. */
     private fun narrowReadyAt(width: Int) {
-    showAt(
-        width,
-        800,
-        {
-            ServerEditorScreen(
-                ServerEditorUi(
-                    step = ServerEditorStep.Ready,
-                    newServer = false,
-                    record = record,
-                    checked = ServerEditorProbe("2.2.6", listOf("opencode", "claude", "codex")),
-                ),
-                EditorActions(),
+        showAt(
+            width,
+            800,
+            {
+                ServerEditorScreen(
+                    ServerEditorUi(
+                        step = ServerEditorStep.Ready,
+                        newServer = false,
+                        record = record,
+                        checked = ServerEditorProbe("2.2.6", listOf("opencode", "claude", "codex")),
+                    ),
+                    EditorActions(),
+                )
+            },
+        ) {
+            onNodeWithText("Home laptop details").assertDoesNotExist()
+            val headline = onNodeWithText("Connected to Home laptop").getBoundsInRoot()
+            val open = onNodeWithText("Open conversations").getBoundsInRoot()
+            assertTrue(
+                open.top.value > headline.bottom.value,
+                "Expected single column at ${width}dp: headline=$headline, open=$open",
             )
-        },
-    ) {
-        onNodeWithText("Home laptop details").assertDoesNotExist()
-        val headline = onNodeWithText("Connected to Home laptop").getBoundsInRoot()
-        val open = onNodeWithText("Open conversations").getBoundsInRoot()
-        assertTrue(
-            open.top.value > headline.bottom.value,
-            "Expected single column at ${width}dp: headline=$headline, open=$open",
-        )
-    }
+        }
     }
 
     /** The editor's Connect form stays one column under 840 dp. */
     private fun narrowConnectAt(width: Int) {
-    showAt(
-        width,
-        800,
-        {
-            ServerEditorScreen(
-                ServerEditorUi(
-                    step = ServerEditorStep.Connect,
-                    newServer = false,
-                    connectOnSave = false,
-                    record = record,
-                    canScan = true,
-                    canTailscale = true,
-                ),
-                EditorActions(draftOf(record)),
+        showAt(
+            width,
+            800,
+            {
+                ServerEditorScreen(
+                    ServerEditorUi(
+                        step = ServerEditorStep.Connect,
+                        newServer = false,
+                        connectOnSave = false,
+                        record = record,
+                        canScan = true,
+                        canTailscale = true,
+                    ),
+                    EditorActions(draftOf(record)),
+                )
+            },
+        ) {
+            val url = onNodeWithText("Server URL").getBoundsInRoot()
+            val check = onNodeWithText("Check connection").getBoundsInRoot()
+            assertTrue(
+                check.top.value > url.bottom.value && abs(check.left.value - url.left.value) < 64f,
+                "Expected single column form at ${width}dp: url=$url, check=$check",
             )
-        },
-    ) {
-        val url = onNodeWithText("Server URL").getBoundsInRoot()
-        val check = onNodeWithText("Check connection").getBoundsInRoot()
-        assertTrue(
-            check.top.value > url.bottom.value && abs(check.left.value - url.left.value) < 64f,
-            "Expected single column form at ${width}dp: url=$url, check=$check",
-        )
+        }
     }
-    }
+}
