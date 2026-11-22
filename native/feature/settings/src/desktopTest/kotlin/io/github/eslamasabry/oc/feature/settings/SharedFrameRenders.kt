@@ -14,7 +14,24 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.feature.settings.presentation.*
+import io.github.eslamasabry.oc.feature.settings.presentation.AboutFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.BackgroundState
+import io.github.eslamasabry.oc.feature.settings.presentation.GroupUi
+import io.github.eslamasabry.oc.feature.settings.presentation.HubUi
+import io.github.eslamasabry.oc.feature.settings.presentation.LocalDataFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.LocalDataKind
+import io.github.eslamasabry.oc.feature.settings.presentation.LocalDataUi
+import io.github.eslamasabry.oc.feature.settings.presentation.LocalModelStorageFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.NotificationProfile
+import io.github.eslamasabry.oc.feature.settings.presentation.ServerLine
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowUi
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -38,7 +55,8 @@ import kotlinx.collections.immutable.persistentListOf
 @OptIn(ExperimentalTestApi::class)
 class SharedFrameRenders {
     private val out =
-        File(System.getProperty("user.home"), "render-out").takeIf { it.isDirectory }?.resolve("shared-frame")?.also(File::mkdirs)
+        File(System.getProperty("user.home"), "render-out").takeIf { it.isDirectory }
+            ?.resolve("shared-frame")?.also(File::mkdirs)
 
     private val thisAppRows =
         persistentListOf(
@@ -106,7 +124,10 @@ class SharedFrameRenders {
                         NotificationFacts(
                             blocked = true,
                             usageAlertsShown = true,
-                            profiles = persistentListOf(NotificationProfile(ProfileId("laptop"), "Laptop", false, true)),
+                            profiles =
+                                persistentListOf(
+                                    NotificationProfile(ProfileId("laptop"), "Laptop", false, true)
+                                ),
                             background = BackgroundState.Off,
                         )
                 )
@@ -126,7 +147,10 @@ class SharedFrameRenders {
     }
 
     private val pages =
-        listOf("hub", "group", "help", "notifications", "privacy", "privacy-confirm", "storage", "about", "updates", "appearance")
+        listOf(
+            "hub", "group", "help", "notifications", "privacy", "privacy-confirm",
+            "storage", "about", "updates", "appearance",
+        )
 
     private fun shoot(name: String, w: Int, h: Int, density: Float, key: String) {
         val state = scene(name)

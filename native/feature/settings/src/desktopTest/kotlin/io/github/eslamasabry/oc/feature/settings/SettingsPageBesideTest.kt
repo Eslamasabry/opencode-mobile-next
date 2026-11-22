@@ -98,7 +98,10 @@ class SettingsPageBesideTest {
                     localeTag = "en",
                     stillFrame = true,
                 ) {
-                    CompositionLocalProvider(LocalKitRedactor provides Redactor(), LocalKitWindow provides window.value) {
+                    CompositionLocalProvider(
+                        LocalKitRedactor provides Redactor(),
+                        LocalKitWindow provides window.value,
+                    ) {
                         Box(Modifier.size(window.value.widthDp.dp, window.value.heightDp.dp)) {
                             SettingsScreen(state, actions)
                         }
@@ -122,10 +125,16 @@ class SettingsPageBesideTest {
                         assertEquals(1, list, "$at: the group's rows stand beside the page")
                         val l = onNodeWithTag("settings-list-pane").getBoundsInRoot()
                         val d = onNodeWithTag("settings-detail-pane").getBoundsInRoot()
-                        assertTrue(w - l.right.value > PAGE_CAP || abs(d.left.value - l.right.value) <= 1f, "$at: the page starts at the list's edge ($l, $d)")
+                        assertTrue(
+                            w - l.right.value > PAGE_CAP || abs(d.left.value - l.right.value) <= 1f,
+                            "$at: the page starts at the list's edge ($l, $d)",
+                        )
                         val left = d.left.value - l.right.value
                         val right = w - d.right.value
-                        assertTrue(right <= 1f || abs(left - right) <= 1f, "$at: fills, or two equal margins ($left, $right)")
+                        assertTrue(
+                            right <= 1f || abs(left - right) <= 1f,
+                            "$at: fills, or two equal margins ($left, $right)",
+                        )
                     }
                 }
             }

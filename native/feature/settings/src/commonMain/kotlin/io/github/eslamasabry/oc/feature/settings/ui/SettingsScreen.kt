@@ -365,7 +365,9 @@ public fun SettingsScreen(
             Layout.showsDetail(window.cls, window.short, window.widthDp)
     val pageScroll = rememberSaveable(page, saver = ScrollState.Saver) { ScrollState(0) }
     CompositionLocalProvider(LocalSettingsPageScroll provides pageScroll) {
-        if (beside) SettingsPagePanes(state, actions, page, onExit, hubScroll) { pageBody(Modifier) }
+        if (beside) SettingsPagePanes(state, actions, SettingsPagePanesParts(page, hubScroll), onExit) {
+            pageBody(Modifier)
+        }
         else pageBody(modifier)
     }
 }

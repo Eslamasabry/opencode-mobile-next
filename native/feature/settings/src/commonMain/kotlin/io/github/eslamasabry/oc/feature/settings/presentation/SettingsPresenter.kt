@@ -328,11 +328,7 @@ public class SettingsPresenter(
             voice = e.voice,
             // Flutter shows "Usage alerts" on every phone that notifies; here the row exists
             // only when the host can open Usage › Alerts (absent, never dead).
-            notifications =
-                e.notifications?.let {
-                    if (f.canOpen(SettingsOutside.UsageAlerts)) it.copy(usageAlertsShown = true)
-                    else it
-                },
+            notifications = notificationsUi(e, f),
             updates = e.updates,
             about = about,
             memoryPreview = memoryPreview?.let { MemoryPreviewUi(l.memoryPreview ?: it.enabled(), it.phoneNode) },
@@ -390,6 +386,13 @@ public class SettingsPresenter(
                 ),
         )
     }
+
+    /** The notifications facts with the usage-alerts row only where the host can open Usage › Alerts. */
+    private fun notificationsUi(e: Engines, f: SettingsFacts) =
+        e.notifications?.let {
+            if (f.canOpen(SettingsOutside.UsageAlerts)) it.copy(usageAlertsShown = true)
+            else it
+        }
 
     private fun appearance(p: PersonalPrefs, f: SettingsFacts, all: Boolean): AppearanceUi {
         val available = PackId.entries.filter { it != PackId.Dynamic || f.dynamicColour }

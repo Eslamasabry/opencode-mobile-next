@@ -53,7 +53,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -190,12 +189,12 @@ private fun SettingsPanes(
 internal fun SettingsPagePanes(
     state: SettingsUi,
     actions: SettingsActions,
-    page: SettingsPage,
+    parts: SettingsPagePanesParts,
     onExit: (() -> Unit)?,
-    listScroll: ScrollState,
     detail: @Composable () -> Unit,
 ) {
     val listGroup = state.listGroup
+    val listScroll = parts.listScroll
     KitPaneScreen(
         topBar = {
             KitTopBar(
@@ -214,8 +213,19 @@ internal fun SettingsPagePanes(
                     .padding(top = Space.S2.dp, bottom = Space.S6.dp)
             ) {
                 if (listGroup != null)
-                    GroupBody(state.copy(group = listGroup), actions, SettingsPage.Group(listGroup.id), openPage = page)
-                else HubBody(state, actions, selected = (state.stack.lastOrNull { it is SettingsPage.Group } as? SettingsPage.Group)?.id)
+                    GroupBody(
+                        state.copy(group = listGroup),
+                        actions,
+                        SettingsPage.Group(listGroup.id),
+                        openPage = parts.page,
+                    )
+                else
+                    HubBody(
+                        state,
+                        actions,
+                        selected =
+                            (state.stack.lastOrNull { it is SettingsPage.Group } as? SettingsPage.Group)?.id,
+                    )
             }
         },
         detail = { Box(Modifier.fillMaxSize().testTag("settings-detail-pane")) { detail() } },
@@ -444,46 +454,13 @@ internal fun GroupPage(
 
 @Composable
 private fun ColumnScope.GroupBody(
-    state: SettingsUi,
-    actions: SettingsActions,
-    page: SettingsPage.Group,
-    /** The page open beside this list (big screens): its row is marked. */
-    openPage: SettingsPage? = null,
+    state: SettingsUi, actions: SettingsActions, page: SettingsPage.Group,
+    openPage: SettingsPage? = null, // the page open beside this list (big screens): its row is marked
 ) {
     var languageOpen by rememberSaveable(page.id) { mutableStateOf(false) }
     var otherOpen by rememberSaveable(page.id) { mutableStateOf(false) }
-    val otherNow = state.group?.rows.orEmpty().firstNotNullOfOrNull { (it.door as? SettingsDoor.Choice)?.mode }
-    if (otherOpen && otherNow != null) {
-        KitSheet(
-            visible = true,
-            onDismissRequest = { otherOpen = false },
-            title = stringResource(Res.string.dockModeTitle),
-        ) {
-            OtherConversationsBody(otherNow) {
-                actions.onOtherConversations(it)
-                otherOpen = false
-            }
-        }
-    }
-    if (languageOpen) {
-        KitSheet(
-            visible = true,
-            onDismissRequest = { languageOpen = false },
-            title = stringResource(Res.string.settingsV3Language),
-        ) {
-            LanguageBody(
-                state.language,
-                object : SettingsActions by actions {
-                    override fun onLanguage(
-                        language: io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
-                    ) {
-                        actions.onLanguage(language)
-                        languageOpen = false
-                    }
-                },
-            )
-        }
-    }
+    GroupOtherSheet(state, actions, otherOpen) { otherOpen = false }
+    GroupLanguageSheet(state, actions, languageOpen) { languageOpen = false }
     val rows = state.group?.rows.orEmpty()
     KitRowGroup(leadingTiles = true) {
         rows.forEach { row ->
@@ -532,22 +509,7 @@ private fun ColumnScope.GroupBody(
             }
         }
     }
-    if (page.id == SettingsGroupId.Conversations)
-        state.phrases
-            ?.takeIf { it.hiddenCount > 0 && it.profile != null }
-            ?.let { phrases ->
-                KitRow(
-                    title = stringResource(Res.string.settingsPhraseChipsShowHidden),
-                    leading = KitRowLeading.Glyph(KitIcons.hidden),
-                    supporting =
-                        pluralStringResource(
-                            Res.plurals.settingsPhraseChipsHiddenCount,
-                            phrases.hiddenCount,
-                            phrases.hiddenCount,
-                        ),
-                    onClick = actions::onShowHiddenPhrases,
-                )
-            }
+    GroupHiddenPhrases(state, actions, page)
     // P-031: the saved servers are listed once, behind Servers (each opens its own page there); a second list
     // here, under a sentence for a label, repeated them.
 }
