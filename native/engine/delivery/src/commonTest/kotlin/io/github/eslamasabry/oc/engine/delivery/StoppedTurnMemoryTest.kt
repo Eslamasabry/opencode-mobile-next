@@ -1,14 +1,19 @@
 package io.github.eslamasabry.oc.engine.delivery
 
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.PrefsKeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
+import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ProfileTrust
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.StopResult
+import io.github.eslamasabry.oc.core.testing.FakeGatewayEvents
 import io.github.eslamasabry.oc.core.testing.FakeServerGateway
 import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.core.testing.TestDispatchers
@@ -59,9 +64,9 @@ class StoppedTurnMemoryTest {
      */
     private fun TestScope.stoppedRunDelivery(
         disk: Disk,
-        server: FakeServerGateway = FakeServerGateway(listOf(Session(S1))),
+        server: ServerGateway = FakeServerGateway(listOf(Session(S1))),
     ): Pair<ConnectionDelivery, PrefsKeyValueStore> {
-        server.events.connect()
+        (server.events as FakeGatewayEvents).connect()
         val store = kv(disk, this)
         val delivery =
             ConnectionDelivery(
@@ -154,6 +159,36 @@ class StoppedTurnMemoryTest {
             assertTrue(
                 REF in d.stoppedByPerson.value,
                 "the run being stopped is not a newer run",
+            )
+        }
+
+    @Test
+    fun `B-STOP-CUT-008 a stop that found nothing running does not excuse a later run`() =
+        runTest {
+            val server = FakeServerGateway(listOf(Session(S1)))
+            // The server answers every Stop with NothingRunning; events still stream from the fake.
+            val nothingRunning =
+                object : ServerGateway by server {
+                    override suspend fun stop(session: SessionId, resume: Boolean) =
+                        StopResult.NothingRunning.ok()
+                }
+            val (d, store) = stoppedRunDelivery(Disk(), nothingRunning)
+            testScheduler.runCurrent()
+            d.markCutByStop(listOf(REF))
+            d.engine!!.stopTurn(REF)
+            testScheduler.runCurrent()
+            assertTrue(REF in d.stoppedByPerson.value, "the earlier stop stays recorded")
+
+            // A turn started elsewhere after the stop that found nothing running is a newer run.
+            server.events.emit(GatewayEvent.RunStarted(REF.sessionId))
+            testScheduler.runCurrent()
+            assertFalse(
+                REF in d.stoppedByPerson.value,
+                "a run this unanswered Stop did not cut is not excused",
+            )
+            assertTrue(
+                ConnectionDelivery.readStoppedByPerson(store, P1).isEmpty(),
+                "the stored stop is gone from disk too",
             )
         }
 }
