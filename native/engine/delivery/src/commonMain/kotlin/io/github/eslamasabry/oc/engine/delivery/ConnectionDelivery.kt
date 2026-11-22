@@ -284,6 +284,20 @@ public class ConnectionDelivery(
                     observedReceipts.observe(current.scope, event)
             }
         }
+        // The live truth with no chat screen open: the streamed busy word itself clears the stored
+        // stop (Home and the Edge light never reach running()), and the run's end retires the Stop
+        // wind-down guard, so only the wind-down of this app's own Stop is excused.
+        scope.launch {
+            gateway.events.all.collect { envelope ->
+                when (val event = envelope.event) {
+                    is GatewayEvent.RunStarted -> serverBusy(ConversationRef(profile.id, event.sessionId))
+                    is GatewayEvent.RunRetrying -> serverBusy(ConversationRef(profile.id, event.sessionId))
+                    is GatewayEvent.RunEnded ->
+                        requestedStop.update { it - ConversationRef(profile.id, event.sessionId) }
+                    else -> Unit
+                }
+            }
+        }
         scope.launch(lane) {
             gateway.events.project.collect { envelope ->
                 val event = envelope.event
@@ -335,15 +349,20 @@ public class ConnectionDelivery(
         scope.launch(reconcileLane) { queue.flush() }
     }
 
+    /**
+     * The live truth wins: a busy status the server reports now is a run the person's stored stop
+     * did not cut, unless this app's own Stop is still winding that same run down (requestedStop).
+     */
+    private fun serverBusy(ref: ConversationRef) {
+        if (ref !in requestedStop.value) stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
+    }
+
     public fun running(ref: ConversationRef, busy: Boolean) {
         runRecovery?.running(ref.sessionId, busy)
         running.update { if (busy) it + ref else it - ref }
         if (busy) {
-            // The live truth wins: a busy status the server reports now is a run the person's stored stop did not
-            // cut, unless this app's own Stop is still winding that same run down (requestedStop).
-            if (ref !in requestedStop.value) stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
+            serverBusy(ref)
         } else {
-            requestedStop.update { it - ref }
             engine?.turnEnded(ref)
         }
     }
