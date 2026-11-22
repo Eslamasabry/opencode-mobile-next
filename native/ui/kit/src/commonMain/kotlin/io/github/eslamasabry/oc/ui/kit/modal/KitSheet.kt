@@ -64,11 +64,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.node.DelegatingNode
-import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.node.delegate
-import androidx.compose.ui.node.undelegate
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusRequester
@@ -79,7 +76,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollEdges
 import androidx.compose.ui.platform.testTag
@@ -409,7 +405,7 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                 }
             }
             Box(
-                Modifier.clearedUnderModal(state, modal)
+                Modifier.clearedUnderModal(state)
                     .onFocusChanged {
                         held.has = it.hasFocus
                         // Whatever asked for it (a requestFocus on a page field): the page takes no focus under a modal.
@@ -441,45 +437,13 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
 }
 
 /**
- * The page's semantics are cleared while a sheet or a dialog of the host is showing. `cleared` is what the host
- * composed; the node also reads the host when it joins the page, because a restored sheet registers during the
- * composition that places the page (a rotation rebuilt the screen around the sheet), after the page: the page must be
- * cleared in that first frame too.
+ * The page's semantics are cleared while a sheet or a dialog of the host is showing. The choice is made when the
+ * modifier is attached to the page, not while the host composes it: a screen composed around a sheet it had open (a
+ * rotation rebuilt it) registers that sheet during that same composition, after its page, and the page must be cleared
+ * in that first frame too.
  */
-private fun Modifier.clearedUnderModal(host: KitSheetHostState, cleared: Boolean): Modifier =
-    this then ClearedUnderModalElement(host, cleared)
-
-private data class ClearedUnderModalElement(val host: KitSheetHostState, val cleared: Boolean) :
-    ModifierNodeElement<ClearedUnderModalNode>() {
-    override fun create(): ClearedUnderModalNode = ClearedUnderModalNode(host)
-
-    override fun update(node: ClearedUnderModalNode) {
-        node.host = host
-        node.clear(cleared || host.isShowing || host.isDialogShowing)
-    }
-
-    override fun InspectorInfo.inspectableProperties() {
-        name = "kitPageClearedUnderModal"
-        properties["cleared"] = cleared
-    }
-}
-
-private class ClearedUnderModalNode(var host: KitSheetHostState) : DelegatingNode() {
-    private var clearing: Modifier.Node? = null
-
-    override fun onAttach() {
-        clear(host.isShowing || host.isDialogShowing)
-    }
-
-    fun clear(cleared: Boolean) {
-        if (cleared) {
-            if (clearing == null) clearing = delegate(Modifier.clearAndSetSemantics {})
-        } else {
-            clearing?.let { undelegate(it) }
-            clearing = null
-        }
-    }
-}
+private fun Modifier.clearedUnderModal(host: KitSheetHostState): Modifier =
+    composed { if (host.isShowing || host.isDialogShowing) Modifier.clearAndSetSemantics {} else Modifier }
 
 /**
  * A sheet as screen state (Dart `showKitSheet`, `KitSheet`, `showKitFramedSheet`; plan 06 §7.4):
