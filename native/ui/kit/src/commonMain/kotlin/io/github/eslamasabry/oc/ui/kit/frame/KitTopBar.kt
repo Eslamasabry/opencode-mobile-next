@@ -649,10 +649,10 @@ private class BarText(private val measurer: TextMeasurer, private val density: D
         val specSp = base.fontSize.value
         val target = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
         val scale = target / specSp
-        return copy(
+        return base.copy(
             fontSize = target.sp,
-            lineHeight = (lineHeight.value * scale).sp,
-            letterSpacing = (letterSpacing.value * scale).sp,
+            lineHeight = (base.lineHeight.value * scale).sp,
+            letterSpacing = (base.letterSpacing.value * scale).sp,
         )
     }
 
