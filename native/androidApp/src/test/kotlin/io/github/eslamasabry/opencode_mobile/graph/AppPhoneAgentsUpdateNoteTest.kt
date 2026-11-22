@@ -71,7 +71,12 @@ class AppPhoneAgentsUpdateNoteTest {
     private class NoLastKnown : LastKnown {
         override fun <T> peek(profile: ProfileId, mark: ServerMark, shelf: CacheShelf<T>, item: String): T? = null
 
-        override suspend fun <T> read(profile: ProfileId, mark: ServerMark, shelf: CacheShelf<T>, item: String): T? = null
+        override suspend fun <T> read(
+            profile: ProfileId,
+            mark: ServerMark,
+            shelf: CacheShelf<T>,
+            item: String,
+        ): T? = null
 
         override suspend fun <T> write(
             profile: ProfileId,
@@ -81,7 +86,9 @@ class AppPhoneAgentsUpdateNoteTest {
             value: T,
         ): Outcome<Unit> = Outcome.Ok(Unit)
 
-        override suspend fun warm(profile: ProfileId, mark: ServerMark, shelf: CacheShelf<*>) {}
+        override suspend fun warm(profile: ProfileId, mark: ServerMark, shelf: CacheShelf<*>) {
+            // Nothing to warm: this stub keeps no last-known data at all.
+        }
 
         override suspend fun clear(profile: ProfileId): Outcome<Int> = Outcome.Ok(0)
     }

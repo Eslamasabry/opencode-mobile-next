@@ -170,8 +170,9 @@ class AgentsBentoTest {
             onNodeWithText("Install or update", substring = true).assertDoesNotExist()
         }
 
-    // The automatic update's line: after three agents were updated in a row it named only the last one (the updater's
-    // last decision carries one agent). It names every agent it updated, in the order they finished; one stays one name.
+    // The automatic update's line: after three agents were updated in a row it named only the last one (the
+    // updater's last decision carries one agent). It names every agent it updated, in the order they finished; one
+    // stays one name.
     @Test
     fun `B-AGENT-UPD-011 the update note names every agent it updated, in the order they finished`() =
         runComposeUiTest {
@@ -199,7 +200,9 @@ class AgentsBentoTest {
                         ),
                 )
             waitForIdle()
-            onNode(hasContentDescription("This phone is ready · arm64 · Android 15 · updated Claude Code")).assertExists()
+            onNode(
+                hasContentDescription("This phone is ready · arm64 · Android 15 · updated Claude Code")
+            ).assertExists()
         }
 
     @Test
