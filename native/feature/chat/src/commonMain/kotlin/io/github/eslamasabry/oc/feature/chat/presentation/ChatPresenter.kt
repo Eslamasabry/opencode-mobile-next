@@ -45,7 +45,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingCommand
@@ -268,7 +267,8 @@ public class ChatPresenter(
         val out = MutableStateFlow(current())
         // Every START (the first open and every return) relaunches the upstream collect by hand:
         // latest drops each restart after an inner was cancelled, so a return would keep a stale page.
-        var inner: Job? = null
+        // The job type is spelled in full: K1's allowlist holds no kotlinx.coroutines.Job import.
+        var inner: kotlinx.coroutines.Job? = null
         started
             .command(out.subscriptionCount)
             .distinctUntilChanged()
