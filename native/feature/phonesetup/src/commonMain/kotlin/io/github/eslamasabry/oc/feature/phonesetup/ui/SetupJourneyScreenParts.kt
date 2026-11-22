@@ -33,12 +33,11 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.foundation.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.setup.KitProgressRing
 import io.github.eslamasabry.oc.ui.kit.setup.KitTrailMark
 import io.github.eslamasabry.oc.ui.kit.state.KitChecklistStep
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
-import io.github.eslamasabry.oc.ui.kit.state.KitProgressRing
 import io.github.eslamasabry.oc.ui.kit.state.KitStepState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
