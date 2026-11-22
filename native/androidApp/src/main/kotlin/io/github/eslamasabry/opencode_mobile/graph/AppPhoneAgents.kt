@@ -238,21 +238,7 @@ class AppPhoneAgents(
     /** The updater's last decision, as the status line words it ([PhoneAgentsState.updateNote]). */
     internal fun setUpdateNote(decision: AgentUpdateDecision) {
         val name = decision.agent?.let { catalog.byId(it)?.name }
-        val note =
-            when (decision.step) {
-                AgentUpdateStep.NotLooked,
-                AgentUpdateStep.NothingBehind -> null
-                AgentUpdateStep.Reading -> PhoneAgentUpdateNote.Reading
-                AgentUpdateStep.ReadFailed -> PhoneAgentUpdateNote.ReadFailed
-                AgentUpdateStep.WaitingAgentsBusy -> PhoneAgentUpdateNote.WaitingBusy
-                AgentUpdateStep.WaitingSetup -> PhoneAgentUpdateNote.WaitingSetup
-                AgentUpdateStep.WaitingSwitch -> PhoneAgentUpdateNote.WaitingSwitch
-                AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
-                AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
-                AgentUpdateStep.Updated -> PhoneAgentUpdateNote.Updated
-                AgentUpdateStep.Refused,
-                AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
-            }
+        val note = noteFor(decision.step)
         // The Updated note names every agent this run of updates finished, in the order they finished: an install that
         // starts keeps the run going, any other decision starts it over. An agent is named once, at its first finish —
         // a repeated Updated decision (a re-read, a retry) must not repeat the name.
@@ -267,6 +253,23 @@ class AppPhoneAgents(
             it.copy(updateNote = note, updateAgentName = name, updatedAgentNames = updated.toImmutableList())
         }
     }
+
+    /** The note a step becomes on the status line; the steps that say nothing about updating become null. */
+    private fun noteFor(step: AgentUpdateStep): PhoneAgentUpdateNote? =
+        when (step) {
+            AgentUpdateStep.NotLooked,
+            AgentUpdateStep.NothingBehind -> null
+            AgentUpdateStep.Reading -> PhoneAgentUpdateNote.Reading
+            AgentUpdateStep.ReadFailed -> PhoneAgentUpdateNote.ReadFailed
+            AgentUpdateStep.WaitingAgentsBusy -> PhoneAgentUpdateNote.WaitingBusy
+            AgentUpdateStep.WaitingSetup -> PhoneAgentUpdateNote.WaitingSetup
+            AgentUpdateStep.WaitingSwitch -> PhoneAgentUpdateNote.WaitingSwitch
+            AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
+            AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
+            AgentUpdateStep.Updated -> PhoneAgentUpdateNote.Updated
+            AgentUpdateStep.Refused,
+            AgentUpdateStep.Failed -> PhoneAgentUpdateNote.Refused
+        }
 
     /** The state with the updater's note; a signed-out agent is the more important thing to say once the update is done. */
     private fun withUpdateNote(state: PhoneAgentsState): PhoneAgentsState {
