@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.SavedServer
@@ -53,7 +54,12 @@ internal class ServerSavedRowSelection(
 
 /** The row's supporting line: the kind (when kinds differ), waiting/running counts and the secret note. */
 @Composable
-internal fun serverSupportLine(showKind: Boolean, kind: String, server: SavedServer, facts: ServerRowFacts?): String {
+internal fun serverSupportLine(
+    showKind: Boolean,
+    kind: String,
+    server: SavedServer,
+    facts: ServerRowFacts?,
+): AnnotatedString {
     val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
     return kitServerSupporting(
         kind = if (showKind) kind else "",

@@ -107,7 +107,6 @@ public fun ServersScreen(
                         if (!unreadable)
                             (if (token) Res.string.updateConnectionToken else Res.string.e7BannerUpdatePassword)
                         else if (token) Res.string.connectionEnterToken else Res.string.connectionEnterPassword
-                        else if (token) Res.string.connectionEnterToken else Res.string.connectionEnterPassword
                     ),
                     { actions.edit(server.id) },
                 )
