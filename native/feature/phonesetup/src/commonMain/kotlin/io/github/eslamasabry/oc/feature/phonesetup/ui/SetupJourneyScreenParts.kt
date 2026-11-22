@@ -44,17 +44,61 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitMarkHere
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.inAppServerOwnershipRecoveryBody
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupSavedFailed
+import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorCannotStart
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorChecksum
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInstall
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInterrupted
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNoInternet
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNoSpace
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNodeCannotRun
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOffline
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoProgram
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoStart
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeWontRun
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorPackageRepair
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupEssentialsShort
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingChecking
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingDetailsTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingDownloading
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingInstalling
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingInterruptedTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingMinutesLeft
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingMobileData
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingPausedTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingSafeToLeave
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingSafeToLeaveQuiet
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingStoppedNote
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingUnderMinute
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingUnpacking
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupRingWifi
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageStarting
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageUnpackingLinux
+import io.github.eslamasabry.oc.ui.words.res.setupHeartbeatLine
+import io.github.eslamasabry.oc.ui.words.res.setupHeartbeatQuiet
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewBytes
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewChecking
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewDone
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedAt
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedDuring
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedStep
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedTitle
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedUnknown
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewNoInternet
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewPercent
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewStageMeasured
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewStarting
+import io.github.eslamasabry.oc.ui.words.res.setupRbStatusUnreadable
+import io.github.eslamasabry.oc.ui.words.res.setupRbToolsUncheckable
+import io.github.eslamasabry.oc.ui.words.res.setupStepClock
+import io.github.eslamasabry.oc.ui.words.res.setupStepTimedOut
 import org.jetbrains.compose.resources.stringResource
-
-/** The words and counts the progress ring and its lines are drawn from, built once in [RingBodyPane]. */
-internal class RingWords(
-    val title: String,
-    val caption: String?,
-    val measured: Float?,
-    val done: Int,
-    val current: Int,
-    val checking: Boolean,
-)
 
 /** The ring body of the setup job: the words and marks it needs, computed in one place. */
 @Composable
@@ -66,33 +110,11 @@ internal fun RingBodyPane(
     onOpenDetails: () -> Unit,
 ) {
     val progress = state.progress
-    val rows = progress.components.ifEmpty { state.install.map { ComponentProgress(it.id, ComponentState.Pending) } }
-    val done = rows.count { it.state == ComponentState.Done || it.state == ComponentState.Skipped }
-    var current =
-        rows.indexOfFirst {
-                it.state == ComponentState.Running ||
-                    it.state == ComponentState.Checking ||
-                    it.state == ComponentState.Failed
-            }
-            .let { found ->
-                if (found >= 0) found
-                else
-                    rows.indexOfFirst {
-                        it.id == progress.current && it.state != ComponentState.Done &&
-                            it.state != ComponentState.Skipped
-                    }
-            }
+    val facts = ringRowFacts(state)
+    val rows = facts.rows
+    val row = facts.row
     val halted = progress.canContinue
-    if (current < 0 && halted)
-        current = rows.indexOfFirst { it.state != ComponentState.Done && it.state != ComponentState.Skipped }
-    val row = rows.getOrNull(current)
-    val checking =
-        rows.isNotEmpty() &&
-            rows.all {
-                it.state == ComponentState.Checking || it.state == ComponentState.Done ||
-                    it.state == ComponentState.Skipped
-            } &&
-            rows.any { it.state == ComponentState.Checking }
+    val checking = ringChecking(rows)
     // One bar for the whole setup: it only moves forward across steps and stages. A step's own download arc used to
     // be the ring, so it read 100% when the download ended and 29% when the unpacking began.
     val measuredSteps = if (!halted && memory.measured(row) != null) memory.overall(progress) else null
@@ -111,7 +133,7 @@ internal fun RingBodyPane(
             .then(if (wide) Modifier else Modifier.padding(horizontal = Space.S5.dp, vertical = Space.S6.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ProgressRingCall(progress, rows, RingWords(title, caption, measured, done, current, checking))
+        ProgressRingCall(progress, rows, RingWords(title, caption, measured, facts.done, facts.current, checking))
         val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
         val costParts =
             if (!running) emptyList()
@@ -149,6 +171,16 @@ private fun ProgressRingCall(progress: SetupProgress, rows: List<ComponentProgre
     )
 }
 
+/** The words and counts the progress ring and its lines are drawn from, built once in [RingBodyPane]. */
+internal class RingWords(
+    val title: String,
+    val caption: String?,
+    val measured: Float?,
+    val done: Int,
+    val current: Int,
+    val checking: Boolean,
+)
+
 /** The whole-setup ring's stage line, from the current row's state and stage words. */
 @Composable
 private fun jobTitle(
@@ -177,23 +209,7 @@ private fun jobTitle(
         SetupState.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
         SetupState.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
         SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingPausedTitle)
-        else ->
-            when {
-                checking -> stringResource(Res.string.phoneSetupRingChecking)
-                row == null || row.state == ComponentState.Pending ->
-                    stringResource(Res.string.setupProgressViewGettingStarted)
-                row.id == SetupComponentIds.START ->
-                    stringResource(Res.string.phoneSetupStageStarting)
-                row.stage?.let {
-                    it == unpacking ||
-                        Regex("unpack|extract", RegexOption.IGNORE_CASE).containsMatchIn(it)
-                } == true -> stringResource(Res.string.phoneSetupRingUnpacking, subject)
-                ((row.bytesTotal ?: 0) > (row.bytesDone ?: 0)) ||
-                    row.stage?.let {
-                        Regex("download|fetch", RegexOption.IGNORE_CASE).containsMatchIn(it)
-                    } == true -> stringResource(Res.string.phoneSetupRingDownloading, subject)
-                else -> stringResource(Res.string.phoneSetupRingInstalling, subject)
-            }
+        else -> jobWorkingTitle(checking, row, subject, unpacking)
     }
 }
 
@@ -347,60 +363,35 @@ private fun JobDetailsRow(
     state: SetupJourneyUi,
     progress: SetupProgress,
 ) {
-            val measured =
-                if ((component.bytesTotal ?: 0) > 0 && component.bytesDone != null) {
-                    val (received, total) =
-                        SetupProgressRules.formatBytePair(component.bytesDone!!, component.bytesTotal!!)
-                    stringResource(Res.string.setupProgressViewBytes, received, total)
-                } else
-                    component.percent?.let {
-                        stringResource(Res.string.setupProgressViewPercent, it.coerceIn(0.0, 100.0).toInt())
-                    }
-            val stage =
-                component.stage?.let { setupMessageWords(it) }
-                    ?: if (component.state == ComponentState.Checking)
-                        stringResource(Res.string.setupProgressViewChecking)
-                    else null
-            val supporting =
+    val measured = jobRowMeasured(component)
+    val stage = jobRowStage(component)
+    val failureWords =
+        if (component.state == ComponentState.Failed) runtimeProblem(component.error ?: progress.error) else null
+    val supporting = jobRowSupporting(component, stage, measured, failureWords)
+    // A download whose share is known: the Downloading mark in the working arc's place.
+    val running = component.state == ComponentState.Running
+    val share = component.fraction?.toFloat()?.coerceIn(0f, 1f)?.takeIf { running }
+    KitWaitMarkHere(KitWaitKind.Downloading.takeIf { share != null }, share ?: 0f) {
+        KitChecklistStep(
+            itemTitle(
+                component.id,
+                state.options?.components?.firstOrNull { it.id == component.id }?.title
+                    ?: component.id,
+            ),
+            state =
                 when (component.state) {
                     ComponentState.Done,
-                    ComponentState.Skipped -> component.version
-                    ComponentState.Failed -> runtimeProblem(component.error ?: progress.error)
-                    ComponentState.Pending -> null
-                    else ->
-                        when {
-                            stage != null && measured != null ->
-                                stringResource(Res.string.setupProgressViewStageMeasured, stage, measured)
-                            else ->
-                                measured
-                                    ?: stage
-                                    ?: stringResource(Res.string.setupProgressViewStarting)
-                        }
-                }
-            // A download whose share is known: the Downloading mark in the working arc's place.
-            val running = component.state == ComponentState.Running
-            val share = component.fraction?.toFloat()?.coerceIn(0f, 1f)?.takeIf { running }
-            KitWaitMarkHere(KitWaitKind.Downloading.takeIf { share != null }, share ?: 0f) {
-            KitChecklistStep(
-                itemTitle(
-                    component.id,
-                    state.options?.components?.firstOrNull { it.id == component.id }?.title
-                        ?: component.id,
-                ),
-                state =
-                    when (component.state) {
-                        ComponentState.Done,
-                        ComponentState.Skipped -> KitStepState.Done
-                        ComponentState.Running,
-                        ComponentState.Checking -> KitStepState.Working
-                        ComponentState.Failed -> KitStepState.Failed
-                        ComponentState.Pending -> KitStepState.Waiting
-                    },
-                index = index + 1,
-                total = stepCount,
-                supporting = supporting,
-            )
-            }
+                    ComponentState.Skipped -> KitStepState.Done
+                    ComponentState.Running,
+                    ComponentState.Checking -> KitStepState.Working
+                    ComponentState.Failed -> KitStepState.Failed
+                    ComponentState.Pending -> KitStepState.Waiting
+                },
+            index = index + 1,
+            total = stepCount,
+            supporting = supporting,
+        )
+    }
 }
 
 /** The job answer uses Flutter's ownership/network/known-reason/stage fallback order. */
