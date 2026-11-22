@@ -1142,7 +1142,8 @@ public fun ChatScreen(
                         // Only once the page has arrived: while the page transition runs the body is empty, so no
                         // skeleton is ever drawn over the page it leaves (device report, build 10054).
                         ChatPhase.Loading ->
-                            if (pageSettled()) {
+                            // Motion off: no page arrives, so frame one already shows the skeleton (NEW-f).
+                            if (pageSettled() || KitMotion.state.reduced) {
                                 ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
                             }
                         is ChatPhase.Failed ->
