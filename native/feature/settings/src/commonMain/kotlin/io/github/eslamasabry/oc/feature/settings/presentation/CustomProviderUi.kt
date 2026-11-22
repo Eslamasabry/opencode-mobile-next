@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.core.model.IntegrationInfo
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderField
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderOutcome
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderProblem
@@ -64,11 +65,24 @@ public data class CustomProviderUi(
         copy(stage = next, problems = persistentListOf(), refusal = null, detail = null)
 }
 
-/** The ids the page already shows: the form refuses them before Save reaches the server (which checks again). */
-internal fun shownProviderIds(inventory: LibraryInventory): Set<String> = buildSet {
-    inventory.providers.forEach { add(it.id) }
-    inventory.catalog?.providers?.forEach { provider ->
-        add(provider.id)
-        provider.integrationId?.let { add(it) }
+/**
+ * The ids the page already shows: the form refuses them before Save reaches the server (which checks again). One
+ * row is left out (issue 152): listed with no connection and no catalog entry — only the settings file can still
+ * hold it, and the engine's save-time check decides there.
+ */
+internal fun shownProviderIds(inventory: LibraryInventory): Set<String> {
+    val catalog = inventory.catalog
+
+    fun replaceable(provider: IntegrationInfo): Boolean =
+        provider.connections.isEmpty() &&
+            catalog != null &&
+            catalog.providers.none { it.id == provider.id || it.integrationId == provider.id }
+
+    return buildSet {
+        inventory.providers.forEach { if (!replaceable(it)) add(it.id) }
+        catalog?.providers?.forEach { provider ->
+            add(provider.id)
+            provider.integrationId?.let { add(it) }
+        }
     }
 }

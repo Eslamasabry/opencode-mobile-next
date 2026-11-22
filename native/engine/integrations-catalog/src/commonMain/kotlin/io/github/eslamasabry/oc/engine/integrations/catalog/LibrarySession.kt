@@ -531,12 +531,22 @@ public class LibrarySession(
                 CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
             declaration == null -> CustomProviderOutcome.Invalid(draft.problems(taken))
             else -> {
-                // The taken check above refused every id a list shows, and only a catalog this session loaded
-                // proves the id is no catalog id either; with both, an entry the settings file still holds under
-                // this id is stranded (issue 152) and the write replaces it. Without a loaded catalog the write
-                // stays add-only, exactly as before: the file decides.
-                val replaceDeclared = mutable.value.catalog != null
-                written(declaration, host.write(declaration.copy(replaceDeclared = replaceDeclared)))
+                // The taken check above refused every id a list shows with a connection or a catalog entry, and
+                // only a catalog this session loaded proves the id is no catalog id either; a row the live list
+                // shows with no connection can only be a declaration the settings file still holds (issue 152: the
+                // server keeps listing a disconnected provider), so the write replaces it — and requires one, since
+                // only the file knows whether it is there. Without a loaded catalog the write stays add-only,
+                // exactly as before: the file decides.
+                val catalog = mutable.value.catalog
+                val replaceDeclared = catalog != null
+                val requireDeclared =
+                    rows.getOrNull()?.any { it.id == draft.providerId && replaceable(it, catalog) } == true
+                written(
+                    declaration,
+                    host.write(
+                        declaration.copy(replaceDeclared = replaceDeclared, requireDeclared = requireDeclared)
+                    ),
+                )
             }
         }
     }
@@ -554,15 +564,28 @@ public class LibrarySession(
         }
     }
 
-    /** Every id a declaration must not take: the server's integrations, its catalog and the rows already shown. */
-    private fun takenProviderIds(rows: List<IntegrationInfo>): Set<String> = buildSet {
-        rows.forEach { add(it.id) }
-        mutable.value.providers.forEach { add(it.id) }
-        mutable.value.catalog?.providers?.forEach { provider ->
-            add(provider.id)
-            provider.integrationId?.let { add(it) }
+    /**
+     * Every id a declaration must not take: the server's integrations, its catalog and the rows already shown. One
+     * row is left out (issue 152): listed with no connection and no catalog entry — only the settings file can
+     * still hold it, and the script, the file's one reader, refuses the write when it does not.
+     */
+    private fun takenProviderIds(rows: List<IntegrationInfo>): Set<String> {
+        val catalog = mutable.value.catalog
+        return buildSet {
+            rows.forEach { if (!replaceable(it, catalog)) add(it.id) }
+            mutable.value.providers.forEach { if (!replaceable(it, catalog)) add(it.id) }
+            catalog?.providers?.forEach { provider ->
+                add(provider.id)
+                provider.integrationId?.let { add(it) }
+            }
         }
     }
+
+    /** A row no connection rides on and the loaded catalog holds no id for: a stranded declaration (issue 152). */
+    private fun replaceable(row: IntegrationInfo, catalog: CatalogSnapshot?): Boolean =
+        row.connections.isEmpty() &&
+            catalog != null &&
+            catalog.providers.none { it.id == row.id || it.integrationId == row.id }
 
     /** True once the server's integrations list [providerId]; asks [tries] times, a second apart. */
     private suspend fun listed(providerId: String, tries: Int): Boolean {

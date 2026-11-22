@@ -58,7 +58,7 @@ class CustomProviderTest {
         // Blank lines and a repeated id are dropped; the order typed is kept.
         assertEquals(listOf("llama-3", "qwen"), block.getValue("models").jsonObject.keys.toList())
         val input = Json.parseToJsonElement(declaration.input()).jsonObject
-        assertEquals(setOf("id", "block", "replaceDeclared"), input.keys)
+        assertEquals(setOf("id", "block", "replaceDeclared", "requireDeclared"), input.keys)
         assertFalse(Regex("(?i)key|token|password|secret").containsMatchIn(declaration.input()))
     }
 
