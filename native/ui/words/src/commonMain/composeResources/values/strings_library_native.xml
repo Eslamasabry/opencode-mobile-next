@@ -152,4 +152,83 @@
     <string name="nlibMcpAddVariable">Add this value</string>
     <string name="nlibRegistryNeedsSettings">Review the required settings and command arguments before saving.</string>
     <string name="nlibRegistrySaveFailed">The catalog preference could not be saved. Try again before leaving this page.</string>
+    <!-- Row supporting line of a provider added from this app; %1$s = Connected / Not connected / Not loaded -->
+    <string name="nlibCustomAddedByYou">Added by you · %1$s</string>
+    <!-- Row supporting line: the entry is in OpenCode’s settings but the server does not list it yet -->
+    <string name="nlibCustomNotLoaded">Not loaded</string>
+    <!-- Provider sheet line: who added this provider and where -->
+    <string name="nlibCustomAddedByYouHere">Added by you on this phone</string>
+    <!-- Provider sheet: the model ids it declares; %2$s = the ids joined with a space -->
+    <plurals name="nlibCustomModelsCount">
+        <item quantity="one">%1$d model: %2$s</item>
+        <item quantity="other">%1$d models: %2$s</item>
+    </plurals>
+    <!-- Provider sheet row: change what was typed when the provider was added -->
+    <string name="nlibCustomEdit">Edit provider</string>
+    <!-- Supporting line of the Edit provider row -->
+    <string name="nlibCustomEditHint">Name, address and models</string>
+    <!-- Edit form: why the provider ID cannot be changed -->
+    <string name="nlibCustomIdFixed">Fixed: conversations and defaults use it. To use another ID, remove this provider and add it again.</string>
+    <!-- Edit saved, waiting for the restart -->
+    <string name="nlibCustomEditSavedBody">OpenCode on this phone loads the change when it restarts. A reply that is running stops.</string>
+    <!-- Edit done: the server lists the provider again after the restart -->
+    <string name="nlibCustomEditDoneTitle">%1$s is updated</string>
+    <!-- Edit or Remove refused: the entry was changed by hand since the sheet was opened -->
+    <string name="nlibCustomChangedByHand">This provider was changed by hand in OpenCode’s settings since you opened it. The app leaves hand-written settings alone.</string>
+    <!-- Provider sheet notice: the entry in the settings file was not written by this app -->
+    <string name="nlibCustomHandTitle">Set up by hand in OpenCode’s settings</string>
+    <!-- Provider sheet notice body for a hand-written entry -->
+    <string name="nlibCustomHandBody">The app leaves hand-written settings alone. Change or remove it in OpenCode’s settings file on this phone.</string>
+    <!-- Provider sheet destructive answer: forget this provider -->
+    <string name="nlibCustomRemove">Remove provider</string>
+    <!-- Remove question; %1$s = the provider’s name -->
+    <string name="nlibCustomRemoveQuestion">Remove %1$s?</string>
+    <!-- Remove question body -->
+    <string name="nlibCustomRemoveBody">OpenCode on this phone forgets this provider. You can add it again later.</string>
+    <!-- Remove consequence; shown only when a key is saved -->
+    <string name="nlibCustomRemoveKey">Its saved key is removed.</string>
+    <!-- Remove consequence -->
+    <string name="nlibCustomRemoveModels">Its models leave the model list.</string>
+    <!-- Remove consequence -->
+    <string name="nlibCustomRemoveRestart">OpenCode on this phone restarts to finish. A reply that is running stops.</string>
+    <!-- Remove refused: nothing was changed -->
+    <string name="nlibCustomRemoveNothingTitle">Nothing was removed</string>
+    <!-- Remove refused: the server on this phone did not answer, so its key could not be removed -->
+    <string name="nlibCustomRemoveNoServer">OpenCode on this phone is not answering, so its key could not be removed. Start OpenCode from This phone, then try again.</string>
+    <!-- Remove partly done: the key is gone, the settings entry stayed -->
+    <string name="nlibCustomRemovePartTitle">%1$s is not removed yet</string>
+    <!-- Remove partly done body -->
+    <string name="nlibCustomRemovePartBody">Its key is removed, but OpenCode’s settings file could not be written. Try again.</string>
+    <!-- Remove done in the settings, waiting for the restart -->
+    <string name="nlibCustomRemovedWaitTitle">%1$s is removed from the settings</string>
+    <!-- Remove done: key and entry are gone and OpenCode restarted -->
+    <string name="nlibCustomRemovedTitle">%1$s is removed</string>
+    <!-- Remove done body -->
+    <string name="nlibCustomRemovedBody">Its key and its entry in OpenCode’s settings are gone. OpenCode on this phone restarted.</string>
+    <!-- Add the same ID again; %1$s = the name typed -->
+    <string name="nlibCustomReplaceQuestion">Replace %1$s?</string>
+    <!-- Replace question body; %1$s = the provider ID -->
+    <string name="nlibCustomReplaceBody">OpenCode on this phone already has a provider with the ID %1$s, added from this app.</string>
+    <!-- Replace consequence -->
+    <string name="nlibCustomReplaceModels">Its address and models become the ones you typed.</string>
+    <!-- Replace consequence -->
+    <string name="nlibCustomReplaceKey">Its key stays.</string>
+    <!-- Replace consequence -->
+    <string name="nlibCustomReplaceRestart">OpenCode on this phone restarts to load it. A reply that is running stops.</string>
+    <!-- Replace confirm answer -->
+    <string name="nlibCustomReplace">Replace provider</string>
+    <!-- Above the restart steps -->
+    <string name="nlibCustomStepsLabel">Restarting takes three steps</string>
+    <!-- Restart step 1 of 3 -->
+    <string name="nlibCustomStepStop">Stop OpenCode on this phone</string>
+    <!-- Restart step 2 of 3 -->
+    <string name="nlibCustomStepStart">Start OpenCode on this phone</string>
+    <!-- Restart step 3 of 3 after an add or an edit; %1$s = the provider’s name -->
+    <string name="nlibCustomStepCheck">Check that it lists %1$s</string>
+    <!-- Restart step 3 of 3 after a remove; %1$s = the provider’s name -->
+    <string name="nlibCustomStepCheckGone">Check that it no longer lists %1$s</string>
+    <!-- Restart in progress title -->
+    <string name="nlibCustomRestartingTitle">Restarting OpenCode on this phone</string>
+    <!-- Restart in progress body -->
+    <string name="nlibCustomRestartingBody">Waiting is normal: it loads the change as it starts.</string>
 </resources>
