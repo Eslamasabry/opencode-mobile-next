@@ -462,7 +462,7 @@ private data class ClearedUnderModalElement(val host: KitSheetHostState, val cle
     }
 }
 
-private class ClearedUnderModalNode(var host: KitSheetHostState) : Modifier.Node(), DelegatingNode() {
+private class ClearedUnderModalNode(var host: KitSheetHostState) : DelegatingNode() {
     private var clearing: Modifier.Node? = null
 
     override fun onAttach() {
