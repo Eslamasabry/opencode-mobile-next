@@ -22,7 +22,11 @@ class KitAgentMonogramSilentTest {
     @Test
     fun `B-KIT-410 an agent's letter mark is drawn but not spoken`() = runComposeUiTest {
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true) {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                stillFrame = true,
+            ) {
                 AgentMark(slug = "no-such-agent-art", tint = LocalKitColors.current.text1, box = 48.dp, monogram = "F")
             }
         }
