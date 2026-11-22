@@ -112,7 +112,9 @@ private fun modelInvalid(id: String): Boolean =
 /**
  * The declared `providers.<providerId>` block: name, package, `settings.baseURL` and models. Never a key.
  * [replaceDeclared] is the engine's decision (issue 152) that the settings file's entry under this id is stranded —
- * no list shows the id — so the writer replaces it instead of refusing; the script never decides this itself.
+ * no list shows the id — so the writer replaces it instead of refusing; the script never decides this itself, and
+ * still refuses when the old entry is not this app's own shape (a field the writer never writes, e.g. an inline
+ * key), so nothing a person wrote by hand is lost.
  */
 public data class CustomProviderDeclaration(
     val providerId: String,
@@ -203,7 +205,7 @@ public enum class CustomProviderWrite(public val code: Int) {
     Unsafe(code = 22),
     /** Another settings change holds the lock. */
     Busy(code = 23),
-    /** The file already declares this id and the run was not told to replace it. */
+    /** The file already declares this id and the run was not told to replace it, or the entry is not this app's own shape. */
     AlreadyDeclared(code = 24),
     /** A hand-kept `opencode.jsonc` sits beside it; the app leaves hand-kept settings alone. */
     HandManaged(code = 25),
@@ -225,7 +227,9 @@ public enum class CustomProviderWrite(public val code: Int) {
  *
  * Guards (the card installer's, `CardToolJs.INSTALLER_PY`): every ancestor checked for symlinks, owner and others'
  * write; reads with `O_NOFOLLOW` under a 1 MiB ceiling; the card installer's lock is taken too, because both rewrite
- * this file; a hand-kept `opencode.jsonc` is never overwritten; temp file, fsync, atomic replace.
+ * this file; a hand-kept `opencode.jsonc` is never overwritten; temp file, fsync, atomic replace. A told replace
+ * still takes only an entry whose every field is one this app's writer writes (name, package, settings.baseURL,
+ * models): a hand-written entry, down to one extra field, keeps the refusal.
  */
 public object CustomProviderScript {
     public const val CONFIG_DIR: String = "/root/.oc-opencode2/config/opencode"
@@ -286,6 +290,14 @@ def replace(folder, path, data):
         try: os.fsync(directory)
         finally: os.close(directory)
     except OSError: pass
+def app_shaped(entry):
+    if not isinstance(entry, dict) or not set(entry) <= {"name", "package", "settings", "models"}: return False
+    if not all(isinstance(entry[key], str) for key in ("name", "package") if key in entry): return False
+    settings = entry.get("settings")
+    if settings is not None and (not isinstance(settings, dict) or not set(settings) <= {"baseURL"} or not all(isinstance(value, str) for value in settings.values())): return False
+    models = entry.get("models")
+    if models is not None and (not isinstance(models, dict) or any(value != {} for value in models.values())): return False
+    return True
 def main():
     global OWNER
     folder, cards, OWNER = sys.argv[1], sys.argv[2], int(sys.argv[3])
@@ -313,7 +325,7 @@ def main():
         if not isinstance(config, dict): fail(21)
     providers = config.get("providers", {})
     if not isinstance(providers, dict): fail(21)
-    if identity in providers and not replace_entry: fail(24)
+    if identity in providers and not (replace_entry and app_shaped(providers[identity])): fail(24)
     providers[identity] = block
     config["providers"] = providers
     data = (json.dumps(config, indent=2) + "\n").encode()
