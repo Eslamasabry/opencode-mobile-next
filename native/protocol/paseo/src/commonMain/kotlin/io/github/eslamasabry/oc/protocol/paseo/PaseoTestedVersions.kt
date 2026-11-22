@@ -10,11 +10,11 @@ import kotlinx.collections.immutable.persistentSetOf
  * phone that has not updated yet keeps working.
  */
 public object PaseoTestedVersions {
-    /** Daemon versions. 0.16.1 is the version the phone installs; 0.15.4 and older tested ones stay listed (plan 04 §8 "phone pin"). */
-    public val paseo: ImmutableSet<String> = persistentSetOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0", "0.15.3", "0.15.4", "0.16.1")
+    /** Daemon versions. 0.17.1 is the version the phone installs (listed here so the proving build runs its bounded requests; the pins file's own tested list gains it only after a device proof); 0.16.1 and older tested ones stay listed (plan 04 §8 "phone pin"). */
+    public val paseo: ImmutableSet<String> = persistentSetOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0", "0.15.3", "0.15.4", "0.16.1", "0.17.1")
 
     /** The daemon version the phone helper installs. */
-    public const val PHONE_PIN: String = "0.16.1"
+    public const val PHONE_PIN: String = "0.17.1"
 
     /** Claude Code builds. 2.1.327 is the current pin; 2.1.325, 2.1.321, 2.1.319, 2.1.316, 2.1.294 (the 0.11.2 pin) and 2.1.283 stay accepted. */
     public val claudeCode: ImmutableSet<String> = persistentSetOf("2.1.283", "2.1.294", "2.1.316", "2.1.319", "2.1.321", "2.1.325", "2.1.327")

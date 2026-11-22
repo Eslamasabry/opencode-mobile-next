@@ -2,11 +2,11 @@
   "schema": 1,
   "source": "lib/domain/agent_catalog.dart _builtInCatalog(), lib/builtin/agents/paseo_scripts.dart, lib/paseo/tested_versions.dart (copied verbatim; a pin moves only with an app release)",
   "paseo": {
-    "version": "0.16.1",
-    "packageLockSha256": "d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5",
+    "version": "0.17.1",
+    "packageLockSha256": "e642771add423fc02ab1bdeeaf435966af72e4a55acd692c3ebe2d6c5e6d1bad",
     "cliSha256": "2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94",
     "payloadSha256": "8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09",
-    "codeTreeSha256": "766af65e563318895cdb7d4e79fed2629602fef5a98eb8215cb9d9ab3dc22a8a"
+    "codeTreeSha256": "890c17756059650e71d21d199c74a33b8c1f71ce81303c95c70da54705a5b129"
   },
   "node": {
     "version": "v24.22.3",
