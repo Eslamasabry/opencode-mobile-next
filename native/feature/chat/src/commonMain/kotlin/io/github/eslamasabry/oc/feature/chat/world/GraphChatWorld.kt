@@ -1241,6 +1241,9 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     delivery.queue?.state?.collect { queue -> retireSettledMarkers(queue) }
                 },
+                scope.launch(registry.mainContext) {
+                    delivery.stoppedByPerson.collect { refs -> feedKeeper.stoppedByPerson(ref in refs) }
+                },
                 // A marker the server's own copy has met (the process died after the request left, with no journalled
                 // receipt to look up): the delivered message and the "not confirmed" row never stand together.
                 scope.launch(registry.mainContext) {

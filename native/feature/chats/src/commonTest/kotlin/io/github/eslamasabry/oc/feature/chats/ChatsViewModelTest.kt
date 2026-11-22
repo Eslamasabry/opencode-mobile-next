@@ -643,6 +643,24 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `B-STOP-CUT-001 a stop by the person marks the runs it cut as stopped before closing`() =
+        runTest {
+            val order = mutableListOf<String>()
+            val watch = PhoneStopWatch(cutRuns = { order += "cut:" + it.raw }) { order += "close:" + it.raw }
+            val phone = ProfileId("phone")
+            watch.observe(false, phone)
+            watch.observe(true, phone)
+            watch.observe(true, phone)
+            assertEquals(
+                listOf("cut:phone", "close:phone"),
+                order,
+                "the cut runs are marked once, then the connection closes",
+            )
+            watch.observe(true, null)
+            assertEquals(2, order.size, "a server that is not on this phone is never cut by this phone's stop")
+        }
+
+    @Test
     fun `B-OPENING-RESTART the opening card restarts only this phone's own server`() = runTest {
         val home = Home(listOf(source("main", main = true)))
         val vm =

@@ -34,11 +34,13 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockPlacementStore
 import io.github.eslamasabry.oc.engine.attention.dock.DockRecent
 import io.github.eslamasabry.oc.engine.attention.dock.DockRemovals
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
+import io.github.eslamasabry.oc.engine.attention.dock.DockRunEnd
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
 import io.github.eslamasabry.oc.engine.attention.dock.SubAgentChildSource
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
@@ -363,13 +365,25 @@ class AppEdgeDock(
         attached[id] = graph
         savedLines.remove(id)
         val server = graph.session.server
+        val stoppedRefs = (graph as? ChatGraphAccessors)?.chatDelivery?.stoppedByPerson
         graph.scope.launch(dispatchers.main) {
             server.events.all.collect { envelope ->
                 if (attached[id] !== graph) return@collect
                 if (envelope.event == GatewayEvent.Connected) graph.scope.launch(dispatchers.main) { reconcile(id, graph) }
                 peeks.feed(id, envelope.event)
                 facts.feed(id, envelope.event)
-                for (event in DockFeed.events(id, envelope.event)) controller.feed(event)
+                val events = DockFeed.events(id, envelope.event) { r -> stoppedRefs?.value?.contains(r) == true }
+                for (event in events) controller.feed(event)
+            }
+        }
+        stoppedRefs?.let { flow ->
+            graph.scope.launch(dispatchers.main) {
+                flow.collect { refs ->
+                    if (attached[id] !== graph) return@collect
+                    for (ref in refs) {
+                        if (ref.profileId == id) controller.feed(DockEvent.RunEnded(ref, DockRunEnd.Stopped))
+                    }
+                }
             }
         }
         graph.scope.launch(dispatchers.main) {
@@ -406,7 +420,14 @@ class AppEdgeDock(
         val server = graph.session.server
         val location = server.location.value
         fun current() = attached[id] === graph && server.location.value == location
-        (server.sessionStatuses() as? Outcome.Ok)?.let { if (current()) controller.feed(DockFeed.statusesRead(id, it.value)) }
+        val stopped =
+            (graph as? ChatGraphAccessors)?.chatDelivery?.stoppedByPerson?.value
+                ?.filter { it.profileId == id }
+                ?.mapTo(hashSetOf()) { it.sessionId }
+                .orEmpty()
+        (server.sessionStatuses() as? Outcome.Ok)?.let {
+            if (current()) controller.feed(DockFeed.statusesRead(id, it.value, stopped))
+        }
         val permissions = (server.pendingPermissions() as? Outcome.Ok)?.value
         val questions = (server.pendingQuestions() as? Outcome.Ok)?.value
         val forms = if (server.capabilities.value.forms) (server.pendingForms() as? Outcome.Ok)?.value else emptyList()

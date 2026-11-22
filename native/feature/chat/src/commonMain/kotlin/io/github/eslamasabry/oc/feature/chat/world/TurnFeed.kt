@@ -50,6 +50,8 @@ public data class TurnFeed(
      * conversation shows activity again. Only a said idle lets an unfinished reply read as cut off.
      */
     val idleSaid: Boolean = false,
+    /** Whether the person's Stop (of the turn or of this phone's server) cut this conversation's newest run. */
+    val stoppedByPerson: Boolean = false,
 ) {
     public companion object {
         public val Empty: TurnFeed = TurnFeed()
@@ -153,6 +155,12 @@ internal class TurnFeedKeeper(private val sessionId: String) {
         val s = state.value
         val idle = said && !s.busy
         if (s.idleSaid != idle) state.value = s.copy(idleSaid = idle)
+    }
+
+    /** Records whether this app's stop memory marks this conversation's newest run as stopped by the person. */
+    fun stoppedByPerson(stopped: Boolean) {
+        val s = state.value
+        if (s.stoppedByPerson != stopped) state.value = s.copy(stoppedByPerson = stopped)
     }
 
     /** A run is going now (the session status said busy when the chat opened; [atMs] null = start unknown). */
