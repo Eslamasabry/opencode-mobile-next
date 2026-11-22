@@ -546,12 +546,17 @@ public class LibrarySession(
                     host.write(
                         declaration.copy(replaceDeclared = replaceDeclared, requireDeclared = requireDeclared)
                     ),
+                    replaced = requireDeclared,
                 )
             }
         }
     }
 
-    private suspend fun written(declaration: CustomProviderDeclaration, result: Outcome<Int>): CustomProviderOutcome {
+    private suspend fun written(
+        declaration: CustomProviderDeclaration,
+        result: Outcome<Int>,
+        replaced: Boolean,
+    ): CustomProviderOutcome {
         val code = result.getOrNull()
         val write = code?.let(CustomProviderWrite::ofExitCode)
         return when {
@@ -559,6 +564,9 @@ public class LibrarySession(
                 CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, result.failure.label())
             write != CustomProviderWrite.Saved ->
                 CustomProviderOutcome.Refused((write ?: CustomProviderWrite.Failed).refusal(), "Exit $code")
+            // A replace overwrote a declaration the server was already serving: until a restart re-reads the
+            // file the old address is still live, so the save is offered with its restart, never as loaded.
+            replaced -> CustomProviderOutcome.SavedNotLoaded
             listed(declaration.providerId, SETTLE_TRIES) -> CustomProviderOutcome.Loaded
             else -> CustomProviderOutcome.SavedNotLoaded
         }
