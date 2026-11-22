@@ -1,7 +1,14 @@
 package io.github.eslamasabry.oc.ui.kitchat.diff
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -9,12 +16,17 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -114,5 +126,56 @@ class KitDiffViewTest {
             val number = onNodeWithText("1", useUnmergedTree = true).getUnclippedBoundsInRoot()
             val sign = onNodeWithText("+", useUnmergedTree = true).getUnclippedBoundsInRoot()
             assertTrue(sign.left - number.right >= 4.dp, "the sign starts clear of the number: $number vs $sign")
+        }
+
+    @Test
+    fun `B-CHAT-058 the file header keeps its height when the two columns hide the wrap button`() =
+        runComposeUiTest {
+            // The compact header row holds the 48 dp wrap button in the one-column view; the two-column view
+            // hides it (two columns always wrap) and must not lose that height.
+            val file = DiffModel.fromBeforeAfter("a.txt", "old value", "new value")
+            var target = 0
+            setContent {
+                ChatTestTheme {
+                    target = with(LocalDensity.current) { LocalKitTokens.current.minTarget.dp.roundToPx() }
+                    Row(Modifier.size(1200.dp, 600.dp)) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 600f)) {
+                            Box(Modifier.width(360.dp).fillMaxHeight()) {
+                                KitDiffView(
+                                    file,
+                                    maxLines = 5000,
+                                    hunkLabel = { _, _, _, _ -> "hunk" },
+                                    gapLabel = { "$it hidden" },
+                                )
+                            }
+                        }
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(840f, 600f)) {
+                            Box(Modifier.width(840.dp).fillMaxHeight()) {
+                                KitDiffView(
+                                    file,
+                                    maxLines = 5000,
+                                    hunkLabel = { _, _, _, _ -> "hunk" },
+                                    gapLabel = { "$it hidden" },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            onNodeWithContentDescription("Wrap lines", useUnmergedTree = true).assertExists()
+            val headers = onAllNodes(hasTestTag("diff-file-header"), useUnmergedTree = true).fetchSemanticsNodes()
+            assertEquals(2, headers.size, "both views draw their compact file header")
+            val oneColumn = headers[0].boundsInRoot.height
+            val twoColumn = headers[1].boundsInRoot.height
+            // The floor comes first so the test fails without the row's own minimum on any machine: the
+            // equality below alone would pass there if the name text alone were ever taller than the target.
+            assertTrue(oneColumn >= target, "the one-column header is $oneColumn tall, under the $target touch target")
+            assertTrue(twoColumn >= target, "the two-column header is $twoColumn tall, under the $target touch target")
+            assertEquals(
+                oneColumn,
+                twoColumn,
+                1f,
+                "the header row is $oneColumn tall in one column but $twoColumn in two",
+            )
         }
 }

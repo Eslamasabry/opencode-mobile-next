@@ -133,6 +133,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private var readingBusy = false
     private var readingOutcome: RunOutcome? = null
     private var readingIdleSaid = false
+    private var readingStoppedByPerson = false
     private var reading = TranscriptReadingUi()
     private var sessionKey = "turn"
     private var lastLink: ChatLink? = null
@@ -211,17 +212,21 @@ public class TurnFactsPresenter(private val clock: Clock) {
         val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
         // B8: a reply waiting on the person (a request card) is never cut off, whatever the status said.
         val idleSaid = feed.idleSaid && !waitingForYou
-        if (
-            readingSnapshot !== snapshot ||
-                readingBusy != feed.busy ||
-                readingOutcome != outcome ||
-                readingIdleSaid != idleSaid
-        ) {
-            reading = transcriptReading(snapshot, feed.busy, outcome, idleSaid)
+        val coreChanged = readingSnapshot !== snapshot || readingBusy != feed.busy || readingOutcome != outcome
+        val stopChanged = readingIdleSaid != idleSaid || readingStoppedByPerson != feed.stoppedByPerson
+        if (coreChanged || stopChanged) {
+            reading =
+                withPersonStop(
+                    transcriptReading(snapshot, feed.busy, outcome, idleSaid),
+                    snapshot,
+                    feed.busy,
+                    feed.stoppedByPerson,
+                )
             readingSnapshot = snapshot
             readingBusy = feed.busy
             readingOutcome = outcome
             readingIdleSaid = idleSaid
+            readingStoppedByPerson = feed.stoppedByPerson
         }
         val stopped = outcome is RunOutcome.Interrupted
         // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.

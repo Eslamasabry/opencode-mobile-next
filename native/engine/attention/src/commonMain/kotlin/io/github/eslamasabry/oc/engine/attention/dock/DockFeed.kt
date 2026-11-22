@@ -56,7 +56,17 @@ public object DockFeed {
     private const val GLOBAL_FORM = "global"
     private val TODO_TOOLS = setOf("todowrite", "todo")
 
-    public fun events(profile: ProfileId, event: GatewayEvent, children: DockChildSource = SubAgentChildSource): List<DockEvent> = base(profile, event) + children.links(profile, event)
+    public fun events(
+        profile: ProfileId,
+        event: GatewayEvent,
+        children: DockChildSource = SubAgentChildSource,
+        stoppedByPerson: (ConversationRef) -> Boolean = { false },
+    ): List<DockEvent> =
+        base(profile, event).map { e ->
+            if (e is DockEvent.RunEnded && e.end == DockRunEnd.Succeeded && stoppedByPerson(e.ref)) {
+                e.copy(end = DockRunEnd.Stopped)
+            } else e
+        } + children.links(profile, event)
 
     private fun base(profile: ProfileId, event: GatewayEvent): List<DockEvent> {
         fun ref(session: SessionId) = ConversationRef(profile, session)
@@ -118,10 +128,15 @@ public object DockFeed {
         return DockEvent.RequestsRead(profile, by)
     }
 
-    public fun statusesRead(profile: ProfileId, statuses: Map<SessionId, SessionStatus>): DockEvent.StatusesRead =
+    public fun statusesRead(
+        profile: ProfileId,
+        statuses: Map<SessionId, SessionStatus>,
+        stopped: Set<SessionId> = emptySet(),
+    ): DockEvent.StatusesRead =
         DockEvent.StatusesRead(
             profile,
             statuses.filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }.keys,
+            stopped,
         )
 
     private fun partEvents(profile: ProfileId, part: Part): List<DockEvent> {

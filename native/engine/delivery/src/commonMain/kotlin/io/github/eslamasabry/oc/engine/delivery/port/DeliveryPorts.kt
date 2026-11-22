@@ -109,6 +109,13 @@ public interface StopMemory {
     public fun stoppedByPerson(ref: ConversationRef): Boolean = false
 
     public fun clearStoppedByPerson(ref: ConversationRef)
+
+    /**
+     * The server answered this app's Stop. `endedSomething = false` (NothingRunning) means no run
+     * follows it to its end, so the wind-down guard the Stop armed retires now, before it can
+     * excuse a later run started elsewhere.
+     */
+    public fun stopAnswered(ref: ConversationRef, endedSomething: Boolean) {}
 }
 
 /** Failures that carry a server status: before dispatch they keep the entry retryable and the batch going. */

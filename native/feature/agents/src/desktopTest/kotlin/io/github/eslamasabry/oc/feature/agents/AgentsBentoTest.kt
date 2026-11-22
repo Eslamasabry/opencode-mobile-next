@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentUpdateNote
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -167,6 +168,41 @@ class AgentsBentoTest {
             // The install note lives on the tile and in the sheet, not as a notice over the page.
             onNodeWithText("Antigravity is installed", substring = true).assertDoesNotExist()
             onNodeWithText("Install or update", substring = true).assertDoesNotExist()
+        }
+
+    // The automatic update's line: after three agents were updated in a row it named only the last one (the
+    // updater's last decision carries one agent). It names every agent it updated, in the order they finished; one
+    // stays one name.
+    @Test
+    fun `B-AGENT-UPD-011 the update note names every agent it updated, in the order they finished`() =
+        runComposeUiTest {
+            val updated =
+                PhoneAgentsState(
+                    available = true,
+                    owner = ProfileId("owner"),
+                    device = PhoneDevice("arm64", "15"),
+                    updateNote = PhoneAgentUpdateNote.Updated,
+                    updateAgentName = "Kilo",
+                    updatedAgentNames = persistentListOf("Claude Code", "Codex", "Kilo"),
+                )
+            var page by mutableStateOf(AgentsUi(phone = updated))
+            setContent { Screen(page, Recorder()) }
+            onNode(
+                hasContentDescription("This phone is ready · arm64 · Android 15 · updated Claude Code, Codex, Kilo")
+            ).assertExists()
+            // One agent updated: one name, exactly as before.
+            page =
+                AgentsUi(
+                    phone =
+                        updated.copy(
+                            updateAgentName = "Claude Code",
+                            updatedAgentNames = persistentListOf("Claude Code"),
+                        ),
+                )
+            waitForIdle()
+            onNode(
+                hasContentDescription("This phone is ready · arm64 · Android 15 · updated Claude Code")
+            ).assertExists()
         }
 
     @Test

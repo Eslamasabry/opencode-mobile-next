@@ -552,6 +552,102 @@ class Plan(unittest.TestCase):
         self.assertEqual((r['mode'], r['count'], r['total']), ('all', '8', '9'))
 
 
+def shard(index, count):
+    p = subprocess.run(['bash', os.path.join(HERE, 'shard_tasks.sh'), str(index), str(count)],
+                       capture_output=True, text=True, check=True)
+    return p.stdout.splitlines()
+
+
+def shard_weight(task):
+    """A module's weight: the number of lines containing @Test under its test source folders (src/*Test*/, at least 1)."""
+    module = task[1:].rsplit(':', 1)[0].replace(':', '/')
+    n = 0
+    src = os.path.join(HERE, '..', '..', module, 'src')
+    if os.path.isdir(src):
+        for d in sorted(os.listdir(src)):
+            if 'Test' in d:
+                for root, _, files in os.walk(os.path.join(src, d)):
+                    for f in files:
+                        with open(os.path.join(root, f), errors='replace') as fh:
+                            n += sum(1 for line in fh if '@Test' in line)
+    return max(n, 1)
+
+
+def workflow_pick(lane, shard_index, count):
+    """What a desktop-test job of native-ci.yml really runs (its pick step, lines 319-328): the positional pick over
+    shard_tasks.sh's whole list - line c goes to shard c % count; a full lane rotates :quality:test and appends
+    :quality:secTest to the shard that holds it, a fast lane omits both (the dedicated quality shard runs the pair)."""
+    omit = '^:quality:(test|secTest)$' if lane in ('fast', 'candidate') else '^:quality:secTest$'
+    tasks = [t for t in shard(0, 1) if not re.match(omit, t)]
+    picked = [t for c, t in enumerate(tasks) if c % count == shard_index]
+    if ':quality:test' in picked:
+        picked.append(':quality:secTest')
+    return picked
+
+
+class Shards(unittest.TestCase):
+    """B-CI-320..322: the shard plan deals the module test tasks by @Test weight, not round-robin over the sorted list."""
+
+    def test_B_CI_320_every_test_task_lands_in_exactly_one_shard(self):
+        whole = shard(0, 1)
+        self.assertTrue(whole, 'the whole task list is empty')
+        for count in (1, 4, 8, 9):
+            dealt = [t for i in range(count) for t in shard(i, count)]
+            self.assertEqual(len(dealt), len(set(dealt)), f'count {count} deals a task twice')
+            self.assertEqual(sorted(dealt), sorted(whole), f'count {count} does not cover the whole task list')
+
+    def test_B_CI_321_the_shards_carry_near_equal_weight(self):
+        count = 9
+        weights = {t: shard_weight(t) for t in shard(0, 1)}
+        sums = [sum(weights[t] for t in shard(i, count)) for i in range(count)]
+        average = -(-sum(sums) // count)  # the average shard weight, rounded up
+        heaviest_task = max(weights.values())
+        # a task cannot be split, so the heaviest shard may hold one task heavier than a fair share, and no more
+        self.assertLessEqual(max(sums), max(heaviest_task, average + average // 4),
+                             'the heaviest shard carries more than the heaviest task or 1.25 x the average shard')
+
+    def test_B_CI_322_the_plan_is_the_same_twice(self):
+        for count in (4, 9):
+            self.assertEqual([shard(i, count) for i in range(count)], [shard(i, count) for i in range(count)],
+                             f'count {count} is not deterministic')
+
+
+class WorkflowShards(unittest.TestCase):
+    """B-CI-323..325: the path CI really runs - shard_tasks.sh 0 1, then the workflow's positional pick."""
+
+    def test_B_CI_323_the_workflows_pick_over_shard_tasks_0_1_covers_every_task_once(self):
+        whole = shard(0, 1)
+        full = [workflow_pick('full', i, 8) for i in range(8)]
+        dealt = [t for p in full for t in p]
+        self.assertEqual(sorted(dealt), sorted(whole), 'the full-lane pick is not the whole task list')
+        self.assertEqual(len(dealt), len(set(dealt)), 'the full-lane pick deals a task twice')
+        holders = [p for p in full if ':quality:test' in p]
+        self.assertEqual(len(holders), 1, 'quality:test must sit in exactly one shard')
+        self.assertIn(':quality:secTest', holders[0], 'secTest must sit in the shard holding quality:test')
+        picks = [workflow_pick('fast', i, 8) for i in range(8)]  # a fast lane's 9th job runs the quality pair
+        dealt = [t for p in picks for t in p] + [':quality:test', ':quality:secTest']
+        self.assertEqual(sorted(dealt), sorted(whole), 'the fast-lane pick plus its quality shard is not the whole list')
+        self.assertEqual(len(dealt), len(set(dealt)), 'the fast-lane pick deals a task twice')
+
+    def test_B_CI_324_the_workflows_8_module_shards_carry_near_equal_weight(self):
+        weights = {t: shard_weight(t) for t in shard(0, 1)}
+        module = [t for t in weights if t not in (':quality:test', ':quality:secTest')]
+        total = sum(weights[t] for t in module)
+        # a task cannot be split, so the heaviest shard may hold one task heavier than a fair share, and the
+        # round-major layout may leave each shard one task-count of skew
+        bound = max(max(weights[t] for t in module), -(-5 * total // 32)) + -(-len(module) // 8)
+        sums = [sum(weights[t] for t in workflow_pick('fast', i, 8)) for i in range(8)]
+        self.assertLessEqual(max(sums), bound,
+                             'the heaviest module shard carries more than the heaviest task or 1.25 x the average shard')
+
+    def test_B_CI_325_shard_tasks_plans_for_the_count_plan_shards_gives_an_all_lane(self):
+        counts = {lane: plan(lane, 'ALL')['count'] for lane in ('full', 'fast')}
+        self.assertEqual(set(counts.values()), {'8'}, f'an ALL lane must plan the 8 shards the list is laid out for: {counts}')
+        branch = open(os.path.join(HERE, 'shard_tasks.sh')).read()
+        branch = branch[branch.index('count == 1'):]
+        self.assertIn('range(8)', branch, 'shard_tasks.sh no longer lays its list out for the 8 module shards of an ALL lane')
+
+
 class Workflow(unittest.TestCase):
     """The summary job's exit code is the run's verdict on every branch."""
 

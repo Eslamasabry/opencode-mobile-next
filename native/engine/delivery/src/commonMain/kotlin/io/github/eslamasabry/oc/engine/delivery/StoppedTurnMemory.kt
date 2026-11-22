@@ -51,13 +51,16 @@ internal class StoppedTurnMemory(
     }
 
     private fun read(): Set<ConversationRef> =
-        ((store.get(key) as? PrefValue.Str)?.value ?: "")
-            .split(',')
-            .filter { it.isNotBlank() }
-            .mapTo(linkedSetOf()) { ConversationRef(profile, SessionId(it)) }
+        readIds(store, profile).mapTo(linkedSetOf()) { ConversationRef(profile, it) }
 
     companion object {
         const val PREFIX = "oc.stoppedTurns."
         private const val MAX = 200
+
+        fun readIds(store: KeyValueStore, profile: ProfileId): Set<SessionId> =
+            ((store.get(PREFIX + profile.raw) as? PrefValue.Str)?.value ?: "")
+                .split(',')
+                .filter { it.isNotBlank() }
+                .mapTo(linkedSetOf(), ::SessionId)
     }
 }

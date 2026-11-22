@@ -109,13 +109,29 @@ private fun modelsProblem(ids: List<String>): CustomProviderProblem? =
 private fun modelInvalid(id: String): Boolean =
     id.length > CustomProviderDraft.MAX_MODEL || id.any { it <= ' ' || it == '#' || control(it) }
 
-/** The declared `providers.<providerId>` block: name, package, `settings.baseURL` and models. Never a key. */
-public data class CustomProviderDeclaration(val providerId: String, val name: String, val block: JsonObject) {
+/**
+ * The declared `providers.<providerId>` block: name, package, `settings.baseURL` and models. Never a key.
+ * [replaceDeclared] is the engine's decision (issue 152) that the settings file's entry under this id is stranded —
+ * no live connection and no catalog entry rides on it — so the writer replaces it instead of refusing; the script
+ * never decides this itself, and still refuses when the old entry is not this app's own shape (a field the writer
+ * never writes, e.g. an inline key), so nothing a person wrote by hand is lost. [requireDeclared] is the same
+ * decision's other half: the write goes through only when the file really holds an entry under this id — the
+ * script, the file's one reader, refuses when it does not.
+ */
+public data class CustomProviderDeclaration(
+    val providerId: String,
+    val name: String,
+    val block: JsonObject,
+    val replaceDeclared: Boolean = false,
+    val requireDeclared: Boolean = false,
+) {
     /** The run's stdin: the only place the person's words travel (never the script, a process argument). */
     public fun input(): String =
         buildJsonObject {
                 put("id", providerId)
                 put("block", block)
+                put("replaceDeclared", replaceDeclared)
+                put("requireDeclared", requireDeclared)
             }
             .toString()
 }
@@ -193,7 +209,10 @@ public enum class CustomProviderWrite(public val code: Int) {
     Unsafe(code = 22),
     /** Another settings change holds the lock. */
     Busy(code = 23),
-    /** The file already declares this id. */
+    /**
+     * The file already declares this id and the run was not told to replace it, the entry is not this app's own
+     * shape, or a run that required a declared entry found none.
+     */
     AlreadyDeclared(code = 24),
     /** A hand-kept `opencode.jsonc` sits beside it; the app leaves hand-kept settings alone. */
     HandManaged(code = 25),
@@ -215,7 +234,10 @@ public enum class CustomProviderWrite(public val code: Int) {
  *
  * Guards (the card installer's, `CardToolJs.INSTALLER_PY`): every ancestor checked for symlinks, owner and others'
  * write; reads with `O_NOFOLLOW` under a 1 MiB ceiling; the card installer's lock is taken too, because both rewrite
- * this file; a hand-kept `opencode.jsonc` is never overwritten; temp file, fsync, atomic replace.
+ * this file; a hand-kept `opencode.jsonc` is never overwritten; temp file, fsync, atomic replace. A told replace
+ * still takes only an entry whose every field is one this app's writer writes (name, package, settings.baseURL,
+ * models): a hand-written entry, down to one extra field, keeps the refusal. A run told to require a declaration
+ * keeps the same refusal when the file holds no entry under the id.
  */
 public object CustomProviderScript {
     public const val CONFIG_DIR: String = "/root/.oc-opencode2/config/opencode"
@@ -230,7 +252,10 @@ public object CustomProviderScript {
             "[ -x /usr/bin/python3 ] || exit 20\n" +
             "exec /usr/bin/python3 -I -c '" + PROGRAM + "' '" + CONFIG_DIR + "' '" + CARDS_DIR + "' 0 2>/dev/null\n"
 
-    /** argv: settings folder, card installer folder, the engine's uid. stdin: `{"id": …, "block": {…}}`. */
+    /**
+     * argv: settings folder, card installer folder, the engine's uid. stdin:
+     * `{"id": …, "block": {…}, "replaceDeclared": bool, "requireDeclared": bool}`.
+     */
     public const val PROGRAM: String =
         """import os, sys, json, stat, pathlib, tempfile, fcntl, re
 class Stop(Exception):
@@ -276,6 +301,14 @@ def replace(folder, path, data):
         try: os.fsync(directory)
         finally: os.close(directory)
     except OSError: pass
+def app_shaped(entry):
+    if not isinstance(entry, dict) or not set(entry) <= {"name", "package", "settings", "models"}: return False
+    if not all(isinstance(entry[key], str) for key in ("name", "package") if key in entry): return False
+    settings = entry.get("settings")
+    if settings is not None and (not isinstance(settings, dict) or not set(settings) <= {"baseURL"} or not all(isinstance(value, str) for value in settings.values())): return False
+    models = entry.get("models")
+    if models is not None and (not isinstance(models, dict) or any(value != {} for value in models.values())): return False
+    return True
 def main():
     global OWNER
     folder, cards, OWNER = sys.argv[1], sys.argv[2], int(sys.argv[3])
@@ -286,8 +319,12 @@ def main():
     except Exception: fail(26)
     if not isinstance(payload, dict): fail(26)
     identity, block = payload.get("id"), payload.get("block")
+    replace_entry = payload.get("replaceDeclared", False)
+    require_declared = payload.get("requireDeclared", False)
     if not isinstance(identity, str) or not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,63}", identity): fail(26)
     if not isinstance(block, dict) or set(block) != {"name", "package", "settings", "models"}: fail(26)
+    if not isinstance(replace_entry, bool): fail(26)
+    if not isinstance(require_declared, bool): fail(26)
     if not checked(folder, True): fail(20)
     locks = [hold(folder + "/.oc-provider.lock")]
     if checked(cards, True): locks.append(hold(cards + "/lock"))
@@ -301,7 +338,8 @@ def main():
         if not isinstance(config, dict): fail(21)
     providers = config.get("providers", {})
     if not isinstance(providers, dict): fail(21)
-    if identity in providers: fail(24)
+    if require_declared and not (identity in providers and app_shaped(providers[identity])): fail(24)
+    if identity in providers and not (replace_entry and app_shaped(providers[identity])): fail(24)
     providers[identity] = block
     config["providers"] = providers
     data = (json.dumps(config, indent=2) + "\n").encode()

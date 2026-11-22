@@ -549,10 +549,11 @@ private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: Ki
     // The automatic update says what it does or waits for on this same line, never as a new row.
     val named = state.phone.updateNote?.let { it.name.startsWith("Waiting") } == true
     val update =
-        phoneUpdateNote(state.phone.updateNote, state.phone.updateAgentName)?.let { text ->
-            // A wait names the agent it is for ("Antigravity: agent update waits until your agents are idle").
-            if (named && state.phone.updateAgentName != null) "${state.phone.updateAgentName}: $text" else text
-        }
+        phoneUpdateNote(state.phone.updateNote, state.phone.updateAgentName, state.phone.updatedAgentNames)
+            ?.let { text ->
+                // A wait names the agent it is for ("Antigravity: agent update waits until your agents are idle").
+                if (named && state.phone.updateAgentName != null) "${state.phone.updateAgentName}: $text" else text
+            }
     KitStatusLine(
         if (update == null) ready else "$ready · $update",
         tone = StatusTone.Ok,
@@ -568,7 +569,7 @@ private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: Ki
 }
 
 @Composable
-private fun phoneUpdateNote(note: PhoneAgentUpdateNote?, agent: String?): String? =
+private fun phoneUpdateNote(note: PhoneAgentUpdateNote?, agent: String?, updated: List<String>): String? =
     when (note) {
         null -> null
         PhoneAgentUpdateNote.Reading -> stringResource(Res.string.agentsUpdateReading)
@@ -578,7 +579,11 @@ private fun phoneUpdateNote(note: PhoneAgentUpdateNote?, agent: String?): String
         PhoneAgentUpdateNote.WaitingMetered -> stringResource(Res.string.agentsUpdateWaitingMetered)
         PhoneAgentUpdateNote.Updating ->
             stringResource(Res.string.agentsUpdateUpdating, agent.orEmpty())
-        PhoneAgentUpdateNote.Updated -> stringResource(Res.string.agentsUpdateUpdated, agent.orEmpty())
+        PhoneAgentUpdateNote.Updated -> {
+            // The one %1$s names every agent the run finished, in the order they finished; one stays one name.
+            val names = if (updated.isEmpty()) listOf(agent.orEmpty()) else updated
+            stringResource(Res.string.agentsUpdateUpdated, names.joinToString(", "))
+        }
         PhoneAgentUpdateNote.NeedsSignIn -> stringResource(Res.string.agentsUpdateNeedsSignIn, agent.orEmpty())
         PhoneAgentUpdateNote.ReadFailed -> stringResource(Res.string.agentsUpdateReadFailed)
         PhoneAgentUpdateNote.Refused -> stringResource(Res.string.agentsUpdateRefused)

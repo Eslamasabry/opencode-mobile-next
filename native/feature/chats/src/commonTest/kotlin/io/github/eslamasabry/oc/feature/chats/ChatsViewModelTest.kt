@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldAgents
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
@@ -642,6 +643,24 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `B-STOP-CUT-001 a stop by the person marks the runs it cut as stopped before closing`() =
+        runTest {
+            val order = mutableListOf<String>()
+            val watch = PhoneStopWatch(cutRuns = { order += "cut:" + it.raw }) { order += "close:" + it.raw }
+            val phone = ProfileId("phone")
+            watch.observe(false, phone)
+            watch.observe(true, phone)
+            watch.observe(true, phone)
+            assertEquals(
+                listOf("cut:phone", "close:phone"),
+                order,
+                "the cut runs are marked once, then the connection closes",
+            )
+            watch.observe(true, null)
+            assertEquals(2, order.size, "a server that is not on this phone is never cut by this phone's stop")
+        }
+
+    @Test
     fun `B-OPENING-RESTART the opening card restarts only this phone's own server`() = runTest {
         val home = Home(listOf(source("main", main = true)))
         val vm =
@@ -1103,6 +1122,11 @@ class ChatsViewModelTest {
         val now = mutableListOf<HomeDownloadKind>()
         var retried = mutableListOf<HomeDownloadKind>()
         var retryStarts = true
+        var heldAgentsYes = 0
+
+        override fun downloadHeldAgents() {
+            heldAgentsYes++
+        }
 
         override fun downloadNow(kind: HomeDownloadKind) {
             now += kind
@@ -1180,5 +1204,17 @@ class ChatsViewModelTest {
         vm.actOnDownload()
         assertNull(vm.state.value.downloadAsk)
         assertTrue(downloads.retried.isEmpty())
+    }
+
+    @Test
+    fun `B-DL-445 the action on the agents-only line is the yes for the held agents, no ask`() = runTest {
+        val held = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.AgentsWaiting(HomeHeldAgents(3, 660)))
+        val downloads = Downloads(listOf(held))
+        val vm = downloadHome(downloads)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.actOnDownload()
+        assertEquals(1, downloads.heldAgentsYes)
+        assertNull(vm.state.value.downloadAsk)
+        assertTrue(downloads.now.isEmpty(), "the helper's own yes is not given")
     }
 }

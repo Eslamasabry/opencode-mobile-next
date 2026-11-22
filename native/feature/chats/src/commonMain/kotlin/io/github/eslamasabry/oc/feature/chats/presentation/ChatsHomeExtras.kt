@@ -285,12 +285,20 @@ public class NoChatsHomeExtras : ChatsHomeExtras {
  * list, the new-conversation page) sees a server that is not there instead of one that still reads "Connected".
  * [observe] gets each reading of "the person stopped it" and the profile that runs on this phone, if any.
  */
-public class PhoneStopWatch(private val disconnect: suspend (ProfileId) -> Unit) {
+public class PhoneStopWatch(
+    /** Marks the runs the stop cut as stopped (not finished), before the connection closes. */
+    private val cutRuns: suspend (ProfileId) -> Unit = {},
+    private val disconnect: suspend (ProfileId) -> Unit,
+) {
     private var wasStopped: Boolean? = null
 
     public suspend fun observe(stoppedByPerson: Boolean, onThisPhone: ProfileId?) {
         val before = wasStopped
         wasStopped = stoppedByPerson
-        if (stoppedByPerson && before != true && onThisPhone != null) disconnect(onThisPhone)
+        if (stoppedByPerson && before != true && onThisPhone != null) {
+            // The runs the stop cut are the person's own stop: marked before the connection (and what it knew) goes.
+            cutRuns(onThisPhone)
+            disconnect(onThisPhone)
+        }
     }
 }

@@ -55,6 +55,26 @@ class ListRowFactsTest {
     }
 
     @Test
+    fun `B-STOP-CUT-002 a text-only reply cut by Stop reads Stopped even when the server recorded Succeeded`() {
+        val cut =
+            session("text-only", "/w", 5)
+                .copy(lastRunOutcome = io.github.eslamasabry.oc.core.model.SessionRunOutcome.Succeeded)
+        val item =
+            source(
+                    OpenCodeListing(
+                        sessions = listOf(cut),
+                        finishedUnseen = setOf(cut.id),
+                        stoppedByPerson = setOf(cut.id),
+                    )
+                )
+                .current()
+                .items
+                .single()
+        assertTrue(item.stoppedByPerson, "a server Succeeded word must not turn a person-stopped run into Done")
+        assertFalse(item.interrupted)
+    }
+
+    @Test
     fun `H6 a stopped conversation that runs again is not stopped any more`() {
         val item =
             source(

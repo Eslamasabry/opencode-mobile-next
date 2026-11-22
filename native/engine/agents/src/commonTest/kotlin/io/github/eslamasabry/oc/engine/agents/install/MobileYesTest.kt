@@ -89,4 +89,20 @@ class MobileYesTest {
         updater.changed()
         assertEquals(listOf(claude, codex), jobs.started)
     }
+
+    @Test
+    fun `B-DL-446 the yes on Home's line starts exactly the agents it names, another still waits`() = runTest {
+        // The sheet was never answered on mobile data (an app restart): nothing is covered yet.
+        val engine = AgentUpdateChoiceEngine("app1", FakeAgentPrefs(), disk)
+        engine.refresh()
+        engine.decide(mapOf(claude to AgentUpdateChoice.Update, codex to AgentUpdateChoice.Update))
+        engine.mobile.record(emptyMap())
+        val jobs = Jobs()
+        val updater = AgentAutoUpdater(host(engine, setOf(claude, codex)), jobs) { false }
+        updater.changed()
+        assertEquals(emptyList(), jobs.started)
+        engine.mobile.grant(mapOf(claude to "2"))
+        repeat(3) { updater.changed() }
+        assertEquals(listOf(claude), jobs.started, "codex was not named by the yes")
+    }
 }

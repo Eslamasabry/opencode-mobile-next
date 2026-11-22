@@ -20,6 +20,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 /** Ported from test/paseo_gateway_test.dart group 'sub-agents' (lines 1138-1300). */
@@ -59,6 +60,7 @@ class PaseoSubAgentsTest {
     @Test
     fun `B-AGENT-165 a sub-agent is its conversation's child, and its card opens it`() = runTest {
         val h = ready()
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
         h.daemon.push("agent_stream", stream("a1", agentCall("running"), seq = 1))
         h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor()))
         h.pump()
@@ -74,6 +76,42 @@ class PaseoSubAgentsTest {
         assertEquals(listOf(sub), PaseoOperations(h.gateway).sessionChildren(SessionId("a1")).ok().map { it.id.raw })
         assertTrue(h.gateway.capabilities.value.subagentSessions)
     }
+
+    @Test
+    fun `B-AGENT-190 a sub-agent the helper still calls running under an idle conversation is not working`() = runTest {
+        val h = ready()
+        // Nothing runs the parent (no turn, no stream): the helper's own store kept the sub-agent "running" from before
+        // its restart. The app asks the turn, not the stored word.
+        h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor()))
+        h.pump()
+        assertNotEquals(SessionStatus.Busy, h.gateway.sessionStatuses().ok()[SessionId(sub)])
+        assertEquals(listOf(sub), PaseoOperations(h.gateway).sessionChildren(SessionId("a1")).ok().map { it.id.raw })
+    }
+
+    @Test
+    fun `B-AGENT-190 a stale running sub-agent read from the list after a restart is not working`() = runTest {
+        val h = ready()
+        h.daemon.handlers["agent.provider_subagents.list.request"] = {
+            "agent.provider_subagents.list.response" to
+                jsonOf("parentAgentId" to "a1", "subagents" to listOf(descriptor()), "error" to null)
+        }
+        h.daemon.handlers["fetch_agent_request"] = { "fetch_agent_response" to jsonOf("agent" to agentJson("a1")) }
+        PaseoOperations(h.gateway).sessionChildren(SessionId("a1")).ok()
+        h.pump()
+        assertNotEquals(SessionStatus.Busy, h.gateway.sessionStatuses().ok()[SessionId(sub)])
+    }
+
+    @Test
+    fun `B-AGENT-191 a running sub-agent listed before its parent's turn works once the turn starts`() =
+        runTest {
+            val h = ready()
+            h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor()))
+            h.pump()
+            assertNotEquals(SessionStatus.Busy, h.gateway.sessionStatuses().ok()[SessionId(sub)])
+            h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+            h.pump()
+            assertEquals(SessionStatus.Busy, h.gateway.sessionStatuses().ok()[SessionId(sub)])
+        }
 
     @Test
     fun `B-AGENT-165 its steps stream into its own conversation`() = runTest {
@@ -153,8 +191,11 @@ class PaseoSubAgentsTest {
             "agent.provider_subagents.list.response" to
                 jsonOf("parentAgentId" to "a1", "subagents" to listOf(descriptor()), "error" to null)
         }
+        // Its turn is running now, so the helper's "running" is believed.
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        h.pump()
         val ops = PaseoOperations(h.gateway)
-        // Nothing pushed and the history never read: the neutral read asks the helper itself.
+        // Nothing else pushed and the history never read: the neutral read asks the helper itself.
         val agents = ops.subAgents(SessionId("a1")).ok()
         val one = agents.single()
         assertEquals(sub, one.id.raw)

@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
@@ -121,7 +122,18 @@ public class ConnectionDelivery(
     private val stoppedMemory = stores.singleOrNull()?.let { StoppedTurnMemory(it.store, it.lanes.app, profile.id, scope) }
     private val stopped = stoppedMemory?.refs ?: MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
+
+    /**
+     * A Stop this app asked and the server has not shown the end of yet (its busy statuses are the same
+     * run, not a newer one).
+     */
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
+
+    /** The person's Stop of the whole server cut these runs: each is "stopped", like a Stop pressed on its turn. */
+    public suspend fun markCutByStop(refs: Collection<ConversationRef>) {
+        for (ref in refs) stoppedMemory?.add(ref) ?: stopped.update { it + ref }
+        stoppedMemory?.settled()
+    }
 
     private suspend fun admission(profile: ServerProfile): Outcome<Unit> {
         for (check in interactiveSendChecks) {
@@ -182,6 +194,10 @@ public class ConnectionDelivery(
                 override fun clearStoppedByPerson(ref: ConversationRef) {
                     stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
                     requestedStop.update { it - ref }
+                }
+
+                override fun stopAnswered(ref: ConversationRef, endedSomething: Boolean) {
+                    if (!endedSomething) requestedStop.update { it - ref }
                 }
             },
             clock,
@@ -272,6 +288,20 @@ public class ConnectionDelivery(
                     observedReceipts.observe(current.scope, event)
             }
         }
+        // The live truth with no chat screen open: the streamed busy word itself clears the stored
+        // stop (Home and the Edge light never reach running()), and the run's end retires the Stop
+        // wind-down guard, so only the wind-down of this app's own Stop is excused.
+        scope.launch {
+            gateway.events.all.collect { envelope ->
+                when (val event = envelope.event) {
+                    is GatewayEvent.RunStarted -> serverBusy(ConversationRef(profile.id, event.sessionId))
+                    is GatewayEvent.RunRetrying -> serverBusy(ConversationRef(profile.id, event.sessionId))
+                    is GatewayEvent.RunEnded ->
+                        requestedStop.update { it - ConversationRef(profile.id, event.sessionId) }
+                    else -> Unit
+                }
+            }
+        }
         scope.launch(lane) {
             gateway.events.project.collect { envelope ->
                 val event = envelope.event
@@ -323,10 +353,22 @@ public class ConnectionDelivery(
         scope.launch(reconcileLane) { queue.flush() }
     }
 
+    /**
+     * The live truth wins: a busy status the server reports now is a run the person's stored stop
+     * did not cut, unless this app's own Stop is still winding that same run down (requestedStop).
+     */
+    private fun serverBusy(ref: ConversationRef) {
+        if (ref !in requestedStop.value) stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
+    }
+
     public fun running(ref: ConversationRef, busy: Boolean) {
         runRecovery?.running(ref.sessionId, busy)
         running.update { if (busy) it + ref else it - ref }
-        if (!busy) engine?.turnEnded(ref)
+        if (busy) {
+            serverBusy(ref)
+        } else {
+            engine?.turnEnded(ref)
+        }
     }
 
     /**
@@ -369,6 +411,12 @@ public class ConnectionDelivery(
         val request =
             SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
         return if (insteadOfDraft) engine.sendInsteadOfDraft(request) else engine.send(request)
+    }
+
+    public companion object {
+        /** Saved session ids whose newest turn the person stopped on [profile] (readable while offline). */
+        public fun readStoppedByPerson(store: KeyValueStore, profile: ProfileId): Set<SessionId> =
+            StoppedTurnMemory.readIds(store, profile)
     }
 }
 

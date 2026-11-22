@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
@@ -113,5 +114,35 @@ class StoppedOnceTest {
             )
         val facts = reloaded(listOf(prompt(), failed))
         assertEquals(WorkLineState.EndedFailed, facts.work["m1"]?.state)
+    }
+
+    @Test
+    fun `B-STOP-CUT-004 a text-only reply cut by Stop reads Stopped in its turn foot even when saved finished`() {
+        val words = Part("x2", "m2", sid, PartType.Text, "text", text = "The Long Watch.")
+        val savedSucceeded =
+            MessageWithParts(
+                MessageInfo(
+                    "m2",
+                    sid,
+                    Role.Assistant,
+                    providerId = "opencode",
+                    modelId = "big-pickle",
+                    time = MsgTime(1_100, 3_100),
+                    finish = "stop",
+                ),
+                listOf(words).toImmutableList(),
+            )
+        val keeper = TurnFeedKeeper(sid)
+        keeper.stoppedByPerson(true)
+        keeper.history(listOf(prompt(), savedSucceeded), newest = true)
+        keeper.idle()
+        val facts = TurnFactsPresenter(FixedClock).present(keeper.feed.value, 5_000)
+        assertEquals(TurnEndNote.Stopped, facts.reading.endNotes["m1"])
+        // A reply whose own footer already says Stopped still adds no duplicate closing line.
+        val alreadyStopped = TurnFeedKeeper(sid)
+        alreadyStopped.stoppedByPerson(true)
+        alreadyStopped.history(listOf(prompt(), stoppedReply(words)), newest = true)
+        alreadyStopped.idle()
+        assertNull(TurnFactsPresenter(FixedClock).present(alreadyStopped.feed.value, 5_000).reading.endNotes["m1"])
     }
 }

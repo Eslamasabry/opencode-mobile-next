@@ -1400,6 +1400,7 @@ public class PaseoGateway(
             }
             checkLocation(scope, epoch)
             statuses[sessionId] = SessionStatus.Busy
+            wakeSubagents(sessionId)
             return PromptAdmission.Confirmed(null)
         } catch (e: PaseoException) {
             awaitingTurn.remove(sessionId)
@@ -2321,6 +2322,7 @@ public class PaseoGateway(
                 val outcome =
                     if (lost) RunOutcome.Interrupted(InterruptReason.Shutdown) else RunOutcome.Succeeded
                 emit(GatewayEvent.RunEnded(SessionId(id), outcome))
+                if (lost) endCutSubagents(id)
             }
         }
         drafts.remove(id)
@@ -2345,6 +2347,7 @@ public class PaseoGateway(
             return
         emitStatus(id, SessionStatus.Idle)
         emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Interrupted(InterruptReason.Shutdown)))
+        endCutSubagents(id)
     }
 
     private fun cancelRecordBusyExpiry() {
@@ -2417,7 +2420,10 @@ public class PaseoGateway(
         if (statuses[id] == status) return
         statuses[id] = status
         if (status == SessionStatus.Idle) live[id]?.let(::finishOpen)
-        if (status == SessionStatus.Busy) emit(GatewayEvent.RunStarted(SessionId(id)))
+        if (status == SessionStatus.Busy) {
+            emit(GatewayEvent.RunStarted(SessionId(id)))
+            wakeSubagents(id)
+        }
     }
 
     private fun onEvent(push: PaseoPush) {

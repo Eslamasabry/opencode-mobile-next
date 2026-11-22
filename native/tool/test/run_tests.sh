@@ -175,6 +175,16 @@ R="$(new_repo)"; cd "$R" || exit 1; git checkout -q -b side native/main; echo s 
 commit "chore(tool): side [skip ci]" "Side." "${GOOD_TRAILERS[@]}"; git checkout -q work
 git merge -q --no-ff side -m "merge: side into work [skip ci]"
 expect "commits: merge commits need only [skip ci]" 0 native/tool/check_commits.sh native/main
+R="$(new_repo)"; cd "$R" || exit 1; printf 'versionName=3.0.2\nversionCode=10140\n' >native/version.properties
+commit "build(release): native 3.0.2+10140" "Takes versionCode 10140 for the public-lineage fix-forward release." "Release-Tag: v3.0.2+10140"
+expect "commits: the release script's bump commit is accepted" 0 native/tool/check_commits.sh native/main
+expect_out "commits: the bump is named as accepted" "release script's own bump commit \\(Release-Tag v3.0.2\\+10140\\): accepted"
+R="$(new_repo)"; cd "$R" || exit 1; printf 'versionName=3.0.2\nversionCode=10140\n' >native/version.properties
+commit "build(release): native 3.0.2+10140" "Takes versionCode 10140." "Release-Tag: v3.0.2+10150"
+expect "commits: a bump whose Release-Tag names another version fails" 1 native/tool/check_commits.sh native/main
+R="$(new_repo)"; cd "$R" || exit 1; printf 'versionName=3.0.2\n' >native/version.properties; echo x >native/core/common/F.kt
+commit "build(release): native 3.0.2+10140" "Takes versionCode 10140." "Release-Tag: v3.0.2+10140"
+expect "commits: a bump-shaped commit that changes other files fails" 1 native/tool/check_commits.sh native/main
 printf 'fix(core-common): x\n\nBody.\n\nCo-Authored-By: %s\n' "$NOREPLY_ID" >"$TMP_ROOT/msg"
 expect "commits: message mode refuses a missing [skip ci]" 1 native/tool/check_commits.sh --message-file "$TMP_ROOT/msg"
 

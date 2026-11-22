@@ -165,6 +165,8 @@ public data class PhoneAgentsState(
     val updateNote: PhoneAgentUpdateNote? = null,
     /** The agent's name for [PhoneAgentUpdateNote.Updating]. */
     val updateAgentName: String? = null,
+    /** Every agent the update finished, in the order they finished ([PhoneAgentUpdateNote.Updated]). */
+    val updatedAgentNames: ImmutableList<String> = persistentListOf(),
 )
 
 /** What the automatic agent update says on the phone's status line (the words live in the screen). */
