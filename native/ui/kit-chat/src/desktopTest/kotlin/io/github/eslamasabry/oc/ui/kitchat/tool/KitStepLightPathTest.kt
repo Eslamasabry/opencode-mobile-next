@@ -146,7 +146,7 @@ class KitStepLightPathTest {
                     stage = 1
                     mainClock.advanceTimeBy(400)
                     val nodes = nodesFromListTop()
-                    assertEquals(3, nodes.size, "$what: A, the dot and B on the rail")
+                    assertEquals(2, nodes.size, "$what: A and B carry a node; the sentence dot does not")
                     val f = frameOf(rail[0]!!) ?: error("$what: the running step recorded no frame")
                     inNode("$what: the light starts at the step that just finished, not the dot", f.fromY, nodes[0])
                 }
