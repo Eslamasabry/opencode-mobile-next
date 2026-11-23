@@ -85,40 +85,42 @@ public class Diagnostics(
 
     /** Records a handled error. [message] and [stack] are sanitised here; callers pass raw text. */
     public fun record(source: String, message: String, stack: String? = null, at: Instant = clock.now()) {
-        if (maxEntries <= 0) return
-        val safeSource = sanitize(source, SOURCE_LIMIT).ifEmpty { "app" }
-        val safeMessage = sanitize(message, MESSAGE_LIMIT).ifEmpty { UNKNOWN_MESSAGE }
-        val safeStack = sanitize(stack.orEmpty(), STACK_LIMIT)
-        val id = nextId.fetchAndAdd(1L)
-        entries.update { list ->
-            val match =
-                list.indexOfLast {
-                    it.source == safeSource &&
-                        it.message == safeMessage &&
-                        it.stack == safeStack &&
-                        (at - it.at).absoluteValue <= dedupeWindow
+        try {
+            if (maxEntries <= 0) return
+            val safeSource = sanitize(source, SOURCE_LIMIT).ifEmpty { "app" }
+            val safeMessage = sanitize(message, MESSAGE_LIMIT).ifEmpty { UNKNOWN_MESSAGE }
+            val safeStack = sanitize(stack.orEmpty(), STACK_LIMIT)
+            val id = nextId.fetchAndAdd(1L)
+            entries.update { list ->
+                val match =
+                    list.indexOfLast {
+                        it.source == safeSource &&
+                            it.message == safeMessage &&
+                            it.stack == safeStack &&
+                            (at - it.at).absoluteValue <= dedupeWindow
+                    }
+                if (match >= 0) {
+                    val previous = list[match]
+                    val folded =
+                        previous.copy(
+                            at = maxOf(at, previous.at),
+                            firstAt = minOf(at, previous.firstAt),
+                            occurrences = previous.occurrences + 1,
+                        )
+                    list.removingAt(match).adding(folded)
+                } else {
+                    val next = list.adding(ErrorEntry(id, at, safeSource, safeMessage, safeStack))
+                    if (next.size > maxEntries) next.subList(next.size - maxEntries, next.size).toPersistent() else next
                 }
-            if (match >= 0) {
-                val previous = list[match]
-                val folded =
-                    previous.copy(
-                        at = maxOf(at, previous.at),
-                        firstAt = minOf(at, previous.firstAt),
-                        occurrences = previous.occurrences + 1,
-                    )
-                list.removingAt(match).adding(folded)
-            } else {
-                val next = list.adding(ErrorEntry(id, at, safeSource, safeMessage, safeStack))
-                if (next.size > maxEntries) next.subList(next.size - maxEntries, next.size).toPersistent() else next
             }
-        }
-        for (listener in recordListeners.load()) {
-            try {
-                listener()
-            } catch (e: Exception) {
-                log.w(e) { "diagnostics record listener failed" }
+            for (listener in recordListeners.load()) {
+                try {
+                    listener()
+                } catch (e: Exception) {
+                    log.w(e) { "diagnostics record listener failed" }
+                } catch (_: Throwable) { /* an Error in one listener must not stop the listeners after it */ }
             }
-        }
+        } catch (_: Throwable) { /* out of memory: drop this entry */ }
     }
 
     /** A thrown error: its text and frames go through the same sanitiser as any other line. */
