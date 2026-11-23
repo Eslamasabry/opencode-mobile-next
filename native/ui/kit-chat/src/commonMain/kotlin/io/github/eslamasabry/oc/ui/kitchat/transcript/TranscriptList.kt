@@ -89,10 +89,35 @@ internal constructor(
             lazy.firstVisibleItemScrollOffset <= with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
     }
 
-    /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
+    private val seenSizes = HashMap<Int, Int>()
+
+    /**
+     * Plan 09 §7.3: away once scrolled more than 480 dp past the newest edge (even past short rows like the live
+     * line).
+     */
     public val awayFromLatest: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex > 0 ||
-            lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        for (item in lazy.layoutInfo.visibleItemsInfo) {
+            if (item.index < MAX_TRACKED_INDEX) seenSizes[item.index] = item.size
+        }
+        val awayPx = with(density) { AWAY_DP.dp.roundToPx() }
+        scrolledPast(lazy.firstVisibleItemIndex, lazy.firstVisibleItemScrollOffset, awayPx)
+    }
+
+    private fun scrolledPast(first: Int, offset: Int, awayPx: Int): Boolean {
+        var total = offset
+        var away = total > awayPx || first >= MAX_TRACKED_INDEX
+        var i = 0
+        while (!away && i < first) {
+            val h = seenSizes[i]
+            if (h == null) {
+                away = true
+            } else {
+                total += h
+                away = total > awayPx
+            }
+            i++
+        }
+        return away
     }
 
     private var slotHeight = -1
@@ -122,6 +147,7 @@ internal constructor(
     internal companion object {
         const val AWAY_DP = 480
         const val FOLLOW_SLACK_DP = 48
+        private const val MAX_TRACKED_INDEX = 32
     }
 }
 
