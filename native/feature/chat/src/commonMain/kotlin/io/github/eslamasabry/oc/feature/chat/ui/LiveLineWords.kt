@@ -77,19 +77,8 @@ internal fun liveLineWords(
     // you" (RunTailRules: the live line is drawn only while the run works or stops).
     if (work?.state == WorkLineState.WaitingForYou) return null
     val now = work?.now
-    val hasSteps = work != null && work.steps.isNotEmpty()
-    val quiet = quietThinking && !hasSteps
-    val words =
-        when {
-            quiet -> stringResource(Res.string.kitTurnLiveStillThinking)
-            // D1 "steps only" (2026-11-14): the step in hand is in view on the turn's step list with its light and its
-            // time, so the live line says that the agent works and for how long, never the same step a second time.
-            now != null && work != null -> stringResource(Res.string.kitTurnLiveWorking)
-            writing -> stringResource(Res.string.kitTurnLiveWriting)
-            // Keep "Working" across the gaps between steps so the live word never flips back to "Thinking".
-            hasSteps -> stringResource(Res.string.kitTurnLiveWorking)
-            else -> stringResource(Res.string.kitTurnLiveThinking)
-        }
+    val quiet = quietThinking && (work == null || work.steps.isEmpty())
+    val words = liveStatusWord(quiet, work, writing)
     val elapsed = elapsedMs?.coerceAtLeast(0)
     val line =
         if (elapsed == null || elapsed < LIVE_SHOW_ELAPSED_AFTER_MS) stringResource(Res.string.kitTurnLiveNow, words)
@@ -118,3 +107,16 @@ internal fun liveLineWords(
         printed,
     )
 }
+
+@Composable
+private fun liveStatusWord(quiet: Boolean, work: TurnWork?, writing: Boolean): String =
+    when {
+        quiet -> stringResource(Res.string.kitTurnLiveStillThinking)
+        // D1 "steps only" (2026-11-14): the step in hand is in view on the turn's step list with its light and its
+        // time, so the live line says that the agent works and for how long, never the same step a second time.
+        work?.now != null -> stringResource(Res.string.kitTurnLiveWorking)
+        writing -> stringResource(Res.string.kitTurnLiveWriting)
+        // Keep "Working" across the gaps between steps so the live word never flips back to "Thinking".
+        work != null && work.steps.isNotEmpty() -> stringResource(Res.string.kitTurnLiveWorking)
+        else -> stringResource(Res.string.kitTurnLiveThinking)
+    }
