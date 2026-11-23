@@ -1425,7 +1425,10 @@ internal class Oc2Gateway(
         while (true) {
             val count = channel.readAvailable(buffer, 0, buffer.size)
             if (count < 0) break
-            if (count > byteLimit - size) return null
+            if (count > byteLimit - size) {
+                channel.cancel(null)
+                return null
+            }
             if (count > 0) {
                 chunks += buffer.copyOf(count)
                 size += count

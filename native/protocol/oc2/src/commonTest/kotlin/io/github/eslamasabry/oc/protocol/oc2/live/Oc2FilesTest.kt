@@ -26,8 +26,10 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 
 /** OpenCode 2 file browsing (lib/api2/client.dart fsList/fsReadBytes/fsFind, protocol notes §11). */
 class Oc2FilesTest {
@@ -153,15 +155,20 @@ class Oc2FilesTest {
 
     @Test
     fun `B-MEDIA-045 a 20 MB file without a length header is never read whole`() = runTest {
-        val channel = ByteChannel()
+        val channel = ByteChannel(autoFlush = true)
         val piece = ByteArray(64 * 1024)
         var written = 0L
         backgroundScope.launch {
-            repeat(320) {
-                channel.writeFully(piece)
-                written += piece.size
+            try {
+                repeat(320) {
+                    channel.writeFully(piece)
+                    written += piece.size
+                    yield()
+                }
+                channel.flushAndClose()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
             }
-            channel.flushAndClose()
         }
         val g = rawGateway { respond(channel, HttpStatusCode.OK) }
         try {
