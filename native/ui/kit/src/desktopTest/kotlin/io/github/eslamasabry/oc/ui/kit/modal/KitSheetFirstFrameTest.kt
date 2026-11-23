@@ -125,4 +125,47 @@ class KitSheetFirstFrameTest {
                     "and rests at $restingTop",
             )
         }
+
+    @Test
+    fun `B-KIT-MODAL-207 a sheet placed already open on a settled page still rises into place`() =
+        runDesktopComposeUiTest(412, 915) {
+            var placed by mutableStateOf(false)
+            setContent {
+                ThemedWindow {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        KitText("the page under the sheet")
+                        if (placed)
+                            KitSheet(
+                                visible = true,
+                                onDismissRequest = {},
+                                title = "Commands",
+                            ) {
+                                KitText("the sheet's body")
+                            }
+                    }
+                }
+            }
+            waitForIdle()
+            // The clock stops and the sheet is placed over the settled page, already open: frame by frame until it
+            // has come into the window.
+            mainClock.autoAdvance = false
+            runOnUiThread { placed = true }
+            var risingTop = Float.NaN
+            var frames = 0
+            while (risingTop.isNaN() && frames < 60) {
+                mainClock.advanceTimeByFrame()
+                risingTop = sheetTop()
+                frames++
+            }
+            assertTrue(!risingTop.isNaN(), "the sheet placed over a settled page is drawn")
+            mainClock.autoAdvance = true
+            waitForIdle()
+            val restingTop = sheetTop()
+            assertTrue(!restingTop.isNaN(), "the sheet placed over a settled page is still shown once settled")
+            assertTrue(
+                risingTop > restingTop + 24f,
+                "a sheet placed already open on a settled page still rises into place: its top is at $risingTop as " +
+                    "it comes in and rests at $restingTop",
+            )
+        }
 }
