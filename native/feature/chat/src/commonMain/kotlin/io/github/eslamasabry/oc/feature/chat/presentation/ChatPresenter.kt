@@ -260,30 +260,18 @@ public class ChatPresenter(
         // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
         // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
         // after the first frame is drawn), and again on every return.
-        val upstream =
-            combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
-                present(i, l, h)
-            }
+        val upstream = combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ -> present(i, l, h) }
         val out = MutableStateFlow(current())
-        // Every START (the first open and every return) relaunches the upstream collect by hand:
-        // latest drops each restart after an inner was cancelled, so a return would keep a stale page.
-        // The job type is spelled in full: K1's allowlist holds no kotlinx.coroutines.Job import.
+        // Every START (the first open, every return) relaunches the collect by hand: the ordered latest chain
+        // drops each restart after an inner was cancelled. The job type stays spelled out (K1's list has no Job).
         var inner: kotlinx.coroutines.Job? = null
-        started
-            .command(out.subscriptionCount)
-            .distinctUntilChanged()
-            .onEach { c ->
-                inner?.cancel()
-                inner =
-                    if (c == SharingCommand.START) {
-                        scope.launch {
-                            upstream.onStart { emit(current()) }.collect { out.value = it }
-                        }
-                    } else {
-                        null
-                    }
+        started.command(out.subscriptionCount).distinctUntilChanged().onEach { c ->
+            inner?.cancel()
+            inner = null
+            if (c == SharingCommand.START) {
+                inner = scope.launch { upstream.onStart { emit(current()) }.collect { out.value = it } }
             }
-            .launchIn(scope)
+        }.launchIn(scope)
         return out.asStateFlow()
     }
 
