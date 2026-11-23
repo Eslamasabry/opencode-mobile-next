@@ -132,6 +132,27 @@ class TopBarFitTest {
         }
 
     @Test
+    fun `B-KIT-029 a Back bar whose menu draws nothing keeps its title's whole earlier room`() =
+        runComposeUiTest {
+            // One long word: cut, so the subtitle fills the title block's room and its end shows where that room ends.
+            val line = "ill".repeat(60)
+            setContent {
+                Themed(412) {
+                    KitTopBar(
+                        "Saved prompts",
+                        subtitle = line,
+                        exit = KitTopBarExit.Back,
+                        exitLabel = "Back",
+                        onExit = {},
+                        more = { hidden -> if (hidden.isNotEmpty()) KitIconButton(KitIcons.more, "More", {}) },
+                    )
+                }
+            }
+            val right = onNodeWithText(line, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.right
+            assertTrue(right >= 399f, "the subtitle ends at $right; the whole earlier room ends at 400")
+        }
+
+    @Test
     fun `B-KIT-029 at 840 dp a glyph action that does not fit as words stays in the bar as its icon`() =
         runComposeUiTest {
             // One unbreakable word fills every wide room, so "Find" cannot stay as its words.
