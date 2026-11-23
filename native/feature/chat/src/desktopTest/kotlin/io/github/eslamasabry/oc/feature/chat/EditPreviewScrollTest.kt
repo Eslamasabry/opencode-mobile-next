@@ -9,15 +9,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
@@ -95,14 +97,30 @@ class EditPreviewScrollTest {
         )
     }
 
-    /** Today's way to see the rest of a long preview: open every "Show all output" button there is. */
+    /**
+     * Today's way to see the rest of a long preview: open every "Show all output" button there is. TalkBack's
+     * activation, no finger: the button often sits past the fold of the 760 dp window.
+     */
     private fun ComposeUiTest.showAllOutput() {
         repeat(8) {
-            val buttons = onAllNodes(hasText("Show all output"), useUnmergedTree = true)
+            val buttons =
+                onAllNodes(
+                    hasClickAction() and (hasText("Show all output") or hasAnyAncestor(hasText("Show all output"))),
+                    useUnmergedTree = true,
+                )
             if (buttons.fetchSemanticsNodes().isEmpty()) return
-            buttons[0].performClick()
+            buttons[0].performSemanticsAction(SemanticsActions.OnClick)
             waitForIdle()
         }
+    }
+
+    /** One tap on the button whose words are [text], as TalkBack does: the click needs no room on screen. */
+    private fun ComposeUiTest.tapButton(text: String) {
+        onAllNodes(
+            hasClickAction() and (hasText(text) or hasAnyAncestor(hasText(text))),
+            useUnmergedTree = true,
+        )[0].performSemanticsAction(SemanticsActions.OnClick)
+        waitForIdle()
     }
 
     @Test
@@ -176,8 +194,7 @@ class EditPreviewScrollTest {
                     changes.right <= body.right + 0.5f,
                     "$where: Changes $changes keeps inside the card's text edge $body",
                 )
-                onNodeWithText("Changes", useUnmergedTree = true).performClick()
-                waitForIdle()
+                tapButton("Changes")
                 assertTrue(opened == i + 1, "$where: a tap opens the conversation's Changes view once (at $opened)")
             }
         }
