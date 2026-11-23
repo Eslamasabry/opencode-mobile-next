@@ -575,24 +575,26 @@ public class LibrarySession(
                     CustomProviderOutcome.Refused(
                         if (src == null) CustomProviderRefusal.Changed else CustomProviderRefusal.Unavailable
                     )
-                else -> {
-                    mutable.update { it.copy(customRestart = CustomProviderRestartPhase.Restarting) }
-                    when (val restarted = host.restart()) {
-                        is Outcome.Failed -> CustomProviderOutcome.RestartFailed(restarted.failure.label())
-                        is Outcome.Ok -> {
-                            mutable.update { it.copy(customRestart = CustomProviderRestartPhase.Checking) }
-                            if (expectGone) {
-                                if (gone(providerId, RESTART_TRIES)) CustomProviderOutcome.Removed
-                                else CustomProviderOutcome.NotGoneAfterRestart
-                            } else {
-                                if (listed(providerId, RESTART_TRIES)) CustomProviderOutcome.Loaded
-                                else CustomProviderOutcome.NotLoadedAfterRestart
+                else ->
+                    try {
+                        mutable.update { it.copy(customRestart = CustomProviderRestartPhase.Restarting) }
+                        when (val restarted = host.restart()) {
+                            is Outcome.Failed -> CustomProviderOutcome.RestartFailed(restarted.failure.label())
+                            is Outcome.Ok -> {
+                                mutable.update { it.copy(customRestart = CustomProviderRestartPhase.Checking) }
+                                if (expectGone) {
+                                    if (gone(providerId, RESTART_TRIES)) CustomProviderOutcome.Removed
+                                    else CustomProviderOutcome.NotGoneAfterRestart
+                                } else {
+                                    if (listed(providerId, RESTART_TRIES)) CustomProviderOutcome.Loaded
+                                    else CustomProviderOutcome.NotLoadedAfterRestart
+                                }
                             }
                         }
+                    } finally {
+                        mutable.update { it.copy(customRestart = null) }
                     }
-                }
             }
-        mutable.update { it.copy(customRestart = null) }
         if (current() != null) refreshInside()
         outcome
     }
@@ -699,17 +701,19 @@ public class LibrarySession(
         val row = rows.getOrNull()?.firstOrNull { it.id == providerId }
         val disconnected =
             if (row != null && row.connections.isNotEmpty()) src.operations.disconnectIntegration(row) else null
-        val removed = host.remove(providerId)
-        val code = removed.getOrNull()
-        return when {
-            disconnected is Outcome.Failed ->
-                CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, disconnected.failure.label())
-            removed is Outcome.Failed ->
-                CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, removed.failure.label())
-            code == CustomProviderWrite.Saved.code -> CustomProviderOutcome.RemovedNotRestarted
-            // The key went first, so a failed entry write is partial: a second remove finishes the job.
-            disconnected != null -> CustomProviderOutcome.RemovePartial("Exit $code")
-            else -> CustomProviderOutcome.Refused(handRefusal(code), "Exit $code")
+        return if (disconnected is Outcome.Failed) {
+            CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, disconnected.failure.label())
+        } else {
+            val removed = host.remove(providerId)
+            val code = removed.getOrNull()
+            when {
+                removed is Outcome.Failed ->
+                    CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, removed.failure.label())
+                code == CustomProviderWrite.Saved.code -> CustomProviderOutcome.RemovedNotRestarted
+                // The key went first, so a failed entry write is partial: a second remove finishes the job.
+                disconnected != null -> CustomProviderOutcome.RemovePartial("Exit $code")
+                else -> CustomProviderOutcome.Refused(handRefusal(code), "Exit $code")
+            }
         }
     }
 

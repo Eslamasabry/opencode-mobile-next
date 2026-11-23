@@ -444,14 +444,16 @@ public class LibraryViewModel(
 
     override fun restartForProvider(id: String) {
         val library = session
-        val ui = mutable.value.customProvider
+        val inventory = mutable.value.inventory
+        val lookedUpName =
+            inventory.declared.firstOrNull { it.id == id }?.name
+                ?: inventory.providers.firstOrNull { it.id == id }?.name.orEmpty()
+        val current = mutable.value.customProvider
+        val ui =
+            if (current.providerId == id) current
+            else CustomProviderUi(providerId = id, name = lookedUpName)
         val expectGone = ui.mode == CustomProviderMode.Remove
-        val name =
-            ui.name.ifEmpty {
-                val inventory = mutable.value.inventory
-                inventory.declared.firstOrNull { it.id == id }?.name
-                    ?: inventory.providers.firstOrNull { it.id == id }?.name.orEmpty()
-            }
+        val name = ui.name.ifEmpty { lookedUpName }
         if (library != null && !mutable.value.working && id.isNotEmpty()) {
             mutable.update {
                 it.copy(
@@ -460,9 +462,7 @@ public class LibraryViewModel(
                         ui.copy(
                             stage = CustomProviderStage.Restarting,
                             name = name,
-                            // A restart from a provider sheet of its own (a stranded entry) names that sheet's
-                            // provider while it waits, so the steps show where the person asked for them.
-                            providerId = ui.providerId.ifEmpty { id },
+                            providerId = id,
                             refusal = null,
                             detail = null,
                         ),

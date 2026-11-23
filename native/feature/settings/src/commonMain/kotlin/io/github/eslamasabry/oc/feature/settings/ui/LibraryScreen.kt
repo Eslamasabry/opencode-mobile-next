@@ -463,7 +463,6 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         // key-form shortcut is only for a provider with nothing to manage.
                         val declared = inventory.declared.firstOrNull { it.id == provider.id && it.appShaped }
                         val notListed = declared != null && inventory.providers.none { it.id == provider.id }
-                        var opened by remember(provider.id) { mutableStateOf(false) }
                         KitRow(
                             provider.name,
                             leading = KitRowLeading.Logo(provider.id, provider.name),
@@ -489,8 +488,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             trailing = KitRowTrailing.Chevron,
                             onClick = {
                                 focus.clearFocus()
-                                if (declared != null && !notListed) actions.show(LibrarySheet.Provider(provider))
-                                else if (declared != null) opened = true
+                                if (declared != null) actions.show(LibrarySheet.Provider(provider))
                                 else {
                                     val only =
                                         soleMethodToConnect(
@@ -505,7 +503,6 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                 }
                             },
                         )
-                        if (opened) ProviderSheet(provider, state, actions)
                     },
                 )
             }
