@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
@@ -22,6 +26,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -144,6 +150,31 @@ class TopBarFitTest {
         }
 
     @Test
+    fun `B-KIT-029 on the chat bar an action that does not fit is listed in the menu`() =
+        runComposeUiTest {
+            // One unbreakable word fills every wide room, so "Find" cannot stay in the bar as its words.
+            setContent {
+                Themed(840) {
+                    KitTopBar(
+                        "n".repeat(120),
+                        exit = KitTopBarExit.Back,
+                        exitLabel = "Back",
+                        onExit = {},
+                        backBesideTitle = true,
+                        actions = listOf(KitLineAction("Find", {}, icon = KitIcons.search, testTag = "find")),
+                        more = { hidden -> chatMenu(hidden) },
+                    )
+                }
+            }
+            // It does not stay in the bar as its icon: the bar's menu lists it by its words.
+            onNodeWithTag("find").assertDoesNotExist()
+            onNodeWithTag("kit-top-bar-more").performClick()
+            waitForIdle()
+            onNodeWithText("Find").assertExists()
+            assertWhole("Find", "in the menu", oneLine = false)
+        }
+
+    @Test
     fun `B-KIT-029 at 840 dp glyphs that fall back to their icons are counted, so the title keeps its whole line`() =
         runComposeUiTest {
             // Eight glyph actions whose words are too wide to all stay. Those that fall back to their 48 dp icons
@@ -201,6 +232,21 @@ class TopBarFitTest {
             onExit = {},
             actions = labels.map { KitLineAction(it, {}) },
         )
+
+    /** The chat bar's own menu: its button opens what the bar hides, each action by its words. */
+    @Composable
+    private fun chatMenu(hidden: List<KitLineAction>) {
+        var open by remember { mutableStateOf(false) }
+        val label = "More"
+        KitMenu(
+            expanded = open,
+            items = hidden.map { KitMenuItem(label = it.label, onSelect = { open = false }, icon = it.icon) },
+            onDismissRequest = { open = false },
+            title = label,
+        ) {
+            KitIconButton(KitIcons.more, label, { open = true }, Modifier.testTag("kit-top-bar-more"))
+        }
+    }
 
     /** Density 1, so 1 dp is 1 px. The window fits the test host's root: a taller one is centred and loses its top. */
     @Composable
