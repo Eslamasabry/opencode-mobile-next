@@ -69,4 +69,25 @@ class ReportChurnTest {
         capture.close()
         assertTrue("span.202" in assertNotNull(inner.text(ReportFile.Snapshot)))
     }
+
+    @Test
+    fun `B-STATE-073 a second close writes nothing and detaches nothing again`() {
+        val clock = TestClock()
+        val redactor = Redactor()
+        val diagnostics = Diagnostics(redactor, clock)
+        val trace = PerfTrace(redactor, clock)
+        val files = CountingFiles(FakeReportFiles())
+        val report = assertNotNull(ReportProblem.open(files, redactor, clock).getOrNull())
+        var detaches = 0
+        val thermal = ProblemThermalReadings { _ -> { detaches++ } }
+        val capture = ReportProblemCapture(report, diagnostics, trace, thermalReadings = thermal)
+
+        trace.mark("only.span")
+        capture.close()
+        val writesAfterFirstClose = files.writes
+        capture.close()
+
+        assertEquals(1, detaches)
+        assertEquals(writesAfterFirstClose, files.writes)
+    }
 }
