@@ -62,6 +62,13 @@ internal fun toolState(
     )
 }
 
+/** Sets [ToolState.startedAtMs] (and [ToolState.completedAtMs] once finished) from the holding message's times. */
+internal fun ToolState.withMessageTime(createdMs: Long?, completedMs: Long?): ToolState =
+    copy(
+        startedAtMs = createdMs,
+        completedAtMs = if (status == ToolStatus.Running || status == ToolStatus.Pending) null else completedMs,
+    )
+
 /**
  * A failed command's own output: the lines it printed before it failed are the explanation the person needs, not the
  * provider's raw error text (which stays out of the copy). Null for any other step, or a command that printed nothing.
