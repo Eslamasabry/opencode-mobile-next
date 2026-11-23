@@ -475,7 +475,7 @@ class StepsCraftTest {
             mainClock.advanceTimeBy(900)
             activate("chat-step-run-r1")
             mainClock.advanceTimeBy(900)
-            scrollTranscriptUp(700f)
+            scrollTranscriptUp(740f)
             val anchorText = StepsCraftScene.earlierParagraphs.last()
             val anchor0 = boundsOfText(anchorText).top
             val tops = mutableListOf(anchor0)
@@ -489,7 +489,7 @@ class StepsCraftTest {
                 }
             }
             assertTrue(tops.all { abs(it - anchor0) <= 1f }, "earlier moved scrolled far: $anchor0 $tops")
-            scrollTranscriptUp(260f)
+            scrollTranscriptUp(220f)
             val farText = StepsCraftScene.earlierParagraphs[6]
             val far0 = boundsOfText(farText).top
             val farTops = mutableListOf(far0)
@@ -678,6 +678,7 @@ class StepsCraftTest {
                 }
             }
             mainClock.advanceTimeBy(900)
+            onNodeWithText("Show 5 earlier steps").assertIsDisplayed()
             val rowTag = Regex("chat-step-[ce]\\d+")
             val rowMatcher =
                 SemanticsMatcher("step or fold row") { node ->
