@@ -122,7 +122,14 @@ internal fun TimelineStep(
             }
             detail != null -> {
                 {
-                    KitText(redacted(detail), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = if (wide) 3 else 1) // F: lib/ui/kit/chat/kit_tool_row.dart:454
+                    // A group row's detail counts up in place while steps arrive: keep one line at 1.3x text so rows
+                    // below never shift when the file list grows.
+                    KitText(
+                        redacted(detail),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        maxLines = if (wide && !group) 3 else 1,
+                    )
                 }
             }
             else -> null
@@ -245,7 +252,7 @@ internal fun TimelineStep(
     // each neighbour's edge; from 1.3x text the words wrap and the row is taller than 48 on its own.
     @Composable
     fun Target(tappable: @Composable (Modifier) -> Unit) {
-        if (wide) tappable(Modifier.fillMaxWidth())
+        if (wide) tappable(Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp))
         else
             Box(Modifier.fillMaxWidth().height(m.stepLine), contentAlignment = Alignment.Center) {
                 tappable(Modifier.fillMaxWidth().requiredHeight(tokens.minTarget.dp)) // F: lib/ui/kit/chat/kit_tool_row.dart:600
