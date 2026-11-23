@@ -3,6 +3,7 @@
 package io.github.eslamasabry.oc.ui.gate.flicker
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.InternalComposeUiApi
@@ -25,6 +26,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
+import io.github.eslamasabry.oc.ui.kit.logo.KitLogoLoader
+import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 
 /**
  * The one way a kit or feature UI test starts Compose (the flicker-rule design, owner 2026-11-20): the same
@@ -84,7 +87,8 @@ public class KitUiTest internal constructor(
     private var fault: Throwable? = null
 
     override fun setContent(composable: @Composable () -> Unit) {
-        super.setContent(composable)
+        // A device always has a logo loader; a test scene gets one that answers like it (a scene's own provider wins).
+        super.setContent { CompositionLocalProvider(LocalKitLogoLoader provides DeviceLikeLogos, composable) }
         recorder?.mark()
     }
 
@@ -194,3 +198,21 @@ private fun SkikoComposeUiTest.field(name: String): Any =
         it.isAccessible = true
         it.get(this)
     }
+
+/**
+ * The logo loader a device has, for a test scene: a KNOWN agent or provider finds its mark at once, an unknown id finds
+ * none (as the app's loader answers from its bundled marks). Without it every scene gave the 28 dp mark slot back,
+ * which a device keeps for the agents it knows (flicker family 11, the harness half).
+ */
+internal val DeviceLikeLogos =
+    KitLogoLoader { id, _ ->
+        if (id in KNOWN_MARKS) {
+            "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\">" +
+                "<g fill=\"currentColor\"><path d=\"M16 6H8v12h8V6zm4 16H4V2h16v20z\"></path></g></svg>"
+        } else {
+            null
+        }
+    }
+
+private val KNOWN_MARKS =
+    setOf("opencode", "claude", "codex", "antigravity", "paseo", "kilocode", "gemini", "openai", "anthropic", "google")

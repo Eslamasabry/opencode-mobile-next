@@ -145,9 +145,6 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private
     var sizes = IntArray(0)
     var gapPx = 0f
 
-    /** [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. */
-    var tail by mutableStateOf(0)
-
     /** `restWhole`: chips lie past the window's end (the visible end was drawn in to the last whole chip). */
     var more by mutableStateOf(false)
 
@@ -157,6 +154,13 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private
     /** `restWhole`: not even the first chip fits beside the cues; the line then scrolls as a plain line (nothing else can hold it). */
     var noRoom by mutableStateOf(false)
     var after by mutableStateOf(0)
+
+    /**
+     * [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. Read by
+     * the row's own layout in the pass that laid the chips out (never carried through state: a state written while
+     * measuring is read a frame later, so the first frame drew a narrower line than the second).
+     */
+    fun tail(): Int = if (restWhole && sizes.isNotEmpty()) (roomPx - sizes.last()).coerceAtLeast(0) else 0
 
     override val spacing: Dp get() = gap
 
@@ -169,10 +173,6 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private
         this@ChipLine.sizes = sizes.copyOf()
         val step = FilterChipsRules.restGap(sizes, baseGap.toPx(), roomPx.toFloat(), minPeek.toPx()).roundToInt()
         gapPx = step.toFloat()
-        if (restWhole && sizes.isNotEmpty()) {
-            val room = (roomPx - sizes.last()).coerceAtLeast(0)
-            if (room != tail) tail = room
-        }
         val dp = step.toDp()
         // Read by the row's measure: a changed gap measures the line again, so its scroll range holds the gaps.
         if (dp != gap) gap = dp
@@ -327,7 +327,12 @@ public fun KitFilterChips(
     ) {
         Row(
             Modifier.horizontalScroll(scroll).kitScrollCue("edge fade").then(if (whole) Modifier.kitRestsWhole("filter chips") else Modifier)
-                .padding(start = startPad, end = endPad + with(LocalDensity.current) { line.tail.toDp() }, top = room, bottom = room),
+                .padding(start = startPad, end = endPad, top = room, bottom = room)
+                // Inside the padding, in the same pass that lays the chips out: the room kept after the last chip.
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    layout(placeable.width + line.tail(), placeable.height) { placeable.place(0, 0) }
+                },
             horizontalArrangement = line,
             verticalAlignment = Alignment.CenterVertically,
             content = chips,
