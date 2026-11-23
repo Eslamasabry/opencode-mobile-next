@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -227,13 +229,14 @@ public fun KitTopBar(
         else tokens.gutter + Space.S1 + if (hasClose) tokens.minTarget + Space.S1 else 0
     // Flutter's pushed page: Back, the title and the actions share one row (kit_top_bar.dart:346-420).
     val oneRowBack = hasBack && !backBesideTitle && !large
+    BoxWithConstraints(modifier.fillMaxWidth()) {
     val barFit =
         TopBarActions.split(
             actions,
             limit,
             more != null,
             title,
-            TopBarShape(leadDp, large, oneRowBack, !(large && hasBack)),
+            TopBarShape(barWidthDp(window.widthDp), leadDp, large, oneRowBack, !(large && hasBack)),
         )
     val shown = barFit.shown
     val hidden = barFit.hidden
@@ -281,7 +284,7 @@ public fun KitTopBar(
     }
     if (large) {
         Column(
-            modifier
+            Modifier
                 .fillMaxWidth()
                 .semantics { isTraversalGroup = true }
                 .testTag("kit-top-bar"),
@@ -321,8 +324,7 @@ public fun KitTopBar(
                     ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
             }
         }
-        return
-    }
+    } else {
     // The title starts on the page gutter (E20-S08: Back, when there is one, takes the line above); the project ·
     // branch line or the subtitle starts under the title's first letter, one left edge for both.
     val back = hasBack
@@ -356,7 +358,7 @@ public fun KitTopBar(
         }
     }
     Column(
-        modifier
+        Modifier
             .fillMaxWidth()
             .padding(horizontal = if (oneRowBack) 0.dp else Space.S1.dp)
             .semantics { isTraversalGroup = true }
@@ -503,7 +505,13 @@ public fun KitTopBar(
         }
         }
     }
+    }
+    }
 }
+
+/** The bar's own width in dp when its box is bounded (e.g. a narrow pane inside a wide window), else [fallback]. */
+private fun BoxWithConstraintsScope.barWidthDp(fallback: Float): Float =
+    if (constraints.hasBoundedWidth) maxWidth.value else fallback
 
 /**
  * The one exit control of every bar: a bare glyph on a 48 dp circle target. Pressing fills the circle; keyboard
@@ -627,6 +635,8 @@ private val WHITE_SPACE = Regex("\\s+")
 
 /** The bar a split works for. */
 private data class TopBarShape(
+    /** The bar's own width in dp: its box's width when bounded, else the window's width. */
+    val widthDp: Float,
     /** The room before the title's box: Back's 56 dp rail, or the gutter and, if any, a Close button. */
     val leadDp: Int,
     val largeTitle: Boolean,
@@ -722,22 +732,35 @@ private class BarText(private val measurer: TextMeasurer, private val density: D
 
 /**
  * One bar's measured pieces, in px: each action's whole width, and which of them fit beside the title's room.
+ * On a wide window, any glyph action whose words do not fit stays in the bar as a [minTarget] icon button, so its
+ * width is still counted against the bar's room; only text-only actions move to the overflow.
  */
 private class BarFit(
-    val width: Int,
-    val lead: Int,
+    val available: Int,
     private val minTarget: Int,
     private val widths: List<Int>,
-    private val beyond: Int,
+    private val actions: List<KitLineAction>,
+    private val glyphIsIcon: Boolean,
     private val hasMore: Boolean,
 ) {
-    /** The overflow's own place when [k] actions stay: none when every action stays and the caller brings no menu. */
-    private fun overflow(k: Int): Int = if (k < beyond || hasMore) minTarget else 0
+    /** Wide actions past [k] that carry a glyph: they stay in the bar as [minTarget] icon buttons. */
+    private fun iconCount(k: Int): Int =
+        if (glyphIsIcon) 0 else actions.drop(k).count { it.icon != null }
+
+    /** Whether anything past [k] moves to the overflow: all trailing actions on compact/medium, text-only on wide. */
+    private fun hasHidden(k: Int): Boolean =
+        if (glyphIsIcon) k < actions.size else actions.drop(k).any { it.icon == null }
+
+    /** Total width of the actions that stay beside the title when [k] actions keep their primary width. */
+    private fun actionsWidth(k: Int): Int = widths.take(k).sum() + iconCount(k) * minTarget
+
+    /** The overflow's own place when [k] actions stay: none when nothing overflows and the caller brings no menu. */
+    private fun overflow(k: Int): Int = if (hasHidden(k) || hasMore) minTarget else 0
 
     /** The most of the actions that fit in [room] beside [step] px between them and the title's box. */
     fun kept(room: Int, step: Int): Int {
         for (k in widths.size downTo 1) {
-            if (widths.take(k).sum() + step + overflow(k) <= room) return k
+            if (actionsWidth(k) + step + overflow(k) <= room) return k
         }
         return 0
     }
@@ -748,7 +771,15 @@ private class BarFit(
      * actions and their overflow, nor the step.
      */
     fun titleRoom(k: Int, step: Int): Int =
-        (width - lead - widths.take(k).sum() - overflow(k) - step).coerceAtLeast(0)
+        (available - actionsWidth(k) - overflow(k) - step).coerceAtLeast(0)
+
+    /** Builds the bar's split: primary actions up to [kept], any wide trailing glyphs as icons, and the rest hidden. */
+    fun split(kept: Int, tight: Boolean): TopBarSplit {
+        val rest = actions.drop(kept)
+        val asIcons = if (glyphIsIcon) emptyList() else rest.filter { it.icon != null }
+        val hidden = if (glyphIsIcon) rest else rest.filter { it.icon == null }
+        return TopBarSplit(actions.take(kept) + asIcons, hidden, tight = tight, asIcons = asIcons)
+    }
 }
 
 private object TopBarActions {
@@ -793,15 +824,15 @@ private object TopBarActions {
         return with(frameDensity) {
             val fit =
                 BarFit(
-                    width = window.widthDp.dp.roundToPx(),
-                    lead = shape.leadDp.dp.roundToPx(),
+                    available = shape.widthDp.dp.roundToPx() - shape.leadDp.dp.roundToPx(),
                     minTarget = text.minTargetPx,
                     widths = text.widths(candidates, glyphIsIcon, labelStyle),
-                    beyond = actions.size,
+                    actions = actions,
+                    glyphIsIcon = glyphIsIcon,
                     hasMore = hasMore,
                 )
             val titleShare = text.titleShare(window.cls, words, titleStyle, shape.titleBesideActions)
-            val room = fit.width - fit.lead - titleShare
+            val room = fit.available - titleShare
             // What the bar keeps between the title's box and the actions: its earlier step, which a one-row Back bar
             // may give back to a fit.
             val step = (if (shape.oneRow) TITLE_ACTIONS_STEP else ROW_STEP).roundToPx()
@@ -809,12 +840,7 @@ private object TopBarActions {
             val kept = if (shape.oneRow) fit.kept(room, 0) else withStep
             val titleRoom = fit.titleRoom(withStep, step)
             val whole = !shape.oneRow || text.whole(words, titleStyle, titleRoom, lines)
-            // A wide window keeps a glyph action whose words do not fit in the bar as its 48 dp icon button, as on
-            // compact and medium: only a text-only action moves to the overflow there.
-            val rest = actions.drop(kept)
-            val asIcons = if (glyphIsIcon) emptyList() else rest.filter { it.icon != null }
-            val hidden = if (glyphIsIcon) rest else rest.filter { it.icon == null }
-            TopBarSplit(actions.take(kept) + asIcons, hidden, tight = kept > withStep || !whole, asIcons = asIcons)
+            fit.split(kept, tight = kept > withStep || !whole)
         }
     }
 
