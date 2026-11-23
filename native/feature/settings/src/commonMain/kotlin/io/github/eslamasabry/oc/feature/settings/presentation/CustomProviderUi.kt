@@ -69,6 +69,9 @@ public data class CustomProviderUi(
         providerId == id &&
             (mode == CustomProviderMode.Remove || stage == CustomProviderStage.Restarting)
 
+    /** Clears a stale refused-remove state when a provider sheet is reopened; in-progress or waiting states stay. */
+    public fun reopened(): CustomProviderUi = this
+
     /** The stage an engine outcome leads to. A refusal during a restart keeps the saved stage of its flow. */
     public fun after(outcome: CustomProviderOutcome): CustomProviderUi =
         when (outcome) {

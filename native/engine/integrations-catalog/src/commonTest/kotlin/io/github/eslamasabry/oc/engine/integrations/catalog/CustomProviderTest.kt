@@ -566,4 +566,19 @@ class CustomProviderTest {
         assertTrue(host.removedIds.isEmpty(), "the file was not touched")
         assertEquals(1, server.disconnects)
     }
+
+    @Test
+    fun `B-LIB-358 a failed entry run after the key went is partial, never nothing removed`() = runTest {
+        val host =
+            Host(
+                reads = Outcome.Ok(0 to declaredLine()),
+                removes = listOf(Outcome.Failed(Failure.Network(NetworkWhy.Refused))),
+            )
+        val server = Server(listOf(rows(connected("my-box"))))
+        assertEquals(
+            CustomProviderOutcome.RemovePartial("Network · Refused"),
+            session(host, server).removeCustomProvider("my-box"),
+        )
+        assertEquals(1, server.disconnects)
+    }
 }

@@ -413,4 +413,16 @@ class CustomProviderEditUiTest {
         onNodeWithText("Keep editing").performClick()
         assertTrue(calls.any { it.first == "keepEditingProvider" })
     }
+
+    @Test
+    fun `B-LIB-359 a refused remove does not stick to the provider sheet`() {
+        assertEquals(
+            CustomProviderUi(),
+            ui(CustomProviderStage.Removing, CustomProviderMode.Remove)
+                .copy(refusal = CustomProviderRefusal.ChangedByHand)
+                .reopened(),
+        )
+        val waiting = ui(CustomProviderStage.RemovedNotRestarted, CustomProviderMode.Remove)
+        assertEquals(waiting, waiting.reopened())
+    }
 }
