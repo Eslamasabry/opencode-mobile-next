@@ -20,6 +20,7 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
+import io.github.eslamasabry.oc.ui.gate.flicker.Allow
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import kotlin.test.Test
 
@@ -36,7 +37,15 @@ class ChatSheetsSurviveRebuildTest {
 
     @Test
     fun `B-CHAT-420 an open sheet is still open after the screen is rebuilt`() =
-        kitUiTest(412, 915) {
+        kitUiTest(
+            412,
+            915,
+            allow = setOf(
+                Allow.aba("#kit-screen", "the screen is rebuilt on purpose by the rotation in this test"),
+                Allow.blink("#kit-sheet-scrim", "the screen is rebuilt on purpose by the rotation in this test"),
+                Allow.blink("Ask OpenCode…", "the screen is rebuilt on purpose by the rotation in this test"),
+            ),
+        ) {
             val scene = ChatScene()
             var ui by mutableStateOf(scene.live())
             var registry by mutableStateOf(SaveableStateRegistry(null) { true })
