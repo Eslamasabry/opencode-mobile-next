@@ -224,39 +224,7 @@ internal object StepsCraftScene {
                         end,
                     )
                 } else {
-                    val e = idx - reads
-                    if (e % 2 == 1) {
-                        val cmd = commands[(e - 1) % commands.size]
-                        val out =
-                            if (isLast && lastHasOutput) (1..6).joinToString("\n") { "test output line $it" }
-                            else "ok"
-                        Part(
-                            "x$e",
-                            "m2",
-                            sid,
-                            PartType.Tool,
-                            "tool",
-                            callId = "call-x$e",
-                            toolName = "bash",
-                            tool =
-                                ToolState(
-                                    status,
-                                    input = JsonObject(mapOf("command" to JsonPrimitive(cmd))),
-                                    output = out,
-                                    startedAtMs = start,
-                                    completedAtMs = end,
-                                ),
-                        )
-                    } else {
-                        tool(
-                            "e$e",
-                            "edit",
-                            mapOf("filePath" to "/home/dev/projects/demo_app/lib/mod$e.dart"),
-                            status,
-                            start,
-                            end,
-                        )
-                    }
+                    extraStepPart(idx - reads, status, start to end, isLast && lastHasOutput)
                 }
             }
         val messages =
@@ -272,6 +240,43 @@ internal object StepsCraftScene {
         k.event(GatewayEvent.RunStarted(SessionId(sid)), 58_000)
         return TurnFactsPresenter(FixedClock).present(k.feed.value, 64_000)
     }
+
+    private fun extraStepPart(
+        e: Int,
+        status: ToolStatus,
+        span: Pair<Long, Long?>,
+        liveOutput: Boolean,
+    ): Part =
+        if (e % 2 == 1) {
+            val cmd = commands[(e - 1) % commands.size]
+            val out = if (liveOutput) (1..6).joinToString("\n") { "test output line $it" } else "ok"
+            Part(
+                "x$e",
+                "m2",
+                sid,
+                PartType.Tool,
+                "tool",
+                callId = "call-x$e",
+                toolName = "bash",
+                tool =
+                    ToolState(
+                        status,
+                        input = JsonObject(mapOf("command" to JsonPrimitive(cmd))),
+                        output = out,
+                        startedAtMs = span.first,
+                        completedAtMs = span.second,
+                    ),
+            )
+        } else {
+            tool(
+                "e$e",
+                "edit",
+                mapOf("filePath" to "/home/dev/projects/demo_app/lib/mod$e.dart"),
+                status,
+                span.first,
+                span.second,
+            )
+        }
 
     private fun earlierRows() =
         buildList {

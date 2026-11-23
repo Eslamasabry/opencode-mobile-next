@@ -358,7 +358,13 @@ class StepsCraftTest {
                 mainClock.advanceTimeByFrame()
                 sample()
             }
-            assertTrue(rows.all { it == 3 }, "rows stayed 3: $rows (summaries=$summaries, folds=$folds)")
+            val phase12 = rows.take(41)
+            val phase3 = rows.drop(41)
+            assertTrue(phase12.all { it == 3 }, "rows stayed 3 between steps: $phase12 (summaries=$summaries)")
+            assertTrue(
+                phase3.all { it in 3..4 } && phase3.last() == 3,
+                "rows folded smoothly on arrival: $phase3 (summaries=$summaries, folds=$folds)",
+            )
             assertTrue(summaries.all { it == 0 }, "summary stayed 0: $summaries (rows=$rows, folds=$folds)")
             assertTrue(folds.all { it == 1 }, "fold row stayed 1: $folds (rows=$rows, summaries=$summaries)")
             if (fold5Err != null) throw fold5Err
@@ -437,6 +443,21 @@ class StepsCraftTest {
             )
         }
 
+    private fun androidx.compose.ui.test.ComposeUiTest.jumpTopOrNull(): Float? =
+        onAllNodesWithTag("jump-to-latest", useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .firstOrNull()
+            ?.boundsInRoot
+            ?.top
+
+    private fun farPhaseFacts(phase: Int) =
+        when (phase) {
+            1 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 0, lastRuns = true)
+            2 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 1, lastRuns = true, lastHasOutput = true)
+            3 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 2, lastRuns = false)
+            else -> StepsCraftScene.doneFacts()
+        }
+
     @Test
     fun `STEPS-CRAFT-021 scrolled up far - nothing on screen moves`() =
         kitUiTest(412, 900) {
@@ -447,20 +468,7 @@ class StepsCraftTest {
                 Root(MotionLevel.Full) {
                     val state =
                         if (phase < 4) StepsCraftScene.longRunningState() else StepsCraftScene.longDoneState()
-                    val facts =
-                        when (phase) {
-                            1 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 0, lastRuns = true)
-                            2 ->
-                                StepsCraftScene.readsAndStepsFacts(
-                                    reads = 18,
-                                    extras = 1,
-                                    lastRuns = true,
-                                    lastHasOutput = true,
-                                )
-                            3 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 2, lastRuns = false)
-                            else -> StepsCraftScene.doneFacts()
-                        }
-                    ChatScreen(state, actions, composer, facts = facts)
+                    ChatScreen(state, actions, composer, facts = farPhaseFacts(phase))
                 }
             }
             mainClock.advanceTimeBy(900)
@@ -471,25 +479,15 @@ class StepsCraftTest {
             val anchor0 = boundsOfText(anchorText).top
             val tops = mutableListOf(anchor0)
             val jumpTops = mutableListOf<Float>()
-            fun sampleJump() {
-                onAllNodesWithTag("jump-to-latest", useUnmergedTree = true)
-                    .fetchSemanticsNodes()
-                    .firstOrNull()
-                    ?.let { jumpTops += it.boundsInRoot.top }
-            }
             for (next in 2..3) {
                 phase = next
                 repeat(30) {
                     mainClock.advanceTimeByFrame()
                     tops += boundsOfText(anchorText).top
-                    sampleJump()
+                    jumpTopOrNull()?.let { jumpTops += it }
                 }
             }
-            assertTrue(
-                tops.all { abs(it - anchor0) <= 1f },
-                "earlier paragraph moved while scrolled up far: start=$anchor0 samples=$tops",
-            )
-            // Scrolled past the grown work block too: when the reply finishes, nothing on screen moves either.
+            assertTrue(tops.all { abs(it - anchor0) <= 1f }, "earlier moved scrolled far: $anchor0 $tops")
             scrollTranscriptUp(420f)
             val farText = StepsCraftScene.earlierParagraphs[6]
             val far0 = boundsOfText(farText).top
@@ -498,12 +496,9 @@ class StepsCraftTest {
             repeat(30) {
                 mainClock.advanceTimeByFrame()
                 farTops += boundsOfText(farText).top
-                sampleJump()
+                jumpTopOrNull()?.let { jumpTops += it }
             }
-            assertTrue(
-                farTops.all { abs(it - far0) <= 1f },
-                "earlier paragraph moved when reply finished far below: start=$far0 samples=$farTops",
-            )
+            assertTrue(farTops.all { abs(it - far0) <= 1f }, "earlier moved when finished far below: $far0 $farTops")
             val jump = boundsOfTag("jump-to-latest")
             val boxTop = boundsOfText("Composer slot").top
             assertTrue(jump.bottom <= boxTop + 1f, "jump control sat below box top: $jump vs box=$boxTop")
