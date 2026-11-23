@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -38,24 +35,25 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
     val colors = LocalKitColors.current
     val motion = KitMotion.state
     val running = view.status == KitToolStatus.Running
-    val transition = remember(view.id) { Animatable(1f) }
-    var previous by remember(view.id) { mutableStateOf(view.status) }
-    var finishedFromRunning by remember(view.id) { mutableStateOf(false) }
-    LaunchedEffect(view.status) {
-        finishedFromRunning = previous == KitToolStatus.Running && !running
-        previous = view.status
-        if (finishedFromRunning && !motion.reduced) {
-            transition.snapTo(0f)
-            transition.animateTo(
-                1f,
-                tween(
-                    when (view.status) {
-                        KitToolStatus.Done -> MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING
-                        KitToolStatus.Stopped -> MotionTokens.STEP_FADE
-                        else -> MotionTokens.STEP_FLASH
-                    }
-                ),
-            )
+    val tracked = remember(view.id) { arrayOf(view.status) }
+    val fromRunning = remember(view.id) { booleanArrayOf(false) }
+    val epoch = remember(view.id) { intArrayOf(0) }
+    if (tracked[0] != view.status) {
+        val finished = tracked[0] == KitToolStatus.Running && !running
+        fromRunning[0] = finished
+        if (finished) epoch[0]++
+        tracked[0] = view.status
+    }
+    val finishedFromRunning = fromRunning[0]
+    val transition =
+        remember(view.id, epoch[0]) {
+            Animatable(if (finishedFromRunning && !motion.reduced) 0f else 1f)
+        }
+    LaunchedEffect(view.id, epoch[0], motion.reduced) {
+        if (motion.reduced) {
+            if (transition.value < 1f) transition.snapTo(1f)
+        } else if (finishedFromRunning && transition.value < 1f) {
+            transition.animateTo(1f, tween(stepTransitionMs(view.status)))
         }
     }
     if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
@@ -106,41 +104,7 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         return
     }
     if (onRail) {
-        // Flutter's step node (kit_step_light.dart `_StepLightState.build`): the glyph in its small tile, the light round
-        // it while the step runs; a step that finishes flashes once (a tick that springs back to the glyph, a neutral
-        // outline that fades before the failed mark, the accent outline fading on a stop).
-        val icon = view.icon ?: view.kind.icon()
-        val tickShare =
-            MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
-        val settling = finishedFromRunning && transition.value < 1f
-        when (view.status) {
-            KitToolStatus.Running -> KitStepTile(icon, KitStepNodeLook.Running, size, modifier)
-            KitToolStatus.Pending -> KitStepTile(icon, KitStepNodeLook.Queued, size, modifier)
-            // F: lib/ui/kit/chat/kit_tool_row.dart:694 waitingForYou draws the waiting node
-            KitToolStatus.WaitingForYou -> KitStepTile(icon, KitStepNodeLook.Waiting, size, modifier)
-            KitToolStatus.Done ->
-                if (settling && transition.value < tickShare)
-                    // F: lib/ui/kit/chat/kit_step_light.dart:222-229 the tick in success while it lands
-                    KitStepTile(KitIcons.check, KitStepNodeLook.Plain, size, modifier, glyphColor = colors.success)
-                else if (settling) {
-                    // F: lib/ui/kit/chat/kit_step_light.dart:233 the glyph grows back from .4 of its size
-                    val t = (transition.value - tickShare) / (1f - tickShare)
-                    KitStepTile(icon, KitStepNodeLook.Plain, size, modifier, glyphScale = .4f + .6f * t) // F: lib/ui/kit/chat/kit_step_light.dart:240
-                } else KitStepTile(icon, KitStepNodeLook.Plain, size, modifier)
-            KitToolStatus.Failed ->
-                if (settling)
-                    Box(modifier.size(size), contentAlignment = Alignment.Center) {
-                        KitStepTile(icon, KitStepNodeLook.Plain, size)
-                        StillOutline(colors.text2.copy(alpha = 1f - transition.value), size)
-                    }
-                // F: lib/ui/kit/chat/kit_tool_row.dart:705 a failed step settles on the failed mark
-                else KitStatusIcon(StatusTone.Failure, modifier)
-            KitToolStatus.Stopped ->
-                Box(modifier.size(size), contentAlignment = Alignment.Center) {
-                    KitStepTile(icon, KitStepNodeLook.Plain, size)
-                    if (settling) StillOutline(colors.accent.copy(alpha = 1f - transition.value), size)
-                }
-        }
+        RailStepNode(view, size, modifier, finishedFromRunning, transition.value)
         return
     }
     // Flutter's step node: the bare tool glyph (no tile); a running step's glyph turns live and the step light
@@ -183,5 +147,71 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
                     style = Stroke(1.8.dp.toPx()),
                 )
             }
+    }
+}
+
+private const val SPRING_START_SCALE = .4f
+private const val SPRING_SPAN_SCALE = .6f
+
+private fun stepTransitionMs(status: KitToolStatus): Int =
+    when (status) {
+        KitToolStatus.Done -> MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING
+        KitToolStatus.Stopped -> MotionTokens.STEP_FADE
+        else -> MotionTokens.STEP_FLASH
+    }
+
+private fun railNodeLook(status: KitToolStatus): KitStepNodeLook =
+    when (status) {
+        KitToolStatus.Running -> KitStepNodeLook.Running
+        KitToolStatus.Pending -> KitStepNodeLook.Queued
+        KitToolStatus.WaitingForYou -> KitStepNodeLook.Waiting
+        else -> KitStepNodeLook.Plain
+    }
+
+@Composable
+private fun RailStepNode(
+    view: KitToolView,
+    size: Dp,
+    modifier: Modifier,
+    finishedFromRunning: Boolean,
+    progress: Float,
+) {
+    // Flutter's step node (kit_step_light.dart `_StepLightState.build`): the glyph in its small tile, the light round
+    // it while the step runs; a step that finishes flashes once (a tick that springs back to the glyph, a neutral
+    // outline that fades before the failed mark, the accent outline fading on a stop).
+    val colors = LocalKitColors.current
+    val icon = view.icon ?: view.kind.icon()
+    val tickShare = MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
+    val settling = finishedFromRunning && progress < 1f
+    when (view.status) {
+        KitToolStatus.Failed ->
+            if (settling) {
+                Box(modifier.size(size), contentAlignment = Alignment.Center) {
+                    KitStepTile(icon, KitStepNodeLook.Plain, size)
+                    StillOutline(colors.text2.copy(alpha = 1f - progress), size)
+                }
+            } else KitStatusIcon(StatusTone.Failure, modifier)
+        KitToolStatus.Stopped ->
+            Box(modifier.size(size), contentAlignment = Alignment.Center) {
+                KitStepTile(icon, KitStepNodeLook.Plain, size)
+                if (settling) StillOutline(colors.accent.copy(alpha = 1f - progress), size)
+            }
+        else -> {
+            // One KitStepTile call site across Running -> Done so #kit-step-node keeps its identity and never blinks.
+            val doneSettling = view.status == KitToolStatus.Done && settling
+            val showTick = doneSettling && progress < tickShare
+            val scale =
+                if (doneSettling && !showTick) {
+                    SPRING_START_SCALE + SPRING_SPAN_SCALE * ((progress - tickShare) / (1f - tickShare))
+                } else 1f
+            KitStepTile(
+                icon = if (showTick) KitIcons.check else icon,
+                look = railNodeLook(view.status),
+                size = size,
+                modifier = modifier,
+                glyphColor = if (showTick) colors.success else null,
+                glyphScale = scale,
+            )
+        }
     }
 }
