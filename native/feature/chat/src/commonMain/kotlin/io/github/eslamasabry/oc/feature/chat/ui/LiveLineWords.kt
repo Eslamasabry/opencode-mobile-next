@@ -78,9 +78,10 @@ internal fun liveLineWords(
     if (work?.state == WorkLineState.WaitingForYou) return null
     val now = work?.now
     val hasSteps = work != null && work.steps.isNotEmpty()
+    val quiet = quietThinking && !hasSteps
     val words =
         when {
-            quietThinking && !hasSteps -> stringResource(Res.string.kitTurnLiveStillThinking)
+            quiet -> stringResource(Res.string.kitTurnLiveStillThinking)
             // D1 "steps only" (2026-11-14): the step in hand is in view on the turn's step list with its light and its
             // time, so the live line says that the agent works and for how long, never the same step a second time.
             now != null && work != null -> stringResource(Res.string.kitTurnLiveWorking)
@@ -107,7 +108,7 @@ internal fun liveLineWords(
             ?.lastOrNull { it.isNotEmpty() }
             ?.let(mask)
     val hint =
-        if (quietThinking && !hasSteps && elapsed != null && elapsed >= 300_000) {
+        if (quiet && elapsed != null && elapsed >= 300_000) {
             stringResource(Res.string.chatQuietThinkingHint)
         } else null
     return LiveLineWords(
