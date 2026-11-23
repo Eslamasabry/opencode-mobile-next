@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.SavedServer
@@ -15,7 +14,6 @@ import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
-import io.github.eslamasabry.oc.feature.servers.presentation.ServerRowFacts
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
@@ -23,7 +21,6 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.row.kitServerSupporting
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentAccountTitle
 import io.github.eslamasabry.oc.ui.words.res.capsuleRemove
@@ -51,25 +48,6 @@ internal class ServerSavedRowSelection(
     val phoneHost: Boolean = false,
     val selectedId: ProfileId? = null,
 )
-
-/** The row's supporting line: the kind (when kinds differ), waiting/running counts and the secret note. */
-@Composable
-internal fun serverSupportLine(
-    showKind: Boolean,
-    kind: String,
-    server: SavedServer,
-    facts: ServerRowFacts?,
-): AnnotatedString {
-    val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
-    return kitServerSupporting(
-        kind = if (showKind) kind else "",
-        connected = server.connected,
-        waiting = waiting,
-        running = facts?.running ?: 0,
-        secret = serverRowSecretNote(facts),
-        queued = facts?.queued ?: 0,
-    )
-}
 
 /** The row's visible More menu: account, connect, move queued, settings, edit, details and remove. */
 @Composable

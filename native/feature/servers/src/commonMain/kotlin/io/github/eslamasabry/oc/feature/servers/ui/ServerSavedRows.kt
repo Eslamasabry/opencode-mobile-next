@@ -9,6 +9,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
@@ -151,6 +152,25 @@ internal fun withoutTrailingSeparator(line: AnnotatedString): AnnotatedString {
     var end = line.length
     while (end > 0 && (line[end - 1] == ' ' || line[end - 1] == '·' || line[end - 1] == '\u00a0')) end--
     return if (end == line.length) line else line.subSequence(0, end)
+}
+
+/** The row's supporting line: the kind (when kinds differ), waiting/running counts and the secret note. */
+@Composable
+internal fun serverSupportLine(
+    showKind: Boolean,
+    kind: String,
+    server: SavedServer,
+    facts: ServerRowFacts?,
+): AnnotatedString {
+    val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
+    return kitServerSupporting(
+        kind = if (showKind) kind else "",
+        connected = server.connected,
+        waiting = waiting,
+        running = facts?.running ?: 0,
+        secret = serverRowSecretNote(facts),
+        queued = facts?.queued ?: 0,
+    )
 }
 
 @Composable
