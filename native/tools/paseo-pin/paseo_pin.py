@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mechanical Paseo pin move. Downloads, verifies, unpacks and hashes; it NEVER executes package code.
 
-Run as `python3 -I native/tools/paseo-pin/paseo_pin.py --to 0.16.1 --workdir <new empty folder> [--write]`.
+Run as `python3 -I native/tools/paseo-pin/paseo_pin.py --to 0.17.2 --workdir <new empty folder> [--write]`.
 
 What it does, in order:
   1. For each of the seven @getpaseo packages, fetches the registry's version document and tarball, and checks the
