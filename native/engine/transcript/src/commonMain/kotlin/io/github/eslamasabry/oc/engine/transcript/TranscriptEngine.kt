@@ -121,6 +121,10 @@ public class TranscriptCounters {
     /** Characters copied into Find's search text (issue 147: a settled turn's text is copied once, not per publish). */
     public var searchChars: Long = 0
         internal set
+
+    /** Characters copied into thought rows (a running turn's thought text is copied once, not per publish). */
+    public var thoughtChars: Long = 0
+        internal set
 }
 
 public class TranscriptHandle
