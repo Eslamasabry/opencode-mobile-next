@@ -188,13 +188,16 @@ public class TurnFactsPresenter(private val clock: Clock) {
     /**
      * Whether the clock must tick: a run, a retry countdown, or background work still believed
      * running after its turn ended (B-CHAT-007: its elapsed time keeps counting and the six-hour
-     * cutoff applies in a quiet chat).
+     * cutoff applies in a quiet chat). B-CHAT-312: a command a turn left running counts too.
      */
-    internal fun ticking(f: TurnFeed): Boolean =
-        f.busy ||
-            f.retry != null ||
-            runningBackgroundTasks(f.ledger.messages, clock.now().toEpochMilliseconds())
-                .isNotEmpty()
+    internal fun ticking(f: TurnFeed): Boolean {
+        if (f.busy || f.retry != null) return true
+        val nowMs = clock.now().toEpochMilliseconds()
+        val outcome = StoppedSteps.outcomeBesidesRefusal(f.lastOutcome, f.ledger.turns.lastOrNull(), false)
+        val work = LeftRunningCommands.work(f.ledger, outcome is RunOutcome.Interrupted, nowMs)
+        return runningBackgroundTasks(f.ledger.messages, nowMs).isNotEmpty() ||
+            LeftRunningCommands.tasks(f.ledger.messages, work, nowMs).isNotEmpty()
+    }
 
     /**
      * The facts at [nowMs]. [waitingForYou]: a request card waits for the person (no stall, no
@@ -244,7 +247,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     liveChildren = liveChildren,
                     cache = workCache,
                 )
-                .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs, feed.waits) }
+                .let { LeftRunningCommands.settle(it, snapshot.messages, nowMs) }
+                .mapValues { withOwnClock(it.value, nowMs, feed.waits) }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {
@@ -259,7 +263,9 @@ public class TurnFactsPresenter(private val clock: Clock) {
             results = results,
             context = context(feed, compacting),
             live = live(feed, nowMs, waitingForYou, work, compacting),
-            background = runningBackgroundTasks(snapshot.messages, nowMs),
+            background =
+                runningBackgroundTasks(snapshot.messages, nowMs) +
+                    LeftRunningCommands.tasks(snapshot.messages, work, nowMs, busy = feed.busy),
             nowMs = nowMs,
             reading = reading,
             tasks = latestChatTasks(snapshot.messages),
