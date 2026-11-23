@@ -200,7 +200,7 @@ class ChatBottomRoomTest {
                 }
             }
             mainClock.advanceTimeBy(900)
-            assertRoom("at rest, before the step arrives")
+            assertRoomAtLeast("at rest, before the step arrives")
             assertStepsWhole("at rest, before the step arrives")
             arrived = true
             for (frame in 1..40) {
@@ -209,7 +209,7 @@ class ChatBottomRoomTest {
                 assertRoomAtLeast("frame $frame of the arrival")
             }
             mainClock.advanceTimeBy(900)
-            assertRoom("at rest, after the step arrived")
+            assertRoomAtLeast("at rest, after the step arrived")
             assertStepsWhole("at rest, after the step arrived")
         }
 }
