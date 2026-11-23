@@ -212,7 +212,11 @@ internal fun transcriptReading(
                 endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
             else if (prompt != null && !command && !compact && serverStop != null && said)
                 endNotes[turn.turnId] = serverStop
-            if (showsNoWordsEndNote(idleSaid, declined, cutOff, prompt, command, compact, said)) {
+            // NEW-a: the newest turn's no-words closing note (Silent, Failed, a stop) waits for the run's own end:
+            // the server said nothing runs, no other note took the one closing line, and no words came back.
+            val replyIsIdle = idleSaid && !declined && !cutOff
+            val plainPrompt = prompt != null && !command && !compact
+            if (replyIsIdle && plainPrompt && !said) {
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {
@@ -352,28 +356,6 @@ internal fun transcriptReading(
         if (own != null && now != null && own != now) metadata[turnId] = meta.copy(otherModel = ReplyModelNames.fromId(own))
     }
     return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches, thoughtWork)
-}
-
-/**
- * NEW-a: the newest turn's no-words closing note (Silent, Failed, a stop) waits for the run to have ended on its own:
- * the server said nothing runs ([idleSaid]), no other note took the turn's one closing line ([declined], [cutOff]),
- * and a plain prompt turn (not a command, not a compaction) got no words back ([said]). A prompt whose run has not
- * started or not ended is waiting, not failing, so it shows no failure in any frame.
- */
-private fun showsNoWordsEndNote(
-    idleSaid: Boolean,
-    declined: Boolean,
-    cutOff: Boolean,
-    prompt: io.github.eslamasabry.oc.core.model.transcript.MessageWithParts?,
-    command: Boolean,
-    compact: Boolean,
-    said: Boolean,
-): Boolean {
-    val serverSaidIdle = idleSaid
-    val noOtherEndNote = !declined && !cutOff
-    val plainPrompt = prompt != null && !command && !compact
-    val unanswered = plainPrompt && !said
-    return serverSaidIdle && noOtherEndNote && unanswered
 }
 
 /**
