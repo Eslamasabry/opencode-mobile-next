@@ -109,6 +109,10 @@ public class ReportProblem private constructor(
 
     public val storageFailed: Boolean get() = mutableState.value.storageFailed
 
+    /** Test hook: how many events [redacted] has cleaned since the report was opened. */
+    internal var redactions: Int = 0
+        private set
+
     /**
      * Keeps an error. [count] and [firstAt] carry repeats already folded elsewhere (the diagnostics ring, B-332): the
      * error happened [count] times, first at [firstAt], last at [at].
@@ -231,12 +235,14 @@ public class ReportProblem private constructor(
 
     private fun timing(span: PerfSpan) = ProblemEvent(ProblemEventKind.Timing, span.wallStart, TIMING_SOURCE, span.toLogLine())
 
-    private fun redacted(event: ProblemEvent) =
-        event.copy(
+    private fun redacted(event: ProblemEvent): ProblemEvent {
+        redactions++
+        return event.copy(
             source = safeText(event.source, SOURCE_LIMIT),
             message = safeText(event.message, MESSAGE_LIMIT),
             stack = safeText(event.stack, STACK_LIMIT),
         )
+    }
 
     private fun safeText(text: String, limit: Int): String {
         val safe = redactor.opaqueTokens(redactor.redact(text))
