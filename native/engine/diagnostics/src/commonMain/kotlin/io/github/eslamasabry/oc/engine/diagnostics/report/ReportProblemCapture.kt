@@ -147,10 +147,12 @@ public class ReportProblemCapture(
      * repeat; keeps the evidence and does not close the sources.
      */
     public fun close() {
-        lock.withLock {
-            if (!closed.compareAndSet(expectedValue = false, newValue = true)) return@withLock
+        val closing = lock.withLock {
+            if (!closed.compareAndSet(expectedValue = false, newValue = true)) return@withLock false
             flushTimings()
+            true
         }
+        if (!closing) return
         detachRecorded()
         detachCleared()
         detachTimings()
