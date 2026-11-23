@@ -88,11 +88,15 @@ import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveBody
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveKey
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveModels
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveNoServer
+import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveNotGoneBody
+import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveNotGoneTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveNothingTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemovePartBody
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemovePartTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveQuestion
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveRestart
+import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveRestartFailedBody
+import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemoveRestartFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemovedBody
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemovedTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomRemovedWaitTitle
@@ -512,10 +516,10 @@ internal fun ProviderFlowSheet(
                 CustomProviderRestarting(name, flow.mode == CustomProviderMode.Remove, state.inventory.customRestart)
             }
         CustomProviderStage.RemovePartial -> RemovePartialSheet(name, flow, tryAgain, actions)
-        CustomProviderStage.RemovedNotRestarted -> RemoveWaitRestartSheet(provider, name, state, actions)
+        CustomProviderStage.RemovedNotRestarted -> RemoveWaitRestartSheet(provider, name, flow, state, actions)
         CustomProviderStage.Removed -> RemoveDoneSheet(name, actions)
         CustomProviderStage.Removing -> RemoveRefusedSheet(name, flow, tryAgain, actions)
-        // A restart from a stranded entry's sheet that ended: the add flow's own words, Details and actions.
+        // A restart from a stranded entry's sheet or a remove that ended: the flow's own words, Details and actions.
         else -> FlowEndedSheet(name, flow, state, actions)
     }
 }
@@ -543,6 +547,7 @@ private fun RemovePartialSheet(
 private fun RemoveWaitRestartSheet(
     provider: IntegrationInfo,
     name: String,
+    flow: CustomProviderUi,
     state: LibraryUi,
     actions: LibraryActions,
 ) {
@@ -563,6 +568,8 @@ private fun RemoveWaitRestartSheet(
             title = stringResource(Res.string.nlibCustomRemovedWaitTitle, name),
             tone = StatusTone.Neutral,
         )
+        flow.refusal?.let { KitNotice(refusalWords(it)) }
+        flow.detail?.let { CustomProviderDetails(it) }
     }
 }
 
@@ -584,8 +591,8 @@ private fun RemoveDoneSheet(name: String, actions: LibraryActions) {
 }
 
 /**
- * A restart started from a stranded entry's sheet that ended: the add flow's own words, its Details fold, and
- * either Restart again or Add key once the server lists it.
+ * A restart started from a stranded entry's sheet or a remove that ended: the flow's own words, its Details fold,
+ * and either Restart again or Add key once the server lists it.
  */
 @Composable
 private fun FlowEndedSheet(
@@ -620,7 +627,7 @@ private fun FlowEndedSheet(
                 { actions.restartForProvider(flow.providerId) },
                 working = state.working,
             )
-    val (title, body) = resultWords(flow.stage, name)
+    val (title, body) = resultWords(flow.stage, name, flow.mode)
     KitSheet(true, { actions.show(null) }, name, dismissible = !state.working, primary = primary) {
         KitNotice(body, title = title, tone = resultTone(flow.stage))
         flow.refusal?.let { KitNotice(refusalWords(it)) }
@@ -665,18 +672,32 @@ private fun CustomProviderDetails(detail: String) {
     )
 }
 
-/** The result notice's title (naming the provider [name]) and body for [stage]. */
+/** The result notice's title (naming the provider [name]) and body for [stage] in [mode]. */
 @Composable
-private fun resultWords(stage: CustomProviderStage, name: String): Pair<String, String> =
-    when (stage) {
-        CustomProviderStage.Loaded ->
-            stringResource(Res.string.nlibCustomLoadedTitle, name) to stringResource(Res.string.nlibCustomLoadedBody)
-        CustomProviderStage.RestartFailed ->
+private fun resultWords(
+    stage: CustomProviderStage,
+    name: String,
+    mode: CustomProviderMode = CustomProviderMode.Add,
+): Pair<String, String> =
+    when {
+        mode == CustomProviderMode.Remove && stage == CustomProviderStage.NotGoneAfterRestart ->
+            stringResource(Res.string.nlibCustomRemoveNotGoneTitle, name) to
+                stringResource(Res.string.nlibCustomRemoveNotGoneBody)
+        mode == CustomProviderMode.Remove ->
+            stringResource(Res.string.nlibCustomRemoveRestartFailedTitle, name) to
+                stringResource(Res.string.nlibCustomRemoveRestartFailedBody)
+        stage == CustomProviderStage.Loaded ->
+            stringResource(Res.string.nlibCustomLoadedTitle, name) to
+                stringResource(Res.string.nlibCustomLoadedBody)
+        stage == CustomProviderStage.RestartFailed ->
             stringResource(Res.string.nlibCustomRestartFailedTitle, name) to
                 stringResource(Res.string.nlibCustomRestartFailedBody)
-        CustomProviderStage.NotLoadedAfterRestart ->
-            stringResource(Res.string.nlibCustomNotLoadedTitle, name) to stringResource(Res.string.nlibCustomNotLoadedBody)
-        else -> stringResource(Res.string.nlibCustomSavedTitle, name) to stringResource(Res.string.nlibCustomSavedBody)
+        stage == CustomProviderStage.NotLoadedAfterRestart ->
+            stringResource(Res.string.nlibCustomNotLoadedTitle, name) to
+                stringResource(Res.string.nlibCustomNotLoadedBody)
+        else ->
+            stringResource(Res.string.nlibCustomSavedTitle, name) to
+                stringResource(Res.string.nlibCustomSavedBody)
     }
 
 private fun resultTone(stage: CustomProviderStage): StatusTone =
@@ -684,7 +705,8 @@ private fun resultTone(stage: CustomProviderStage): StatusTone =
         CustomProviderStage.Loaded -> StatusTone.Ok
         CustomProviderStage.Restarting -> StatusTone.Progress
         CustomProviderStage.RestartFailed,
-        CustomProviderStage.NotLoadedAfterRestart -> StatusTone.Attention
+        CustomProviderStage.NotLoadedAfterRestart,
+        CustomProviderStage.NotGoneAfterRestart -> StatusTone.Attention
         else -> StatusTone.Neutral
     }
 

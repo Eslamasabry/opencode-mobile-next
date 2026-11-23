@@ -13,8 +13,8 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * Where the add-, edit- or remove-a-provider sheet is (pull request 142, DESIGN §3). "Saved" and "loaded" are never
  * one stage: [SavedNotLoaded], [RestartFailed] and [NotLoadedAfterRestart] all mean the declaration is in the
- * settings file and the server does not list it yet; [RemovedNotRestarted] means the entry is gone and the server
- * still lists it.
+ * settings file and the server does not list it yet; [RemovedNotRestarted], [RestartFailed] (in Remove mode) and
+ * [NotGoneAfterRestart] mean the entry is gone and the server still lists it.
  */
 public enum class CustomProviderStage {
     Form,
@@ -36,6 +36,8 @@ public enum class CustomProviderStage {
     AskReplace,
     /** Removed, and the restarted server no longer lists it. */
     Removed,
+    /** Removed from the settings, restarted, and the server still lists it after polling. */
+    NotGoneAfterRestart,
 }
 
 /** Which flow owns the sheet: the words of a state differ by flow (DESIGN §3). */
@@ -98,9 +100,10 @@ public data class CustomProviderUi(
             CustomProviderOutcome.RemovedNotRestarted -> settled(CustomProviderStage.RemovedNotRestarted)
             CustomProviderOutcome.Removed -> settled(CustomProviderStage.Removed)
             CustomProviderOutcome.NotLoadedAfterRestart -> settled(CustomProviderStage.NotLoadedAfterRestart)
-            CustomProviderOutcome.NotGoneAfterRestart -> goneAfterRestart()
+            CustomProviderOutcome.NotGoneAfterRestart ->
+                settled(CustomProviderStage.NotGoneAfterRestart).copy(detail = NOT_GONE_DETAIL)
             is CustomProviderOutcome.RestartFailed ->
-                settled(savedOrRemoved(CustomProviderStage.RestartFailed)).copy(detail = outcome.detail)
+                settled(CustomProviderStage.RestartFailed).copy(detail = outcome.detail)
             is CustomProviderOutcome.Invalid ->
                 copy(
                     stage =
@@ -125,25 +128,12 @@ public data class CustomProviderUi(
                 )
         }
 
-    /**
-     * A remove whose server still lists it: the entry IS gone from the settings, so the sheet says that and
-     * offers the restart again (DESIGN §3, "removed, waiting for the restart").
-     */
-    private fun goneAfterRestart(): CustomProviderUi =
-        if (mode == CustomProviderMode.Remove) settled(CustomProviderStage.RemovedNotRestarted)
-        else settled(CustomProviderStage.NotLoadedAfterRestart)
-
-    /**
-     * A restart-time outcome in a remove keeps the removed-waiting stage; an add or an edit keeps its own
-     * [fallback] saved stage.
-     */
-    private fun savedOrRemoved(fallback: CustomProviderStage): CustomProviderStage =
-        if (mode == CustomProviderMode.Remove) CustomProviderStage.RemovedNotRestarted else fallback
-
     /** A refusal keeps the stage its flow was in, so the sheet keeps the flow's own words. */
     private fun refusedStage(): CustomProviderStage =
         when (stage) {
-            CustomProviderStage.Restarting -> savedOrRemoved(CustomProviderStage.SavedNotLoaded)
+            CustomProviderStage.Restarting ->
+                if (mode == CustomProviderMode.Remove) CustomProviderStage.RemovedNotRestarted
+                else CustomProviderStage.SavedNotLoaded
             // A remove's refusals keep their stage: the sheet shows the remove's own words.
             CustomProviderStage.Removing -> CustomProviderStage.Removing
             else ->
@@ -154,6 +144,9 @@ public data class CustomProviderUi(
     private fun settled(next: CustomProviderStage): CustomProviderUi =
         copy(stage = next, problems = persistentListOf(), refusal = null, detail = null)
 }
+
+/** Stable technical label for the Details fold when a provider stays listed after a remove restart. */
+private const val NOT_GONE_DETAIL = "NotGoneAfterRestart"
 
 /**
  * The ids the page already shows: the form refuses them before Save reaches the server (which checks again). One
