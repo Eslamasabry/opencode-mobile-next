@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.protocol.oc2.live
 
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.model.ServerLocation
@@ -9,9 +11,13 @@ import io.github.eslamasabry.oc.core.net.TransportError
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
+import io.ktor.client.statement.HttpResponseData
 import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.ByteChannel
+import io.ktor.utils.io.writeFully
 import kotlin.io.encoding.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -20,22 +26,20 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 
 /** OpenCode 2 file browsing (lib/api2/client.dart fsList/fsReadBytes/fsFind, protocol notes §11). */
 class Oc2FilesTest {
     private val requests = mutableListOf<HttpRequestData>()
 
-    private fun gateway(status: HttpStatusCode = HttpStatusCode.OK, body: () -> Any): Oc2Gateway =
+    private fun rawGateway(answer: MockRequestHandleScope.() -> HttpResponseData): Oc2Gateway =
         Oc2Gateway(
             NetClient(
                 HttpClient(
                     MockEngine { request ->
                         requests += request
-                        when (val b = body()) {
-                            is ByteArray -> respond(b, status)
-                            else -> respond(b.toString(), status)
-                        }
+                        answer()
                     }
                 ) {
                     expectSuccess = false
@@ -52,6 +56,14 @@ class Oc2FilesTest {
             initialLocation = ServerLocation(directory = "/work/app"),
             initialDialect = Oc2Dialect.Beta,
         )
+
+    private fun gateway(status: HttpStatusCode = HttpStatusCode.OK, body: () -> Any): Oc2Gateway =
+        rawGateway {
+            when (val b = body()) {
+                is ByteArray -> respond(b, status)
+                else -> respond(b.toString(), status)
+            }
+        }
 
     @Test
     fun `B-NAV-026 a folder lists through fs list with the pinned location, folders keep their kind`() = runTest {
@@ -134,6 +146,50 @@ class Oc2FilesTest {
             assertEquals("/api/fs/find", url.encodedPath)
             assertEquals("main", url.parameters["query"])
             assertEquals("file", url.parameters["type"])
+        } finally {
+            g.close()
+        }
+    }
+
+    @Test
+    fun `B-MEDIA-045 a 20 MB file without a length header is never read whole`() = runTest {
+        val channel = ByteChannel()
+        val piece = ByteArray(64 * 1024)
+        var written = 0L
+        backgroundScope.launch {
+            repeat(320) {
+                channel.writeFully(piece)
+                written += piece.size
+            }
+            channel.flushAndClose()
+        }
+        val g = rawGateway { respond(channel, HttpStatusCode.OK) }
+        try {
+            val failed = assertIs<Outcome.Failed>(g.fileContent("big.bin"))
+            assertEquals(Failure.Media(MediaProblem.FileTooBig), failed.failure)
+            assertTrue(
+                written <= Oc2Gateway.MAX_FILE_BYTES + 1024L * 1024,
+                "the reader took $written bytes of a 20 MiB body",
+            )
+        } finally {
+            g.close()
+        }
+    }
+
+    @Test
+    fun `B-MEDIA-045 a 1 MiB binary file without a length header still reads exactly`() = runTest {
+        val exact = ByteArray(1024 * 1024) { it.toByte() }
+        val channel = ByteChannel()
+        backgroundScope.launch {
+            channel.writeFully(exact)
+            channel.flushAndClose()
+        }
+        val g = rawGateway { respond(channel, HttpStatusCode.OK) }
+        try {
+            val content = assertIs<Outcome.Ok<*>>(g.fileContent("a.bin")).value
+                as io.github.eslamasabry.oc.core.model.FileContent
+            assertEquals("base64", content.encoding)
+            assertContentEquals(exact, Base64.decode(content.content))
         } finally {
             g.close()
         }
