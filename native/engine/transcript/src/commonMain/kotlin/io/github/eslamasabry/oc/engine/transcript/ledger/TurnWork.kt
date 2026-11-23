@@ -92,6 +92,23 @@ public data class TurnWork(
     val now: TurnStep?,
 )
 
+/** One turn's last seen messages, the inputs its work was worked out from, and that work. */
+internal class CachedWork(
+    val messages: List<MessageWithParts>,
+    val key: WorkKey,
+    val work: TurnWork?,
+)
+
+/** The inputs a turn's [TurnWork] is worked out from; any change in them is a change of the work. */
+internal data class WorkKey(
+    val newest: Boolean,
+    val busyNewest: Boolean,
+    val stoppedNewest: Boolean,
+    val waiting: Boolean,
+    val declinedCalls: Set<String>,
+    val waitingCalls: Set<String>,
+)
+
 /**
  * The work of every turn in [snapshot] (CHAT-TRANSCRIPT, B-CHAT-063/117): tool calls settle first
  * (a spinner stops once later words of its turn exist or the run ended; background processes keep
@@ -99,7 +116,9 @@ public data class TurnWork(
  * [stopped]: the last run was stopped by the person or server; [waitingForYou]: a request waits for
  * the person (the running line never spins then). [askedCalls]: every call the person was shown a request for (a
  * step the run ended on before they answered says so); [liveChildren]: raw ids of sub-agents still working or waiting
- * on the person (their delegated steps stay live after the parent's turn ends).
+ * on the person (their delegated steps stay live after the parent's turn ends). [cache]: a turn whose messages hold
+ * the same info and part objects as last time, with the same inputs ([WorkKey]), gets the same [TurnWork] object back
+ * instead of a fresh one (B-CHAT-096), and a turn that is gone leaves it.
  */
 public fun turnWork(
     snapshot: LedgerSnapshot,
@@ -110,25 +129,76 @@ public fun turnWork(
     waitingCalls: Set<String> = emptySet(),
     askedCalls: Set<String> = waitingCalls,
     liveChildren: Set<String> = emptySet(),
+    cache: TurnWorkCache? = null,
 ): Map<String, TurnWork> {
     if (snapshot.messages.isEmpty()) return emptyMap()
     val settled = settleStaleLive(snapshot.messages, busy, askedCalls = askedCalls, liveChildren = liveChildren)
     val turns = if (settled === snapshot.messages) snapshot.turns else TurnLedger.group(settled)
     val out = LinkedHashMap<String, TurnWork>()
+    val seen = HashSet<String>()
     for ((index, turn) in turns.withIndex()) {
         val newest = index == turns.lastIndex
-        work(
-                turn,
+        seen += turn.turnId
+        cachedWork(
+            turn,
+            WorkKey(
                 newest = newest,
-                busy = busy,
-                stopped = stopped && newest,
+                busyNewest = busy && newest,
+                stoppedNewest = stopped && newest,
                 waiting = waitingForYou && (newest || holdsWaitingCall(turn, waitingCalls)),
                 declinedCalls = declinedCalls,
                 waitingCalls = waitingCalls + liveChildCalls(turn, liveChildren),
-            )
-            ?.let { out[turn.turnId] = it }
+            ),
+            cache,
+        )?.let { out[turn.turnId] = it }
     }
+    if (cache != null) cache.entries.keys.retainAll(seen)
     return out
+}
+
+/**
+ * The turn's cached work when nothing in it changed (the same message infos and the same part objects, in the same
+ * count and order, with the same [WorkKey] inputs), else a fresh one, worked out now and stored. A turn that had no
+ * step keeps its cached null, so it costs nothing either.
+ */
+private fun cachedWork(turn: LedgerTurn, key: WorkKey, cache: TurnWorkCache?): TurnWork? {
+    val cached = cache?.entries[turn.turnId]
+    if (cached != null && cached.key == key && sameMessages(cached.messages, turn.messages)) return cached.work
+    val fresh =
+        work(
+            turn,
+            newest = key.newest,
+            busy = key.busyNewest,
+            stopped = key.stoppedNewest,
+            waiting = key.waiting,
+            declinedCalls = key.declinedCalls,
+            waitingCalls = key.waitingCalls,
+        )
+    if (cache != null) cache.entries[turn.turnId] = CachedWork(turn.messages, key, fresh)
+    return fresh
+}
+
+/** Whether two turns hold the same message infos and the same part objects, in the same count and order. */
+private fun sameMessages(cached: List<MessageWithParts>, now: List<MessageWithParts>): Boolean {
+    if (cached.size != now.size) return false
+    for (i in cached.indices) {
+        val a = cached[i]
+        val b = now[i]
+        if (a.info !== b.info || a.parts.size != b.parts.size) return false
+        for (p in a.parts.indices) {
+            if (a.parts[p] !== b.parts[p]) return false
+        }
+    }
+    return true
+}
+
+/**
+ * The [TurnWork] of one conversation's turns, kept between [turnWork] calls (B-CHAT-096): a long chat's every-second
+ * tick reuses every turn that did not change, so the biggest strings (a step's output text, its pretty input) are
+ * made at most once per view instead of once per tick. One cache belongs to one conversation's presenter.
+ */
+public class TurnWorkCache {
+    internal val entries = HashMap<String, CachedWork>()
 }
 
 /**

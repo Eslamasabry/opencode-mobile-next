@@ -146,6 +146,7 @@ class StepFactsCostTest {
         val after = presenter.present(keeper.feed.value, 11_000)
         assertEquals("changed", after.work["u5"]!!.steps[0].output.text)
         assertEquals("x".repeat(10_000), after.work["u6"]!!.steps[0].output.text)
+        assertSame(before.work["u6"], after.work["u6"])
     }
 
     @Test

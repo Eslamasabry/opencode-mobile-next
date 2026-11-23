@@ -44,18 +44,19 @@ public data class ToolArtifact(
  *
  * - [text]: Dart `ToolState.output` exactly: a finished or failed call's output with its leading
  *   and trailing whitespace kept, a JSON object or list pretty-printed with two-space indent; empty
- *   while pending or running.
+ *   while pending or running. Worked out of [source] only when read, at most once per view.
  * - [errorText]: the same text when the call failed (Error), else null.
  * - [rawInput]: Dart `inputJson`: a pending call's streamed raw input unchanged, otherwise the
- *   structured input pretty-printed.
+ *   structured input pretty-printed. Worked out of [source] only when read, at most once per view.
  * - [input] / [metadata]: the server's structured input and metadata, kept for renderers.
  * - [artifacts]: only explicit files (attachments, `filePath` outputs, a shell `outputPath`), never
  *   URLs or path-like prose; a `read` call's attachments take the requested file's name.
+ * - [source]: the call the view was built from; [text] and [rawInput] are made of it only when read,
+ *   so an unchanged step never builds its strings again (B-CHAT-096). A changed output is a changed
+ *   view: [source] is part of equality.
  */
 public data class ToolOutputView(
-    val text: String,
     val errorText: String?,
-    val rawInput: String,
     val input: JsonObject,
     val metadata: JsonObject?,
     val artifacts: List<ToolArtifact>,
@@ -68,7 +69,19 @@ public data class ToolOutputView(
      * finished (then [text] is the whole answer) and for a call that has put nothing out yet.
      */
     val liveTail: String = "",
-)
+    /** The call this view was built from; [text] and [rawInput] are worked out of it, only when read. */
+    val source: ToolState,
+) {
+    /** See the class KDoc; made only when read, at most once per view. */
+    public val text: String by lazy {
+        errorText ?: if (source.status == ToolStatus.Completed) outputText(source) else ""
+    }
+
+    /** See the class KDoc; made only when read, at most once per view. */
+    public val rawInput: String by lazy {
+        if (source.status == ToolStatus.Pending) source.inputRaw ?: "" else prettyJson(source.input)
+    }
+}
 
 /** A running command keeps at most this many of its last lines for the live view. */
 public const val LIVE_TAIL_LINES: Int = 40
@@ -152,25 +165,16 @@ public fun isDeclinedToolError(text: String?): Boolean {
 }
 
 public fun toolOutputView(state: ToolState, toolName: String?): ToolOutputView {
-    val text =
-        when (state.status) {
-            ToolStatus.Completed,
-            ToolStatus.Error -> outputText(state)
-            else -> ""
-        }
-    val errorText = if (state.status == ToolStatus.Error) text else null
+    val errorText = if (state.status == ToolStatus.Error) outputText(state) else null
     return ToolOutputView(
-        text = text,
         errorText = errorText,
-        rawInput =
-            if (state.status == ToolStatus.Pending) state.inputRaw ?: ""
-            else prettyJson(state.input),
         input = state.input,
         metadata = state.metadata,
         artifacts = toolArtifacts(state, toolName),
         pruned = state.pruned,
         failure = toolFailureOf(errorText),
         liveTail = if (state.status == ToolStatus.Running) liveTailOf(state) else "",
+        source = state,
     )
 }
 
