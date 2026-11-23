@@ -434,7 +434,9 @@ public fun KitTopBar(
             // No early return out of this block: leaving a composable lambda half way unwinds its groups by marker.
             // The bar's half of the earlier 16 dp step (F: kit_top_bar.dart:394); the title row keeps the other 8 dp
             // after its words. A tight bar gives both back to the title's words or to an action that fits thanks of it.
-            val stepped: @Composable () -> Unit = { Box(Modifier.padding(start = Space.S2.dp)) { actionRow() } }
+            // A row, not a box: the actions and the overflow control stay beside each other, not one over the other.
+            val stepped: @Composable () -> Unit =
+                { Row(Modifier.padding(start = Space.S2.dp)) { actionRow() } }
             BackBar(
                 exit = { ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f) },
                 // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and it
