@@ -458,7 +458,7 @@ public fun parseDeclaredProviders(output: String): List<DeclaredProvider> =
         .mapNotNull { line ->
             try {
                 Json.parseToJsonElement(line)
-            } catch (e: kotlinx.serialization.SerializationException) {
+            } catch (_: kotlinx.serialization.SerializationException) {
                 null
             }
         }
