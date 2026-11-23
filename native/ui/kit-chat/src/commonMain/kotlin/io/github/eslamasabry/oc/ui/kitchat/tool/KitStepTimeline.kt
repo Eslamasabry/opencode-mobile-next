@@ -274,34 +274,42 @@ internal class StepRail {
     internal val lit = HashMap<Any, LitFrame>()
 
     /** The light's rail for the node [key] (Dart `_LightPainter.paint`, kit_step_light.dart:378-401). */
-    fun light(key: Any, tail: Float): StepLightRail {
-        fun mine() = spans[key]
-        fun inView(k: Any) = (shares[k]?.invoke() ?: 1f) > LIGHT_START_SHARE
-        fun prevBottom(top: Float) =
-            spans.entries
-                .filter { (k, span) -> k != key && inView(k) && span.endInclusive <= top + .5f }
-                .maxOfOrNull { it.value.endInclusive }
-        fun startOf(top: Float): Float {
-            val last = lastLit
-            val fromLast =
-                last
-                    ?.takeIf { it != key && inView(it) }
-                    ?.let { spans[it]?.endInclusive }
-                    ?.takeIf { it <= top + .5f }
-            return fromLast ?: prevBottom(top) ?: headerStart
-        }
-        fun nextTop(bottom: Float) =
-            spans.values.filter { it.start >= bottom - .5f && it != mine() }.minOfOrNull { it.start }
-        return StepLightRail(
-            above = { mine()?.let { it.start - startOf(it.start) } ?: 0f },
-            below = { mine()?.let { m -> nextTop(m.endInclusive)?.let { it - m.endInclusive } ?: tail } ?: 0f },
-            last = { mine()?.let { nextTop(it.endInclusive) == null } ?: true },
-            drawn = { p -> lit[key] = LitFrame(mine()?.let { startOf(it.start) } ?: headerStart, p) },
+    fun light(key: Any, tail: Float): StepLightRail =
+        StepLightRail(
+            above = { spans[key]?.let { it.start - startOf(key, it.start) } ?: 0f },
+            below = { belowOf(key, tail) },
+            last = { spans[key]?.let { nextTop(key, it.endInclusive) == null } ?: true },
+            drawn = { p -> lit[key] = LitFrame(spans[key]?.let { startOf(key, it.start) } ?: headerStart, p) },
             ended = {
                 lastLit = key
                 lit.remove(key)
             },
         )
+
+    private fun inView(key: Any): Boolean = (shares[key]?.invoke() ?: 1f) > LIGHT_START_SHARE
+
+    private fun prevBottom(key: Any, top: Float): Float? =
+        spans.entries
+            .filter { (k, span) -> k != key && inView(k) && span.endInclusive <= top + EDGE_SLOP }
+            .maxOfOrNull { it.value.endInclusive }
+
+    private fun startOf(key: Any, top: Float): Float {
+        val fromLast =
+            lastLit
+                ?.takeIf { it != key && inView(it) }
+                ?.let { spans[it]?.endInclusive }
+                ?.takeIf { it <= top + EDGE_SLOP }
+        return fromLast ?: prevBottom(key, top) ?: headerStart
+    }
+
+    private fun nextTop(key: Any, bottom: Float): Float? {
+        val mine = spans[key]
+        return spans.values.filter { it.start >= bottom - EDGE_SLOP && it != mine }.minOfOrNull { it.start }
+    }
+
+    private fun belowOf(key: Any, tail: Float): Float {
+        val mine = spans[key] ?: return 0f
+        return nextTop(key, mine.endInclusive)?.let { it - mine.endInclusive } ?: tail
     }
 
     /** The open steps have been shown once: a step composed after this arrived while the timeline was open. */
@@ -322,6 +330,10 @@ internal class StepRail {
     /** A composition of the list ended: the next arrivals start a new group. */
     fun arrived() {
         arrivals = 0
+    }
+
+    private companion object {
+        const val EDGE_SLOP = .5f
     }
 }
 
