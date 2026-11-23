@@ -35,8 +35,17 @@ import kotlinx.serialization.json.JsonPrimitive
 internal object StepsCraftScene {
     private val sid = Ref.sessionId.raw
     const val TURN = "m1"
+    const val TURN_OLD = "m0"
     const val ASK = "Look into why the player closes on the TV"
+    const val OLD_ASK = "Summarise how the build pipeline works"
     const val REPLY = "The player no longer closes: the codec now starts off the main thread, and the tests pass."
+
+    /** Earlier answer paragraphs above the running turn, tall enough to scroll 40 dp or 500+ dp up. */
+    val earlierParagraphs: List<String> =
+        (1..14).map { n ->
+            "Earlier paragraph $n: the build pipeline compiles each module, runs the desktop checks, " +
+                "and writes the report before packing the archive for review."
+        }
     private const val CD = "cd /home/dev/projects/demo_app;"
     private const val ENV = ". /home/dev/projects/.toolchain/env.sh;"
 
@@ -186,6 +195,117 @@ internal object StepsCraftScene {
         k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
         return TurnFactsPresenter(FixedClock).present(k.feed.value, 64_000)
     }
+
+    /**
+     * A running turn of [reads] consecutive Read calls followed by [extras] alternating bash/edit steps.
+     * When [lastHasOutput] is true and the last step is a running bash step, it carries live output so it
+     * opens itself while the model progresses.
+     */
+    fun readsAndStepsFacts(
+        reads: Int,
+        extras: Int = 0,
+        lastRuns: Boolean = true,
+        lastHasOutput: Boolean = false,
+    ): TurnFactsUi {
+        val total = reads + extras
+        val parts =
+            (1..total).map { idx ->
+                val isLast = idx == total
+                val status = if (isLast && lastRuns) ToolStatus.Running else ToolStatus.Completed
+                val start = 2_000L + idx * 3_000L
+                val end = if (status == ToolStatus.Completed) start + 1_200 else null
+                if (idx <= reads) {
+                    tool(
+                        "r$idx",
+                        "read",
+                        mapOf("filePath" to "/home/dev/projects/demo_app/lib/file$idx.dart"),
+                        status,
+                        start,
+                        end,
+                    )
+                } else {
+                    val e = idx - reads
+                    if (e % 2 == 1) {
+                        val cmd = commands[(e - 1) % commands.size]
+                        val out =
+                            if (isLast && lastHasOutput) (1..6).joinToString("\n") { "test output line $it" }
+                            else "ok"
+                        Part(
+                            "x$e",
+                            "m2",
+                            sid,
+                            PartType.Tool,
+                            "tool",
+                            callId = "call-x$e",
+                            toolName = "bash",
+                            tool =
+                                ToolState(
+                                    status,
+                                    input = JsonObject(mapOf("command" to JsonPrimitive(cmd))),
+                                    output = out,
+                                    startedAtMs = start,
+                                    completedAtMs = end,
+                                ),
+                        )
+                    } else {
+                        tool(
+                            "e$e",
+                            "edit",
+                            mapOf("filePath" to "/home/dev/projects/demo_app/lib/mod$e.dart"),
+                            status,
+                            start,
+                            end,
+                        )
+                    }
+                }
+            }
+        val messages =
+            listOf(
+                MessageWithParts(
+                    info(TURN, Role.User, 0, 0),
+                    persistentListOf(Part("p1", TURN, sid, PartType.Text, "text", text = ASK)),
+                ),
+                MessageWithParts(info("m2", Role.Assistant, 1_000, null), parts.toImmutableList()),
+            )
+        val k = TurnFeedKeeper(sid)
+        k.history(messages)
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        return TurnFactsPresenter(FixedClock).present(k.feed.value, 64_000)
+    }
+
+    private fun earlierRows() =
+        buildList {
+            add(FooterRow("footer:$TURN_OLD", TURN_OLD, failed = false))
+            for (i in earlierParagraphs.indices.reversed()) {
+                add(block(TURN_OLD, "m0a", "old$i", i, earlierParagraphs[i]))
+            }
+            add(prompt(TURN_OLD, OLD_ASK))
+        }
+
+    fun longRunningState(): ChatUi =
+        ChatUi.loading(Ref).copy(
+            title = ASK,
+            phase = ChatPhase.Live,
+            rows =
+                (listOf(
+                    WorkLineRow("work:$TURN", TURN, calls = 10, failed = 0, state = WorkState.Running),
+                    prompt(TURN, ASK),
+                ) + earlierRows()).toImmutableList(),
+            live = LiveTurnUi(stopping = false),
+        )
+
+    fun longDoneState(): ChatUi =
+        ChatUi.loading(Ref).copy(
+            title = ASK,
+            phase = ChatPhase.Live,
+            rows =
+                (listOf(
+                    FooterRow("footer:$TURN", TURN, failed = false),
+                    block(TURN, "m2", "r", 0, REPLY),
+                    WorkLineRow("work:$TURN", TURN, calls = 10, failed = 0, state = WorkState.Done),
+                    prompt(TURN, ASK),
+                ) + earlierRows()).toImmutableList(),
+        )
 
     fun doneState(): ChatUi =
         ChatUi.loading(Ref).copy(

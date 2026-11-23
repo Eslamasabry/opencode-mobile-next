@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -362,6 +363,270 @@ class StepsCraftTest {
             assertTrue(folds.all { it == 1 }, "fold row stayed 1: $folds (rows=$rows, summaries=$summaries)")
             if (fold5Err != null) throw fold5Err
             onNodeWithText("Show 6 earlier steps").assertIsDisplayed()
+        }
+
+    /** Drag the transcript list down by [dp] so older messages move down into view (no fling). */
+    private fun androidx.compose.ui.test.ComposeUiTest.scrollTranscriptUp(dp: Float) {
+        val steps = maxOf(8, (dp / 10f).toInt())
+        val step = dp / steps
+        onNodeWithTag("transcript-list").performTouchInput {
+            down(center)
+            repeat(steps) { moveBy(Offset(0f, step)) }
+            advanceEventTime(300)
+            up()
+        }
+        mainClock.advanceTimeBy(300)
+    }
+
+    @Test
+    fun `STEPS-CRAFT-020 scrolled up by 40 dp - nothing on screen moves while steps arrive`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        when (phase) {
+                            1 -> StepsCraftScene.readsAndStepsFacts(reads = 3, extras = 0, lastRuns = true)
+                            2 -> StepsCraftScene.readsAndStepsFacts(reads = 4, extras = 0, lastRuns = false)
+                            3 ->
+                                StepsCraftScene.readsAndStepsFacts(
+                                    reads = 4,
+                                    extras = 1,
+                                    lastRuns = true,
+                                    lastHasOutput = true,
+                                )
+                            else -> StepsCraftScene.readsAndStepsFacts(reads = 4, extras = 2, lastRuns = true)
+                        }
+                    ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            scrollTranscriptUp(40f)
+            val earlierText = StepsCraftScene.earlierParagraphs.last()
+            val prompt0 = promptTop()
+            val earlier0 = boundsOfText(earlierText).top
+            val prompts = mutableListOf(prompt0)
+            val earliers = mutableListOf(earlier0)
+            val jumps = mutableListOf<Int>()
+            fun sample() {
+                prompts += promptTop()
+                earliers += boundsOfText(earlierText).top
+                jumps += onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes().size
+            }
+            sample()
+            for (next in 2..4) {
+                phase = next
+                repeat(30) {
+                    mainClock.advanceTimeByFrame()
+                    sample()
+                }
+            }
+            assertTrue(
+                prompts.all { abs(it - prompt0) <= 1f },
+                "prompt moved while scrolled up 40 dp: start=$prompt0 samples=$prompts",
+            )
+            assertTrue(
+                earliers.all { abs(it - earlier0) <= 1f },
+                "earlier answer moved while scrolled up 40 dp: start=$earlier0 samples=$earliers",
+            )
+            assertTrue(
+                jumps.all { it == 0 },
+                "jump-to-latest drew over text while scrolled up 40 dp: $jumps",
+            )
+        }
+
+    @Test
+    fun `STEPS-CRAFT-021 scrolled up far - nothing on screen moves`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val state =
+                        if (phase < 4) StepsCraftScene.longRunningState() else StepsCraftScene.longDoneState()
+                    val facts =
+                        when (phase) {
+                            1 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 0, lastRuns = true)
+                            2 ->
+                                StepsCraftScene.readsAndStepsFacts(
+                                    reads = 18,
+                                    extras = 1,
+                                    lastRuns = true,
+                                    lastHasOutput = true,
+                                )
+                            3 -> StepsCraftScene.readsAndStepsFacts(reads = 18, extras = 2, lastRuns = false)
+                            else -> StepsCraftScene.doneFacts()
+                        }
+                    ChatScreen(state, actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            activate("chat-step-run-r1")
+            mainClock.advanceTimeBy(900)
+            scrollTranscriptUp(540f)
+            val anchorText = StepsCraftScene.earlierParagraphs.last()
+            val anchor0 = boundsOfText(anchorText).top
+            val tops = mutableListOf(anchor0)
+            val jumpTops = mutableListOf<Float>()
+            fun sampleJump() {
+                onAllNodesWithTag("jump-to-latest", useUnmergedTree = true)
+                    .fetchSemanticsNodes()
+                    .firstOrNull()
+                    ?.let { jumpTops += it.boundsInRoot.top }
+            }
+            for (next in 2..3) {
+                phase = next
+                repeat(30) {
+                    mainClock.advanceTimeByFrame()
+                    tops += boundsOfText(anchorText).top
+                    sampleJump()
+                }
+            }
+            assertTrue(
+                tops.all { abs(it - anchor0) <= 1f },
+                "earlier paragraph moved while scrolled up far: start=$anchor0 samples=$tops",
+            )
+            // Scrolled past the work block too: when the reply finishes, nothing on screen moves either.
+            scrollTranscriptUp(180f)
+            val farText = StepsCraftScene.earlierParagraphs[6]
+            val far0 = boundsOfText(farText).top
+            val farTops = mutableListOf(far0)
+            phase = 4
+            repeat(30) {
+                mainClock.advanceTimeByFrame()
+                farTops += boundsOfText(farText).top
+                sampleJump()
+            }
+            assertTrue(
+                farTops.all { abs(it - far0) <= 1f },
+                "earlier paragraph moved when reply finished far below: start=$far0 samples=$farTops",
+            )
+            val jump = boundsOfTag("jump-to-latest")
+            val boxTop = boundsOfText("Composer slot").top
+            assertTrue(jump.bottom <= boxTop + 1f, "jump control sat below box top: $jump vs box=$boxTop")
+            assertTrue(
+                jumpTops.isNotEmpty() && jumpTops.all { abs(it - jumpTops.first()) <= 1f },
+                "jump control moved from its fixed place: $jumpTops",
+            )
+        }
+
+    @Suppress("MaxLineLength")
+    @Test
+    fun `STEPS-CRAFT-022 at the newest line - a group opened by a tap stays put while steps arrive and its count changes`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        when (phase) {
+                            1 -> StepsCraftScene.readsAndStepsFacts(reads = 8, extras = 0, lastRuns = false)
+                            2 -> StepsCraftScene.readsAndStepsFacts(reads = 9, extras = 0, lastRuns = true)
+                            3 -> StepsCraftScene.readsAndStepsFacts(reads = 9, extras = 0, lastRuns = false)
+                            else -> StepsCraftScene.readsAndStepsFacts(reads = 10, extras = 4, lastRuns = true)
+                        }
+                    ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
+            onNodeWithTag("chat-step-run-r1").performTouchInput { down(center); up() }
+            mainClock.advanceTimeBy(900)
+            val group0 = boundsOfTag("chat-step-run-r1").top
+            val prompt0 = promptTop()
+            val earlierText = StepsCraftScene.earlierParagraphs.last()
+            val earlier0 = boundsOfText(earlierText).top
+            val groupTops = mutableListOf(group0)
+            val prompts = mutableListOf(prompt0)
+            val earliers = mutableListOf(earlier0)
+            val summaries = mutableListOf<Int>()
+            val hideFolds = mutableListOf<Int>()
+            fun sample() {
+                groupTops += boundsOfTag("chat-step-run-r1").top
+                prompts += promptTop()
+                earliers += boundsOfText(earlierText).top
+                summaries += onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).fetchSemanticsNodes().size
+                hideFolds +=
+                    onAllNodesWithText("Hide earlier steps", useUnmergedTree = true).fetchSemanticsNodes().size
+            }
+            for (next in 2..4) {
+                phase = next
+                repeat(40) {
+                    mainClock.advanceTimeByFrame()
+                    sample()
+                }
+            }
+            assertTrue(
+                groupTops.all { abs(it - group0) <= 1f },
+                "opened group row moved: start=$group0 samples=$groupTops",
+            )
+            assertTrue(
+                prompts.all { abs(it - prompt0) <= 1f },
+                "prompt moved above opened group: start=$prompt0 samples=$prompts",
+            )
+            assertTrue(
+                earliers.all { abs(it - earlier0) <= 1f },
+                "earlier answer moved above opened group: start=$earlier0 samples=$earliers",
+            )
+            assertTrue(summaries.all { it == 0 }, "summary row flashed: $summaries")
+            assertTrue(hideFolds.all { it == 0 }, "fold header replaced group: $hideFolds")
+            onNodeWithText("Read 10 files").assertIsDisplayed()
+        }
+
+    @Test
+    fun `STEPS-CRAFT-023 the go-to-newest control does not appear and vanish after a step arrives`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        when (phase) {
+                            1 -> StepsCraftScene.readsAndStepsFacts(reads = 3, extras = 0, lastRuns = true)
+                            2 -> StepsCraftScene.readsAndStepsFacts(reads = 3, extras = 0, lastRuns = false)
+                            3 -> StepsCraftScene.readsAndStepsFacts(reads = 4, extras = 0, lastRuns = true)
+                            else -> StepsCraftScene.readsAndStepsFacts(reads = 5, extras = 0, lastRuns = false)
+                        }
+                    ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            val jumps = mutableListOf<Int>()
+            val liveTops = mutableListOf<Float>()
+            fun sample(checkLive: Boolean) {
+                jumps += onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes().size
+                if (checkLive) liveTops += boundsOfTag("chat-live-line").top
+            }
+            sample(checkLive = true)
+            phase = 2
+            repeat(30) {
+                mainClock.advanceTimeByFrame()
+                sample(checkLive = true)
+            }
+            phase = 3
+            repeat(30) {
+                mainClock.advanceTimeByFrame()
+                sample(checkLive = true)
+            }
+            val live0 = liveTops.first()
+            assertTrue(liveTops.all { abs(it - live0) <= 1f }, "live line jumped between steps: $liveTops")
+            // Tap to open the 3-file group: FoldAnchor scrolls past the 26 dp live line, still well below 480 dp.
+            onNodeWithTag("chat-step-run-r1").performTouchInput { down(center); up() }
+            repeat(40) {
+                mainClock.advanceTimeByFrame()
+                sample(checkLive = false)
+            }
+            phase = 4
+            repeat(40) {
+                mainClock.advanceTimeByFrame()
+                sample(checkLive = false)
+            }
+            assertTrue(jumps.all { it == 0 }, "jump-to-latest appeared while near the newest line: $jumps")
         }
 
     private companion object {

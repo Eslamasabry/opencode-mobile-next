@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -289,4 +290,53 @@ class KitToolRowTest {
         onAllNodesWithTag("kit-command-no-output", useUnmergedTree = true).assertCountEquals(1)
         onNodeWithText("No output", useUnmergedTree = true).assertIsDisplayed()
     }
+
+    @Test
+    fun `B-STEPS-WIDE a counting group row keeps one height at 1_3x text so rows below stay put`() =
+        runComposeUiTest {
+            var detail by mutableStateOf("CLAUDE.md · pubspec.yaml · README.md")
+            var title by mutableStateOf("Read 3 files")
+            setContent {
+                ChatTestTheme(fontScale = 1.3f) {
+                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.width(360.dp)) {
+                        KitStepList {
+                            KitToolRow(
+                                view(
+                                    kind = KitToolKind.Read,
+                                    title = title,
+                                    subject = null,
+                                    detail = detail,
+                                ),
+                                opened = false,
+                                onToggle = {},
+                                modifier = androidx.compose.ui.Modifier.testTag("group-row"),
+                                group = true,
+                            )
+                            KitToolRow(
+                                view(kind = KitToolKind.List, title = "Listed files", subject = "lib"),
+                                opened = false,
+                                onToggle = {},
+                                modifier = androidx.compose.ui.Modifier.testTag("below-row"),
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val below0 = onNodeWithTag("below-row", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
+            val h0 = onNodeWithTag("group-row", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.height
+            title = "Reading a file"
+            detail = "4 files"
+            waitForIdle()
+            val below1 = onNodeWithTag("below-row", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
+            title = "Read 7 files"
+            detail = "CLAUDE.md · pubspec.yaml · README.md · build.gradle.kts · Main.kt · App.kt · Chat.kt"
+            waitForIdle()
+            val below2 = onNodeWithTag("below-row", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
+            val h2 = onNodeWithTag("group-row", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.height
+            assertEquals(below0, below1, 0.5f, "below row shifted while running: $below0 -> $below1")
+            assertEquals(below0, below2, 0.5f, "below row shifted when detail grew: $below0 -> $below2")
+            assertEquals(h0, h2, 0.5f, "group row height changed: $h0 -> $h2")
+            assertTrue(h0 >= 48f, "wide group row kept a 48 dp target: $h0")
+        }
 }

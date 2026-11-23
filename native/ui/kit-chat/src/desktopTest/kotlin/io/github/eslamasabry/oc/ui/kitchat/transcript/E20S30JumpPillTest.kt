@@ -134,4 +134,40 @@ class E20S30JumpPillTest {
         assertEquals(1f, composerFaceAlpha(null, Style.Solid))
         assertEquals(1f, composerFaceAlpha(ChromeVeil(VeilLook.Opaque, 0f, 1f), Style.Soft))
     }
+
+    @Test
+    fun `E20-S30 scrolling past a short newest row stays below the away threshold`() = runComposeUiTest {
+        lateinit var state: TranscriptListState
+        setContent {
+            KitTheme(
+                appearance = KitAppearance(style = Style.Solid),
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                Box(Modifier.size(412.dp, 800.dp)) {
+                    state = rememberTranscriptListState()
+                    KitTranscriptList(
+                        state,
+                        newestKey = "live",
+                        jumpLabel = "Jump to latest",
+                        motion = KitMotionLevel.Off,
+                    ) {
+                        item(key = "live") { Box(Modifier.fillMaxWidth().height(26.dp)) }
+                        item(key = "work") { Box(Modifier.fillMaxWidth().height(600.dp)) }
+                        items(rows, key = { it }) { Box(Modifier.fillMaxWidth().height(40.dp)) }
+                    }
+                }
+            }
+        }
+        waitForIdle()
+        // 120 dp past the 26 dp live line: index 1, offset 94 dp, well below AWAY_DP (480 dp).
+        runOnIdle { state.lazy.requestScrollToItem(1, 94) }
+        waitForIdle()
+        onNodeWithTag("jump-to-latest").assertDoesNotExist()
+        // Past 480 dp into index 1: now away.
+        runOnIdle { state.lazy.requestScrollToItem(1, 500) }
+        waitForIdle()
+        onNodeWithTag("jump-to-latest").assertExists()
+    }
 }
