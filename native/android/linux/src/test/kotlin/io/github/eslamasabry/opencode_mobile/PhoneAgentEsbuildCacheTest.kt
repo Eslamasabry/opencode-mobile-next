@@ -13,7 +13,7 @@ import org.junit.rules.TemporaryFolder
 class PhoneAgentEsbuildCacheTest {
     @get:Rule val folder = TemporaryFolder()
 
-    private val key = "0.17.2-c2f1fbbb755a"
+    private val key = "0.17.3-5fcd5dc3354c"
 
     private class Launch(val code: Int, val options: String, val ours: String)
 

@@ -40,7 +40,7 @@ class PhoneAgentEsbuildHookTest {
         File(plugins, "one/index.server.ts").writeText("export const a = 1")
         File(pin, "node_modules/esbuild").mkdirs()
         File(pin, "node_modules/esbuild/index.js").writeText(ESBUILD_STUB)
-        home = File(work, "oc-esbuild/0.17.2-key").apply { mkdirs() }
+        home = File(work, "oc-esbuild/0.17.3-key").apply { mkdirs() }
         File(home, "pin-root").writeText(pin.absolutePath)
         hook = File(home, "hook.cjs").apply { writeText(EsbuildCacheHook.SOURCE) }
         File(work, "project").mkdirs()

@@ -166,9 +166,9 @@ class AgentRegistryTest {
 
     @Test
     fun `B-AGENT-REG-014 the registry keeps its proof and answer times across reads, and a removal drops the proof`() {
-        val first = PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to "1.0.0"), null, "0.17.2", 7L, 99L)
+        val first = PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to "1.0.0"), null, "0.17.3", 7L, 99L)
         assertEquals("1.0.0", first.proven, "a pinned copy that runs is proven by its install")
-        assertEquals("0.17.2", first.provenHelper)
+        assertEquals("0.17.3", first.provenHelper)
         assertEquals(7L, first.provenBuild)
         assertNull(first.signedInAt, "no sign-in answer, no time for it")
         val text = PhoneAgentFacts.encode(mapOf("codex" to first.copy(signedIn = true, signedInAt = 99L)))

@@ -121,7 +121,7 @@ class SetUpFirstTest {
     @Test
     fun `B-AGENT-SETUP-013 the fact is written once, kept across app starts, and survives an update of the agent`() {
         val pin = omp.recipe!!.version
-        val installed = PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to pin), null, "0.17.2", 7L)
+        val installed = PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to pin), null, "0.17.3", 7L)
         val seen = PhoneAgentFacts.seenSetUp(mapOf("omp-acp" to installed), "omp-acp")
         assertTrue(seen.getValue("omp-acp").setUp)
         assertEquals(pin, seen.getValue("omp-acp").proven, "the rest of what is known stays")
@@ -142,7 +142,7 @@ class SetUpFirstTest {
                 updating,
                 mapOf(
                     "omp-acp" to
-                        PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to "99.0.0"), null, "0.17.2", 8L)
+                        PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to "99.0.0"), null, "0.17.3", 8L)
                 ),
             )
         assertTrue(afterUpdate.getValue("omp-acp").setUp, "the owner is not asked to set up again after an update")
