@@ -281,7 +281,8 @@ class AgentPinsParityTest {
     fun `B-AGENT-008 Cline 3-0-75 pins equal the downloads checked on 2026-11-22`() {
         // Moved after the freeze. Each SHA-256 is of the registry tarball, whose sha512 equals dist.integrity;
         // installedBytes is the executable member's size.
-        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("cline"))!!.recipe!!
+        val recipe =
+            AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("cline"))!!.recipe!!
         assertEquals("3.0.75", recipe.version)
         assertEquals("cline", recipe.executable)
         assertEquals(listOf("--acp"), recipe.launchArgs)
@@ -435,7 +436,8 @@ class AgentPinsParityTest {
             "nodeX64Sha256" to "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2",
         )
         fun dartConst(name: String) = node.getValue(name)
-        // Paseo moved to 0.17.3 (via 0.17.2, 0.17.1, 0.16.1, 0.15.4) after the Flutter freeze (B-193): the pins equal the install script's own checks.
+        // Paseo moved to 0.17.3 (via 0.17.2, 0.17.1, 0.16.1, 0.15.4) after the Flutter freeze (B-193): the pins equal
+        // the install script's own checks.
         assertEquals(PaseoPhoneScripts.VERSION, pins.paseo.version)
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, pins.paseo.packageLockSha256)
         assertEquals(PaseoPhoneScripts.CLI_SHA256, pins.paseo.cliSha256)
