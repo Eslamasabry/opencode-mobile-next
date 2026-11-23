@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.Allow
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -59,6 +60,14 @@ class ReopenStoppedFirstFrameTest {
                 KitText(if (chrome.busy()) "composer: busy" else "composer: idle", modifier)
             }
         }
+
+    /**
+     * What the recorder finds here is this test's own scenario, not a fault of the page: it closes the
+     * conversation and reopens it on purpose, so the running page and the stopped page swap in one
+     * frame and the live line leaves and comes back. Both are allowed by name, for this test only.
+     */
+    private val swap = Allow.jump("answer so far", "the test closes and reopens the conversation: intended")
+    private val liveLine = Allow.aba("#chat-live-line", "the test closes and reopens the conversation: intended")
 
     /** The page under test: the world it reads, its two states, and the away/back switch. */
     private class Reopened(
@@ -135,7 +144,11 @@ class ReopenStoppedFirstFrameTest {
 
     @Test
     fun `B-CHAT-420 a chat reopened after its run was stopped draws Stopped from its first frame`() =
-        kitUiTest(412, 915) {
+        kitUiTest(
+            412,
+            915,
+            allow = setOf(swap, liveLine),
+        ) {
             val chat = reopenedChat()
             try {
                 // The running page is up before the app goes to the background.
@@ -168,7 +181,11 @@ class ReopenStoppedFirstFrameTest {
 
     @Test
     fun `B-CHAT-421 the reopened stopped chat keeps its place - the Stopped note never moves`() =
-        kitUiTest(412, 915) {
+        kitUiTest(
+            412,
+            915,
+            allow = setOf(swap),
+        ) {
             val chat = reopenedChat()
             try {
                 mainClock.advanceTimeByFrame()
