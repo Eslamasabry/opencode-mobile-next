@@ -244,9 +244,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     askedCalls = askedCalls.toSet(),
                     liveChildren = liveChildren,
                 )
-                .mapValues {
-                    withOwnClock(LeftRunningCommands.settle(it.value, nowMs), nowMs, feed.waits)
-                }
+                .let { LeftRunningCommands.settle(it, snapshot.messages, nowMs) }
+                .mapValues { withOwnClock(it.value, nowMs, feed.waits) }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {

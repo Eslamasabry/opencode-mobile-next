@@ -23,23 +23,53 @@ import kotlinx.serialization.json.JsonPrimitive
  * own `completed` report ends it: the mapper then sets no flag, the engine reads Done, and nothing here applies.
  */
 public object LeftRunningCommands {
+    /** Each part's start time from its holding message's created time, skipping messages with no time. */
+    public fun startsOf(messages: List<MessageWithParts>): Map<String, Long> =
+        buildMap {
+            for (message in messages) {
+                val created = message.info.time?.createdMs ?: continue
+                for (part in message.parts) put(part.id, created)
+            }
+        }
+
     /**
      * [work] as the transcript reads the work of a turn that is not running: every stop-ended step settled
      * ([StoppedSteps.settle]), then the commands it left running kept Running ([keepRunning]).
      */
-    public fun settle(work: TurnWork, nowMs: Long): TurnWork = keepRunning(StoppedSteps.settle(work), nowMs)
+    public fun settle(
+        work: TurnWork,
+        nowMs: Long,
+        starts: Map<String, Long> = emptyMap(),
+    ): TurnWork = keepRunning(StoppedSteps.settle(work), nowMs, starts)
+
+    /** [settle] over every turn of [work], using each step's holding message time from [messages] when needed. */
+    public fun settle(
+        work: Map<String, TurnWork>,
+        messages: List<MessageWithParts>,
+        nowMs: Long,
+    ): Map<String, TurnWork> {
+        val starts = startsOf(messages)
+        return work.mapValues { settle(it.value, nowMs, starts) }
+    }
 
     /**
      * [work] with each command its turn left running reading [StepState.Running] again: no time yet, and counted as
      * work that ran, as a running command is. [work] itself when nothing changes, and in a turn the person stopped.
      */
-    public fun keepRunning(work: TurnWork, nowMs: Long): TurnWork {
+    public fun keepRunning(
+        work: TurnWork,
+        nowMs: Long,
+        starts: Map<String, Long> = emptyMap(),
+    ): TurnWork {
         val stopped = work.state == WorkLineState.Stopped
-        if (stopped || work.steps.none { it.state == StepState.Stopped && leftSince(it, nowMs) != null }) return work
+        if (stopped || work.steps.none { it.state == StepState.Stopped && leftSince(it, nowMs, starts) != null }) {
+            return work
+        }
         val steps =
             work.steps.map { step ->
-                if (step.state == StepState.Stopped && leftSince(step, nowMs) != null) {
-                    step.copy(state = StepState.Running, durationMs = null)
+                val since = if (step.state == StepState.Stopped) leftSince(step, nowMs, starts) else null
+                if (since != null) {
+                    step.copy(state = StepState.Running, durationMs = null, startedAtMs = since)
                 } else {
                     step
                 }
@@ -61,12 +91,13 @@ public object LeftRunningCommands {
         busy: Boolean = false,
     ): List<BackgroundTask> {
         val turns = if (busy) emptyList() else work.values
+        val msgStarts = startsOf(messages)
         val starts: Map<String, Long> =
             turns
                 .filter { it.state != WorkLineState.Stopped }
                 .flatMap { it.steps }
                 .filter { it.state == StepState.Running }
-                .mapNotNull { step -> leftSince(step, nowMs)?.let { step.partId to it } }
+                .mapNotNull { step -> leftSince(step, nowMs, msgStarts)?.let { step.partId to it } }
                 .toMap()
         if (starts.isEmpty()) return emptyList()
         val seen = HashSet<String>()
@@ -88,15 +119,15 @@ public object LeftRunningCommands {
      * own): [settle] over every turn.
      */
     public fun work(snapshot: LedgerSnapshot, stopped: Boolean, nowMs: Long): Map<String, TurnWork> =
-        turnWork(snapshot, busy = false, stopped = stopped).mapValues { settle(it.value, nowMs) }
+        settle(turnWork(snapshot, busy = false, stopped = stopped), snapshot.messages, nowMs)
 
     /**
      * When [step]'s command started, when the step is a command its turn left running that the app still believes runs:
-     * the mapper flagged it `background`, and it started less than [BACKGROUND_TASK_MAX_AGE_MS] ago. Null for any other
-     * step, and for one the server gave no start time (then nothing says how long it has run).
+     * the mapper flagged it `background`, and it started less than [BACKGROUND_TASK_MAX_AGE_MS] ago. Uses the step's
+     * own start time or its holding message's created time ([starts]); null with neither.
      */
-    private fun leftSince(step: TurnStep, nowMs: Long): Long? {
-        val start = step.startedAtMs ?: return null
+    private fun leftSince(step: TurnStep, nowMs: Long, starts: Map<String, Long>): Long? {
+        val start = step.startedAtMs ?: starts[step.partId] ?: return null
         val flag =
             (step.output.metadata?.get("background") as? JsonPrimitive)?.let {
                 !it.isString && it.content == "true"
