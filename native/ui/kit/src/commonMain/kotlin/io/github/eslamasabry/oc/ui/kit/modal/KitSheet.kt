@@ -200,16 +200,36 @@ public class KitSheetHostState internal constructor() {
     internal var entry: SheetEntry? by mutableStateOf(null)
         private set
 
-    internal val shown: MutableTransitionState<Boolean> = MutableTransitionState(false)
+    /** Replaced, already shown, by [showRestored]: a transition state cannot be made shown from outside. */
+    internal var shown: MutableTransitionState<Boolean> by mutableStateOf(MutableTransitionState(false))
+        private set
 
     internal var dialog: DialogEntry? by mutableStateOf(null)
         private set
 
     internal val dialogShown: MutableTransitionState<Boolean> = MutableTransitionState(false)
 
+    /**
+     * True once this host has completed a composition (audit 3, 2026-11-23): only a sheet composed in the host's own
+     * first composition is one a rebuild restored open; one first placed on a page that had already settled opens
+     * normally, with its rise.
+     */
+    internal var composedOnce: Boolean = false
+
     internal fun show(e: SheetEntry) {
         entry = e
         shown.targetState = true
+    }
+
+    /**
+     * A sheet open in the host's own first composition (the screen was rebuilt around it open, a rotation): it is
+     * registered during that composition, already shown, so the frame that rebuilds the page draws it open and
+     * plays no entrance. [show] runs from an effect after that frame, which left one frame of the page showing
+     * where the sheet sits.
+     */
+    internal fun showRestored(e: SheetEntry) {
+        entry = e
+        shown = MutableTransitionState(true)
     }
 
     internal fun hide(e: SheetEntry) {
@@ -329,6 +349,7 @@ private fun PageKeyboard(held: PageFocus) {
 @Composable
 public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val state = remember { KitSheetHostState() }
+    SideEffect { state.composedOnce = true }
     // Any sheet or dialog of this host dims the page: the kit says so to whatever floats above it.
     KitReportsModal(state.isShowing || state.isDialogShowing)
     // Liquid glass: the page as the sheets and menus over it see it, recorded only while one of them is liquid.
@@ -434,7 +455,9 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
  * (B-KIT-032). [growsInPlace]: one sheet whose second step needs more room changes [height] from
  * `Half` to `Full` and grows taller where it is, on the spatial spring (snap under reduced motion),
  * instead of a second sheet replacing it; from an expanded window it stays the centred panel and
- * grows there, never jumping to the end sheet.
+ * grows there, never jumping to the end sheet. A sheet that is open in the screen's first composition (a rebuild
+ * such as a rotation restored it) is drawn open from that first frame: no entrance is replayed and no frame of the
+ * page shows where it sits.
  *
  * States: closed, open, asking (discard), predictive back, grown Text: frame (header), reading
  * (body) Cap: Sheet (640 / 560 / 440) Motion: rises on the spatial spring, scrim fades STANDARD;
@@ -479,7 +502,7 @@ public fun KitSheet(
     kitAssert(title.isNotBlank()) { "KitSheet: a sheet needs its title" }
     host ?: return
     val entry = remember { SheetEntry() }
-    SideEffect {
+    val describe: () -> Unit = {
         entry.title = title
         entry.subtitle = subtitle
         entry.closeLabel = closeLabel
@@ -504,6 +527,17 @@ public fun KitSheet(
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
+    // A screen rebuilt around a sheet it had open (a rotation) holds that sheet open in its first composition: the
+    // sheet describes and registers itself here, inside the composition, so the frame that rebuilds the page draws
+    // it already open. Registered from the effect below, it came one frame later and the page showed through where
+    // it sits (a conversation's message box hint). A sheet that opens later enters as it always did.
+    var bornOpen by remember { mutableStateOf(visible && !host.composedOnce) }
+    if (bornOpen) {
+        bornOpen = false
+        describe()
+        host.showRestored(entry)
+    }
+    SideEffect(describe)
     DisposableEffect(host, visible) {
         if (visible) host.show(entry)
         else {
