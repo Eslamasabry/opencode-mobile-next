@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.protocol.oc2.send.Oc2ClientIds
 import io.github.eslamasabry.oc.protocol.oc2.send.Oc2PromptSend
 import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
