@@ -129,7 +129,10 @@ class PhoneAgentsSessionTest {
         // The connected helper is the pinned Paseo release (AgentHelper starts exactly pins.paseo.version).
         val helper = AgentPins.builtIn.paseo.version
         val certification = AgentCertification.bundled
-        assertAll(true, certification.capabilitiesFor(certifiedClaude327, AgentArchitecture.Arm64, helper), "claude")
+        // Carried certification needs the pinned helper in the tested list; a pin moved but not yet proved on a device
+        // is not listed, and Claude then waits for its phone check.
+        val carries = helper in AgentPins.builtIn.paseoTestedVersions
+        assertAll(carries, certification.capabilitiesFor(certifiedClaude327, AgentArchitecture.Arm64, helper), "claude")
         for (descriptor in AgentCatalog.builtIn.agents) {
             if (descriptor.id == AgentId.CLAUDE) continue
             assertAll(false, certification.capabilitiesFor(descriptor, AgentArchitecture.Arm64, helper), descriptor.id.raw)
