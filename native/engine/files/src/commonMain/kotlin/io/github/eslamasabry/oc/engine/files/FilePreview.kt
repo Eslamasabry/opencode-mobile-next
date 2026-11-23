@@ -183,10 +183,12 @@ public object FilePreview {
     public fun data(path: String, content: FileContent): FileData? {
         if (tooBig(content)) return null
         val bytes =
-            if (content.encoding == "base64") decodeBase64(content.content) ?: return null
+            if (content.encoding == "base64") decodeBase64(content.content)
             else content.content.encodeToByteArray()
-        val mime = content.mimeType?.takeIf { it.isNotBlank() } ?: mimeFor(path)
-        return FileData(path, mime, bytes)
+        return bytes?.let { decoded ->
+            val mime = content.mimeType?.takeIf { m -> m.isNotBlank() } ?: mimeFor(path)
+            FileData(path, mime, decoded)
+        }
     }
 
     /**
