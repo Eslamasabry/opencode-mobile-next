@@ -245,8 +245,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     liveChildren = liveChildren,
                 )
                 .mapValues {
-                    val kept = LeftRunningCommands.keepRunning(StoppedSteps.settle(it.value), nowMs)
-                    withOwnClock(kept, nowMs, feed.waits)
+                    withOwnClock(LeftRunningCommands.settle(it.value, nowMs), nowMs, feed.waits)
                 }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
         val results = HashMap<String, TurnResultUi>()
@@ -263,9 +262,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
             context = context(feed, compacting),
             live = live(feed, nowMs, waitingForYou, work, compacting),
             background =
-                runningBackgroundTasks(snapshot.messages, nowMs).let { claude ->
-                    if (feed.busy) claude else claude + LeftRunningCommands.tasks(snapshot.messages, work, nowMs)
-                },
+                runningBackgroundTasks(snapshot.messages, nowMs) +
+                    LeftRunningCommands.tasks(snapshot.messages, work, nowMs, busy = feed.busy),
             nowMs = nowMs,
             reading = reading,
             tasks = latestChatTasks(snapshot.messages),

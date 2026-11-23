@@ -24,8 +24,14 @@ import kotlinx.serialization.json.JsonPrimitive
  */
 public object LeftRunningCommands {
     /**
+     * [work] as the transcript reads the work of a turn that is not running: every stop-ended step settled
+     * ([StoppedSteps.settle]), then the commands it left running kept Running ([keepRunning]).
+     */
+    public fun settle(work: TurnWork, nowMs: Long): TurnWork = keepRunning(StoppedSteps.settle(work), nowMs)
+
+    /**
      * [work] with each command its turn left running reading [StepState.Running] again: no time yet, and counted as
-     * work that ran, as a running command is. [work] itself when nothing changes.
+     * work that ran, as a running command is. [work] itself when nothing changes, and in a turn the person stopped.
      */
     public fun keepRunning(work: TurnWork, nowMs: Long): TurnWork {
         val stopped = work.state == WorkLineState.Stopped
@@ -45,16 +51,23 @@ public object LeftRunningCommands {
     /**
      * The commands [work] still reads running (after [keepRunning]) as the background line's tasks, oldest first and
      * one per call id: the part's own call id, or its id when it gave none. [messages] is the conversation as the
-     * ledger holds it, oldest first; each task names the message that holds its step.
+     * ledger holds it, oldest first; each task names the message that holds its step. While the chat is [busy] the
+     * line holds none of them: a running reply's command is the reply's own step.
      */
-    public fun tasks(messages: List<MessageWithParts>, work: Map<String, TurnWork>, nowMs: Long): List<BackgroundTask> {
-        val starts = HashMap<String, Long>()
-        for (turn in work.values) {
-            for (step in turn.steps) {
-                val running = turn.state != WorkLineState.Stopped && step.state == StepState.Running
-                if (running) leftSince(step, nowMs)?.let { starts[step.partId] = it }
-            }
-        }
+    public fun tasks(
+        messages: List<MessageWithParts>,
+        work: Map<String, TurnWork>,
+        nowMs: Long,
+        busy: Boolean = false,
+    ): List<BackgroundTask> {
+        val turns = if (busy) emptyList() else work.values
+        val starts: Map<String, Long> =
+            turns
+                .filter { it.state != WorkLineState.Stopped }
+                .flatMap { it.steps }
+                .filter { it.state == StepState.Running }
+                .mapNotNull { step -> leftSince(step, nowMs)?.let { step.partId to it } }
+                .toMap()
         if (starts.isEmpty()) return emptyList()
         val seen = HashSet<String>()
         val found =
@@ -72,11 +85,10 @@ public object LeftRunningCommands {
 
     /**
      * The work of a conversation that is not busy as the transcript reads it, for the clock (which has no work of its
-     * own): every turn's steps settled, then the commands its turns left running kept Running.
+     * own): [settle] over every turn.
      */
     public fun work(snapshot: LedgerSnapshot, stopped: Boolean, nowMs: Long): Map<String, TurnWork> =
-        turnWork(snapshot, busy = false, stopped = stopped)
-            .mapValues { keepRunning(StoppedSteps.settle(it.value), nowMs) }
+        turnWork(snapshot, busy = false, stopped = stopped).mapValues { settle(it.value, nowMs) }
 
     /**
      * When [step]'s command started, when the step is a command its turn left running that the app still believes runs:
