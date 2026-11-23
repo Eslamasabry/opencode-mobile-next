@@ -132,7 +132,7 @@ class ProjectFilesTest {
             FakeFiles(
                 contents =
                     mapOf(
-                        "big.bin" to FileContent("AAAA".repeat(5_242_880), "binary", "base64", null),
+                        "big.bin" to FileContent("AAAA".repeat(6_990_507), "binary", "base64", null),
                         "big.txt" to FileContent("a".repeat(20_971_520), "text", null, null),
                         "edge.bin" to FileContent("AAAA".repeat(5_592_406), "binary", "base64", null),
                     )
