@@ -111,6 +111,10 @@ internal fun serverMenuItems(
     }
 }
 
+/** Flutter strips the daemon's explanatory label, keeping a reported prerelease/build suffix. */
+internal fun plainServerVersion(raw: String): String =
+    Regex("""\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?""").find(raw)?.value ?: raw.trim()
+
 /** The Details sheet of a saved server row: its address, version and project folder. */
 @Composable
 internal fun ServerDetailsSheet(
