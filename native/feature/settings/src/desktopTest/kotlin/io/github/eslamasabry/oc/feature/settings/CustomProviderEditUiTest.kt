@@ -84,9 +84,8 @@ class CustomProviderEditUiTest {
         )
 
     private fun page(
-        capabilities: ServerCapabilities = phone,
+        onThisPhone: Boolean = true,
         rows: List<IntegrationInfo> = listOf(row),
-        declared: List<DeclaredProvider> = listOf(declared),
         sheet: LibrarySheet? = null,
         custom: CustomProviderUi = CustomProviderUi(),
         restartPhase: CustomProviderRestartPhase? = null,
@@ -96,9 +95,9 @@ class CustomProviderEditUiTest {
         inventory =
             LibraryInventory(
                 loading = false,
-                capabilities = capabilities,
+                capabilities = if (onThisPhone) phone else remote,
                 providers = rows.toImmutableList(),
-                declared = declared.toImmutableList(),
+                declared = (if (onThisPhone) listOf(declared) else emptyList()).toImmutableList(),
                 customRestart = restartPhase,
             ),
         sheet = sheet,
@@ -136,9 +135,8 @@ class CustomProviderEditUiTest {
             onNodeWithText("Remove provider").assertExists()
             shows(
                 page(
-                    capabilities = remote,
+                    onThisPhone = false,
                     rows = listOf(connected),
-                    declared = emptyList(),
                     sheet = LibrarySheet.Provider(connected),
                 ),
             )

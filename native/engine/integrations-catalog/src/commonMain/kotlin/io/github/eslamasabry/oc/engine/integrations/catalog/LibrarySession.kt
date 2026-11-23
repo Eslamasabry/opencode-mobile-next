@@ -675,30 +675,40 @@ public class LibrarySession(
         src: LibrarySource,
         host: CustomProviderHost,
         providerId: String,
-    ): CustomProviderOutcome {
+    ): CustomProviderOutcome = removeEntryRefusal(host, providerId) ?: removeKeyAndEntry(src, host, providerId)
+
+    /** Why the remove stops before anything changes: the read refused, or the entry is not one the app wrote. */
+    private suspend fun removeEntryRefusal(
+        host: CustomProviderHost,
+        providerId: String,
+    ): CustomProviderOutcome.Refused? =
         when (val entry = fileEntry(host, providerId)) {
-            is FileEntry.Refused -> return entry.outcome
-            FileEntry.NotAppShaped -> return CustomProviderOutcome.Refused(CustomProviderRefusal.ChangedByHand)
-            FileEntry.AppShaped -> Unit
+            is FileEntry.Refused -> entry.outcome
+            FileEntry.NotAppShaped -> CustomProviderOutcome.Refused(CustomProviderRefusal.ChangedByHand)
+            FileEntry.AppShaped -> null
         }
+
+    private suspend fun removeKeyAndEntry(
+        src: LibrarySource,
+        host: CustomProviderHost,
+        providerId: String,
+    ): CustomProviderOutcome {
         val rows = src.operations.integrations()
         if (rows is Outcome.Failed)
             return CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
         val row = rows.getOrNull()?.firstOrNull { it.id == providerId }
-        var keyRemoved = false
-        if (row != null && row.connections.isNotEmpty()) {
-            val disconnected = src.operations.disconnectIntegration(row)
-            if (disconnected is Outcome.Failed)
-                return CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, disconnected.failure.label())
-            keyRemoved = true
-        }
+        val disconnected =
+            if (row != null && row.connections.isNotEmpty()) src.operations.disconnectIntegration(row) else null
         val removed = host.remove(providerId)
         val code = removed.getOrNull()
         return when {
+            disconnected is Outcome.Failed ->
+                CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, disconnected.failure.label())
             removed is Outcome.Failed ->
                 CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, removed.failure.label())
             code == CustomProviderWrite.Saved.code -> CustomProviderOutcome.RemovedNotRestarted
-            keyRemoved -> CustomProviderOutcome.RemovePartial("Exit $code")
+            // The key went first, so a failed entry write is partial: a second remove finishes the job.
+            disconnected != null -> CustomProviderOutcome.RemovePartial("Exit $code")
             else -> CustomProviderOutcome.Refused(handRefusal(code), "Exit $code")
         }
     }

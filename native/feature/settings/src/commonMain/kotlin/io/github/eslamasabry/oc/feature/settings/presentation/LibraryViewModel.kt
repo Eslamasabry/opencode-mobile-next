@@ -296,7 +296,7 @@ public class LibraryViewModel(
                                 providerId = sheet.id,
                             )
                         }
-                        else -> it.customProvider,
+                        else -> it.customProvider
                     },
             )
         }
@@ -460,6 +460,9 @@ public class LibraryViewModel(
                         ui.copy(
                             stage = CustomProviderStage.Restarting,
                             name = name,
+                            // A restart from a provider sheet of its own (a stranded entry) names that sheet's
+                            // provider while it waits, so the steps show where the person asked for them.
+                            providerId = ui.providerId.ifEmpty { id },
                             refusal = null,
                             detail = null,
                         ),

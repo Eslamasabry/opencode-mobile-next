@@ -77,16 +77,10 @@ public data class CustomProviderUi(
             CustomProviderOutcome.NeedsReplaceAnswer -> settled(CustomProviderStage.AskReplace)
             CustomProviderOutcome.RemovedNotRestarted -> settled(CustomProviderStage.RemovedNotRestarted)
             CustomProviderOutcome.Removed -> settled(CustomProviderStage.Removed)
-            CustomProviderOutcome.NotGoneAfterRestart ->
-                // A remove whose server still lists it: the entry IS gone from the settings, so the sheet says
-                // that and offers the restart again (DESIGN §3, "removed, waiting for the restart").
-                if (mode == CustomProviderMode.Remove) settled(CustomProviderStage.RemovedNotRestarted)
-                else settled(CustomProviderStage.NotLoadedAfterRestart)
+            CustomProviderOutcome.NotLoadedAfterRestart -> settled(CustomProviderStage.NotLoadedAfterRestart)
+            CustomProviderOutcome.NotGoneAfterRestart -> goneAfterRestart()
             is CustomProviderOutcome.RestartFailed ->
-                settled(
-                    if (mode == CustomProviderMode.Remove) CustomProviderStage.RemovedNotRestarted
-                    else CustomProviderStage.RestartFailed,
-                ).copy(detail = outcome.detail)
+                settled(savedOrRemoved(CustomProviderStage.RestartFailed)).copy(detail = outcome.detail)
             is CustomProviderOutcome.Invalid ->
                 copy(
                     stage =
@@ -104,21 +98,37 @@ public data class CustomProviderUi(
                 )
             is CustomProviderOutcome.Refused ->
                 copy(
-                    stage =
-                        when (stage) {
-                            CustomProviderStage.Restarting ->
-                                if (mode == CustomProviderMode.Remove) CustomProviderStage.RemovedNotRestarted
-                                else CustomProviderStage.SavedNotLoaded
-                            // A remove's refusals keep their stage: the sheet shows the remove's own words.
-                            CustomProviderStage.Removing -> CustomProviderStage.Removing
-                            else ->
-                                if (mode == CustomProviderMode.Edit) CustomProviderStage.Editing
-                                else CustomProviderStage.Form
-                        },
+                    stage = refusedStage(),
                     problems = persistentListOf(),
                     refusal = outcome.reason,
                     detail = outcome.detail,
                 )
+        }
+
+    /**
+     * A remove whose server still lists it: the entry IS gone from the settings, so the sheet says that and
+     * offers the restart again (DESIGN §3, "removed, waiting for the restart").
+     */
+    private fun goneAfterRestart(): CustomProviderUi =
+        if (mode == CustomProviderMode.Remove) settled(CustomProviderStage.RemovedNotRestarted)
+        else settled(CustomProviderStage.NotLoadedAfterRestart)
+
+    /**
+     * A restart-time outcome in a remove keeps the removed-waiting stage; an add or an edit keeps its own
+     * [fallback] saved stage.
+     */
+    private fun savedOrRemoved(fallback: CustomProviderStage): CustomProviderStage =
+        if (mode == CustomProviderMode.Remove) CustomProviderStage.RemovedNotRestarted else fallback
+
+    /** A refusal keeps the stage its flow was in, so the sheet keeps the flow's own words. */
+    private fun refusedStage(): CustomProviderStage =
+        when (stage) {
+            CustomProviderStage.Restarting -> savedOrRemoved(CustomProviderStage.SavedNotLoaded)
+            // A remove's refusals keep their stage: the sheet shows the remove's own words.
+            CustomProviderStage.Removing -> CustomProviderStage.Removing
+            else ->
+                if (mode == CustomProviderMode.Edit) CustomProviderStage.Editing
+                else CustomProviderStage.Form
         }
 
     private fun settled(next: CustomProviderStage): CustomProviderUi =
