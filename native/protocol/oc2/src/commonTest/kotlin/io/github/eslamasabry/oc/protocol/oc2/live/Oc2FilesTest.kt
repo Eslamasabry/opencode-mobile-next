@@ -10,11 +10,11 @@ import io.github.eslamasabry.oc.core.net.NetClient
 import io.github.eslamasabry.oc.core.net.TransportError
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpResponseData
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
-import io.ktor.client.statement.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.writeFully
