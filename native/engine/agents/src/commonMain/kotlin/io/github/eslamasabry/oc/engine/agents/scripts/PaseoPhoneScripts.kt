@@ -27,22 +27,22 @@ public class PaseoPinUnavailable : IllegalArgumentException("The agent host inst
  * byte-faithful except the gzip bytes of the embedded lock, which come from [PaseoLockCodec].
  */
 public object PaseoPhoneScripts {
-    public const val VERSION: String = "0.16.1"
+    public const val VERSION: String = "0.17.3"
     public const val NODE_VERSION: String = "v24.22.3"
     public const val NODE_ARM64_SHA256: String = "261af2af250dfd7e9f25cf151d1b2713a0adf8f10a9ad116c4947f68627affe8"
     public const val NODE_X64_SHA256: String = "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2"
     public const val PACKAGE_LOCK_ASSET: String = "assets/agents/paseo-package-lock.json"
-    public const val PACKAGE_LOCK_SHA256: String = "d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5"
-    public const val INSTALL_DIRECTORY: String = "/home/oc/.local/share/oc-paseo/$VERSION-d5317553e538"
+    public const val PACKAGE_LOCK_SHA256: String = "5fcd5dc3354c0b6ac915876597704e716eb5b9c32ba7ba3540fa6ef8821ca8cc"
+    public const val INSTALL_DIRECTORY: String = "/home/oc/.local/share/oc-paseo/$VERSION-5fcd5dc3354c"
 
-    // Registry artifact https://registry.npmjs.org/@getpaseo/cli/-/cli-0.16.1.tgz, checked against the lock's SRI.
+    // Registry artifact https://registry.npmjs.org/@getpaseo/cli/-/cli-0.17.3.tgz, checked against the lock's SRI.
     public const val CLI_RELATIVE_PATH: String = "node_modules/@getpaseo/cli/bin/paseo"
     public const val CLI_SHA256: String = "2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94"
     public const val PAYLOAD_RELATIVE_PATH: String = "node_modules/@getpaseo/cli/dist/index.js"
     public const val PAYLOAD_SHA256: String = "8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09"
 
     // SHA256 of the sorted sha256sum manifest for every regular bin/dist file, paths relative to the npm prefix.
-    public const val CODE_TREE_SHA256: String = "766af65e563318895cdb7d4e79fed2629602fef5a98eb8215cb9d9ab3dc22a8a"
+    public const val CODE_TREE_SHA256: String = "dad765506bf0a72bffc5219157a8f89e994f177714eed1a5d5c96d51d039a669"
 
     private const val PACKAGE_JSON = """{
   "name": "oc-phone-agent-host",
