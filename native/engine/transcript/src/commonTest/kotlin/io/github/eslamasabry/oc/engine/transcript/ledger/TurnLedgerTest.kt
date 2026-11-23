@@ -19,7 +19,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNotSame
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -128,6 +130,90 @@ class TurnLedgerTest {
         val other = MessageInfo("o1", "s2", Role.User)
         assertFalse(ledger.apply(GatewayEvent.MessageUpserted(other)))
         assertTrue(ledger.snapshot().messages.isEmpty())
+    }
+
+    @Test
+    fun `B-CHAT-096 PB-21 a progress event rebuilds only its own message in the ledger snapshot`() {
+        val page = ArrayList<MessageWithParts>(500)
+        page += msg(info("m0", Role.User, 1), text("p0", "m0", "build it"))
+        for (i in 1..498) {
+            page +=
+                msg(
+                    info("m$i", Role.Assistant, i + 1L),
+                    tool("t$i", "m$i", "bash", ToolStatus.Completed, start = i + 1L, end = i + 2L, output = "ok $i"),
+                )
+        }
+        page +=
+            msg(
+                info("m499", Role.Assistant, 500),
+                tool("t499", "m499", "bash", ToolStatus.Running, start = 500, output = "line 1"),
+            )
+        val ledger = TurnLedger(S)
+        ledger.load(page)
+        val before = ledger.snapshot()
+        // (a) one progress event on the running tool rebuilds only that message.
+        val progress = tool("t499", "m499", "bash", ToolStatus.Running, start = 500, output = "line 1\nline 2")
+        assertTrue(ledger.apply(GatewayEvent.PartUpserted(progress)))
+        val after = ledger.snapshot()
+        assertEquals(before.messages.map { it.info.id }, after.messages.map { it.info.id })
+        for (i in after.messages.indices) {
+            val id = after.messages[i].info.id
+            if (id == "m499") {
+                assertNotSame(before.messages[i], after.messages[i], "rebuilt: $id")
+            } else {
+                assertSame(before.messages[i], after.messages[i], "rebuilt: $id")
+            }
+        }
+        assertEquals("line 1\nline 2", after.messages.last().parts.single().tool?.output)
+        // (b) a new end time for one old message rebuilds only that message.
+        assertTrue(ledger.apply(GatewayEvent.MessageUpserted(info("m250", Role.Assistant, 251, done = 900))))
+        val mid = ledger.snapshot()
+        for (i in mid.messages.indices) {
+            val id = mid.messages[i].info.id
+            if (id == "m250") {
+                assertNotSame(after.messages[i], mid.messages[i], "rebuilt: $id")
+            } else {
+                assertSame(after.messages[i], mid.messages[i], "rebuilt: $id")
+            }
+        }
+        assertEquals(900L, mid.messages.single { it.info.id == "m250" }.info.time?.completedMs)
+        // (c) a message that arrives late joins the end without rebuilding the rest.
+        assertTrue(ledger.apply(GatewayEvent.MessageUpserted(info("m500", Role.Assistant, 600))))
+        val grown = ledger.snapshot()
+        assertEquals(501, grown.messages.size)
+        assertEquals("m500", grown.messages.last().info.id)
+        for (i in 0..499) assertSame(mid.messages[i], grown.messages[i], "rebuilt: ${grown.messages[i].info.id}")
+    }
+
+    @Test
+    fun `B-CHAT-096 PB-22 a reused snapshot still follows server order, new prompts and streamed words`() {
+        val ledger = TurnLedger(S)
+        ledger.load(
+            listOf(
+                msg(info("m1", Role.User, 1), text("p1", "m1", "fix it")),
+                msg(info("m2", Role.Assistant, 2), text("x", "m2", "")),
+                msg(info("m3", Role.Assistant, 3), tool("t3", "m3", "bash", ToolStatus.Running, start = 3)),
+            )
+        )
+        ledger.snapshot()
+        // (a) words streamed after the first delta reach their message at the next real change.
+        fun delta(words: String) =
+            GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, words)
+        assertTrue(ledger.apply(delta("Hel")))
+        assertFalse(ledger.apply(delta("lo")))
+        val step = tool("t3", "m3", "bash", ToolStatus.Running, start = 3, output = "a")
+        assertTrue(ledger.apply(GatewayEvent.PartUpserted(step)))
+        assertEquals("Hello", ledger.snapshot().messages.single { it.info.id == "m2" }.parts.single().text)
+        // (b) a report that moves a message's creation re-sorts it into server order.
+        assertTrue(ledger.apply(GatewayEvent.MessageUpserted(info("m3", Role.Assistant, 0))))
+        val moved = ledger.snapshot()
+        assertEquals(listOf("m3", "m1", "m2"), moved.messages.map { it.info.id })
+        assertEquals(listOf(TurnLedger.HEAD, "m1"), moved.turns.map { it.turnId })
+        // (c) a user message starts a turn only once it has words.
+        assertTrue(ledger.apply(GatewayEvent.MessageUpserted(info("m4", Role.User, 4))))
+        assertEquals(listOf(TurnLedger.HEAD, "m1"), ledger.snapshot().turns.map { it.turnId })
+        assertTrue(ledger.apply(GatewayEvent.PartUpserted(text("p4", "m4", "again"))))
+        assertEquals(listOf(TurnLedger.HEAD, "m1", "m4"), ledger.snapshot().turns.map { it.turnId })
     }
 }
 
