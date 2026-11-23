@@ -63,15 +63,32 @@ public data class CustomProviderUi(
 
     /**
      * True when this state owns the provider sheet of [id]: a remove, from its question's answer to its end, or a
-     * restart started from that sheet. The provider sheet then shows the flow's own words.
+     * restart started from a stranded entry's sheet (and its end state). The provider sheet then shows the flow's
+     * own words.
      */
     public fun ownsProviderSheet(id: String): Boolean =
         providerId == id &&
-            (mode == CustomProviderMode.Remove || stage == CustomProviderStage.Restarting)
+            (mode == CustomProviderMode.Remove ||
+                (mode == CustomProviderMode.Add && ownsStrandedRestart()))
 
-    /** Clears a stale refused-remove state when a provider sheet is reopened; in-progress or waiting states stay. */
+    /**
+     * Clears stale refused-remove or non-remove end states when a provider sheet is reopened; in-progress or
+     * remove-waiting states stay.
+     */
     public fun reopened(): CustomProviderUi =
-        if (stage == CustomProviderStage.Removing && refusal != null) CustomProviderUi() else this
+        if (
+            (stage == CustomProviderStage.Removing && refusal != null) ||
+                (mode != CustomProviderMode.Remove && stage != CustomProviderStage.Restarting)
+        )
+            CustomProviderUi()
+        else this
+
+    private fun ownsStrandedRestart(): Boolean =
+        stage == CustomProviderStage.Restarting ||
+            stage == CustomProviderStage.RestartFailed ||
+            stage == CustomProviderStage.NotLoadedAfterRestart ||
+            stage == CustomProviderStage.Loaded ||
+            (stage == CustomProviderStage.SavedNotLoaded && refusal != null)
 
     /** The stage an engine outcome leads to. A refusal during a restart keeps the saved stage of its flow. */
     public fun after(outcome: CustomProviderOutcome): CustomProviderUi =

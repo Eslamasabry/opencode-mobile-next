@@ -515,8 +515,8 @@ internal fun ProviderFlowSheet(
         CustomProviderStage.RemovedNotRestarted -> RemoveWaitRestartSheet(provider, name, state, actions)
         CustomProviderStage.Removed -> RemoveDoneSheet(name, actions)
         CustomProviderStage.Removing -> RemoveRefusedSheet(name, flow, tryAgain, actions)
-        // A restart from a stranded entry's sheet that ended with the provider listed: the add flow's own words.
-        else -> FlowEndedSheet(name, flow, actions)
+        // A restart from a stranded entry's sheet that ended: the add flow's own words, Details and actions.
+        else -> FlowEndedSheet(name, flow, state, actions)
     }
 }
 
@@ -583,12 +583,48 @@ private fun RemoveDoneSheet(name: String, actions: LibraryActions) {
     }
 }
 
-/** A flow that owns the provider sheet but is none of the remove's states (a stranded restart that loaded it). */
+/**
+ * A restart started from a stranded entry's sheet that ended: the add flow's own words, its Details fold, and
+ * either Restart again or Add key once the server lists it.
+ */
 @Composable
-private fun FlowEndedSheet(name: String, flow: CustomProviderUi, actions: LibraryActions) {
+private fun FlowEndedSheet(
+    name: String,
+    flow: CustomProviderUi,
+    state: LibraryUi,
+    actions: LibraryActions,
+) {
+    val loaded = flow.stage == CustomProviderStage.Loaded
+    val row = state.inventory.providers.firstOrNull { it.id == flow.providerId }
+    val primary =
+        if (loaded)
+            row?.let { provider ->
+                KitAction(
+                    stringResource(Res.string.nlibCustomAddKey, name),
+                    {
+                        val only =
+                            soleMethodToConnect(
+                                provider,
+                                state.inventory.capabilities?.integrationCommandAuth == true,
+                            )
+                        actions.show(
+                            if (only != null) LibrarySheet.Method(provider, only)
+                            else LibrarySheet.Provider(provider)
+                        )
+                    },
+                )
+            }
+        else
+            KitAction(
+                stringResource(Res.string.nlibCustomRestart),
+                { actions.restartForProvider(flow.providerId) },
+                working = state.working,
+            )
     val (title, body) = resultWords(flow.stage, name)
-    KitSheet(true, { actions.show(null) }, name) {
+    KitSheet(true, { actions.show(null) }, name, dismissible = !state.working, primary = primary) {
         KitNotice(body, title = title, tone = resultTone(flow.stage))
+        flow.refusal?.let { KitNotice(refusalWords(it)) }
+        flow.detail?.let { CustomProviderDetails(it) }
     }
 }
 
