@@ -43,7 +43,7 @@ class TopBarFitTest {
             onNodeWithText(fourth).assertDoesNotExist()
             onNodeWithTag("kit-top-bar-more").performClick()
             waitForIdle()
-            assertWhole(fourth, "in the overflow")
+            assertWhole(fourth, "in the overflow", oneLine = false)
         }
 
     @Test
@@ -60,7 +60,7 @@ class TopBarFitTest {
             waiting.forEach { label -> onNodeWithText(label).assertDoesNotExist() }
             onNodeWithTag("kit-top-bar-more").performClick()
             waitForIdle()
-            waiting.forEach { label -> assertWhole(label, "in the overflow") }
+            waiting.forEach { label -> assertWhole(label, "in the overflow", oneLine = false) }
         }
 
     @Test
@@ -123,16 +123,35 @@ class TopBarFitTest {
         val results = mutableListOf<TextLayoutResult>()
         val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).fetchSemanticsNode()
         title.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(results)
-        val whole = !results.first().hasVisualOverflow && results.first().lineCount == 1
-        assertTrue(whole, "the title keeps its whole single line at this width")
+        val layout = results.first()
+        val whole = !layout.hasVisualOverflow && !cut(layout) && layout.lineCount == 1
+        val seen = "${layout.lineCount} line(s), cut ${cut(layout)}, overflow ${layout.hasVisualOverflow}"
+        assertTrue(whole, "the title keeps its whole single line at this width: $seen")
     }
 
-    /** [label]'s words are laid out on one line, whole, with no ellipsis, wherever the bar shows them. */
-    private fun androidx.compose.ui.test.ComposeUiTest.assertWhole(label: String, where: String) {
+    /**
+     * [label]'s words are laid out whole, no line ending in an ellipsis: on one line in the bar, on as many lines as
+     * the overflow's narrower menu needs for them.
+     */
+    private fun androidx.compose.ui.test.ComposeUiTest.assertWhole(
+        label: String,
+        where: String,
+        oneLine: Boolean = true,
+    ) {
         val layout = textLayout(label)
-        val cut = (0 until layout.lineCount).any { layout.isLineEllipsized(it) }
-        assertTrue(!layout.hasVisualOverflow && !cut && layout.lineCount == 1, "$label is drawn in full $where")
+        val whole = !layout.hasVisualOverflow && !cut(layout) && (!oneLine || layout.lineCount == 1)
+        val seen = "${layout.lineCount} line(s), cut ${cut(layout)}, overflow ${layout.hasVisualOverflow}"
+        assertTrue(whole, "$label is drawn in full $where: $seen")
     }
+
+    /**
+     * A line ends in an ellipsis, or runs past the layout's width: on desktop a word too long for the last line is
+     * simply cut off there, with no ellipsis and no overflow flag.
+     */
+    private fun cut(layout: TextLayoutResult): Boolean =
+        (0 until layout.lineCount).any {
+            layout.isLineEllipsized(it) || layout.getLineRight(it) - layout.getLineLeft(it) > layout.size.width
+        }
 
     private fun androidx.compose.ui.test.ComposeUiTest.textLayout(text: String): TextLayoutResult {
         val results = mutableListOf<TextLayoutResult>()

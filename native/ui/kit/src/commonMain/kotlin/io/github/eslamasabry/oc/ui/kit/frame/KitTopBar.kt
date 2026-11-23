@@ -614,6 +614,9 @@ private val TITLE_ACTIONS_STEP = (Space.S2 + Space.S2).dp
 /** Any other bar's step between the title's box and the actions: its row's space1. */
 private val ROW_STEP = Space.S1.dp
 
+/** Where a bar's words split: each of the pieces is laid out on a line of its own where it fits. */
+private val WHITE_SPACE = Regex("\\s+")
+
 /** The bar a split works for. */
 private data class TopBarShape(
     /** The room before the title's box: Back's 56 dp rail, or the gutter and, if any, a Close button. */
@@ -663,10 +666,15 @@ private class BarText(private val measurer: TextMeasurer, private val density: D
             .size
             .width
 
-    /** Whether the words stay whole in [room] px, wrapped to their [lines]: never ending in an ellipsis. */
-    fun whole(words: String, style: TextStyle, room: Int, lines: Int): Boolean =
-        !measurer
-            .measure(
+    /**
+     * Whether the words stay whole in [room] px, wrapped to their [lines]: every line fits the room and none ends in an
+     * ellipsis. The layout's overflow flag shows neither on a last line: a word too long for it simply runs past the
+     * room on desktop, and neither a flag nor the line's extent shows that, so a word wider than the room is itself
+     * the proof of a cut.
+     */
+    fun whole(words: String, style: TextStyle, room: Int, lines: Int): Boolean {
+        val layout =
+            measurer.measure(
                 AnnotatedString(words),
                 style,
                 constraints = Constraints(maxWidth = room),
@@ -675,7 +683,13 @@ private class BarText(private val measurer: TextMeasurer, private val density: D
                 overflow = TextOverflow.Ellipsis,
                 density = density,
             )
-            .hasVisualOverflow
+        val cut =
+            (0 until layout.lineCount).any {
+                layout.isLineEllipsized(it) ||
+                    layout.getLineRight(it) - layout.getLineLeft(it) > layout.size.width
+            }
+        return !layout.hasVisualOverflow && !cut && words.split(WHITE_SPACE).all { width(it, style) <= room }
+    }
 
     /** Each action's whole width in px: a 48 dp icon button for a glyph drawn as one, else its padded words. */
     fun widths(candidates: List<KitLineAction>, glyphIsIcon: Boolean, style: TextStyle): List<Int> =
