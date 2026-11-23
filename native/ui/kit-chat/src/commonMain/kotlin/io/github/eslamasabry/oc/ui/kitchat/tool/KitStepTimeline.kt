@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
@@ -60,7 +61,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
@@ -370,17 +370,19 @@ internal fun RailNode(
     // edge crosses is faint, never cut at full ink, and at Full motion it settles the last few dp into place (#001).
     val reveal = LocalRailReveal.current
     val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
+    val fullHeight = remember { IntArray(1) }
     val fadePx = with(density) { REVEAL_FADE_DP.dp.toPx() }
     SideEffect { if (reveal != null) rail.shares[key] = { reveal.ink(at[0], fadePx) } else rail.shares.remove(key) }
-    val rise = if (KitMotion.state.travels) ARRIVAL_RISE_DP.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
     Box(
-        modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .onPlaced { at[0] = it }
+            .layout { measurable, constraints ->
+                val p = measurable.measure(constraints)
+                layout(p.width, fullHeight[0]) { p.place(0, 0) }
+            }
             .graphicsLayer {
                 if (reveal != null) {
                     alpha = reveal.ink(at[0], fadePx)
-                    translationY = rise.toPx() * (1f - reveal.shown(at[0]))
                     // The node sits outside the row's box, in the rail's column: an offscreen layer (what a faded layer
                     // draws into by default) is cut to the box and dropped the glyph until the row stood at full ink, so
                     // rows popped their glyph in at the end (owner 2026-11-14). The fade is applied to each mark instead.
@@ -388,31 +390,45 @@ internal fun RailNode(
                 }
             }
     ) {
-        content()
-        Box(
-            Modifier.offset(x = -m.column, y = top)
-                .width(m.glyph)
-                .height(box)
-                .clearAndSetSemantics {}
-                .onGloballyPositioned { c ->
-                    val root = rail.root ?: return@onGloballyPositioned
-                    if (root.isAttached && c.isAttached) {
-                        val at = root.localPositionOf(c, Offset(c.size.width / 2f, c.size.height / 2f))
-                        val centre = at.y // F: lib/ui/kit/chat/kit_step_node.dart:72
-                        rail.centres[key] = centre
-                        rail.spans[key] = (centre - nodeHalf)..(centre + nodeHalf)
-                        rail.columns[key] = at.x
-                    }
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            CompositionLocalProvider(LocalStepLightRail provides light) { node() }
+        Box(modifier.fillMaxWidth().revealRowHeight(reveal, at, fullHeight)) {
+            content()
+            Box(
+                Modifier.offset(x = -m.column, y = top)
+                    .width(m.glyph)
+                    .height(box)
+                    .clearAndSetSemantics {}
+                    .recordRailPosition(rail, key, nodeHalf),
+                contentAlignment = Alignment.Center,
+            ) {
+                CompositionLocalProvider(LocalStepLightRail provides light) { node() }
+            }
         }
     }
 }
 
-/** How far a row that arrives or opens rises into place at Full motion (Flutter `_StepArrival.rise`). */
-internal const val ARRIVAL_RISE_DP: Int = 6
+/** Reports the revealed height on the row node while saving its full height for the enclosing reveal. */
+private fun Modifier.revealRowHeight(
+    reveal: RailReveal?,
+    at: Array<LayoutCoordinates?>,
+    fullHeight: IntArray,
+): Modifier = layout { measurable, constraints ->
+    val p = measurable.measure(constraints)
+    fullHeight[0] = p.height
+    val h = if (reveal != null) (p.height * reveal.shown(at[0])).roundToInt().coerceIn(0, p.height) else p.height
+    layout(p.width, h) { p.place(0, 0) }
+}
+
+private fun Modifier.recordRailPosition(rail: StepRail, key: Any, nodeHalf: Float): Modifier =
+    onGloballyPositioned { c ->
+        val root = rail.root ?: return@onGloballyPositioned
+        if (root.isAttached && c.isAttached) {
+            val pos = root.localPositionOf(c, Offset(c.size.width / 2f, c.size.height / 2f))
+            val centre = pos.y // F: lib/ui/kit/chat/kit_step_node.dart:72
+            rail.centres[key] = centre
+            rail.spans[key] = (centre - nodeHalf)..(centre + nodeHalf)
+            rail.columns[key] = pos.x
+        }
+    }
 
 /**
  * One row of a step list that comes and goes with the list's motion (owner 2026-11-14): shown while [visible]; a row
