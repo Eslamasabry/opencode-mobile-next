@@ -435,6 +435,8 @@ public fun KitTopBar(
             // The bar's half of the earlier 16 dp step (F: kit_top_bar.dart:394); the title row keeps the other 8 dp
             // after its words. A tight bar gives both back to the title's words or to an action that fits thanks of it.
             // A row, not a box: the actions and the overflow control stay beside each other, not one over the other.
+            // The step only where the action row draws something: an empty row must not take the title's room.
+            val drawsActions = shown.isNotEmpty() || hidden.isNotEmpty() || more != null
             val stepped: @Composable () -> Unit =
                 { Row(Modifier.padding(start = Space.S2.dp)) { actionRow() } }
             BackBar(
@@ -456,7 +458,7 @@ public fun KitTopBar(
                         ) { u() }
                     }
                 },
-                actions = if (barFit.tight) actionRow else stepped,
+                actions = if (barFit.tight || !drawsActions) actionRow else stepped,
             )
         } else {
         Row(
@@ -559,7 +561,9 @@ private fun BackBar(
         val actionsP = actionsM.map { it.measure(loose) }
         val exitW = exitP.maxOfOrNull { it.width } ?: 0
         val actionsW = actionsP.maxOfOrNull { it.width } ?: 0
-        val gap = if (actionsW > 0) 0 else Space.S2.dp.roundToPx()
+        // The step between the title and the actions, where it stays, is the actions row's own start padding, so the
+        // layout never adds one: an action row that draws nothing takes no room from the title either.
+        val gap = 0
         val end = Space.S1.dp.roundToPx() // F: kit_top_bar.dart:446 (_endRoom without a last glyph)
         // The title row pads its words by space 2 itself: its box starts that much before the 56 dp text rail.
         // The title row's own 8 dp start padding may lie over Back's last 4 dp of empty target edge.
