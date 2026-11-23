@@ -57,6 +57,7 @@ class ReportProblemCaptureTest {
         val slow = trace.begin("slow")
         trace.mark("fast")
         slow.finish()
+        assertNotNull(capture).close()
         assertEquals(2, report.entries.size)
         assertContains(report.reportText(), "slow")
         assertContains(report.reportText(), "fast")

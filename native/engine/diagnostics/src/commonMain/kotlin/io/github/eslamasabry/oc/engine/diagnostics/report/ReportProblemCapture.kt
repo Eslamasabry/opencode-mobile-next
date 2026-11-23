@@ -4,6 +4,8 @@ import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfSpan
 import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
 import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 /** A platform subscription to thermal changes; closing the capture detaches it too. */
@@ -20,11 +22,14 @@ public fun interface ProblemThermalReadings {
  * capacity of timings). A repeated error is kept as a count (B-332): each change of a ring entry adds
  * the occurrences it gained, with the entry's first time, so repeats folded before attachment or
  * coalesced in one update keep their count; a long span that finishes after newer ones
- * is still kept. A finished timing reaches disk in the same call that finished it. Clearing
- * [Diagnostics] (Settings › Clear) also erases the restored persisted evidence, even when the
- * in-memory ring is empty, and never replays old timings. With [typedAndroidExits] the diagnostics
- * copy of Android's exit record (source [ReportProblem.ANDROID_EXIT_SOURCE]) is skipped because the
- * caller records the typed exit itself.
+ * is still kept. A finished timing reaches disk in the same call that finished it when no timing
+ * was written in the last five seconds; timings that finish closer together are kept in memory
+ * and written together in one report write, by the first timing five seconds or more after the
+ * last write, before the next error, or on [close]. Clearing [Diagnostics] (Settings › Clear)
+ * also erases the restored persisted evidence, even when the in-memory ring is empty, and never
+ * replays old timings. With [typedAndroidExits] the diagnostics copy of Android's exit record
+ * (source [ReportProblem.ANDROID_EXIT_SOURCE]) is skipped because the caller records the typed
+ * exit itself.
  *
  * Storage problems never throw into the app being diagnosed: [ReportProblem.storageFailed] says so
  * instead.
@@ -40,6 +45,8 @@ public class ReportProblemCapture(
     private val seenErrors = mutableMapOf<Long, Pair<Instant, Int>>()
     private val historicalTimingIds = mutableSetOf<Long>()
     private val closed = AtomicBoolean(false)
+    private val pendingTimings = ArrayDeque<PerfSpan>()
+    private var lastFlush: Instant? = null
     private val detachRecorded: () -> Unit
     private val detachCleared: () -> Unit
     private val detachTimings: () -> Unit
@@ -71,6 +78,8 @@ public class ReportProblemCapture(
         lock.withLock {
             if (closed.load()) return@withLock
             seenErrors.clear()
+            pendingTimings.clear()
+            lastFlush = null
             report.clear()
         }
     }
@@ -78,6 +87,7 @@ public class ReportProblemCapture(
     private fun captureErrors() {
         lock.withLock {
             if (closed.load()) return@withLock
+            flushTimings()
             val list = diagnostics.errors.value
             val current = list.mapTo(HashSet()) { it.id }
             seenErrors.keys.retainAll(current)
@@ -106,8 +116,22 @@ public class ReportProblemCapture(
     private fun onTiming(span: PerfSpan) {
         if (closed.load()) return
         lock.withLock {
-            if (!closed.load() && !historicalTimingIds.remove(span.id)) report.recordTiming(span)
+            if (closed.load() || historicalTimingIds.remove(span.id)) return@withLock
+            val now = report.clock.now()
+            pendingTimings.addLast(span)
+            while (pendingTimings.size > report.maxEntries) pendingTimings.removeFirst()
+            val last = lastFlush
+            if (last == null || now - last >= FLUSH_EVERY) flushTimings(now)
         }
+    }
+
+    /** Caller holds [lock]. Writes every pending timing in one report write; a refused write drops them too. */
+    private fun flushTimings(now: Instant = report.clock.now()) {
+        if (pendingTimings.isEmpty()) return
+        val spans = pendingTimings.toList()
+        pendingTimings.clear()
+        report.recordTimings(spans)
+        lastFlush = now
     }
 
     private fun onThermal(status: String, headroom: Double?) {
@@ -119,15 +143,21 @@ public class ReportProblemCapture(
     }
 
     /**
-     * Detaches the ring and the trace. Safe to repeat; keeps the evidence and does not close the
-     * sources.
+     * Detaches the ring and the trace, after writing a timing that is still waiting. Safe to
+     * repeat; keeps the evidence and does not close the sources.
      */
     public fun close() {
-        val closing = lock.withLock { closed.compareAndSet(expectedValue = false, newValue = true) }
-        if (!closing) return
+        lock.withLock {
+            if (!closed.compareAndSet(expectedValue = false, newValue = true)) return@withLock
+            flushTimings()
+        }
         detachRecorded()
         detachCleared()
         detachTimings()
         detachThermal()
+    }
+
+    private companion object {
+        private val FLUSH_EVERY: Duration = 5.seconds
     }
 }
