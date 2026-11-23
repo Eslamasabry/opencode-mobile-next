@@ -777,12 +777,14 @@ private fun OneStep(
     // Issue 147 (F-033): a command that is running and has put something out opens by itself, so its growing tail is in
     // view without a tap. It stays open when the command ends (its output stays readable); the person's own fold wins.
     // A delegated step whose sub-agent waits on the person opens by itself too: its "Open its conversation" is in view.
-    if (opensItself(step, waitingForYou, text != null) || (waitingForYou && child != null))
+    val autoOpen = opensItself(step, waitingForYou, text != null) || (waitingForYou && child != null)
+    if (autoOpen)
         LaunchedEffect(key) { if (folds.open[key] == null) folds.open[key] = true }
+    val isOpen = folds.open[key] ?: autoOpen
     KitToolRow(
         view = view,
-        opened = folds.open[key] == true,
-        onToggle = { folds.open[key] = !(folds.open[key] ?: false) },
+        opened = isOpen,
+        onToggle = { folds.open[key] = !isOpen },
         modifier = Modifier.testTag("chat-step-${step.partId}"),
         body =
             if (!hasBody) null
