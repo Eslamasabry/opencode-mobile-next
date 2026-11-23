@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
+import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWorkCache
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
 import io.github.eslamasabry.oc.engine.transcript.ledger.turnWork
@@ -127,6 +128,7 @@ public data class TurnFactsUi(
  */
 public class TurnFactsPresenter(private val clock: Clock) {
     private val stall = TurnStallTracker()
+    private val workCache = TurnWorkCache()
     private var lastProgress: Long? = null
     private var readingSnapshot: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerSnapshot? =
         null
@@ -240,6 +242,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     waitingCalls = waitingCalls,
                     askedCalls = askedCalls.toSet(),
                     liveChildren = liveChildren,
+                    cache = workCache,
                 )
                 .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs, feed.waits) }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
