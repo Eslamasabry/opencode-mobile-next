@@ -221,7 +221,11 @@ internal fun transcriptReading(
                 endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
             else if (prompt != null && !command && !compact && serverStop != null && said)
                 endNotes[turn.turnId] = serverStop
-            if (!declined && !cutOff && prompt != null && !command && !compact && !said) {
+            // NEW-a: the newest turn's no-words closing note (Silent, Failed, a stop) waits for the run's own end:
+            // the server said nothing runs, no other note took the one closing line, and no words came back.
+            val replyIsIdle = idleSaid && !declined && !cutOff
+            val plainPrompt = prompt != null && !command && !compact
+            if (replyIsIdle && plainPrompt && !said) {
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {

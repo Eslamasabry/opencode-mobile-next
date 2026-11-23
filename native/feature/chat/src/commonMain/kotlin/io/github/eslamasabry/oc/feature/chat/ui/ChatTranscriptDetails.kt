@@ -277,7 +277,7 @@ internal fun TranscriptDetail(
             "agent-info" -> stringResource(Res.string.chatUiAgentNote)
             "agent-warning" -> stringResource(Res.string.chatUiAgentWarning)
             "agent-error" -> stringResource(Res.string.chatUiAgentProblem)
-            "instructions" -> stringResource(Res.string.sessionInstructionsUpdated)
+            "instructions", "instructions.updated" -> stringResource(Res.string.sessionInstructionsUpdated)
             "skill" ->
                 stringResource(Res.string.chatUiSkill) + " · " + mask(part.filename ?: part.text)
             "synthetic" -> part.filename ?: stringResource(Res.string.chatUiContextAdded)
@@ -289,7 +289,7 @@ internal fun TranscriptDetail(
         }
     val body =
         when (kind) {
-            "instructions" -> stringResource(Res.string.sessionInstructionsApplied)
+            "instructions", "instructions.updated" -> stringResource(Res.string.sessionInstructionsApplied)
             "skill" -> if (part.filename == null) "" else part.text
             "agent-error", "app-continue" -> ""
             else -> part.text
