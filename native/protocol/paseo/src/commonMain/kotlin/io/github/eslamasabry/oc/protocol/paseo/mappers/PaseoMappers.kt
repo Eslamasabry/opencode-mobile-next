@@ -433,8 +433,7 @@ public fun paseoItemMessage(
                 if (item["stoppedByPlan"].let { it is JsonPrimitive && !it.isString && it.content == "true" })
                     JsonObject((base ?: JsonObject(emptyMap())) + (PLAN_STOPPED_KEY to JsonPrimitive(true)))
                 else base
-            val tool = toolState(status, input, output, error, metadata).withMessageTime(createdMs, completedMs)
-            newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = tool)
+            newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = toolState(status, input, output, error, metadata))
         }
         "todo" -> {
             val todos = item.arr("items") ?: JsonArray(emptyList())

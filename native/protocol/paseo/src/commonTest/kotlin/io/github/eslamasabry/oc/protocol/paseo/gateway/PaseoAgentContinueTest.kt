@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.protocol.paseo.mappers.PASEO_CONTINUE_MAX
 import io.github.eslamasabry.oc.protocol.paseo.mappers.PASEO_CONTINUE_NOTICE
 import io.github.eslamasabry.oc.protocol.paseo.mappers.PASEO_CONTINUE_PROMPT
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemMessage
-import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoTimeline
 import io.github.eslamasabry.oc.protocol.paseo.str
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -181,45 +180,6 @@ class PaseoAgentContinueTest {
         val done = mapped(commandItem(status = "completed", output = "ok")).parts.single().tool!!
         assertNull(done.metadata?.get("background"))
         assertNull(mapped(commandItem(), provider = "claude").parts.single().tool!!.metadata?.get("background"))
-    }
-
-    @Test
-    fun `a left-running command takes its message created time as start and keeps it on end`() {
-        val started = "2026-10-10T10:00:02.000Z"
-        val ended = "2026-10-10T10:00:22.000Z"
-        val startedMs = kotlin.time.Instant.parse(started).toEpochMilliseconds()
-        val endedMs = kotlin.time.Instant.parse(ended).toEpochMilliseconds()
-        val startEntry =
-            mapOf("provider" to "antigravity", "item" to commandItem(), "timestamp" to started, "seqStart" to 2)
-        val wordsEntry =
-            mapOf(
-                "provider" to "antigravity",
-                "item" to mapOf("type" to "assistant_message", "text" to startedWords, "messageId" to "a1"),
-                "timestamp" to "2026-10-10T10:00:12.000Z",
-                "seqStart" to 3,
-            )
-        val live = paseoTimeline(agentId, jsonOf("entries" to listOf(startEntry, wordsEntry)), busy = false)
-        val running = live.messages.first().parts.single().tool!!
-        assertEquals(ToolStatus.Running, running.status)
-        assertEquals(JsonPrimitive(true), running.metadata?.get("background"))
-        assertEquals(startedMs, running.startedAtMs, "the running step takes its message created time")
-        assertNull(running.completedAtMs, "a running step has no end time yet")
-        val endEntry =
-            mapOf(
-                "provider" to "antigravity",
-                "item" to commandItem(status = "completed", output = "Linux"),
-                "timestamp" to ended,
-                "seqStart" to 4,
-            )
-        val closed = paseoTimeline(agentId, jsonOf("entries" to listOf(startEntry, wordsEntry, endEntry)), busy = false)
-        val done = closed.messages.first().parts.single().tool!!
-        assertEquals(ToolStatus.Completed, done.status)
-        assertNull(done.metadata?.get("background"))
-        assertEquals(startedMs, done.startedAtMs, "the finished step keeps the original start time")
-        assertEquals(endedMs, done.completedAtMs, "the finished step records its completion time")
-        val noTime = paseoItemMessage(agentId, commandItem(), "m2", "antigravity", null, null)!!.parts.single().tool!!
-        assertNull(noTime.startedAtMs, "without a message time, no start time is invented")
-        assertNull(noTime.completedAtMs)
     }
 
     @Test
