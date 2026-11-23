@@ -146,3 +146,9 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10120 | build | 2026-11-21 | 3.0.1 release candidate build 2 |
 | 10130 | release | 2026-11-21 | native release 3.0.1+10130 (public lineage) |
 | 10131 | build | 2026-11-22 | 3.0.2 release candidate build |
+| 10132 | seen | 2026-11-23 | on the branch native/pins-302: interim 3.0.2 line with the agent pin moves, not the candidate |
+| 10133 | seen | 2026-11-23 | on the branch native/pins-302: interim 3.0.2 line with the agent pin moves and Paseo 0.17.2, not the candidate |
+| 10134 | seen | 2026-11-23 | on the branch native/test-10134: owner phone test build (crash fix) |
+| 10135 | seen | 2026-11-23 | on the branch native/test-10135: owner phone test build (crash, memory and steps fixes) |
+| 10136 | seen | 2026-11-23 | on the branch native/test-10136: owner phone test build (crash, memory and steps fixes) |
+| 10137 | build | 2026-11-23 | 3.0.2 release candidate build 2 |
