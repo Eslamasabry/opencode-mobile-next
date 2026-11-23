@@ -58,6 +58,20 @@ internal class PartEntry(var part: Part, var version: Long) {
     var promptVersion: Long = -1
 
     /**
+     * The reasoning part's whole thought text, kept while the part's version holds (no copy per
+     * publish).
+     */
+    var thoughtText: String? = null
+    var thoughtVersion: Long = -1
+
+    /**
+     * Find's join of a non-reasoning part's own text, kept while the part's version holds (no
+     * copy per publish).
+     */
+    var searchJoin: String? = null
+    var searchVersion: Long = -1
+
+    /**
      * `<messageId>/<partId>`. Plan 09 §3.7 says `b:<partId>:<offset>`, but OC2 part ids are
      * per-message ordinals (`text-0`, `reasoning-0`; 04 §7.6), so the part id alone repeats in
      * every step and turn.
@@ -607,15 +621,13 @@ internal class TranscriptModel(
                     PartType.Reasoning -> {
                         val text = pe.raw ?: continue
                         val first = text.lineSequence().firstOrNull { it.isNotBlank() } ?: continue
-                        val made = text.toString()
-                        counters.thoughtChars += made.length
                         rows +=
                             reuse(
                                 ThoughtRow(
                                     "thought:${p.messageId}/${p.id}",
                                     turnId,
                                     first.trim(),
-                                    text = made,
+                                    text = thoughtTextOf(pe),
                                     live = !p.ended && !finished,
                                 )
                             )
@@ -727,11 +739,7 @@ internal class TranscriptModel(
             val shown = row(key) ?: continue
             val text =
                 if (part.type == PartType.Reasoning) (shown as? ThoughtRow)?.text ?: entry.raw?.toString().orEmpty()
-                else
-                    listOf(part.searchText, entry.raw?.toString().orEmpty())
-                        .filter { it.isNotBlank() }
-                        .joinToString("\n")
-                        .also { counters.searchChars += it.length }
+                else searchJoinOf(entry)
             if (text.isNotBlank())
                 (out ?: ArrayList<SearchText>().also { out = it }) +=
                     SearchText(key, "${part.messageId}/${part.id}", text)
@@ -765,6 +773,31 @@ internal class TranscriptModel(
         pe.promptRow = row
         pe.promptVersion = pe.version
         return row
+    }
+
+    /** The reasoning part's whole thought text, copied once per part version and counted once. */
+    private fun thoughtTextOf(pe: PartEntry): String {
+        val cached = pe.thoughtText
+        if (cached != null && pe.thoughtVersion == pe.version) return cached
+        val made = pe.raw?.toString().orEmpty()
+        pe.thoughtText = made
+        pe.thoughtVersion = pe.version
+        counters.thoughtChars += made.length
+        return made
+    }
+
+    /** Find's join of a non-reasoning part's own text, made once per part version and counted once. */
+    private fun searchJoinOf(pe: PartEntry): String {
+        val cached = pe.searchJoin
+        if (cached != null && pe.searchVersion == pe.version) return cached
+        val made =
+            listOf(pe.part.searchText, pe.raw?.toString().orEmpty())
+                .filter { it.isNotBlank() }
+                .joinToString("\n")
+        pe.searchJoin = made
+        pe.searchVersion = pe.version
+        counters.searchChars += made.length
+        return made
     }
 
     private fun noticeKindOf(p: Part): NoticeKind =
