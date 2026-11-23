@@ -273,6 +273,8 @@ internal class ReplyActions(
     val onOpenProviders: () -> Unit = {},
     /** S28 story 6: a finished shell step's "Run this command again" (null = this server runs no shell here). */
     val onRerunCommand: ((String) -> Unit)? = null,
+    /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
+    val onOpenChanges: (() -> Unit)? = null,
 )
 
 /**

@@ -62,7 +62,8 @@ class EditPreviewScrollTest {
         return TurnStep("w1", toolFacts("write", state), StepState.Done, 40, 1_000, toolOutputView(state, "write"))
     }
 
-    private fun reply() = ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {})
+    private fun reply(onOpenChanges: (() -> Unit)? = null) =
+        ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {}, onOpenChanges = onOpenChanges)
 
     /** The page the conversation draws: the step sits 300 dp down, so only the page can take a drag. */
     @Composable
@@ -167,7 +168,7 @@ class EditPreviewScrollTest {
         var opened = 0
         for ((i, scale) in listOf(1f, 1.3f).withIndex()) {
             kitUiTest(360, 760) {
-                setContent { E20Scene(scale) { Page(step, reply()) {} } }
+                setContent { E20Scene(scale) { Page(step, reply { opened++ }) {} } }
                 waitForIdle()
                 val where = "360 dp at ${scale}x"
                 assertTrue(

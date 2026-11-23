@@ -243,7 +243,7 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
         ToolKind.Patch -> {
             val files =
                 remember(kind, input, metadata, mask) { stepDiffs(kind, input, metadata, mask) }
-            if (files.isEmpty()) StepOutput(text, reply) else files.forEach { StepDiff(it) }
+            if (files.isEmpty()) StepOutput(text, reply) else files.forEach { StepDiff(it, reply) }
             metadata["diagnostics"]
                 ?.takeIf { it != JsonNull }
                 ?.let { TechnicalText(it.toString(), reply) }
@@ -577,24 +577,21 @@ private fun StepProse(text: String, reply: ReplyActions?, key: String) {
     }
 }
 
+/** The preview under an opened edit step never grows past 12 lines: a cut one offers Changes instead. */
 @Composable
-private fun StepDiff(file: DiffFile) {
-    var full by rememberSaveable(file.path) { mutableStateOf(false) }
+private fun StepDiff(file: DiffFile, reply: ReplyActions?) {
     MaskedLine(file.path)
     val lines = stringResource(Res.string.tools44Lines)
     val hidden = stringResource(Res.string.tools44HiddenLines)
     KitDiffView(
         file,
-        maxLines = if (full) Int.MAX_VALUE else 12,
+        maxLines = 12,
         hunkLabel = { _, _, start, end -> "$lines $start–$end" },
         gapLabel = { "$hidden: $it" },
     )
-    if (!full && file.totalLines > 12)
-        KitButton(
-            stringResource(Res.string.tools44ShowAll),
-            { full = true },
-            role = KitButtonRole.Tertiary,
-        )
+    val onOpenChanges = reply?.onOpenChanges
+    if (file.totalLines > 12 && onOpenChanges != null)
+        KitButton(stringResource(Res.string.chatUiChanges), onOpenChanges, role = KitButtonRole.Tertiary)
 }
 
 private fun JsonObject.word(key: String): String? =

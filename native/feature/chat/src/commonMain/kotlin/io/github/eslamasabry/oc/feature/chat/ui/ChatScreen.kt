@@ -2076,6 +2076,7 @@ internal fun rememberReplyActions(
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
             onRerunCommand = onRerunCommand,
+            onOpenChanges = actions::openChanges,
         )
     }
 }

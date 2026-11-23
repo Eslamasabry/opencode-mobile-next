@@ -10,8 +10,10 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolOutputView
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.compareGolden
+import io.github.eslamasabry.oc.feature.chat.ui.ReplyActions
 import io.github.eslamasabry.oc.feature.chat.ui.ToolStepBody
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
@@ -23,7 +25,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * E20-S12 (owner's phone, 11-07): an opened Write drew its path and "Show all output" over code lines 1–2, and the
+ * E20-S12 (owner's phone, 11-07): an opened Write drew its path and "Changes" over code lines 1–2, and the
  * code started left of the card's text.
  */
 @OptIn(ExperimentalTestApi::class)
@@ -45,6 +47,8 @@ class E20S12WriteCardTest {
         return TurnStep("w1", toolFacts("write", state), StepState.Done, 40, 1_000, toolOutputView(state, "write"))
     }
 
+    private val reply = ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {}, onOpenChanges = {})
+
     @Composable
     private fun WriteRow(step: TurnStep, opened: Boolean) {
         KitToolRow(
@@ -62,7 +66,7 @@ class E20S12WriteCardTest {
             ),
             opened = opened,
             onToggle = {},
-            body = { ToolStepBody(step, null) },
+            body = { ToolStepBody(step, reply) },
         )
     }
 
@@ -71,7 +75,7 @@ class E20S12WriteCardTest {
     private val frames = listOf(Frame(360, 1200, "360"), Frame(600, 1200, "600"), Frame(800, 1200, "landscape"))
 
     @Test
-    fun `E20-S12 an opened Write stacks its path, code and Show all output on the card's text edge`() {
+    fun `E20-S12 an opened Write stacks its path, code and Changes on the card's text edge`() {
         val step = writeStep()
         for (frame in frames) for (scale in listOf(1f, 1.3f)) {
             kitUiTest(frame.width, frame.height) {
@@ -83,12 +87,12 @@ class E20S12WriteCardTest {
                 val pathLine = boundsOfText(path)
                 val first = boundsOfText("val line1 =", substring = true)
                 val twelfth = boundsOfText("val line12 =", substring = true)
-                val more = boundsOfText("Show all output")
+                val more = boundsOfText("Changes")
                 assertTrue(abs(body.left - title.left) < 1f, "$where: the body starts on the title's edge, $body vs $title")
                 assertTrue(abs(pathLine.left - title.left) < 1f, "$where: the path starts on the title's edge, $pathLine")
                 assertTrue(first.left >= body.left - 0.5f, "$where: the code starts at or inside the text edge, $first")
                 assertTrue(pathLine.bottom <= first.top + 0.5f, "$where: the path $pathLine is above line 1 $first")
-                assertTrue(twelfth.bottom <= more.top + 0.5f, "$where: Show all output $more is under line 12 $twelfth")
+                assertTrue(twelfth.bottom <= more.top + 0.5f, "$where: Changes $more is under line 12 $twelfth")
             }
         }
     }
