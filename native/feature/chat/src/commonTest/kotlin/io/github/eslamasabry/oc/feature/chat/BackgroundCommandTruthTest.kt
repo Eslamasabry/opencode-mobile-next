@@ -32,7 +32,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * B-CHAT-311..313: Antigravity moves a slow command to the background and ends its turn; the helper says nothing more
+ * B-CHAT-311..314: Antigravity moves a slow command to the background and ends its turn; the helper says nothing more
  * until the next prompt. The engine stops every step of a turn that is not the newest busy one, so the command read
  * "Stopped before it finished" while it went on. It reads Running, sits on the background line, and ends only on its
  * real result.
@@ -51,7 +51,7 @@ class BackgroundCommandTruthTest {
     private fun bash(
         callId: String = "c1",
         status: ToolStatus = ToolStatus.Running,
-        startedAtMs: Long = 2_000,
+        startedAtMs: Long? = 2_000,
         output: String? = null,
     ): Part {
         val background = status == ToolStatus.Running
@@ -70,7 +70,7 @@ class BackgroundCommandTruthTest {
                     output = output,
                     metadata = if (background) JsonObject(mapOf("background" to JsonPrimitive(true))) else null,
                     startedAtMs = startedAtMs,
-                    completedAtMs = if (status == ToolStatus.Completed) startedAtMs + 20_000 else null,
+                    completedAtMs = if (status == ToolStatus.Completed) startedAtMs?.plus(20_000) else null,
                 ),
         )
     }
@@ -85,7 +85,7 @@ class BackgroundCommandTruthTest {
             text = "I started it in the background and will report the output once it finishes.",
         )
 
-    private fun reply(vararg parts: Part) =
+    private fun reply(vararg parts: Part, time: MsgTime? = MsgTime(2_000, 12_000)) =
         MessageWithParts(
             MessageInfo(
                 "m2",
@@ -93,7 +93,7 @@ class BackgroundCommandTruthTest {
                 Role.Assistant,
                 providerId = "antigravity",
                 modelId = "m",
-                time = MsgTime(2_000, 12_000),
+                time = time,
             ),
             parts.toList().toImmutableList(),
         )
@@ -105,10 +105,11 @@ class BackgroundCommandTruthTest {
         )
 
     /** The person's prompt and the agent's reply, as the ledger holds them. */
-    private fun keeper(vararg parts: Part): TurnFeedKeeper = TurnFeedKeeper(sid).also { k ->
-        k.history(listOf(prompt, reply(*parts)))
-        k.link(ChatLink.Live)
-    }
+    private fun keeper(vararg parts: Part, time: MsgTime? = MsgTime(2_000, 12_000)): TurnFeedKeeper =
+        TurnFeedKeeper(sid).also { k ->
+            k.history(listOf(prompt, reply(*parts, time = time)))
+            k.link(ChatLink.Live)
+        }
 
     /**
      * The reply started and the agent ended its turn; the command goes on (nothing reaches the app until the next
@@ -164,6 +165,7 @@ class BackgroundCommandTruthTest {
         k.event(GatewayEvent.PartUpserted(bash(status = ToolStatus.Completed, output = "ok")), 60_000)
         val ended = presenter.present(k.feed.value, 61_000)
         assertEquals(StepState.Done, step(ended).state)
+        assertEquals(20_000L, step(ended).durationMs, "how long it took")
         assertTrue(ended.background.isEmpty(), "the status line clears")
         assertFalse(presenter.ticking(k.feed.value), "nothing runs: the clock stands still")
     }
@@ -183,5 +185,24 @@ class BackgroundCommandTruthTest {
         assertEquals(StepState.Stopped, step(stoppedFacts).state)
         assertTrue(stoppedFacts.background.isEmpty())
         assertFalse(presenter.ticking(stopped.feed.value))
+    }
+
+    @Test
+    fun `B-CHAT-314 a left-running command with no start time reads Running from its message's time`() {
+        val k = keeper(bash(startedAtMs = null), words)
+        turnEnded(k)
+        val facts = presenter.present(k.feed.value, 60_000)
+        val step = step(facts)
+        assertEquals(StepState.Running, step.state, "the command still runs")
+        assertEquals(2_000L, step.startedAtMs, "the row counts from the message time")
+        val task = facts.background.single()
+        assertEquals("c1", task.callId)
+        assertEquals(2_000L, task.sinceMs)
+        // Without a message time either, nothing says how long it has run: leave the engine's state.
+        val noTime = keeper(bash(startedAtMs = null), words, time = null)
+        turnEnded(noTime)
+        val noTimeFacts = presenter.present(noTime.feed.value, 60_000)
+        assertEquals(StepState.Stopped, step(noTimeFacts).state)
+        assertTrue(noTimeFacts.background.isEmpty())
     }
 }
