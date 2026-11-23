@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chat.presentation.StepEntry
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFamily
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFold
+import io.github.eslamasabry.oc.feature.chat.presentation.StepListCut
 import io.github.eslamasabry.oc.feature.chat.presentation.StepListRules
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
@@ -207,7 +208,7 @@ internal fun TurnWorkLine(
 ) {
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
-    val cut = remember(rows) { StepListRules.cut(rows) }
+    val rawCut = remember(rows) { StepListRules.cut(rows) }
     // A turn with a delegated step whose sub-agent waits on the person opens on entry (the person's own fold wins once
     // tapped), so the way to the child, "Open its conversation", is one tap from the row.
     val childNeeds = LocalChildNeedsYou.current
@@ -215,6 +216,7 @@ internal fun TurnWorkLine(
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
     val summed = StepListRules.sums(work.state, turnRuns)
+    val cut = if (summed) rawCut else keepOpenedRuns(rows, rawCut, folds)
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
@@ -257,6 +259,19 @@ internal fun TurnWorkLine(
         rows.forEachIndexed { i, row ->
             key(row.key) { KitStepItem(visible = i >= folded || open, order = i, makesRoom = !tapped) { entry(row) } }
         }
+    }
+}
+
+/** Keep a run the person tapped open in view instead of folding it away behind "Show earlier steps". */
+private fun keepOpenedRuns(rows: List<StepEntry>, cut: StepListCut, folds: TranscriptFolds): StepListCut {
+    val firstOpen =
+        rows.indexOfFirst { row ->
+            row is StepEntry.Run && folds.open["run:${row.steps.first().partId}"] == true
+        }
+    return when {
+        firstOpen < 0 || firstOpen >= cut.earlier.size -> cut
+        firstOpen < 2 -> StepListCut(emptyList(), rows, null)
+        else -> StepListRules.cut(rows, shown = rows.size - firstOpen)
     }
 }
 
