@@ -124,8 +124,9 @@ public object TopBarTitle {
  * Frame text: it never grows past 1.3×, and the title wraps to two lines from 1.3×.
  *
  * An action with an [KitLineAction.icon] is an icon button on phones and tablets (its words are what TalkBack says);
- * wide windows show the words, and where the room cannot hold them the action stays in the bar as its icon button. A
- * text action's words are never cut: the actions stay beside the title while
+ * wide windows show the words, and where the room cannot hold them the action stays in the bar as its icon button,
+ * except on a [backBesideTitle] bar, where it goes to [more] with the rest: that bar never moves. A text action's
+ * words are never cut: the actions stay beside the title while
  * their whole labels fit in the room the title keeps — 90 dp at least on a compact window, its whole single
  * line on wider ones — and the rest go to [more] whole. [large] is a hub's bar: the title in the 28 sp large
  * size on its own line, the actions on the title's line at the end (or beside Back).
@@ -236,7 +237,7 @@ public fun KitTopBar(
             limit,
             more != null,
             title,
-            TopBarShape(barWidthDp(window.widthDp), leadDp, large, oneRowBack, !(large && hasBack)),
+            TopBarShape(barWidthDp(window.widthDp), leadDp, large, oneRowBack, !(large && hasBack), backBesideTitle),
         )
     val shown = barFit.shown
     val hidden = barFit.hidden
@@ -644,6 +645,8 @@ private data class TopBarShape(
     val oneRow: Boolean,
     /** Whether the actions sit beside the title at all (a large bar with Back keeps them on Back's own row). */
     val titleBesideActions: Boolean,
+    /** The compact block beside Back (E20-S13, the chat bar): one block, whose menu lists what the bar hides. */
+    val backBesideTitle: Boolean,
 )
 
 /**
@@ -732,24 +735,25 @@ private class BarText(private val measurer: TextMeasurer, private val density: D
 
 /**
  * One bar's measured pieces, in px: each action's whole width, and which of them fit beside the title's room.
- * On a wide window, any glyph action whose words do not fit stays in the bar as a [minTarget] icon button, so its
- * width is still counted against the bar's room; only text-only actions move to the overflow.
+ * Where [glyphsStay], a wide window keeps any glyph action whose words do not fit in the bar as a [minTarget] icon
+ * button, so its width is still counted against the bar's room and only text-only actions move to the overflow.
  */
 private class BarFit(
     val available: Int,
     private val minTarget: Int,
     private val widths: List<Int>,
     private val actions: List<KitLineAction>,
-    private val glyphIsIcon: Boolean,
+    /** Whether a glyph action past the kept ones stays in the bar as its icon button, not in the overflow. */
+    private val glyphsStay: Boolean,
     private val hasMore: Boolean,
 ) {
-    /** Wide actions past [k] that carry a glyph: they stay in the bar as [minTarget] icon buttons. */
+    /** Actions past [k] that carry a glyph: where glyphs stay, they stay in the bar as [minTarget] icon buttons. */
     private fun iconCount(k: Int): Int =
-        if (glyphIsIcon) 0 else actions.drop(k).count { it.icon != null }
+        if (glyphsStay) actions.drop(k).count { it.icon != null } else 0
 
-    /** Whether anything past [k] moves to the overflow: all trailing actions on compact/medium, text-only on wide. */
+    /** Whether anything past [k] moves to the overflow: all of them, or only the text-only ones where glyphs stay. */
     private fun hasHidden(k: Int): Boolean =
-        if (glyphIsIcon) k < actions.size else actions.drop(k).any { it.icon == null }
+        if (glyphsStay) actions.drop(k).any { it.icon == null } else k < actions.size
 
     /** Total width of the actions that stay beside the title when [k] actions keep their primary width. */
     private fun actionsWidth(k: Int): Int = widths.take(k).sum() + iconCount(k) * minTarget
@@ -773,11 +777,11 @@ private class BarFit(
     fun titleRoom(k: Int, step: Int): Int =
         (available - actionsWidth(k) - overflow(k) - step).coerceAtLeast(0)
 
-    /** Builds the bar's split: primary actions up to [kept], any wide trailing glyphs as icons, and the rest hidden. */
+    /** Builds the bar's split: primary actions up to [kept], trailing glyphs as icons where they stay, rest hidden. */
     fun split(kept: Int, tight: Boolean): TopBarSplit {
         val rest = actions.drop(kept)
-        val asIcons = if (glyphIsIcon) emptyList() else rest.filter { it.icon != null }
-        val hidden = if (glyphIsIcon) rest else rest.filter { it.icon == null }
+        val asIcons = if (glyphsStay) rest.filter { it.icon != null } else emptyList()
+        val hidden = if (glyphsStay) rest.filter { it.icon == null } else rest
         return TopBarSplit(actions.take(kept) + asIcons, hidden, tight = tight, asIcons = asIcons)
     }
 }
@@ -786,9 +790,9 @@ private object TopBarActions {
     /**
      * Which actions stay beside the title and which go to the overflow. An action with a glyph is a 48 dp icon button
      * on compact and medium windows; a wide window shows its words, and where those do not fit it keeps the action as
-     * its icon button instead of moving it to the overflow. A text action's words are never cut: the actions stay, in
-     * the caller's order, while their whole labels fit in the room the title keeps, and the rest go to the overflow,
-     * whole.
+     * its icon button instead of moving it to the overflow, except on the compact block beside Back (the chat bar),
+     * where it goes to the overflow with the rest. A text action's words are never cut: the actions stay, in the
+     * caller's order, while their whole labels fit in the room the title keeps, and the rest go to the overflow, whole.
      *
      * A one-row Back bar keeps its earlier step between the title and the actions. The step gives way only where that
      * is what keeps the title's words whole beside the actions that stay, or what lets one more action stay in the bar.
@@ -828,7 +832,10 @@ private object TopBarActions {
                     minTarget = text.minTargetPx,
                     widths = text.widths(candidates, glyphIsIcon, labelStyle),
                     actions = actions,
-                    glyphIsIcon = glyphIsIcon,
+                    // A wide window keeps a glyph action whose words do not fit as its icon button, but not in the
+                    // compact block beside Back (the chat bar): there it waits in the bar's menu, which lists it by
+                    // name, and the bar's row stays put while its actions come and go.
+                    glyphsStay = !glyphIsIcon && !shape.backBesideTitle,
                     hasMore = hasMore,
                 )
             val titleShare = text.titleShare(window.cls, words, titleStyle, shape.titleBesideActions)
