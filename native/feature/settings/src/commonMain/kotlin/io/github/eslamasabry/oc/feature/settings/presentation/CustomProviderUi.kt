@@ -11,9 +11,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Where the add-a-provider sheet is (pull request 142). "Saved" and "loaded" are never one stage: [SavedNotLoaded],
- * [RestartFailed] and [NotLoadedAfterRestart] all mean the declaration is in the settings file and the server does not
- * list it yet.
+ * Where the add-, edit- or remove-a-provider sheet is (pull request 142, DESIGN §3). "Saved" and "loaded" are never
+ * one stage: [SavedNotLoaded], [RestartFailed] and [NotLoadedAfterRestart] all mean the declaration is in the
+ * settings file and the server does not list it yet; [RemovedNotRestarted], [RestartFailed] (in Remove mode) and
+ * [NotGoneAfterRestart] mean the entry is gone and the server still lists it.
  */
 public enum class CustomProviderStage {
     Form,
@@ -23,11 +24,33 @@ public enum class CustomProviderStage {
     Restarting,
     RestartFailed,
     NotLoadedAfterRestart,
+    /** The edit form: the id fixed, the other fields filled from the declared entry. */
+    Editing,
+    /** A remove is running (its confirmation's answer stays working); a refusal keeps this stage and its reason. */
+    Removing,
+    /** The entry left the settings file; the server still lists it until OpenCode restarts. */
+    RemovedNotRestarted,
+    /** The saved key is gone but the entry stayed: a second remove finishes the job. */
+    RemovePartial,
+    /** The id is already an app-written entry: Save asks before anything is written (4A). */
+    AskReplace,
+    /** Removed, and the restarted server no longer lists it. */
+    Removed,
+    /** Removed from the settings, restarted, and the server still lists it after polling. */
+    NotGoneAfterRestart,
 }
 
-/** The add-a-provider sheet's state. What the person types stays in the sheet's own fields. */
+/** Which flow owns the sheet: the words of a state differ by flow (DESIGN §3). */
+public enum class CustomProviderMode {
+    Add,
+    Edit,
+    Remove,
+}
+
+/** The add-, edit- or remove-a-provider sheet's state. What the person types stays in the sheet's own fields. */
 public data class CustomProviderUi(
     val stage: CustomProviderStage = CustomProviderStage.Form,
+    val mode: CustomProviderMode = CustomProviderMode.Add,
     /** Filled only by Save: an untouched form is never red. */
     val problems: ImmutableList<CustomProviderProblem> = persistentListOf(),
     /** Why nothing was saved (on the form), or why a restart was not asked for (after a save). */
@@ -40,30 +63,90 @@ public data class CustomProviderUi(
     /** The first problem of [field], or null: one message under each field. */
     public fun problem(field: CustomProviderField): CustomProviderProblem? = problems.firstOrNull { it.field == field }
 
-    /** The stage an engine outcome leads to. A refusal during a restart keeps the saved stage. */
+    /**
+     * True when this state owns the provider sheet of [id]: a remove, from its question's answer to its end, or a
+     * restart started from a stranded entry's sheet (and its end state). The provider sheet then shows the flow's
+     * own words.
+     */
+    public fun ownsProviderSheet(id: String): Boolean =
+        providerId == id &&
+            (mode == CustomProviderMode.Remove ||
+                (mode == CustomProviderMode.Add && ownsStrandedRestart()))
+
+    /**
+     * Clears stale refused-remove or non-remove end states when a provider sheet is reopened; in-progress or
+     * remove-waiting states stay.
+     */
+    public fun reopened(): CustomProviderUi =
+        when {
+            stage == CustomProviderStage.Removing && refusal != null -> CustomProviderUi()
+            mode != CustomProviderMode.Remove && stage != CustomProviderStage.Restarting -> CustomProviderUi()
+            else -> this
+        }
+
+    private fun ownsStrandedRestart(): Boolean =
+        stage == CustomProviderStage.Restarting ||
+            stage == CustomProviderStage.RestartFailed ||
+            stage == CustomProviderStage.NotLoadedAfterRestart ||
+            stage == CustomProviderStage.Loaded ||
+            (stage == CustomProviderStage.SavedNotLoaded && refusal != null)
+
+    /** The stage an engine outcome leads to. A refusal during a restart keeps the saved stage of its flow. */
     public fun after(outcome: CustomProviderOutcome): CustomProviderUi =
         when (outcome) {
             CustomProviderOutcome.Loaded -> settled(CustomProviderStage.Loaded)
             CustomProviderOutcome.SavedNotLoaded -> settled(CustomProviderStage.SavedNotLoaded)
+            CustomProviderOutcome.NeedsReplaceAnswer -> settled(CustomProviderStage.AskReplace)
+            CustomProviderOutcome.RemovedNotRestarted -> settled(CustomProviderStage.RemovedNotRestarted)
+            CustomProviderOutcome.Removed -> settled(CustomProviderStage.Removed)
             CustomProviderOutcome.NotLoadedAfterRestart -> settled(CustomProviderStage.NotLoadedAfterRestart)
+            CustomProviderOutcome.NotGoneAfterRestart ->
+                settled(CustomProviderStage.NotGoneAfterRestart).copy(detail = NOT_GONE_DETAIL)
             is CustomProviderOutcome.RestartFailed ->
                 settled(CustomProviderStage.RestartFailed).copy(detail = outcome.detail)
             is CustomProviderOutcome.Invalid ->
-                copy(stage = CustomProviderStage.Form, problems = outcome.problems.toImmutableList(), refusal = null)
-            is CustomProviderOutcome.Refused ->
                 copy(
                     stage =
-                        if (stage == CustomProviderStage.Restarting) CustomProviderStage.SavedNotLoaded
+                        if (mode == CustomProviderMode.Edit) CustomProviderStage.Editing
                         else CustomProviderStage.Form,
+                    problems = outcome.problems.toImmutableList(),
+                    refusal = null,
+                )
+            is CustomProviderOutcome.RemovePartial ->
+                copy(
+                    stage = CustomProviderStage.RemovePartial,
+                    problems = persistentListOf(),
+                    refusal = null,
+                    detail = outcome.detail,
+                )
+            is CustomProviderOutcome.Refused ->
+                copy(
+                    stage = refusedStage(),
                     problems = persistentListOf(),
                     refusal = outcome.reason,
                     detail = outcome.detail,
                 )
         }
 
+    /** A refusal keeps the stage its flow was in, so the sheet keeps the flow's own words. */
+    private fun refusedStage(): CustomProviderStage =
+        when (stage) {
+            CustomProviderStage.Restarting ->
+                if (mode == CustomProviderMode.Remove) CustomProviderStage.RemovedNotRestarted
+                else CustomProviderStage.SavedNotLoaded
+            // A remove's refusals keep their stage: the sheet shows the remove's own words.
+            CustomProviderStage.Removing -> CustomProviderStage.Removing
+            else ->
+                if (mode == CustomProviderMode.Edit) CustomProviderStage.Editing
+                else CustomProviderStage.Form
+        }
+
     private fun settled(next: CustomProviderStage): CustomProviderUi =
         copy(stage = next, problems = persistentListOf(), refusal = null, detail = null)
 }
+
+/** Stable technical label for the Details fold when a provider stays listed after a remove restart. */
+private const val NOT_GONE_DETAIL = "NotGoneAfterRestart"
 
 /**
  * The ids the page already shows: the form refuses them before Save reaches the server (which checks again). One

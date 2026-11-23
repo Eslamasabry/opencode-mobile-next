@@ -80,6 +80,15 @@ public enum class LibraryNotice {
     Ended,
 }
 
+/**
+ * The honest phases of a custom-provider restart: `restart()` is the phone host's one call (stop, then the manual
+ * start), so stop and start are not separate phases the app can report between.
+ */
+public enum class CustomProviderRestartPhase {
+    Restarting,
+    Checking,
+}
+
 public data class LibraryInventory(
     val loading: Boolean = true,
     val capabilities: ServerCapabilities? = null,
@@ -102,6 +111,10 @@ public data class LibraryInventory(
     val activeCredential: ImmutableMap<String, String?> = persistentMapOf(),
     /** True while the lists are the last-known ones, before the live read answers. */
     val fromKept: Boolean = false,
+    /** The `providers` entries the settings file holds on this phone; empty elsewhere, or when the read fails. */
+    val declared: ImmutableList<DeclaredProvider> = persistentListOf(),
+    /** While a custom-provider restart runs: its honest phase, so the sheet names the real stage. */
+    val customRestart: CustomProviderRestartPhase? = null,
 ) {
     /** A skeleton is only for a first-ever load: with kept lists the screen shows a quiet bar instead. */
     val coldLoading: Boolean
@@ -277,6 +290,9 @@ public class LibrarySession(
         read("conversations", { src.server.sessionPage(limit = 100) }) { page ->
             mutable.update { it.copy(conversations = page.items) }
         }
+        // The read step fills `declared`: which providers the settings file holds on this phone. Off this phone,
+        // or when the read refuses, the list is empty: the rows then say only what the server lists.
+        val declared = if (src.current()) declaredProviders(src) else persistentListOf()
         if (failures.isEmpty() && src.current()) {
             val shelf = KeptLibrary.of(mutable.value)
             kept?.let { k -> scope.launch { k.keep(src.profile, place(src), shelf) } }
@@ -285,6 +301,7 @@ public class LibrarySession(
             it.copy(
                 loading = false,
                 fromKept = false,
+                declared = declared,
                 skillConversationsSupported =
                     src.current() &&
                         src.capabilities.serverCatalog &&
@@ -486,33 +503,97 @@ public class LibrarySession(
      * provider), writes the declaration into the server's own settings file, then gives the server a moment to load
      * it by itself. Never restarts on its own: a restart stops replies in progress, so the person asks for it.
      */
-    public suspend fun addCustomProvider(draft: CustomProviderDraft): CustomProviderOutcome = lane.withLock {
+    public suspend fun addCustomProvider(
+        draft: CustomProviderDraft,
+        replaceConfirmed: Boolean = false,
+    ): CustomProviderOutcome = lane.withLock {
         val src = current()
         val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
         val outcome =
             when {
                 src == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Changed)
                 host == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Unavailable)
-                else -> declare(src, host, draft)
+                else -> declare(src, host, draft, replaceConfirmed)
             }
         if (src?.current() == true) refreshInside()
         outcome
     }
 
-    /** Restarts this phone's OpenCode for a saved declaration, then waits for the server to list [providerId]. */
-    public suspend fun restartForCustomProvider(providerId: String): CustomProviderOutcome = lane.withLock {
+    /**
+     * Edit of a provider this app declared (DESIGN 2A): the id is fixed, the name, address and models come from
+     * [draft]. Only an app-written entry is replaced; a hand-written one is refused and never touched. The key is
+     * not read, written or disconnected here.
+     */
+    public suspend fun editCustomProvider(
+        providerId: String,
+        draft: CustomProviderDraft,
+    ): CustomProviderOutcome = lane.withLock {
         val src = current()
         val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
         val outcome =
-            when (val restarted = host?.restart()) {
+            when {
+                src == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Changed)
+                host == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Unavailable)
+                else -> editDeclared(host, providerId, draft)
+            }
+        if (src?.current() == true) refreshInside()
+        outcome
+    }
+
+    /**
+     * Remove of a provider this app declared: the read step must confirm an app-written entry, the saved key (when
+     * the row has one) is deleted first, then the entry leaves the settings file. The restart is the person's own
+     * choice ([restartForCustomProvider] with `expectGone`).
+     */
+    public suspend fun removeCustomProvider(providerId: String): CustomProviderOutcome = lane.withLock {
+        val src = current()
+        val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
+        val outcome =
+            when {
+                src == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Changed)
+                host == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Unavailable)
+                else -> removeDeclared(src, host, providerId)
+            }
+        if (src?.current() == true) refreshInside()
+        outcome
+    }
+
+    /**
+     * Restarts this phone's OpenCode for a saved declaration, then waits for the server to list [providerId]; with
+     * [expectGone] (a remove) it waits for the list to come back WITHOUT the id, and only a list that answers
+     * counts. The sheet is told the honest phase: restarting while the phone host restarts, checking while it polls.
+     */
+    public suspend fun restartForCustomProvider(
+        providerId: String,
+        expectGone: Boolean = false,
+    ): CustomProviderOutcome = lane.withLock {
+        val src = current()
+        val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
+        val outcome =
+            when (host) {
                 null ->
                     CustomProviderOutcome.Refused(
                         if (src == null) CustomProviderRefusal.Changed else CustomProviderRefusal.Unavailable
                     )
-                is Outcome.Failed -> CustomProviderOutcome.RestartFailed(restarted.failure.label())
-                is Outcome.Ok ->
-                    if (listed(providerId, RESTART_TRIES)) CustomProviderOutcome.Loaded
-                    else CustomProviderOutcome.NotLoadedAfterRestart
+                else ->
+                    try {
+                        mutable.update { it.copy(customRestart = CustomProviderRestartPhase.Restarting) }
+                        when (val restarted = host.restart()) {
+                            is Outcome.Failed -> CustomProviderOutcome.RestartFailed(restarted.failure.label())
+                            is Outcome.Ok -> {
+                                mutable.update { it.copy(customRestart = CustomProviderRestartPhase.Checking) }
+                                if (expectGone) {
+                                    if (gone(providerId, RESTART_TRIES)) CustomProviderOutcome.Removed
+                                    else CustomProviderOutcome.NotGoneAfterRestart
+                                } else {
+                                    if (listed(providerId, RESTART_TRIES)) CustomProviderOutcome.Loaded
+                                    else CustomProviderOutcome.NotLoadedAfterRestart
+                                }
+                            }
+                        }
+                    } finally {
+                        mutable.update { it.copy(customRestart = null) }
+                    }
             }
         if (current() != null) refreshInside()
         outcome
@@ -522,6 +603,7 @@ public class LibrarySession(
         src: LibrarySource,
         host: CustomProviderHost,
         draft: CustomProviderDraft,
+        replaceConfirmed: Boolean,
     ): CustomProviderOutcome {
         val rows = src.operations.integrations()
         val taken = rows.getOrNull()?.let(::takenProviderIds).orEmpty()
@@ -530,25 +612,158 @@ public class LibrarySession(
             rows is Outcome.Failed ->
                 CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
             declaration == null -> CustomProviderOutcome.Invalid(draft.problems(taken))
-            else -> {
-                // The taken check above refused every id a list shows with a connection or a catalog entry, and
-                // only a catalog this session loaded proves the id is no catalog id either; a row the live list
-                // shows with no connection can only be a declaration the settings file still holds (issue 152: the
-                // server keeps listing a disconnected provider), so the write replaces it — and requires one, since
-                // only the file knows whether it is there. Without a loaded catalog the write stays add-only,
-                // exactly as before: the file decides.
-                val catalog = mutable.value.catalog
-                val replaceDeclared = catalog != null
-                val requireDeclared =
-                    rows.getOrNull()?.any { it.id == draft.providerId && replaceable(it, catalog) } == true
-                written(
-                    declaration,
-                    host.write(
-                        declaration.copy(replaceDeclared = replaceDeclared, requireDeclared = requireDeclared)
-                    ),
-                    replaced = requireDeclared,
-                )
+            else ->
+                when (val entry = fileEntry(host, draft.providerId)) {
+                    // The read refused: the file's state is unknown, so nothing is written.
+                    is FileEntry.Refused -> entry.outcome
+                    // The id is an app-written entry (4A): Save asks before anything is written; a confirmed
+                    // answer replaces it under the writer's strictest flags.
+                    FileEntry.AppShaped ->
+                        if (replaceConfirmed) {
+                            written(
+                                declaration,
+                                host.write(declaration.copy(replaceDeclared = true, requireDeclared = true)),
+                                replaced = true,
+                            )
+                        } else CustomProviderOutcome.NeedsReplaceAnswer
+                    FileEntry.NotAppShaped -> {
+                        // The taken check above refused every id a list shows with a connection or a catalog entry, and
+                        // only a catalog this session loaded proves the id is no catalog id either; a row the live list
+                        // shows with no connection can only be a declaration the settings file still holds (issue 152:
+                        // the server keeps listing a disconnected provider), so the write replaces it — and requires
+                        // one, since only the file knows whether it is there. Without a loaded catalog the write stays
+                        // add-only, exactly as before: the file decides.
+                        val catalog = mutable.value.catalog
+                        val replaceDeclared = catalog != null
+                        val requireDeclared =
+                            rows.getOrNull()?.any { it.id == draft.providerId && replaceable(it, catalog) } == true
+                        written(
+                            declaration,
+                            host.write(
+                                declaration.copy(replaceDeclared = replaceDeclared, requireDeclared = requireDeclared)
+                            ),
+                            replaced = requireDeclared,
+                        )
+                    }
+                }
+        }
+    }
+
+    /** The edit's write: the id is the provider's own, and both flags true, so only an app-written entry goes. */
+    private suspend fun editDeclared(
+        host: CustomProviderHost,
+        providerId: String,
+        draft: CustomProviderDraft,
+    ): CustomProviderOutcome {
+        val edited = draft.copy(id = providerId)
+        val declaration = edited.declaration(emptySet())
+            ?: return CustomProviderOutcome.Invalid(edited.problems(emptySet()))
+        val result = host.write(declaration.copy(replaceDeclared = true, requireDeclared = true))
+        val code = result.getOrNull()
+        return when {
+            result is Outcome.Failed ->
+                CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, result.failure.label())
+            code == CustomProviderWrite.Saved.code -> CustomProviderOutcome.SavedNotLoaded
+            else -> CustomProviderOutcome.Refused(handRefusal(code), "Exit $code")
+        }
+    }
+
+    /**
+     * The remove's ordered steps: the read confirms an app-written entry, the key (when the row has one) goes
+     * first, as Disconnect does, then the entry leaves the file. A non-zero exit AFTER a key was removed is
+     * partial (a second remove finds no key and finishes); before it, a plain refusal.
+     */
+    private suspend fun removeDeclared(
+        src: LibrarySource,
+        host: CustomProviderHost,
+        providerId: String,
+    ): CustomProviderOutcome = removeEntryRefusal(host, providerId) ?: removeKeyAndEntry(src, host, providerId)
+
+    /** Why the remove stops before anything changes: the read refused, or the entry is not one the app wrote. */
+    private suspend fun removeEntryRefusal(
+        host: CustomProviderHost,
+        providerId: String,
+    ): CustomProviderOutcome.Refused? =
+        when (val entry = fileEntry(host, providerId)) {
+            is FileEntry.Refused -> entry.outcome
+            FileEntry.NotAppShaped -> CustomProviderOutcome.Refused(CustomProviderRefusal.ChangedByHand)
+            FileEntry.AppShaped -> null
+        }
+
+    private suspend fun removeKeyAndEntry(
+        src: LibrarySource,
+        host: CustomProviderHost,
+        providerId: String,
+    ): CustomProviderOutcome {
+        val rows = src.operations.integrations()
+        if (rows is Outcome.Failed)
+            return CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
+        val row = rows.getOrNull()?.firstOrNull { it.id == providerId }
+        val disconnected =
+            if (row != null && row.connections.isNotEmpty()) src.operations.disconnectIntegration(row) else null
+        return if (disconnected is Outcome.Failed) {
+            CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, disconnected.failure.label())
+        } else {
+            val removed = host.remove(providerId)
+            val code = removed.getOrNull()
+            when {
+                removed is Outcome.Failed && disconnected != null ->
+                    CustomProviderOutcome.RemovePartial(removed.failure.label())
+                removed is Outcome.Failed ->
+                    CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, removed.failure.label())
+                code == CustomProviderWrite.Saved.code -> CustomProviderOutcome.RemovedNotRestarted
+                // The key went first, so a failed entry write is partial: a second remove finishes the job.
+                disconnected != null -> CustomProviderOutcome.RemovePartial("Exit $code")
+                else -> CustomProviderOutcome.Refused(handRefusal(code), "Exit $code")
             }
+        }
+    }
+
+    /** What the settings file holds under one id, as the read step answers it. */
+    private sealed interface FileEntry {
+        /** The read refused; its outcome is the caller's. */
+        data class Refused(val outcome: CustomProviderOutcome.Refused) : FileEntry
+
+        /** No app-written entry under the id: not there, or a hand wrote it. */
+        data object NotAppShaped : FileEntry
+
+        /** The file holds an app-written entry under the id. */
+        data object AppShaped : FileEntry
+    }
+
+    private suspend fun fileEntry(host: CustomProviderHost, id: String): FileEntry =
+        when (val read = host.read()) {
+            is Outcome.Failed ->
+                FileEntry.Refused(CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, read.failure.label()))
+            is Outcome.Ok ->
+                when {
+                    read.value.first != CustomProviderWrite.Saved.code ->
+                        FileEntry.Refused(
+                            CustomProviderOutcome.Refused(
+                                CustomProviderWrite.ofExitCode(read.value.first).refusal(),
+                                "Exit ${read.value.first}",
+                            )
+                        )
+                    parseDeclaredProviders(read.value.second).any { it.id == id && it.appShaped } -> FileEntry.AppShaped
+                    else -> FileEntry.NotAppShaped
+                }
+        }
+
+    /** An edit's or a remove's write mapping: exits 24 and 27 mean a hand changed the entry since it was opened. */
+    private fun handRefusal(code: Int?): CustomProviderRefusal =
+        when (code?.let(CustomProviderWrite::ofExitCode)) {
+            CustomProviderWrite.AlreadyDeclared, CustomProviderWrite.NoEntry -> CustomProviderRefusal.ChangedByHand
+            else -> code?.let(CustomProviderWrite::ofExitCode)?.refusal() ?: CustomProviderRefusal.Failed
+        }
+
+    /** The read step's answer as `declared`: empty when this phone's file cannot be read. */
+    private suspend fun declaredProviders(src: LibrarySource): ImmutableList<DeclaredProvider> {
+        val host = src.customProviders?.takeIf { src.capabilities.customProviders } ?: return persistentListOf()
+        return when (val read = host.read()) {
+            is Outcome.Failed -> persistentListOf()
+            is Outcome.Ok ->
+                if (read.value.first != CustomProviderWrite.Saved.code) persistentListOf()
+                else parseDeclaredProviders(read.value.second).toImmutableList()
         }
     }
 
@@ -601,6 +816,16 @@ public class LibrarySession(
             if (index > 0) delay(LISTED_WAIT_MS)
             val rows = current()?.operations?.integrations()?.getOrNull()
             if (rows?.any { it.id == providerId } == true) return true
+        }
+        return false
+    }
+
+    /** True once a list that ANSWERED holds no [providerId]: a list that never answered says nothing. */
+    private suspend fun gone(providerId: String, tries: Int): Boolean {
+        repeat(tries) { index ->
+            if (index > 0) delay(LISTED_WAIT_MS)
+            val rows = current()?.operations?.integrations()?.getOrNull() ?: return@repeat
+            if (rows.none { it.id == providerId }) return true
         }
         return false
     }

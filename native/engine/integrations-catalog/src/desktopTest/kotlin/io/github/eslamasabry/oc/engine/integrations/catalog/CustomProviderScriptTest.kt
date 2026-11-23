@@ -132,6 +132,146 @@ try: main()""",
             }
             .toString()
 
+    /** The run's stdin for an edit: both flags, so only an app-written entry under the id is replaced. */
+    private fun editInput(declared: CustomProviderDeclaration = declaration()): String =
+        buildJsonObject {
+                put("id", declared.providerId)
+                put("block", declared.block)
+                put("replaceDeclared", true)
+                put("requireDeclared", true)
+            }
+            .toString()
+
+    /** The run's stdin for the remove step: the id travels on stdin only, never the command line. */
+    private fun removeInput(id: String = "my-box"): String =
+        buildJsonObject {
+                put("op", "remove")
+                put("id", id)
+            }
+            .toString()
+
+    @Test
+    fun `B-LIB-326 the read step returns name, address and models of an app-shaped entry and nothing else`() {
+        config.mkdirs()
+        file.writeText(
+            """{"keep":42,"providers":{"hand":{"name":"Hand"},"my-box":""" + declaration().block.toString() + "}}"
+        )
+        val (code, output) = writeCaptured("""{"op":"read"}""")
+        assertEquals(0, code)
+        assertEquals(
+            listOf(
+                """{"id":"hand","appShaped":false}""",
+                """{"id":"my-box","appShaped":true,"name":"My box",""" +
+                    """"baseURL":"http://models.example.net:8080/v1","models":["llama-3","qwen"]}""",
+            ),
+            output.trim().lines(),
+        )
+        assertFalse("keep" in output, "no other setting of the file is printed")
+    }
+
+    @Test
+    fun `B-LIB-327 the read step marks a hand-written entry and prints none of its values`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"hand-box":{"name":"Hand Box","npm":"yes",""" +
+                """"settings":{"baseURL":"http://hand.example:9/v1","apiKey":"hand-written-inline-value"},""" +
+                """"models":{"m":{"x":1}}}}}"""
+        )
+        val (code, output) = writeCaptured("""{"op":"read"}""")
+        assertEquals(0, code)
+        assertEquals(listOf("""{"id":"hand-box","appShaped":false}"""), output.trim().lines())
+        for (value in listOf("Hand Box", "hand.example", "hand-written-inline-value")) {
+            assertFalse(value in output, "a hand-written value is never printed: $value")
+        }
+    }
+
+    @Test
+    fun `B-LIB-328 Edit replaces only with both flags, and a hand-written entry exits 24 unchanged`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
+                """"settings":{"baseURL":"http://old.example:9000/v1"},"models":{"old-model":{}}}}}"""
+        )
+        assertEquals(0, write(editInput()))
+        assertEquals(declaration().block, json().getValue("providers").jsonObject.getValue("my-box").jsonObject)
+        // Requiring the entry is not enough: without the replace flag the write still refuses.
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","package":"@opencode/ai/providers/openai-compatible",""" +
+                """"settings":{"baseURL":"http://old.example:9000/v1"},"models":{"old-model":{}}}}}"""
+        )
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) {
+            write(
+                buildJsonObject {
+                        put("id", "my-box")
+                        put("block", declaration().block)
+                        put("replaceDeclared", false)
+                        put("requireDeclared", true)
+                    }
+                    .toString(),
+            )
+        }
+        // A hand-written entry keeps the refusal with both flags, and the file is untouched.
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","settings":{"baseURL":"http://old.example:9000/v1",""" +
+                """"apiKey":"hand-written-inline-value"}}}}"""
+        )
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, file.readText()) { write(editInput()) }
+    }
+
+    @Test
+    fun `B-LIB-330 remove deletes an app-shaped entry and keeps every other key of the file`() {
+        config.mkdirs()
+        file.writeText(
+            """{"keep":42,"mcp":{"servers":{"oc-ui":{"type":"local"}}},"providers":{"my-box":""" +
+                declaration().block.toString() + ""","other":{"name":"Other","npm":"no"}}}"""
+        )
+        assertEquals(0, write(removeInput()))
+        val after = json()
+        assertEquals(setOf("keep", "mcp", "providers"), after.keys)
+        assertEquals(42, after.getValue("keep").jsonPrimitive.content.toInt())
+        assertEquals("""{"servers":{"oc-ui":{"type":"local"}}}""", after.getValue("mcp").toString())
+        assertEquals(setOf("other"), after.getValue("providers").jsonObject.keys)
+        val other = after.getValue("providers").jsonObject.getValue("other").jsonObject
+        assertEquals("no", other.getValue("npm").jsonPrimitive.content)
+    }
+
+    @Test
+    fun `B-LIB-331 remove refuses a hand-written entry and a jsonc beside it, and the file stays byte-identical`() {
+        config.mkdirs()
+        file.writeText(
+            """{"providers":{"my-box":{"name":"Old box","settings":{"baseURL":"http://old.example:9000/v1",""" +
+                """"apiKey":"hand-written-inline-value"}}}}"""
+        )
+        val hand = file.readText()
+        assertEquals(CustomProviderWrite.AlreadyDeclared.code, write(removeInput()))
+        assertEquals(hand, file.readText(), "a refused remove leaves the file as it was")
+        file.writeText("""{"providers":{"my-box":""" + declaration().block.toString() + "}}")
+        val shaped = file.readText()
+        File(config, "opencode.jsonc").writeText("{\"providers\":{}}")
+        assertEquals(CustomProviderWrite.HandManaged.code, write(removeInput()))
+        assertEquals(shaped, file.readText(), "a refused remove leaves the file as it was")
+    }
+
+    @Test
+    fun `B-LIB-339 the read and remove steps take the id on stdin only and echo no key`() {
+        config.mkdirs()
+        val key = "sk-test-not-real"
+        file.writeText(
+            """{"providers":{"hand-box":{"name":"Hand","settings":{"baseURL":"http://hand.example/v1",""" +
+                """"apiKey":"$key"}}}}"""
+        )
+        val script = CustomProviderScript.script()
+        assertFalse("hand-box" in script, "the script holds no id")
+        assertFalse(key in script, "the script holds no key text")
+        val (readCode, readOutput) = writeCaptured("""{"op":"read"}""")
+        assertEquals(0, readCode)
+        assertFalse(key in readOutput, "a hand-written key is never echoed by the read step")
+        assertEquals(listOf("""{"id":"hand-box","appShaped":false}"""), readOutput.trim().lines())
+        val (removeCode, removeOutput) = writeCaptured(removeInput("hand-box"))
+        assertEquals(CustomProviderWrite.AlreadyDeclared.code, removeCode)
+        assertFalse(key in removeOutput, "a hand-written key is never echoed by the remove step")
+    }
+
     @Test
     fun `PR142-12 the declaration is data, never code - quotes and shell words land in the file as typed`() {
         config.mkdirs()

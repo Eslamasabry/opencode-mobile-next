@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.eslamasabry.oc.engine.integrations.catalog.McpAddProblem
 import io.github.eslamasabry.oc.engine.integrations.catalog.McpAddResult
@@ -386,7 +387,22 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         attempt to inventory.providers.firstOrNull { it.id == attempt.integration }
                     }
                 val rows = providerRows(inventory, { values -> match(*values) }, modelTerms)
-                val empty = rows.isEmpty() && inventory.attempts.isEmpty()
+                // An entry the settings file holds that the server does not list (the stranded case behind issue
+                // 152): a row of its own, its sheet built on a stub, because only the file knows it.
+                val stranded =
+                    inventory.declared
+                        .filter {
+                            it.appShaped &&
+                                rows.none { row -> row.id == it.id } &&
+                                inventory.attempts.none { attempt -> attempt.integration == it.id } &&
+                                it.id !in inventory.uncertain &&
+                                match(it.name, it.id, it.models.joinToString(" "))
+                        }
+                        .map { entry ->
+                            IntegrationInfo(entry.id, entry.name ?: entry.id, persistentListOf(), persistentListOf(), 0)
+                        }
+                val shownRows = rows + stranded
+                val empty = shownRows.isEmpty() && inventory.attempts.isEmpty()
                 // Pull request 142: an endpoint the list does not have. Offered wherever the list is; a server whose
                 // settings the app does not own answers on the sheet with why, instead of a form that cannot save.
                 val canAddProvider = inventory.capabilities?.serverCatalog == true
@@ -439,15 +455,28 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                     )
                                 }
                             },
-                    itemCount = rows.size,
-                    itemKey = { "provider-" + rows[it].id },
+                    itemCount = shownRows.size,
+                    itemKey = { "provider-" + shownRows[it].id },
                     itemContent = { index ->
-                        val provider = rows[index]
+                        val provider = shownRows[index]
+                        // An app-written provider says so, and its row always opens its provider sheet: the
+                        // key-form shortcut is only for a provider with nothing to manage.
+                        val declared = inventory.declared.firstOrNull { it.id == provider.id && it.appShaped }
+                        val notListed = declared != null && inventory.providers.none { it.id == provider.id }
                         KitRow(
                             provider.name,
                             leading = KitRowLeading.Logo(provider.id, provider.name),
                             supporting =
-                                if (provider.connections.isEmpty())
+                                if (declared != null) {
+                                    val connectionState =
+                                        when {
+                                            notListed -> stringResource(Res.string.nlibCustomNotLoaded)
+                                            provider.connections.isEmpty() ->
+                                                stringResource(Res.string.nlibDisconnected)
+                                            else -> stringResource(Res.string.nlibConnected)
+                                        }
+                                    stringResource(Res.string.nlibCustomAddedByYou, connectionState)
+                                } else if (provider.connections.isEmpty())
                                     stringResource(Res.string.nlibDisconnected)
                                 else if (
                                     inventory.catalog?.providers?.none {
@@ -459,16 +488,19 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             trailing = KitRowTrailing.Chevron,
                             onClick = {
                                 focus.clearFocus()
-                                val only =
-                                    soleMethodToConnect(
-                                        provider,
-                                        state.inventory.capabilities?.integrationCommandAuth ==
-                                            true,
+                                if (declared != null) actions.show(LibrarySheet.Provider(provider))
+                                else {
+                                    val only =
+                                        soleMethodToConnect(
+                                            provider,
+                                            state.inventory.capabilities?.integrationCommandAuth ==
+                                                true,
+                                        )
+                                    actions.show(
+                                        if (only != null) LibrarySheet.Method(provider, only)
+                                        else LibrarySheet.Provider(provider)
                                     )
-                                actions.show(
-                                    if (only != null) LibrarySheet.Method(provider, only)
-                                    else LibrarySheet.Provider(provider)
-                                )
+                                }
                             },
                         )
                     },
@@ -639,6 +671,7 @@ private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: Lib
                 }
             LibrarySheet.Registry -> LibraryRegistrySheet(state, actions)
             LibrarySheet.AddProvider -> CustomProviderSheet(state, actions)
+            is LibrarySheet.EditProvider -> EditProviderSheet(sheet, state, actions)
             is LibrarySheet.RegistryNode ->
                 KitSheet(
                     true,
@@ -934,14 +967,38 @@ internal fun soleMethodToConnect(
 
 @Composable
 private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: LibraryActions) {
+    // A remove (or the restart it asked for) owns this sheet: the flow's own words, never the provider's rows.
+    val flow =
+        state.customProvider.takeIf { it.ownsProviderSheet(provider.id) }
+            ?.takeUnless { it.stage == CustomProviderStage.Removing && it.refusal == null }
+    if (flow != null) {
+        ProviderFlowSheet(provider, flow, state, actions)
+        return
+    }
     var disconnect by remember { mutableStateOf(false) }
+    var remove by remember { mutableStateOf(false) }
     val current = state.inventory.providers.firstOrNull { it.id == provider.id } ?: provider
+    val declared = state.inventory.declared.firstOrNull { it.id == current.id }
+    val appWritten = declared?.appShaped == true
+    val handWritten = declared?.appShaped == false
+    // In the settings file but not in the server's list (issue 152): the sheet says what is saved and offers the
+    // restart that loads it, with Edit and Remove.
+    val stranded = appWritten && state.inventory.providers.none { it.id == current.id }
     val hasCredentials =
         current.connections.any { it.type == "credential" && !it.id.isNullOrEmpty() }
     KitSheet(
         true,
         { actions.show(null) },
         current.name,
+        dismissible = !state.working,
+        primary =
+            if (stranded)
+                KitAction(
+                    stringResource(Res.string.nlibCustomRestart),
+                    { actions.restartForProvider(current.id) },
+                    working = state.working,
+                )
+            else null,
         tertiary =
             buildList {
                 if (state.inventory.capabilities?.integrationCredentials == true)
@@ -959,36 +1016,84 @@ private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: 
                             destructive = true,
                         )
                     )
+                if (appWritten)
+                    add(
+                        KitAction(
+                            stringResource(Res.string.nlibCustomRemove),
+                            { remove = true },
+                            destructive = true,
+                        )
+                    )
             },
     ) {
+        if (appWritten) {
+            KitText(
+                stringResource(Res.string.nlibCustomAddedByYouHere),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+            declared?.baseUrl?.let { KitText(it, role = TypeRole.Mono) }
+            val models = declared?.models.orEmpty()
+            if (models.isNotEmpty())
+                KitText(
+                    pluralStringResource(
+                        Res.plurals.nlibCustomModelsCount,
+                        models.size,
+                        models.size,
+                        models.joinToString(" "),
+                    ),
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
+        }
+        if (handWritten)
+            KitNotice(
+                stringResource(Res.string.nlibCustomHandBody),
+                title = stringResource(Res.string.nlibCustomHandTitle),
+                tone = StatusTone.Neutral,
+            )
+        if (stranded)
+            KitNotice(
+                stringResource(Res.string.nlibCustomSavedBody),
+                title = stringResource(Res.string.nlibCustomSavedTitle, current.name),
+                tone = StatusTone.Neutral,
+            )
         val methods =
             connectMethods(
                 current.id,
                 current.methods,
                 commandSupported = state.inventory.capabilities?.integrationCommandAuth == true,
             )
-        if (methods.isEmpty()) KitText(stringResource(Res.string.nlibServerManaged))
-        KitRowGroup {
-            methods.forEach { method ->
-                KitRow(
-                    if (connectMethodHasOwnLabel(method)) method.label
-                    else stringResource(Res.string.m40AuthKey),
-                    supporting =
-                        stringResource(
-                            when (connectMethodHint(method)) {
-                                ConnectHint.Key -> Res.string.m40AuthKeyHelp
-                                ConnectHint.Command -> Res.string.m40AuthCommandHint
-                                ConnectHint.Browser -> Res.string.m40AuthBrowserHint
-                                ConnectHint.Device -> Res.string.m40AuthDeviceHint
-                                ConnectHint.Account -> Res.string.m40AuthAccountHint
-                            }
-                        ),
-                    supportingMaxLines = 3,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.show(LibrarySheet.Method(current, method)) },
-                )
+        if (methods.isEmpty() && declared == null) KitText(stringResource(Res.string.nlibServerManaged))
+        if (methods.isNotEmpty() || appWritten)
+            KitRowGroup {
+                methods.forEach { method ->
+                    KitRow(
+                        if (connectMethodHasOwnLabel(method)) method.label
+                        else stringResource(Res.string.m40AuthKey),
+                        supporting =
+                            stringResource(
+                                when (connectMethodHint(method)) {
+                                    ConnectHint.Key -> Res.string.m40AuthKeyHelp
+                                    ConnectHint.Command -> Res.string.m40AuthCommandHint
+                                    ConnectHint.Browser -> Res.string.m40AuthBrowserHint
+                                    ConnectHint.Device -> Res.string.m40AuthDeviceHint
+                                    ConnectHint.Account -> Res.string.m40AuthAccountHint
+                                }
+                            ),
+                        supportingMaxLines = 3,
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { actions.show(LibrarySheet.Method(current, method)) },
+                    )
+                }
+                if (appWritten)
+                    KitRow(
+                        stringResource(Res.string.nlibCustomEdit),
+                        supporting = stringResource(Res.string.nlibCustomEditHint),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { actions.show(LibrarySheet.EditProvider(current.id)) },
+                    )
             }
-        }
         current.connections.forEach { connection ->
             KitText(
                 if (connection.type == "env") stringResource(Res.string.nlibEnvironment)
@@ -1024,6 +1129,28 @@ private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: 
             actions.disconnect(current)
         },
         { disconnect = false },
+    )
+    KitConfirm(
+        if (remove)
+            KitConfirmSpec(
+                title = stringResource(Res.string.nlibCustomRemoveQuestion, current.name),
+                confirmLabel = stringResource(Res.string.nlibCustomRemove),
+                kind = KitConfirmKind.Destructive,
+                body = stringResource(Res.string.nlibCustomRemoveBody),
+                consequences =
+                    buildList {
+                        if (hasCredentials) add(stringResource(Res.string.nlibCustomRemoveKey))
+                        add(stringResource(Res.string.nlibCustomRemoveModels))
+                        add(stringResource(Res.string.nlibCustomRemoveRestart))
+                    },
+            )
+        else null,
+        {
+            remove = false
+            actions.removeProvider(current)
+        },
+        { remove = false },
+        working = state.working,
     )
 }
 

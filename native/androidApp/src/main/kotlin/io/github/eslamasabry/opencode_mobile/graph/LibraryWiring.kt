@@ -408,6 +408,47 @@ private class PhoneCustomProviders(
                         }
                     }
 
+                // The read step's stdout is data about this phone's own settings file: never logged.
+                override suspend fun read(): Outcome<Pair<Int, String>> =
+                    withContext(dispatchers.io) {
+                        attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                            val linux = BuiltinLinux.get(application)
+                            if (!runsHere(profile) || !linux.installed)
+                                CustomProviderWrite.NotSetUp.code to ""
+                            else {
+                                val run =
+                                    linux.run(
+                                        CustomProviderScript.script(),
+                                        CUSTOM_PROVIDER_WRITE_SECONDS,
+                                        logOutput = false,
+                                        stdin = CustomProviderScript.READ_INPUT,
+                                    )
+                                // The read step's whole output is capped where it is produced: a file so large it
+                                // cannot be one settings file's provider lines is refused, not carried around.
+                                if (run.output.length > CUSTOM_PROVIDER_READ_LIMIT)
+                                    CustomProviderWrite.Failed.code to ""
+                                else run.exitCode to run.output
+                            }
+                        }
+                    }
+
+                override suspend fun remove(id: String): Outcome<Int> =
+                    withContext(dispatchers.io) {
+                        attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                            val linux = BuiltinLinux.get(application)
+                            if (!runsHere(profile) || !linux.installed) CustomProviderWrite.NotSetUp.code
+                            else
+                                linux
+                                    .run(
+                                        CustomProviderScript.script(),
+                                        CUSTOM_PROVIDER_WRITE_SECONDS,
+                                        logOutput = false,
+                                        stdin = CustomProviderScript.removeInput(id),
+                                    )
+                                    .exitCode
+                        }
+                    }
+
                 override suspend fun restart(): Outcome<Unit> =
                     if (runsHere(profile)) phoneServer.value.restart()
                     else Failure.Unavailable(FeatureId("restartPhoneServer")).failed()
@@ -416,3 +457,6 @@ private class PhoneCustomProviders(
 
 /** The settings write reads and replaces one small file; a minute covers a slow phone. */
 private const val CUSTOM_PROVIDER_WRITE_SECONDS = 60L
+
+/** The read step's stdout cap: the script's provider lines are a few KiB; 256 KiB is a file gone wrong. */
+private const val CUSTOM_PROVIDER_READ_LIMIT = 262_144

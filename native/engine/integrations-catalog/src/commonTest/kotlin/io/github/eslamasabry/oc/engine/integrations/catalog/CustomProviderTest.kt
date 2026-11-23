@@ -122,13 +122,23 @@ class CustomProviderTest {
     private class Host(
         var writes: List<Outcome<Int>> = listOf(Outcome.Ok(0)),
         var restartResult: Outcome<Unit> = Outcome.Ok(Unit),
+        var reads: Outcome<Pair<Int, String>> = Outcome.Ok(0 to ""),
+        var removes: List<Outcome<Int>> = listOf(Outcome.Ok(0)),
     ) : CustomProviderHost {
         val written = mutableListOf<CustomProviderDeclaration>()
+        val removedIds = mutableListOf<String>()
         var restarts = 0
 
         override suspend fun write(declaration: CustomProviderDeclaration): Outcome<Int> {
             written += declaration
             return writes[(written.size - 1).coerceAtMost(writes.size - 1)]
+        }
+
+        override suspend fun read(): Outcome<Pair<Int, String>> = reads
+
+        override suspend fun remove(id: String): Outcome<Int> {
+            removedIds += id
+            return removes[(removedIds.size - 1).coerceAtMost(removes.size - 1)]
         }
 
         override suspend fun restart(): Outcome<Unit> {
@@ -138,10 +148,19 @@ class CustomProviderTest {
     }
 
     /** The integrations the server lists, answer by answer (the last one repeats). */
-    private class Server(var answers: List<Outcome<ImmutableList<IntegrationInfo>>>) {
+    private class Server(
+        var answers: List<Outcome<ImmutableList<IntegrationInfo>>>,
+        var disconnectResult: Outcome<Unit> = Outcome.Ok(Unit),
+    ) {
         var reads = 0
+        var disconnects = 0
 
         fun next(): Outcome<ImmutableList<IntegrationInfo>> = answers[reads++.coerceAtMost(answers.size - 1)]
+
+        fun disconnect(): Outcome<Unit> {
+            disconnects++
+            return disconnectResult
+        }
     }
 
     private fun row(id: String) =
@@ -195,6 +214,9 @@ class CustomProviderTest {
                         override suspend fun integrations() = listings.next()
 
                         override suspend fun catalog() = catalogAnswer ?: Outcome.Ok(catalog ?: noCatalog)
+
+                        override suspend fun disconnectIntegration(integration: IntegrationInfo) =
+                            listings.disconnect()
                     }
                 override val customProviders = host
 
@@ -440,5 +462,123 @@ class CustomProviderTest {
         )
         assertTrue(failed.written.isEmpty())
         assertTrue(fresh.written.isEmpty())
+    }
+
+    // ---- edit and remove of a provider this app declared (DESIGN §2, §5)
+
+    /** One line of the read step's stdout: an app-shaped entry under `my-box`. */
+    private fun declaredLine(
+        id: String = "my-box",
+        name: String = "My box",
+        baseUrl: String = "http://old.example:9000/v1",
+        models: List<String> = listOf("old-model"),
+    ): String {
+        val ids = models.joinToString(",") { """"$it"""" }
+        return """{"id":"$id","appShaped":true,"name":"$name","baseURL":"$baseUrl","models":[$ids]}"""
+    }
+
+    @Test
+    fun `B-LIB-329 Edit never changes the provider ID and never touches the key`() = runTest {
+        val host = Host()
+        val server = Server(listOf(listing("openai")))
+        val edited =
+            session(host, server).editCustomProvider(
+                "my-box",
+                CustomProviderDraft("New box", "Totally Different", "http://new.example:8443/v1", "llama-3\nqwen"),
+            )
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, edited)
+        val written = host.written.single()
+        assertEquals("my-box", written.providerId, "the written id is the edited provider's id, not the draft's")
+        assertTrue(written.replaceDeclared, "the edit replaces an app-written entry")
+        assertTrue(written.requireDeclared, "the edit requires the entry it replaces")
+        assertEquals(0, server.disconnects, "an edit never disconnects a credential")
+        assertEquals(0, host.restarts)
+    }
+
+    @Test
+    fun `B-LIB-332 remove with the server not answering changes nothing`() = runTest {
+        val host = Host(reads = Outcome.Ok(0 to declaredLine()))
+        val server = Server(listOf(Outcome.Failed(Failure.Network(NetworkWhy.Refused))))
+        val outcome = session(host, server).removeCustomProvider("my-box")
+        assertEquals(CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, "Network · Refused"), outcome)
+        assertTrue(host.removedIds.isEmpty(), "the file was not touched")
+        assertEquals(0, server.disconnects, "no key was deleted")
+    }
+
+    @Test
+    fun `B-LIB-333 the key removed but the file write failed is partial, and a second remove finishes it`() = runTest {
+        val host =
+            Host(
+                reads = Outcome.Ok(0 to declaredLine()),
+                removes = listOf(Outcome.Ok(26), Outcome.Ok(0)),
+            )
+        val server = Server(listOf(rows(connected("my-box")), rows(row("my-box"))))
+        val library = session(host, server)
+        assertEquals(CustomProviderOutcome.RemovePartial("Exit 26"), library.removeCustomProvider("my-box"))
+        assertEquals(1, server.disconnects, "the key went first, as Disconnect does")
+        assertEquals(CustomProviderOutcome.RemovedNotRestarted, library.removeCustomProvider("my-box"))
+        assertEquals(1, server.disconnects, "the second remove finds no key to remove")
+        assertEquals(listOf("my-box", "my-box"), host.removedIds)
+    }
+
+    @Test
+    fun `B-LIB-334 Removed only after a restart and a list without the id, and only a good list counts`() = runTest {
+        val restarted = Host()
+        assertEquals(
+            CustomProviderOutcome.Removed,
+            session(restarted, Server(listOf(listing("openai"))))
+                .restartForCustomProvider("my-box", expectGone = true),
+        )
+        assertEquals(1, restarted.restarts)
+        val host = Host()
+        val silent = Server(listOf(Outcome.Failed(Failure.Network(NetworkWhy.Refused))))
+        val library = session(host, silent)
+        assertEquals(
+            CustomProviderOutcome.NotGoneAfterRestart,
+            library.restartForCustomProvider("my-box", expectGone = true),
+        )
+        assertTrue(silent.reads >= 60, "60 checks were asked before giving up")
+    }
+
+    @Test
+    fun `B-LIB-335 adding an app-written id asks Replace and writes nothing before the answer`() = runTest {
+        val host = Host(reads = Outcome.Ok(0 to declaredLine()))
+        val library = session(host, Server(listOf(listing())))
+        library.refresh()
+        assertEquals(CustomProviderOutcome.NeedsReplaceAnswer, library.addCustomProvider(good))
+        assertTrue(host.written.isEmpty(), "nothing is written before the answer")
+        assertEquals(CustomProviderOutcome.SavedNotLoaded, library.addCustomProvider(good, replaceConfirmed = true))
+        val written = host.written.single()
+        assertTrue(written.replaceDeclared, "a confirmed replace is told to replace")
+        assertTrue(written.requireDeclared, "a confirmed replace is told to require the entry")
+    }
+
+    @Test
+    fun `B-LIB-357 a failed key removal stops the remove before the file`() = runTest {
+        val host = Host(reads = Outcome.Ok(0 to declaredLine()))
+        val server =
+            Server(
+                listOf(rows(connected("my-box"))),
+                disconnectResult = Outcome.Failed(Failure.Network(NetworkWhy.Refused)),
+            )
+        val outcome = session(host, server).removeCustomProvider("my-box")
+        assertEquals(CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, "Network · Refused"), outcome)
+        assertTrue(host.removedIds.isEmpty(), "the file was not touched")
+        assertEquals(1, server.disconnects)
+    }
+
+    @Test
+    fun `B-LIB-358 a failed entry run after the key went is partial, never nothing removed`() = runTest {
+        val host =
+            Host(
+                reads = Outcome.Ok(0 to declaredLine()),
+                removes = listOf(Outcome.Failed(Failure.Network(NetworkWhy.Refused))),
+            )
+        val server = Server(listOf(rows(connected("my-box"))))
+        assertEquals(
+            CustomProviderOutcome.RemovePartial("Network · Refused"),
+            session(host, server).removeCustomProvider("my-box"),
+        )
+        assertEquals(1, server.disconnects)
     }
 }
