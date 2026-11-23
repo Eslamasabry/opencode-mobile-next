@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -123,13 +124,17 @@ internal fun TimelineStep(
             detail != null -> {
                 {
                     // A group row's detail counts up in place while steps arrive: keep one line at 1.3x text so rows
-                    // below never shift when the file list grows.
-                    KitText(
-                        redacted(detail),
-                        role = TypeRole.Secondary,
-                        tone = TextTone.Secondary,
-                        maxLines = if (wide && !group) 3 else 1,
-                    )
+                    // below never shift when the file list grows. Key group rows by live so switching between the live
+                    // count and finished file list does not jump one text node horizontally.
+                    val show: @Composable () -> Unit = {
+                        KitText(
+                            redacted(detail),
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Secondary,
+                            maxLines = if (wide && !group) 3 else 1,
+                        )
+                    }
+                    if (group) key(live) { show() } else show()
                 }
             }
             else -> null
@@ -186,18 +191,20 @@ internal fun TimelineStep(
     // F: lib/ui/kit/chat/kit_tool_row.dart:536-556 and 1216-1244 _stepWords
     val words: (@Composable () -> Unit)? =
         when (status) {
-            KitToolStatus.Running ->
-                if (duration == null) null
-                else {
-                    {
-                        KitText(duration, Modifier.testTag("kit-step-counter"), role = TypeRole.Caption, tone = TextTone.Secondary, maxLines = 1, tabular = true)
-                    }
-                }
+            KitToolStatus.Running,
             KitToolStatus.Done ->
                 if (duration == null) null
                 else {
                     {
-                        KitText(duration, Modifier.testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, maxLines = wordLines)
+                        val running = status == KitToolStatus.Running
+                        KitText(
+                            duration,
+                            Modifier.testTag(if (running) "kit-step-counter" else "kit-tool-duration"),
+                            role = TypeRole.Caption,
+                            tone = if (running) TextTone.Secondary else TextTone.Tertiary,
+                            maxLines = if (running) 1 else wordLines,
+                            tabular = running,
+                        )
                     }
                 }
             // LOOK-5: a failed step's word is plain text1, never a danger colour.

@@ -339,4 +339,35 @@ class KitToolRowTest {
             assertEquals(h0, h2, 0.5f, "group row height changed: $h0 -> $h2")
             assertTrue(h0 >= 48f, "wide group row kept a 48 dp target: $h0")
         }
+
+    @Test
+    fun `B-STEPS-DURATION duration node keeps its identity from running to done`() =
+        runComposeUiTest {
+            var status by mutableStateOf(KitToolStatus.Running)
+            var duration by mutableStateOf("25.0s")
+            setContent {
+                ChatTestTheme {
+                    KitStepList {
+                        KitToolRow(
+                            view(
+                                kind = KitToolKind.Shell,
+                                title = "Ran tests",
+                                subject = null,
+                                status = status,
+                                durationLabel = duration,
+                            ),
+                            opened = false,
+                            onToggle = {},
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            val runningId = onNodeWithTag("kit-step-counter", useUnmergedTree = true).fetchSemanticsNode().id
+            status = KitToolStatus.Done
+            duration = "1.0s"
+            waitForIdle()
+            val doneId = onNodeWithTag("kit-tool-duration", useUnmergedTree = true).fetchSemanticsNode().id
+            assertEquals(runningId, doneId, "duration text recreated across Running -> Done")
+        }
 }
