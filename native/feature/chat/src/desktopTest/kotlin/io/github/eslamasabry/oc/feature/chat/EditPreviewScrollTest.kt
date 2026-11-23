@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -15,7 +16,6 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -114,8 +114,13 @@ class EditPreviewScrollTest {
             waitForIdle()
             showAllOutput()
             val scroll = page ?: error("the page never composed")
-            onNodeWithText("val line5 =", substring = true, useUnmergedTree = true)
-                .performTouchInput { swipeUp(centerY, centerY - 300f) }
+            // A slow finger-up drag of 300 px, as a person scrolling the page would make it.
+            onNodeWithText("val line5 =", substring = true, useUnmergedTree = true).performTouchInput {
+                down(center)
+                repeat(10) { moveBy(Offset(0f, -30f), delayMillis = 20) }
+                moveBy(Offset.Zero, delayMillis = 100)
+                up()
+            }
             waitForIdle()
             assertTrue(
                 scroll.value > 150,
@@ -132,9 +137,10 @@ class EditPreviewScrollTest {
             waitForIdle()
             showAllOutput()
             val under =
-                onAllNodes(hasAnyAncestor(hasTestTag("kit-tool-body")), useUnmergedTree = true)
-                    .fetchSemanticsNodes() +
-                    onNodeWithTag("kit-tool-body", useUnmergedTree = true).fetchSemanticsNodes()
+                onAllNodes(
+                    hasTestTag("kit-tool-body") or hasAnyAncestor(hasTestTag("kit-tool-body")),
+                    useUnmergedTree = true,
+                ).fetchSemanticsNodes()
             assertTrue(under.isNotEmpty(), "the opened step draws its body")
             assertTrue(
                 under.none { SemanticsProperties.VerticalScrollAxisRange in it.config },
