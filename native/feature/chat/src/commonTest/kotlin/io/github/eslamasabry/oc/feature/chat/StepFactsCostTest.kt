@@ -119,8 +119,8 @@ class StepFactsCostTest {
             for (i in 0 until 200) assertSame(first.work["u$i"], work["u$i"], "turn u$i at $at")
         }
         for (k in 1..50) {
-            keeper.event(GatewayEvent.PartUpserted(runPart(k)), 10_000 + k)
-            val next = presenter.present(keeper.feed.value, 10_000 + k)
+            keeper.event(GatewayEvent.PartUpserted(runPart(k)), 10_000L + k)
+            val next = presenter.present(keeper.feed.value, 10_000L + k)
             reusesSettledTurns(next.work, "event $k")
             assertTrue(
                 next.work["u200"]!!.steps.single().output.liveTail.endsWith("line $k"),
