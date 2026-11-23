@@ -82,15 +82,25 @@ internal class FoldAnchor {
         FoldAnchorRules.scrollFor(held = item == key, before = before, after = after)
 
     /**
-     * Pays the held item [key]'s size change back: by how far its top moved from where it was touched, measured (or by
-     * its size change, [sized], when it is not in view). Measured, because a list resting on its oldest row keeps that
-     * row, and the held one, in place on its own as the item folds; paying the fold back as well moved the row up by as
-     * much again. What the list cannot scroll (nothing above it) is lent as [room] and scrolled into; the room first
-     * fills the short conversation's empty space above its oldest row (room there adds nothing to scroll into).
+     * Once the person has scrolled up from the newest edge by any amount, a visible item changing height must not
+     * shift what they are reading above it.
      */
-    suspend fun payBack(lazy: LazyListState, key: String, sized: Float) {
-        val t0 = heldTop
-        val now = lazy.topOf(key)
+    fun pinsWhileScrolled(lazy: LazyListState, key: String): Boolean =
+        !lazy.isScrollInProgress &&
+            (lazy.firstVisibleItemIndex > 0 || lazy.firstVisibleItemScrollOffset > 0) &&
+            lazy.layoutInfo.visibleItemsInfo.any { it.key == key }
+
+    /**
+     * Pays the held item [key]'s size change back: by how far its top moved from where it was touched, measured (or by
+     * its size change, [sized], when it is not in view or pinned while scrolled up). Measured, because a list resting
+     * on its oldest row keeps that row, and the held one, in place on its own as the item folds; paying the fold back
+     * as well moved the row up by as much again. What the list cannot scroll (nothing above it) is lent as [room] and
+     * scrolled into; the room first fills the short conversation's empty space above its oldest row (room there adds
+     * nothing to scroll into).
+     */
+    suspend fun payBack(lazy: LazyListState, key: String, sized: Float, useHeldTop: Boolean = true) {
+        val t0 = if (useHeldTop) heldTop else null
+        val now = if (t0 != null) lazy.topOf(key) else null
         val scroll = if (t0 != null && now != null) (now - t0).toFloat() else sized
         if (kotlin.math.abs(scroll) < FoldAnchorRules.HALF_PX) return
         val left = scroll - lazy.scrollBy(scroll)
@@ -180,7 +190,9 @@ internal fun Modifier.foldAnchor(key: String, anchor: FoldAnchor, lazy: LazyList
         .onSizeChanged { size ->
             val before = last[0]
             last[0] = size.height
-            val scroll = anchor.scrollFor(key, before, size.height)
-            if (scroll != 0f) scope.launch { anchor.payBack(lazy, key, scroll) }
+            val held = anchor.item == key
+            val pinned = !held && anchor.pinsWhileScrolled(lazy, key)
+            val scroll = FoldAnchorRules.scrollFor(held = held || pinned, before = before, after = size.height)
+            if (scroll != 0f) scope.launch { anchor.payBack(lazy, key, scroll, useHeldTop = held) }
         }
 }
