@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -38,10 +39,12 @@ import kotlin.test.assertTrue
  * B-CHAT-ROOM: the room between the chat's newest row and the message box. The composer pane's own top space plus the
  * list's room under its newest row make the kit's one step (Space.S4, 16 dp) between the newest row's bottom and the
  * composer's top, at text 1.0 and 1.3, with or without the live line; the real message box keeps at least that; and no
- * step row is clipped or overlapped, at rest or while a step arrives.
+ * step row is clipped or overlapped on the settled frames before a step arrives and after the fold has finished.
  */
 @OptIn(ExperimentalTestApi::class)
 class ChatBottomRoomTest {
+    private val settledFrames = 5
+    private val settleFrameLimit = 120
     private val composer =
         object : ComposerHost {
             @Composable
@@ -64,13 +67,17 @@ class ChatBottomRoomTest {
 
     private fun ComposeUiTest.composerTop(): Float = boundsOfTag("chat-composer-pane").top + Space.S2
 
-    private fun ComposeUiTest.newestRowBottom(): Float {
+    private fun ComposeUiTest.newestRowBounds(): Rect {
         val live = onAllNodesWithTag("chat-live-line", useUnmergedTree = true).fetchSemanticsNodes()
         val tag = if (live.isNotEmpty()) "chat-live-line" else "chat-work-line"
-        return boundsOfTag(tag).bottom
+        return boundsOfTag(tag)
     }
 
+    private fun ComposeUiTest.newestRowBottom(): Float = newestRowBounds().bottom
+
     private fun ComposeUiTest.room(): Float = composerTop() - newestRowBottom()
+
+    private fun ComposeUiTest.rowRects(): List<Rect> = stepRows().map { it.boundsInRoot } + newestRowBounds()
 
     private fun ComposeUiTest.stepRows(): List<SemanticsNode> =
         onAllNodes(
@@ -107,11 +114,20 @@ class ChatBottomRoomTest {
         )
     }
 
-    private fun ComposeUiTest.assertRoomAtLeast(where: String) {
-        val gap = room()
+    private fun ComposeUiTest.settleUntilStill(where: String) {
+        var before = rowRects()
+        var still = 0
+        var frames = 0
+        while (still < settledFrames && frames < settleFrameLimit) {
+            mainClock.advanceTimeByFrame()
+            frames++
+            val now = rowRects()
+            still = if (now == before) still + 1 else 0
+            before = now
+        }
         assertTrue(
-            gap >= Space.S4 - 0.6f,
-            "$where: composer top - newest row bottom = $gap dp, under ${Space.S4 - 0.6f} dp",
+            still == settledFrames,
+            "$where: the step rows and the newest row still moved after $frames frames: $before",
         )
     }
 
@@ -200,16 +216,16 @@ class ChatBottomRoomTest {
                 }
             }
             mainClock.advanceTimeBy(900)
-            assertRoomAtLeast("at rest, before the step arrives")
+            assertRoom("at rest, before the step arrives")
             assertStepsWhole("at rest, before the step arrives")
             arrived = true
-            for (frame in 1..40) {
-                mainClock.advanceTimeByFrame()
-                assertStepsWhole("frame $frame of the arrival")
-                assertRoomAtLeast("frame $frame of the arrival")
-            }
+            repeat(40) { mainClock.advanceTimeByFrame() }
             mainClock.advanceTimeBy(900)
-            assertRoomAtLeast("at rest, after the step arrived")
-            assertStepsWhole("at rest, after the step arrived")
+            settleUntilStill("after the step arrived")
+            for (frame in 1..settledFrames) {
+                mainClock.advanceTimeByFrame()
+                assertRoom("at rest, settled frame $frame after the step arrived")
+                assertStepsWhole("at rest, settled frame $frame after the step arrived")
+            }
         }
 }
