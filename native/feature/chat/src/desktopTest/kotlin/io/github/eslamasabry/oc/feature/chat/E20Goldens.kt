@@ -87,12 +87,14 @@ internal object E20Goldens {
 }
 
 /** The real kit theme at density 1 and the given text [scale], on the page's ground. */
+@Suppress("LongParameterList") // the one scene door: every option arrives named, with its default
 @Composable
 internal fun E20Scene(
     scale: Float = 1f,
     locale: String = "en",
     dark: Boolean = false,
     style: Style = Style.Solid,
+    motion: MotionLevel = MotionLevel.Off,
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(LocalDensity provides Density(1f, scale)) {
@@ -100,7 +102,7 @@ internal fun E20Scene(
             appearance =
                 KitAppearance(
                     mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light,
-                    motion = MotionLevel.Off,
+                    motion = motion,
                     style = style,
                 ),
             platform = DesktopKitPlatform(),
