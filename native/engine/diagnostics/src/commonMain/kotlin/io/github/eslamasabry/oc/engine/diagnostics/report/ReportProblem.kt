@@ -94,7 +94,7 @@ public data class ReportProblemState(
 public class ReportProblem private constructor(
     private val files: ReportFiles,
     private val redactor: Redactor,
-    private val clock: Clock,
+    internal val clock: Clock,
     public val maxEntries: Int,
     public val maxBytes: Int,
     public val foldWindow: Duration,
@@ -108,6 +108,10 @@ public class ReportProblem private constructor(
     public val entries: ImmutableList<ProblemEvent> get() = mutableState.value.entries
 
     public val storageFailed: Boolean get() = mutableState.value.storageFailed
+
+    /** Test hook: how many events [redacted] has cleaned since the report was opened. */
+    internal var redactions: Int = 0
+        private set
 
     /**
      * Keeps an error. [count] and [firstAt] carry repeats already folded elsewhere (the diagnostics ring, B-332): the
@@ -145,7 +149,7 @@ public class ReportProblem private constructor(
             var added = false
             for (span in spans) {
                 added = true
-                next += timing(span)
+                next += redacted(timing(span))
                 if (next.size > maxEntries) evictOne(next)
             }
             if (!added) Outcome.Ok(Unit) else commit(next)
@@ -231,12 +235,14 @@ public class ReportProblem private constructor(
 
     private fun timing(span: PerfSpan) = ProblemEvent(ProblemEventKind.Timing, span.wallStart, TIMING_SOURCE, span.toLogLine())
 
-    private fun redacted(event: ProblemEvent) =
-        event.copy(
+    private fun redacted(event: ProblemEvent): ProblemEvent {
+        redactions++
+        return event.copy(
             source = safeText(event.source, SOURCE_LIMIT),
             message = safeText(event.message, MESSAGE_LIMIT),
             stack = safeText(event.stack, STACK_LIMIT),
         )
+    }
 
     private fun safeText(text: String, limit: Int): String {
         val safe = redactor.opaqueTokens(redactor.redact(text))
@@ -256,11 +262,12 @@ public class ReportProblem private constructor(
         ).encodeToByteArray()
 
     /**
-     * Caller holds [lock]. [flush] false leaves the bytes in the system's file cache
+     * Caller holds [lock]. Every candidate is redacted already (an event is cleaned once, when it is recorded);
+     * nothing is cleaned here again. [flush] false leaves the bytes in the system's file cache
      * ([ReportFiles.writePendingCached]).
      */
     private fun commit(candidates: List<ProblemEvent>, flush: Boolean = true): Outcome<Unit> {
-        val next = candidates.map(::redacted).toMutableList()
+        val next = candidates.toMutableList()
         while (next.size > maxEntries) evictOne(next)
         var bytes = encode(next)
         while (bytes.size > maxBytes && next.isNotEmpty()) {
