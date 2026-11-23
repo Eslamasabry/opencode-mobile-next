@@ -231,4 +231,12 @@
     <string name="nlibCustomRestartingTitle">Restarting OpenCode on this phone</string>
     <!-- Restart in progress body -->
     <string name="nlibCustomRestartingBody">Waiting is normal: it loads the change as it starts.</string>
+    <!-- Remove done in the settings, but restarting OpenCode failed; %1$s = the provider’s name -->
+    <string name="nlibCustomRemoveRestartFailedTitle">%1$s is removed, but OpenCode did not restart</string>
+    <!-- Remove restart failed body -->
+    <string name="nlibCustomRemoveRestartFailedBody">Try again, or start OpenCode from This phone. It stays in the list until OpenCode restarts.</string>
+    <!-- Remove done in the settings and OpenCode restarted, but it still lists the provider; %1$s = the provider’s name -->
+    <string name="nlibCustomRemoveNotGoneTitle">%1$s is removed, but OpenCode still lists it</string>
+    <!-- Remove not gone after restart body -->
+    <string name="nlibCustomRemoveNotGoneBody">Restart OpenCode again. If it is still listed after that, open Details.</string>
 </resources>
