@@ -540,6 +540,7 @@ internal fun ChatTranscriptList(
     var stepsShown by rememberSaveable { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    val liveTurn = if (live != null) unique.firstOrNull()?.turnId else null
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
         remember(unique, pending, liveRow, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
@@ -845,6 +846,7 @@ internal fun ChatTranscriptList(
                             runningSteps = runningSteps,
                             onHideSteps = { stepsShown = false },
                             stopping = live?.stopping == true,
+                            turnRuns = row.turnId == liveTurn,
                         )
                 } else {
                     ChatRow(
@@ -869,6 +871,7 @@ internal fun ChatTranscriptList(
                         runningSteps = runningSteps,
                         onHideSteps = { stepsShown = false },
                         stopping = live?.stopping == true,
+                        turnRuns = row.turnId == liveTurn,
                     )
                 }
                 if (display.timestampsVisible) {
@@ -1285,6 +1288,8 @@ private fun ChatRow(
     onHideSteps: () -> Unit = {},
     /** The person pressed Stop: no step says it waits for them any more. */
     stopping: Boolean = false,
+    /** This row belongs to the turn currently running. */
+    turnRuns: Boolean = false,
 ) {
     when (row) {
         is BlockRow -> {
@@ -1387,6 +1392,7 @@ private fun ChatRow(
                         reply,
                         onCompactAgain,
                         stopping = stopping,
+                        turnRuns = turnRuns,
                     )
                 }
                 else

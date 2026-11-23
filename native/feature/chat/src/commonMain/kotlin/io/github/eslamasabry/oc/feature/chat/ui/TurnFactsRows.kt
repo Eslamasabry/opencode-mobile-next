@@ -202,6 +202,8 @@ internal fun TurnWorkLine(
     onCompactAgain: (() -> Unit)? = null,
     /** The person pressed Stop: the turn's steps no longer say they wait for the person (the tail says Stopping). */
     stopping: Boolean = false,
+    /** The turn itself is still running: keep the folded step list open between steps instead of summing to one row. */
+    turnRuns: Boolean = false,
 ) {
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
@@ -212,7 +214,7 @@ internal fun TurnWorkLine(
     val open = folds.open[foldKey] ?: work.steps.any { it.waitsOnChild(childNeeds) }
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
-    val summed = StepListRules.sums(work.state)
+    val summed = StepListRules.sums(work.state, turnRuns)
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
