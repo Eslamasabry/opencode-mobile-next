@@ -22,6 +22,8 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
+import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.ui.stepGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.math.abs
@@ -397,13 +399,7 @@ class StepsCraftTest {
                         when (phase) {
                             1 -> StepsCraftScene.readsAndStepsFacts(reads = 3, extras = 0, lastRuns = true)
                             2 -> StepsCraftScene.readsAndStepsFacts(reads = 4, extras = 0, lastRuns = false)
-                            3 ->
-                                StepsCraftScene.readsAndStepsFacts(
-                                    reads = 4,
-                                    extras = 1,
-                                    lastRuns = true,
-                                    lastHasOutput = true,
-                                )
+                            3 -> StepsCraftScene.readsAndStepsFacts(4, 1, lastRuns = true, lastHasOutput = true)
                             else -> StepsCraftScene.readsAndStepsFacts(reads = 4, extras = 2, lastRuns = true)
                         }
                     ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = facts)
@@ -430,26 +426,14 @@ class StepsCraftTest {
                     sample()
                 }
             }
-            assertTrue(
-                prompts.all { abs(it - prompt0) <= 1f },
-                "prompt moved while scrolled up 40 dp: start=$prompt0 samples=$prompts",
-            )
-            assertTrue(
-                earliers.all { abs(it - earlier0) <= 1f },
-                "earlier answer moved while scrolled up 40 dp: start=$earlier0 samples=$earliers",
-            )
-            assertTrue(
-                jumps.all { it == 0 },
-                "jump-to-latest drew over text while scrolled up 40 dp: $jumps",
-            )
+            assertTrue(prompts.all { abs(it - prompt0) <= 1f }, "prompt moved scrolled 40 dp: $prompt0 $prompts")
+            assertTrue(earliers.all { abs(it - earlier0) <= 1f }, "earlier moved scrolled 40 dp: $earlier0 $earliers")
+            assertTrue(jumps.all { it == 0 }, "jump-to-latest drew over text while scrolled up 40 dp: $jumps")
         }
 
     private fun androidx.compose.ui.test.ComposeUiTest.jumpTopOrNull(): Float? =
-        onAllNodesWithTag("jump-to-latest", useUnmergedTree = true)
-            .fetchSemanticsNodes()
-            .firstOrNull()
-            ?.boundsInRoot
-            ?.top
+        onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes()
+            .firstOrNull()?.boundsInRoot?.top
 
     private fun farPhaseFacts(phase: Int) =
         when (phase) {
@@ -556,18 +540,9 @@ class StepsCraftTest {
                     sample()
                 }
             }
-            assertTrue(
-                groupTops.all { abs(it - group0) <= 1f },
-                "opened group row moved: start=$group0 samples=$groupTops",
-            )
-            assertTrue(
-                prompts.all { abs(it - prompt0) <= 1f },
-                "prompt moved above opened group: start=$prompt0 samples=$prompts",
-            )
-            assertTrue(
-                earliers.all { abs(it - earlier0) <= 1f },
-                "earlier answer moved above opened group: start=$earlier0 samples=$earliers",
-            )
+            assertTrue(groupTops.all { abs(it - group0) <= 1f }, "opened group moved: $group0 $groupTops")
+            assertTrue(prompts.all { abs(it - prompt0) <= 1f }, "prompt moved above group: $prompt0 $prompts")
+            assertTrue(earliers.all { abs(it - earlier0) <= 1f }, "earlier moved above group: $earlier0 $earliers")
             assertTrue(summaries.all { it == 0 }, "summary row flashed: $summaries")
             assertTrue(hideFolds.all { it == 0 }, "fold header replaced group: $hideFolds")
             onNodeWithText("Read 10 files").assertIsDisplayed()
@@ -689,12 +664,8 @@ class StepsCraftTest {
             repeat(40) { frame ->
                 mainClock.advanceTimeByFrame()
                 val nodes =
-                    onAllNodes(rowMatcher, useUnmergedTree = true)
-                        .fetchSemanticsNodes()
-                        .map {
-                            val tag = it.config.getOrNull(SemanticsProperties.TestTag).orEmpty()
-                            tag to it.boundsInRoot
-                        }
+                    onAllNodes(rowMatcher, useUnmergedTree = true).fetchSemanticsNodes()
+                        .map { it.config.getOrNull(SemanticsProperties.TestTag).orEmpty() to it.boundsInRoot }
                         .sortedBy { it.second.top }
                 for (i in 1 until nodes.size) {
                     val prev = nodes[i - 1]
@@ -705,6 +676,25 @@ class StepsCraftTest {
                     )
                 }
             }
+        }
+
+    @Test
+    fun `STEPS-CRAFT-026 a slow model after steps still says Still thinking and its hint`() =
+        kitUiTest(412, 1200) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            val base = StepsCraftScene.alternatingFacts(8, false)
+            val runStart = base.runStartedAtMs ?: 0L
+            val facts = base.copy(live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow), nowMs = runStart + 300_000)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            onNodeWithText("Still thinking", substring = true, useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Some models think quietly", substring = true, useUnmergedTree = true).assertIsDisplayed()
+            onAllNodesWithText("Working", substring = true, useUnmergedTree = true).assertCountEquals(0)
         }
 
     private companion object {

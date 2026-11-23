@@ -77,7 +77,7 @@ internal fun liveLineWords(
     // you" (RunTailRules: the live line is drawn only while the run works or stops).
     if (work?.state == WorkLineState.WaitingForYou) return null
     val now = work?.now
-    val quiet = quietThinking && (work == null || work.steps.isEmpty())
+    val quiet = quietThinking
     val words = liveStatusWord(quiet, work, writing)
     val elapsed = elapsedMs?.coerceAtLeast(0)
     val line =
