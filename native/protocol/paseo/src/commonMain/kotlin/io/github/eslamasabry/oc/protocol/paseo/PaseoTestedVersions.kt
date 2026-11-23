@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.persistentSetOf
  * phone that has not updated yet keeps working.
  */
 public object PaseoTestedVersions {
-    /** Daemon versions. 0.17.3 is the version the phone installs (listed here so the proving build runs its bounded requests; the pins file's own tested list gains it only after a device proof); 0.16.1 and older tested ones stay listed (plan 04 §8 "phone pin"). */
+    /** Daemon versions. 0.17.3 is the version the phone installs (proven on the owner's phone on 2026-11-23 with build 10139, so the pins file's tested list holds it too); 0.16.1 and older tested ones stay listed (plan 04 §8 "phone pin"). */
     public val paseo: ImmutableSet<String> = persistentSetOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0", "0.15.3", "0.15.4", "0.16.1", "0.17.3")
 
     /** The daemon version the phone helper installs. */

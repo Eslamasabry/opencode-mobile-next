@@ -38,7 +38,8 @@ internal const val AGENT_PINS_JSON: String = """{
     "0.14.0",
     "0.15.3",
     "0.15.4",
-    "0.16.1"
+    "0.16.1",
+    "0.17.3"
   ],
   "agents": [
     {

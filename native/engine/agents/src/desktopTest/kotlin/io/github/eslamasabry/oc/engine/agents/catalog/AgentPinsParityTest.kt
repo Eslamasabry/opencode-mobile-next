@@ -455,7 +455,8 @@ class AgentPinsParityTest {
         )
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
         assertEquals(
-            Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + listOf("0.15.3", "0.15.4", "0.16.1"),
+            Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() +
+                listOf("0.15.3", "0.15.4", "0.16.1", "0.17.3"),
             pins.paseoTestedVersions,
         )
     }
