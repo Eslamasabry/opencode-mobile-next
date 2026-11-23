@@ -12,7 +12,6 @@
 # both classes pass on the pinned line) and the two tools/strings lines (a gate module, never absorbed) are gone.
 # Flutter golden gates compare with frozen Flutter pictures that are not re-recordable; the runner differs from the PC.
 * :: *.rb.*GateTest | Flutter golden gate (FlutterGoldenGate): reference is a frozen Flutter picture
-ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest > N1 B-KIT-029 the title keeps room next to long actions on a phone[desktop] | 3.0.0: a bar with long text actions squeezes its title (the review's file page); fix = text actions to overflow
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default[desktop] | 3.0.0: the align gate has no column for words after a hanging mark (KitMarkedConsequences by design); backlog B-494
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2[desktop] | 3.0.0: the align gate has no column for words after a hanging mark (KitMarkedConsequences by design); backlog B-494
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest > kit_consequences_default_text2_1280x800[desktop] | 3.0.0: the align gate has no column for words after a hanging mark (KitMarkedConsequences by design); backlog B-494
