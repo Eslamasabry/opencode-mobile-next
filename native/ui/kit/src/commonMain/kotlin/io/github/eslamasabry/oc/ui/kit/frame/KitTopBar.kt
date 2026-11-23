@@ -122,7 +122,8 @@ public object TopBarTitle {
  * Frame text: it never grows past 1.3×, and the title wraps to two lines from 1.3×.
  *
  * An action with an [KitLineAction.icon] is an icon button on phones and tablets (its words are what TalkBack says);
- * wide windows show the words. A text action's words are never cut: the actions stay beside the title while
+ * wide windows show the words, and where the room cannot hold them the action stays in the bar as its icon button. A
+ * text action's words are never cut: the actions stay beside the title while
  * their whole labels fit in the room the title keeps — 90 dp at least on a compact window, its whole single
  * line on wider ones — and the rest go to [more] whole. [large] is a hub's bar: the title in the 28 sp large
  * size on its own line, the actions on the title's line at the end (or beside Back).
@@ -257,7 +258,8 @@ public fun KitTopBar(
             ) {
                 shown.forEach { action ->
                     val glyph = action.icon
-                    if (icons && glyph != null) {
+                    // A wide window keeps a glyph action whose words did not fit as its icon button (split's asIcons).
+                    if (glyph != null && (icons || barFit.asIcons.any { it === action })) {
                         KitIconButton(
                             icon = glyph,
                             label = action.semanticsLabel ?: action.label,
@@ -643,6 +645,8 @@ private data class TopBarSplit(
     val hidden: List<KitLineAction>,
     /** A one-row Back bar only: the step gave way because that kept the title's words whole or an action in the bar. */
     val tight: Boolean,
+    /** A wide window only: these shown actions' words did not fit, so they draw as their 48 dp icon buttons. */
+    val asIcons: List<KitLineAction> = emptyList(),
 )
 
 /**
@@ -750,9 +754,10 @@ private class BarFit(
 private object TopBarActions {
     /**
      * Which actions stay beside the title and which go to the overflow. An action with a glyph is a 48 dp icon button
-     * on compact and medium windows; a wide window shows its words. A text action's words are never cut: the actions
-     * stay, in the caller's order, while their whole labels fit in the room the title keeps, and the rest go to the
-     * overflow, whole.
+     * on compact and medium windows; a wide window shows its words, and where those do not fit it keeps the action as
+     * its icon button instead of moving it to the overflow. A text action's words are never cut: the actions stay, in
+     * the caller's order, while their whole labels fit in the room the title keeps, and the rest go to the overflow,
+     * whole.
      *
      * A one-row Back bar keeps its earlier step between the title and the actions. The step gives way only where that
      * is what keeps the title's words whole beside the actions that stay, or what lets one more action stay in the bar.
@@ -804,7 +809,12 @@ private object TopBarActions {
             val kept = if (shape.oneRow) fit.kept(room, 0) else withStep
             val titleRoom = fit.titleRoom(withStep, step)
             val whole = !shape.oneRow || text.whole(words, titleStyle, titleRoom, lines)
-            TopBarSplit(actions.take(kept), actions.drop(kept), tight = kept > withStep || !whole)
+            // A wide window keeps a glyph action whose words do not fit in the bar as its 48 dp icon button, as on
+            // compact and medium: only a text-only action moves to the overflow there.
+            val rest = actions.drop(kept)
+            val asIcons = if (glyphIsIcon) emptyList() else rest.filter { it.icon != null }
+            val hidden = if (glyphIsIcon) rest else rest.filter { it.icon == null }
+            TopBarSplit(actions.take(kept) + asIcons, hidden, tight = kept > withStep || !whole, asIcons = asIcons)
         }
     }
 
