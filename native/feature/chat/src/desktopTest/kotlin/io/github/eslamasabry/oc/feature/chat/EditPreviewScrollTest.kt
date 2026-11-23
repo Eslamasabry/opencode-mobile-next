@@ -98,16 +98,13 @@ class EditPreviewScrollTest {
     }
 
     /**
-     * Today's way to see the rest of a long preview: open every "Show all output" button there is. TalkBack's
-     * activation, no finger: the button often sits past the fold of the 760 dp window.
+     * Today's way to see the rest of a long preview: open every "Show all output" button there is. The merged tree
+     * holds the words and the click on one node, and TalkBack's activation needs no room on screen (the button sits
+     * past the fold of the 760 dp window).
      */
     private fun ComposeUiTest.showAllOutput() {
         repeat(8) {
-            val buttons =
-                onAllNodes(
-                    hasClickAction() and (hasText("Show all output") or hasAnyAncestor(hasText("Show all output"))),
-                    useUnmergedTree = true,
-                )
+            val buttons = onAllNodes(hasText("Show all output") and hasClickAction())
             if (buttons.fetchSemanticsNodes().isEmpty()) return
             buttons[0].performSemanticsAction(SemanticsActions.OnClick)
             waitForIdle()
@@ -116,10 +113,7 @@ class EditPreviewScrollTest {
 
     /** One tap on the button whose words are [text], as TalkBack does: the click needs no room on screen. */
     private fun ComposeUiTest.tapButton(text: String) {
-        onAllNodes(
-            hasClickAction() and (hasText(text) or hasAnyAncestor(hasText(text))),
-            useUnmergedTree = true,
-        )[0].performSemanticsAction(SemanticsActions.OnClick)
+        onAllNodes(hasText(text) and hasClickAction())[0].performSemanticsAction(SemanticsActions.OnClick)
         waitForIdle()
     }
 
