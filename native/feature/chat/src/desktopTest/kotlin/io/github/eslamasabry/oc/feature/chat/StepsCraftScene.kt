@@ -331,4 +331,80 @@ internal object StepsCraftScene {
                 ),
             live = LiveTurnUi(stopping = false),
         )
+
+    private val stageReadFiles =
+        listOf(
+            "CLAUDE.md", "pubspec.yaml", "README.md", "main.kt", "app.kt",
+            "player.kt", "codec.kt", "theme.kt", "audio.kt", "video.kt",
+            "surface.kt", "buffer.kt", "clock.kt", "render.kt", "tests.kt",
+        )
+
+    /**
+     * Replays the owner's recording across live stages 0 -> 1 -> 2:
+     * 0 = 8 completed reads while the model thinks;
+     * 1 = 15 completed reads + a running command (25.0s);
+     * 2 = 15 completed reads + the command finished while the turn still runs.
+     */
+    fun liveStageFacts(stage: Int): TurnFactsUi {
+        val count = if (stage == 0) 8 else 15
+        val parts =
+            buildList {
+                for (n in 1..count) {
+                    val start = 2_000L + n * 1_000L
+                    add(
+                        tool(
+                            "r$n",
+                            "read",
+                            mapOf("filePath" to "/work/demo/${stageReadFiles[n - 1]}"),
+                            ToolStatus.Completed,
+                            start,
+                            start + 400,
+                        )
+                    )
+                }
+                if (stage >= 1) {
+                    val running = stage == 1
+                    add(
+                        tool(
+                            "c2",
+                            "bash",
+                            mapOf("command" to "./gradlew test"),
+                            if (running) ToolStatus.Running else ToolStatus.Completed,
+                            8_000L,
+                            if (running) null else 9_000L,
+                        )
+                    )
+                }
+            }
+        val messages =
+            listOf(
+                MessageWithParts(
+                    info(TURN, Role.User, 0, 0),
+                    persistentListOf(Part("p1", TURN, sid, PartType.Text, "text", text = ASK)),
+                ),
+                MessageWithParts(info("m2", Role.Assistant, 1_000, null), parts.toImmutableList()),
+            )
+        val k = TurnFeedKeeper(sid)
+        k.history(messages)
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        return TurnFactsPresenter(FixedClock).present(k.feed.value, 33_000)
+    }
+
+    fun liveStageState(stage: Int): ChatUi =
+        ChatUi.loading(Ref).copy(
+            title = ASK,
+            phase = ChatPhase.Live,
+            rows =
+                persistentListOf(
+                    WorkLineRow(
+                        "work:$TURN",
+                        TURN,
+                        calls = if (stage == 0) 8 else 16,
+                        failed = 0,
+                        state = if (stage == 1) WorkState.Running else WorkState.Done,
+                    ),
+                    prompt(TURN, ASK),
+                ),
+            live = LiveTurnUi(stopping = false),
+        )
 }

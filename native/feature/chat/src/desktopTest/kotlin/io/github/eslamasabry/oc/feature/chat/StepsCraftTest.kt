@@ -629,6 +629,43 @@ class StepsCraftTest {
             assertTrue(jumps.all { it == 0 }, "jump-to-latest appeared while near the newest line: $jumps")
         }
 
+    @Test
+    fun `STEPS-CRAFT-024 an opened folded group stays clean across live stage 0 to 1 to 2`() =
+        kitUiTest(412, 2600) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var stage by mutableStateOf(0)
+            setContent {
+                Root {
+                    ChatScreen(
+                        StepsCraftScene.liveStageState(stage),
+                        actions,
+                        composer,
+                        facts = StepsCraftScene.liveStageFacts(stage),
+                    )
+                }
+            }
+            waitForIdle()
+            onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
+            onNodeWithText("Read 8 files").performSemanticsAction(SemanticsActions.OnClick)
+            waitForIdle()
+            onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
+            onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
+            stage = 1
+            waitForIdle()
+            onAllNodesWithText("Hide earlier steps").assertCountEquals(0)
+            onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
+            onNodeWithTag("chat-step-run-r1", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Read 15 files").assertIsDisplayed()
+            onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
+            stage = 2
+            waitForIdle()
+            onAllNodesWithText("Hide earlier steps").assertCountEquals(0)
+            onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
+            onNodeWithTag("chat-step-run-r1", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Read 15 files").assertIsDisplayed()
+            onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
+        }
+
     private companion object {
         /** The finished turn's one row: what it did, the most done first. */
         const val SUMMARY = "Ran 11 commands · 2 other steps"
