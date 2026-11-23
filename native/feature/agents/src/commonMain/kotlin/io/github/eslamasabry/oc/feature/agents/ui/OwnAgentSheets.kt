@@ -96,7 +96,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.serversCancel
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** The person's own agents as rows of the page's own kind, then "Add your own agent" (issue 147). */
@@ -259,8 +258,16 @@ private fun OwnAgentSheetBody(
             error = if (problem == OwnAgentProblem.Start) stringResource(Res.string.agentsOwnAgentBadStart) else null,
             enabled = enabled,
         )
-        OwnAgentHelpFold(Res.string.agentsHelpWhatTitle, Res.string.agentsHelpWhatBody, formKey)
-        OwnAgentHelpFold(Res.string.agentsHelpNotTitle, Res.string.agentsHelpNotBody, formKey)
+        OwnAgentHelpFold(
+            stringResource(Res.string.agentsHelpWhatTitle),
+            stringResource(Res.string.agentsHelpWhatBody),
+            formKey,
+        )
+        OwnAgentHelpFold(
+            stringResource(Res.string.agentsHelpNotTitle),
+            stringResource(Res.string.agentsHelpNotBody),
+            formKey,
+        )
         KitField(
             form.install,
             stringResource(Res.string.agentsOwnAgentInstall),
@@ -270,7 +277,11 @@ private fun OwnAgentSheetBody(
                 if (problem == OwnAgentProblem.Install) stringResource(Res.string.agentsOwnAgentBadInstall) else null,
             enabled = enabled,
         )
-        OwnAgentHelpFold(Res.string.agentsHelpInstallTitle, Res.string.agentsHelpInstallBody, formKey)
+        OwnAgentHelpFold(
+            stringResource(Res.string.agentsHelpInstallTitle),
+            stringResource(Res.string.agentsHelpInstallBody),
+            formKey,
+        )
         OwnAgentEnvSection(problem, form.env, formKey, enabled)
         OwnAgentStatusSection(state, who)
         OwnAgentHelpDetails(formKey)
@@ -294,7 +305,11 @@ private fun OwnAgentEnvSection(
                 enabled = enabled.isEnabled,
             ),
     )
-    OwnAgentHelpFold(Res.string.agentsHelpKeysTitle, Res.string.agentsHelpKeysBody, formKey)
+    OwnAgentHelpFold(
+        stringResource(Res.string.agentsHelpKeysTitle),
+        stringResource(Res.string.agentsHelpKeysBody),
+        formKey,
+    )
     if (problem == OwnAgentProblem.EnvName) KitErrorNotice(stringResource(Res.string.agentsOwnAgentBadEnvName))
     if (problem == OwnAgentProblem.EnvValue) KitErrorNotice(stringResource(Res.string.agentsOwnAgentBadEnvValue))
     for (line in env) {
@@ -353,10 +368,10 @@ private fun OwnAgentStatusSection(state: OwnAgentsUi, who: String) {
 }
 
 @Composable
-private fun OwnAgentHelpFold(title: StringResource, body: StringResource, resetKey: Any) {
+private fun OwnAgentHelpFold(title: String, body: String, resetKey: Any) {
     var expanded by remember(resetKey) { mutableStateOf(false) }
-    KitExpandRow(stringResource(title), expanded, onExpandedChange = { expanded = it }, inset = false) {
-        KitText(stringResource(body), tone = TextTone.Secondary)
+    KitExpandRow(title, expanded, onExpandedChange = { expanded = it }, inset = false) {
+        KitText(body, tone = TextTone.Secondary)
     }
 }
 
