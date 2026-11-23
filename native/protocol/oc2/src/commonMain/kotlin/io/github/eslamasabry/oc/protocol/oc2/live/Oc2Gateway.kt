@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.protocol.oc2.send.Oc2ClientIds
 import io.github.eslamasabry.oc.protocol.oc2.send.Oc2PromptSend
 import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
@@ -1403,25 +1404,7 @@ internal class Oc2Gateway(
                 (response.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L) > byteLimit) {
                 return@exchange Failure.UnreadableReply().failed()
             }
-            val channel = response.bodyAsChannel()
-            val chunks = ArrayList<ByteArray>()
-            val buffer = ByteArray(8192)
-            var size = 0
-            while (true) {
-                val count = channel.readAvailable(buffer, 0, buffer.size)
-                if (count < 0) break
-                if (count > byteLimit - size) return@exchange Failure.UnreadableReply().failed()
-                if (count > 0) {
-                    chunks += buffer.copyOf(count)
-                    size += count
-                }
-            }
-            val bytes = ByteArray(size)
-            var offset = 0
-            for (chunk in chunks) {
-                chunk.copyInto(bytes, offset)
-                offset += chunk.size
-            }
+            val bytes = boundedBody(response, byteLimit) ?: return@exchange Failure.UnreadableReply().failed()
             attempt({ Failure.UnreadableReply() }) {
                 val text = bytes.decodeToString(throwOnInvalidSequence = true)
                 Oc2Wire.parse(text)?.let { settled.response(HttpMethod.Get, path, it) }
@@ -1429,6 +1412,36 @@ internal class Oc2Gateway(
             }.flatMap { value -> value?.ok() ?: Failure.UnreadableReply().failed() }
         }.flatMap { it }
     } ?: Failure.TimedOut().failed()
+
+    /**
+     * The body up to [byteLimit] bytes, read in 8 KiB pieces, or null when the body is longer: an over-limit
+     * body is never held whole, whatever its Content-Length says.
+     */
+    private suspend fun boundedBody(response: HttpResponse, byteLimit: Int): ByteArray? {
+        val channel = response.bodyAsChannel()
+        val chunks = ArrayList<ByteArray>()
+        val buffer = ByteArray(8192)
+        var size = 0
+        while (true) {
+            val count = channel.readAvailable(buffer, 0, buffer.size)
+            if (count < 0) break
+            if (count > byteLimit - size) {
+                channel.cancel(null)
+                return null
+            }
+            if (count > 0) {
+                chunks += buffer.copyOf(count)
+                size += count
+            }
+        }
+        val bytes = ByteArray(size)
+        var offset = 0
+        for (chunk in chunks) {
+            chunk.copyInto(bytes, offset)
+            offset += chunk.size
+        }
+        return bytes
+    }
 
     override suspend fun prompt(
         session: SessionId,
@@ -2407,9 +2420,12 @@ internal class Oc2Gateway(
                 readFailure = ::readFailure,
             ) { reply ->
                 val declared = reply.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L
-                // Over the cap by its own header: the body is never read ([TOO_BIG] stands for it).
-                (if (declared > MAX_FILE_BYTES) TOO_BIG else reply.bodyAsBytes()) to
-                    reply.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()
+                // Over the cap by its own header: the body is never read ([TOO_BIG] stands for it). A header
+                // that lies small gets the same answer once the bounded read itself crosses the cap.
+                val body =
+                    if (declared > MAX_FILE_BYTES) TOO_BIG
+                    else boundedBody(reply, MAX_FILE_BYTES) ?: TOO_BIG
+                body to reply.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()
             }
         if (response is Outcome.Failed) {
             val failure = response.failure

@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.files.ShareServer
 import io.github.eslamasabry.oc.engine.files.WifiShare
 import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.files.presentation.FilePhase
+import io.github.eslamasabry.oc.feature.files.presentation.FileReadReason
 import io.github.eslamasabry.oc.feature.files.presentation.FileViewModel
 import io.github.eslamasabry.oc.feature.files.presentation.NoFileLinks
 import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
@@ -220,6 +221,20 @@ class FileViewModelTest {
         setup.vm.openWith()
         assertEquals(FileNotice.OpenWithNone, setup.vm.state.value.notice)
         assertFalse(Setup(this, handoff = null).vm.state.value.canOpenWith)
+    }
+
+    @Test
+    fun `B-MEDIA-045 a 20 MB file shows the too-big state`() = runTest {
+        val big = FileContent("AAAA".repeat(6_990_507), "binary", "base64", null)
+        val setup =
+            Setup(
+                this,
+                "big.bin",
+                connections = FakeConnections(FakeFileGateway(contents = mapOf("big.bin" to big))),
+            )
+        val state = setup.vm.state.value
+        assertEquals(FilePhase.Failed, state.phase)
+        assertEquals(FileReadReason.TooBig, FileReadReason.of(state.failure))
     }
 
     @Test

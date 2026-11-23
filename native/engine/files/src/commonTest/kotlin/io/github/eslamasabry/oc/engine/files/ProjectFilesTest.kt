@@ -127,6 +127,28 @@ class ProjectFilesTest {
     }
 
     @Test
+    fun `B-MEDIA-045 a 20 MB file is refused as too big before it is decoded`() = runTest {
+        val gateway =
+            FakeFiles(
+                contents =
+                    mapOf(
+                        "big.bin" to FileContent("AAAA".repeat(6_990_507), "binary", "base64", null),
+                        "big.txt" to FileContent("a".repeat(20_971_520), "text", null, null),
+                        "edge.bin" to FileContent("AAAA".repeat(5_592_406), "binary", "base64", null),
+                    )
+            )
+        assertEquals(
+            Failure.Media(MediaProblem.FileTooBig),
+            (ProjectFiles.open(gateway, "big.bin") as Outcome.Failed).failure,
+        )
+        assertEquals(
+            Failure.Media(MediaProblem.FileTooBig),
+            (ProjectFiles.open(gateway, "big.txt") as Outcome.Failed).failure,
+        )
+        assertIs<Outcome.Ok<*>>(ProjectFiles.open(gateway, "edge.bin"))
+    }
+
+    @Test
     fun `B-NAV-026 name search returns project files, empty query asks nothing`() = runTest {
         val gateway = FakeFiles(found = listOf("lib/main.dart", "./lib/main.dart", "README.md"))
         val found = (ProjectFiles.find(gateway, " main ") as Outcome.Ok).value

@@ -39,12 +39,14 @@ public object ProjectFiles {
     private suspend fun openInside(gateway: FileGateway, normal: String, line: Int?): Outcome<OpenedFile> =
         when (val read = gateway.fileContent(normal)) {
             is Outcome.Failed -> read
-            is Outcome.Ok -> {
-                val data =
-                    FilePreview.data(normal, read.value)
-                        ?: return Outcome.Failed(Failure.Media(MediaProblem.FileNotShowable))
-                Outcome.Ok(OpenedFile(data, FilePreview.body(data, line)))
-            }
+            is Outcome.Ok ->
+                if (FilePreview.tooBig(read.value)) Outcome.Failed(Failure.Media(MediaProblem.FileTooBig))
+                else {
+                    val data =
+                        FilePreview.data(normal, read.value)
+                            ?: return Outcome.Failed(Failure.Media(MediaProblem.FileNotShowable))
+                    Outcome.Ok(OpenedFile(data, FilePreview.body(data, line)))
+                }
         }
 
     /** Fuzzy file-name search across the project (`/fs/find`). */
