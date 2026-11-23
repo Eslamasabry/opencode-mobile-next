@@ -88,7 +88,7 @@ internal class FoldAnchor {
     fun pinsWhileScrolled(lazy: LazyListState, key: String): Boolean =
         !lazy.isScrollInProgress &&
             (lazy.firstVisibleItemIndex > 0 || lazy.firstVisibleItemScrollOffset > 0) &&
-            lazy.layoutInfo.visibleItemsInfo.any { it.key == key }
+            lazy.layoutInfo.visibleItemsInfo.any { it.key == key && it.index >= lazy.firstVisibleItemIndex }
 
     /**
      * Pays the held item [key]'s size change back: by how far its top moved from where it was touched, measured (or by
