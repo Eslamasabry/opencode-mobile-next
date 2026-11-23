@@ -179,18 +179,15 @@ private fun cachedWork(turn: LedgerTurn, key: WorkKey, cache: TurnWorkCache?): T
 }
 
 /** Whether two turns hold the same message infos and the same part objects, in the same count and order. */
-private fun sameMessages(cached: List<MessageWithParts>, now: List<MessageWithParts>): Boolean {
-    if (cached.size != now.size) return false
-    for (i in cached.indices) {
-        val a = cached[i]
-        val b = now[i]
-        if (a.info !== b.info || a.parts.size != b.parts.size) return false
-        for (p in a.parts.indices) {
-            if (a.parts[p] !== b.parts[p]) return false
+private fun sameMessages(cached: List<MessageWithParts>, now: List<MessageWithParts>): Boolean =
+    cached.size == now.size &&
+        cached.indices.all { i ->
+            val a = cached[i]
+            val b = now[i]
+            a.info === b.info &&
+                a.parts.size == b.parts.size &&
+                a.parts.indices.all { p -> a.parts[p] === b.parts[p] }
         }
-    }
-    return true
-}
 
 /**
  * The [TurnWork] of one conversation's turns, kept between [turnWork] calls (B-CHAT-096): a long chat's every-second
