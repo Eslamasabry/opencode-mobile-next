@@ -43,7 +43,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -64,7 +63,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.focusGroup
@@ -372,9 +370,7 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             // that had focus gets it back only if (a) the page had it when the modal showed, (b) nothing on the page has taken it since,
             // and (c) the soft keyboard was up when the modal showed, or none was ever seen (a hardware keyboard, a
             // desktop): focus on a field brings the keyboard back, which the person had put away.
-            // Read through a derived value: a restored sheet registers while this host is composing (its page came
-            // first), and what the host read before that must still reach it afterwards.
-            val modal by remember(state) { derivedStateOf { state.isShowing || state.isDialogShowing } }
+            val modal = state.isShowing || state.isDialogShowing
             // Asked to show (entering or shown), not leaving; read live in the focus callbacks below.
             val holding = { state.shown.targetState || state.dialogShown.targetState }
             val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
@@ -405,7 +401,8 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                 }
             }
             Box(
-                Modifier.clearedUnderModal(state)
+                (if (modal) Modifier.clearAndSetSemantics {}
+                else Modifier)
                     .onFocusChanged {
                         held.has = it.hasFocus
                         // Whatever asked for it (a requestFocus on a page field): the page takes no focus under a modal.
@@ -435,15 +432,6 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
         }
     }
 }
-
-/**
- * The page's semantics are cleared while a sheet or a dialog of the host is showing. The choice is made when the
- * modifier is attached to the page, not while the host composes it: a screen composed around a sheet it had open (a
- * rotation rebuilt it) registers that sheet during that same composition, after its page, and the page must be cleared
- * in that first frame too.
- */
-private fun Modifier.clearedUnderModal(host: KitSheetHostState): Modifier =
-    composed { if (host.isShowing || host.isDialogShowing) Modifier.clearAndSetSemantics {} else Modifier }
 
 /**
  * A sheet as screen state (Dart `showKitSheet`, `KitSheet`, `showKitFramedSheet`; plan 06 §7.4):

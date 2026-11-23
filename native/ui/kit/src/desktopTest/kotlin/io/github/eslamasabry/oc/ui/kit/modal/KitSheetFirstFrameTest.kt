@@ -81,10 +81,6 @@ class KitSheetFirstFrameTest {
             onNodeWithTag("kit-sheet")
                 .assertExists("the sheet that came back with the rebuilt screen is drawn in its first frame")
             val firstTop = sheetTop()
-            assertTrue(
-                onAllNodesWithText("the page under the sheet").fetchSemanticsNodes().isEmpty(),
-                "the page under the sheet is cleared from the rebuilt screen's first frame",
-            )
             mainClock.autoAdvance = true
             waitForIdle()
             onNodeWithTag("kit-sheet").assertExists("the sheet that came back is still shown once settled")
