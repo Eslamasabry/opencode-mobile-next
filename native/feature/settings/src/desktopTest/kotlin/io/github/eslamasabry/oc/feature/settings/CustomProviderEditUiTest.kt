@@ -116,15 +116,24 @@ class CustomProviderEditUiTest {
     @Test
     fun `B-LIB-336 an entry in the file the server does not list gets a row with Restart, Edit and Remove`() =
         runComposeUiTest {
+            val stub = IntegrationInfo("my-box", "My box", persistentListOf(), persistentListOf(), 0)
             shows(page(rows = emptyList(), sheet = null))
             onNodeWithText("My box").assertExists()
             onNodeWithText("Added by you · Not loaded").assertExists()
-            onNodeWithText("My box").performClick()
+            shows(page(rows = emptyList(), sheet = LibrarySheet.Provider(stub)))
             onNodeWithText("My box is saved").assertExists()
             onNodeWithText("Restart OpenCode on this phone").assertExists()
             onNodeWithText("Edit provider").assertExists()
             onNodeWithText("Remove provider").assertExists()
         }
+
+    @Test
+    fun `B-LIB-336b the not-loaded row opens its sheet through show`() = runComposeUiTest {
+        val stub = IntegrationInfo("my-box", "My box", persistentListOf(), persistentListOf(), 0)
+        shows(page(rows = emptyList(), sheet = null))
+        onNodeWithText("My box").performClick()
+        assertEquals(listOf<Any?>(LibrarySheet.Provider(stub)), calls.single { it.first == "show" }.second)
+    }
 
     @Test
     fun `B-LIB-337 the phone offers Edit and Remove for its own entry, a remote server offers neither`() =

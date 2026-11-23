@@ -552,4 +552,18 @@ class CustomProviderTest {
         assertTrue(written.replaceDeclared, "a confirmed replace is told to replace")
         assertTrue(written.requireDeclared, "a confirmed replace is told to require the entry")
     }
+
+    @Test
+    fun `B-LIB-357 a failed key removal stops the remove before the file`() = runTest {
+        val host = Host(reads = Outcome.Ok(0 to declaredLine()))
+        val server =
+            Server(
+                listOf(rows(connected("my-box"))),
+                disconnectResult = Outcome.Failed(Failure.Network(NetworkWhy.Refused)),
+            )
+        val outcome = session(host, server).removeCustomProvider("my-box")
+        assertEquals(CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, "Network · Refused"), outcome)
+        assertTrue(host.removedIds.isEmpty(), "the file was not touched")
+        assertEquals(1, server.disconnects)
+    }
 }
