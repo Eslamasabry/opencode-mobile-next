@@ -259,7 +259,7 @@ public fun AgentsScreen(
             OwnProviderSheet(state, hub.own, ownActions)
             AgentsHelpSheet(hub.own, ownActions)
         }
-        if (ownAgentActions != null && hub != null) OwnAgentSheet(hub.ownAgents, ownAgentActions, ownActions)
+        if (ownAgentActions != null && hub != null) OwnAgentSheet(hub.ownAgents, ownAgentActions)
         KitSheet(
             visible = state.revertingAgent != null,
             onDismissRequest = actions::cancelPreviousVersion,
