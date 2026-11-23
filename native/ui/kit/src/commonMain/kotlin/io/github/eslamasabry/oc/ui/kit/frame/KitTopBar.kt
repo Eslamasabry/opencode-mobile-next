@@ -763,7 +763,11 @@ private object TopBarActions {
     ): TopBarSplit {
         val window = LocalKitWindow.current
         val candidates = actions.take(limit)
-        if (candidates.none { it.icon == null }) {
+        // A glyph is a fixed 48 dp button on compact and medium windows, so an all-glyph set is already bounded there.
+        // A wide window draws a glyph's words, so even an all-glyph set must be measured there: unbounded, the row
+        // starves the title's room and every change to the actions re-places the bar (the chat header's live words).
+        val glyphIsIcon = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
+        if (glyphIsIcon && candidates.none { it.icon == null }) {
             return TopBarSplit(candidates, actions.drop(limit), tight = false)
         }
         val tokens = LocalKitTokens.current
@@ -778,7 +782,6 @@ private object TopBarActions {
         val words = kitTitleLine(title)
         val lines = if (LocalKitHeaderCapsule.current) 1 else 2
         return with(frameDensity) {
-            val glyphIsIcon = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
             val fit =
                 BarFit(
                     width = window.widthDp.dp.roundToPx(),
