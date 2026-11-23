@@ -209,6 +209,13 @@ public class KitSheetHostState internal constructor() {
 
     internal val dialogShown: MutableTransitionState<Boolean> = MutableTransitionState(false)
 
+    /**
+     * True once this host has completed a composition (audit 3, 2026-11-23): only a sheet composed in the host's own
+     * first composition is one a rebuild restored open; one first placed on a page that had already settled opens
+     * normally, with its rise.
+     */
+    internal var composedOnce: Boolean = false
+
     internal fun show(e: SheetEntry) {
         entry = e
         shown.targetState = true
@@ -342,6 +349,7 @@ private fun PageKeyboard(held: PageFocus) {
 @Composable
 public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val state = remember { KitSheetHostState() }
+    SideEffect { state.composedOnce = true }
     // Any sheet or dialog of this host dims the page: the kit says so to whatever floats above it.
     KitReportsModal(state.isShowing || state.isDialogShowing)
     // Liquid glass: the page as the sheets and menus over it see it, recorded only while one of them is liquid.
@@ -523,7 +531,7 @@ public fun KitSheet(
     // sheet describes and registers itself here, inside the composition, so the frame that rebuilds the page draws
     // it already open. Registered from the effect below, it came one frame later and the page showed through where
     // it sits (a conversation's message box hint). A sheet that opens later enters as it always did.
-    var bornOpen by remember { mutableStateOf(visible) }
+    var bornOpen by remember { mutableStateOf(visible && !host.composedOnce) }
     if (bornOpen) {
         bornOpen = false
         describe()
