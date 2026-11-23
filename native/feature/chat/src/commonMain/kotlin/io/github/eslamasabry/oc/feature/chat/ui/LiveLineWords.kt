@@ -84,6 +84,8 @@ internal fun liveLineWords(
             // time, so the live line says that the agent works and for how long, never the same step a second time.
             now != null && work != null -> stringResource(Res.string.kitTurnLiveWorking)
             writing -> stringResource(Res.string.kitTurnLiveWriting)
+            // Keep "Working" across the gaps between steps so the live word never flips back to "Thinking".
+            work != null && work.steps.isNotEmpty() -> stringResource(Res.string.kitTurnLiveWorking)
             else -> stringResource(Res.string.kitTurnLiveThinking)
         }
     val elapsed = elapsedMs?.coerceAtLeast(0)
