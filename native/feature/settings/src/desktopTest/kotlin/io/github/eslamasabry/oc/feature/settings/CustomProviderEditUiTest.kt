@@ -425,4 +425,34 @@ class CustomProviderEditUiTest {
         val waiting = ui(CustomProviderStage.RemovedNotRestarted, CustomProviderMode.Remove)
         assertEquals(waiting, waiting.reopened())
     }
+
+    @Test
+    fun `B-LIB-360 a failed restart from a stranded entry's sheet says it failed`() = runComposeUiTest {
+        val stub = IntegrationInfo("my-box", "My box", persistentListOf(), persistentListOf(), 0)
+        shows(
+            page(
+                rows = emptyList(),
+                sheet = LibrarySheet.Provider(stub),
+                custom = ui(CustomProviderStage.RestartFailed).copy(detail = "Runtime · Generic"),
+            ),
+        )
+        onNodeWithText("My box is saved, but OpenCode did not restart").assertExists()
+        onNodeWithText("Try again, or start OpenCode from This phone. The provider loads when OpenCode starts.")
+            .assertExists()
+        onNodeWithText("Details").assertExists()
+        onNodeWithText("My box is saved").assertDoesNotExist()
+        onNodeWithText("Restart OpenCode on this phone").performClick()
+        assertEquals(listOf<Any?>("my-box"), calls.single { it.first == "restartForProvider" }.second)
+        shows(
+            page(
+                rows = emptyList(),
+                sheet = LibrarySheet.Provider(stub),
+                custom = ui(CustomProviderStage.NotLoadedAfterRestart),
+            ),
+        )
+        onNodeWithText("My box is saved but not loaded").assertExists()
+        onNodeWithText("OpenCode restarted but does not list it yet. Try restarting it again.").assertExists()
+        onNodeWithText("My box is saved").assertDoesNotExist()
+        onNodeWithText("Restart OpenCode on this phone").assertExists()
+    }
 }
