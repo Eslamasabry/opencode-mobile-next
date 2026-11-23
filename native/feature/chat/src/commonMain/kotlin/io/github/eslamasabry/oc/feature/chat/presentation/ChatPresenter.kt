@@ -47,8 +47,10 @@ import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingCommand
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -58,8 +60,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Where the presenter runs a command's suspending half (the ViewModel's scope; tests start it in
@@ -255,13 +257,22 @@ public class ChatPresenter(
             .launchIn(scope)
         // S28 story 3: the undone line follows the session as well.
         val extra = feed.combine(world.undone) { f, u -> f to u }.combine(world.parent) { x, _ -> x }
-        return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
-                present(i, l, h)
+        // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
+        // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
+        // after the first frame is drawn), and again on every return.
+        val upstream = combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ -> present(i, l, h) }
+        val out = MutableStateFlow(current())
+        // Every START (the first open, every return) relaunches the collect by hand: the ordered latest chain
+        // drops each restart after an inner was cancelled. The job type stays spelled out (K1's list has no Job).
+        var inner: kotlinx.coroutines.Job? = null
+        started.command(out.subscriptionCount).distinctUntilChanged().onEach { c ->
+            inner?.cancel()
+            inner = null
+            if (c == SharingCommand.START) {
+                inner = scope.launch { upstream.onStart { emit(current()) }.collect { out.value = it } }
             }
-            // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
-            // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
-            // after the first frame is drawn).
-            .stateIn(scope, started, current())
+        }.launchIn(scope)
+        return out.asStateFlow()
     }
 
     /**
