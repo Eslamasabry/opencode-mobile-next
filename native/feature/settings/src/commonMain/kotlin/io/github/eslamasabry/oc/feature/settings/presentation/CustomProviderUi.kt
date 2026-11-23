@@ -76,12 +76,11 @@ public data class CustomProviderUi(
      * remove-waiting states stay.
      */
     public fun reopened(): CustomProviderUi =
-        if (
-            (stage == CustomProviderStage.Removing && refusal != null) ||
-                (mode != CustomProviderMode.Remove && stage != CustomProviderStage.Restarting)
-        )
-            CustomProviderUi()
-        else this
+        when {
+            stage == CustomProviderStage.Removing && refusal != null -> CustomProviderUi()
+            mode != CustomProviderMode.Remove && stage != CustomProviderStage.Restarting -> CustomProviderUi()
+            else -> this
+        }
 
     private fun ownsStrandedRestart(): Boolean =
         stage == CustomProviderStage.Restarting ||
