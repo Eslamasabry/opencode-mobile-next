@@ -91,6 +91,8 @@ internal constructor(
 
     private val seenSizes = HashMap<Int, Int>()
 
+    internal fun forgetSizes() = seenSizes.clear()
+
     /**
      * Plan 09 §7.3: away once scrolled more than 480 dp past the newest edge (even past short rows like the live
      * line).
@@ -190,6 +192,7 @@ public fun KitTranscriptList(
         // rule 2).
         if (newestKey != lastKey[0]) {
             lastKey[0] = newestKey
+            state.forgetSizes()
             if (state.following && newestKey != null) state.lazy.requestScrollToItem(0)
         }
     }

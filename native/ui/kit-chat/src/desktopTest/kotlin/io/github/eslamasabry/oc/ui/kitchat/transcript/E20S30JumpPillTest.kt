@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.getBoundsInRoot
@@ -167,6 +170,49 @@ class E20S30JumpPillTest {
         onNodeWithTag("jump-to-latest").assertDoesNotExist()
         // Past 480 dp into index 1: now away.
         runOnIdle { state.lazy.requestScrollToItem(1, 500) }
+        waitForIdle()
+        onNodeWithTag("jump-to-latest").assertExists()
+    }
+
+    @Test
+    fun `E20-S30 a newer row replacing one below keeps the go-to-newest control`() = runComposeUiTest {
+        lateinit var state: TranscriptListState
+        var replaced by mutableStateOf(false)
+        setContent {
+            KitTheme(
+                appearance = KitAppearance(style = Style.Solid),
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                Box(Modifier.size(412.dp, 800.dp)) {
+                    state = rememberTranscriptListState()
+                    val newestKey = if (replaced) "reply" else "live"
+                    KitTranscriptList(
+                        state,
+                        newestKey = newestKey,
+                        jumpLabel = "Jump to latest",
+                        motion = KitMotionLevel.Off,
+                    ) {
+                        if (replaced) {
+                            item(key = "reply") { Box(Modifier.fillMaxWidth().height(900.dp)) }
+                        } else {
+                            item(key = "live") { Box(Modifier.fillMaxWidth().height(26.dp)) }
+                        }
+                        item(key = "work") { Box(Modifier.fillMaxWidth().height(600.dp)) }
+                        items(rows, key = { it }) { Box(Modifier.fillMaxWidth().height(40.dp)) }
+                    }
+                }
+            }
+        }
+        waitForIdle()
+        runOnIdle {
+            state.lazy.requestScrollToItem(1, 94)
+            state.following = false
+        }
+        waitForIdle()
+        onNodeWithTag("jump-to-latest").assertDoesNotExist()
+        runOnIdle { replaced = true }
         waitForIdle()
         onNodeWithTag("jump-to-latest").assertExists()
     }
