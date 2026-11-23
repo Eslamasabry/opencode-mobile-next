@@ -205,14 +205,15 @@ internal fun TurnWorkLine(
 ) {
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
-    val cut = remember(rows) { StepListRules.cut(rows) }
+    // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
+    // for the person keeps its newest rows in view.
+    val summed = StepListRules.sums(work.state)
+    val shownRows = remember(rows, summed) { flattenSingleRun(rows, summed) }
+    val cut = remember(shownRows) { StepListRules.cut(shownRows) }
     // A turn with a delegated step whose sub-agent waits on the person opens on entry (the person's own fold wins once
     // tapped), so the way to the child, "Open its conversation", is one tap from the row.
     val childNeeds = LocalChildNeedsYou.current
     val open = folds.open[foldKey] ?: work.steps.any { it.waitsOnChild(childNeeds) }
-    // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
-    // for the person keeps its newest rows in view.
-    val summed = StepListRules.sums(work.state)
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
@@ -233,7 +234,7 @@ internal fun TurnWorkLine(
             is StepEntry.Group -> SubAgentGroup(row, work.state, onOpenSession, treeWords)
         }
     }
-    val folded = if (summed) rows.size else cut.earlier.size
+    val folded = if (summed) shownRows.size else cut.earlier.size
     // Rows that fold away while nobody tapped (a new step arrived, the turn ended) fold at the arrival's pace, so the
     // list's height holds while one row goes and another comes (owner 2026-11-14, "flashing").
     val openBefore = remember(foldKey) { booleanArrayOf(open) }
@@ -252,10 +253,17 @@ internal fun TurnWorkLine(
         // turn's work or its earlier steps unfolds them one after another from the top (#052, #002); a row that moves
         // behind the fold as new ones arrive folds away while the new one grows in, so the reply below moves smoothly
         // and no row is composed again.
-        rows.forEachIndexed { i, row ->
+        shownRows.forEachIndexed { i, row ->
             key(row.key) { KitStepItem(visible = i >= folded || open, order = i, makesRoom = !tapped) { entry(row) } }
         }
     }
+}
+
+private fun flattenSingleRun(rows: List<StepEntry>, summed: Boolean): List<StepEntry> {
+    val singleRun =
+        if (summed) rows.filter { it !is StepEntry.Detail }.singleOrNull() as? StepEntry.Run else null
+    return if (singleRun == null) rows
+    else rows.flatMap { if (it === singleRun) singleRun.steps.map(StepEntry::Step) else listOf(it) }
 }
 
 /**

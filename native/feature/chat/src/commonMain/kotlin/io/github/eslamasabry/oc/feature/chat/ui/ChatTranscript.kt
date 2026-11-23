@@ -18,6 +18,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -65,9 +66,13 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
+import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
+import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
+import io.github.eslamasabry.oc.feature.chat.presentation.lastBlockKeys
+import io.github.eslamasabry.oc.feature.chat.presentation.workOf
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
@@ -509,6 +514,7 @@ internal fun ChatTranscriptList(
     val listFacts = remember(rows) { rowFacts.of(rows) }
     val unique = listFacts.unique
     val tables = listFacts.tables
+    val lastBlocks = remember(unique) { lastBlockKeys(unique) }
     val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
     // B8: the newest turn's footer carries "Send again" when its reply was cut off before any words.
     val newestFooter =
@@ -881,6 +887,24 @@ internal fun ChatTranscriptList(
                             else -> null
                         }
                     if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                }
+                if (row is BlockRow && source != null && row.key == lastBlocks[source]) {
+                    folds?.let { safeFolds ->
+                        AnchoredStretches(row.turnId, source, facts) { stretchWork, stretchEntries ->
+                            TurnWorkLine(
+                                stretchWork,
+                                facts.nowMs,
+                                safeFolds,
+                                onOpenSession,
+                                onOpenFile,
+                                stretchEntries,
+                                reasoningExpanded,
+                                reply,
+                                onCompactAgain,
+                                stopping = live?.stopping == true,
+                            )
+                        }
+                    }
                 }
                 }
               }
@@ -1376,15 +1400,26 @@ private fun ChatRow(
             Column {
                 val work = facts.work[row.turnId]
                 if (work != null && folds != null) {
+                    val turnStretches = facts.reading.stretches[row.turnId]
+                    val first = turnStretches?.firstOrNull()
+                    val shownWork =
+                        if (first != null) {
+                            remember(work, first, turnStretches.size == 1) {
+                                workOf(work, first, last = turnStretches.size == 1)
+                            }
+                        } else {
+                            work
+                        }
+                    val shownEntries = first?.entries ?: facts.reading.workEntries[row.turnId].orEmpty()
                     // D1 "steps only" (owner 2026-11-14): the steps stay in view while the turn runs (the newest five,
                     // the live one with its light); the live line under them no longer names the step they show.
                     TurnWorkLine(
-                        work,
+                        shownWork,
                         facts.nowMs,
                         folds,
                         onOpenSession,
                         onOpenFile,
-                        facts.reading.workEntries[row.turnId].orEmpty(),
+                        shownEntries,
                         reasoningExpanded,
                         reply,
                         onCompactAgain,
@@ -1923,4 +1958,25 @@ private fun SentPromptBubble(row: PromptRow) {
         photos = sent.photos,
         attachments = sent.attachments,
     )
+}
+
+@Composable
+private fun AnchoredStretches(
+    turnId: String,
+    source: String,
+    facts: TurnFactsUi,
+    draw: @Composable (TurnWork, List<WorkEntryUi>) -> Unit,
+) {
+    val work = facts.work[turnId]
+    val turnStretches = facts.reading.stretches[turnId]
+    if (work == null || turnStretches == null) return
+    turnStretches.forEachIndexed { i, stretch ->
+        if (stretch.anchor == source) {
+            key(stretch.key) {
+                val last = i == turnStretches.lastIndex
+                val stretchWork = remember(work, stretch, last) { workOf(work, stretch, last) }
+                if (stretchWork.steps.isNotEmpty()) draw(stretchWork, stretch.entries)
+            }
+        }
+    }
 }

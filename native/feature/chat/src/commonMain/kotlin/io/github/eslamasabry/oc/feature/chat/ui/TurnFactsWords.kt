@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.formatRetryCountdown
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolDuration
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
+import io.github.eslamasabry.oc.feature.chat.presentation.WorkKind
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatStalledOnTool
@@ -395,28 +396,31 @@ internal fun runCount(family: StepFamily, count: Int): String =
     }
 
 /**
- * A finished turn's work in one line (its summary row): the kinds it did, the most done first, "Ran 11 commands · read 1
- * file · 2 other steps"; first letter upper.
+ * A finished stretch's work in one line (its summary row): each kind in the order it first appeared, with "not run"
+ * last, "Ran 11 commands · 2 other steps"; first letter upper.
  */
 @Composable
 internal fun turnWorkWords(work: TurnWork): String {
     // Only work that happened is said in the past tense: a refused write is no "edited 1 file" (review #2).
     val c = WorkLineRules.split(work).done
+    val order = WorkLineRules.firstSeen(work).withIndex().associate { (i, kind) -> kind to i }
     val counted =
         listOf(
-                c.ran to Res.plurals.kitWorkRan,
-                c.read to Res.plurals.kitWorkRead,
-                c.edited to Res.plurals.kitWorkEdited,
-                c.searched to Res.plurals.kitWorkSearched,
-                c.listed to Res.plurals.kitWorkListed,
-                c.fetched to Res.plurals.kitWorkFetched,
-                c.delegated to Res.plurals.kitWorkDelegated,
-                c.other to Res.plurals.kitWorkOther,
-                c.notRun to Res.plurals.kitWorkNotRun,
+                Triple(WorkKind.Ran, c.ran, Res.plurals.kitWorkRan),
+                Triple(WorkKind.Read, c.read, Res.plurals.kitWorkRead),
+                Triple(WorkKind.Edited, c.edited, Res.plurals.kitWorkEdited),
+                Triple(WorkKind.Searched, c.searched, Res.plurals.kitWorkSearched),
+                Triple(WorkKind.Listed, c.listed, Res.plurals.kitWorkListed),
+                Triple(WorkKind.Fetched, c.fetched, Res.plurals.kitWorkFetched),
+                Triple(WorkKind.Delegated, c.delegated, Res.plurals.kitWorkDelegated),
+                Triple(WorkKind.Other, c.other, Res.plurals.kitWorkOther),
+                Triple(WorkKind.NotRun, c.notRun, Res.plurals.kitWorkNotRun),
             )
-            .filter { it.first > 0 }
-            .sortedByDescending { it.first }
-    val segments = counted.map { (n, res) -> pluralStringResource(res, n, n) }.toMutableList()
+            .filter { it.second > 0 }
+            .sortedBy { (kind, _, _) ->
+                if (kind == WorkKind.NotRun) Int.MAX_VALUE else order[kind] ?: (Int.MAX_VALUE - 1)
+            }
+    val segments = counted.map { (_, n, res) -> pluralStringResource(res, n, n) }.toMutableList()
     if (segments.isEmpty()) return pluralStringResource(Res.plurals.kitWorkSteps, work.steps.size, work.steps.size)
     segments[0] = segments[0].replaceFirstChar { it.uppercase() }
     return segments.joinToString(stringResource(Res.string.kitWorkSeparator))
