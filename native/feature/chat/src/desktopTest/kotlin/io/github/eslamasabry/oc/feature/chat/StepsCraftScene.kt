@@ -269,7 +269,7 @@ internal object StepsCraftScene {
             )
         val k = TurnFeedKeeper(sid)
         k.history(messages)
-        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 58_000)
         return TurnFactsPresenter(FixedClock).present(k.feed.value, 64_000)
     }
 
