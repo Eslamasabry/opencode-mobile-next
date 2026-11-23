@@ -583,9 +583,10 @@ internal fun ChatTranscriptList(
         jumpLabel = words.jumpToLatest,
         motion = motion,
         modifier = modifier,
-        // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
-        // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
-        contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
+        // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends Space.S4 (16 dp) above the
+        // composer top, as the sum of two Space.S2: the bottom block's own top room (KitScreen measures it into the
+        // list's bottom padding) and the composer pane's top room inside its tag (ChatScreen). The list keeps none.
+        contentPadding = PaddingValues(top = Space.S4.dp),
         // Reading back to the top of what is loaded brings the earlier messages by itself; the row stays the visible
         // way to them (and the way to try again after a read that failed).
         onReachOldest = if (older != null && !older.loading && older.failure == null) onLoadOlder else null,

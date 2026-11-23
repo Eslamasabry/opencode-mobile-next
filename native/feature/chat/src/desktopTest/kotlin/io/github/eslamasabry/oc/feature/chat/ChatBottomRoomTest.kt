@@ -36,8 +36,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * B-CHAT-ROOM: the room between the chat's newest row and the message box. The composer pane's own top space plus the
- * list's room under its newest row make the kit's one step (Space.S4, 16 dp) between the newest row's bottom and the
+ * B-CHAT-ROOM: the room between the chat's newest row and the message box. The bottom block's top space plus the
+ * composer pane's top space make the kit's one step (Space.S4, 16 dp) between the newest row's bottom and the
  * composer's top, at text 1.0 and 1.3, with or without the live line; the real message box keeps at least that; and no
  * step row is clipped or overlapped on the settled frames before a step arrives and after the fold has finished.
  */
