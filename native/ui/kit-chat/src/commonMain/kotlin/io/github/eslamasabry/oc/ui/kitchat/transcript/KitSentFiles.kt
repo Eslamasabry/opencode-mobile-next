@@ -67,16 +67,14 @@ public fun rememberKitSentFiles(files: List<KitSentFile>): KitSentFiles {
 private fun KitSentFile.isInlineImage(): Boolean =
     mime?.startsWith("image/") == true && url?.startsWith("data:") == true
 
-/** The longest base64 payload a sent picture's `data:` address may decode (16 MiB of characters). */
-private const val SENT_DATA_URL_CHARS = 16 * 1024 * 1024
-
-/** The bytes inside a base64 `data:` address, or null when it is not one or past the viewer's cap. */
+/** The bytes inside a base64 `data:` address, or null when it is not one. */
 @OptIn(ExperimentalEncodingApi::class)
 public fun dataUrlBytes(url: String): ByteArray? {
+    @Suppress("MagicNumber") val limit = 16 * 1024 * 1024
     if (!url.startsWith("data:")) return null
     val comma = url.indexOf(',')
     if (comma < 0 || !url.substring(5, comma).endsWith(";base64")) return null
-    if (url.length - comma - 1 > SENT_DATA_URL_CHARS) return null
+    if (url.length - comma - 1 > limit) return null
     return try {
         Base64.Mime.decode(url, comma + 1, url.length)
     } catch (_: IllegalArgumentException) {
