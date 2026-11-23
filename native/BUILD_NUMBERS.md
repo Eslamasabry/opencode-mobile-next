@@ -148,3 +148,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10131 | build | 2026-11-22 | 3.0.2 release candidate build |
 | 10132 | build | 2026-11-22 | interim 3.0.2 line with the agent pin moves (pins-302), not the candidate |
 | 10133 | build | 2026-11-22 | interim 3.0.2 line with the agent pin moves and Paseo 0.17.2 (pins-302), not the candidate |
+| 10136 | build | 2026-11-23 | owner phone test build: crash, memory and steps fixes |
