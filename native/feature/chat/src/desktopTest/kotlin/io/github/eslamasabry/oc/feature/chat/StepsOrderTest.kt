@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.Allow
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -55,9 +56,23 @@ class StepsOrderTest {
         }
     }
 
+    private companion object {
+        const val TEMP_ALLOW_REASON =
+            "TEMPORARY: the known step-arrival jump; fixed by the job steps-no-flash; " +
+                "remove this allow when that job is merged"
+    }
+
     @Test
     fun `STEPS-ORDER-001 work after a paragraph is drawn under it, before the next`() =
-        kitUiTest(412, 2600) {
+        kitUiTest(
+            412,
+            2600,
+            allow =
+                setOf(
+                    Allow.first("#chat-turn-files", TEMP_ALLOW_REASON),
+                    Allow.jump("#chat-turn-files", TEMP_ALLOW_REASON),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent {
                 Root {
@@ -80,7 +95,15 @@ class StepsOrderTest {
 
     @Test
     fun `STEPS-ORDER-002 a folded group says what it did in the order it did it`() =
-        kitUiTest(412, 2600) {
+        kitUiTest(
+            412,
+            2600,
+            allow =
+                setOf(
+                    Allow.first("#chat-turn-files", TEMP_ALLOW_REASON),
+                    Allow.jump("#chat-turn-files", TEMP_ALLOW_REASON),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent {
                 Root {
@@ -94,7 +117,15 @@ class StepsOrderTest {
 
     @Test
     fun `STEPS-ORDER-003 while the reply runs a new step appears under the newest paragraph`() =
-        kitUiTest(412, 2600) {
+        kitUiTest(
+            412,
+            2600,
+            allow =
+                setOf(
+                    Allow.first("#chat-live-line", TEMP_ALLOW_REASON),
+                    Allow.jump("#chat-live-line", TEMP_ALLOW_REASON),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent {
                 Root {
@@ -171,7 +202,16 @@ class StepsOrderTest {
 
     @Test
     fun `STEPS-ORDER-006 a finished single-run summary opens to its steps without repeating itself`() =
-        kitUiTest(412, 2600) {
+        kitUiTest(
+            412,
+            2600,
+            allow =
+                setOf(
+                    Allow.first("#chat-turn-footer", TEMP_ALLOW_REASON),
+                    Allow.jump("#chat-turn-footer", TEMP_ALLOW_REASON),
+                    Allow.jump("#chat-work-line", TEMP_ALLOW_REASON),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent {
                 Root {

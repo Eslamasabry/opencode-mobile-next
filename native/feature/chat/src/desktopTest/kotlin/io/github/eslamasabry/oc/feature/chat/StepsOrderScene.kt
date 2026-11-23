@@ -82,8 +82,7 @@ internal object StepsOrderScene {
         name: String,
         input: Map<String, String>,
         status: ToolStatus,
-        start: Long,
-        end: Long?,
+        span: Pair<Long, Long?>,
     ) =
         Part(
             id,
@@ -98,8 +97,8 @@ internal object StepsOrderScene {
                     status,
                     input = JsonObject(input.mapValues { JsonPrimitive(it.value) }),
                     output = "ok",
-                    startedAtMs = start,
-                    completedAtMs = end,
+                    startedAtMs = span.first,
+                    completedAtMs = span.second,
                 ),
         )
 
@@ -109,10 +108,11 @@ internal object StepsOrderScene {
             persistentListOf(Part("p1", TURN, sid, PartType.Text, "text", text = ASK)),
         )
 
-    private fun c1() = tool("c1", "bash", mapOf("command" to "git status --short"), ToolStatus.Completed, 2_000, 3_000)
+    private fun c1() =
+        tool("c1", "bash", mapOf("command" to "git status --short"), ToolStatus.Completed, 2_000L to 3_000L)
 
     private fun f1() =
-        tool("f1", "read", mapOf("filePath" to "/work/demo/README.md"), ToolStatus.Completed, 4_000, 5_000)
+        tool("f1", "read", mapOf("filePath" to "/work/demo/README.md"), ToolStatus.Completed, 4_000L to 5_000L)
 
     private fun e1(status: ToolStatus = ToolStatus.Completed) =
         tool(
@@ -120,8 +120,7 @@ internal object StepsOrderScene {
             "edit",
             mapOf("filePath" to "/work/demo/player.kt"),
             status,
-            6_000,
-            if (status == ToolStatus.Completed) 7_000 else null,
+            6_000L to if (status == ToolStatus.Completed) 7_000L else null,
         )
 
     private fun c2(status: ToolStatus = ToolStatus.Completed) =
@@ -130,13 +129,12 @@ internal object StepsOrderScene {
             "bash",
             mapOf("command" to "./gradlew test"),
             status,
-            8_000,
-            if (status == ToolStatus.Completed) 9_000 else null,
+            8_000L to if (status == ToolStatus.Completed) 9_000L else null,
         )
 
     private fun readStep(n: Int): Part {
         val start = 2_000L + n * 1_000L
-        return tool("r$n", "read", mapOf("filePath" to readFiles[n - 1]), ToolStatus.Completed, start, start + 400)
+        return tool("r$n", "read", mapOf("filePath" to readFiles[n - 1]), ToolStatus.Completed, start to (start + 400))
     }
 
     fun done(): List<MessageWithParts> =
