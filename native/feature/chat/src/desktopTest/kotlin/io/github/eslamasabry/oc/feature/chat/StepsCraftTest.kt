@@ -353,6 +353,7 @@ class StepsCraftTest {
                 sample()
             }
             val fold5Err = runCatching { onNodeWithText("Show 5 earlier steps").assertIsDisplayed() }.exceptionOrNull()
+            mainClock.advanceTimeBy(400)
             phase = 3
             repeat(40) {
                 mainClock.advanceTimeByFrame()
@@ -424,7 +425,7 @@ class StepsCraftTest {
             sample()
             for (next in 2..4) {
                 phase = next
-                repeat(30) {
+                repeat(if (next == 2) 65 else 30) {
                     mainClock.advanceTimeByFrame()
                     sample()
                 }
@@ -474,7 +475,7 @@ class StepsCraftTest {
             mainClock.advanceTimeBy(900)
             activate("chat-step-run-r1")
             mainClock.advanceTimeBy(900)
-            scrollTranscriptUp(540f)
+            scrollTranscriptUp(700f)
             val anchorText = StepsCraftScene.earlierParagraphs.last()
             val anchor0 = boundsOfText(anchorText).top
             val tops = mutableListOf(anchor0)
@@ -488,7 +489,7 @@ class StepsCraftTest {
                 }
             }
             assertTrue(tops.all { abs(it - anchor0) <= 1f }, "earlier moved scrolled far: $anchor0 $tops")
-            scrollTranscriptUp(420f)
+            scrollTranscriptUp(260f)
             val farText = StepsCraftScene.earlierParagraphs[6]
             val far0 = boundsOfText(farText).top
             val farTops = mutableListOf(far0)
@@ -599,7 +600,7 @@ class StepsCraftTest {
             }
             sample(checkLive = true)
             phase = 2
-            repeat(30) {
+            repeat(65) {
                 mainClock.advanceTimeByFrame()
                 sample(checkLive = true)
             }
@@ -629,8 +630,9 @@ class StepsCraftTest {
         kitUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var stage by mutableStateOf(0)
+            mainClock.autoAdvance = false
             setContent {
-                Root {
+                Root(MotionLevel.Full) {
                     ChatScreen(
                         StepsCraftScene.liveStageState(stage),
                         actions,
@@ -639,26 +641,69 @@ class StepsCraftTest {
                     )
                 }
             }
-            waitForIdle()
+            mainClock.advanceTimeBy(900)
             onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
             onNodeWithText("Read 8 files").performSemanticsAction(SemanticsActions.OnClick)
-            waitForIdle()
+            mainClock.advanceTimeBy(900)
             onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
             onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
             stage = 1
-            waitForIdle()
+            mainClock.advanceTimeBy(900)
             onAllNodesWithText("Hide earlier steps").assertCountEquals(0)
             onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
             onNodeWithTag("chat-step-run-r1", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithText("Read 15 files").assertIsDisplayed()
             onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
             stage = 2
-            waitForIdle()
+            mainClock.advanceTimeBy(900)
             onAllNodesWithText("Hide earlier steps").assertCountEquals(0)
             onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
             onNodeWithTag("chat-step-run-r1", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithText("Read 15 files").assertIsDisplayed()
             onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
+        }
+
+    @Test
+    fun `STEPS-CRAFT-025 rows never overlap while a step folds`() =
+        kitUiTest(412, 1200) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var arrived by mutableStateOf(false)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        if (!arrived) StepsCraftScene.alternatingFacts(8, false)
+                        else StepsCraftScene.alternatingFacts(9, true)
+                    ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            val rowTag = Regex("chat-step-[ce]\\d+")
+            val rowMatcher =
+                SemanticsMatcher("step or fold row") { node ->
+                    val tag = node.config.getOrNull(SemanticsProperties.TestTag)
+                    tag == STEP_FOLD_ROW_TAG || tag?.matches(rowTag) == true
+                }
+            arrived = true
+            repeat(40) { frame ->
+                mainClock.advanceTimeByFrame()
+                val nodes =
+                    onAllNodes(rowMatcher, useUnmergedTree = true)
+                        .fetchSemanticsNodes()
+                        .map {
+                            val tag = it.config.getOrNull(SemanticsProperties.TestTag).orEmpty()
+                            tag to it.boundsInRoot
+                        }
+                        .sortedBy { it.second.top }
+                for (i in 1 until nodes.size) {
+                    val prev = nodes[i - 1]
+                    val curr = nodes[i]
+                    assertTrue(
+                        curr.second.top >= prev.second.bottom - 0.5f,
+                        "frame $frame overlap: ${prev.first}=${prev.second} vs ${curr.first}=${curr.second} all=$nodes",
+                    )
+                }
+            }
         }
 
     private companion object {
