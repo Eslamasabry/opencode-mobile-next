@@ -676,11 +676,14 @@ internal fun ChatTranscriptList(
                             modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
+                    val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
                     if (line != null) KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
                         spoken = line.spoken,
-                        step = line.step,
+                        // On the step rail, a running command's own opened box already shows its live output; showing
+                        // it a second time here resizes the live line when each command starts and ends.
+                        step = if (onRail && notice == null) null else line.step,
                         // D1: the steps are always in view above, so the live line opens nothing.
                         onTap = null,
                         tapLabel =
@@ -703,7 +706,7 @@ internal fun ChatTranscriptList(
                         ask = null,
                         // D1: under a running turn's steps, the line stays on their rail (including between steps) so
                         // its height and alignment never jump while the turn still runs.
-                        onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming,
+                        onRail = onRail,
                     )
                 } else if (
                     RunTailRules.liveLineShown(
@@ -804,7 +807,7 @@ internal fun ChatTranscriptList(
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }
                   }
-              CompositionLocalProvider(LocalKitFindMarks provides marks) {
+              CompositionLocalProvider(LocalKitFindMarks provides marks, LocalLiveTurnId provides liveTurn) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
@@ -846,7 +849,6 @@ internal fun ChatTranscriptList(
                             runningSteps = runningSteps,
                             onHideSteps = { stepsShown = false },
                             stopping = live?.stopping == true,
-                            turnRuns = row.turnId == liveTurn,
                         )
                 } else {
                     ChatRow(
@@ -871,7 +873,6 @@ internal fun ChatTranscriptList(
                         runningSteps = runningSteps,
                         onHideSteps = { stepsShown = false },
                         stopping = live?.stopping == true,
-                        turnRuns = row.turnId == liveTurn,
                     )
                 }
                 if (display.timestampsVisible) {
@@ -1288,8 +1289,6 @@ private fun ChatRow(
     onHideSteps: () -> Unit = {},
     /** The person pressed Stop: no step says it waits for them any more. */
     stopping: Boolean = false,
-    /** This row belongs to the turn currently running. */
-    turnRuns: Boolean = false,
 ) {
     when (row) {
         is BlockRow -> {
@@ -1392,7 +1391,6 @@ private fun ChatRow(
                         reply,
                         onCompactAgain,
                         stopping = stopping,
-                        turnRuns = turnRuns,
                     )
                 }
                 else

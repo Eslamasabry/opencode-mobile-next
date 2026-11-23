@@ -203,8 +203,6 @@ internal fun TurnWorkLine(
     onCompactAgain: (() -> Unit)? = null,
     /** The person pressed Stop: the turn's steps no longer say they wait for the person (the tail says Stopping). */
     stopping: Boolean = false,
-    /** The turn itself is still running: keep the folded step list open between steps instead of summing to one row. */
-    turnRuns: Boolean = false,
 ) {
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
@@ -215,8 +213,8 @@ internal fun TurnWorkLine(
     val open = folds.open[foldKey] ?: work.steps.any { it.waitsOnChild(childNeeds) }
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
-    val summed = StepListRules.sums(work.state, turnRuns)
-    val cut = if (summed) rawCut else keepOpenedRuns(rows, rawCut, folds)
+    val summed = StepListRules.sums(work.state, turnRuns = LocalLiveTurnId.current == work.turnId)
+    val cut = keepOpenedRuns(rows, rawCut, folds, summed)
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
@@ -263,7 +261,13 @@ internal fun TurnWorkLine(
 }
 
 /** Keep a run the person tapped open in view instead of folding it away behind "Show earlier steps". */
-private fun keepOpenedRuns(rows: List<StepEntry>, cut: StepListCut, folds: TranscriptFolds): StepListCut {
+private fun keepOpenedRuns(
+    rows: List<StepEntry>,
+    cut: StepListCut,
+    folds: TranscriptFolds,
+    summed: Boolean,
+): StepListCut {
+    if (summed) return cut
     val firstOpen =
         rows.indexOfFirst { row ->
             row is StepEntry.Run && folds.open["run:${row.steps.first().partId}"] == true
@@ -409,6 +413,9 @@ private fun SubAgentGroup(
 
 /** Sessions with an open request of their own, so a delegated step's sub-agent that waits on the person shows it. */
 internal val LocalChildNeedsYou = androidx.compose.runtime.compositionLocalOf<Set<String>> { emptySet() }
+
+/** Turn id of the currently running turn, so its step list stays unfolded between steps. */
+internal val LocalLiveTurnId = androidx.compose.runtime.compositionLocalOf<String?> { null }
 
 /** This delegated step's sub-agent has an open request: the step reads "Waiting for you" and opens its conversation. */
 private fun TurnStep.waitsOnChild(open: Set<String>): Boolean = facts.childSessionId?.let { it in open } == true
