@@ -489,8 +489,8 @@ class StepsCraftTest {
                 tops.all { abs(it - anchor0) <= 1f },
                 "earlier paragraph moved while scrolled up far: start=$anchor0 samples=$tops",
             )
-            // Scrolled past the work block too: when the reply finishes, nothing on screen moves either.
-            scrollTranscriptUp(180f)
+            // Scrolled past the grown work block too: when the reply finishes, nothing on screen moves either.
+            scrollTranscriptUp(420f)
             val farText = StepsCraftScene.earlierParagraphs[6]
             val far0 = boundsOfText(farText).top
             val farTops = mutableListOf(far0)
