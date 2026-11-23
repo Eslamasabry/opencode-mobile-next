@@ -28,7 +28,6 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.SecretFieldPresence
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
-import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -113,7 +112,7 @@ internal fun AgentsHelpSheet(own: OwnProviderUi, actions: OwnProviderActions) {
 
 /** One question of the help sheet: its title and one or two sentences. */
 @Composable
-internal fun HelpPart(title: String, body: String) {
+private fun HelpPart(title: String, body: String) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         KitText(title, role = TypeRole.RowTitle)
         KitText(body, tone = TextTone.Secondary)
@@ -171,11 +170,11 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                             destructive = true,
                         )
                     )
+                add(KitAction(stringResource(Res.string.agentsHelpTitle), actions::openAgentsHelp))
             },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitText(stringResource(Res.string.agentsOwnProviderBody, name))
-            ProviderHelpFold(agent)
             val problem = own.problem
             if (problem == OwnProviderProblem.Unsupported)
                 KitErrorNotice(stringResource(Res.string.agentsOwnProviderUnsupported, name))
@@ -215,18 +214,5 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun ProviderHelpFold(resetKey: String?) {
-    var expanded by remember(resetKey) { mutableStateOf(false) }
-    KitExpandRow(
-        stringResource(Res.string.agentsHelpProviderTitle),
-        expanded,
-        onExpandedChange = { expanded = it },
-        inset = false,
-    ) {
-        KitText(stringResource(Res.string.agentsHelpProviderBody), tone = TextTone.Secondary)
     }
 }
