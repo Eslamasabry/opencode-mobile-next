@@ -216,4 +216,42 @@ class E20S30JumpPillTest {
         waitForIdle()
         onNodeWithTag("jump-to-latest").assertExists()
     }
+
+    @Test
+    fun `E20-S30 a row growing below the screen brings the go-to-newest control`() = runComposeUiTest {
+        lateinit var state: TranscriptListState
+        var replyHeight by mutableStateOf(40.dp)
+        setContent {
+            KitTheme(
+                appearance = KitAppearance(style = Style.Solid),
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                Box(Modifier.size(412.dp, 800.dp)) {
+                    state = rememberTranscriptListState()
+                    KitTranscriptList(
+                        state,
+                        newestKey = "live",
+                        jumpLabel = "Jump to latest",
+                        motion = KitMotionLevel.Off,
+                    ) {
+                        item(key = "live") { Box(Modifier.fillMaxWidth().height(26.dp)) }
+                        item(key = "reply") { Box(Modifier.fillMaxWidth().height(replyHeight)) }
+                        item(key = "work") { Box(Modifier.fillMaxWidth().height(600.dp)) }
+                        items(rows, key = { it }) { Box(Modifier.fillMaxWidth().height(40.dp)) }
+                    }
+                }
+            }
+        }
+        waitForIdle()
+        runOnIdle {
+            state.lazy.requestScrollToItem(2, 40)
+            state.following = false
+        }
+        waitForIdle()
+        runOnIdle { replyHeight = 900.dp }
+        waitForIdle()
+        onNodeWithTag("jump-to-latest").assertExists()
+    }
 }

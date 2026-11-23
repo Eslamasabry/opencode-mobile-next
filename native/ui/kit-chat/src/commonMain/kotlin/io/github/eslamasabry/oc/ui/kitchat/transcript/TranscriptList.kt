@@ -94,33 +94,21 @@ internal constructor(
     internal fun forgetSizes() = seenSizes.clear()
 
     /**
-     * Plan 09 §7.3: away once scrolled more than 480 dp past the newest edge (even past short rows like the live
-     * line).
+     * Plan 09 §7.3: away once scrolled more than 480 dp past the newest edge (even past a short index 0 row like the
+     * live line). Rows at index 1+ are not remembered because they can grow below the viewport without re-measuring.
      */
     public val awayFromLatest: Boolean by derivedStateOf {
-        for (item in lazy.layoutInfo.visibleItemsInfo) {
-            if (item.index < MAX_TRACKED_INDEX) seenSizes[item.index] = item.size
-        }
+        lazy.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 0 }?.let { seenSizes[0] = it.size }
         val awayPx = with(density) { AWAY_DP.dp.roundToPx() }
         scrolledPast(lazy.firstVisibleItemIndex, lazy.firstVisibleItemScrollOffset, awayPx)
     }
 
-    private fun scrolledPast(first: Int, offset: Int, awayPx: Int): Boolean {
-        var total = offset
-        var away = total > awayPx || first >= MAX_TRACKED_INDEX
-        var i = 0
-        while (!away && i < first) {
-            val h = seenSizes[i]
-            if (h == null) {
-                away = true
-            } else {
-                total += h
-                away = total > awayPx
-            }
-            i++
+    private fun scrolledPast(first: Int, offset: Int, awayPx: Int): Boolean =
+        when (first) {
+            0 -> offset > awayPx
+            1 -> seenSizes[0]?.let { offset + it > awayPx } ?: true
+            else -> true
         }
-        return away
-    }
 
     private var slotHeight = -1
 
@@ -149,7 +137,6 @@ internal constructor(
     internal companion object {
         const val AWAY_DP = 480
         const val FOLLOW_SLACK_DP = 48
-        private const val MAX_TRACKED_INDEX = 32
     }
 }
 
