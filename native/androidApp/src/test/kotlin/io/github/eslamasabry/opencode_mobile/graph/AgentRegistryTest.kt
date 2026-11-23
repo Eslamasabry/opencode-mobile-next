@@ -153,7 +153,11 @@ class AgentRegistryTest {
         assertFalse(PhoneAgentFacts.provenRuns(proof, "1.0.1", pins), "another version runs now")
         assertFalse(PhoneAgentFacts.provenRuns(proof, null, pins))
         val testedHelper = pins.paseoTestedVersions.first { it != pins.paseo.version }
-        assertTrue(PhoneAgentFacts.provenRuns(proof.copy(provenHelper = testedHelper), "1.0.0", pins))
+        // A tested helper's proof carries only while the pinned helper is tested too (a pin not yet proved is not).
+        assertEquals(
+            pins.paseo.version in pins.paseoTestedVersions,
+            PhoneAgentFacts.provenRuns(proof.copy(provenHelper = testedHelper), "1.0.0", pins),
+        )
         assertFalse(PhoneAgentFacts.provenRuns(proof.copy(provenHelper = "0.0.1"), "1.0.0", pins), "untested helper")
         assertFalse(PhoneAgentFacts.provenRuns(PhoneAgentFacts.Fact(false, "1.0.0", true), "1.0.0", pins), "no proof")
         // A record from before the proof was written: its pinned copy that ran is the proof.
@@ -162,9 +166,9 @@ class AgentRegistryTest {
 
     @Test
     fun `B-AGENT-REG-014 the registry keeps its proof and answer times across reads, and a removal drops the proof`() {
-        val first = PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to "1.0.0"), null, "0.16.1", 7L, 99L)
+        val first = PhoneAgentFacts.of(mapOf("installed" to true, "foundVersion" to "1.0.0"), null, "0.17.3", 7L, 99L)
         assertEquals("1.0.0", first.proven, "a pinned copy that runs is proven by its install")
-        assertEquals("0.16.1", first.provenHelper)
+        assertEquals("0.17.3", first.provenHelper)
         assertEquals(7L, first.provenBuild)
         assertNull(first.signedInAt, "no sign-in answer, no time for it")
         val text = PhoneAgentFacts.encode(mapOf("codex" to first.copy(signedIn = true, signedInAt = 99L)))

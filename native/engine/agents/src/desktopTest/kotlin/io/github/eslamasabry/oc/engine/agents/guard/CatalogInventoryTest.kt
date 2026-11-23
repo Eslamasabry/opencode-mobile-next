@@ -102,7 +102,7 @@ class CatalogInventoryTest {
         // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
         // 2.1.327, Codex 0.170.0, Antigravity 1.5.11, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
         // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
-        // same agents' pins literally. Gemini CLI and Cline did not move.
+        // same agents' pins literally. Gemini CLI did not move.
         "claude" to listOf(
             text("2.1.319", "2.1.330"),
             text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.330/linux-arm64/claude"),
@@ -129,22 +129,33 @@ class CatalogInventoryTest {
             text("codex-x86_64-unknown-linux-musl", "bin/codex"),
         ),
         "antigravity" to listOf(
-            text("1.5.3", "1.5.13"),
-            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/cli_linux_arm64.tar.gz"),
-            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "36596ad8038531fd75f0e97b5ba8967a30f2fd67f8d9c61959d2e4761d7b215f"),
-            number("downloadBytes", 69843447, 91596782),
-            number("installedBytes", 235622776, 253711024),
-            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-x64/cli_linux_x64.tar.gz"),
-            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "7fa9cc6df0d09562693d637c406a86c1b0f52ab3364714b1fd2d79cc6060d4b2"),
-            number("downloadBytes", 73694700, 100548668),
-            number("installedBytes", 246837648, 270103240),
+            text("1.5.3", "1.5.15"),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-arm/cli_linux_arm64.tar.gz"),
+            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "e5b5d7ca1dda2cfdc0b09c72931320c3ef5c481a14dbda137304107ce6e776b1"),
+            number("downloadBytes", 69843447, 92373221),
+            number("installedBytes", 235622776, 256660144),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-x64/cli_linux_x64.tar.gz"),
+            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "8d9913298602049ef29e9669f35252b6b79571979ce1bd0fb27753c7bac84114"),
+            number("downloadBytes", 73694700, 101464790),
+            number("installedBytes", 246837648, 273879752),
         ),
         "qwen" to listOf(
-            text("0.26.4", "0.28.0"),
-            text("https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz", "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.0.tgz"),
-            text("a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89", "32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9"),
-            number("downloadBytes", 42796897, 43527360),
-            number("installedBytes", 154807157, 158997434),
+            text("0.26.4", "0.28.4"),
+            text("https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz", "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.4.tgz"),
+            text("a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89", "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5"),
+            number("downloadBytes", 42796897, 44773289),
+            number("installedBytes", 154807157, 162973081),
+        ),
+        "cline" to listOf(
+            text("3.0.74", "3.0.75"),
+            text("https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz", "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.75.tgz"),
+            text("10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049", "8f20880bccb5c626d44c157c3dfa3916147be09cf3ebf6066fc7288f58288743"),
+            number("downloadBytes", 54812128, 55316566),
+            number("installedBytes", 162253096, 165464360),
+            text("https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz", "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.75.tgz"),
+            text("52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc", "e2fee40340a2bb248830f8e2a361e4b93b148a9ed90d246e69af3627176ea96d"),
+            number("downloadBytes", 55037574, 55550729),
+            number("installedBytes", 161793504, 165025248),
         ),
         "kilo" to listOf(
             text("7.8.18", "7.8.32"),

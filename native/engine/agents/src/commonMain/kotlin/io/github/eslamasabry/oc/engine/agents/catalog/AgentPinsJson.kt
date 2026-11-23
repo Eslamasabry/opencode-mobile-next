@@ -7,11 +7,11 @@ internal const val AGENT_PINS_JSON: String = """{
   "schema": 1,
   "source": "lib/domain/agent_catalog.dart _builtInCatalog(), lib/builtin/agents/paseo_scripts.dart, lib/paseo/tested_versions.dart (copied verbatim; a pin moves only with an app release)",
   "paseo": {
-    "version": "0.16.1",
-    "packageLockSha256": "d5317553e5380c6705cf5742e4be475553ef788114671cc1ca217a24b068b6d5",
+    "version": "0.17.3",
+    "packageLockSha256": "5fcd5dc3354c0b6ac915876597704e716eb5b9c32ba7ba3540fa6ef8821ca8cc",
     "cliSha256": "2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94",
     "payloadSha256": "8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09",
-    "codeTreeSha256": "766af65e563318895cdb7d4e79fed2629602fef5a98eb8215cb9d9ab3dc22a8a"
+    "codeTreeSha256": "dad765506bf0a72bffc5219157a8f89e994f177714eed1a5d5c96d51d039a669"
   },
   "node": {
     "version": "v24.22.3",
@@ -154,7 +154,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "antigravity",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "1.5.13",
+        "version": "1.5.15",
         "executable": "agy",
         "launchArgs": [
           "acp",
@@ -166,20 +166,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/cli_linux_arm64.tar.gz",
-            "sha256": "36596ad8038531fd75f0e97b5ba8967a30f2fd67f8d9c61959d2e4761d7b215f",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "e5b5d7ca1dda2cfdc0b09c72931320c3ef5c481a14dbda137304107ce6e776b1",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 91596782,
-            "installedBytes": 253711024
+            "downloadBytes": 92373221,
+            "installedBytes": 256660144
           },
           "x64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-x64/cli_linux_x64.tar.gz",
-            "sha256": "7fa9cc6df0d09562693d637c406a86c1b0f52ab3364714b1fd2d79cc6060d4b2",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "8d9913298602049ef29e9669f35252b6b79571979ce1bd0fb27753c7bac84114",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 100548668,
-            "installedBytes": 270103240
+            "downloadBytes": 101464790,
+            "installedBytes": 273879752
           }
         }
       }
@@ -224,7 +224,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "qwen",
       "signInMethod": "apiKeyHost",
       "recipe": {
-        "version": "0.28.0",
+        "version": "0.28.4",
         "executable": "qwen",
         "launchArgs": [
           "--acp"
@@ -232,20 +232,20 @@ internal const val AGENT_PINS_JSON: String = """{
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.0.tgz",
-            "sha256": "32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.4.tgz",
+            "sha256": "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5",
             "format": "npmTarGz",
             "member": "package/cli-entry.js",
-            "downloadBytes": 43527360,
-            "installedBytes": 158997434
+            "downloadBytes": 44773289,
+            "installedBytes": 162973081
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.0.tgz",
-            "sha256": "32ca2695069210bae82410a8712d8658a7da5779ecbfcd67160adce415a4e1d9",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.4.tgz",
+            "sha256": "bd9daa7bef7ab4cccea8f74372d1924f54637412f73bd21242e6740c145fdfc5",
             "format": "npmTarGz",
             "member": "package/cli-entry.js",
-            "downloadBytes": 43527360,
-            "installedBytes": 158997434
+            "downloadBytes": 44773289,
+            "installedBytes": 162973081
           }
         }
       }
@@ -293,7 +293,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "cline",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "3.0.74",
+        "version": "3.0.75",
         "executable": "cline",
         "launchArgs": [
           "--acp"
@@ -303,20 +303,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz",
-            "sha256": "10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.75.tgz",
+            "sha256": "8f20880bccb5c626d44c157c3dfa3916147be09cf3ebf6066fc7288f58288743",
             "format": "tarGz",
             "member": "package/bin/cline",
-            "downloadBytes": 54812128,
-            "installedBytes": 162253096
+            "downloadBytes": 55316566,
+            "installedBytes": 165464360
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz",
-            "sha256": "52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.75.tgz",
+            "sha256": "e2fee40340a2bb248830f8e2a361e4b93b148a9ed90d246e69af3627176ea96d",
             "format": "tarGz",
             "member": "package/bin/cline",
-            "downloadBytes": 55037574,
-            "installedBytes": 161793504
+            "downloadBytes": 55550729,
+            "installedBytes": 165025248
           }
         }
       }
