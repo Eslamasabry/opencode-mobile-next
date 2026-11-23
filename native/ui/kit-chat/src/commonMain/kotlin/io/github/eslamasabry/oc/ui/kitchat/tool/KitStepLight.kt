@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kitchat.tool
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -27,11 +28,11 @@ import kotlin.math.sin
 public enum class KitStepLightState { Idle, Working, Background }
 
 /**
- * The step light's lap (B-KIT-036). Port of Dart `kit_step_light.dart`: one lap of [LAP_MS] (a background process runs a
- * calmer [CALM_LAP_MS] lap). In one lap a light comes down the rail from above to the node (0-28 %), the node's outline
- * splits at the top centre and both halves fill at once, each with a bright head, meeting at the bottom centre
- * (26-66 %), then one light goes on down the rail while the outline dims (64-95 %); the last 5 % is quiet and the lap
- * starts again. Pure numbers here so the timeline and the geometry are testable; [KitStepLight] draws them.
+ * The step light's lap (B-KIT-036). Port of Dart `kit_step_light.dart`: one lap of [LAP_MS] (a background process runs
+ * a calmer [CALM_LAP_MS] lap). In one lap a light comes down the rail from above to the node (0-28 %), the node's
+ * outline splits at the top centre and both halves fill at once, each with a bright head, meeting at the bottom centre
+ * (26-66 %), then the outline dims with no light below the node; the end of the lap is quiet and the lap starts again.
+ * Pure numbers here so the timeline and the geometry are testable; [KitStepLight] draws them.
  */
 public object KitStepLightLap {
     public const val LAP_MS: Int = 2000
@@ -49,7 +50,7 @@ public object KitStepLightLap {
             KitStepLightState.Background -> CALM_LAP_MS
         }
 
-    /** One frame of the lap at [p] (0..1), with [above] and [below] the rail lengths to the neighbouring nodes. */
+    /** One frame of the lap at [p] (0..1), with [above] the rail length from the start to this node's top. */
     public data class Frame(
         /** The light on the rail above the node, as a (from, to) span measured down from the rail's top; or null. */
         val railAbove: ClosedFloatingPointRange<Float>?,
@@ -59,15 +60,13 @@ public object KitStepLightLap {
         val outlineAlpha: Float,
         /** Whether each half carries its bright head. */
         val heads: Boolean,
-        /** The light on the rail below the node, measured down from the node's bottom edge; or null. */
-        val railBelow: ClosedFloatingPointRange<Float>?,
     ) {
         /** How many lines and paths this frame strokes (the Dart test counts them on the canvas). */
-        val lines: Int get() = (if (railAbove != null) 1 else 0) + (if (railBelow != null) 1 else 0)
+        val lines: Int get() = if (railAbove != null) 1 else 0
         val paths: Int get() = (if (fill > 0f) 2 else 0) + (if (heads) 2 else 0)
     }
 
-    public fun frameAt(p: Float, above: Float = 24f, below: Float = 24f): Frame {
+    public fun frameAt(p: Float, above: Float = 24f): Frame {
         var railAbove: ClosedFloatingPointRange<Float>? = null
         if (above > 0f && p < .3f) {
             val head = easeInOut(seg(p, 0f, .28f)) * (above + LIGHT_LEN)
@@ -78,14 +77,7 @@ public object KitStepLightLap {
         val fill = easeInOut(seg(p, .26f, .66f))
         val dim = .75f * (1f - seg(p, .7f, 1f))
         val heads = fill > 0f && p > .26f && p < .68f
-        var railBelow: ClosedFloatingPointRange<Float>? = null
-        if (below > 0f && p > .64f && p < .97f) {
-            val head = easeOut(seg(p, .64f, .95f)) * (below + LIGHT_LEN)
-            val a = (head - LIGHT_LEN).coerceIn(0f, below)
-            val b = head.coerceIn(0f, below)
-            if (b > a) railBelow = a..b
-        }
-        return Frame(railAbove, fill, dim, heads, railBelow)
+        return Frame(railAbove, fill, dim, heads)
     }
 
     /** The phase (0..1) of a lap of [lapMs] at [elapsedMs] since it started; the lap repeats. */
@@ -129,8 +121,6 @@ public object KitStepLightLap {
 
     private fun easeInOut(t: Float) = if (t < .5f) 2 * t * t else 1 - (-2 * t + 2) * (-2 * t + 2) / 2
 
-    private fun easeOut(t: Float) = 1 - (1 - t) * (1 - t)
-
     internal const val HEAD_LENGTH: Float = HEAD_LEN
 
     /** The light on the rail: 2 dp wide, centred on the rail (F: kit_step_light.dart:403). */
@@ -140,17 +130,24 @@ public object KitStepLightLap {
 /**
  * Where a step's node sits on its rail, in px of the node's own box: how far the rail runs [above] it to the node (or
  * the line) before, and [below] it to the next node (or the last node's short tail). [lone]: off any rail, the light
- * goes round the node only. Read at draw time (the neighbours are placed after this node composes).
+ * goes round the node only. Read at draw time (the neighbours are placed after this node composes). [drawn] reports
+ * each moving frame's phase to the rail; [ended] fires when this node's light leaves composition.
  */
-internal class StepLightRail(val above: () -> Float, val below: () -> Float, val last: () -> Boolean)
+internal class StepLightRail(
+    val above: () -> Float,
+    val below: () -> Float,
+    val last: () -> Boolean,
+    val drawn: (phase: Float) -> Unit = {},
+    val ended: () -> Unit = {},
+)
 
 /**
  * The step node's light (B-KIT-036; Dart `_StepLight` + `_LightPainter`, lib/ui/kit/chat/kit_step_light.dart): nothing
  * when [state] is idle; otherwise one lap of [KitStepLightLap] in [color] round a node [size] square: on a rail
- * ([rail]) the light comes down the rail from the node before, splits at the node's top centre and fills both sides
- * with a bright head each until they meet at the bottom centre, then one light runs on down the rail to the next node
- * and the outline dims. The rail parts fade in above and out below. Calm runs the lap at half speed; Off and reduced
- * motion ([animate] false) draw the whole outline still. Draw phase only: the lap never recomposes.
+ * ([rail]) the light comes down the rail from above, splits at the node's top centre and fills both sides with a bright
+ * head each until they meet at the bottom centre, then the outline dims with no light below the node. The rail part
+ * fades in above. Calm runs the lap at half speed; Off and reduced motion ([animate] false) draw the whole outline
+ * still. Draw phase only: the lap never recomposes.
  */
 @Composable
 public fun KitStepLight(state: KitStepLightState, color: Color, size: Dp, animate: Boolean, modifier: Modifier = Modifier) {
@@ -168,13 +165,14 @@ internal fun KitStepLight(
     railColor: Color = color,
 ) {
     val lap = KitStepLightLap.lapMs(state) ?: return
+    if (rail != null) DisposableEffect(rail) { onDispose { rail.ended() } }
     val motion = KitMotion.state
     // F: kit_step_light.dart:78-82 Calm runs the lap at half speed
     val speed = if (motion.level == MotionLevel.Calm) .5f else 1f
     // The lap runs on the frame clock (withInfiniteAnimationFrameNanos), never a timer: a hidden window sends no frames,
     // so it parks with the app (LocalKitVisibility's rule) and wakes nothing while hidden.
     val moving = animate && !motion.reduced && !motion.stillFrame
-    val phase = rememberLoopPhase(moving, lap, speed, still = STILL_PHASE)
+    val phase = rememberLoopPhase(moving, lap, speed, still = 0f)
     Canvas(modifier.size(size)) {
         val s = this.size.minDimension
         val dp = density
@@ -186,7 +184,8 @@ internal fun KitStepLight(
         val above = rail?.above?.invoke()?.coerceAtLeast(0f) ?: 0f
         val below = rail?.below?.invoke()?.coerceAtLeast(0f) ?: 0f
         val p = phase.floatValue
-        val frame = KitStepLightLap.frameAt(p, above = above / dp, below = below / dp)
+        rail?.drawn(p)
+        val frame = KitStepLightLap.frameAt(p, above = above / dp)
         val railW = 2f // F: kit_step_light.dart:463 two physical pixels
         val x = s / 2f
         val lightW = KitStepLightLap.LIGHT_WIDTH * dp
@@ -204,17 +203,8 @@ internal fun KitStepLight(
             drawOutline(s, color.copy(alpha = color.alpha * frame.outlineAlpha), frame.fill, KitStepLightLap.FILL_STROKE * dp)
             if (frame.heads) drawHeads(s, color, frame.fill, dp)
         }
-        // 3) One light on down the rail to the next node, fading out.
-        frame.railBelow?.let { r ->
-            val brush =
-                Brush.verticalGradient(0f to color, .5f to color, 1f to color.copy(alpha = 0f), startY = s, endY = s + below)
-            drawLine(brush, Offset(x, s + r.start * dp), Offset(x, s + r.endInclusive * dp), lightW, StrokeCap.Round)
-        }
     }
 }
-
-/** The lap phase drawn when nothing moves: the outline whole (the frame is not used then). */
-private const val STILL_PHASE = .66f
 
 /** One half of the outline as a path, in px (the polyline of [KitStepLightLap.outlineHalf]). */
 private fun halfPath(size: Float, stroke: Float, left: Boolean): Path =

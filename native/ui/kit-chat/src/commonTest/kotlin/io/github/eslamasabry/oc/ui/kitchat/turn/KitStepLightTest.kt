@@ -15,17 +15,17 @@ class KitStepLightTest {
         KitStepLightLap.frameAt(KitStepLightLap.phase(ms, KitStepLightLap.lapMs(state)!!))
 
     @Test
-    fun `B-KIT-036 one 2-second lap - a light from above, both halves filling, the light going on, a quiet end`() {
+    fun `B-KIT-036 one 2-second lap - a light from above, both halves filling, no light below`() {
         assertEquals(2000, KitStepLightLap.lapMs(KitStepLightState.Working))
         // 0-28 %: one light from above, no outline yet.
         at(200).let { assertEquals(1, it.lines); assertEquals(0, it.paths) }
         // 26-66 %: both halves fill at once with a head each, no light on the rail.
         at(800).let { assertEquals(4, it.paths); assertEquals(0, it.lines) }
-        // 64-95 %: one light goes on down the rail, the outline dims.
+        // 64-95 %: the outline dims; no light is drawn below the running node.
         at(1500).let {
             assertEquals(2, it.paths)
-            assertEquals(1, it.lines)
-            assertTrue(it.railBelow != null && it.outlineAlpha < .75f)
+            assertEquals(0, it.lines)
+            assertTrue(it.outlineAlpha < .75f)
         }
         // 95-100 % is quiet, then the lap starts again.
         assertEquals(0, at(1980).lines)
