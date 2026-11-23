@@ -154,7 +154,6 @@ class OwnAgentInlineHelpTest {
 
     @Composable
     private fun Screen(
-        state: AgentsUi,
         own: OwnProviderUi,
         actions: Recorder,
         ownAgents: OwnAgentsUi = OwnAgentsUi(available = true, sheetOpen = true),
@@ -173,7 +172,7 @@ class OwnAgentInlineHelpTest {
                 ) {
                     Box(Modifier.width(width)) {
                         AgentsScreen(
-                            state,
+                            page(),
                             actions,
                             AgentsHubControlsUi(own = own, ownAgents = ownAgents),
                             null,
@@ -189,7 +188,7 @@ class OwnAgentInlineHelpTest {
     @Test
     fun `B-AGENT-OWN-044 the own-agent sheet has no link to a second help sheet`() = kitUiTest {
         val actions = Recorder()
-        setContent { Screen(page(), own(), actions) }
+        setContent { Screen(own(), actions) }
         onNodeWithText("Your own agent").assertExists()
         onAllNodesWithText("How agents work on this phone").assertCountEquals(0)
     }
@@ -197,7 +196,7 @@ class OwnAgentInlineHelpTest {
     @Test
     fun `B-AGENT-OWN-045 a help fold opens its words inside the own-agent sheet`() = kitUiTest {
         val actions = Recorder()
-        setContent { Screen(page(), own(), actions) }
+        setContent { Screen(own(), actions) }
         val parts = listOf(
             "What runs here" to "Coding agents that speak ACP",
             "Not supported" to "Desktop apps with windows",
@@ -217,7 +216,7 @@ class OwnAgentInlineHelpTest {
     fun `B-AGENT-OWN-046 Where files are and What the phone needs sit in one closed Details row at the end`() =
         kitUiTest {
             val actions = Recorder()
-            setContent { Screen(page(), own(), actions) }
+            setContent { Screen(own(), actions) }
             onAllNodesWithText("Where files are").assertCountEquals(0)
             onNodeWithText("Details").performScrollTo().performClick()
             onNodeWithText("Where files are").assertExists()
@@ -231,7 +230,7 @@ class OwnAgentInlineHelpTest {
     fun `B-AGENT-OWN-047 with every help part open the sheet still scrolls at 360 dp and text 1_3`() =
         kitUiTest(360, 780) {
             val actions = Recorder()
-            setContent { Screen(page(), own(), actions, width = 360.dp, fontScale = 1.3f) }
+            setContent { Screen(own(), actions, width = 360.dp, fontScale = 1.3f) }
             for (title in listOf("What runs here", "Not supported", "Installing", "Keys and sign-ins", "Details"))
                 onNodeWithText(title).performScrollTo().performClick()
             for (body in listOf(
@@ -249,7 +248,7 @@ class OwnAgentInlineHelpTest {
     @Test
     fun `B-AGENT-OWN-048 the provider sheet explains your own provider in place, with no second sheet`() = kitUiTest {
         val actions = Recorder()
-        setContent { Screen(page(), own(editing = "claude"), actions, ownAgents = OwnAgentsUi(available = true)) }
+        setContent { Screen(own(editing = "claude"), actions, ownAgents = OwnAgentsUi(available = true)) }
         onNodeWithText("Your own provider").performScrollTo().performClick()
         onNodeWithText("Claude Code can use any Anthropic-compatible endpoint", substring = true).assertExists()
         onAllNodesWithText("How agents work on this phone").assertCountEquals(0)
