@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
@@ -309,6 +312,56 @@ class StepsCraftTest {
             val back = boundsOfText(StepsCraftScene.REPLY)
             assertEquals(reply.top, back.top, 1f, "folding brings the reply back: $reply → $back")
             onNodeWithText(StepsCraftScene.REPLY).assertIsDisplayed()
+        }
+
+    @Test
+    fun `STEPS-CRAFT-019 a folded list stays folded while steps arrive, between steps too`() =
+        kitUiTest(412, 1200) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        when (phase) {
+                            1 -> StepsCraftScene.alternatingFacts(8, true)
+                            2 -> StepsCraftScene.alternatingFacts(8, false)
+                            else -> StepsCraftScene.alternatingFacts(9, true)
+                        }
+                    ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = facts)
+                }
+            }
+            val stepTag = Regex("chat-step-[ce]\\d+")
+            val stepMatcher =
+                SemanticsMatcher("step row") { node ->
+                    node.config.getOrNull(SemanticsProperties.TestTag)?.matches(stepTag) == true
+                }
+            val rows = mutableListOf<Int>()
+            val summaries = mutableListOf<Int>()
+            val folds = mutableListOf<Int>()
+            fun sample() {
+                rows += onAllNodes(stepMatcher, useUnmergedTree = true).fetchSemanticsNodes().size
+                summaries += onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).fetchSemanticsNodes().size
+                folds += onAllNodesWithTag(STEP_FOLD_ROW_TAG, useUnmergedTree = true).fetchSemanticsNodes().size
+            }
+            mainClock.advanceTimeBy(900)
+            sample()
+            phase = 2
+            repeat(40) {
+                mainClock.advanceTimeByFrame()
+                sample()
+            }
+            val fold5Err = runCatching { onNodeWithText("Show 5 earlier steps").assertIsDisplayed() }.exceptionOrNull()
+            phase = 3
+            repeat(40) {
+                mainClock.advanceTimeByFrame()
+                sample()
+            }
+            assertTrue(rows.all { it == 3 }, "rows stayed 3: $rows (summaries=$summaries, folds=$folds)")
+            assertTrue(summaries.all { it == 0 }, "summary stayed 0: $summaries (rows=$rows, folds=$folds)")
+            assertTrue(folds.all { it == 1 }, "fold row stayed 1: $folds (rows=$rows, summaries=$summaries)")
+            if (fold5Err != null) throw fold5Err
+            onNodeWithText("Show 6 earlier steps").assertIsDisplayed()
         }
 
     private companion object {

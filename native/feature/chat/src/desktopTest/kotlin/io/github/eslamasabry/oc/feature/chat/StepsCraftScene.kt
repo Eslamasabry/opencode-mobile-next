@@ -153,6 +153,40 @@ internal object StepsCraftScene {
         return TurnFactsPresenter(FixedClock).present(k.feed.value, 64_000)
     }
 
+    /** Alternating commands and edits (1..[steps]), so every step is its own row; [lastRuns] leaves the last live. */
+    fun alternating(steps: Int, lastRuns: Boolean): List<MessageWithParts> {
+        val parts =
+            (1..steps).map { n ->
+                val status = if (n == steps && lastRuns) ToolStatus.Running else ToolStatus.Completed
+                val start = 2_000L + n * 5_000L
+                val end = if (status == ToolStatus.Completed) start + 2_400 else null
+                if (n % 2 == 1) bash(n, status)
+                else
+                    tool(
+                        "e$n",
+                        "edit",
+                        mapOf("filePath" to "/home/dev/projects/demo_app/lib/f$n.dart"),
+                        status,
+                        start,
+                        end,
+                    )
+            }
+        return listOf(
+            MessageWithParts(
+                info(TURN, Role.User, 0, 0),
+                persistentListOf(Part("p1", TURN, sid, PartType.Text, "text", text = ASK)),
+            ),
+            MessageWithParts(info("m2", Role.Assistant, 1_000, null), parts.toImmutableList()),
+        )
+    }
+
+    fun alternatingFacts(steps: Int, lastRuns: Boolean): TurnFactsUi {
+        val k = TurnFeedKeeper(sid)
+        k.history(alternating(steps, lastRuns))
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        return TurnFactsPresenter(FixedClock).present(k.feed.value, 64_000)
+    }
+
     fun doneState(): ChatUi =
         ChatUi.loading(Ref).copy(
             title = ASK,
