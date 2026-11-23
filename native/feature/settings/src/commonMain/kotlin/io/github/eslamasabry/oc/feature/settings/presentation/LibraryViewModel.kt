@@ -296,6 +296,7 @@ public class LibraryViewModel(
                                 providerId = sheet.id,
                             )
                         }
+                        is LibrarySheet.Provider -> it.customProvider.reopened()
                         else -> it.customProvider
                     },
             )

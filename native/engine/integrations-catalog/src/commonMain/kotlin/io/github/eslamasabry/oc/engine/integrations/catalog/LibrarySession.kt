@@ -707,6 +707,8 @@ public class LibrarySession(
             val removed = host.remove(providerId)
             val code = removed.getOrNull()
             when {
+                removed is Outcome.Failed && disconnected != null ->
+                    CustomProviderOutcome.RemovePartial(removed.failure.label())
                 removed is Outcome.Failed ->
                     CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, removed.failure.label())
                 code == CustomProviderWrite.Saved.code -> CustomProviderOutcome.RemovedNotRestarted
