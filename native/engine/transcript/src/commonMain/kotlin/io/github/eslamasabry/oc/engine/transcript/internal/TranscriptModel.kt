@@ -607,13 +607,15 @@ internal class TranscriptModel(
                     PartType.Reasoning -> {
                         val text = pe.raw ?: continue
                         val first = text.lineSequence().firstOrNull { it.isNotBlank() } ?: continue
+                        val made = text.toString()
+                        counters.thoughtChars += made.length
                         rows +=
                             reuse(
                                 ThoughtRow(
                                     "thought:${p.messageId}/${p.id}",
                                     turnId,
                                     first.trim(),
-                                    text = text.toString(),
+                                    text = made,
                                     live = !p.ended && !finished,
                                 )
                             )
