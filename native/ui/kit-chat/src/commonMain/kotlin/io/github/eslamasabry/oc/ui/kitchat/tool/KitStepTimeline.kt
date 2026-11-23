@@ -264,6 +264,9 @@ internal class StepRail {
     /** Where the rail starts under the line's glyph, px from the timeline's top. */
     var headerStart: Float = 0f
 
+    /** The node whose travelling light ended last on this rail, if any. */
+    var lastLit: Any? = null
+
     /** One recorded frame of a node's travelling light: where that lap starts from, and its phase. */
     internal class LitFrame(val fromY: Float, val phase: Float)
 
@@ -273,14 +276,31 @@ internal class StepRail {
     /** The light's rail for the node [key] (Dart `_LightPainter.paint`, kit_step_light.dart:378-401). */
     fun light(key: Any, tail: Float): StepLightRail {
         fun mine() = spans[key]
-        fun prevBottom(top: Float) = spans.values.filter { it.endInclusive <= top + .5f }.maxOfOrNull { it.endInclusive }
-        fun nextTop(bottom: Float) = spans.values.filter { it.start >= bottom - .5f && it != mine() }.minOfOrNull { it.start }
-        fun above() = mine()?.let { it.start - (prevBottom(it.start) ?: headerStart) } ?: 0f
+        fun inView(k: Any) = (shares[k]?.invoke() ?: 1f) > LIGHT_START_SHARE
+        fun prevBottom(top: Float) =
+            spans.entries
+                .filter { (k, span) -> k != key && inView(k) && span.endInclusive <= top + .5f }
+                .maxOfOrNull { it.value.endInclusive }
+        fun startOf(top: Float): Float {
+            val last = lastLit
+            val fromLast =
+                last
+                    ?.takeIf { it != key && inView(it) }
+                    ?.let { spans[it]?.endInclusive }
+                    ?.takeIf { it <= top + .5f }
+            return fromLast ?: prevBottom(top) ?: headerStart
+        }
+        fun nextTop(bottom: Float) =
+            spans.values.filter { it.start >= bottom - .5f && it != mine() }.minOfOrNull { it.start }
         return StepLightRail(
-            above = { above() },
+            above = { mine()?.let { it.start - startOf(it.start) } ?: 0f },
             below = { mine()?.let { m -> nextTop(m.endInclusive)?.let { it - m.endInclusive } ?: tail } ?: 0f },
             last = { mine()?.let { nextTop(it.endInclusive) == null } ?: true },
-            drawn = { p -> lit[key] = LitFrame((spans[key]?.start ?: 0f) - above(), p) },
+            drawn = { p -> lit[key] = LitFrame(mine()?.let { startOf(it.start) } ?: headerStart, p) },
+            ended = {
+                lastLit = key
+                lit.remove(key)
+            },
         )
     }
 
@@ -304,6 +324,9 @@ internal class StepRail {
         arrivals = 0
     }
 }
+
+/** A node less in view than this cannot start a running step's light while its fold moves. */
+private const val LIGHT_START_SHARE = .02f
 
 internal val LocalKitStepRail = compositionLocalOf<StepRail?> { null }
 
