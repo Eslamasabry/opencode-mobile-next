@@ -169,6 +169,15 @@ internal object StepsOrderScene {
             ),
         )
 
+    fun runningDoneSteps(): List<MessageWithParts> =
+        listOf(
+            promptMsg,
+            MessageWithParts(
+                info("m2", Role.Assistant, 1_000, null),
+                listOf(c1(), f1()).toImmutableList(),
+            ),
+        )
+
     fun thoughtAlone(): List<MessageWithParts> =
         listOf(
             promptMsg,
@@ -229,6 +238,13 @@ internal object StepsOrderScene {
     fun runningFacts(): TurnFactsUi {
         val k = TurnFeedKeeper(sid)
         k.history(running())
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        return TurnFactsPresenter(FixedClock).present(k.feed.value, 10_000)
+    }
+
+    fun runningDoneStepsFacts(): TurnFactsUi {
+        val k = TurnFeedKeeper(sid)
+        k.history(runningDoneSteps())
         k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
         return TurnFactsPresenter(FixedClock).present(k.feed.value, 10_000)
     }

@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
+import io.github.eslamasabry.oc.feature.chat.presentation.workOf
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -183,5 +184,14 @@ class StepsOrderTest {
             waitForIdle()
             onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
             onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
+        }
+
+    @Test
+    fun `STEPS-ORDER-007 the last stretch keeps the turn's own state while the reply runs`() =
+        kitUiTest(412, 2600) {
+            val facts = StepsOrderScene.runningDoneStepsFacts()
+            val work = requireNotNull(facts.work["m1"])
+            val stretches = requireNotNull(facts.reading.stretches["m1"])
+            assertEquals(work.state, workOf(work, stretches.last(), last = true).state)
         }
 }

@@ -17,7 +17,6 @@ public fun workOf(work: TurnWork, stretch: WorkStretchUi, last: Boolean): TurnWo
     val active = steps.any { it.state == StepState.Pending || it.state == StepState.Running }
     val state =
         when {
-            last && stretch.live && work.state == WorkLineState.Done -> WorkLineState.Running
             last -> work.state
             work.state == WorkLineState.WaitingForYou && active -> WorkLineState.WaitingForYou
             active -> WorkLineState.Running

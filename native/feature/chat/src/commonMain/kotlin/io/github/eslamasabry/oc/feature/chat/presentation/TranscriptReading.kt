@@ -25,7 +25,6 @@ public data class WorkStretchUi(
     val key: String,
     val anchor: String?,
     val entries: List<WorkEntryUi>,
-    val live: Boolean = false,
 )
 
 public data class TurnMetadataUi(
@@ -309,7 +308,7 @@ internal fun transcriptReading(
         }
         val hasTools = parts.any { it.type == PartType.Tool }
         val entries = ArrayList<WorkEntryUi>()
-        val acc = if (hasTools) StretchAccumulator(turn.turnId, live) else null
+        val acc = if (hasTools) StretchAccumulator(turn.turnId) else null
         for ((index, part) in parts.withIndex()) {
             val identity = "${part.messageId}/${part.id}"
             val notice = part.type in setOf(PartType.Notice, PartType.Compaction, PartType.Switch)
@@ -377,7 +376,7 @@ internal fun transcriptReading(
 }
 
 /** Splits a turn's work entries into stretches between visible texts, dropping stretches without a tool step. */
-private class StretchAccumulator(private val turnId: String, private val live: Boolean) {
+private class StretchAccumulator(private val turnId: String) {
     private var anchor: String? = null
     private var entries = ArrayList<WorkEntryUi>()
     private var hidden = ArrayList<String>()
@@ -394,17 +393,17 @@ private class StretchAccumulator(private val turnId: String, private val live: B
 
     fun onOther(part: Part, identity: String, foldedText: Boolean, allHidden: MutableSet<String>) {
         if (part.type == PartType.Text && part.text.isNotBlank() && !foldedText) {
-            flush(trailing = false, allHidden = allHidden)
+            flush(allHidden)
             anchor = identity
         }
     }
 
     fun finish(allHidden: MutableSet<String>): List<WorkStretchUi> {
-        flush(trailing = true, allHidden = allHidden)
+        flush(allHidden)
         return stretches
     }
 
-    private fun flush(trailing: Boolean, allHidden: MutableSet<String>) {
+    private fun flush(allHidden: MutableSet<String>) {
         val firstStep = entries.firstOrNull { it is WorkEntryUi.Step } as? WorkEntryUi.Step
         if (firstStep == null) {
             allHidden.removeAll(hidden)
@@ -416,7 +415,6 @@ private class StretchAccumulator(private val turnId: String, private val live: B
                     key = key,
                     anchor = if (first) null else anchor,
                     entries = entries.toList(),
-                    live = live && trailing,
                 )
         }
         entries = ArrayList()
