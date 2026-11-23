@@ -1,7 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -11,6 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
@@ -137,6 +141,54 @@ class TopBarFitTest {
                 }
             }
             onNodeWithTag("find").assertExists()
+        }
+
+    @Test
+    fun `B-KIT-029 at 840 dp glyphs that fall back to their icons are counted, so the title keeps its whole line`() =
+        runComposeUiTest {
+            // Eight glyph actions whose words are too wide to all stay. Those that fall back to their 48 dp icons
+            // still take the bar's room: uncounted, they push the title's words out of its whole line.
+            val words =
+                listOf(
+                    "Collapse all steps",
+                    "Expand all steps",
+                    "Copy updated file",
+                    "Show surrounding lines",
+                    "Open in the editor",
+                    "Add to the prompt",
+                    "Rename the session",
+                    "Move to another project",
+                )
+            setContent {
+                Themed(840) {
+                    KitTopBar(
+                        "n".repeat(28),
+                        exit = KitTopBarExit.Back,
+                        exitLabel = "Back",
+                        onExit = {},
+                        actions =
+                            words.mapIndexed { index, label ->
+                                KitLineAction(label, {}, icon = KitIcons.search, testTag = "glyph-$index")
+                            },
+                    )
+                }
+            }
+            assertTitleKeepsItsLine()
+            // Every action is in the bar: its words, or its icon where the words did not fit.
+            words.indices.forEach { onNodeWithTag("glyph-$it").assertExists() }
+        }
+
+    @Test
+    fun `B-KIT-029 a bar in a narrow pane of a wide window splits by the pane's own width and keeps its title room`() =
+        runComposeUiTest {
+            // The window is wide, but this bar only has a pane's 400 dp: what does not fit there waits in the overflow.
+            setContent {
+                Themed(840) {
+                    Box(Modifier.width(400.dp)) { fileBar() }
+                }
+            }
+            assertTitleKeepsItsLine()
+            onNodeWithTag("kit-top-bar-more").assertExists()
         }
 
     /** The review file page's bar: Back, a file name that ends in one unbreakable word, and its four text actions. */
