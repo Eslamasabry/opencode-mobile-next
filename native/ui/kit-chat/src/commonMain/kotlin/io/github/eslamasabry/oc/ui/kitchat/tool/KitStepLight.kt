@@ -140,9 +140,16 @@ public object KitStepLightLap {
 /**
  * Where a step's node sits on its rail, in px of the node's own box: how far the rail runs [above] it to the node (or
  * the line) before, and [below] it to the next node (or the last node's short tail). [lone]: off any rail, the light
- * goes round the node only. Read at draw time (the neighbours are placed after this node composes).
+ * goes round the node only. Read at draw time (the neighbours are placed after this node composes). [drawn] reports
+ * each moving frame's phase to the rail; [ended] fires when this node's light leaves composition.
  */
-internal class StepLightRail(val above: () -> Float, val below: () -> Float, val last: () -> Boolean)
+internal class StepLightRail(
+    val above: () -> Float,
+    val below: () -> Float,
+    val last: () -> Boolean,
+    val drawn: (phase: Float) -> Unit = {},
+    val ended: () -> Unit = {},
+)
 
 /**
  * The step node's light (B-KIT-036; Dart `_StepLight` + `_LightPainter`, lib/ui/kit/chat/kit_step_light.dart): nothing
@@ -186,6 +193,7 @@ internal fun KitStepLight(
         val above = rail?.above?.invoke()?.coerceAtLeast(0f) ?: 0f
         val below = rail?.below?.invoke()?.coerceAtLeast(0f) ?: 0f
         val p = phase.floatValue
+        rail?.drawn(p)
         val frame = KitStepLightLap.frameAt(p, above = above / dp, below = below / dp)
         val railW = 2f // F: kit_step_light.dart:463 two physical pixels
         val x = s / 2f

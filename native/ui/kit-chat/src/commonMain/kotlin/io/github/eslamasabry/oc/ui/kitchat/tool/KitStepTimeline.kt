@@ -264,15 +264,23 @@ internal class StepRail {
     /** Where the rail starts under the line's glyph, px from the timeline's top. */
     var headerStart: Float = 0f
 
+    /** One recorded frame of a node's travelling light: where that lap starts from, and its phase. */
+    internal class LitFrame(val fromY: Float, val phase: Float)
+
+    /** The latest recorded frame of each node's travelling light, px from the rail's top. */
+    internal val lit = HashMap<Any, LitFrame>()
+
     /** The light's rail for the node [key] (Dart `_LightPainter.paint`, kit_step_light.dart:378-401). */
     fun light(key: Any, tail: Float): StepLightRail {
         fun mine() = spans[key]
         fun prevBottom(top: Float) = spans.values.filter { it.endInclusive <= top + .5f }.maxOfOrNull { it.endInclusive }
         fun nextTop(bottom: Float) = spans.values.filter { it.start >= bottom - .5f && it != mine() }.minOfOrNull { it.start }
+        fun above() = mine()?.let { it.start - (prevBottom(it.start) ?: headerStart) } ?: 0f
         return StepLightRail(
-            above = { mine()?.let { it.start - (prevBottom(it.start) ?: headerStart) } ?: 0f },
+            above = { above() },
             below = { mine()?.let { m -> nextTop(m.endInclusive)?.let { it - m.endInclusive } ?: tail } ?: 0f },
             last = { mine()?.let { nextTop(it.endInclusive) == null } ?: true },
+            drawn = { p -> lit[key] = LitFrame((spans[key]?.start ?: 0f) - above(), p) },
         )
     }
 
