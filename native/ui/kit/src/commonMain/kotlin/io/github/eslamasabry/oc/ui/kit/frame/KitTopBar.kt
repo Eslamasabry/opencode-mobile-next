@@ -440,10 +440,9 @@ public fun KitTopBar(
             // The bar's half of the earlier 16 dp step (F: kit_top_bar.dart:394); the title row keeps the other 8 dp
             // after its words. A tight bar gives both back to the title's words or to an action that fits thanks of it.
             // A row, not a box: the actions and the overflow control stay beside each other, not one over the other.
-            // The step only where the action row draws something: an empty row must not take the title's room.
-            val drawsActions = shown.isNotEmpty() || hidden.isNotEmpty() || more != null
-            val stepped: @Composable () -> Unit =
-                { Row(Modifier.padding(start = Space.S2.dp)) { actionRow() } }
+            // The step is the row's own, and only where the row draws something: what a caller's menu draws is known
+            // only once it is laid out, and an empty row must not take the title's room.
+            val stepped: @Composable () -> Unit = { Row(Modifier.stepWhereDrawn(Space.S2.dp)) { actionRow() } }
             BackBar(
                 exit = { ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f) },
                 // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and it
@@ -463,7 +462,7 @@ public fun KitTopBar(
                         ) { u() }
                     }
                 },
-                actions = if (barFit.tight || !drawsActions) actionRow else stepped,
+                actions = if (barFit.tight) actionRow else stepped,
             )
         } else {
         Row(
@@ -937,6 +936,14 @@ private fun Modifier.tuckedTarget(by: androidx.compose.ui.unit.Dp): Modifier =
         val inset = by.roundToPx()
         val placeable = measurable.measure(constraints)
         layout(placeable.width, (placeable.height - 2 * inset).coerceAtLeast(0)) { placeable.place(0, -inset) }
+    }
+
+/** [by] of room before the content, only where the content takes a width: an empty row takes none of it. */
+private fun Modifier.stepWhereDrawn(by: androidx.compose.ui.unit.Dp): Modifier =
+    layout { measurable, constraints ->
+        val p = measurable.measure(constraints)
+        val step = if (p.width > 0) by.roundToPx() else 0
+        layout(p.width + step, p.height) { p.placeRelative(step, 0) }
     }
 
 /** Where the shell's controls sit (Dart `KitShellControlsLayout`). */
