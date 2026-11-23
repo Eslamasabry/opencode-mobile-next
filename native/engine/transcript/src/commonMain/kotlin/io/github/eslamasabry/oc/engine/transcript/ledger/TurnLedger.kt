@@ -46,11 +46,17 @@ public class TurnLedger(private val sessionId: String) {
         /** Text streamed into a part after its first delta, not yet folded into the part (see [snapshot]). */
         val streams = HashMap<String, StringBuilder>()
 
+        /** This message as last published; null after any change. */
+        var view: MessageWithParts? = null
+
         /** The part [id] with the words streamed into it so far folded in (once: the side buffer empties). */
         fun fold(id: String) {
             val more = streams.remove(id) ?: return
             val part = parts[id] ?: return
-            if (more.isNotEmpty()) parts[id] = part.copy(text = part.text + more)
+            if (more.isNotEmpty()) {
+                parts[id] = part.copy(text = part.text + more)
+                view = null
+            }
         }
     }
 
@@ -58,9 +64,13 @@ public class TurnLedger(private val sessionId: String) {
     private var version = 0L
     private var cached: LedgerSnapshot = LedgerSnapshot.Empty
 
+    /** The entries in server order, kept between snapshots; null means sort at the next snapshot. */
+    private var order: List<Entry>? = null
+
     /** Forgets everything (another server, a reload from scratch). */
     public fun reset() {
         messages.clear()
+        order = null
         version++
     }
 
@@ -87,6 +97,7 @@ public class TurnLedger(private val sessionId: String) {
                         false
                     } else {
                         entry.parts[part.id] = part.copy(text = event.delta)
+                        entry.view = null
                         entry.partStamps[part.id] = version + 1
                         changed()
                     }
@@ -117,6 +128,7 @@ public class TurnLedger(private val sessionId: String) {
                 messages[m.info.id] = entry
                 continue
             }
+            existing.view = null
             if (existing.stamp <= beforeVersion) {
                 existing.info = m.info
                 existing.stamp = stamp
@@ -142,6 +154,7 @@ public class TurnLedger(private val sessionId: String) {
             existing.parts.clear()
             existing.parts.putAll(kept)
         }
+        order = null
         changed()
     }
 
@@ -151,10 +164,16 @@ public class TurnLedger(private val sessionId: String) {
         for (entry in messages.values) if (entry.streams.isNotEmpty()) entry.streams.keys.toList().forEach(entry::fold)
         // Server order (B-CHAT-100): by creation time; a stable sort keeps the order the server gave equal times in
         // (history pages and live arrivals both insert in server order). Ids are not compared: they need not ascend.
+        val sorted =
+            order
+                ?: messages.values
+                    .sortedWith(compareBy { it.info.time?.createdMs ?: Long.MAX_VALUE })
+                    .also { order = it }
         val ordered =
-            messages.values
-                .sortedWith(compareBy { it.info.time?.createdMs ?: Long.MAX_VALUE })
-                .map { MessageWithParts(it.info, it.parts.values.toImmutableList()) }
+            sorted.map { entry ->
+                entry.view
+                    ?: MessageWithParts(entry.info, entry.parts.values.toImmutableList()).also { entry.view = it }
+            }
         cached = LedgerSnapshot(version, ordered, group(ordered))
         return cached
     }
@@ -163,10 +182,13 @@ public class TurnLedger(private val sessionId: String) {
         val entry = messages[info.id]
         if (entry == null) {
             messages[info.id] = Entry(info, version + 1)
+            order = null
         } else {
             val next = entry.info.keepingKnownTimes(info)
             if (entry.info == next) return false
+            if (entry.info.time?.createdMs != next.time?.createdMs) order = null
             entry.info = next
+            entry.view = null
             entry.stamp = version + 1
         }
         return changed()
@@ -193,6 +215,7 @@ public class TurnLedger(private val sessionId: String) {
         }
         if (old == next) return false
         entry.parts[part.id] = next
+        entry.view = null
         entry.partStamps[part.id] = version + 1
         return changed()
     }
