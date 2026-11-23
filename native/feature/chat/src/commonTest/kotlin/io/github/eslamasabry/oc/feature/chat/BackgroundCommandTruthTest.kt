@@ -32,7 +32,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * B-CHAT-311..314: Antigravity moves a slow command to the background and ends its turn; the helper says nothing more
+ * B-CHAT-311..315: Antigravity moves a slow command to the background and ends its turn; the helper says nothing more
  * until the next prompt. The engine stops every step of a turn that is not the newest busy one, so the command read
  * "Stopped before it finished" while it went on. It reads Running, sits on the background line, and ends only on its
  * real result.
@@ -204,5 +204,22 @@ class BackgroundCommandTruthTest {
         val noTimeFacts = presenter.present(noTime.feed.value, 60_000)
         assertEquals(StepState.Stopped, step(noTimeFacts).state)
         assertTrue(noTimeFacts.background.isEmpty())
+    }
+
+    @Test
+    fun `B-CHAT-315 after a restart while the command runs it still reads Running, never Stopped`() {
+        // Fresh keeper and fresh presenter: transcript reloaded from the server, no live turn events or prior clock.
+        val reloaded = keeper(bash(startedAtMs = null), words)
+        val fresh = TurnFactsPresenter(Now)
+        val facts = fresh.present(reloaded.feed.value, 60_000)
+        val step = step(facts)
+        assertEquals(StepState.Running, step.state, "reloaded transcript reads Running, never Stopped")
+        assertEquals(2_000L, step.startedAtMs, "elapsed time starts from the message's created time")
+        assertNull(step.durationMs, "a running step has no fixed duration yet")
+        assertEquals(58_000L, shownStepDurationMs(step.state, step.durationMs, step.startedAtMs, 60_000))
+        val task = facts.background.single()
+        assertEquals("c1", task.callId)
+        assertEquals(2_000L, task.sinceMs)
+        assertTrue(fresh.ticking(reloaded.feed.value), "the line ticks after a restart")
     }
 }
