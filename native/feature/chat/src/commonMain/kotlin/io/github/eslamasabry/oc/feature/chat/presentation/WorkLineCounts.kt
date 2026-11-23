@@ -21,6 +21,18 @@ public data class WorkLineCounts(
         get() = waitingEdit + waitingRun + waitingOther
 }
 
+public enum class WorkKind {
+    Ran,
+    Read,
+    Edited,
+    Searched,
+    Listed,
+    Fetched,
+    Delegated,
+    Other,
+    NotRun,
+}
+
 public object WorkLineRules {
     private val editTools = setOf("edit", "write", "patch", "apply_patch", "multiedit")
     private val runTools = setOf("bash", "shell")
@@ -33,6 +45,9 @@ public object WorkLineRules {
     private fun unfinished(step: TurnStep, asking: Boolean): Boolean =
         step.state == StepState.Pending || (asking && step.state == StepState.Running)
 
+    private fun hasCounts(c: WorkCounts): Boolean =
+        c.read + c.searched + c.listed + c.edited + c.ran + c.fetched + c.delegated + c.other + c.notRun > 0
+
     /**
      * Splits [work]'s counts into finished and unfinished steps. With every step finished it is the engine's own
      * counts, unchanged; otherwise the finished ones are counted again by the same rules (`TurnWork.count`): a file
@@ -42,8 +57,14 @@ public object WorkLineRules {
         // P-102 / review #2: a stopped, declined or failed step did not do its work; it is not counted as "edited",
         // "read" or "ran" (the engine's counts include failed steps, so any of them means counting again).
         val asking = work.state == WorkLineState.WaitingForYou
-        if (work.steps.none { unfinished(it, asking) || it.state == StepState.Stopped || it.state == StepState.Declined || it.state == StepState.Failed })
-            return WorkLineCounts(work.counts)
+        val allFinished =
+            work.steps.none {
+                unfinished(it, asking) ||
+                    it.state == StepState.Stopped ||
+                    it.state == StepState.Declined ||
+                    it.state == StepState.Failed
+            }
+        if (hasCounts(work.counts) && allFinished) return WorkLineCounts(work.counts)
         var out = WorkLineCounts(WorkCounts(steps = work.counts.steps))
         val editedFiles = HashSet<String>()
         val waitingFiles = HashSet<String>()
@@ -53,6 +74,18 @@ public object WorkLineRules {
                 else out.copy(done = finished(out.done, step, editedFiles))
         }
         return out
+    }
+
+    /** Finished work kinds in order of first appearance in [work], with [WorkKind.NotRun] last. */
+    public fun firstSeen(work: TurnWork): List<WorkKind> {
+        val asking = work.state == WorkLineState.WaitingForYou
+        val seen = LinkedHashSet<WorkKind>()
+        var hasNotRun = false
+        for (step in work.steps) {
+            val kind = if (unfinished(step, asking)) null else kindOf(step)
+            if (kind == WorkKind.NotRun) hasNotRun = true else if (kind != null) seen += kind
+        }
+        return if (hasNotRun) seen.toList() + WorkKind.NotRun else seen.toList()
     }
 
     private fun path(step: TurnStep): String? = step.facts.subject?.trim()?.takeIf { it.isNotEmpty() }
@@ -83,24 +116,41 @@ public object WorkLineRules {
             else -> true
         }
 
+    private fun kindOf(step: TurnStep): WorkKind? =
+        when {
+            step.state == StepState.NotRun -> WorkKind.NotRun
+            !didItsWork(step) -> null
+            else ->
+                when (name(step)) {
+                    "read" -> WorkKind.Read
+                    "glob",
+                    "grep" -> WorkKind.Searched
+                    "list" -> WorkKind.Listed
+                    in editTools -> WorkKind.Edited
+                    in runTools -> WorkKind.Ran
+                    "webfetch",
+                    "websearch" -> WorkKind.Fetched
+                    "task",
+                    "subagent" -> WorkKind.Delegated
+                    else -> WorkKind.Other
+                }
+        }
+
     private fun finished(c: WorkCounts, step: TurnStep, files: MutableSet<String>): WorkCounts {
-        if (step.state == StepState.NotRun) return c.copy(notRun = c.notRun + 1)
-        if (!didItsWork(step)) return c
-        return when (name(step)) {
-            "read" -> c.copy(read = c.read + 1)
-            "glob",
-            "grep" -> c.copy(searched = c.searched + 1)
-            "list" -> c.copy(listed = c.listed + 1)
-            in editTools -> {
+        return when (kindOf(step)) {
+            null -> c
+            WorkKind.NotRun -> c.copy(notRun = c.notRun + 1)
+            WorkKind.Read -> c.copy(read = c.read + 1)
+            WorkKind.Searched -> c.copy(searched = c.searched + 1)
+            WorkKind.Listed -> c.copy(listed = c.listed + 1)
+            WorkKind.Edited -> {
                 val path = path(step)
                 if (path == null || files.add(path)) c.copy(edited = c.edited + 1) else c
             }
-            in runTools -> c.copy(ran = c.ran + 1)
-            "webfetch",
-            "websearch" -> c.copy(fetched = c.fetched + 1)
-            "task",
-            "subagent" -> c.copy(delegated = c.delegated + 1)
-            else -> c.copy(other = c.other + 1)
+            WorkKind.Ran -> c.copy(ran = c.ran + 1)
+            WorkKind.Fetched -> c.copy(fetched = c.fetched + 1)
+            WorkKind.Delegated -> c.copy(delegated = c.delegated + 1)
+            WorkKind.Other -> c.copy(other = c.other + 1)
         }
     }
 }

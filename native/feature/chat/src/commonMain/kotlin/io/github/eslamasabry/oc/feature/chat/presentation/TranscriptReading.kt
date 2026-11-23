@@ -20,6 +20,14 @@ public sealed interface WorkEntryUi {
     public data class Detail(val value: TranscriptDetailUi) : WorkEntryUi
 }
 
+/** One contiguous stretch of work entries between visible assistant texts. */
+public data class WorkStretchUi(
+    val key: String,
+    val anchor: String?,
+    val entries: List<WorkEntryUi>,
+    val live: Boolean = false,
+)
+
 public data class TurnMetadataUi(
     val models: List<String>,
     val tokens: Long,
@@ -122,6 +130,7 @@ public data class TranscriptReadingUi(
      * are hidden and sit inside that line.
      */
     val thoughtWork: Map<String, List<TranscriptDetailUi>> = emptyMap(),
+    val stretches: Map<String, List<WorkStretchUi>> = emptyMap(),
 )
 
 /**
@@ -143,6 +152,7 @@ internal fun transcriptReading(
     val endNotes = LinkedHashMap<String, TurnEndNote>()
     val switches = LinkedHashMap<String, List<TranscriptDetailUi>>()
     val thoughtWork = LinkedHashMap<String, List<TranscriptDetailUi>>()
+    val stretches = LinkedHashMap<String, List<WorkStretchUi>>()
     val newestFailedCompaction =
         snapshot.messages.asReversed().firstNotNullOfOrNull { m ->
             m.parts.asReversed().firstOrNull { it.type == PartType.Compaction }
@@ -299,6 +309,7 @@ internal fun transcriptReading(
         }
         val hasTools = parts.any { it.type == PartType.Tool }
         val entries = ArrayList<WorkEntryUi>()
+        val acc = if (hasTools) StretchAccumulator(turn.turnId, live) else null
         for ((index, part) in parts.withIndex()) {
             val identity = "${part.messageId}/${part.id}"
             val notice = part.type in setOf(PartType.Notice, PartType.Compaction, PartType.Switch)
@@ -330,11 +341,22 @@ internal fun transcriptReading(
             val foldedThought = hasTools && part.type == PartType.Reasoning
             if ((foldedText || foldedNotice || foldedThought) && hasTools) {
                 hidden += identity
-                entries += WorkEntryUi.Detail(TranscriptDetailUi("work-detail:$identity", part))
-            } else if (part.type == PartType.Tool) entries += WorkEntryUi.Step(part.id)
+                val entry = WorkEntryUi.Detail(TranscriptDetailUi("work-detail:$identity", part))
+                entries += entry
+                acc?.addDetail(entry, identity)
+            } else if (part.type == PartType.Tool) {
+                val entry = WorkEntryUi.Step(part.id)
+                entries += entry
+                acc?.addStep(entry)
+            } else {
+                acc?.onOther(part, identity, foldedText, hidden)
+            }
         }
-        if (hasTools) work[turn.turnId] = entries
-        else {
+        if (hasTools) {
+            work[turn.turnId] = entries
+            val built = acc?.finish(hidden).orEmpty()
+            if (built.isNotEmpty()) stretches[turn.turnId] = built
+        } else {
             // Review #13 (C-022): a thought never stands loose in the reply area. With no tool step to fold under, the
             // turn's thoughts make its work line themselves: the first thought's row draws it, the others hide.
             val thoughts = parts.filter { it.type == PartType.Reasoning }
@@ -351,7 +373,55 @@ internal fun transcriptReading(
         val own = meta.model
         if (own != null && now != null && own != now) metadata[turnId] = meta.copy(otherModel = ReplyModelNames.fromId(own))
     }
-    return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches, thoughtWork)
+    return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches, thoughtWork, stretches)
+}
+
+/** Splits a turn's work entries into stretches between visible texts, dropping stretches without a tool step. */
+private class StretchAccumulator(private val turnId: String, private val live: Boolean) {
+    private var anchor: String? = null
+    private var entries = ArrayList<WorkEntryUi>()
+    private var hidden = ArrayList<String>()
+    private val stretches = ArrayList<WorkStretchUi>()
+
+    fun addDetail(entry: WorkEntryUi.Detail, identity: String) {
+        entries += entry
+        hidden += identity
+    }
+
+    fun addStep(entry: WorkEntryUi.Step) {
+        entries += entry
+    }
+
+    fun onOther(part: Part, identity: String, foldedText: Boolean, allHidden: MutableSet<String>) {
+        if (part.type == PartType.Text && part.text.isNotBlank() && !foldedText) {
+            flush(trailing = false, allHidden = allHidden)
+            anchor = identity
+        }
+    }
+
+    fun finish(allHidden: MutableSet<String>): List<WorkStretchUi> {
+        flush(trailing = true, allHidden = allHidden)
+        return stretches
+    }
+
+    private fun flush(trailing: Boolean, allHidden: MutableSet<String>) {
+        val firstStep = entries.firstOrNull { it is WorkEntryUi.Step } as? WorkEntryUi.Step
+        if (firstStep == null) {
+            allHidden.removeAll(hidden)
+        } else {
+            val first = stretches.isEmpty()
+            val key = if (first) "work:$turnId" else "work:$turnId:${firstStep.partId}"
+            stretches +=
+                WorkStretchUi(
+                    key = key,
+                    anchor = if (first) null else anchor,
+                    entries = entries.toList(),
+                    live = live && trailing,
+                )
+        }
+        entries = ArrayList()
+        hidden = ArrayList()
+    }
 }
 
 /**
