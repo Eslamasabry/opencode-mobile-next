@@ -228,7 +228,7 @@ class OwnAgentInlineHelpTest {
         }
 
     @Test
-    fun `B-AGENT-OWN-047 with every help part open the sheet still scrolls at 360 dp and text 1.3`() =
+    fun `B-AGENT-OWN-047 with every help part open the sheet still scrolls at 360 dp and text 1_3`() =
         kitUiTest(360, 780) {
             val actions = Recorder()
             setContent { Screen(page(), own(), actions, width = 360.dp, fontScale = 1.3f) }
