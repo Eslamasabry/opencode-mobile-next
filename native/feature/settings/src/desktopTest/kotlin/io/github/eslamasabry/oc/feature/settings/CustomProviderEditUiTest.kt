@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.IntegrationConnectionInfo
 import io.github.eslamasabry.oc.core.model.IntegrationInfo
 import io.github.eslamasabry.oc.core.model.IntegrationMethodInfo
+import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderOutcome
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderProblem
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderRefusal
 import io.github.eslamasabry.oc.engine.integrations.catalog.CustomProviderRestartPhase
@@ -453,6 +454,28 @@ class CustomProviderEditUiTest {
         onNodeWithText("My box is saved but not loaded").assertExists()
         onNodeWithText("OpenCode restarted but does not list it yet. Try restarting it again.").assertExists()
         onNodeWithText("My box is saved").assertDoesNotExist()
+        onNodeWithText("Restart OpenCode on this phone").assertExists()
+    }
+
+    @Test
+    fun `B-LIB-361 a failed restart after a remove says it failed`() = runComposeUiTest {
+        val restarting = ui(CustomProviderStage.Restarting, CustomProviderMode.Remove)
+        val failed = restarting.after(CustomProviderOutcome.RestartFailed("Runtime · Generic"))
+        shows(page(sheet = LibrarySheet.Provider(row), custom = failed))
+        onNodeWithText("My box is removed, but OpenCode did not restart").assertExists()
+        onNodeWithText(
+            "Try again, or start OpenCode from This phone. It stays in the list until OpenCode restarts.",
+        ).assertExists()
+        onNodeWithText("Details").assertExists()
+        onNodeWithText("My box is removed from the settings").assertDoesNotExist()
+        onNodeWithText("Restart OpenCode on this phone").performClick()
+        assertEquals(listOf<Any?>("my-box"), calls.single { it.first == "restartForProvider" }.second)
+        val notGone = restarting.after(CustomProviderOutcome.NotGoneAfterRestart)
+        shows(page(sheet = LibrarySheet.Provider(row), custom = notGone))
+        onNodeWithText("My box is removed, but OpenCode still lists it").assertExists()
+        onNodeWithText("Restart OpenCode again. If it is still listed after that, open Details.").assertExists()
+        onNodeWithText("Details").assertExists()
+        onNodeWithText("My box is removed from the settings").assertDoesNotExist()
         onNodeWithText("Restart OpenCode on this phone").assertExists()
     }
 }
