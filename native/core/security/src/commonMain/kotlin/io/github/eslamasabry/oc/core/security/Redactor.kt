@@ -369,7 +369,16 @@ public class Redactor {
 /** The root log sink; AppLog.install accepts only a RedactingLogSink. */
 public class RedactingWriter(private val redactor: Redactor, private val delegates: List<LogSink>) : RedactingLogSink {
     override fun write(entry: LogEntry) {
-        val clean = entry.copy(message = redactor.redact(entry.message))
-        delegates.forEach { it.write(clean) }
+        val clean =
+            try {
+                entry.copy(message = redactor.redact(entry.message))
+            } catch (_: Throwable) {
+                return // redaction failed: drop the entry, never write it unredacted
+            }
+        delegates.forEach {
+            try {
+                it.write(clean)
+            } catch (_: Throwable) { /* one delegate failing must not stop the ones after it */ }
+        }
     }
 }

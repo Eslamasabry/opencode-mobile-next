@@ -19,4 +19,8 @@ public class ConnectionCoroutineScope(override val coroutineContext: CoroutineCo
 
 public fun supervisedContext(parent: Job?, dispatcher: CoroutineDispatcher, name: String): CoroutineContext =
     SupervisorJob(parent) + dispatcher + CoroutineName(name) +
-        CoroutineExceptionHandler { _, e -> AppLog.tagged(name).e(e) { "uncaught failure in $name" } }
+        CoroutineExceptionHandler { _, e ->
+            try {
+                AppLog.tagged(name).e(e) { "uncaught failure in $name" }
+            } catch (_: Throwable) { /* logging must never throw out of the handler */ }
+        }

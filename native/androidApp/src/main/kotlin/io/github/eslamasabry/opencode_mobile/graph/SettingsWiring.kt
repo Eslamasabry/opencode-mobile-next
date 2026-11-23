@@ -1044,8 +1044,10 @@ object DiagnosticsLogSink : LogSink {
     @Volatile var target: Diagnostics? = null
 
     override fun write(entry: LogEntry) {
-        val error = HandledErrors.fromLog(entry) ?: return
-        target?.record(error.source, error.message)
+        try {
+            val error = HandledErrors.fromLog(entry) ?: return
+            target?.record(error.source, error.message)
+        } catch (_: Throwable) { /* recording a log entry must never throw out of the sink */ }
     }
 }
 
