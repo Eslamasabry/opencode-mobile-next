@@ -13,9 +13,11 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -96,6 +98,45 @@ class TopBarFitTest {
             assertTrue(title.width >= 90f, "the title keeps at least 90 dp: ${title.width}")
             val step = action.left - title.right
             assertTrue(step < 15f, "the step gives way where the title's words are still cut: $step")
+        }
+
+    @Test
+    fun `B-KIT-029 a Back bar with no actions keeps its title's whole earlier room`() =
+        runComposeUiTest {
+            // One long word: cut, so the subtitle fills the title block's room and its end shows where that room ends.
+            val line = "ill".repeat(60)
+            setContent {
+                Themed(412) {
+                    KitTopBar(
+                        "Saved prompts",
+                        subtitle = line,
+                        exit = KitTopBarExit.Back,
+                        exitLabel = "Back",
+                        onExit = {},
+                    )
+                }
+            }
+            val right = onNodeWithText(line, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.right
+            assertTrue(right >= 399f, "the subtitle ends at $right; the whole earlier room ends at 400")
+        }
+
+    @Test
+    fun `B-KIT-029 at 840 dp a glyph action that does not fit as words stays in the bar as its icon`() =
+        runComposeUiTest {
+            // One unbreakable word fills every wide room, so "Find" cannot stay as its words.
+            setContent {
+                Themed(840) {
+                    KitTopBar(
+                        "n".repeat(120),
+                        exit = KitTopBarExit.Back,
+                        exitLabel = "Back",
+                        onExit = {},
+                        actions = listOf(KitLineAction("Find", {}, icon = KitIcons.search, testTag = "find")),
+                        more = { _ -> KitIconButton(KitIcons.more, "More", {}) },
+                    )
+                }
+            }
+            onNodeWithTag("find").assertExists()
         }
 
     /** The review file page's bar: Back, a file name that ends in one unbreakable word, and its four text actions. */
