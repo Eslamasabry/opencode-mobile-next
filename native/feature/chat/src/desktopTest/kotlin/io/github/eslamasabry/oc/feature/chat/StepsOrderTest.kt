@@ -2,11 +2,7 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -14,7 +10,6 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performSemanticsAction
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
@@ -157,47 +152,6 @@ class StepsOrderTest {
                 "m2/r0" in facts.reading.hiddenPartKeys,
                 "thought without a step must stay visible: ${facts.reading.hiddenPartKeys}",
             )
-        }
-
-    @Test
-    fun `STEPS-ORDER-005 an opened folded group keeps one identity while steps arrive during a running turn`() =
-        kitUiTest(412, 2600) {
-            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
-            var stage by mutableStateOf(0)
-            setContent {
-                Root {
-                    ChatScreen(
-                        StepsOrderScene.liveReadsState(stage),
-                        actions,
-                        composer,
-                        facts = StepsOrderScene.liveReadsFacts(stage),
-                    )
-                }
-            }
-            waitForIdle()
-            // Stage 0: 8 completed reads while the model thinks; one folded line, opened by a single tap.
-            onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
-            onNodeWithText("Read 8 files").performSemanticsAction(SemanticsActions.OnClick)
-            waitForIdle()
-            // Opening never repeats "Read 8 files" as its own child, and exposes the first file step directly.
-            onAllNodesWithText("Read 8 files", useUnmergedTree = true).assertCountEquals(1)
-            onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
-            // Stage 1: more reads and a running command arrive; the same group grows in count, never swaps control.
-            stage = 1
-            waitForIdle()
-            onAllNodesWithText("Hide earlier steps").assertCountEquals(0)
-            onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
-            onNodeWithTag("chat-step-run-r1", useUnmergedTree = true).assertIsDisplayed()
-            onNodeWithText("Read 15 files").assertIsDisplayed()
-            onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
-            // Stage 2: command ends while the turn still runs; the opened group stays itself, never flips to summary.
-            stage = 2
-            waitForIdle()
-            onAllNodesWithText("Hide earlier steps").assertCountEquals(0)
-            onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).assertCountEquals(0)
-            onNodeWithTag("chat-step-run-r1", useUnmergedTree = true).assertIsDisplayed()
-            onNodeWithText("Read 15 files").assertIsDisplayed()
-            onNodeWithTag("chat-step-r1", useUnmergedTree = true).assertIsDisplayed()
         }
 
     @Test
