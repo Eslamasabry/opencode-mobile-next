@@ -60,6 +60,12 @@ public object FilePreview {
     /** files_screen.dart `_maxViewerChars`. */
     public const val MAX_VIEWER_CHARS: Int = 200_000
 
+    /** The largest file the viewer reads whole (16 MiB); a bigger one is refused, never decoded. */
+    public const val MAX_PREVIEW_BYTES: Int = 16 * 1024 * 1024
+
+    /** The base64 length of [MAX_PREVIEW_BYTES]: a longer base64 payload decodes past the cap. */
+    private const val MAX_BASE64_CHARS: Int = 22_369_624
+
     private const val SNIFF_BYTES = 8192
 
     private val images = setOf("png", "jpg", "jpeg", "gif", "webp", "bmp")
@@ -168,8 +174,14 @@ public object FilePreview {
 
     public fun mimeFor(path: String): String? = mimes[FilePaths.extension(path)]
 
+    /** True when [content] carries more than [MAX_PREVIEW_BYTES]: refused whole, before any decoding. */
+    public fun tooBig(content: FileContent): Boolean =
+        if (content.encoding == "base64") content.content.length > MAX_BASE64_CHARS
+        else content.content.length > MAX_PREVIEW_BYTES
+
     /** The exact bytes the server sent: base64 content decoded, text content as UTF-8. */
     public fun data(path: String, content: FileContent): FileData? {
+        if (tooBig(content)) return null
         val bytes =
             if (content.encoding == "base64") decodeBase64(content.content) ?: return null
             else content.content.encodeToByteArray()

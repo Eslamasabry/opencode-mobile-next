@@ -67,12 +67,14 @@ public fun rememberKitSentFiles(files: List<KitSentFile>): KitSentFiles {
 private fun KitSentFile.isInlineImage(): Boolean =
     mime?.startsWith("image/") == true && url?.startsWith("data:") == true
 
-/** The bytes inside a base64 `data:` address, or null when it is not one. */
+/** The bytes inside a base64 `data:` address, or null when it is not one or past the viewer's cap. */
 @OptIn(ExperimentalEncodingApi::class)
 public fun dataUrlBytes(url: String): ByteArray? {
     if (!url.startsWith("data:")) return null
     val comma = url.indexOf(',')
     if (comma < 0 || !url.substring(5, comma).endsWith(";base64")) return null
+    val limit = 16 * 1024 * 1024
+    if (url.length - comma - 1 > limit) return null
     return try {
         Base64.Mime.decode(url, comma + 1, url.length)
     } catch (_: IllegalArgumentException) {
