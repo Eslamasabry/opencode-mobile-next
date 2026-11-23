@@ -271,8 +271,9 @@ public object CustomProviderScript {
             "exec /usr/bin/python3 -I -c '" + PROGRAM + "' '" + CONFIG_DIR + "' '" + CARDS_DIR + "' 0 2>/dev/null\n"
 
     /**
-     * argv: settings folder, card installer folder, the engine's uid. stdin:
-     * `{"id": …, "block": {…}, "replaceDeclared": bool, "requireDeclared": bool}`.
+     * argv: settings folder, card installer folder, the engine's uid. stdin is one of three steps: the write's
+     * `{"id": …, "block": {…}, "replaceDeclared": bool, "requireDeclared": bool}`, [READ_INPUT] (no lock, one JSON
+     * line per entry) or [removeInput] (both locks). Any other `"op"` is refused.
      */
     public const val PROGRAM: String =
         """import os, sys, json, stat, pathlib, tempfile, fcntl, re
@@ -327,6 +328,54 @@ def app_shaped(entry):
     models = entry.get("models")
     if models is not None and (not isinstance(models, dict) or any(value != {} for value in models.values())): return False
     return True
+def app_written(entry):
+    if not isinstance(entry, dict) or set(entry) != {"name", "package", "settings", "models"}: return False
+    if not all(isinstance(entry[key], str) for key in ("name", "package")): return False
+    settings = entry.get("settings")
+    if not isinstance(settings, dict) or set(settings) != {"baseURL"}: return False
+    if not isinstance(settings.get("baseURL"), str): return False
+    models = entry.get("models")
+    if not isinstance(models, dict) or any(value != {} for value in models.values()): return False
+    return True
+def loaded(folder):
+    raw = read(folder + "/opencode.json")
+    config = {}
+    if raw is not None and raw.strip():
+        try: config = json.loads(raw)
+        except Exception: fail(21)
+        if not isinstance(config, dict): fail(21)
+    return config
+def read_all(folder):
+    if not checked(folder, True): fail(20)
+    if os.path.lexists(folder + "/opencode.jsonc"): fail(25)
+    providers = loaded(folder).get("providers", {})
+    if not isinstance(providers, dict): fail(21)
+    for identity in sorted(providers):
+        entry = providers[identity]
+        if app_written(entry):
+            line = {"id": identity, "appShaped": True, "name": entry["name"], "baseURL": entry["settings"]["baseURL"]}
+            line["models"] = list(entry["models"])
+        else:
+            line = {"id": identity, "appShaped": False}
+        print(json.dumps(line, separators=(",", ":")))
+def remove_one(folder, cards, payload):
+    identity = payload.get("id")
+    if not isinstance(identity, str) or not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,63}", identity): fail(26)
+    if not checked(folder, True): fail(20)
+    locks = [hold(folder + "/.oc-provider.lock")]
+    if checked(cards, True): locks.append(hold(cards + "/lock"))
+    if os.path.lexists(folder + "/opencode.jsonc"): fail(25)
+    config = loaded(folder)
+    providers = config.get("providers", {})
+    if not isinstance(providers, dict): fail(21)
+    if identity not in providers: fail(27)
+    if not app_written(providers[identity]): fail(24)
+    del providers[identity]
+    config["providers"] = providers
+    data = (json.dumps(config, indent=2) + "\n").encode()
+    if len(data) > LIMIT: fail(21)
+    try: replace(folder, folder + "/opencode.json", data)
+    except Exception: fail(26)
 def main():
     global OWNER
     folder, cards, OWNER = sys.argv[1], sys.argv[2], int(sys.argv[3])
@@ -336,7 +385,10 @@ def main():
     try: payload = json.loads(raw)
     except Exception: fail(26)
     if not isinstance(payload, dict): fail(26)
-    if payload.get("op") is not None: fail(26)
+    op = payload.get("op")
+    if op == "read": return read_all(folder)
+    if op == "remove": return remove_one(folder, cards, payload)
+    if op is not None: fail(26)
     identity, block = payload.get("id"), payload.get("block")
     replace_entry = payload.get("replaceDeclared", False)
     require_declared = payload.get("requireDeclared", False)
@@ -349,12 +401,7 @@ def main():
     if checked(cards, True): locks.append(hold(cards + "/lock"))
     if os.path.lexists(folder + "/opencode.jsonc"): fail(25)
     path = folder + "/opencode.json"
-    raw = read(path)
-    config = {}
-    if raw is not None and raw.strip():
-        try: config = json.loads(raw)
-        except Exception: fail(21)
-        if not isinstance(config, dict): fail(21)
+    config = loaded(folder)
     providers = config.get("providers", {})
     if not isinstance(providers, dict): fail(21)
     if require_declared and not (identity in providers and app_shaped(providers[identity])): fail(24)
