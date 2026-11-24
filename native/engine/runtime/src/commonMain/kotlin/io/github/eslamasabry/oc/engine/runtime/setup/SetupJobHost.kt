@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.runtime.setup
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.engine.runtime.server.StartProblem
 
 /**
  * The ports of the setup engine (port of the BuiltinLinux channel calls lib/builtin/setup/setup_engine.dart makes).
@@ -106,9 +107,56 @@ public data class SetupFinishRequest(
     /** OpenCode was installed or updated by this job: a running server is the old one and must restart. */
     val openCodeChanged: Boolean,
     val version: String?,
-)
+    /** Told the kind of a start that failed ([failed]); the engine keeps that kind with the stored text. */
+    val failedAs: (StartStepKind) -> Unit = {},
+) {
+    /** Names the [kind] of a start that ended in [failed], which the caller returns as it is. */
+    public fun failed(kind: StartStepKind, failed: Outcome.Failed): Outcome.Failed {
+        failedAs(kind)
+        return failed
+    }
+}
 
 /** Starts the server and connects; Ok only when OpenCode answers (`SetupFinisher`). */
 public fun interface SetupFinisher {
     public suspend fun finish(request: SetupFinishRequest): Outcome<Unit>
+}
+
+/**
+ * What stopped a start of the phone's own OpenCode, the setup job's `start` step. setup.json keeps [code] in front
+ * of the redacted text ([mark], [read]), so a job read again after a restart still knows the kind.
+ */
+public enum class StartStepKind(public val code: String) {
+    TimedOut("start_timed_out"),
+    Ownership("start_ownership"),
+    Exited("start_exited"),
+    Refused("start_refused"),
+    Password("start_password"),
+    Withdrawn("start_withdrawn"),
+    Profile("start_profile"),
+    Recovery("start_recovery"),
+    Store("start_store"),
+    Prepare("start_prepare"),
+    Confirm("start_confirm"),
+    Save("start_save"),
+    Connect("start_connect"),
+    ;
+
+    public companion object {
+        /** The start kind for what the one start path says stopped it; every problem is Refused for now. */
+        public fun of(problem: StartProblem): StartStepKind = StartStepKind.Refused
+
+        /** The text setup.json keeps for a failed start: the kind's code in front of [text]. */
+        public fun mark(kind: StartStepKind, text: String): String = "[${kind.code}] $text"
+
+        /**
+         * The kind a stored start error names and its text without the code; `(null, [stored])`, unchanged, when
+         * the text does not start with a known kind's code.
+         */
+        public fun read(stored: String): Pair<StartStepKind?, String> {
+            val kind =
+                StartStepKind.entries.firstOrNull { stored.startsWith("[${it.code}] ") } ?: return null to stored
+            return kind to stored.substringAfter("] ")
+        }
+    }
 }

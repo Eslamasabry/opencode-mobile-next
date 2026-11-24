@@ -50,6 +50,7 @@ internal fun setupFailKindOf(error: SetupError?): String =
         SetupError.NodeCannotRun, SetupError.OpenCodeNoProgram, SetupError.OpenCodeWontRun,
         SetupError.OpenCodeNoStart, SetupError.CannotStart, is SetupError.PortBusy,
         SetupError.ToolsUncheckable, SetupError.Unexpected -> "unknown"
+        is SetupError.StartStepFailed -> "unknown"
     }
 
 internal fun journeyJobState(state: SetupState): SetupJobState =
