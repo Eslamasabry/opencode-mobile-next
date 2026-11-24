@@ -207,7 +207,7 @@ internal fun TurnWorkLine(
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
-    val summed = StepListRules.sums(work.state)
+    val summed = StepListRules.sums(work.state, turnRuns = LocalLiveTurnId.current == work.turnId)
     val shownRows = remember(rows, summed) { flattenSingleRun(rows, summed) }
     val cut = remember(shownRows) { StepListRules.cut(shownRows) }
     // A turn with a delegated step whose sub-agent waits on the person opens on entry (the person's own fold wins once
@@ -400,6 +400,9 @@ private fun SubAgentGroup(
 
 /** Sessions with an open request of their own, so a delegated step's sub-agent that waits on the person shows it. */
 internal val LocalChildNeedsYou = androidx.compose.runtime.compositionLocalOf<Set<String>> { emptySet() }
+
+/** Turn id of the currently running turn, so its step list stays unfolded between steps. */
+internal val LocalLiveTurnId = androidx.compose.runtime.compositionLocalOf<String?> { null }
 
 /** This delegated step's sub-agent has an open request: the step reads "Waiting for you" and opens its conversation. */
 private fun TurnStep.waitsOnChild(open: Set<String>): Boolean = facts.childSessionId?.let { it in open } == true

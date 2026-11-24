@@ -548,6 +548,11 @@ internal fun ChatTranscriptList(
     var stepsShown by rememberSaveable { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    val liveTurn = if (live != null) unique.firstOrNull()?.turnId else null
+    val liveWorkId =
+        liveTurn?.let { id ->
+            facts.reading.stretches[id]?.lastOrNull()?.key?.removePrefix("work:") ?: id
+        }
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
         remember(unique, pending, liveRow, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
@@ -814,7 +819,7 @@ internal fun ChatTranscriptList(
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }
                   }
-              CompositionLocalProvider(LocalKitFindMarks provides marks) {
+              CompositionLocalProvider(LocalKitFindMarks provides marks, LocalLiveTurnId provides liveWorkId) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
