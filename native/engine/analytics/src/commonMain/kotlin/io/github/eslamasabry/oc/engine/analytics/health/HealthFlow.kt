@@ -138,11 +138,14 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         )
     }
 
-    /** One built-in Linux setup step. [exit] is the exit code when it gave one. */
+    /**
+     * One built-in Linux setup step. [exit] is the exit code when it gave one. A step never seen running has no
+     * [elapsedMs]: then `ms_range` and the performance trace are left out rather than sent as a made-up time.
+     */
     public fun linuxSetupStep(
         step: String,
         ok: Boolean,
-        elapsedMs: Long,
+        elapsedMs: Long?,
         exit: Int? = null,
         compatMode: String = "none",
         freeGigabytes: Double? = null,
@@ -163,7 +166,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 put("result", result)
                 if (attempt != null) put("attempt", HealthRanges.attemptOf(attempt))
                 if (failed && failKind != null) put("fail_kind", failKind)
-                put("ms_range", HealthRanges.setupMsOf(elapsedMs))
+                if (elapsedMs != null) put("ms_range", HealthRanges.setupMsOf(elapsedMs))
                 // Native steps have no exit code: leave the two out rather than send a word that means "unknown".
                 if (ok || exit != null) {
                     put("exit_kind", exitKindOf(exit, ok))
@@ -173,11 +176,13 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 if (freeGigabytes != null) put("free_space_range", HealthRanges.storageOf(freeGigabytes))
             },
         )
-        t.performanceTrace(
-            PerfSchema.linuxSetup(step),
-            elapsedMs,
-            mapOf("step" to step, "result" to if (result == "ok" || result == "fail") result else "fail"),
-        )
+        if (elapsedMs != null) {
+            t.performanceTrace(
+                PerfSchema.linuxSetup(step),
+                elapsedMs,
+                mapOf("step" to step, "result" to if (result == "ok" || result == "fail") result else "fail"),
+            )
+        }
     }
 
     public fun agentStart(agent: String, ok: Boolean, failKind: String = "other", elapsedMs: Long? = null) {

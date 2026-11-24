@@ -397,7 +397,11 @@ class NativePhoneSetup(
                     SetupFinisher { request ->
                         when (val finished = runtime.finishSetup(request)) {
                             is Outcome.Failed -> finished
-                            is Outcome.Ok -> connections.connect(finished.value)
+                            is Outcome.Ok ->
+                                when (val connected = connections.connect(finished.value)) {
+                                    is Outcome.Failed -> request.failed(StartStepKind.Connect, connected)
+                                    is Outcome.Ok -> connected
+                                }
                         }
                     },
             )

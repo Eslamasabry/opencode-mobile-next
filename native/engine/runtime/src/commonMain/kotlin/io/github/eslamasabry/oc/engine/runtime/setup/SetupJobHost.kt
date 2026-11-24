@@ -143,8 +143,16 @@ public enum class StartStepKind(public val code: String) {
     ;
 
     public companion object {
-        /** The start kind for what the one start path says stopped it; every problem is Refused for now. */
-        public fun of(problem: StartProblem): StartStepKind = StartStepKind.Refused
+        /** The start kind for what the one start path says stopped it ([StartProblem]). */
+        public fun of(problem: StartProblem): StartStepKind =
+            when (problem) {
+                StartProblem.Exited -> StartStepKind.Exited
+                StartProblem.TimedOut -> StartStepKind.TimedOut
+                StartProblem.Interrupted -> StartStepKind.Withdrawn
+                StartProblem.PasswordMissing, StartProblem.PasswordNotSaved -> StartStepKind.Password
+                StartProblem.Refused, StartProblem.Busy -> StartStepKind.Refused
+                StartProblem.ComponentRecovery -> StartStepKind.Ownership
+            }
 
         /** The text setup.json keeps for a failed start: the kind's code in front of [text]. */
         public fun mark(kind: StartStepKind, text: String): String = "[${kind.code}] $text"

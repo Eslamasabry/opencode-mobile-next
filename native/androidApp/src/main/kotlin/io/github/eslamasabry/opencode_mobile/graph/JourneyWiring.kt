@@ -50,7 +50,15 @@ internal fun setupFailKindOf(error: SetupError?): String =
         SetupError.NodeCannotRun, SetupError.OpenCodeNoProgram, SetupError.OpenCodeWontRun,
         SetupError.OpenCodeNoStart, SetupError.CannotStart, is SetupError.PortBusy,
         SetupError.ToolsUncheckable, SetupError.Unexpected -> "unknown"
-        is SetupError.StartStepFailed -> "unknown"
+        is SetupError.StartStepFailed -> startFailKindOf(error.kind)
+    }
+
+/** A start that names its kind: only a timed-out start and one refused for ownership have a word of the list. */
+private fun startFailKindOf(kind: StartStepKind): String =
+    when (kind) {
+        StartStepKind.TimedOut -> "timeout"
+        StartStepKind.Ownership -> "permission"
+        else -> "unknown"
     }
 
 internal fun journeyJobState(state: SetupState): SetupJobState =

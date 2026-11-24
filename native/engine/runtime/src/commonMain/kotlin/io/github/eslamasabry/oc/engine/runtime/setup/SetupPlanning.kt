@@ -272,7 +272,8 @@ public object SetupPlanning {
         title: String,
         step: Boolean = false,
     ): Pair<SetupError, SetupError> {
-        val reason = failed.error ?: ""
+        // A start's stored error names its kind in front: every check below reads the text without that code.
+        val (kind, reason) = StartStepKind.read(failed.error ?: "")
         fun both(error: SetupError) = error to error
         if (isOwnershipText(reason)) return both(SetupError.OwnershipUnknown)
         when (reason) {
@@ -305,7 +306,7 @@ public object SetupPlanning {
                 return both(SetupError.PortBusy(it))
             }
         if (NodeCompatScripts.cannotRun(reason, logTail)) return both(SetupError.NodeCannotRun)
-        if (step) return both(SetupError.CannotStart)
+        if (step) return both(kind?.let { SetupError.StartStepFailed(it) } ?: SetupError.CannotStart)
         if (reason.startsWith(OpenCodeInstallFailure.NO_PROGRAM))
             return both(SetupError.OpenCodeNoProgram)
         if (reason.startsWith(OpenCodeInstallFailure.WONT_RUN))
@@ -381,7 +382,8 @@ public object SetupPlanning {
                         .filter { it.componentState == ComponentState.Failed }
                         .map { it.error } + record.error)
                     .mapNotNull { raw ->
-                        raw?.trim()?.takeIf { it.isNotEmpty() && !record.logTail.contains(it) }
+                        StartStepKind.read(raw ?: "").second.trim()
+                            .takeIf { it.isNotEmpty() && !record.logTail.contains(it) }
                     }
                     .distinct()
             } else {
