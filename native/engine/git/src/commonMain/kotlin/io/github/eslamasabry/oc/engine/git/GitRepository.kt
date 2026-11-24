@@ -528,9 +528,11 @@ public class GitRepository(
     ): GitActionResult {
         // A step after a failed one is absent (stopOnFailure), so each is read only once the earlier ones passed.
         val head = envelope["head"]!!
+        if (!head.ok) {
+            return fail(GitAction.Pull, classifyGitError(head.stderr) ?: GitProblem.DetachedHead, head)
+        }
         val upstream = envelope["upstream"]!!
         return when {
-            !head.ok -> fail(GitAction.Pull, classifyGitError(head.stderr) ?: GitProblem.DetachedHead, head)
             upstream.ok -> {
                 val pull = envelope["pull"]!!
                 if (pull.ok) pulled(envelope, upstream.stdout.trim())
