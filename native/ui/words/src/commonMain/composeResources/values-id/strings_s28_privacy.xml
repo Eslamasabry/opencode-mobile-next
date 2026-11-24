@@ -18,7 +18,7 @@
     <string name="collectSend">Apakah pengiriman pesan berhasil atau menunggu dalam antrean, cara Anda membuatnya (diketik, diucapkan, atau dilampirkan), agen mana, dan seberapa cepat balasan pertama datang</string>
     <string name="collectStall">Tahap, durasi, dan penyebab (cause) penantian panjang: berpikir tanpa keluaran yang telah dikonfirmasi, alat berjalan, mencoba lagi, koneksi atau pemberitahuan selesai terputus, koneksi senyap yang belum diperiksa, atau penyebab tidak diketahui</string>
     <string name="collectQueue">Jumlah pesan antrean yang terkirim atau gagal</string>
-    <string name="collectPhoneSetup">Sejauh mana penyiapan di ponsel ini berjalan, lama tiap langkah, jenis kegagalan, dan apakah Anda meninggalkannya sebelum selesai lalu kembali</string>
+    <string name="collectPhoneSetup">Sejauh mana penyiapan di ponsel ini berjalan, lama tiap langkah, jenis kegagalan (termasuk saat memulai server: exited, refused, password, withdrawn, atau port_busy; hanya kata tetap, tidak pernah teks dari ponsel atau server), dan apakah Anda meninggalkannya sebelum selesai lalu kembali</string>
     <string name="collectAgents">Apakah agen berhasil dimulai, dan jenis kegagalan</string>
     <string name="collectBackground">Mengapa layanan latar belakang berhenti</string>
     <string name="collectUpdates">Apakah pembaruan berhasil terpasang, dan jenis kegagalan</string>

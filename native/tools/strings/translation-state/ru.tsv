@@ -2453,7 +2453,7 @@ collectOwnPhone	a74d93488a
 collectOwnTogether	1b6a721bf4
 collectOwnUse	75a660278e
 collectPages	a61453d46b
-collectPhoneSetup	01b513ae13
+collectPhoneSetup	835204b3fd
 collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
@@ -7961,7 +7961,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	0bc79f580a
+nativeBundledPrivacy	361b7f663b
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208

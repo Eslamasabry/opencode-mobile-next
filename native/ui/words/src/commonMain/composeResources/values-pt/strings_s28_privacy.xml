@@ -18,7 +18,7 @@
     <string name="collectSend">Se o envio de uma mensagem funcionou ou ficou na fila, como você a fez (digitada, falada ou anexada), qual agente e quanto demorou a primeira resposta</string>
     <string name="collectStall">A etapa, a duração e a causa (cause) de uma espera longa: pensamento silencioso confirmado, uma ferramenta em execução, uma nova tentativa, uma conexão perdida ou sem aviso de conclusão, uma conexão silenciosa não verificada ou uma causa desconhecida</string>
     <string name="collectQueue">Quantas mensagens da fila foram enviadas ou falharam</string>
-    <string name="collectPhoneSetup">Até onde a configuração neste celular chegou, quanto cada etapa levou, o tipo de falha e se você a deixou inacabada e voltou</string>
+    <string name="collectPhoneSetup">Até onde a configuração neste celular chegou, quanto cada etapa levou, o tipo de falha (incluindo ao iniciar o servidor: exited, refused, password, withdrawn ou port_busy; apenas palavras fixas, nunca texto do celular ou do servidor) e se você a deixou inacabada e voltou</string>
     <string name="collectAgents">Se um agente iniciou e o tipo de falha</string>
     <string name="collectBackground">Por que o serviço em segundo plano parou</string>
     <string name="collectUpdates">Se uma atualização foi instalada e o tipo de falha</string>

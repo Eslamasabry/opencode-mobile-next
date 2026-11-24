@@ -18,7 +18,7 @@
     <string name="collectSend">Si l’envoi d’un message a fonctionné ou attendu dans la file, comment vous l’avez composé (tapé, dicté ou joint), quel agent, et en combien de temps est venue la première réponse</string>
     <string name="collectStall">L’étape, la durée et la cause (cause) d’une longue attente\u00A0: réflexion silencieuse confirmée, outil en cours, nouvelle tentative, connexion perdue ou fin non reçue, connexion silencieuse non vérifiée ou cause inconnue</string>
     <string name="collectQueue">Combien de messages en file ont été envoyés ou ont échoué</string>
-    <string name="collectPhoneSetup">Jusqu’où la configuration sur ce téléphone est allée, la durée de chaque étape, le type d’échec, et si vous l’avez laissée inachevée puis êtes revenu</string>
+    <string name="collectPhoneSetup">Jusqu’où la configuration sur ce téléphone est allée, la durée de chaque étape, le type d’échec (y compris au démarrage du serveur\u00A0: exited, refused, password, withdrawn ou port_busy, mots fixes uniquement, jamais de texte du téléphone ou du serveur), et si vous l’avez laissée inachevée puis êtes revenu</string>
     <string name="collectAgents">Si un agent a démarré, et le type d’échec</string>
     <string name="collectBackground">Pourquoi le service en arrière-plan s’est arrêté</string>
     <string name="collectUpdates">Si une mise à jour s’est installée, et le type d’échec</string>
