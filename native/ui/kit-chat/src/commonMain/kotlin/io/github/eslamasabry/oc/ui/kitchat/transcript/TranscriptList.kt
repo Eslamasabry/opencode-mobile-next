@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,6 +44,10 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenListEdges
@@ -59,6 +64,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportScrolledUnder
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -94,31 +100,32 @@ internal constructor(
     public val anchor: TranscriptAnchor = TranscriptAnchor.Today,
 ) {
     private val followingState: MutableState<Boolean> = followingState
-    private var draggedSinceUnfollowState by mutableStateOf(false)
-    private var dragStartedWhileFollowingState by mutableStateOf(false)
 
     /** Plain item count maintained when [anchor] is [TranscriptAnchor.Hybrid]. */
     internal var itemCount: Int = 0
 
+    /** Newest-first item keys from the last Hybrid recording pass. */
+    internal var recordedKeys: List<Any?> = emptyList()
+
     /** True while the last measured layout ran in normal order (oldest-first). */
     internal var laidOutNormal by mutableStateOf(false)
+
+    /** Order composed for the upcoming measure pass (plain field). */
+    internal var composedNormal: Boolean = false
+
+    /** True while a Hybrid jump-to-newest glide is flipping back to reversed and animating. */
+    internal var jumping by mutableStateOf(false)
+
+    /** Standing bottom room (px) applied while laid out in normal order (plain field). */
+    internal var roomPx: Int = 0
 
     /** Public read of whether the transcript is currently laid out in normal order. */
     public val isNormalOrder: Boolean
         get() = laidOutNormal
 
-    internal val draggedSinceUnfollow: Boolean
-        get() = draggedSinceUnfollowState
-
-    internal val dragStartedWhileFollowing: Boolean
-        get() = dragStartedWhileFollowingState
-
-    internal fun markDragStart() {
-        val wasFollowing = followingState.value
-        followingState.value = false
-        draggedSinceUnfollowState = true
-        dragStartedWhileFollowingState = wasFollowing
-    }
+    /** Target layout order for Hybrid: normal while reading and not mid-drag-out-of-reversed. */
+    public val orderNormal: Boolean
+        get() = anchor == TranscriptAnchor.Hybrid && !following && (!lazy.isScrollInProgress || laidOutNormal)
 
     /**
      * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the
@@ -129,35 +136,23 @@ internal constructor(
         get() = followingState.value
         set(value) {
             followingState.value = value
-            draggedSinceUnfollowState = false
-            dragStartedWhileFollowingState = false
         }
 
     /** Translates a newest-first item index to the underlying [LazyListState] index. */
     public fun lazyIndex(newestFirst: Int): Int =
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) (itemCount - 1 - newestFirst).coerceAtLeast(0)
-        else newestFirst
+        if (laidOutNormal) (itemCount - 1 - newestFirst).coerceAtLeast(0) else newestFirst
 
     /** True while older rows lie above the viewport (under the top bar). */
     public fun isScrolledUnder(): Boolean =
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) lazy.canScrollBackward else lazy.canScrollForward
+        if (laidOutNormal) lazy.canScrollBackward else lazy.canScrollForward
 
     /** The newest row is at the bottom edge, within the 48 dp follow slack (plan 08 §5.1). */
     public val atNewest: Boolean by derivedStateOf {
         val slack = with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) {
-            TranscriptAnchorOps.atNewestNormalOrder(lazy, slack)
+        if (laidOutNormal) {
+            TranscriptAnchorOps.atNewestNormalOrder(lazy, roomPx, slack)
         } else {
             lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset <= slack
-        }
-    }
-
-    /** True when resting directly at the newest edge with zero slack. */
-    internal val atExactNewest: Boolean by derivedStateOf {
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) {
-            !lazy.canScrollForward
-        } else {
-            lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset == 0
         }
     }
 
@@ -167,15 +162,19 @@ internal constructor(
 
     /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
     public val awayFromLatest: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex > 0 ||
-            lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        if (anchor == TranscriptAnchor.Hybrid) {
+            !following && !jumping
+        } else {
+            lazy.firstVisibleItemIndex > 0 ||
+                lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        }
     }
 
     /** Deep enough in history (> 480 dp from newest) to fold the phrase row away. */
     internal val awayForPhraseRow: Boolean by derivedStateOf {
         val awayPx = with(density) { AWAY_DP.dp.roundToPx() }
         if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) {
-            !following && !TranscriptAnchorOps.atNewestNormalOrder(lazy, awayPx)
+            !TranscriptAnchorOps.atNewestNormalOrder(lazy, roomPx, awayPx)
         } else {
             lazy.firstVisibleItemIndex > 0 || lazy.firstVisibleItemScrollOffset > awayPx
         }
@@ -191,7 +190,7 @@ internal constructor(
 
     /** Requests a same-frame scroll to the newest row (bottom edge). */
     public fun requestScrollToNewest() {
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) {
+        if (laidOutNormal) {
             if (itemCount > 0) lazy.requestScrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
         } else {
             lazy.requestScrollToItem(0)
@@ -200,7 +199,7 @@ internal constructor(
 
     /** Scrolls to the newest row (bottom edge). */
     public suspend fun scrollToNewest() {
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) {
+        if (laidOutNormal) {
             if (itemCount > 0) lazy.scrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
         } else {
             lazy.scrollToItem(0)
@@ -217,7 +216,7 @@ internal constructor(
     public fun keepAtBottom() {
         val leave =
             Snapshot.withoutReadObservation {
-                !following || lazy.isScrollInProgress ||
+                !following || jumping || laidOutNormal || lazy.isScrollInProgress ||
                     (lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset == 0)
             }
         if (!leave) lazy.requestScrollToItem(0)
@@ -264,15 +263,20 @@ public fun KitTranscriptList(
     onReachOldest: (() -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
-    val normalOrder = state.anchor == TranscriptAnchor.Hybrid && state.laidOutNormal
+    val isHybrid = state.anchor == TranscriptAnchor.Hybrid
+    val normal = state.orderNormal
     val recorded =
-        if (normalOrder) {
-            RecordingLazyListScope().apply(content).also { state.itemCount = it.entries.size }
+        if (isHybrid) {
+            RecordingLazyListScope().apply(content).also {
+                state.itemCount = it.entries.size
+                state.recordedKeys = it.entries.map { entry -> entry.key }
+            }
         } else {
             null
         }
     val lastKey = remember { arrayOfNulls<String>(1) }
     SideEffect {
+        if (isHybrid) state.composedNormal = normal
         // Runs after this composition applies and before its layout: same frame as the insert (§7.3
         // rule 2).
         if (newestKey != lastKey[0]) {
@@ -280,17 +284,42 @@ public fun KitTranscriptList(
             if (state.following && newestKey != null) state.requestScrollToNewest()
         }
     }
-    LaunchedEffect(state) {
-        state.lazy.interactionSource.interactions.collect {
-            if (it is DragInteraction.Start) TranscriptAnchorOps.handleDragStart(state)
+    val density = LocalDensity.current
+    val chrome = kitScreenChromePadding()
+    // The chrome's padding follows the bottom block's measured height, which moves on every frame the keyboard
+    // travels: it is read where the list is measured (its content padding, its pin) and placed (the pill, the
+    // fade), never while composing, so the list is not composed again on each of those frames.
+    val insetPadding = remember(contentPadding, chrome) { SumPadding(contentPadding, chrome) }
+    val pin = remember(state) { BottomPin(state) }
+    pin.probe = LocalTranscriptProbe.current
+    val listPadding =
+        if (isHybrid) remember(insetPadding, pin, density) { SumPadding(insetPadding, EndRoom(pin, density)) }
+        else insetPadding
+    val personScroll = remember(state, pin) { PersonScroll(state, pin) }
+    if (isHybrid) {
+        LaunchedEffect(state) {
+            snapshotFlow { state.lazy.isScrollInProgress }.collect { scrolling ->
+                if (!scrolling && personScroll.personScrolled) {
+                    personScroll.personScrolled = false
+                    if (!state.following && state.atNewest) state.following = true
+                }
+            }
         }
-    }
-    // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6: "Jump
-    // to latest" right after a send with the newest message in view): read on the edge alone, a drag that ended there
-    // never resumed following (the edge was reached mid-drag and did not change after it), so the next send landed
-    // below the rows in view and the list stood "away".
-    LaunchedEffect(state) {
-        snapshotFlow { TranscriptAnchorOps.canReenterFollow(state) }.collect { if (it) state.following = true }
+    } else {
+        LaunchedEffect(state) {
+            state.lazy.interactionSource.interactions.collect {
+                if (it is DragInteraction.Start) state.following = false
+            }
+        }
+        // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6:
+        // "Jump to latest" right after a send with the newest message in view): read on the edge alone, a drag that
+        // ended there never resumed following (the edge was reached mid-drag and did not change after it), so the next
+        // send landed below the rows in view and the list stood "away".
+        LaunchedEffect(state) {
+            snapshotFlow { !state.lazy.isScrollInProgress && state.atLiveEdge }.collect {
+                if (it) state.following = true
+            }
+        }
     }
     val reachOldest = androidx.compose.runtime.rememberUpdatedState(onReachOldest)
     LaunchedEffect(state) {
@@ -301,23 +330,16 @@ public fun KitTranscriptList(
     KitReportScrolledUnder { state.isScrolledUnder() }
     // Reading history: the phrase row folds away, so the jump pill rises out of the message box (owner 2026-11-14).
     io.github.eslamasabry.oc.ui.kit.frame.KitReportAwayFromLatest { state.awayForPhraseRow }
-    val chrome = kitScreenChromePadding()
-    // The chrome's padding follows the bottom block's measured height, which moves on every frame the keyboard
-    // travels: it is read where the list is measured (its content padding, its pin) and placed (the pill, the
-    // fade), never while composing, so the list is not composed again on each of those frames.
-    val insetPadding = remember(contentPadding, chrome) { SumPadding(contentPadding, chrome) }
-    val pin = remember(state) { BottomPin(state) }
-    pin.probe = LocalTranscriptProbe.current
     Box(modifier) {
         // E20-S30: what the list draws, recorded for the pill's blur (the pill itself is never in it).
         val backdrop = rememberKitFrostState()
         LazyColumn(
             state = state.lazy,
-            reverseLayout = !normalOrder,
+            reverseLayout = !normal,
             // C-002: a short conversation sits on the composer, its empty space above (Flutter's reversed list,
             // chat_transcript.dart:153-155). Under reverseLayout, Bottom is where index 0 (the newest row) rests.
             verticalArrangement = Arrangement.Bottom,
-            contentPadding = insetPadding,
+            contentPadding = listPadding,
             // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
             // list measures, so the newest row rides the slot's edge frame by frame.
             // The list ends its own words before the page's floating controls (kitScreenListEdges): the jump pill and
@@ -326,12 +348,22 @@ public fun KitTranscriptList(
             // the page's (the pill lies in the page's recording: reading that would draw the pill into itself).
             modifier =
                 Modifier.fillMaxSize()
-                    .keepsBottom(pin) { insetPadding.calculateBottomPadding().value }
+                    .then(if (isHybrid) Modifier.nestedScroll(personScroll) else Modifier)
+                    .keepsBottom(
+                        pin = pin,
+                        topPaddingPx = { with(density) { insetPadding.calculateTopPadding().roundToPx() } },
+                        bottomPaddingPx = { with(density) { insetPadding.calculateBottomPadding().roundToPx() } },
+                        bottomInsetDp = { insetPadding.calculateBottomPadding().value },
+                    )
                     .kitFrostSource(backdrop)
                     .kitScreenListEdges()
                     .testTag("transcript-list"),
             content = {
-                if (recorded != null) recorded.replayReversed(this) else content()
+                when {
+                    recorded == null -> content()
+                    normal -> recorded.replayReversed(this)
+                    else -> recorded.replayForward(this)
+                }
             },
         )
         // E20-S30 (owner 2026-11-07, "Big gap not required"): no solid lane behind the pill. The words scroll on under
@@ -434,6 +466,36 @@ internal class BottomPin(private val state: TranscriptListState) {
     var roomPx: Int = 0
     var lastReq: String = "none"
 
+    val isHybrid: Boolean
+        get() = state.anchor == TranscriptAnchor.Hybrid
+
+    val composedNormal: Boolean
+        get() = state.composedNormal
+
+    fun setRoom(px: Int) {
+        roomPx = px
+        state.roomPx = px
+    }
+
+    fun syncBounds(insetDp: Float, maxHeight: Int) {
+        bottomInset = insetDp
+        if (maxHeight >= 0) viewport = maxHeight
+    }
+
+    fun flipIfNeeded(topPadPx: Int, bottomPadPx: Int): Boolean {
+        val targetNormal = state.composedNormal
+        val currentNormal = Snapshot.withoutReadObservation { state.laidOutNormal }
+        if (targetNormal == currentNormal) return false
+        val req =
+            Snapshot.withoutReadObservation {
+                TranscriptAnchorOps.computeFlipRequest(state, targetNormal, topPadPx, bottomPadPx)
+            }
+        state.lazy.requestScrollToItem(req.first, req.second)
+        lastReq = "${req.first},${req.second}"
+        state.laidOutNormal = targetNormal
+        return true
+    }
+
     fun viewport(height: Int) {
         if (viewport >= 0 && height != viewport) state.keepAtBottom()
         viewport = height
@@ -459,59 +521,186 @@ internal class BottomPin(private val state: TranscriptListState) {
     }
 }
 
-private fun Modifier.keepsBottom(pin: BottomPin, bottomInsetDp: () -> Float): Modifier =
+private class EndRoom(private val pin: BottomPin, private val density: Density) : PaddingValues {
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+    override fun calculateTopPadding(): Dp = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+    override fun calculateBottomPadding(): Dp = with(density) { pin.roomPx.toDp() }
+}
+
+private class PersonScroll(
+    private val state: TranscriptListState,
+    private val pin: BottomPin,
+) : NestedScrollConnection {
+    var personScrolled: Boolean = false
+
+    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+        if (source == NestedScrollSource.UserInput || source == NestedScrollSource.SideEffect) {
+            personScrolled = true
+        }
+        return when {
+            available.y > 0f -> {
+                state.following = false
+                Offset.Zero
+            }
+            available.y < 0f && Snapshot.withoutReadObservation { state.laidOutNormal } -> {
+                val excess = TranscriptAnchorOps.roomExcess(state.lazy, pin.roomPx, -available.y)
+                if (excess > 0f) Offset(0f, -excess) else Offset.Zero
+            }
+            else -> Offset.Zero
+        }
+    }
+}
+
+private fun Modifier.keepsBottom(
+    pin: BottomPin,
+    topPaddingPx: () -> Int,
+    bottomPaddingPx: () -> Int,
+    bottomInsetDp: () -> Float,
+): Modifier =
     this.then(Modifier.layout { measurable, constraints ->
-        // The bottom chrome (composer, request slot) changed height: re-pin before the list measures.
         pin.lastReq = "none"
-        pin.inset(bottomInsetDp())
-        if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
+        if (pin.isHybrid) {
+            val room = if (pin.composedNormal && constraints.hasBoundedHeight) constraints.maxHeight else 0
+            pin.setRoom(room)
+            val flipped = pin.flipIfNeeded(topPaddingPx(), bottomPaddingPx())
+            if (!pin.composedNormal) {
+                val maxH = if (constraints.hasBoundedHeight) constraints.maxHeight else -1
+                if (flipped) {
+                    pin.syncBounds(bottomInsetDp(), maxH)
+                } else {
+                    pin.inset(bottomInsetDp())
+                    if (maxH >= 0) pin.viewport(maxH)
+                }
+            }
+        } else {
+            // The bottom chrome (composer, request slot) changed height: re-pin before the list measures.
+            pin.inset(bottomInsetDp())
+            if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
+        }
         val placeable = measurable.measure(constraints)
         pin.emitProbe()
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     })
 
 private object TranscriptAnchorOps {
-    fun probeTop(info: androidx.compose.foundation.lazy.LazyListLayoutInfo, normal: Boolean): String {
-        val items = info.visibleItemsInfo
-        if (items.isEmpty()) return "none@0"
-        val h = info.viewportSize.height
-        if (normal) {
-            val topPad = info.beforeContentPadding
-            val item =
-                items.firstOrNull { topPad + it.offset <= topPad && topPad < topPad + it.offset + it.size }
-                    ?: items.first()
-            return "${item.key}@${topPad + item.offset}"
+    fun computeFlipRequest(
+        state: TranscriptListState,
+        toNormal: Boolean,
+        topPadPx: Int,
+        bottomPadPx: Int,
+    ): Pair<Int, Int> {
+        val info = state.lazy.layoutInfo
+        return if (toNormal) {
+            flipToNormal(state, info, topPadPx)
+        } else if (state.jumping) {
+            flipToReversedForJump(state, info, bottomPadPx)
+        } else {
+            0 to 0
         }
-        val bottomPad = info.beforeContentPadding
-        val topPad = info.afterContentPadding
-        val item =
-            items.lastOrNull {
-                val top = h - bottomPad - (it.offset + it.size)
-                top <= topPad && topPad < top + it.size
-            } ?: items.last()
-        val top = h - bottomPad - (item.offset + item.size)
-        return "${item.key}@$top"
     }
 
-    fun atNewestNormalOrder(lazy: LazyListState, slackPx: Int): Boolean {
+    private fun flipToNormal(state: TranscriptListState, info: LazyListLayoutInfo, newTopPad: Int): Pair<Int, Int> {
+        val items = info.visibleItemsInfo
+        if (items.isEmpty()) return 0 to 0
+        val h = info.viewportSize.height
+        val prevBottomPad = info.beforeContentPadding
+        val picked =
+            items.lastOrNull {
+                val top = h - prevBottomPad - (it.offset + it.size)
+                top <= newTopPad && newTopPad < top + it.size
+            } ?: items.last()
+        val top = h - prevBottomPad - (picked.offset + picked.size)
+        val total = if (state.itemCount > 0) state.itemCount else info.totalItemsCount
+        val revIdx = state.recordedKeys.indexOf(picked.key).takeIf { it >= 0 } ?: picked.index
+        val normalIdx = (total - 1 - revIdx).coerceIn(0, (total - 1).coerceAtLeast(0))
+        return normalIdx to (newTopPad - top).coerceAtLeast(0)
+    }
+
+    private fun flipToReversedForJump(
+        state: TranscriptListState,
+        info: LazyListLayoutInfo,
+        newBottomPad: Int,
+    ): Pair<Int, Int> {
+        val items = info.visibleItemsInfo
+        val line = info.viewportSize.height - newBottomPad
+        val prevTopPad = info.beforeContentPadding
+        val picked =
+            items.firstOrNull {
+                val top = prevTopPad + it.offset
+                top < line && line <= top + it.size
+            }
+        return if (picked == null) {
+            0 to 0
+        } else {
+            val bottom = prevTopPad + picked.offset + picked.size
+            val revIdx =
+                state.recordedKeys.indexOf(picked.key).takeIf { it >= 0 }
+                    ?: (info.totalItemsCount - 1 - picked.index)
+            revIdx.coerceAtLeast(0) to (bottom - line).coerceAtLeast(0)
+        }
+    }
+
+    fun roomExcess(lazy: LazyListState, roomPx: Int, deltaDown: Float): Float {
+        val info = Snapshot.withoutReadObservation { lazy.layoutInfo }
+        val last = info.visibleItemsInfo.lastOrNull()
+        return if (last == null || last.index != info.totalItemsCount - 1) {
+            0f
+        } else {
+            val end = info.beforeContentPadding + last.offset + last.size
+            val line = info.viewportSize.height - info.afterContentPadding + roomPx
+            val allowed = (end - line).coerceAtLeast(0)
+            (deltaDown - allowed).coerceAtLeast(0f)
+        }
+    }
+
+    fun probeTop(info: LazyListLayoutInfo, normal: Boolean): String {
+        val items = info.visibleItemsInfo
+        return when {
+            items.isEmpty() -> "none@0"
+            normal -> {
+                val topPad = info.beforeContentPadding
+                val item =
+                    items.firstOrNull { topPad + it.offset <= topPad && topPad < topPad + it.offset + it.size }
+                        ?: items.first()
+                "${item.key}@${topPad + item.offset}"
+            }
+            else -> {
+                val h = info.viewportSize.height
+                val bottomPad = info.beforeContentPadding
+                val topPad = info.afterContentPadding
+                val item =
+                    items.lastOrNull {
+                        val top = h - bottomPad - (it.offset + it.size)
+                        top <= topPad && topPad < top + it.size
+                    } ?: items.last()
+                val top = h - bottomPad - (item.offset + item.size)
+                "${item.key}@$top"
+            }
+        }
+    }
+
+    fun atNewestNormalOrder(lazy: LazyListState, roomPx: Int, slackPx: Int): Boolean {
         val info = lazy.layoutInfo
         val last = info.visibleItemsInfo.lastOrNull()
-        val end = info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding
-        return !lazy.canScrollForward ||
-            (last != null && last.index == info.totalItemsCount - 1 && (last.offset + last.size) - end <= slackPx)
+        return when {
+            info.totalItemsCount == 0 -> true
+            last == null || last.index != info.totalItemsCount - 1 -> false
+            else -> {
+                val end = info.beforeContentPadding + last.offset + last.size
+                val line = info.viewportSize.height - info.afterContentPadding + roomPx
+                end - line <= slackPx
+            }
+        }
     }
-
-    fun handleDragStart(state: TranscriptListState) {
-        state.following = false
-    }
-
-    fun canReenterFollow(state: TranscriptListState): Boolean =
-        !state.lazy.isScrollInProgress && state.atLiveEdge
 
     fun reachedOldest(state: TranscriptListState): Boolean {
         val info = state.lazy.layoutInfo
         val atOldest =
-            if (state.anchor == TranscriptAnchor.Hybrid && state.laidOutNormal) {
+            if (state.laidOutNormal) {
                 info.visibleItemsInfo.firstOrNull()?.index == 0
             } else {
                 val top = info.visibleItemsInfo.lastOrNull()
@@ -523,7 +712,7 @@ private object TranscriptAnchorOps {
     suspend fun jumpToNewest(state: TranscriptListState, motion: KitMotionLevel) {
         val lazy = state.lazy
         val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
-        if (state.anchor == TranscriptAnchor.Hybrid && state.laidOutNormal) {
+        if (state.laidOutNormal) {
             val last = (state.itemCount - 1).coerceAtLeast(0)
             val lastVisible = lazy.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             val end = TranscriptListState.MAX_SCROLL_OFFSET
@@ -574,6 +763,13 @@ private class RecordingLazyListScope : LazyListScope {
         }
     }
 
+    fun replayForward(target: LazyListScope) {
+        for (i in entries.indices) {
+            val entry = entries[i]
+            target.item(key = entry.key, contentType = entry.contentType, content = entry.content)
+        }
+    }
+
     fun replayReversed(target: LazyListScope) {
         for (i in entries.indices.reversed()) {
             val entry = entries[i]
@@ -597,18 +793,35 @@ private fun KitJumpToLatest(
 ) {
     val scope = rememberCoroutineScope()
     val jump: () -> Unit = {
-        state.following = true
-        scope.launch { TranscriptAnchorOps.jumpToNewest(state, motion) }
+        if (state.anchor == TranscriptAnchor.Hybrid) {
+            state.jumping = true
+            state.following = true
+            scope.launch {
+                try {
+                    snapshotFlow { state.laidOutNormal }.first { !it }
+                    TranscriptAnchorOps.jumpToNewest(state, motion)
+                } finally {
+                    state.jumping = false
+                }
+            }
+        } else {
+            state.following = true
+            scope.launch { TranscriptAnchorOps.jumpToNewest(state, motion) }
+        }
     }
     // The kit's own jump pill (small, chevron and words), or a floating chat's round arrow, shown while away from the
     // newest end.
+    val visible = state.awayFromLatest
+    val pillModifier =
+        if (state.anchor == TranscriptAnchor.Hybrid && !visible) modifier
+        else modifier.testTag("jump-to-latest")
     if (round)
-        io.github.eslamasabry.oc.ui.kit.frame.KitJumpButton(label, jump, state.awayFromLatest, modifier.testTag("jump-to-latest"))
+        io.github.eslamasabry.oc.ui.kit.frame.KitJumpButton(label, jump, visible, pillModifier)
     else
         KitJumpPill(
             label = label,
-            visible = state.awayFromLatest,
-            modifier = modifier.testTag("jump-to-latest"),
+            visible = visible,
+            modifier = pillModifier,
             backdrop = backdrop,
             onClick = jump,
         )

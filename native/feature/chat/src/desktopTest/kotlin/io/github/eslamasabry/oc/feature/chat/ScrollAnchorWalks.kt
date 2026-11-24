@@ -74,8 +74,36 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-@OptIn(ExperimentalTestApi::class)
-internal object ScrollAnchorWalks {
+private const val PROBE_CAP = 120
+private const val PROBE_TAIL = 3
+
+private class ProbeLog {
+    private val lines = ArrayDeque<String>(PROBE_CAP)
+    private val flips = mutableListOf<String>()
+    private var lastOrder: String? = null
+    private var lastLine: String? = null
+
+    val sink: (String) -> Unit = { line ->
+        if (lines.size >= PROBE_CAP) lines.removeFirst()
+        lines.addLast(line)
+        val order = line.substringAfter("order=", "").substringBefore(' ')
+        if (lastOrder != null && order != lastOrder) {
+            flips += "before=${lastLine ?: "none"} -> after=$line"
+        }
+        lastOrder = order
+        lastLine = line
+    }
+
+    fun latest(): String? = lines.lastOrNull()
+
+    fun tail(): String = " | probe=" + lines.takeLast(PROBE_TAIL).joinToString(" ; ")
+
+    fun printFlips(label: String) {
+        for (f in flips) println("PROBE_FLIP [$label] $f")
+    }
+}
+
+private object ScrollWalkScene {
     private val sid = Ref.sessionId.raw
     private const val TURN_A = "a-m1"
     private const val MSG_A = "a-m2"
@@ -83,53 +111,12 @@ internal object ScrollAnchorWalks {
     private const val MSG_B = "b-m2"
     private const val ASK_B = "Check the player logs and run the test suite"
     private const val EXTRA_REPLY_BLOCKS = 30
-    private const val WIDE_MIN_EXTRA_PX = 200f
-    private const val TOTAL_STEPS = 10
-    private const val FRAMES_PER_STEP = 12
-    private const val END_FRAMES = 40
-    private const val GLIDE_FRAMES = 60
-    private const val SETTLE_MS = 900L
-    private const val TOLERANCE_PX = 0.5f
-    private const val PHONE_W = 360
-    private const val PHONE_H = 800
-    private const val WIDE_W = 840
-    private const val PROBE_CAP = 120
-    private const val PROBE_TAIL = 3
-    private const val TAP_LEFT_INSET_PX = 24f
-    private val REPORT_OPTIONS = KitUiOptions(mode = FlickerMode.Report)
 
     private object FixedClock : Clock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 
-    private class ProbeLog {
-        private val lines = ArrayDeque<String>(PROBE_CAP)
-        private val flips = mutableListOf<String>()
-        private var lastOrder: String? = null
-        private var lastLine: String? = null
-
-        val sink: (String) -> Unit = { line ->
-            if (lines.size >= PROBE_CAP) lines.removeFirst()
-            lines.addLast(line)
-            val order = line.substringAfter("order=", "").substringBefore(' ')
-            if (lastOrder != null && order != lastOrder) {
-                lastLine?.let { flips += "before: $it" }
-                flips += "after:  $line"
-            }
-            lastOrder = order
-            lastLine = line
-        }
-
-        fun latest(): String? = lines.lastOrNull()
-
-        fun tail(): String = " | probe=" + lines.takeLast(PROBE_TAIL).joinToString(" ; ")
-
-        fun printFlips(label: String) {
-            for (f in flips) println("PROBE_FLIP [$label] $f")
-        }
-    }
-
-    private val composer =
+    val composer =
         object : ComposerHost {
             @Composable
             override fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier) {
@@ -148,49 +135,6 @@ internal object ScrollAnchorWalks {
                 }
             }
         }
-
-    @Composable
-    private fun Root(
-        anchor: TranscriptAnchor,
-        direction: LayoutDirection = LayoutDirection.Ltr,
-        probe: ((String) -> Unit)? = null,
-        content: @Composable () -> Unit,
-    ) {
-        CompositionLocalProvider(
-            LocalTranscriptAnchor provides anchor,
-            LocalLayoutDirection provides direction,
-            LocalTranscriptProbe provides probe,
-        ) {
-            KitTheme(
-                platform = DesktopKitPlatform(),
-                appearance = KitAppearance(motion = MotionLevel.Full),
-                localeTag = "en",
-                stillFrame = false,
-            ) {
-                CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
-            }
-        }
-    }
-
-    private fun findingsFile(): File {
-        val pid = ProcessHandle.current().pid()
-        val dir = File(System.getProperty("oc.flicker.dir") ?: "build/flicker")
-        return File(dir, "findings-$pid.tsv")
-    }
-
-    private fun readFindingLines(): List<String> =
-        findingsFile().takeIf { it.isFile }?.readLines().orEmpty().filter { !it.startsWith("#") && it.isNotBlank() }
-
-    private fun withFlickerReport(label: String, block: () -> Unit) {
-        val before = readFindingLines().toSet()
-        block()
-        val added = readFindingLines().filter { it !in before }
-        if (added.isEmpty()) {
-            println("FLICKER [$label] none")
-        } else {
-            for (row in added) println("FLICKER [$label] $row")
-        }
-    }
 
     private fun info(id: String, role: Role, at: Long, done: Long?): MessageInfo =
         MessageInfo(
@@ -266,14 +210,14 @@ internal object ScrollAnchorWalks {
         return listOf(userB, assistantB)
     }
 
-    private fun sceneFacts(steps: Int, ended: Boolean): TurnFactsUi {
+    fun facts(steps: Int, ended: Boolean): TurnFactsUi {
         val keeper = TurnFeedKeeper(sid)
         keeper.history(doneTurnA() + turnB(steps, ended), newest = ended)
         if (ended) keeper.idle() else keeper.event(GatewayEvent.RunStarted(SessionId(sid)), 100_000L)
         return TurnFactsPresenter(FixedClock).present(keeper.feed.value, 160_000L)
     }
 
-    private fun sceneState(steps: Int, ended: Boolean): ChatUi {
+    fun state(steps: Int, ended: Boolean): ChatUi {
         val rows =
             buildList {
                 add(
@@ -301,6 +245,76 @@ internal object ScrollAnchorWalks {
             live = if (ended) null else LiveTurnUi(stopping = false),
         )
     }
+}
+
+@OptIn(ExperimentalTestApi::class)
+internal object ScrollAnchorWalks {
+    private const val WIDE_MIN_EXTRA_PX = 200f
+    private const val TOTAL_STEPS = 10
+    private const val FRAMES_PER_STEP = 12
+    private const val END_FRAMES = 40
+    private const val GLIDE_FRAMES = 60
+    private const val SETTLE_MS = 900L
+    private const val TOLERANCE_PX = 0.5f
+    private const val PHONE_W = 360
+    private const val PHONE_H = 800
+    private const val WIDE_W = 840
+    private const val TAP_LEFT_INSET_PX = 24f
+    private val REPORT_OPTIONS = KitUiOptions(mode = FlickerMode.Report)
+
+    @Composable
+    private fun Root(
+        anchor: TranscriptAnchor,
+        direction: LayoutDirection = LayoutDirection.Ltr,
+        probe: ((String) -> Unit)? = null,
+        content: @Composable () -> Unit,
+    ) {
+        CompositionLocalProvider(
+            LocalTranscriptAnchor provides anchor,
+            LocalLayoutDirection provides direction,
+            LocalTranscriptProbe provides probe,
+        ) {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Full),
+                localeTag = "en",
+                stillFrame = false,
+            ) {
+                CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
+            }
+        }
+    }
+
+    private fun findingsFile(): File {
+        val pid = ProcessHandle.current().pid()
+        val dir = File(System.getProperty("oc.flicker.dir") ?: "build/flicker")
+        return File(dir, "findings-$pid.tsv")
+    }
+
+    private fun readFindingLines(): List<String> =
+        findingsFile().takeIf { it.isFile }?.readLines().orEmpty().filter { !it.startsWith("#") && it.isNotBlank() }
+
+    private fun withFlickerReport(label: String, block: () -> Unit) {
+        val before = readFindingLines().toSet()
+        block()
+        val added = readFindingLines().filter { it !in before }
+        if (added.isEmpty()) {
+            println("FLICKER [$label] 0")
+        } else {
+            val summary =
+                added.joinToString("; ") { row ->
+                    val cols = row.split('\t')
+                    if (cols.size >= 4) "${cols[1]}:${cols[2]}(x${cols[3]})" else row
+                }
+            println("FLICKER [$label] ${added.size}: $summary")
+        }
+    }
+
+    private val composer: ComposerHost = ScrollWalkScene.composer
+
+    private fun sceneFacts(steps: Int, ended: Boolean): TurnFactsUi = ScrollWalkScene.facts(steps, ended)
+
+    private fun sceneState(steps: Int, ended: Boolean): ChatUi = ScrollWalkScene.state(steps, ended)
 
     private data class TrackedNode(val id: Int, val label: String, val top: Float)
 
@@ -574,6 +588,35 @@ internal object ScrollAnchorWalks {
         }
     }
 
+    private class WalkRunState(val captureBlank: Boolean) {
+        var worst = Drift(0f, 0, "none")
+        var frame = 0
+        var missingControlFrame = -1
+        var badProbeFrame = -1
+        var maxBlank = 0f
+        var captured = false
+    }
+
+    private fun ComposeUiTest.stepReadingFrame(
+        baseline: Map<Int, TrackedNode>,
+        probe: ProbeLog,
+        run: WalkRunState,
+    ) {
+        run.frame++
+        mainClock.advanceTimeByFrame()
+        run.worst = checkFrame(baseline, run.frame, run.worst)
+        if (!jumpControlShown() && run.missingControlFrame < 0) run.missingControlFrame = run.frame
+        if (!probeHasOrderAndRoom(probe.latest()) && run.badProbeFrame < 0) run.badProbeFrame = run.frame
+        val bottom = newestRowBottom() ?: return
+        val blank = (composerTop() - bottom).coerceAtLeast(0f)
+        if (blank > run.maxBlank) run.maxBlank = blank
+        val wantPng = run.captureBlank && !run.captured
+        if (wantPng && run.frame == 1 && blank > 1f) {
+            captureO5BlankRoom()
+            run.captured = true
+        }
+    }
+
     fun walk002ScrolledUp40(
         anchor: TranscriptAnchor,
         width: Int = PHONE_W,
@@ -600,45 +643,24 @@ internal object ScrollAnchorWalks {
                 assertDragPrecondition(label, probe)
                 val baseline = visibleNodes()
                 assertTrue(baseline.isNotEmpty(), "visible set must not be empty after 40 dp drag${probe.tail()}")
-                var worst = Drift(0f, 0, "none")
-                var frame = 0
-                var missingControlFrame = -1
-                var badProbeFrame = -1
-                var maxBlank = 0f
-                val captureBlank = width == PHONE_W && direction == LayoutDirection.Ltr
-                var captured = false
-                fun stepFrame() {
-                    frame++
-                    mainClock.advanceTimeByFrame()
-                    worst = checkFrame(baseline, frame, worst)
-                    if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
-                    if (!probeHasOrderAndRoom(probe.latest()) && badProbeFrame < 0) badProbeFrame = frame
-                    val bottom = newestRowBottom()
-                    if (bottom != null) {
-                        val blank = (composerTop() - bottom).coerceAtLeast(0f)
-                        if (blank > maxBlank) maxBlank = blank
-                        if (captureBlank && !captured && frame == 1 && blank > 1f) {
-                            captureO5BlankRoom()
-                            captured = true
-                        }
-                    }
-                }
+                val run = WalkRunState(captureBlank = width == PHONE_W && direction == LayoutDirection.Ltr)
                 for (k in 2..TOTAL_STEPS) {
                     step = k
-                    repeat(FRAMES_PER_STEP) { stepFrame() }
+                    repeat(FRAMES_PER_STEP) { stepReadingFrame(baseline, probe, run) }
                 }
                 ended = true
-                repeat(END_FRAMES) { stepFrame() }
-                println("ScrollAnchorWalks blank ($label)=${"%.1f".format(maxBlank)} px")
+                repeat(END_FRAMES) { stepReadingFrame(baseline, probe, run) }
+                println("ScrollAnchorWalks blank ($label)=${"%.1f".format(run.maxBlank)} px")
                 probe.printFlips(label)
-                assertNoDrift(worst, "002 scrolled up 40dp (${width}x$height $direction)", probe)
+                assertNoDrift(run.worst, "002 scrolled up 40dp (${width}x$height $direction)", probe)
                 assertTrue(
-                    missingControlFrame < 0,
-                    "002 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest${probe.tail()}",
+                    run.missingControlFrame < 0,
+                    "002 jump-to-latest hidden: max=0.0 frame=${run.missingControlFrame} " +
+                        "node=jump-to-latest${probe.tail()}",
                 )
                 assertTrue(
-                    badProbeFrame < 0,
-                    "002 expected order=N room>0: max=0.0 frame=$badProbeFrame node=probe${probe.tail()}",
+                    run.badProbeFrame < 0,
+                    "002 expected order=N room>0: max=0.0 frame=${run.badProbeFrame} node=probe${probe.tail()}",
                 )
             }
         }

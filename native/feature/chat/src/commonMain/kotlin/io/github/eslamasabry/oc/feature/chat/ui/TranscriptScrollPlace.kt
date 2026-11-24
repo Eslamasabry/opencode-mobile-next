@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -19,6 +18,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
+import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import kotlinx.coroutines.flow.first
 
@@ -188,12 +188,11 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             snapshotFlow { current }.first { it.isNotEmpty() }
             ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
                 // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
-                val newestIndex = if (list.isNormalOrder) current.lastIndex else 0
-                list.following = holder.following && index == newestIndex
-                list.lazy.scrollToItem(index, offset)
+                list.following = holder.following && index == 0
+                list.lazy.scrollToItem(list.lazyIndex(index), offset)
             }
         }
-        snapshotFlow { list.lazy.placeIn(current) to list.following }
+        snapshotFlow { list.placeIn(current) to list.following }
             .collect { (place, following) ->
                 if (place == null) return@collect
                 holder.place = place
@@ -203,8 +202,15 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     }
 }
 
-private fun LazyListState.placeIn(keys: List<String>): ScrollPlace? =
-    ScrollPlaceRules.capture(keys, firstVisibleItemIndex, firstVisibleItemScrollOffset)
+private fun TranscriptListState.placeIn(keys: List<String>): ScrollPlace? =
+    if (anchor != TranscriptAnchor.Hybrid) {
+        ScrollPlaceRules.capture(keys, lazy.firstVisibleItemIndex, lazy.firstVisibleItemScrollOffset)
+    } else {
+        val firstIndex = lazy.firstVisibleItemIndex
+        val key = lazy.layoutInfo.visibleItemsInfo.firstOrNull { it.index == firstIndex }?.key as? String
+        val at = if (key != null) keys.indexOf(key) else -1
+        if (at >= 0) ScrollPlaceRules.capture(keys, at, lazy.firstVisibleItemScrollOffset) else null
+    }
 
 /**
  * Find brings its current hit's row into view (plan 09 §6.6); a jump never animates across thousands of rows (§7.5).

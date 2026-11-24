@@ -496,7 +496,7 @@ internal fun ChatTranscriptList(
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
-    val anchored = list.isNormalOrder
+    val anchored = list.anchor == io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.Hybrid
     SideEffect {
         folds.onPerson = if (anchored) ({ list.following = false }) else null
     }
