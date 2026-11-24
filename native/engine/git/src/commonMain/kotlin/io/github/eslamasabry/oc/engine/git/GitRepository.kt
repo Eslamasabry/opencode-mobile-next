@@ -388,16 +388,32 @@ public class GitRepository(
     // --------------------------------------------------------------- writes
 
     /**
-     * `git pull --ff-only`. A branch without upstream is [GitProblem.NoUpstream]; diverged history
-     * cannot fast-forward.
+     * `git pull --ff-only`. A branch that tracks nothing is linked first when the remote (origin, else the only one)
+     * already has a branch of the same name: with no remote it is [GitProblem.NoRemote], with no such branch
+     * [GitProblem.NoUpstream]. Diverged history cannot fast-forward.
      */
-    public suspend fun pull(gitHubToken: String? = null): GitActionResult =
-        withGitHubToken(GitAction.Pull, gitHubToken) { file, secrets -> pullWithAuth(file, secrets) }
+    public suspend fun pull(gitHubToken: String? = null): GitActionResult {
+        var link: BranchLink? = null
+        val first =
+            withGitHubToken(GitAction.Pull, gitHubToken) { file, secrets ->
+                pullWithAuth(file, secrets) { link = it }
+            }
+        // The link is followed only when the first script's answer stood: else its credential file could not be
+        // removed, and `first` says so.
+        val target = link?.takeIf { first.problem == GitProblem.NoUpstream } ?: return first
+        return withGitHubToken(GitAction.Pull, gitHubToken) { file, secrets ->
+            linkWithAuth(target, file, secrets)
+        }
+    }
 
-    private suspend fun pullWithAuth(file: GitSecretFile?, secrets: List<String>): GitActionResult =
+    private suspend fun pullWithAuth(
+        file: GitSecretFile?,
+        secrets: List<String>,
+        onLink: (BranchLink) -> Unit,
+    ): GitActionResult =
         when (val run = run(pullScript(file), networkTimeoutMs, secrets)) {
             is Run.Failed -> GitActionResult.failure(GitAction.Pull, run.failure)
-            is Run.Done -> pullResult(run.envelope, file, secrets)
+            is Run.Done -> pullResult(run.envelope, file, secrets, onLink)
         }
 
     private fun pullScript(file: GitSecretFile?): GitScript =
@@ -409,53 +425,152 @@ public class GitRepository(
                     GIT + listOf("symbolic-ref", "--short", "-q", "HEAD"),
                     stopOnFailure = true,
                 ),
+                // Read for a branch that tracks nothing: the remote its link would go to.
+                GitStep("remotes", GIT + listOf("remote"), optional = true),
                 GitStep(
                     "upstream",
                     GIT + listOf("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"),
                     stopOnFailure = true,
                 ),
-                GitStep(
-                    "pull",
-                    GIT +
-                        (if (file == null) emptyList() else gitHubCredentialOptions) +
-                        listOf("pull", "--ff-only", "--no-rebase"),
-                ),
-                GitStep(
-                    "count",
-                    GIT + listOf("rev-list", "--count", "ORIG_HEAD..HEAD"),
-                    optional = true,
-                ),
-            ),
+            ) + pullSteps(file),
             environment = if (file == null) emptyMap() else mapOf(GIT_TOKEN_FILE to file.shellPath),
             removeOnExit = file?.let { listOf(it.shellPath) }.orEmpty(),
         )
 
-    private fun pullResult(envelope: GitEnvelope, file: GitSecretFile?, secrets: List<String>): GitActionResult {
-        // A step after a failed one is absent (stopOnFailure), so each is read only once the earlier ones passed.
-        val head = envelope["head"]!!
+    /** The pull itself and how many commits it brought: the last steps of both pull scripts. */
+    private fun pullSteps(file: GitSecretFile?): List<GitStep> =
+        listOf(
+            GitStep(
+                "pull",
+                GIT +
+                    (if (file == null) emptyList() else gitHubCredentialOptions) +
+                    listOf("pull", "--ff-only", "--no-rebase"),
+            ),
+            GitStep(
+                "count",
+                GIT + listOf("rev-list", "--count", "ORIG_HEAD..HEAD"),
+                optional = true,
+            ),
+        )
+
+    /**
+     * Fetches the remote of [link], links the branch to the remote's branch of the same name, then pulls and counts as
+     * [pullScript] does.
+     */
+    private fun linkScript(file: GitSecretFile?, link: BranchLink): GitScript =
+        GitScript(
+            directory,
+            listOf(
+                GitStep(
+                    "fetch",
+                    GIT +
+                        (if (file == null) emptyList() else gitHubCredentialOptions) +
+                        listOf("fetch", "--quiet", link.remote),
+                    stopOnFailure = true,
+                ),
+                GitStep(
+                    "remote-branch",
+                    GIT + listOf("rev-parse", "--verify", "--quiet", "refs/remotes/${link.remote}/${link.branch}"),
+                    stopOnFailure = true,
+                ),
+                GitStep(
+                    "link-remote",
+                    GIT + listOf("config", "branch.${link.branch}.remote", link.remote),
+                    stopOnFailure = true,
+                ),
+                GitStep(
+                    "link-merge",
+                    GIT + listOf("config", "branch.${link.branch}.merge", "refs/heads/${link.branch}"),
+                    stopOnFailure = true,
+                ),
+            ) + pullSteps(file),
+            environment = if (file == null) emptyMap() else mapOf(GIT_TOKEN_FILE to file.shellPath),
+            removeOnExit = file?.let { listOf(it.shellPath) }.orEmpty(),
+        )
+
+    private suspend fun linkWithAuth(link: BranchLink, file: GitSecretFile?, secrets: List<String>): GitActionResult =
+        when (val run = run(linkScript(file, link), networkTimeoutMs, secrets)) {
+            is Run.Failed -> GitActionResult.failure(GitAction.Pull, run.failure)
+            is Run.Done -> linkResult(link, run.envelope, file, secrets)
+        }
+
+    /**
+     * The link script's answer; a failed step ends the script (stopOnFailure), so each is read only once the earlier
+     * ones passed. Nothing is linked when the remote has no branch of that name, and a pull that cannot fast-forward
+     * leaves the link, which is true: the page then shows ahead and behind.
+     */
+    private fun linkResult(
+        link: BranchLink,
+        envelope: GitEnvelope,
+        file: GitSecretFile?,
+        secrets: List<String>,
+    ): GitActionResult {
+        val fetch = envelope["fetch"]
+        val remoteBranch = envelope["remote-branch"]
+        val failedLink =
+            listOf("link-remote", "link-merge").firstNotNullOfOrNull { envelope[it]?.takeIf { step -> !step.ok } }
+        // After the link steps passed, the pull step has reported (a required step).
         return when {
-            !head.ok -> fail(GitAction.Pull, classifyGitError(head.stderr) ?: GitProblem.DetachedHead, head)
-            !envelope["upstream"]!!.ok -> {
-                val upstream = envelope["upstream"]!!
-                val problem =
-                    if (classifyGitError(upstream.stderr) == GitProblem.NotARepository)
-                        GitProblem.NotARepository
-                    else GitProblem.NoUpstream
-                fail(GitAction.Pull, problem, upstream)
-            }
+            fetch != null && !fetch.ok -> fail(GitAction.Pull, null, fetch, file != null, secrets)
+            remoteBranch == null -> GitActionResult.failure(GitAction.Pull, GitFailure(GitProblem.Unknown))
+            !remoteBranch.ok -> fail(GitAction.Pull, GitProblem.NoUpstream, remoteBranch)
+            failedLink != null -> fail(GitAction.Pull, null, failedLink, file != null, secrets)
             !envelope["pull"]!!.ok -> fail(GitAction.Pull, null, envelope["pull"]!!, file != null, secrets)
-            else -> pulled(envelope)
+            else -> pulled(envelope, "${link.remote}/${link.branch}")
         }
     }
 
-    private fun pulled(envelope: GitEnvelope): GitActionResult {
+    private fun pullResult(
+        envelope: GitEnvelope,
+        file: GitSecretFile?,
+        secrets: List<String>,
+        onLink: (BranchLink) -> Unit,
+    ): GitActionResult {
+        // A step after a failed one is absent (stopOnFailure), so each is read only once the earlier ones passed.
+        val head = envelope["head"]!!
+        val upstream = envelope["upstream"]!!
+        return when {
+            !head.ok -> fail(GitAction.Pull, classifyGitError(head.stderr) ?: GitProblem.DetachedHead, head)
+            upstream.ok -> {
+                val pull = envelope["pull"]!!
+                if (pull.ok) pulled(envelope, upstream.stdout.trim())
+                else fail(GitAction.Pull, null, pull, file != null, secrets)
+            }
+            classifyGitError(upstream.stderr) == GitProblem.NotARepository ->
+                fail(GitAction.Pull, GitProblem.NotARepository, upstream)
+            else -> linkOrRefuse(envelope, head, upstream, onLink)
+        }
+    }
+
+    /**
+     * A branch that tracks nothing. The remote is `origin`, else the only one: with none to pick the answer is
+     * [GitProblem.NoRemote] with the Details a first push gives. Else [onLink] receives the remote and the branch, and
+     * what comes back only stands in until the link script answers.
+     */
+    private fun linkOrRefuse(
+        envelope: GitEnvelope,
+        head: GitStepResult,
+        upstream: GitStepResult,
+        onLink: (BranchLink) -> Unit,
+    ): GitActionResult {
+        val remotes = envelope["remotes"]
+        val remote = remotes?.let { pickRemote(it.stdout) }
+        if (remotes != null && remote != null) onLink(BranchLink(remote, head.stdout.trim()))
+        return when {
+            remotes == null -> fail(GitAction.Pull, GitProblem.NoUpstream, upstream)
+            remote == null -> noRemote(GitAction.Pull, remotes.stdout)
+            else -> GitActionResult.failure(GitAction.Pull, GitFailure(GitProblem.NoUpstream))
+        }
+    }
+
+    private fun pulled(envelope: GitEnvelope, target: String): GitActionResult {
         val pull = envelope["pull"]!!
         val upToDate = "already up to date" in "${pull.stdout}\n${pull.stderr}".lowercase()
         return GitActionResult.success(
             GitAction.Pull,
             if (upToDate) GitActionNote.UpToDate else GitActionNote.Pulled,
             count = if (upToDate) null else envelope["count"]?.stdout?.trim()?.toIntOrNull(),
-            target = envelope["upstream"]!!.stdout.trim(),
+            target = target,
         )
     }
 
@@ -550,28 +665,9 @@ public class GitRepository(
             target = plan["upstream"]?.stdout?.trim().orEmpty()
             pushArgs = listOf("push")
         } else {
-            val remotes =
-                plan["remotes"]
-                    ?.stdout
-                    .orEmpty()
-                    .split('\n')
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-            val remote =
-                when {
-                    "origin" in remotes -> "origin"
-                    remotes.size == 1 -> remotes.single()
-                    else -> null
-                }
-            if (remote == null) {
-                return GitActionResult.failure(
-                    GitAction.Push,
-                    GitFailure(
-                        GitProblem.NoRemote,
-                        if (remotes.isEmpty()) "" else "Remotes: ${remotes.joinToString(", ")}",
-                    ),
-                )
-            }
+            val listed = plan["remotes"]?.stdout.orEmpty()
+            val remote = pickRemote(listed)
+            if (remote == null) return noRemote(GitAction.Push, listed)
             pushArgs = listOf("push", "--set-upstream", remote, branch)
             target = "$remote/$branch"
         }
@@ -1019,6 +1115,37 @@ public class GitRepository(
             GitFailure(problem ?: classifyGitError(raw, usedGitHubToken) ?: GitProblem.Unknown, details),
         )
     }
+
+    /** The names `git remote` lists, one per line. */
+    private fun remoteNames(stdout: String): List<String> =
+        stdout.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
+
+    /**
+     * The remote a first push, or a branch's link, goes to: `origin`, else the only one; null when none can be chosen
+     * (no remote, or several and none is origin).
+     */
+    private fun pickRemote(stdout: String): String? {
+        val remotes = remoteNames(stdout)
+        return when {
+            "origin" in remotes -> "origin"
+            remotes.size == 1 -> remotes.single()
+            else -> null
+        }
+    }
+
+    /**
+     * [GitProblem.NoRemote] with the same Details for a first push and for a link: nothing, or the names that compete.
+     */
+    private fun noRemote(action: GitAction, stdout: String): GitActionResult {
+        val remotes = remoteNames(stdout)
+        return GitActionResult.failure(
+            action,
+            GitFailure(GitProblem.NoRemote, if (remotes.isEmpty()) "" else "Remotes: ${remotes.joinToString(", ")}"),
+        )
+    }
+
+    /** The remote and the branch to link a branch that tracks nothing to, when the remote has one of the same name. */
+    private data class BranchLink(val remote: String, val branch: String)
 
     private sealed interface Run {
         data class Done(val envelope: GitEnvelope) : Run

@@ -47,12 +47,13 @@ public fun gitSyncOpensRemotes(hasRemote: Boolean, detached: Boolean, operationI
     !hasRemote && !detached && !operationInProgress
 
 /**
- * Red row for B-GIT-157: whether Get latest can link a branch that tracks nothing yet, because the remote a first push
- * would go to lists a branch of the same name. The stub answers false until the fix lands.
+ * Get latest can also link a branch that tracks nothing yet (B-GIT-157): its row is open when the snapshot lists a
+ * branch of the same name on the remote a first push would go to, and its line is then the Send row's "First time,
+ * links this branch". Only the same name counts; a branch the remote lacks still says to send it first.
  */
 public fun gitPullLinksBranch(
     hasUpstream: Boolean,
     head: String?,
     pushRemote: String?,
     remoteBranches: List<String>,
-): Boolean = false
+): Boolean = !hasUpstream && head != null && pushRemote != null && "$pushRemote/$head" in remoteBranches
