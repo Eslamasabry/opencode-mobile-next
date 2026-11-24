@@ -61,5 +61,71 @@ oc_prune_one() {
   if oc_in_use "${D}1"; then return 0; fi
   rm -rf -- "${D}1"
 }
+# oc_prune_stale ROOT KEEP RE LINK: an old version's .new, .old.<pid> and .oc-good folders go.
+oc_prune_stale() {
+  oc_ps_root=${D}1 oc_ps_keep=${D}2 oc_ps_re=${D}3 oc_ps_link=${D}4
+  [ -d "${D}oc_ps_root" ] && [ ! -L "${D}oc_ps_root" ] || return 0
+  [ "${D}(cd "${D}oc_ps_root" && pwd -P)" = "${D}oc_ps_root" ] || return 0
+  oc_ps_live=${D}(readlink -f "${D}oc_ps_link" 2>/dev/null) || return 0
+  case "${D}oc_ps_live" in "${D}oc_ps_root"/*) ;; *) return 0 ;; esac
+  oc_ps_live=${D}{oc_ps_live#"${D}oc_ps_root"/}
+  oc_ps_live="${D}oc_ps_root/${D}{oc_ps_live%%/*}"
+  ls -1A "${D}oc_ps_root" 2>/dev/null |
+    grep -E "^(${D}oc_ps_re)\.(new|oc-good|old\.[0-9]+)${D}" | while IFS= read -r oc_ps_name; do
+    case "${D}oc_ps_name" in
+      *.new) oc_ps_ver=${D}{oc_ps_name%.new} ;;
+      *.oc-good) oc_ps_ver=${D}{oc_ps_name%.oc-good} ;;
+      *) oc_ps_ver=${D}{oc_ps_name%.old.*} ;;
+    esac
+    case " ${D}oc_ps_keep " in *" ${D}oc_ps_ver "*) continue ;; esac
+    oc_ps_pending="${D}oc_ps_root/${D}oc_ps_ver.oc-pending"
+    [ ! -e "${D}oc_ps_pending" ] && [ ! -L "${D}oc_ps_pending" ] || continue
+    oc_ps_path="${D}oc_ps_root/${D}oc_ps_name"
+    [ -d "${D}oc_ps_path" ] && [ ! -L "${D}oc_ps_path" ] || continue
+    [ "${D}(readlink -f "${D}oc_ps_path")" = "${D}oc_ps_path" ] || continue
+    [ "${D}oc_ps_path" != "${D}oc_ps_live" ] || continue
+    if oc_in_use "${D}oc_ps_path"; then continue; fi
+    rm -rf -- "${D}oc_ps_path"
+  done || true
+}
+# oc_prune_downloads DIR KEEP: downloads of versions no longer kept go.
+oc_prune_downloads() {
+  oc_pd_dir=${D}1 oc_pd_keep=${D}2
+  [ -d "${D}oc_pd_dir" ] && [ ! -L "${D}oc_pd_dir" ] || return 0
+  ls -1A "${D}oc_pd_dir" 2>/dev/null | grep -E -- '-[0-9a-f]{64}${D}' | while IFS= read -r oc_pd_name; do
+    oc_pd_kept=
+    for oc_pd_k in ${D}oc_pd_keep; do
+      case "${D}oc_pd_name" in "${D}oc_pd_k"-*) oc_pd_kept=1 ;; esac
+    done
+    [ -z "${D}oc_pd_kept" ] || continue
+    oc_pd_path="${D}oc_pd_dir/${D}oc_pd_name"
+    [ -f "${D}oc_pd_path" ] && [ ! -L "${D}oc_pd_path" ] || continue
+    rm -f -- "${D}oc_pd_path"
+  done || true
+}
+# oc_prune_probes ROOT: day-old, unused version-check folders a killed install left go.
+oc_prune_probes() {
+  oc_pp_root=${D}1
+  [ -d "${D}oc_pp_root" ] && [ ! -L "${D}oc_pp_root" ] || return 0
+  ls -1A "${D}oc_pp_root" 2>/dev/null | grep -E '^\.probe\.[A-Za-z0-9]+${D}' | while IFS= read -r oc_pp_name; do
+    oc_pp_path="${D}oc_pp_root/${D}oc_pp_name"
+    [ -d "${D}oc_pp_path" ] && [ ! -L "${D}oc_pp_path" ] || continue
+    [ -n "${D}(find "${D}oc_pp_path" -maxdepth 0 -mmin +1440 2>/dev/null)" ] || continue
+    if oc_in_use "${D}oc_pp_path"; then continue; fi
+    rm -rf -- "${D}oc_pp_path"
+  done || true
+}
+# oc_prune_node_parts DIR PREFIX: Node downloads of versions no longer pinned go.
+oc_prune_node_parts() {
+  oc_pn_dir=${D}1 oc_pn_keep=${D}2
+  [ -d "${D}oc_pn_dir" ] && [ ! -L "${D}oc_pn_dir" ] || return 0
+  ls -1A "${D}oc_pn_dir" 2>/dev/null |
+    grep -E '^node-v[0-9]+\.[0-9]+\.[0-9]+-linux-[a-z0-9]+\.tar\.gz${D}' | while IFS= read -r oc_pn_name; do
+    case "${D}oc_pn_name" in "${D}oc_pn_keep"*) continue ;; esac
+    oc_pn_path="${D}oc_pn_dir/${D}oc_pn_name"
+    [ -f "${D}oc_pn_path" ] && [ ! -L "${D}oc_pn_path" ] || continue
+    rm -f -- "${D}oc_pn_path"
+  done || true
+}
 """
 }

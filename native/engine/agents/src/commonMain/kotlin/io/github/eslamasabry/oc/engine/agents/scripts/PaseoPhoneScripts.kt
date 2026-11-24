@@ -118,12 +118,16 @@ oc_paseo_prune() {
   if oc_no_old_node; then
     oc_prune_versions /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
       '^[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}${D}' /home/oc/.local/bin/paseo
+    oc_prune_stale /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
+      '[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}' /home/oc/.local/bin/paseo
   fi
   oc_prune_one ${INSTALL_DIRECTORY}.oc-good
 }
 oc_node_prune() {
   oc_prune_versions /home/oc/.local 'node-$NODE_VERSION' '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}' \
     /home/oc/.local/bin/node oc_node_stock
+  oc_prune_stale /home/oc/.local 'node-$NODE_VERSION' 'node-v[0-9]+\.[0-9]+\.[0-9]+' /home/oc/.local/bin/node
+  oc_prune_node_parts /home/oc/.cache/oc-setup 'node-$NODE_VERSION-'
   oc_prune_one /home/oc/.local/node-$NODE_VERSION.old
   oc_prune_one /home/oc/.local/node.old
 }
