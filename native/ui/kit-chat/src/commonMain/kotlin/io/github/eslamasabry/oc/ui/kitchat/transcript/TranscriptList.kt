@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportScrolledUnder
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -134,6 +135,18 @@ public fun rememberTranscriptListState(): TranscriptListState {
 }
 
 /**
+ * The running turn's live line as the docked "Jump to latest" row repeats it at its start (owner decision O2 = D,
+ * 2026-11-24): the same words, tone, spoken words and rail as the list's own live line, so the row's line lies where
+ * the list's lies at rest.
+ */
+public data class KitTranscriptDockLive(
+    public val words: String,
+    public val tone: KitTurnLiveTone,
+    public val spoken: String,
+    public val onRail: Boolean,
+)
+
+/**
  * `LazyColumn(reverseLayout = true)` over block rows, newest first (plan 09 §7.1), with
  * follow-bottom and the "Jump to latest" control. Callers add items with stable String keys and a
  * contentType (§7.2).
@@ -150,6 +163,11 @@ public fun KitTranscriptList(
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(vertical = Space.S4.dp),
+    /**
+     * The running turn's live line, repeated at the docked "Jump to latest" row's start while the person reads
+     * older rows ([KitTranscriptDockLive]); null: the row shows its words alone.
+     */
+    dockLive: KitTranscriptDockLive? = null,
     /**
      * Called when the person, reading history, brings the list's oldest item (its top) into view: the transcript loads
      * its earlier messages there by itself. Items added on top never move the row being read (the list keeps its
