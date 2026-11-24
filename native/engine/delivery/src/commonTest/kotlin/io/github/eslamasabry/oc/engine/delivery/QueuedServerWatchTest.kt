@@ -32,6 +32,7 @@ class QueuedServerWatchTest {
         val opens = ArrayList<ProfileId>()
         val released = ArrayList<ProfileId>()
         val nudges = ArrayList<ProfileId>()
+        val held = HashSet<ProfileId>()
 
         override fun queue(): QueueRead = QueueRead.Readable(QueuedPromptCodec.decodeQueue(raw))
 
@@ -55,6 +56,8 @@ class QueuedServerWatchTest {
             released += profile
             live -= profile
         }
+
+        override fun held(profile: ProfileId): Boolean = profile in held
     }
 
     private val b = ProfileId("fx-oc2-b")
@@ -147,5 +150,25 @@ class QueuedServerWatchTest {
         runCurrent()
         assertEquals(QueuedServerWatch.MAX_SERVERS, ports.opens.size)
         assertEquals(emptySet(), QueuedServerWatch.waiting(QueueRead.Unreadable))
+    }
+
+    @Test
+    fun `B-CHAT-426 the queued watch keeps a connection an open chat shows`() = runTest {
+        val ports = Ports().apply { raw = "[" + entry("q1", b.raw) + "]"; reachable += b }
+        val watch = QueuedServerWatch(ports, backgroundScope) { currentTime }
+        watch.start()
+        runCurrent()
+        assertEquals(listOf(b), ports.opens, "opened while its prompt waits")
+        // An open chat shows b: its connection stays, with nothing left waiting for it.
+        ports.held += b
+        ports.raw = "[]"
+        advanceTimeBy(QueuedServerWatch.ROUND.inWholeMilliseconds)
+        runCurrent()
+        assertTrue(ports.released.isEmpty(), "an open chat shows this connection")
+        // The chat closed: the next round lets go of it.
+        ports.held -= b
+        advanceTimeBy(QueuedServerWatch.ROUND.inWholeMilliseconds)
+        runCurrent()
+        assertEquals(listOf(b), ports.released)
     }
 }

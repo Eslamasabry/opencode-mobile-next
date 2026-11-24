@@ -36,6 +36,9 @@ public interface QueuedServerPorts {
 
     /** Lets go of a connection this watch opened, once nothing waits for it any more. */
     public suspend fun release(profile: ProfileId)
+
+    /** True while an open chat shows this server. */
+    public fun held(profile: ProfileId): Boolean = false
 }
 
 /**

@@ -135,6 +135,7 @@ public class GraphChatWorlds(
     private val lastKnown: Set<ChatLastKnown> = emptySet(),
     storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
     private val glances: Set<ChatGlance> = emptySet(),
+    private val connectionOpeners: Set<ChatConnectionOpener> = emptySet(),
 ) : ChatWorlds {
     private val withdrawn =
         storages.singleOrNull()?.let {
@@ -155,6 +156,7 @@ public class GraphChatWorlds(
         check(histories.size <= 1) { "multiple prompt history stores" }
         check(lastKnown.size <= 1) { "multiple last-known transcript stores" }
         check(glances.size <= 1) { "multiple conversation glances" }
+        check(connectionOpeners.size <= 1) { "multiple chat connection openers" }
     }
 
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
@@ -180,6 +182,7 @@ public class GraphChatWorlds(
                     withdrawn,
                     shownOutcomes,
                     glance = glances.singleOrNull(),
+                    connectionOpener = connectionOpeners.singleOrNull(),
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -227,6 +230,7 @@ internal class GraphChatWorld(
         HashSet(),
     /** What the conversation list shows of this conversation: the page's title from its first frame. */
     private val glance: ChatGlance? = null,
+    private val connectionOpener: ChatConnectionOpener? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
