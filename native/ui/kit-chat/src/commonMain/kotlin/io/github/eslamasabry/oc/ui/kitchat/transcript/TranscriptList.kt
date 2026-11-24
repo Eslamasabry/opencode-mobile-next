@@ -140,7 +140,7 @@ internal constructor(
 
     /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
     public val awayFromLatest: Boolean by derivedStateOf {
-        if (anchor == TranscriptAnchor.NormalOrder) {
+        if (anchor != TranscriptAnchor.Today) {
             !following
         } else {
             lazy.firstVisibleItemIndex > 0 ||
@@ -411,9 +411,16 @@ internal class BottomPin(private val state: TranscriptListState) {
     val isNormalOrder: Boolean
         get() = state.anchor == TranscriptAnchor.NormalOrder
 
+    val isSameFrame: Boolean
+        get() = state.anchor == TranscriptAnchor.SameFrame
+
     fun pinNormalOrder() {
         state.pinNormalOrder()
     }
+
+    fun captureTopAnchor(): TopAnchor? = TranscriptAnchorOps.captureTopAnchor(state)
+
+    fun correctTopAnchor(before: TopAnchor) = TranscriptAnchorOps.correctTopAnchor(state, before)
 
     fun viewport(height: Int) {
         if (viewport >= 0 && height != viewport) state.keepAtBottom()
@@ -436,11 +443,51 @@ private fun Modifier.keepsBottom(pin: BottomPin, bottomInsetDp: () -> Float): Mo
             pin.inset(bottomInsetDp())
             if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
         }
+        val before = if (pin.isSameFrame) pin.captureTopAnchor() else null
         val placeable = measurable.measure(constraints)
+        if (before != null) pin.correctTopAnchor(before)
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     })
 
+internal data class TopAnchor(val key: Any, val top: Int)
+
 private object TranscriptAnchorOps {
+    private const val HALF_PX = 0.5f
+
+    fun captureTopAnchor(state: TranscriptListState): TopAnchor? =
+        Snapshot.withoutReadObservation {
+            if (state.following || state.lazy.isScrollInProgress) {
+                null
+            } else {
+                val info = state.lazy.layoutInfo
+                info.visibleItemsInfo.maxByOrNull { it.index }?.let { item ->
+                    TopAnchor(
+                        key = item.key,
+                        top = info.viewportSize.height - info.beforeContentPadding - (item.offset + item.size),
+                    )
+                }
+            }
+        }
+
+    fun correctTopAnchor(state: TranscriptListState, before: TopAnchor) {
+        val delta =
+            Snapshot.withoutReadObservation {
+                if (state.following || state.lazy.isScrollInProgress) {
+                    0f
+                } else {
+                    val info = state.lazy.layoutInfo
+                    val now = info.visibleItemsInfo.firstOrNull { it.key == before.key }
+                    if (now == null) {
+                        0f
+                    } else {
+                        val afterTop = info.viewportSize.height - info.beforeContentPadding - (now.offset + now.size)
+                        (before.top - afterTop).toFloat()
+                    }
+                }
+            }
+        if (kotlin.math.abs(delta) >= HALF_PX) state.lazy.dispatchRawDelta(delta)
+    }
+
     fun atNewestNormalOrder(lazy: LazyListState, slackPx: Int): Boolean {
         val info = lazy.layoutInfo
         val last = info.visibleItemsInfo.lastOrNull()
@@ -450,7 +497,7 @@ private object TranscriptAnchorOps {
     }
 
     fun handleDragStart(state: TranscriptListState) {
-        if (state.anchor == TranscriptAnchor.NormalOrder) {
+        if (state.anchor != TranscriptAnchor.Today) {
             if (state.following) state.following = false else state.markDragWhileReading()
         } else {
             state.following = false
@@ -459,7 +506,7 @@ private object TranscriptAnchorOps {
 
     fun canReenterFollow(state: TranscriptListState): Boolean =
         !state.lazy.isScrollInProgress &&
-            if (state.anchor == TranscriptAnchor.NormalOrder) {
+            if (state.anchor != TranscriptAnchor.Today) {
                 state.draggedSinceUnfollow && state.atNewest
             } else {
                 state.atLiveEdge

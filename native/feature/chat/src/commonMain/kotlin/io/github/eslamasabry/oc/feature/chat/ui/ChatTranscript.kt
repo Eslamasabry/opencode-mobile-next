@@ -496,13 +496,9 @@ internal fun ChatTranscriptList(
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
+    val anchored = list.anchor != io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.Today
     SideEffect {
-        folds.onPerson =
-            if (list.anchor == io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.NormalOrder) {
-                { list.following = false }
-            } else {
-                null
-            }
+        folds.onPerson = if (anchored) ({ list.following = false }) else null
     }
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
     // raw fence; only
@@ -808,7 +804,7 @@ internal fun ChatTranscriptList(
             // bubble in place, so it never fades in.
             val rowModifier =
                 kitTranscriptItemMotion(fadeIn = row !is PromptRow).let { base ->
-                    if (normalOrder) base else base.foldAnchor(row.key, anchor, list.lazy)
+                    if (anchored) base else base.foldAnchor(row.key, anchor, list.lazy)
                 }
             Column(rowModifier) {
               // Find: every match in this row is tinted by the kit's text parts; the current match of the current row
