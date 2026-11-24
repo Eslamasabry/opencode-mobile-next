@@ -138,14 +138,11 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         )
     }
 
-    /**
-     * One built-in Linux setup step. [exit] is the exit code when it gave one. A step never seen running has no
-     * [elapsedMs]: then `ms_range` and the performance trace are left out rather than sent as a made-up time.
-     */
+    /** One built-in Linux setup step. [exit] is the exit code when it gave one. */
     public fun linuxSetupStep(
         step: String,
         ok: Boolean,
-        elapsedMs: Long?,
+        elapsedMs: Long,
         exit: Int? = null,
         compatMode: String = "none",
         freeGigabytes: Double? = null,
@@ -188,6 +185,24 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         if (elapsedMs == null) return
         val traced = if (result == "ok" || result == "fail") result else "fail"
         t.performanceTrace(PerfSchema.linuxSetup(step), elapsedMs, mapOf("step" to step, "result" to traced))
+    }
+
+    /** A failed step never seen running: sent once with no ms_range and no performance trace. */
+    public fun linuxSetupStepUnmeasured(step: String, attempt: Int, failKind: String, freeGigabytes: Double?) {
+        val t = telemetry()
+        t.breadcrumb("linux.step:$step")
+        t.breadcrumb("linux.fail")
+        t.track(
+            ProductEvent.LinuxSetupStep,
+            buildMap {
+                put("step", step)
+                put("result", "fail")
+                put("attempt", HealthRanges.attemptOf(attempt))
+                put("fail_kind", failKind)
+                put("compat_mode", "none")
+                if (freeGigabytes != null) put("free_space_range", HealthRanges.storageOf(freeGigabytes))
+            },
+        )
     }
 
     public fun agentStart(agent: String, ok: Boolean, failKind: String = "other", elapsedMs: Long? = null) {
