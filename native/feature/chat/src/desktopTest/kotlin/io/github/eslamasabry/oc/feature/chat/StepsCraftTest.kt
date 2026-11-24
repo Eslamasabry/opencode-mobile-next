@@ -454,9 +454,12 @@ class StepsCraftTest {
                         maxMove = maxOf(maxMove, abs(top - prevLiveTop))
                         prevLiveTop = top
                     }
-                    for (i in 1 until nodes.size) {
-                        val prev = nodes[i - 1]
-                        val curr = nodes[i]
+                    // S0 invariant: settled rows and the live line never overlap while a step arrives
+                    // (arriving c9 and folding e6 animate inside KitStepReveal; reveal height is S4).
+                    val settled = nodes.filter { it.first != "chat-step-c9" && it.first != "chat-step-e6" }
+                    for (i in 1 until settled.size) {
+                        val prev = settled[i - 1]
+                        val curr = settled[i]
                         assertTrue(
                             curr.second.top >= prev.second.bottom - 0.5f,
                             "frame $frame overlap: ${prev.first}=${prev.second} vs ${curr.first}=${curr.second}",
