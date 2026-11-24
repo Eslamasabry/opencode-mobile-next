@@ -51,11 +51,14 @@ class CardToolServerTest {
     fun start() {
         directory = Files.createTempDirectory("gen-ui-server-").toFile()
         marker = File(directory, "enabled").apply { writeText("enabled\n") }
-        val script = File(directory, "server.cjs").apply { writeText(CardToolServer.script(marker.path)) }
-        val slow = File(directory, "slow.cjs").apply {
-            writeText("Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 6000); require('./server.cjs');")
-        }
-        helper = Helper(slow)
+        val original = CardToolServer.script(marker.path)
+        val changed = original.replace(
+            "try { normalizeGenUiCard(params.arguments); }",
+            "await new Promise(r => setTimeout(r, 6000)); try { normalizeGenUiCard(params.arguments); }",
+        )
+        check(changed != original) { "the slow-call replace did not match" }
+        val script = File(directory, "server.cjs").apply { writeText(changed) }
+        helper = Helper(script)
         helper.awaitReady()
     }
 
