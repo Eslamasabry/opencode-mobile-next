@@ -53,6 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.ui.kitchat.turn.SWEEP_TAG
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.test.Test
@@ -292,6 +293,13 @@ class IdleChatTickTest {
                     onNodeWithTag("chat-work-summary").performTouchInput { down(center); up() }
                     meter.settle(max = 80)
                     onNodeWithTag("chat-step-p-c1", useUnmergedTree = true).assertExists()
+                    val stepRunning =
+                        SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Running") and
+                            hasAnyAncestor(hasTestTag("chat-step-p-c1"))
+                    onNode(stepRunning, useUnmergedTree = true).assertExists()
+                    onNodeWithText("Running uname", useUnmergedTree = true).assertExists()
+                    onNodeWithText("28.0s", substring = true, useUnmergedTree = true).assertExists()
+                    onNodeWithTag(SWEEP_TAG, useUnmergedTree = true).assertDoesNotExist()
 
                     var busy = 0
                     for (s in 1..5) {
@@ -304,6 +312,10 @@ class IdleChatTickTest {
                         hasTestTag("kit-step-node") and hasAnyAncestor(hasTestTag("chat-step-p-c1")),
                         useUnmergedTree = true,
                     ).assertExists()
+                    onNode(stepRunning, useUnmergedTree = true).assertExists()
+                    onNodeWithText("Running uname", useUnmergedTree = true).assertExists()
+                    onNodeWithText("33.0s", substring = true, useUnmergedTree = true).assertExists()
+                    onNodeWithTag(SWEEP_TAG, useUnmergedTree = true).assertDoesNotExist()
                 } finally {
                     meter.close()
                 }
