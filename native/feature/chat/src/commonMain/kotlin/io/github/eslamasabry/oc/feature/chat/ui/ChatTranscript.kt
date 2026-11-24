@@ -795,6 +795,11 @@ internal fun ChatTranscriptList(
             }
         }
         itemsIndexed(unique, key = { _, it -> it.key }, contentType = { _, it -> it.kind }) { index, row ->
+            SideEffect {
+                if (TranscriptProbe.on) {
+                    TranscriptProbe.rows[row.key] = (TranscriptProbe.rows[row.key] ?: 0) + 1
+                }
+            }
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
             Column(

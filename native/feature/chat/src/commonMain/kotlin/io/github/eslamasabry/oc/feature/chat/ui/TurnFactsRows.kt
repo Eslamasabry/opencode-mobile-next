@@ -705,6 +705,11 @@ private fun OneStep(
      */
     stopSaidBelow: Boolean = false,
 ) {
+    SideEffect {
+        if (TranscriptProbe.on) {
+            TranscriptProbe.steps[step.partId] = (TranscriptProbe.steps[step.partId] ?: 0) + 1
+        }
+    }
     val key = "step:${step.partId}"
     val f = step.facts
     val out = step.output
