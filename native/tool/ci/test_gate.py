@@ -676,6 +676,64 @@ class Workflow(unittest.TestCase):
         self.assertIn('[ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then', text)
 
 
+class GradleCache(unittest.TestCase):
+    """B-CI-340/341: only the line and master write the Gradle cache; every other ref reads it and never saves."""
+
+    def read_only(self, ref):
+        """True when a run on ref may only read setup-gradle's cache, as native-setup's cache-read-only value says."""
+        path = os.path.join(HERE, '..', '..', '..', '.github', 'actions', 'native-setup', 'action.yml')
+        lines = open(path).read().splitlines()
+        hits = [i for i, line in enumerate(lines) if line.strip().startswith('cache-read-only:')]
+        self.assertEqual(len(hits), 1, f'{len(hits)} lines in native-setup start with cache-read-only:, expected 1')
+        key = lines[hits[0]]
+        indent = len(key) - len(key.lstrip())
+        value = key.split(':', 1)[1].strip()
+        if value == '>-':
+            body = []
+            for line in lines[hits[0] + 1:]:
+                if not line.strip():
+                    continue
+                if len(line) - len(line.lstrip()) <= indent:
+                    break
+                body.append(line.strip())
+            value = ' '.join(body)
+        value = ' '.join(value.split())
+        if value == 'false':
+            return False
+        if value == 'true':
+            return True
+        if not (value.startswith('${{') and value.endswith('}}')):
+            self.fail(f'cache-read-only is {value!r}, not an expression')
+        for term in value[3:-2].split('&&'):
+            term = term.strip()
+            exact = re.fullmatch(r"github\.ref != '([^']+)'", term)
+            prefix = re.fullmatch(r"!startsWith\(github\.ref, '([^']+)'\)", term)
+            if exact:
+                if ref == exact.group(1):
+                    return False
+            elif prefix:
+                if ref.startswith(prefix.group(1)):
+                    return False
+            else:
+                self.fail(f'cache-read-only holds a term this test cannot read: {term!r}')
+        return True
+
+    def test_B_CI_340_a_work_branch_tag_or_pull_ref_reads_the_gradle_cache_and_never_writes_it(self):
+        reads = ('refs/heads/native/glm-ci-cache-day1', 'refs/heads/native/glass-next-old',
+                 'refs/heads/native/nextgen', 'refs/heads/mastery',
+                 'refs/tags/v3.0.2+10150', 'refs/pull/12/merge', '')
+        for ref in reads:
+            with self.subTest(ref=ref):
+                self.assertTrue(self.read_only(ref),
+                                'a work branch, a tag, a pull ref or an empty ref must only read the Gradle cache')
+
+    def test_B_CI_341_the_line_and_master_write_the_gradle_cache(self):
+        writes = ('refs/heads/master', 'refs/heads/native/glass-next', 'refs/heads/native/next',
+                  'refs/heads/native/screens-merge41')
+        for ref in writes:
+            with self.subTest(ref=ref):
+                self.assertFalse(self.read_only(ref), 'the line and master must still write the Gradle cache')
+
 
 class CandidateGate(unittest.TestCase):
     """B-CI-303: one candidate must prove every required check, not just a green aggregate."""
