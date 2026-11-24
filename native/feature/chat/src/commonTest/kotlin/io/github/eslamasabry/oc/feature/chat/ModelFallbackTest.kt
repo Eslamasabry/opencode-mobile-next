@@ -5,13 +5,16 @@ import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
+import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.ModelFallback
 import io.github.eslamasabry.oc.feature.chat.world.ModelKey
+import io.github.eslamasabry.oc.feature.chat.world.ReplacedModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -172,4 +175,36 @@ class ModelFallbackTest {
                 world.calls,
             )
         }
+
+    @Test
+    fun `B-523-011 presenter surfaces ModelReplaced status at lowest priority and dismissStatus clears it`() {
+        val m2 = model("prov", "m2")
+        val modelsFlow =
+            MutableStateFlow(
+                ComposerModels(
+                    choices = listOf(m2),
+                    selected = m2,
+                    replaced = ReplacedModel("Gone Model", "Sonnet 5"),
+                )
+            )
+        val world =
+            object : FakeChatWorld() {
+                override val models: StateFlow<ComposerModels> = modelsFlow
+            }
+        val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
+
+        val status = presenter.current().status
+        assertEquals(ChatStatusKind.ModelReplaced, status?.kind)
+        assertEquals("Gone Model", status?.oldModel)
+        assertEquals("Sonnet 5", status?.newModel)
+
+        world.link.value = ChatLink.Offline
+        assertEquals(ChatStatusKind.Offline, presenter.current().status?.kind)
+
+        world.link.value = ChatLink.Live
+        assertEquals(ChatStatusKind.ModelReplaced, presenter.current().status?.kind)
+
+        presenter.dismissStatus(status!!.id)
+        assertNull(presenter.current().status)
+    }
 }

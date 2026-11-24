@@ -1929,6 +1929,13 @@ private fun statusLine(
                         icon = KitIcons.restore,
                     ),
             )
+        ChatStatusKind.ModelReplaced ->
+            KitStatus(
+                KitStatusKind.Info,
+                "",
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
+            )
     }
 
 /**

@@ -1985,6 +1985,41 @@ class WorldComposerFilesModelsTest {
             assertIs<Outcome.Ok<Unit>>(stale.world.loadModels())
             assertNull(stale.world.models.value.selected)
         }
+
+    @Test
+    fun `B-523-010 loadModels records replaced model on stale fallback and clears it on send or selectModel`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "gone"))
+            f.operations.catalog =
+                Outcome.Ok(snapshot(catalogModel("m1", enabled = false), catalogModel("m2", name = "Model Two")))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "gone"), null))
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            assertEquals(
+                io.github.eslamasabry.oc.feature.chat.world.ReplacedModel("Gone", "Model Two"),
+                f.world.models.value.replaced,
+            )
+            f.world.draftChanged("hi")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("hi"))
+            runCurrent()
+            assertNull(f.world.models.value.replaced)
+
+            val byDefault = Fixture(this, selection = null)
+            byDefault.operations.catalog =
+                Outcome.Ok(snapshot(catalogModel("m2", name = "Model Two"), catalogModel("m3", name = "Model Three")))
+            byDefault.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "old-free"), null))
+            byDefault.switchesModels()
+            byDefault.open()
+            assertIs<Outcome.Ok<Unit>>(byDefault.world.loadModels())
+            assertEquals(
+                io.github.eslamasabry.oc.feature.chat.world.ReplacedModel("Old Free", "Model Two"),
+                byDefault.world.models.value.replaced,
+            )
+            val m3 = byDefault.world.models.value.choices.first { it.modelId == "m3" }
+            assertIs<Outcome.Ok<Unit>>(byDefault.world.selectModel(m3))
+            assertNull(byDefault.world.models.value.replaced)
+        }
 }
 
 /** The header port's context-usage memory, unused by these tests. */
