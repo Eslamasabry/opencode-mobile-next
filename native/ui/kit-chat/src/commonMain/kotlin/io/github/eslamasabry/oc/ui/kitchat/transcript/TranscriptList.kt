@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
@@ -39,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -61,6 +63,17 @@ import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 
+/** Test-only switch for comparing transcript scroll-anchor mechanisms (DESIGN R4, S1). */
+public enum class TranscriptAnchor {
+    Today,
+    NormalOrder,
+    SameFrame,
+}
+
+/** Provides [TranscriptAnchor] to [rememberTranscriptListState]; production never provides it. */
+public val LocalTranscriptAnchor: ProvidableCompositionLocal<TranscriptAnchor> =
+    staticCompositionLocalOf { TranscriptAnchor.Today }
+
 /**
  * The transcript list's scroll state (plan 09 §7.3, plan 08 §5.1 follow-scroll). Hoisted per chat
  * entry.
@@ -75,6 +88,7 @@ internal constructor(
     public val lazy: LazyListState,
     followingState: MutableState<Boolean>,
     private val density: Density,
+    public val anchor: TranscriptAnchor = TranscriptAnchor.Today,
 ) {
     /**
      * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the
@@ -130,7 +144,8 @@ public fun rememberTranscriptListState(): TranscriptListState {
     val lazy = rememberLazyListState()
     val following = rememberSaveable { mutableStateOf(true) }
     val density = LocalDensity.current
-    return remember(lazy, following, density) { TranscriptListState(lazy, following, density) }
+    val anchor = LocalTranscriptAnchor.current
+    return remember(lazy, following, density, anchor) { TranscriptListState(lazy, following, density, anchor) }
 }
 
 /**
