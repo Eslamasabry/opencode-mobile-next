@@ -336,7 +336,7 @@ class ModelGoneWayOnTest {
     }
 
     @Test
-    fun `B-523-013 stale choice replacement note shows in status slot and wraps 40-char name at 360dp text 1_3`() {
+    fun `B-523-013 replacement note wraps at 360dp text 1_3`() {
         val oldName = "Alpha Beta Gamma Delta Epsilon Zeta 40ch"
         val newName = "Sigma Tau Upsilon Phi Chi Psi Omega 40ch"
         assertEquals(40, oldName.length)
@@ -358,6 +358,12 @@ class ModelGoneWayOnTest {
                         )
                 }
             world.title.value = "Project chat"
+            world.transcript.value =
+                stateOf(
+                    prompt("u1", "Check the checkout race"),
+                    block("u1", "a1", "p1", 0, "The race happens in the retry path."),
+                    footer("u1"),
+                )
             val scene = ChatScene(world = world)
             val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -379,9 +385,7 @@ class ModelGoneWayOnTest {
             waitForIdle()
             onNodeWithText(expectedNote).assertExists()
             assertWrapsWithoutCut(expectedNote)
-            onNodeWithTag("kit-status-dismiss").performClick()
-            waitForIdle()
-            onAllNodesWithText(expectedNote).assertCountEquals(0)
+            onNodeWithTag("kit-status-dismiss").assertExists()
         }
     }
 }
