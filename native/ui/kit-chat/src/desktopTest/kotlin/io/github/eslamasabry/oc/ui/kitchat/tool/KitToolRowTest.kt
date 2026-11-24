@@ -351,7 +351,7 @@ class KitToolRowTest {
         }
 
     @Test
-    fun `B-CHAT-567 a group row keeps a 48 dp target at 1.3x text`() =
+    fun `B-CHAT-567 a group row keeps a 48 dp target at 1_3x text`() =
         runComposeUiTest {
             setContent {
                 ChatTestTheme(fontScale = 1.3f) {
