@@ -47,13 +47,20 @@ class JourneyWiringTest {
         ) + StartStepKind.entries.map { SetupError.StartStepFailed(it) }
 
     @Test
-    fun `B-SETUP-012 a start that timed out sends timeout, ownership sends permission, every other start kind unknown`(
-    ) {
+    fun `B-SETUP-012 start kinds and busy port map to their closed fail kinds`() {
         val words = StartStepKind.entries.associateWith { setupFailKindOf(SetupError.StartStepFailed(it)) }
         assertEquals(
-            mapOf(StartStepKind.TimedOut to "timeout", StartStepKind.Ownership to "permission"),
+            mapOf(
+                StartStepKind.TimedOut to "timeout",
+                StartStepKind.Ownership to "permission",
+                StartStepKind.Exited to "exited",
+                StartStepKind.Refused to "refused",
+                StartStepKind.Password to "password",
+                StartStepKind.Withdrawn to "withdrawn",
+            ),
             words.filterValues { it != "unknown" },
         )
+        assertEquals("port_busy", setupFailKindOf(SetupError.PortBusy(4096)))
     }
 
     @Test
