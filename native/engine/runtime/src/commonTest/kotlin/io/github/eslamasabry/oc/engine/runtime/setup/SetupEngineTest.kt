@@ -585,7 +585,7 @@ class SetupEngineTest {
     // ---- B-SETUP-009 -------------------------------------------------------------------------------------------
 
     @Test
-    fun `B-SETUP-009 a start that timed out keeps its kind in setup.json and after a restore`() = runTest {
+    fun `B-SETUP-009 a start that timed out keeps its kind in setup json and after a restore`() = runTest {
         val engine = engine()
         engine.finisher = SetupFinisher { r ->
             r.failed(
