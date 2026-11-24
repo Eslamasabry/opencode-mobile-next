@@ -599,7 +599,7 @@ private fun StepRow(
         val runKey = "run:${lead.partId}"
         val runOpen = host.folds.open[runKey] == true
         KitToolRow(
-            view = runView(steps, family, host.clock),
+            view = runView(steps, family, host.work, host.clock),
             opened = runOpen,
             onToggle = { host.folds.open[runKey] = !runOpen },
             modifier = Modifier.testTag("chat-step-run-${lead.partId}"),
@@ -658,7 +658,7 @@ private fun StepFamily.toKitKind(): KitToolKind =
 
 /** A run's row: "Ran 6 commands", what they did (or the running one's words), how long; failures named. */
 @Composable
-private fun runView(steps: List<TurnStep>, family: StepFamily, clock: FactsClock): KitToolView {
+private fun runView(steps: List<TurnStep>, family: StepFamily, work: TurnWork, clock: FactsClock): KitToolView {
     val live = steps.lastOrNull { it.state == StepState.Running || it.state == StepState.Pending }
     val ended = steps.count { it.state != StepState.Running && it.state != StepState.Pending }
     val total = steps.mapNotNull { it.durationMs }.takeIf { it.size == steps.size }?.sum()
@@ -675,6 +675,7 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, clock: FactsClock
     val icon =
         if (live != null) stepGlyph(live.facts)
         else steps.map { stepGlyph(it.facts) }.distinct().singleOrNull()
+    val running = live?.state == StepState.Running
     return KitToolView(
         id = "run:${steps.first().partId}",
         kind = family.toKitKind(),
@@ -687,6 +688,7 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, clock: FactsClock
         removed = null,
         statusLabel = stepStatus(if (live != null) StepState.Running else StepState.Done, null),
         icon = icon,
+        still = running && work.state != WorkLineState.Running,
     )
 }
 
@@ -728,7 +730,8 @@ private fun OneStep(
     }
     val key = "step:${step.partId}"
     val nowMs = if (!waitingForYou && step.state == StepState.Running) clock.read() else 0L
-    val view = stepToolView(step, nowMs, waitingForYou, stopSaidBelow)
+    val still = step.state == StepState.Running && host.work.state != WorkLineState.Running
+    val view = stepToolView(step, nowMs, waitingForYou, stopSaidBelow, still)
     val text = stepOutputShown(step, host.folds.full[key] == true)
     val child = step.facts.childSessionId?.takeIf { host.onOpenSession != null }
     val files = if (host.onOpenFile == null) emptyList() else step.output.artifacts.filter(::canOpenArtifact)
@@ -798,6 +801,7 @@ private fun stepToolView(
     nowMs: Long,
     waitingForYou: Boolean,
     stopSaidBelow: Boolean,
+    still: Boolean,
 ): KitToolView {
     val f = step.facts
     val out = step.output
@@ -825,6 +829,7 @@ private fun stepToolView(
         added = f.added,
         removed = f.removed,
         statusLabel = stepStatusLabel(step, waitingForYou),
+        still = still,
     )
 }
 
