@@ -630,7 +630,7 @@ class SetupEngineTest {
                 StartProblem.Busy to StartStepKind.Refused,
                 StartProblem.ComponentRecovery to StartStepKind.Ownership,
             )
-        assertEquals(StartProblem.entries, table.map { it.first })
+        assertEquals(StartProblem.entries.toSet(), table.map { it.first }.toSet(), "every start problem is listed")
         for ((problem, kind) in table) assertEquals(kind, StartStepKind.of(problem), problem.name)
     }
 
