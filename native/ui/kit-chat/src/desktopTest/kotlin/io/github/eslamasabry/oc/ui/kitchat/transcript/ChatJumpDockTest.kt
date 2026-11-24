@@ -269,11 +269,12 @@ class ChatJumpDockTest {
             .groupBy { it.words() }
             .mapValues { (_, nodes) -> nodes.map { it.boundsInRoot.top }.sorted() }
 
-    private fun ComposeUiTest.assertTops(rest: Map<String, List<Float>>, when: String) {
+    /** Each text node is where it was at rest ([rest]), within half a pixel. */
+    private fun ComposeUiTest.assertTops(rest: Map<String, List<Float>>, moment: String) {
         val now = tops()
         for ((words, was) in rest) for (top in was) {
             val tops = now[words].orEmpty()
-            assertTrue(tops.any { abs(it - top) <= 0.5f }, "$when: \"$words\" moved from $top to $tops")
+            assertTrue(tops.any { abs(it - top) <= 0.5f }, "$moment: \"$words\" moved from $top to $tops")
         }
     }
 
@@ -385,7 +386,7 @@ class ChatJumpDockTest {
             assertTrue(words.isNotEmpty(), "the row shows no words")
             for (node in words) {
                 val layouts = mutableListOf<TextLayoutResult>()
-                node.config[SemanticsActions.GetTextLayoutResult].action(layouts)
+                node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
                 assertTrue(layouts.none { it.hasVisualOverflow }, "\"${node.words()}\" is cut: $layouts")
                 val place = node.boundsInRoot
                 assertTrue(inside(place, row), "\"${node.words()}\" lies at $place, outside the row $row")
