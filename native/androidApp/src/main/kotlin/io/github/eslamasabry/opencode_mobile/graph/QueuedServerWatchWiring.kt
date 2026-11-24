@@ -36,8 +36,7 @@ import kotlinx.coroutines.CoroutineScope
 @SingleIn(AppScope::class)
 @Inject
 // one collaborator added to an existing constructor; splitting it is its own refactor
-@Suppress("LongParameterList")
-class AppQueuedServerWatch(
+class AppQueuedServerWatch @Suppress("LongParameterList") constructor(
     private val application: Application,
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,

@@ -119,8 +119,7 @@ private const val SAVED_RECENT_MODELS = 8
 @Inject
 @ContributesBinding(AppScope::class)
 // one collaborator added to an existing constructor; splitting it is its own refactor
-@Suppress("LongParameterList")
-public class GraphChatWorlds(
+public class GraphChatWorlds @Suppress("LongParameterList") constructor(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
     private val recentBackings: Set<RecentModelsBacking> = emptySet(),
@@ -213,8 +212,7 @@ public class GraphChatWorlds(
  * is connected; send admission requires storage.
  */
 // one collaborator added to an existing constructor; splitting it is its own refactor
-@Suppress("LongParameterList")
-internal class GraphChatWorld(
+internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     override val ref: ConversationRef,
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
@@ -3207,9 +3205,9 @@ internal class GraphChatWorld(
     }
 
     override suspend fun reload(): Outcome<Unit> {
+        if (opening) return Outcome.Ok(Unit)
         // A person's Try again waits for a server that is not ready yet afresh.
         endWait()
-        if (opening) return Outcome.Ok(Unit)
         if (connectionOpener == null || registry.graphFor(ref) != null || appStartsServer) {
             bind(registry.graphFor(ref))
         } else {
