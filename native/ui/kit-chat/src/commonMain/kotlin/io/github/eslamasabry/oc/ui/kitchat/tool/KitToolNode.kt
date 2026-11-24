@@ -114,7 +114,8 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
             MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
         val settling = finishedFromRunning && transition.value < 1f
         when (view.status) {
-            KitToolStatus.Running -> KitStepTile(icon, KitStepNodeLook.Running, size, modifier)
+            KitToolStatus.Running ->
+                KitStepTile(icon, KitStepNodeLook.Running, size, modifier, animate = !view.still)
             KitToolStatus.Pending -> KitStepTile(icon, KitStepNodeLook.Queued, size, modifier)
             // F: lib/ui/kit/chat/kit_tool_row.dart:694 waitingForYou draws the waiting node
             KitToolStatus.WaitingForYou -> KitStepTile(icon, KitStepNodeLook.Waiting, size, modifier)
@@ -172,7 +173,13 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         else if (running) {
             // Alone, the glyph keeps the size it has at rest.
             val scale = GLYPH_SHARE / GLYPH_SHARE_FRAMED
-            KitStepTile(view.icon ?: view.kind.icon(), KitStepNodeLook.Running, size, glyphScale = scale)
+            KitStepTile(
+                view.icon ?: view.kind.icon(),
+                KitStepNodeLook.Running,
+                size,
+                glyphScale = scale,
+                animate = !view.still,
+            )
         } else KitToolGlyph(view.icon ?: view.kind.icon(), colors.text2, size * GLYPH_SHARE)
         if (!running && finishedFromRunning && transition.value < 1f && view.status != KitToolStatus.Done)
             Canvas(Modifier.size(size)) {
