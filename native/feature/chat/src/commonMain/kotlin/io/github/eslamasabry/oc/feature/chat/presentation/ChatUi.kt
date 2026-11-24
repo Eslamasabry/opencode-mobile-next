@@ -88,8 +88,8 @@ public data class ChatUi(
      * turn says "Attach {file} again to send".
      */
     val attachAgain: AttachAgainUi? = null,
-    /** The one-time GitHub star ask rides under the live line while this turn waits for its reply. */
-    val starAsk: Boolean = false,
+    /** The one-time first-reply ask riding the newest finished reply's footer; null when not shown. */
+    val replyAsk: ReplyAskUi? = null,
     /**
      * Set up at first use: the failed replies (by turn id) whose agent needs setting up; they say so and offer the
      * agent's set-up instead of today's fixes. A turn missing here keeps today's words.
@@ -490,13 +490,31 @@ public enum class ChatPlace {
     Appearance,
 }
 
+/** Stage of the one-time first-reply footer ask. */
+public enum class ReplyAskStage { Ask, Thanks, Sorry }
+
+/** State of the one-time first-reply ask on [turnId]'s footer. */
+public data class ReplyAskUi(
+    val turnId: String,
+    val stage: ReplyAskStage = ReplyAskStage.Ask,
+    val menu: Boolean = false,
+)
+
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
-    /** "Star on GitHub" on the live line's ask: opens the repository and ends the ask. */
-    public fun starTapped() {}
+    public fun replyAskYes() = Unit
 
-    /** "Not now" on the live line's ask. */
-    public fun starDismissed() {}
+    public fun replyAskNo() = Unit
+
+    public fun replyAskSkip() = Unit
+
+    public fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse) = Unit
+
+    public fun replyAskMenuClosed() = Unit
+
+    public fun replyAskStar() = Unit
+
+    public fun replyAskReport() = Unit
 
     /** Back (button, gesture or Esc): pops when nothing is lost (07 §3.4). */
     public fun leaveRequested()

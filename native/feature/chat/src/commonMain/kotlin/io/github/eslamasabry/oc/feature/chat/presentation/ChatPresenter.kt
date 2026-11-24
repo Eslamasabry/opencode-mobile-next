@@ -306,19 +306,19 @@ public class ChatPresenter(
             .launchIn(scope)
     }
 
-    override fun starTapped() {
-        if (!local.value.starAsk) return
-        local.update { it.copy(starAsk = false) }
-        star?.report(StarPromptEvent.Tapped)
-        // Opened on the app's own link path; a refusal costs nothing, the ask is already spent.
-        outside?.openOwnLink(StarPromptRules.URL)
-    }
+    override fun replyAskYes() = Unit
 
-    override fun starDismissed() {
-        if (!local.value.starAsk) return
-        local.update { it.copy(starAsk = false) }
-        star?.report(StarPromptEvent.Dismissed)
-    }
+    override fun replyAskNo() = Unit
+
+    override fun replyAskSkip() = Unit
+
+    override fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse) = Unit
+
+    override fun replyAskMenuClosed() = Unit
+
+    override fun replyAskStar() = Unit
+
+    override fun replyAskReport() = Unit
 
     private data class Five(
         val t: TranscriptState,
@@ -558,9 +558,7 @@ public class ChatPresenter(
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
-            starAsk =
-                l.starAsk && !t.run.busy && i.link == ChatLink.Live &&
-                    world.requests.value?.state?.value?.card == null,
+            replyAsk = null,
             setUpReplies = setUpReplies(t.rows),
             signInTurns = signInTurns(t.rows, waiting = i.pending.isNotEmpty()),
         )

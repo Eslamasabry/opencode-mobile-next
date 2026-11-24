@@ -10,10 +10,16 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 /** What the ask reports, in words only: no conversation, no text, no ids. */
 public enum class StarPromptEvent { Shown, Tapped, Dismissed }
 
+/** The person's answer to the first-reply footer ask (stored on-device only). */
+public enum class ReplyAskAnswer { Yes, No, Skip }
+
+/** What the person uses the app for (stored on-device only). */
+public enum class ReplyAskUse { Everyday, Code, Both, Looking }
+
 /**
  * The one-time "star us on GitHub" ask, app-wide (not per conversation). The chat reports when its own prompt starts a
- * turn and when a turn ends; the app answers whether to ask now. The chat shows the card and reports what the person
- * did; the app counts, remembers and sends the (opt-in) analytics.
+ * turn and when a turn ends; the app answers whether to ask now. The chat shows the ask on the reply's footer and
+ * reports what the person did; the app counts, remembers and sends the (opt-in) analytics.
  */
 public interface ChatStarPrompt {
     /** A prompt started a turn (counted; it never asks). */
@@ -24,6 +30,10 @@ public interface ChatStarPrompt {
      * already remembered as asked, so it never repeats.
      */
     public suspend fun replyEnded(success: Boolean): Boolean
+
+    public suspend fun answered(answer: ReplyAskAnswer) = Unit
+
+    public suspend fun usedFor(use: ReplyAskUse) = Unit
 
     public fun report(event: StarPromptEvent)
 }

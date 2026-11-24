@@ -12,11 +12,28 @@ import kotlinx.coroutines.sync.withLock
  * started a turn, how many finished with a good reply, when the first prompt was sent (milliseconds, 0 = not yet), and
  * whether the ask was ever shown. Stored in one string under [StarPromptRules.KEY] as `p=<n>;r=<n>;s=<0|1>;f=<ms>`.
  */
+/** Answer stored locally under `a=` in [StarPromptRules.KEY]; never sent off-device. */
+public enum class StarPromptAnswer(public val code: String) {
+    Yes("y"),
+    No("n"),
+    Skip("k"),
+}
+
+/** Use choice stored locally under `u=` in [StarPromptRules.KEY]; never sent off-device. */
+public enum class StarPromptUse(public val code: String) {
+    Everyday("e"),
+    Code("c"),
+    Both("b"),
+    Looking("l"),
+}
+
 public data class StarPromptState(
     val prompts: Int = 0,
     val replies: Int = 0,
     val shown: Boolean = false,
     val firstMs: Long = 0,
+    val answer: StarPromptAnswer? = null,
+    val use: StarPromptUse? = null,
 )
 
 /** The rules, free of storage so they are tested with plain values. */
@@ -102,4 +119,10 @@ public class StarPromptLedger(
             val stored = store.commit(lanes.app) { putString(StarPromptRules.KEY, StarPromptRules.encode(next)) }
             ask && stored is Outcome.Ok
         }
+
+    /** Records the person's Yes/No/Skip answer once. */
+    public suspend fun answered(answer: StarPromptAnswer) = Unit
+
+    /** Records what the person uses the app for once. */
+    public suspend fun usedFor(use: StarPromptUse) = Unit
 }
