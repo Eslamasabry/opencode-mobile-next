@@ -133,6 +133,16 @@ def find(nodes, text, exact=True):
     return [n for n in nodes if n.label().strip() and (n.label().strip() == t if exact else t in n.label())]
 
 
+def row_titles(nodes, text):
+    """The exact [text] labels that are a row's own title: nothing labelled sits to their left on the same line. A row's
+    value can read the same as another row's title (Settings > Server shows "Servers  This phone" above the "This phone"
+    row); the value has its row's title to its left, so it is left out."""
+    def beside(a, b):
+        return a.box[1] < b.box[3] and b.box[1] < a.box[3] and b.box[2] <= a.box[0]
+    hits = find(nodes, text)
+    return [h for h in hits if not any(n is not h and n.label().strip() and beside(h, n) for n in nodes)]
+
+
 def tap(node):
     x, y = node.center
     adb('shell', 'input', 'tap', str(x), str(y))
@@ -267,13 +277,13 @@ def open_this_phone():
         nodes = screen()
     else:
         raise Fail(f'no "{server_row}" row in Settings')
-    v, nodes = wait_for('This phone row', 20, lambda ns: find(ns, word('settingsV3ThisPhone')))
+    v, nodes = wait_for('This phone row', 20, lambda ns: row_titles(ns, word('settingsV3ThisPhone')))
     for _ in range(6):
         if v:
             tap(v[0])
             return
         swipe_up()
-        v = find(screen(), word('settingsV3ThisPhone'))
+        v = row_titles(screen(), word('settingsV3ThisPhone'))
     raise Fail(f'no "{word("settingsV3ThisPhone")}" row under Settings > {server_row}')
 
 

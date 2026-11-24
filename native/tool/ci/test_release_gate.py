@@ -337,6 +337,21 @@ class SmokeScript(unittest.TestCase):
         self.assertEqual(labels(with_agent), [with_agent])
         self.assertEqual(labels('Message', 'Starting'), [])
 
+    def test_the_this_phone_row_is_opened_not_the_servers_rows_value_that_reads_the_same(self):
+        # Settings > Server as the 3.0.2 candidate draws it: the "Servers" row's value reads "This phone" and comes first.
+        import xml.etree.ElementTree as ET
+        name = self.mod.word('settingsV3ThisPhone')
+        xml = ('<hierarchy><node text="Servers" class="x" bounds="[148,325][798,383]"/>'
+               f'<node text="{name}" class="x" bounds="[819,331][988,379]"/>'
+               '<node text="What this server can do" class="x" bounds="[148,472][978,530]"/>'
+               f'<node text="{name}" class="x" bounds="[148,619][833,677]"/>'
+               '<node text="Installed" class="x" bounds="[854,625][988,673]"/></hierarchy>')
+        nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
+        self.assertEqual(len(self.mod.find(nodes, name)), 2)
+        self.assertEqual([n.box for n in self.mod.row_titles(nodes, name)], [(148, 619, 833, 677)])
+        alone = [n for n in nodes if n.box[1] > 400]
+        self.assertEqual([n.box for n in self.mod.row_titles(alone, name)], [(148, 619, 833, 677)])
+
     def test_it_refuses_without_a_serial_and_writes_no_serial_into_the_result(self):
         env = {k: v for k, v in os.environ.items() if k != 'OC_SMOKE_SERIAL'}
         p = subprocess.run([sys.executable, '-I', os.path.join(HERE, '..', 'qa', 'release_smoke.py'), '--new-apk', __file__], env=env,
