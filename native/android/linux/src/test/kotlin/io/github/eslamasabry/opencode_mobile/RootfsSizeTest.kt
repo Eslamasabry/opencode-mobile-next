@@ -122,7 +122,7 @@ class RootfsSizeTest {
         val expected = oldSizeOf(root)
         assertEquals(3220L, expected)
         assertEquals(expected, RootfsWalk.size(root.toPath()))
-        assertEquals(0L, oldSizeOf(File(root, "gone").toPath()))
+        assertEquals(0L, oldSizeOf(File(root, "gone")))
         assertEquals(0L, RootfsWalk.size(File(root, "gone").toPath()))
         assertEquals(0L, RootfsWalk.size(File(root, "rel-link").toPath()))
     }
