@@ -179,18 +179,20 @@ internal fun TimelineStep(
     // F: lib/ui/kit/chat/kit_tool_row.dart:536-556 and 1216-1244 _stepWords
     val words: (@Composable () -> Unit)? =
         when (status) {
-            KitToolStatus.Running ->
-                if (duration == null) null
-                else {
-                    {
-                        KitText(duration, Modifier.testTag("kit-step-counter"), role = TypeRole.Caption, tone = TextTone.Secondary, maxLines = 1, tabular = true)
-                    }
-                }
+            KitToolStatus.Running,
             KitToolStatus.Done ->
                 if (duration == null) null
                 else {
                     {
-                        KitText(duration, Modifier.testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, maxLines = wordLines)
+                        val running = status == KitToolStatus.Running
+                        KitText(
+                            duration,
+                            Modifier.testTag(if (running) "kit-step-counter" else "kit-tool-duration"),
+                            role = TypeRole.Caption,
+                            tone = if (running) TextTone.Secondary else TextTone.Tertiary,
+                            maxLines = if (running) 1 else wordLines,
+                            tabular = running,
+                        )
                     }
                 }
             // LOOK-5: a failed step's word is plain text1, never a danger colour.
@@ -245,7 +247,7 @@ internal fun TimelineStep(
     // each neighbour's edge; from 1.3x text the words wrap and the row is taller than 48 on its own.
     @Composable
     fun Target(tappable: @Composable (Modifier) -> Unit) {
-        if (wide) tappable(Modifier.fillMaxWidth())
+        if (wide) tappable(Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp))
         else
             Box(Modifier.fillMaxWidth().height(m.stepLine), contentAlignment = Alignment.Center) {
                 tappable(Modifier.fillMaxWidth().requiredHeight(tokens.minTarget.dp)) // F: lib/ui/kit/chat/kit_tool_row.dart:600
