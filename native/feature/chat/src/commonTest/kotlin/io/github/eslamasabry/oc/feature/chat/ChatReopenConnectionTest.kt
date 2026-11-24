@@ -224,4 +224,24 @@ class ChatReopenConnectionTest {
         worlds.release(second)
         assertEquals(listOf(ref.profileId to true, ref.profileId to false), opener.holds)
     }
+
+    @Test
+    fun `B-CHAT-427 a second Try again while connecting keeps the Connecting line`() = runTest {
+        val registry = registry(FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20)))))
+        val opener = Opener(registry, profile)
+        val world = GraphChatWorld(ref, registry, connectionOpener = opener)
+        world.attach()
+        runCurrent()
+        backgroundScope.launch { world.reload() }
+        runCurrent()
+        backgroundScope.launch { world.reload() }
+        runCurrent()
+        assertEquals(ChatServerWait.Connecting, world.serverWait.value)
+        assertEquals(ChatLoad.Loading, world.load.value)
+        assertEquals(listOf(ref.profileId), opener.opens)
+        opener.gate.complete(Unit)
+        runCurrent()
+        assertEquals(ChatLoad.Live, world.load.value)
+        world.detach()
+    }
 }
