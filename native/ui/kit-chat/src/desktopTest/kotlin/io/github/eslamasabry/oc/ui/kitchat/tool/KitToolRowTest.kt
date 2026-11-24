@@ -1,8 +1,11 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
@@ -22,8 +25,15 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kitchat.ChatFakePlatform
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -289,4 +299,82 @@ class KitToolRowTest {
         onAllNodesWithTag("kit-command-no-output", useUnmergedTree = true).assertCountEquals(1)
         onNodeWithText("No output", useUnmergedTree = true).assertIsDisplayed()
     }
+
+    @Test
+    fun `B-CHAT-566 the duration text keeps its identity from Running to Done`() =
+        runComposeUiTest {
+            var status by mutableStateOf(KitToolStatus.Running)
+            var duration by mutableStateOf("25.0s")
+            mainClock.autoAdvance = false
+            setContent {
+                KitTheme(
+                    appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Full),
+                    platform = ChatFakePlatform(),
+                    localeTag = "en",
+                    stillFrame = false,
+                ) {
+                    CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                        KitStepList {
+                            KitToolRow(
+                                view(
+                                    kind = KitToolKind.Shell,
+                                    title = "Ran tests",
+                                    subject = null,
+                                    status = status,
+                                    durationLabel = duration,
+                                ),
+                                opened = false,
+                                onToggle = {},
+                            )
+                        }
+                    }
+                }
+            }
+            mainClock.advanceTimeBy(300)
+            val before = onNodeWithTag("kit-step-counter", useUnmergedTree = true).fetchSemanticsNode()
+            val runningId = before.id
+            var prevTop = before.boundsInRoot.top
+            var maxMove = 0f
+            status = KitToolStatus.Done
+            duration = "1.0s"
+            try {
+                repeat(30) { frame ->
+                    mainClock.advanceTimeByFrame()
+                    val node = onNodeWithTag("kit-tool-duration", useUnmergedTree = true).fetchSemanticsNode()
+                    maxMove = maxOf(maxMove, abs(node.boundsInRoot.top - prevTop))
+                    prevTop = node.boundsInRoot.top
+                    assertEquals(runningId, node.id, "frame $frame: duration text recreated across Running -> Done")
+                }
+            } finally {
+                println("B-CHAT-566 maxMove=$maxMove")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-567 a group row keeps a 48 dp target at 1.3x text`() =
+        runComposeUiTest {
+            setContent {
+                ChatTestTheme(fontScale = 1.3f) {
+                    KitStepList {
+                        KitToolRow(
+                            view(
+                                kind = KitToolKind.Read,
+                                title = "Read 2 files",
+                                subject = null,
+                                detail = null,
+                                status = KitToolStatus.Done,
+                            ),
+                            opened = false,
+                            onToggle = {},
+                            modifier = Modifier.testTag("group-row"),
+                            group = true,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            val height = onNodeWithTag("group-row", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.height
+            println("B-CHAT-567 maxMove=0.0 height=$height")
+            assertTrue(height >= 48f, "wide group row kept a 48 dp target: $height")
+        }
 }

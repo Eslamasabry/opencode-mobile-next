@@ -1,10 +1,14 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
+import io.github.eslamasabry.oc.ui.kitchat.turn.LIVE_LINE_TAG
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +22,8 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
+import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.ui.stepGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.math.abs
@@ -309,6 +315,193 @@ class StepsCraftTest {
             val back = boundsOfText(StepsCraftScene.REPLY)
             assertEquals(reply.top, back.top, 1f, "folding brings the reply back: $reply → $back")
             onNodeWithText(StepsCraftScene.REPLY).assertIsDisplayed()
+        }
+
+    private fun readsWalkFacts(phase: Int) =
+        when (phase) {
+            1 -> StepsCraftScene.readsAndStepsFacts(3, 0, true)
+            2 -> StepsCraftScene.readsAndStepsFacts(4, 0, false)
+            3 -> StepsCraftScene.readsAndStepsFacts(4, 1, true, lastHasOutput = true)
+            else -> StepsCraftScene.readsAndStepsFacts(4, 2, true)
+        }
+
+    @Test
+    fun `B-CHAT-560 the live line keeps its top and height between steps`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = readsWalkFacts(phase))
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            val live0 = boundsOfTag("chat-live-line")
+            var prev = live0
+            var maxMove = 0f
+            try {
+                for (next in 1..4) {
+                    phase = next
+                    repeat(40) { frame ->
+                        mainClock.advanceTimeByFrame()
+                        val box = boundsOfTag("chat-live-line")
+                        maxMove = maxOf(maxMove, abs(box.top - prev.top), abs(box.height - prev.height))
+                        prev = box
+                        assertTrue(
+                            abs(box.top - live0.top) <= 0.5f && abs(box.height - live0.height) <= 0.5f,
+                            "phase $next frame $frame live line moved: base=$live0 now=$box",
+                        )
+                    }
+                }
+            } finally {
+                println("B-CHAT-560 maxMove=$maxMove")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-561 the status word holds Working between steps`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = readsWalkFacts(phase))
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            var prevTop = boundsOfTag("chat-live-line").top
+            var maxMove = 0f
+            try {
+                for (next in 1..4) {
+                    phase = next
+                    repeat(40) { frame ->
+                        mainClock.advanceTimeByFrame()
+                        val top = boundsOfTag("chat-live-line").top
+                        maxMove = maxOf(maxMove, abs(top - prevTop))
+                        prevTop = top
+                        val words =
+                            onNodeWithTag(LIVE_LINE_TAG)
+                                .fetchSemanticsNode()
+                                .config
+                                .getOrNull(SemanticsProperties.Text)
+                                .orEmpty()
+                                .joinToString(" ") { it.text }
+                        assertTrue(
+                            "Working" in words && "Thinking" !in words,
+                            "phase $next frame $frame status words='$words'",
+                        )
+                    }
+                }
+            } finally {
+                println("B-CHAT-561 maxMove=$maxMove")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-562 a slow model after steps still says Still thinking and its hint`() =
+        kitUiTest(412, 1200) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            val base = StepsCraftScene.alternatingFacts(8, false)
+            val runStart = base.runStartedAtMs ?: 0L
+            val facts = base.copy(live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow), nowMs = runStart + 300_000)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            onNodeWithText("Still thinking", substring = true, useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Some models think quietly", substring = true, useUnmergedTree = true).assertIsDisplayed()
+            onAllNodesWithText("Working", substring = true, useUnmergedTree = true).assertCountEquals(0)
+            println("B-CHAT-562 maxMove=0.0")
+        }
+
+    @Test
+    fun `B-CHAT-563 rows never overlap while a step arrives`() =
+        kitUiTest(412, 1200) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var arrived by mutableStateOf(false)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        if (!arrived) StepsCraftScene.alternatingFacts(8, true)
+                        else StepsCraftScene.alternatingFacts(9, true)
+                    ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            val rowMatcher =
+                SemanticsMatcher("step, fold or live row") { node ->
+                    val tag = node.config.getOrNull(SemanticsProperties.TestTag)
+                    tag == STEP_FOLD_ROW_TAG || tag == "chat-live-line" || tag?.startsWith("chat-step-") == true
+                }
+            var prevLiveTop = boundsOfTag("chat-live-line").top
+            var maxMove = 0f
+            arrived = true
+            try {
+                repeat(40) { frame ->
+                    mainClock.advanceTimeByFrame()
+                    val nodes =
+                        onAllNodes(rowMatcher, useUnmergedTree = true)
+                            .fetchSemanticsNodes()
+                            .map { it.config.getOrNull(SemanticsProperties.TestTag).orEmpty() to it.boundsInRoot }
+                            .sortedBy { it.second.top }
+                    nodes.firstOrNull { it.first == "chat-live-line" }?.second?.top?.let { top ->
+                        maxMove = maxOf(maxMove, abs(top - prevLiveTop))
+                        prevLiveTop = top
+                    }
+                    for (i in 1 until nodes.size) {
+                        val prev = nodes[i - 1]
+                        val curr = nodes[i]
+                        assertTrue(
+                            curr.second.top >= prev.second.bottom - 0.5f,
+                            "frame $frame overlap: ${prev.first}=${prev.second} vs ${curr.first}=${curr.second}",
+                        )
+                    }
+                }
+            } finally {
+                println("B-CHAT-563 maxMove=$maxMove")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-564 a running command with output is open on its first frame`() =
+        kitUiTest(412, 900) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var phase by mutableStateOf(1)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts =
+                        if (phase == 1) StepsCraftScene.readsAndStepsFacts(4, 0, true)
+                        else StepsCraftScene.readsAndStepsFacts(4, 1, true, lastHasOutput = true)
+                    ChatScreen(StepsCraftScene.longRunningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            phase = 2
+            var maxMove = 0f
+            try {
+                mainClock.advanceTimeByFrame()
+                val outNodes =
+                    onAllNodesWithText("test output line 1", substring = true, useUnmergedTree = true)
+                        .fetchSemanticsNodes()
+                assertTrue(outNodes.isNotEmpty(), "frame 1: running command output was not open")
+                var prevH = boundsOfTag("chat-step-x1").height
+                repeat(29) { idx ->
+                    mainClock.advanceTimeByFrame()
+                    val h = boundsOfTag("chat-step-x1").height
+                    maxMove = maxOf(maxMove, abs(h - prevH))
+                    assertTrue(h >= prevH - 0.5f, "frame ${idx + 2}: row height shrank $prevH -> $h")
+                    prevH = h
+                }
+            } finally {
+                println("B-CHAT-564 maxMove=$maxMove")
+            }
         }
 
     private companion object {
