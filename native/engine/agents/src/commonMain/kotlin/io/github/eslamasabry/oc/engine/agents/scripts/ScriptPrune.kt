@@ -88,7 +88,11 @@ oc_prune_stale() {
     rm -rf -- "${D}oc_ps_path"
   done || true
 }
-# oc_prune_downloads DIR KEEP: downloads of versions no longer kept go.
+"""
+
+    /** Extra cleanup helpers for old downloads, stale version-check folders and old Node archives. */
+    val LEFTOVERS: String =
+        """# oc_prune_downloads DIR KEEP: downloads of versions no longer kept go.
 oc_prune_downloads() {
   oc_pd_dir=${D}1 oc_pd_keep=${D}2
   [ -d "${D}oc_pd_dir" ] && [ ! -L "${D}oc_pd_dir" ] || return 0

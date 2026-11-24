@@ -239,6 +239,7 @@ printf '%s
 oc_version_pattern=${versionPattern(recipe.version)}
 $PROBE
 ${ScriptPrune.FUNCTION}
+${ScriptPrune.LEFTOVERS}
 $updatePrelude
 command -v python3 >/dev/null && command -v timeout >/dev/null || {
   echo '[oc] Agent setup needs the Linux tools first' >&2; exit 1

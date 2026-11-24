@@ -153,6 +153,7 @@ node_part=/home/oc/.cache/oc-setup/node-$NODE_VERSION-linux-${D}node_arch.tar.gz
 mkdir -p /home/oc/.local/bin /home/oc/.cache/oc-setup
 [ ! -L /home/oc/.local ] || exit 1
 ${ScriptPrune.FUNCTION}
+${ScriptPrune.LEFTOVERS}
 $NODE_HEAL
 $NODE_GUARDS
 node_link_new="${D}node_dir.link.${D}${D}"
@@ -216,6 +217,7 @@ oc_version '$NODE_VERSION'
 
     public val nodeCheck: String = """set -eu
 ${ScriptPrune.FUNCTION}
+${ScriptPrune.LEFTOVERS}
 $NODE_HEAL
 $NODE_GUARDS
 oc_node_heal
