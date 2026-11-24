@@ -54,6 +54,7 @@ class CardToolServerTest {
         val script = File(directory, "server.cjs").apply { writeText(CardToolServer.script(marker.path)) }
         val slow = File(directory, "slow.cjs").apply { writeText("setTimeout(() => require('./server.cjs'), 6000);\n") }
         helper = Helper(slow)
+        helper.awaitReady()
     }
 
     @AfterTest
@@ -358,6 +359,14 @@ class CardToolServerTest {
             thread(isDaemon = true) { stderrBytes += process.errorStream.readBytes().size }
         }
 
+        fun awaitReady() {
+            raw(("""{"jsonrpc":"2.0","id":"ready","method":"ping"}""" + "\n").encodeToByteArray())
+            val line =
+                assertNotNull(lines.poll(READY_SECONDS, TimeUnit.SECONDS), "helper not ready after $READY_SECONDS s")
+            val ready = obj("jsonrpc" to "2.0", "id" to "ready", "result" to JsonObject(emptyMap()))
+            assertEquals(ready, Json.parseToJsonElement(line).jsonObject)
+        }
+
         fun initialize(version: String = "2025-11-25"): JsonObject {
             val reply = request("initialize", initParams(version))
             notification("notifications/initialized")
@@ -410,6 +419,8 @@ class CardToolServerTest {
     }
 
     private companion object {
+        const val READY_SECONDS = 60L
+
         fun node(): String =
             System.getenv("PATH").orEmpty().split(File.pathSeparator).map { File(it, "node") }.firstOrNull { it.canExecute() }?.path
                 ?: File("/opt/node22/bin/node").takeIf { it.canExecute() }?.path
