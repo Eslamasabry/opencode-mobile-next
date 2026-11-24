@@ -134,7 +134,13 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         else if (running) {
             // Alone, the glyph keeps the size it has at rest.
             val scale = GLYPH_SHARE / GLYPH_SHARE_FRAMED
-            KitStepTile(view.icon ?: view.kind.icon(), KitStepNodeLook.Running, size, glyphScale = scale)
+            KitStepTile(
+                view.icon ?: view.kind.icon(),
+                KitStepNodeLook.Running,
+                size,
+                glyphScale = scale,
+                animate = !view.still,
+            )
         } else KitToolGlyph(view.icon ?: view.kind.icon(), colors.text2, size * GLYPH_SHARE)
         val settling = finished && transition.value < 1f
         if (!running && settling && view.status != KitToolStatus.Done)
@@ -212,6 +218,7 @@ private fun RailStepNode(
                 modifier = modifier,
                 glyphColor = if (showTick) colors.success else null,
                 glyphScale = scale,
+                animate = !view.still,
             )
         }
     }

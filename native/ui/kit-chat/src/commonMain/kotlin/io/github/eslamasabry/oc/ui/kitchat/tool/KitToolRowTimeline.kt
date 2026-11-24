@@ -128,7 +128,7 @@ internal fun TimelineStep(
             else -> null
         }
     val title: @Composable () -> Unit = {
-        KitLiveSweep(working = live, step = true) {
+        KitLiveSweep(working = live && !view.still, step = true) {
             KitText(view.title, role = TypeRole.Secondary, tone = tone, maxLines = if (wide) 3 else 1) // F: lib/ui/kit/chat/kit_tool_row.dart:482
         }
     }
@@ -138,7 +138,7 @@ internal fun TimelineStep(
             shellLine ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f)) {
-                        KitLiveSweep(working = live, step = true) {
+                        KitLiveSweep(working = live && !view.still, step = true) {
                             KitMonoText(
                                 redacted(subject.orEmpty()),
                                 tone = tone,

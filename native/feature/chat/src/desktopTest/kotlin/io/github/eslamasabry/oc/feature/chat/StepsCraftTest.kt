@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.ui.stepGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -434,7 +435,11 @@ class StepsCraftTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val base = StepsCraftScene.alternatingFacts(8, false)
             val runStart = base.runStartedAtMs ?: 0L
-            val facts = base.copy(live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow), nowMs = runStart + 300_000)
+            val facts =
+                base.copy(
+                    live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow),
+                    clock = FactsClock.at(runStart + 300_000),
+                )
             mainClock.autoAdvance = false
             setContent {
                 Root(MotionLevel.Full) {

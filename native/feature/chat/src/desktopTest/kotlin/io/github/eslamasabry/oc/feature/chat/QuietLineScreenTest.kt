@@ -18,6 +18,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
@@ -61,7 +62,13 @@ class QuietLineScreenTest {
     private fun render(locale: String, scale: Float, motion: MotionLevel): Unit = kitUiTest(360, 800) {
         val scene = ChatScene()
         val state = scene.live().copy(status = null, rows = persistentListOf(prompt("t", "Explain this carefully")), live = LiveTurnUi(false))
-        var facts by mutableStateOf(TurnFactsUi(nowMs = 72_000, runStartedAtMs = 0, live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow)))
+        var facts by mutableStateOf(
+            TurnFactsUi(
+                clock = FactsClock.at(72_000),
+                runStartedAtMs = 0,
+                live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow),
+            )
+        )
         setContent { Root(locale, scale, motion) { scene.Screen(state, facts = facts, projectName = null) } }
         val prefix = if (locale == "ar") "ما زال يفكر" else "Still thinking"
         fun words(): String = onNodeWithText(prefix, substring = true, useUnmergedTree = true)
@@ -85,13 +92,13 @@ class QuietLineScreenTest {
         val before = words()
         assertTrue(Regex("\\p{N}").containsMatchIn(before), "the live label includes elapsed time")
         val stop = boundsOfTag("chat-stop-button")
-        runOnIdle { facts = facts.copy(nowMs = 73_000) }
+        runOnIdle { facts = facts.copy(clock = FactsClock.at(73_000)) }
         whole()
         assertTrue(before != words(), "elapsed time advances even with Motion off")
         assertEquals(stop, boundsOfTag("chat-stop-button"), "Stop stays where it was")
         if (motion == MotionLevel.Off) onNodeWithTag(SWEEP_TAG, useUnmergedTree = true).assertDoesNotExist()
         else onNodeWithTag(SWEEP_TAG, useUnmergedTree = true).assertExists()
-        runOnIdle { facts = facts.copy(nowMs = 312_000) }
+        runOnIdle { facts = facts.copy(clock = FactsClock.at(312_000)) }
         whole()
         assertEquals(stop, boundsOfTag("chat-stop-button"), "the calm long-think hint adds no composer movement")
         val picture = File("build/reports/quiet-line/$locale-$scale-${motion.name}.png")
@@ -109,10 +116,16 @@ class QuietLineScreenTest {
             kitUiTest(1080, 2400) {
                 val scene = ChatScene()
                 val state = scene.live().copy(status = null, rows = persistentListOf(prompt("t", "Explain this carefully")), live = LiveTurnUi(false))
-                var facts by mutableStateOf(TurnFactsUi(nowMs = 72_000, runStartedAtMs = 0, live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow)))
+                var facts by mutableStateOf(
+            TurnFactsUi(
+                clock = FactsClock.at(72_000),
+                runStartedAtMs = 0,
+                live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow),
+            )
+        )
                 setContent { Root(locale, 1.3f, motion) { scene.Screen(state, facts = facts, projectName = null) } }
                 for ((name, now) in listOf("1min" to 72_000L, "5min" to 312_000L)) {
-                    runOnIdle { facts = facts.copy(nowMs = now) }
+                    runOnIdle { facts = facts.copy(clock = FactsClock.at(now)) }
                     waitForIdle()
                     val picture = File("build/reports/quiet-line/shot-$locale-${motion.name}-$name.png")
                     picture.parentFile.mkdirs()
