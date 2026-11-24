@@ -262,89 +262,75 @@ class ModelGoneWayOnTest {
         assertTrue(bounds.left >= 0f && bounds.right <= 360f, "Line outside 360dp: $bounds")
     }
 
+    private fun checkFailedCard(
+        footer: FooterRow,
+        choices: List<ComposerModel>,
+        verify: androidx.compose.ui.test.ComposeUiTest.() -> Unit,
+    ) = kitUiTest(360, 800) {
+        val world = ModelWorld(choices)
+        world.transcript.value = stateOf(prompt("u1", "go"), footer)
+        val scene = ChatScene(world = world)
+        val state = scene.live().copy(status = null, rows = world.transcript.value.rows)
+        setContent {
+            Root("en", 1.3f, MotionLevel.Off) {
+                ChatScreen(
+                    state,
+                    scene.actions,
+                    scene.host,
+                    header = ChatHeaderSlot(ChatHeaderUi(title = state.title), scene.headerActions),
+                    facts = TurnFactsUi.Empty,
+                    modelChoices = choices,
+                    canGoBack = false,
+                )
+            }
+        }
+        waitForIdle()
+        verify()
+    }
+
     @Test
     fun `B-523-012 error card names gone model and provider when known and wraps 40-char name at 360dp text 1_3`() {
         val longModelId = "alpha-beta-gamma-delta-epsilon-zeta-40ch"
         val longModelDisplay = "Alpha Beta Gamma Delta Epsilon Zeta 40ch"
         assertEquals(40, longModelDisplay.length)
         val expectedNamed = "$longModelDisplay is not available on Anthropic any more."
-
-        kitUiTest(360, 800) {
-            val m2 =
-                ComposerModel(
-                    "anthropic",
-                    "sonnet-5",
-                    "Sonnet 5",
-                    supportsAttachments = false,
-                    providerName = "Anthropic",
-                    enabled = true,
-                )
-            val world = ModelWorld(listOf(m2))
-            world.transcript.value =
-                stateOf(
-                    prompt("u1", "go"),
-                    FooterRow(
-                        "footer:u1",
-                        "u1",
-                        failed = true,
-                        reason = "Model not found",
-                        errorKind = MessageErrorKind.ModelNotFound,
-                        createdMs = 200L,
-                        providerId = "anthropic",
-                        modelId = longModelId,
-                    ),
-                )
-            val scene = ChatScene(world = world)
-            val state = scene.live().copy(status = null, rows = world.transcript.value.rows)
-            setContent {
-                Root("en", 1.3f, MotionLevel.Off) {
-                    ChatScreen(
-                        state,
-                        scene.actions,
-                        scene.host,
-                        header = ChatHeaderSlot(ChatHeaderUi(title = state.title), scene.headerActions),
-                        facts = TurnFactsUi.Empty,
-                        modelChoices = listOf(m2),
-                        canGoBack = false,
-                    )
-                }
-            }
-            waitForIdle()
+        val m2 =
+            ComposerModel(
+                "anthropic",
+                "sonnet-5",
+                "Sonnet 5",
+                supportsAttachments = false,
+                providerName = "Anthropic",
+                enabled = true,
+            )
+        checkFailedCard(
+            FooterRow(
+                "footer:u1",
+                "u1",
+                failed = true,
+                reason = "Model not found",
+                errorKind = MessageErrorKind.ModelNotFound,
+                createdMs = 200L,
+                providerId = "anthropic",
+                modelId = longModelId,
+            ),
+            listOf(m2),
+        ) {
             onNodeWithText(expectedNamed).assertExists()
             onAllNodesWithText("The server doesn't have this model.").assertCountEquals(0)
             assertWrapsWithoutCut(expectedNamed)
         }
-
-        kitUiTest(360, 800) {
-            val world = ModelWorld(emptyList())
-            world.transcript.value =
-                stateOf(
-                    prompt("u1", "go"),
-                    FooterRow(
-                        "footer:u1",
-                        "u1",
-                        failed = true,
-                        reason = "Model not found",
-                        errorKind = MessageErrorKind.ModelNotFound,
-                        createdMs = 200L,
-                    ),
-                )
-            val scene = ChatScene(world = world)
-            val state = scene.live().copy(status = null, rows = world.transcript.value.rows)
-            setContent {
-                Root("en", 1.3f, MotionLevel.Off) {
-                    ChatScreen(
-                        state,
-                        scene.actions,
-                        scene.host,
-                        header = ChatHeaderSlot(ChatHeaderUi(title = state.title), scene.headerActions),
-                        facts = TurnFactsUi.Empty,
-                        modelChoices = emptyList(),
-                        canGoBack = false,
-                    )
-                }
-            }
-            waitForIdle()
+        checkFailedCard(
+            FooterRow(
+                "footer:u1",
+                "u1",
+                failed = true,
+                reason = "Model not found",
+                errorKind = MessageErrorKind.ModelNotFound,
+                createdMs = 200L,
+            ),
+            emptyList(),
+        ) {
             onNodeWithText("The server doesn't have this model.").assertExists()
         }
     }

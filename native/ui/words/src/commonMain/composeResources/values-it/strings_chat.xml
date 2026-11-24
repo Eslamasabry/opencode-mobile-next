@@ -1375,4 +1375,6 @@
     <string name="chatContinueBriefStopped">Dove si è fermato:</string>
     <string name="chatUiContinuedAfterCommand">Un comando era ancora in esecuzione, quindi all'agente è stato chiesto di aspettarlo e andare avanti</string>
     <string name="chatSendNoPlanMode">Questo agente non ha la modalità Plan, quindi non è stato inviato nulla. Disattiva Plan per inviare nella modalità propria dell'agente.</string>
+    <string name="chatErrorModelNotFoundNamed">%1$s non è più disponibile su %2$s.</string>
+    <string name="chatModelReplacedNotice">%1$s non è più disponibile. Uso %2$s.</string>
 </resources>

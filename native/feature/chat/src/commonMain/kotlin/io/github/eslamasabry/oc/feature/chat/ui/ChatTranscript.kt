@@ -281,6 +281,7 @@ internal class ReplyActions(
     /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
     val onOpenChanges: (() -> Unit)? = null,
     val answered: () -> List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptyList() },
+    val modelGoneLabel: ((model: String, provider: String) -> String)? = null,
 )
 
 /**
@@ -1530,11 +1531,14 @@ private fun ChatRow(
                             if (signInAgainEarly != null && signInPast)
                                 row.providerId?.let { reply?.signInPastWords?.invoke(it) } ?: signInAgainEarly
                             else signInAgainEarly
+                        val goneKey = goneModelKey(row)
+                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
                         if (setUp != null)
                             KitQuietLine(listWords.setUpNeeded(setUp.name), modifier = Modifier.testTag("chat-reply-set-up"))
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
+                        else if (modelGone != null) KitQuietLine(modelGone)
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
@@ -1597,16 +1601,6 @@ private fun ChatRow(
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
                                             kind == ReplyFailureKind.Model
                                     ) {
-                                        val goneKey =
-                                            row.providerId
-                                                ?.takeIf { it.isNotBlank() }
-                                                ?.let { p ->
-                                                    row.modelId
-                                                        ?.takeIf { it.isNotBlank() }
-                                                        ?.let { m ->
-                                                            io.github.eslamasabry.oc.feature.chat.world.ModelKey(p, m)
-                                                        }
-                                                }
                                         ErrorRecovery.suggestedModel(reason, reply.models)
                                             ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
                                                 goneKey,
@@ -1807,6 +1801,39 @@ internal fun turnGap(row: TranscriptRow, older: TranscriptRow?): Int {
 
 /** NV: LAYOUT-RULES.md edge-tap: a target keeps 4 dp from the window edge. */
 private const val FOOTER_EDGE_INSET_DP = 4 // NV: LAYOUT-RULES.md edge-tap minimum
+
+private fun goneModelKey(row: FooterRow): io.github.eslamasabry.oc.feature.chat.world.ModelKey? =
+    row.providerId?.takeIf { it.isNotBlank() }?.let { provider ->
+        row.modelId?.takeIf { it.isNotBlank() }?.let { model ->
+            io.github.eslamasabry.oc.feature.chat.world.ModelKey(provider, model)
+        }
+    }
+
+private fun modelGoneWords(
+    row: FooterRow,
+    kind: ReplyFailureKind,
+    goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
+    reply: ReplyActions?,
+): String? {
+    val format = reply?.modelGoneLabel
+    val isModelError = row.errorKind == MessageErrorKind.ModelNotFound || kind == ReplyFailureKind.Model
+    return if (format == null || goneKey == null || !isModelError) null
+    else {
+        val listed =
+            reply.models.firstOrNull {
+                it.providerId == goneKey.providerId && it.modelId == goneKey.modelId
+            }
+        val modelName =
+            listed?.label?.takeIf { it.isNotBlank() }
+                ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(goneKey.modelId)
+        val providerName =
+            reply.models
+                .firstOrNull { it.providerId == goneKey.providerId && it.providerName.isNotBlank() }
+                ?.providerName
+                ?: goneKey.providerId
+        format(modelName, providerName)
+    }
+}
 
 /**
  * Plan 09 R13 column (as the kit's reply block): 700 dp cap, the row gap only where the block does

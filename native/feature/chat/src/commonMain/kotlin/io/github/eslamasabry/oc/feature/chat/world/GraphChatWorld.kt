@@ -2000,6 +2000,10 @@ internal class GraphChatWorld(
                     choices,
                 )
             else null
+        val replaced =
+            if (missing != null && fallback != null)
+                ReplacedModel(ModelNames.fromId(missing.modelId), fallback.label)
+            else null
         mutableModels.value =
             ComposerModels(
                 choices,
@@ -2020,6 +2024,7 @@ internal class GraphChatWorld(
                 recent = recentOf(choices),
                 favorites = favoritesOf(choices),
                 displayOnly = if (newer) previous.displayOnly else failure != null,
+                replaced = if (newer) previous.replaced else replaced,
             )
         return if (failure != null) Outcome.Failed(failure) else Outcome.Ok(Unit)
     }
@@ -2105,6 +2110,7 @@ internal class GraphChatWorld(
                 usesDefault = if (modelChanged) false else now.usesDefault,
                 agent = if (agentChanged) event.agent else now.agent,
                 displayOnly = if (modelChanged) false else now.displayOnly,
+                replaced = if (modelChanged) null else now.replaced,
             )
         if (modelChanged && remoteModel != null)
             registry.appScope.launch {
@@ -2253,6 +2259,7 @@ internal class GraphChatWorld(
                                         usesDefault = false,
                                         displayOnly = false,
                                         recent = recentOf(mutableModels.value.choices),
+                                        replaced = null,
                                     )
                                 Outcome.Ok(Unit)
                             }
@@ -2518,9 +2525,15 @@ internal class GraphChatWorld(
         retireFailedTwins(id)
         refreshDraftProtection()
         return try {
-            dispatch(id, text, snapshot, expected)
+            dispatch(id, text, snapshot, expected).also(::clearReplacedModel)
         } finally {
             if (submission != null) submissionOwner?.releaseSubmission(submission)
+        }
+    }
+
+    private fun clearReplacedModel(outcome: Outcome<Unit>) {
+        if (outcome is Outcome.Ok && mutableModels.value.replaced != null) {
+            mutableModels.value = mutableModels.value.copy(replaced = null)
         }
     }
 

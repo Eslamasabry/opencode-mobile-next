@@ -1437,4 +1437,6 @@
     <string name="kitTurnLiveStillThinking">Всё ещё думает</string>
     <string name="chatQuietThinkingHint">Некоторые модели думают молча несколько минут.</string>
     <string name="kitToolUnanswered">Остановлено до вашего ответа</string>
+    <string name="chatErrorModelNotFoundNamed">%1$s больше недоступна в %2$s.</string>
+    <string name="chatModelReplacedNotice">%1$s больше недоступна. Используется %2$s.</string>
 </resources>

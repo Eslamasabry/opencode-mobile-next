@@ -154,9 +154,11 @@ import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
 import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
+import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFoundNamed
 import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
 import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
 import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
+import io.github.eslamasabry.oc.ui.words.res.chatModelReplacedNotice
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
@@ -1932,9 +1934,15 @@ private fun statusLine(
         ChatStatusKind.ModelReplaced ->
             KitStatus(
                 KitStatusKind.Info,
-                "",
+                stringResource(
+                    Res.string.chatModelReplacedNotice,
+                    line.oldModel.orEmpty(),
+                    line.newModel.orEmpty(),
+                ),
                 id = "chat-status-${line.id}",
                 tone = StatusTone.Neutral,
+                onDismiss = { actions.dismissStatus(line.id) },
+                dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
     }
 
@@ -2061,6 +2069,7 @@ internal fun rememberReplyActions(
     val signIn = rememberAgentSignInCopy(phoneAgentSignIn)
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
+    val modelGoneTemplate = stringResource(Res.string.chatErrorModelNotFoundNamed, "\u0000", "\u0001")
     val openProviders = stringResource(Res.string.chatUiOpenProviders)
     val openAccount = stringResource(Res.string.chatSendFailureAccountAction)
     val compactLabel = stringResource(Res.string.chatUiCompactSession)
@@ -2072,8 +2081,8 @@ internal fun rememberReplyActions(
     val canCompact = state.capabilities.compact && state.live == null
     val copyKeys =
         listOf(
-            chooseModel, useModelTemplate, openProviders, openAccount, compactLabel,
-            copy, copied, continueLabel, signInSettings,
+            chooseModel, useModelTemplate, modelGoneTemplate, openProviders, openAccount,
+            compactLabel, copy, copied, continueLabel, signInSettings,
         )
     return remember(actions, markdown, signIn, phoneAgentSignIn, models, canCompact, callbacks, copyKeys) {
         ReplyActions(
@@ -2105,6 +2114,9 @@ internal fun rememberReplyActions(
             onRerunCommand = callbacks.onRerunCommand,
             onOpenChanges = actions::openChanges,
             answered = { io.github.eslamasabry.oc.feature.chat.world.ModelFallback.answered(latestRows) },
+            modelGoneLabel = { model, provider ->
+                modelGoneTemplate.replace("\u0000", model).replace("\u0001", provider)
+            },
         )
     }
 }
