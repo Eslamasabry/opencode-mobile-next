@@ -3209,28 +3209,35 @@ internal class GraphChatWorld(
         if (connectionOpener == null || registry.graphFor(ref) != null || appStartsServer) {
             bind(registry.graphFor(ref))
         } else {
-            // A computer that went away: its connection is opened first, and the page waits for it meanwhile.
-            opening = true
-            mutableLoad.value = ChatLoad.Loading
-            loadWaiting.value = true
-            val opened =
-                try {
-                    connectionOpener.open(ref.profileId)
-                } finally {
-                    opening = false
-                    loadWaiting.value = false
-                }
-            // The chat closed meanwhile: nothing of it is left to show.
-            if (stopWatching == null) return opened
-            val graph = registry.graphFor(ref)
-            // The registry watch may have bound the new graph already; the same graph is never bound twice.
-            if (graph == null || graph !== attached?.graph) bind(graph)
-            if (opened is Outcome.Failed && graph == null) mutableLoad.value = ChatLoad.Failed(opened.failure)
+            reopenComputer(connectionOpener)
         }
         return when (val l = mutableLoad.value) {
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
             else -> Outcome.Ok(Unit)
         }
+    }
+
+    /**
+     * Try again for a computer that went away: its connection is opened first and the page waits for it meanwhile
+     * (the home's own path, so the server on the home stays the one the person chose).
+     */
+    private suspend fun reopenComputer(opener: ChatConnectionOpener) {
+        opening = true
+        mutableLoad.value = ChatLoad.Loading
+        loadWaiting.value = true
+        val opened =
+            try {
+                opener.open(ref.profileId)
+            } finally {
+                opening = false
+                loadWaiting.value = false
+            }
+        // The chat closed meanwhile: nothing of it is left to show.
+        if (stopWatching == null) return
+        val graph = registry.graphFor(ref)
+        // The registry watch may have bound the new graph already; the same graph is never bound twice.
+        if (graph == null || graph !== attached?.graph) bind(graph)
+        if (opened is Outcome.Failed && graph == null) mutableLoad.value = ChatLoad.Failed(opened.failure)
     }
 
     override suspend fun isChildSession(id: String): Outcome<Boolean> {
