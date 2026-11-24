@@ -552,7 +552,7 @@ public fun ChatScreen(
         val arrival = latest.arrival ?: return@LaunchedEffect
         arrival.landOnIndex?.let {
             list.following = false
-            list.lazy.scrollToItem(itemsBelowRows + it)
+            list.lazy.scrollToItem(list.lazyIndex(itemsBelowRows + it))
         }
         if (!arrival.focusComposer) actions.arrivalShown(arrival.id)
     }

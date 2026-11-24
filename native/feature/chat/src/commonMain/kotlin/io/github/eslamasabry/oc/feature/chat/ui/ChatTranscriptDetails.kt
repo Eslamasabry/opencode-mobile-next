@@ -86,7 +86,7 @@ internal fun TranscriptDetail(
             title = mask(backgroundTaskName(shell.command)),
             supporting = outcome,
             expanded = folds.open[key] ?: failed,
-            onExpandedChange = { folds.open[key] = it },
+            onExpandedChange = { folds.set(key, it) },
             modifier = Modifier.testTag("background-shell-result"),
         ) {
             KitCommandBox(
@@ -175,7 +175,7 @@ internal fun TranscriptDetail(
             KitStepFold(
                 title = if (thinking) stringResource(Res.string.kitMessageThinking) else stringResource(Res.string.kitMessageThought),
                 expanded = open,
-                onToggle = { folds.open[key] = !open },
+                onToggle = { folds.set(key, !open) },
                 modifier = Modifier.testTag("assistant-reasoning-block"),
                 icon = KitIcons.idea,
             ) {
@@ -197,7 +197,7 @@ internal fun TranscriptDetail(
             KitStepFold(
                 title = thoughtTitle,
                 expanded = open,
-                onToggle = { folds.open[key] = !open },
+                onToggle = { folds.set(key, !open) },
                 modifier = Modifier.testTag("assistant-reasoning-block"),
                 body = bodyPart,
             )
@@ -207,7 +207,7 @@ internal fun TranscriptDetail(
                 title = thoughtTitle,
                 titleMaxLines = 2, // NV: unchanged off the rail (two lines of the thought's first line)
                 expanded = open,
-                onExpandedChange = { folds.open[key] = it },
+                onExpandedChange = { folds.set(key, it) },
                 modifier = Modifier.testTag("assistant-reasoning-block"),
             ) {
                 bodyPart()
@@ -317,7 +317,7 @@ private fun ExpandNotice(
         KitExpandRow(
             title = header,
             expanded = folds.open[key] ?: initiallyOpen,
-            onExpandedChange = { folds.open[key] = it },
+            onExpandedChange = { folds.set(key, it) },
             modifier = Modifier.testTag("transcript-notice-$key"),
         ) {
             DetailMarkdown(key, body, reply)

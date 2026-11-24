@@ -126,6 +126,21 @@ internal class TranscriptFolds(
     val full: SnapshotStateMap<String, Boolean>,
     val earlier: SnapshotStateMap<String, Int>,
 ) {
+    /** Called when the person toggles a fold directly (never for app writes). */
+    var onPerson: (() -> Unit)? = null
+
+    /** Records a person's fold toggle and writes to [open]. */
+    fun set(key: String, v: Boolean) {
+        onPerson?.invoke()
+        open[key] = v
+    }
+
+    /** Records a person's "show all" toggle and writes to [full]. */
+    fun setFull(key: String, v: Boolean) {
+        onPerson?.invoke()
+        full[key] = v
+    }
+
     /** Something the person opened is still open (the bar shows Collapse all steps). */
     val anyOpen: Boolean
         get() = open.values.any { it } || full.values.any { it }
@@ -243,11 +258,11 @@ internal fun TurnWorkLine(
     KitStepList(
         // The reply's 16 dp edge: the glyphs and the rail sit on it, the steps' words one column in.
         modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
-        fold = if (summed) null else cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
+        fold = if (summed) null else cut.fold?.let { stepFoldLine(it, open) { folds.set(foldKey, !open) } },
     ) {
         if (summed)
             key("summary:${work.turnId}") {
-                KitStepItem { WorkSummaryRow(work, open) { folds.open[foldKey] = !open } }
+                KitStepItem { WorkSummaryRow(work, open) { folds.set(foldKey, !open) } }
             }
         // Every row in one sequence, each with its own fold (owner 2026-11-14, "clipping flashing"): opening the
         // turn's work or its earlier steps unfolds them one after another from the top (#052, #002); a row that moves
@@ -501,7 +516,7 @@ internal fun ThoughtWorkLine(
     KitStepList(
         // The reply's 16 dp edge, as the turn's other steps.
         modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
-        fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
+        fold = cut.fold?.let { stepFoldLine(it, open) { folds.set(foldKey, !open) } },
     ) {
         (cut.earlier + cut.shown).forEachIndexed { i, row ->
             key(row.key) { KitStepItem(visible = i >= folded || open, order = i) { entry(row as StepEntry.Detail) } }
@@ -595,7 +610,7 @@ private fun StepRow(
         KitToolRow(
             view = runView(steps, family, nowMs),
             opened = runOpen,
-            onToggle = { folds.open[runKey] = !runOpen },
+            onToggle = { folds.set(runKey, !runOpen) },
             modifier = Modifier.testTag("chat-step-run-${lead.partId}"),
             group = true,
         )
@@ -773,7 +788,7 @@ private fun OneStep(
     KitToolRow(
         view = view,
         opened = folds.open[key] == true,
-        onToggle = { folds.open[key] = !(folds.open[key] ?: false) },
+        onToggle = { folds.set(key, !(folds.open[key] ?: false)) },
         modifier = Modifier.testTag("chat-step-${step.partId}"),
         body =
             if (!hasBody) null
@@ -819,7 +834,7 @@ private fun OneStep(
                                     io.github.eslamasabry.oc.ui.kitchat.tool
                                         .KIT_COMMAND_OUTPUT_LINES,
                             moreLabel = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines),
-                            onMore = { folds.full[key] = true },
+                            onMore = { folds.setFull(key, true) },
                             exitLabel = null,
                             // Ended and printed nothing: say so (never a blank box that reads as lost output).
                             emptyLabel =
@@ -864,7 +879,7 @@ internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: Transcr
         KitExpandRow(
             title = summary,
             expanded = folds.open[key] == true,
-            onExpandedChange = { folds.open[key] = it },
+            onExpandedChange = { folds.set(key, it) },
         ) {
             for (file in result.files) KitQuietLine(
                 fileLine(mask(file.path), file.added, file.removed)

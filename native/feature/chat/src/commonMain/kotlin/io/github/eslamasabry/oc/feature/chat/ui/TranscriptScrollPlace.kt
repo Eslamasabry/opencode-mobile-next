@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
+import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import kotlinx.coroutines.flow.first
 
@@ -180,7 +181,7 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             holder.fromStore = false
             holder.following = true
             list.following = true
-            list.lazy.scrollToItem(0)
+            list.scrollToNewest()
         }
         val saved = holder.place
         if (saved != null && !(holder.fromStore && holder.following)) {
@@ -188,7 +189,8 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             snapshotFlow { current }.first { it.isNotEmpty() }
             ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
                 // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
-                list.following = holder.following && index == 0
+                val newestIndex = if (list.anchor == TranscriptAnchor.NormalOrder) current.lastIndex else 0
+                list.following = holder.following && index == newestIndex
                 list.lazy.scrollToItem(index, offset)
             }
         }
@@ -226,7 +228,7 @@ internal fun FindJump(find: FindUi?, loaded: Boolean, itemsBelowRows: Int, list:
         if (now.currentIndex >= 0 && token != jumped) {
             jumped = token
             list.following = false
-            val target = below + now.currentIndex
+            val target = list.lazyIndex(below + now.currentIndex)
             list.lazy.scrollToItem(target)
             // Once the row is laid out, put it clear of the top bar and of the bottom block (the list's content
             // padding is the room those two take): a row that fits stands in the middle of the room, a taller one
@@ -235,7 +237,10 @@ internal fun FindJump(find: FindUi?, loaded: Boolean, itemsBelowRows: Int, list:
             val info = list.lazy.layoutInfo
             val item = info.visibleItemsInfo.firstOrNull { it.index == target } ?: return@LaunchedEffect
             val room = info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding
-            if (room > 0) list.lazy.dispatchRawDelta(findScrollDelta(item.offset, item.size, room))
+            val delta = findScrollDelta(item.offset, item.size, room)
+            if (room > 0) {
+                list.lazy.dispatchRawDelta(if (list.anchor == TranscriptAnchor.NormalOrder) -delta else delta)
+            }
         }
     }
 }

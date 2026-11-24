@@ -496,6 +496,14 @@ internal fun ChatTranscriptList(
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
+    SideEffect {
+        folds.onPerson =
+            if (list.anchor == io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.NormalOrder) {
+                { list.following = false }
+            } else {
+                null
+            }
+    }
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
     // raw fence; only
     // Copy reply copies the reply as written (plan 09 §6.6).
@@ -541,7 +549,7 @@ internal fun ChatTranscriptList(
     SideEffect {
         val came = extraBottomPx > 0 && roomBefore[0] == 0
         roomBefore[0] = extraBottomPx
-        if (came && list.following && !list.lazy.isScrollInProgress) list.lazy.requestScrollToItem(0)
+        if (came && list.following && !list.lazy.isScrollInProgress) list.requestScrollToNewest()
     }
     // Flutter `_liveStepsShown` (chat_stop_after_step.dart): a tap on the live line shows the running turn's steps;
     // cleared once the turn ends. Null = no running turn; false = the live line names the step and the work hides.
@@ -565,7 +573,8 @@ internal fun ChatTranscriptList(
                 },
             )
         }
-    KeepScrollPlace(list, itemKeys, placeKey)
+    val normalOrder = list.anchor == io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.NormalOrder
+    KeepScrollPlace(list, if (normalOrder) itemKeys.asReversed() else itemKeys, placeKey)
     // F-023: a waiting decision is brought back into view whenever a newer row arrives or the person asks. The list is
     // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
     val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }
@@ -582,7 +591,7 @@ internal fun ChatTranscriptList(
         repeat(3) { withFrameNanos {} }
         val at = latestWaitingIndex ?: return@LaunchedEffect
         list.following = false
-        list.lazy.scrollToItem(at)
+        list.lazy.scrollToItem(list.lazyIndex(at))
         androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { list.following = false }
     }
     KitTranscriptList(
@@ -797,10 +806,11 @@ internal fun ChatTranscriptList(
         itemsIndexed(unique, key = { _, it -> it.key }, contentType = { _, it -> it.kind }) { index, row ->
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
-            Column(
-                kitTranscriptItemMotion(fadeIn = row !is PromptRow)
-                    .foldAnchor(row.key, anchor, list.lazy)
-            ) {
+            val rowModifier =
+                kitTranscriptItemMotion(fadeIn = row !is PromptRow).let { base ->
+                    if (normalOrder) base else base.foldAnchor(row.key, anchor, list.lazy)
+                }
+            Column(rowModifier) {
               // Find: every match in this row is tinted by the kit's text parts; the current match of the current row
               // (a message or a prompt: one text) is the stronger one. Nothing is provided while Find is closed.
               val marks =

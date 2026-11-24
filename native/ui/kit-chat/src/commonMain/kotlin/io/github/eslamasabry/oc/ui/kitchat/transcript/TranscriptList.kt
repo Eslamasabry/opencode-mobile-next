@@ -90,23 +90,62 @@ internal constructor(
     private val density: Density,
     public val anchor: TranscriptAnchor = TranscriptAnchor.Today,
 ) {
+    private val followingState: MutableState<Boolean> = followingState
+    private var draggedSinceUnfollowState by mutableStateOf(false)
+
+    /** Plain item count maintained when [anchor] is [TranscriptAnchor.NormalOrder]. */
+    internal var itemCount: Int = 0
+
+    internal val draggedSinceUnfollow: Boolean
+        get() = draggedSinceUnfollowState
+
+    internal fun markDragWhileReading() {
+        draggedSinceUnfollowState = true
+    }
+
     /**
      * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the
      * reader's choice as it is now (a copy synced on recomposition went stale and pulled a reader
      * back to the bottom).
      */
-    public var following: Boolean by followingState
+    public var following: Boolean
+        get() = followingState.value
+        set(value) {
+            followingState.value = value
+            draggedSinceUnfollowState = false
+        }
+
+    /** Translates a newest-first item index to the underlying [LazyListState] index. */
+    public fun lazyIndex(newestFirst: Int): Int =
+        if (anchor == TranscriptAnchor.NormalOrder) (itemCount - 1 - newestFirst).coerceAtLeast(0)
+        else newestFirst
+
+    /** True while older rows lie above the viewport (under the top bar). */
+    public fun isScrolledUnder(): Boolean =
+        if (anchor == TranscriptAnchor.NormalOrder) lazy.canScrollBackward else lazy.canScrollForward
+
+    /** The newest row is at the bottom edge, within the 48 dp follow slack (plan 08 §5.1). */
+    public val atNewest: Boolean by derivedStateOf {
+        val slack = with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
+        if (anchor == TranscriptAnchor.NormalOrder) {
+            TranscriptAnchorOps.atNewestNormalOrder(lazy, slack)
+        } else {
+            lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset <= slack
+        }
+    }
 
     /** Index 0 (the newest row) is at the bottom, within the 48 dp follow slack (plan 08 §5.1). */
-    public val atLiveEdge: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex == 0 &&
-            lazy.firstVisibleItemScrollOffset <= with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
-    }
+    public val atLiveEdge: Boolean
+        get() = atNewest
 
     /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
     public val awayFromLatest: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex > 0 ||
-            lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        if (anchor == TranscriptAnchor.NormalOrder) {
+            !following
+        } else {
+            lazy.firstVisibleItemIndex > 0 ||
+                lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        }
     }
 
     private var slotHeight = -1
@@ -117,6 +156,32 @@ internal constructor(
         slotHeight = height
     }
 
+    /** Requests a same-frame scroll to the newest row (bottom edge). */
+    public fun requestScrollToNewest() {
+        if (anchor == TranscriptAnchor.NormalOrder) {
+            if (itemCount > 0) lazy.requestScrollToItem(itemCount - 1, Int.MAX_VALUE)
+        } else {
+            lazy.requestScrollToItem(0)
+        }
+    }
+
+    /** Scrolls to the newest row (bottom edge). */
+    public suspend fun scrollToNewest() {
+        if (anchor == TranscriptAnchor.NormalOrder) {
+            if (itemCount > 0) lazy.scrollToItem(itemCount - 1, Int.MAX_VALUE)
+        } else {
+            lazy.scrollToItem(0)
+        }
+    }
+
+    internal fun pinNormalOrder() {
+        val target =
+            Snapshot.withoutReadObservation {
+                if (following && !lazy.isScrollInProgress && itemCount > 0) itemCount - 1 else -1
+            }
+        if (target >= 0) lazy.requestScrollToItem(target, Int.MAX_VALUE)
+    }
+
     /**
      * M-005/M-009: keeps the newest row on the bottom edge this frame. While the person follows the conversation (and
      * no scroll is running, so a fling or the jump glide is never cut short), the list snaps to index 0 at offset 0 in
@@ -125,6 +190,10 @@ internal constructor(
      * never moved. Safe to call from measure: its reads are not observed, so scrolling never re-runs the caller.
      */
     public fun keepAtBottom() {
+        if (anchor == TranscriptAnchor.NormalOrder) {
+            pinNormalOrder()
+            return
+        }
         val leave =
             Snapshot.withoutReadObservation {
                 !following || lazy.isScrollInProgress ||
@@ -173,18 +242,25 @@ public fun KitTranscriptList(
     onReachOldest: (() -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
+    val normalOrder = state.anchor == TranscriptAnchor.NormalOrder
+    val recorded =
+        if (normalOrder) {
+            RecordingLazyListScope().apply(content).also { state.itemCount = it.entries.size }
+        } else {
+            null
+        }
     val lastKey = remember { arrayOfNulls<String>(1) }
     SideEffect {
         // Runs after this composition applies and before its layout: same frame as the insert (§7.3
         // rule 2).
         if (newestKey != lastKey[0]) {
             lastKey[0] = newestKey
-            if (state.following && newestKey != null) state.lazy.requestScrollToItem(0)
+            if (state.following && newestKey != null) state.requestScrollToNewest()
         }
     }
     LaunchedEffect(state) {
         state.lazy.interactionSource.interactions.collect {
-            if (it is DragInteraction.Start) state.following = false
+            if (it is DragInteraction.Start) TranscriptAnchorOps.handleDragStart(state)
         }
     }
     // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6: "Jump
@@ -192,21 +268,15 @@ public fun KitTranscriptList(
     // never resumed following (the edge was reached mid-drag and did not change after it), so the next send landed
     // below the rows in view and the list stood "away".
     LaunchedEffect(state) {
-        snapshotFlow { state.atLiveEdge && !state.lazy.isScrollInProgress }
-            .collect { if (it) state.following = true }
+        snapshotFlow { TranscriptAnchorOps.canReenterFollow(state) }.collect { if (it) state.following = true }
     }
     val reachOldest = androidx.compose.runtime.rememberUpdatedState(onReachOldest)
     LaunchedEffect(state) {
-        snapshotFlow {
-                val info = state.lazy.layoutInfo
-                val top = info.visibleItemsInfo.lastOrNull()
-                !state.following && top != null && top.index == info.totalItemsCount - 1
-            }
-            .collect { if (it) reachOldest.value?.invoke() }
+        snapshotFlow { TranscriptAnchorOps.reachedOldest(state) }.collect { if (it) reachOldest.value?.invoke() }
     }
     // Chat edge A (owner 2026-11-09): the frame shows its scrolled-container ground only while older rows lie under the
     // header (the list is reversed: older rows are forward, above).
-    KitReportScrolledUnder { state.lazy.canScrollForward }
+    KitReportScrolledUnder { state.isScrolledUnder() }
     // Reading history: the phrase row folds away, so the jump pill rises out of the message box (owner 2026-11-14).
     io.github.eslamasabry.oc.ui.kit.frame.KitReportAwayFromLatest { state.awayFromLatest }
     val chrome = kitScreenChromePadding()
@@ -220,7 +290,7 @@ public fun KitTranscriptList(
         val backdrop = rememberKitFrostState()
         LazyColumn(
             state = state.lazy,
-            reverseLayout = true,
+            reverseLayout = !normalOrder,
             // C-002: a short conversation sits on the composer, its empty space above (Flutter's reversed list,
             // chat_transcript.dart:153-155). Under reverseLayout, Bottom is where index 0 (the newest row) rests.
             verticalArrangement = Arrangement.Bottom,
@@ -237,7 +307,9 @@ public fun KitTranscriptList(
                     .kitFrostSource(backdrop)
                     .kitScreenListEdges()
                     .testTag("transcript-list"),
-            content = content,
+            content = {
+                if (recorded != null) recorded.replayReversed(this) else content()
+            },
         )
         // E20-S30 (owner 2026-11-07, "Big gap not required"): no solid lane behind the pill. The words scroll on under
         // the translucent composer; while the pill shows, only a short soft fade (never a block) settles them where
@@ -336,6 +408,13 @@ internal class BottomPin(private val state: TranscriptListState) {
     private var viewport = -1
     private var bottomInset = Float.NaN
 
+    val isNormalOrder: Boolean
+        get() = state.anchor == TranscriptAnchor.NormalOrder
+
+    fun pinNormalOrder() {
+        state.pinNormalOrder()
+    }
+
     fun viewport(height: Int) {
         if (viewport >= 0 && height != viewport) state.keepAtBottom()
         viewport = height
@@ -349,13 +428,115 @@ internal class BottomPin(private val state: TranscriptListState) {
 
 private fun Modifier.keepsBottom(pin: BottomPin, bottomInsetDp: () -> Float): Modifier =
     this.then(Modifier.layout { measurable, constraints ->
-        // The bottom chrome (composer, request slot) changed height: re-pin before the list measures with the new
-        // padding.
-        pin.inset(bottomInsetDp())
-        if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
+        if (pin.isNormalOrder) {
+            pin.pinNormalOrder()
+        } else {
+            // The bottom chrome (composer, request slot) changed height: re-pin before the list measures with the new
+            // padding.
+            pin.inset(bottomInsetDp())
+            if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
+        }
         val placeable = measurable.measure(constraints)
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     })
+
+private object TranscriptAnchorOps {
+    fun atNewestNormalOrder(lazy: LazyListState, slackPx: Int): Boolean {
+        val info = lazy.layoutInfo
+        val last = info.visibleItemsInfo.lastOrNull()
+        val end = info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding
+        return !lazy.canScrollForward ||
+            (last != null && last.index == info.totalItemsCount - 1 && (last.offset + last.size) - end <= slackPx)
+    }
+
+    fun handleDragStart(state: TranscriptListState) {
+        if (state.anchor == TranscriptAnchor.NormalOrder) {
+            if (state.following) state.following = false else state.markDragWhileReading()
+        } else {
+            state.following = false
+        }
+    }
+
+    fun canReenterFollow(state: TranscriptListState): Boolean =
+        !state.lazy.isScrollInProgress &&
+            if (state.anchor == TranscriptAnchor.NormalOrder) {
+                state.draggedSinceUnfollow && state.atNewest
+            } else {
+                state.atLiveEdge
+            }
+
+    fun reachedOldest(state: TranscriptListState): Boolean {
+        val info = state.lazy.layoutInfo
+        val atOldest =
+            if (state.anchor == TranscriptAnchor.NormalOrder) {
+                info.visibleItemsInfo.firstOrNull()?.index == 0
+            } else {
+                val top = info.visibleItemsInfo.lastOrNull()
+                top != null && top.index == info.totalItemsCount - 1
+            }
+        return !state.following && atOldest
+    }
+
+    suspend fun jumpToNewest(state: TranscriptListState, motion: KitMotionLevel) {
+        val lazy = state.lazy
+        val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
+        if (state.anchor == TranscriptAnchor.NormalOrder) {
+            val last = (state.itemCount - 1).coerceAtLeast(0)
+            val lastVisible = lazy.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            when {
+                motion == KitMotionLevel.Off -> lazy.scrollToItem(last, Int.MAX_VALUE)
+                last - lastVisible <= viewport * 2 -> lazy.animateScrollToItem(last, Int.MAX_VALUE)
+                else -> {
+                    lazy.scrollToItem((last - 2).coerceAtLeast(0))
+                    lazy.animateScrollToItem(last, Int.MAX_VALUE)
+                }
+            }
+        } else {
+            when {
+                motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
+                lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
+                else -> {
+                    lazy.scrollToItem(2)
+                    lazy.animateScrollToItem(0)
+                }
+            }
+        }
+    }
+}
+
+private class RecordedItem(
+    val key: Any?,
+    val contentType: Any?,
+    val content: @Composable LazyItemScope.() -> Unit,
+)
+
+private class RecordingLazyListScope : LazyListScope {
+    val entries: MutableList<RecordedItem> = ArrayList()
+
+    override fun item(key: Any?, contentType: Any?, content: @Composable LazyItemScope.() -> Unit) {
+        entries.add(RecordedItem(key, contentType, content))
+    }
+
+    override fun items(
+        count: Int,
+        key: ((index: Int) -> Any)?,
+        contentType: (index: Int) -> Any?,
+        itemContent: @Composable LazyItemScope.(index: Int) -> Unit,
+    ) {
+        for (i in 0 until count) {
+            val k = key?.invoke(i)
+            val ct = contentType(i)
+            entries.add(RecordedItem(k, ct) { itemContent(i) })
+        }
+    }
+
+    fun replayReversed(target: LazyListScope) {
+        for (i in entries.indices.reversed()) {
+            val entry = entries[i]
+            target.item(key = entry.key, contentType = entry.contentType, content = entry.content)
+        }
+    }
+}
 
 /**
  * The pill (plan 08 §5.1 "Jump pill"). It alone reads [TranscriptListState.awayFromLatest]. Plain
@@ -372,22 +553,9 @@ private fun KitJumpToLatest(
 ) {
     val scope = rememberCoroutineScope()
     val jump: () -> Unit = {
-                state.following = true
-                scope.launch {
-                    val lazy = state.lazy
-                    val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
-                    when {
-                        motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
-                        lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
-                        else -> {
-                            lazy.scrollToItem(
-                                2
-                            ) // jump close, glide the last stretch (never animate across thousands)
-                            lazy.animateScrollToItem(0)
-                        }
-                    }
-                }
-            }
+        state.following = true
+        scope.launch { TranscriptAnchorOps.jumpToNewest(state, motion) }
+    }
     // The kit's own jump pill (small, chevron and words), or a floating chat's round arrow, shown while away from the
     // newest end.
     if (round)
