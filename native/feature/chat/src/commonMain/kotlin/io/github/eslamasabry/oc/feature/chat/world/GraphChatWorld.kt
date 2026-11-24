@@ -551,6 +551,9 @@ internal class GraphChatWorld(
     private var notReadyJob: Job? = null
     private var notReadyWaitedMs = 0L
 
+    /** True while Try again opens the connection of a computer that is not open; a second tap opens nothing more. */
+    private var opening = false
+
     /** A failure page held back for [FAILED_SETTLE_MS], so a success right after it never crosses in and out. */
     private var failedSettleJob: Job? = null
     /**
@@ -813,6 +816,7 @@ internal class GraphChatWorld(
      */
     fun attach() {
         if (stopWatching != null) return
+        connectionOpener?.hold(ref.profileId, true)
         endWait()
         showKept()
         draftStore?.open(ref)?.let { reopened ->
@@ -1442,6 +1446,7 @@ internal class GraphChatWorld(
     }
 
     fun detach() {
+        val wasAttached = stopWatching != null
         stopWatching?.invoke()
         stopWatching = null
         endWait()
@@ -1450,6 +1455,7 @@ internal class GraphChatWorld(
         closeKept()
         unbind(flushHeld = true)
         draftSession?.close()
+        if (wasAttached) connectionOpener?.hold(ref.profileId, false)
     }
 
     /**
@@ -3199,7 +3205,28 @@ internal class GraphChatWorld(
     override suspend fun reload(): Outcome<Unit> {
         // A person's Try again waits for a server that is not ready yet afresh.
         endWait()
-        bind(registry.graphFor(ref))
+        if (opening) return Outcome.Ok(Unit)
+        if (connectionOpener == null || registry.graphFor(ref) != null || appStartsServer) {
+            bind(registry.graphFor(ref))
+        } else {
+            // A computer that went away: its connection is opened first, and the page waits for it meanwhile.
+            opening = true
+            mutableLoad.value = ChatLoad.Loading
+            loadWaiting.value = true
+            val opened =
+                try {
+                    connectionOpener.open(ref.profileId)
+                } finally {
+                    opening = false
+                    loadWaiting.value = false
+                }
+            // The chat closed meanwhile: nothing of it is left to show.
+            if (stopWatching == null) return opened
+            val graph = registry.graphFor(ref)
+            // The registry watch may have bound the new graph already; the same graph is never bound twice.
+            if (graph == null || graph !== attached?.graph) bind(graph)
+            if (opened is Outcome.Failed && graph == null) mutableLoad.value = ChatLoad.Failed(opened.failure)
+        }
         return when (val l = mutableLoad.value) {
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
             else -> Outcome.Ok(Unit)

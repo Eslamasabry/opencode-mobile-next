@@ -54,7 +54,7 @@ public interface QueuedServerPorts {
  * - every round, each live server with a waiting prompt is nudged ([QueuedServerPorts.nudge]): a connection
  *   opened elsewhere, or one whose last send pass stopped early, still sends once it can.
  *
- * A connection this watch opened is released when that server has nothing left waiting.
+ * A connection this watch opened is released when that server has nothing left waiting and no open chat shows it.
  */
 public class QueuedServerWatch(
     private val ports: QueuedServerPorts,
@@ -101,9 +101,9 @@ public class QueuedServerWatch(
     /** One round. Runs only in the watch's own loop (and in tests), never concurrently. */
     internal suspend fun round() {
         val waiting = waiting(ports.queue())
-        // Nothing waits any more: let go of what this watch opened, forget old backoff.
+        // Nothing waits any more and no open chat shows it: let go of what this watch opened, forget old backoff.
         for (profile in opened.toList()) {
-            if (profile !in waiting) {
+            if (profile !in waiting && !ports.held(profile)) {
                 opened -= profile
                 ports.release(profile)
             }
