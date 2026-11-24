@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.gate.flicker.Allow
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
 import io.github.eslamasabry.oc.ui.kitchat.turn.LIVE_LINE_TAG
@@ -327,7 +328,21 @@ class StepsCraftTest {
 
     @Test
     fun `B-CHAT-560 the live line keeps its top and height between steps`() =
-        kitUiTest(412, 900) {
+        kitUiTest(
+            412,
+            900,
+            allow =
+                setOf(
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S5
+                    Allow.aba("#kit-turn-live-sweep", "TEMPORARY: base c5584b61ac; removed by S5"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S4
+                    Allow.aba("Earlier paragraph #", "TEMPORARY: base c5584b61ac; removed by S4"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S5
+                    Allow.jump("file#.dart", "TEMPORARY: base c5584b61ac; removed by S5"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S4
+                    Allow.jump("#chat-work-line", "TEMPORARY: base c5584b61ac; removed by S4"),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var phase by mutableStateOf(1)
             mainClock.autoAdvance = false
@@ -361,7 +376,21 @@ class StepsCraftTest {
 
     @Test
     fun `B-CHAT-561 the status word holds Working between steps`() =
-        kitUiTest(412, 900) {
+        kitUiTest(
+            412,
+            900,
+            allow =
+                setOf(
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S5
+                    Allow.aba("#kit-turn-live-sweep", "TEMPORARY: base c5584b61ac; removed by S5"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S4
+                    Allow.aba("Earlier paragraph #", "TEMPORARY: base c5584b61ac; removed by S4"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S5
+                    Allow.jump("file#.dart", "TEMPORARY: base c5584b61ac; removed by S5"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S4
+                    Allow.jump("#chat-work-line", "TEMPORARY: base c5584b61ac; removed by S4"),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var phase by mutableStateOf(1)
             mainClock.autoAdvance = false
@@ -421,7 +450,15 @@ class StepsCraftTest {
 
     @Test
     fun `B-CHAT-563 rows never overlap while a step arrives`() =
-        kitUiTest(412, 1200) {
+        kitUiTest(
+            412,
+            1200,
+            allow =
+                setOf(
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S4
+                    Allow.double("#.#s", "TEMPORARY: base c5584b61ac; removed by S4"),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var arrived by mutableStateOf(false)
             mainClock.autoAdvance = false
@@ -473,7 +510,17 @@ class StepsCraftTest {
 
     @Test
     fun `B-CHAT-564 a running command with output is open on its first frame`() =
-        kitUiTest(412, 900) {
+        kitUiTest(
+            412,
+            900,
+            allow =
+                setOf(
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S5
+                    Allow.jump("file#.dart", "TEMPORARY: base c5584b61ac; removed by S5"),
+                    // TEMPORARY (lead, 2026-11-25): exists on base c5584b61ac; removed by design step S4
+                    Allow.first("#.#s", "TEMPORARY: base c5584b61ac; removed by S4"),
+                ),
+        ) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             var phase by mutableStateOf(1)
             mainClock.autoAdvance = false
