@@ -189,6 +189,24 @@ class IdleChatTickTest {
         }
     }
 
+    private fun KitUiTest.runMeasuredTicks(meter: FrameMeter, onTick: (Int) -> Unit) {
+        val frame0 = taggedBounds()
+        var frameNo = 0
+        for (s in 1..5) {
+            repeat(62) {
+                meter.frame()
+                frameNo++
+                assertBoundsHeld(frameNo, frame0, taggedBounds())
+            }
+            onTick(s)
+        }
+        repeat(10) {
+            meter.frame()
+            frameNo++
+            assertBoundsHeld(frameNo, frame0, taggedBounds())
+        }
+    }
+
     private fun checkIdleTick(width: Int, height: Int) {
         val prevLocale = Locale.getDefault()
         try {
@@ -222,21 +240,7 @@ class IdleChatTickTest {
                     TranscriptProbe.rows.clear()
                     TranscriptProbe.steps.clear()
                     TranscriptProbe.on = true
-                    val frame0 = taggedBounds()
-                    var frameNo = 0
-                    for (s in 1..5) {
-                        repeat(62) {
-                            meter.frame()
-                            frameNo++
-                            assertBoundsHeld(frameNo, frame0, taggedBounds())
-                        }
-                        facts = presenter.present(feed, 30_000L + s * 1_000L)
-                    }
-                    repeat(10) {
-                        meter.frame()
-                        frameNo++
-                        assertBoundsHeld(frameNo, frame0, taggedBounds())
-                    }
+                    runMeasuredTicks(meter) { s -> facts = presenter.present(feed, 30_000L + s * 1_000L) }
                     assertTrue(TranscriptProbe.rows.isEmpty(), "idle ticks recomposed rows: ${TranscriptProbe.rows}")
                     assertTrue(
                         TranscriptProbe.steps.keys.all { it == "p-c1" },
@@ -259,6 +263,7 @@ class IdleChatTickTest {
         checkIdleTick(840, 800)
     }
 
+    @Suppress("MaxLineLength")
     @Test
     fun `B-CHAT-341 a command a finished turn left running keeps a still light, so an idle chat asks for no frames between ticks`() {
         val prevLocale = Locale.getDefault()

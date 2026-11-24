@@ -12,7 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
+import io.github.eslamasabry.oc.feature.chat.presentation.TimelineEntryUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TimelineUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -52,100 +55,151 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Real messages, newest first; a row jumps and a saved prompt has its own Fork action. */
 @Composable
-internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowMs: Long = 0) {
+internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, clock: FactsClock = FactsClock.Still) {
+    val subtitle =
+        if (timeline?.entries?.any { it.forkable } == true) {
+            stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor)
+        } else {
+            null
+        }
     KitSheet(
         visible = timeline != null,
         onDismissRequest = actions::closeTimeline,
         title = stringResource(Res.string.chatUiMessageTimeline),
-        subtitle = if (timeline?.entries?.any { it.forkable } == true) stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor) else null,
+        subtitle = subtitle,
     ) {
-        // No early return out of a composable block: the rest of the body sits inside this if.
-        if (timeline != null) {
-        val field = rememberTextFieldState(timeline.query)
-        val mask = rememberKitMask()
-        val platform = LocalKitPlatform.current
-        val stepTitle = rememberStepTitles()
-        // Flutter filters every keystroke; the search field settles only its announcement.
-        LaunchedEffect(field, actions) {
-            snapshotFlow { field.text.toString() }.drop(1).collect(actions::timelineQuery)
-        }
-        Column(
-            Modifier.fillMaxWidth().testTag("timeline-sheet"),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            KitSearchField(
-                label = stringResource(Res.string.chatUiSearchMessages),
-                state = field,
-                modifier = Modifier.testTag("timeline-search"),
-                onSearch = {},
-                resultCount = if (timeline.query.isBlank()) null else timeline.entries.size,
-                partial = timeline.partial,
-            )
-            if (timeline.partial && timeline.olderFailure == null) {
-                KitNotice(
-                    message = stringResource(Res.string.historyLoadedOnly),
-                    icon = KitIcons.history,
-                    actions = listOf(KitLineAction(
-                        stringResource(Res.string.historyLoadOlder), actions::loadOlder,
-                        enabled = !timeline.loadingOlder,
-                        disabledReason = if (timeline.loadingOlder) stringResource(Res.string.historyLoadedOnly) else null,
-                        testTag = "timeline-load-older",
-                    )),
-                )
+        if (timeline != null) TimelineSheetBody(timeline, actions, clock)
+    }
+}
+
+@Composable
+private fun TimelineSheetBody(timeline: TimelineUi, actions: ChatActions, clock: FactsClock) {
+    val field = rememberTextFieldState(timeline.query)
+    val mask = rememberKitMask()
+    val stepTitle = rememberStepTitles()
+    // Flutter filters every keystroke; the search field settles only its announcement.
+    LaunchedEffect(field, actions) {
+        snapshotFlow { field.text.toString() }.drop(1).collect(actions::timelineQuery)
+    }
+    TimelineSheetHeader(timeline, field, actions)
+    if (timeline.entries.isNotEmpty()) {
+        val nowMs = clock.read()
+        KitRowGroup {
+            for (entry in timeline.entries) {
+                TimelineEntryRow(entry, nowMs, mask, stepTitle, actions)
             }
-            timeline.olderFailure?.let { HistoryReadFailure(it, actions::loadOlder) }
-            if (timeline.entries.isEmpty()) {
-                if (timeline.query.isNotBlank() && !timeline.partial) {
-                    KitSearchNoMatch(timeline.query, { field.edit { replace(0, length, "") }; actions.timelineQuery("") }, Modifier.testTag("timeline-no-match"))
-                } else {
-                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"), size = KitStateSize.Inline)
-                }
-            }
-        }
-        if (timeline.entries.isNotEmpty()) KitRowGroup {
-        for (entry in timeline.entries) {
-            KitRow(
-                title =
-                    mask(
-                        entry.preview.ifBlank {
-                            // Flutter: "Tools: Shell · uptime" (each tool once, as its step row names it).
-                            if (entry.tools.isEmpty()) stringResource(Res.string.chatUiMessage)
-                            else
-                                stringResource(
-                                    Res.string.chatUiToolsSummary,
-                                    entry.tools.joinToString(", ") { facts ->
-                                        listOfNotNull(stepTitle(facts), facts.subject?.takeIf { it.isNotBlank() })
-                                            .joinToString(" · ")
-                                    },
-                                )
-                        }
-                    ),
-                titleMaxLines = 2, // F: lib/ui/screens/chat/timeline_sheet.dart:242
-                leading = KitRowLeading.Glyph(if (entry.prompt) KitIcons.person else KitIcons.sparkle),
-                supporting =
-                    listOfNotNull(
-                            if (entry.prompt) stringResource(Res.string.chatUiYou) else "OpenCode",
-                            entry.createdMs?.let { platform.messageTime(it, nowMs) },
-                        )
-                        .joinToString(" · "),
-                trailing =
-                    if (entry.forkable)
-                        KitRowTrailing.IconAction(
-                            KitLineAction(
-                                stringResource(Res.string.chatUiForkFromThisPrompt),
-                                { actions.timelineSelect(entry.messageId, fork = true) },
-                                testTag = "timeline-fork-${entry.messageId}",
-                                icon = KitIcons.branch,
-                            )
-                        )
-                    else KitRowTrailing.None,
-                modifier = Modifier.testTag("timeline-row-${entry.messageId}"),
-                onClick = { actions.timelineSelect(entry.messageId) },
-            )
-        }
-        }
         }
     }
+}
+
+@Composable
+private fun TimelineSheetHeader(
+    timeline: TimelineUi,
+    field: androidx.compose.foundation.text.input.TextFieldState,
+    actions: ChatActions,
+) {
+    Column(
+        Modifier.fillMaxWidth().testTag("timeline-sheet"),
+        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    ) {
+        KitSearchField(
+            label = stringResource(Res.string.chatUiSearchMessages),
+            state = field,
+            modifier = Modifier.testTag("timeline-search"),
+            onSearch = {},
+            resultCount = if (timeline.query.isBlank()) null else timeline.entries.size,
+            partial = timeline.partial,
+        )
+        if (timeline.partial && timeline.olderFailure == null) {
+            val disabledReason =
+                if (timeline.loadingOlder) stringResource(Res.string.historyLoadedOnly) else null
+            KitNotice(
+                message = stringResource(Res.string.historyLoadedOnly),
+                icon = KitIcons.history,
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.historyLoadOlder),
+                            actions::loadOlder,
+                            enabled = !timeline.loadingOlder,
+                            disabledReason = disabledReason,
+                            testTag = "timeline-load-older",
+                        )
+                    ),
+            )
+        }
+        timeline.olderFailure?.let { HistoryReadFailure(it, actions::loadOlder) }
+        if (timeline.entries.isEmpty()) {
+            if (timeline.query.isNotBlank() && !timeline.partial) {
+                KitSearchNoMatch(
+                    timeline.query,
+                    {
+                        field.edit { replace(0, length, "") }
+                        actions.timelineQuery("")
+                    },
+                    Modifier.testTag("timeline-no-match"),
+                )
+            } else {
+                KitStateView(
+                    kind = KitStateKind.Empty,
+                    title = stringResource(Res.string.chatUiNoMatchingMessages),
+                    icon = KitIcons.history,
+                    modifier = Modifier.testTag("timeline-empty"),
+                    size = KitStateSize.Inline,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimelineEntryRow(
+    entry: TimelineEntryUi,
+    nowMs: Long,
+    mask: (String) -> String,
+    stepTitle: (ToolFacts) -> String,
+    actions: ChatActions,
+) {
+    val platform = LocalKitPlatform.current
+    val fallbackTitle =
+        if (entry.tools.isEmpty()) {
+            stringResource(Res.string.chatUiMessage)
+        } else {
+            stringResource(
+                Res.string.chatUiToolsSummary,
+                entry.tools.joinToString(", ") { facts ->
+                    listOfNotNull(stepTitle(facts), facts.subject?.takeIf { it.isNotBlank() })
+                        .joinToString(" · ")
+                },
+            )
+        }
+    val trailing =
+        if (entry.forkable) {
+            KitRowTrailing.IconAction(
+                KitLineAction(
+                    stringResource(Res.string.chatUiForkFromThisPrompt),
+                    { actions.timelineSelect(entry.messageId, fork = true) },
+                    testTag = "timeline-fork-${entry.messageId}",
+                    icon = KitIcons.branch,
+                )
+            )
+        } else {
+            KitRowTrailing.None
+        }
+    KitRow(
+        title = mask(entry.preview.ifBlank { fallbackTitle }),
+        titleMaxLines = 2, // F: lib/ui/screens/chat/timeline_sheet.dart:242
+        leading = KitRowLeading.Glyph(if (entry.prompt) KitIcons.person else KitIcons.sparkle),
+        supporting =
+            listOfNotNull(
+                    if (entry.prompt) stringResource(Res.string.chatUiYou) else "OpenCode",
+                    entry.createdMs?.let { platform.messageTime(it, nowMs) },
+                )
+                .joinToString(" · "),
+        trailing = trailing,
+        modifier = Modifier.testTag("timeline-row-${entry.messageId}"),
+        onClick = { actions.timelineSelect(entry.messageId) },
+    )
 }
 
 @Composable

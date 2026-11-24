@@ -68,6 +68,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
@@ -640,6 +641,7 @@ internal fun ChatTranscriptList(
                     }
                 val runTurn = unique.firstOrNull()?.turnId
                 val runWork = runTurn?.let { facts.work[it] }
+                val nowMs = facts.clock.read()
                 if (LocalKitAppearance.current.style != KitSurfaceStyle.Signal) {
                     val line =
                         liveLineWords(
@@ -651,7 +653,7 @@ internal fun ChatTranscriptList(
                             // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
                             elapsedMs =
                                 (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { facts.nowMs - it },
+                                    ?.let { nowMs - it },
                         )
                     // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
                     val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
@@ -676,7 +678,7 @@ internal fun ChatTranscriptList(
                                     else Res.string.chatSteerStopStep
                                 ),
                             onStop =
-                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, facts.nowMs))
+                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, nowMs))
                                     ({ onStopForSteer(steerWait.promptKey, steerWait.text) })
                                 else null,
                             stopping = live.stopping,
@@ -725,7 +727,7 @@ internal fun ChatTranscriptList(
                     val mask = rememberKitMask()
                     KitRunningFeedLine(
                         sinceMs = step?.startedAtMs ?: facts.runStartedAtMs,
-                        nowMs = facts.nowMs,
+                        nowMs = nowMs,
                         command = step?.facts?.subject?.let(mask),
                         runningLabel = liveWords,
                     )
@@ -746,7 +748,7 @@ internal fun ChatTranscriptList(
                     io.github.eslamasabry.oc.ui.kitchat.transcript.KitBackgroundWorkLine(
                         backgroundWords(
                             facts.background,
-                            maxOf(facts.nowMs, first.sinceMs + since.elapsed.inWholeMilliseconds),
+                            maxOf(facts.clock.read(), first.sinceMs + since.elapsed.inWholeMilliseconds),
                         ),
                         lineModifier,
                         onOpen = onOpenBackground,
@@ -774,7 +776,7 @@ internal fun ChatTranscriptList(
                             writing = unique.firstOrNull().let { it is BlockRow && it.live },
                             elapsedMs =
                                 (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { facts.nowMs - it },
+                                    ?.let { facts.clock.read() - it },
                         )
                     else null
                 CompositionLocalProvider(LocalPendingLiveStatus provides status) {
@@ -891,14 +893,14 @@ internal fun ChatTranscriptList(
                             is FooterRow -> row.createdMs
                             else -> null
                         }
-                    if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                    if (created != null) RowTime(created, facts.clock)
                 }
                 if (row is BlockRow && source != null && row.key == lastBlocks[source]) {
                     folds?.let { safeFolds ->
                         AnchoredStretches(row.turnId, source, facts) { stretchWork, stretchEntries ->
                             TurnWorkLine(
                                 stretchWork,
-                                facts.nowMs,
+                                facts.clock,
                                 safeFolds,
                                 onOpenSession,
                                 onOpenFile,
@@ -1420,7 +1422,7 @@ private fun ChatRow(
                     // the live one with its light); the live line under them no longer names the step they show.
                     TurnWorkLine(
                         shownWork,
-                        facts.nowMs,
+                        facts.clock,
                         folds,
                         onOpenSession,
                         onOpenFile,
@@ -1984,4 +1986,9 @@ private fun AnchoredStretches(
             }
         }
     }
+}
+
+@Composable
+private fun RowTime(createdMs: Long, clock: FactsClock) {
+    KitMessageTimestamp(createdMs, clock.read())
 }
