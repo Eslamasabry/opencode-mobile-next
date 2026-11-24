@@ -31,9 +31,9 @@ public interface ChatStarPrompt {
      */
     public suspend fun replyEnded(success: Boolean): Boolean
 
-    public suspend fun answered(answer: ReplyAskAnswer) = Unit
+    public suspend fun answered(answer: ReplyAskAnswer): Unit = Unit
 
-    public suspend fun usedFor(use: ReplyAskUse) = Unit
+    public suspend fun usedFor(use: ReplyAskUse): Unit = Unit
 
     public fun report(event: StarPromptEvent)
 }

@@ -306,19 +306,19 @@ public class ChatPresenter(
             .launchIn(scope)
     }
 
-    override fun replyAskYes() = Unit
+    override fun replyAskYes(): Unit = Unit
 
-    override fun replyAskNo() = Unit
+    override fun replyAskNo(): Unit = Unit
 
-    override fun replyAskSkip() = Unit
+    override fun replyAskSkip(): Unit = Unit
 
-    override fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse) = Unit
+    override fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse): Unit = Unit
 
-    override fun replyAskMenuClosed() = Unit
+    override fun replyAskMenuClosed(): Unit = Unit
 
-    override fun replyAskStar() = Unit
+    override fun replyAskStar(): Unit = Unit
 
-    override fun replyAskReport() = Unit
+    override fun replyAskReport(): Unit = Unit
 
     private data class Five(
         val t: TranscriptState,

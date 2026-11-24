@@ -121,8 +121,8 @@ public class StarPromptLedger(
         }
 
     /** Records the person's Yes/No/Skip answer once. */
-    public suspend fun answered(answer: StarPromptAnswer) = Unit
+    public suspend fun answered(answer: StarPromptAnswer): Unit = Unit
 
     /** Records what the person uses the app for once. */
-    public suspend fun usedFor(use: StarPromptUse) = Unit
+    public suspend fun usedFor(use: StarPromptUse): Unit = Unit
 }

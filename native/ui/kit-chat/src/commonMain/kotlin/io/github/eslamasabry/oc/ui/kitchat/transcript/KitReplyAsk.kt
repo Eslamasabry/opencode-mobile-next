@@ -21,7 +21,7 @@ public fun KitReplyAsk(
     onNo: () -> Unit,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
-) = Unit
+): Unit = Unit
 
 /** Follow-up line shown in [KitReplyFooter]'s metadata slot after Yes or No. */
 @Composable
@@ -31,4 +31,4 @@ public fun KitReplyAskAfter(
     onAction: () -> Unit,
     star: Boolean,
     modifier: Modifier = Modifier,
-) = Unit
+): Unit = Unit

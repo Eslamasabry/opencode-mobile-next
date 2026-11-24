@@ -502,19 +502,19 @@ public data class ReplyAskUi(
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
-    public fun replyAskYes() = Unit
+    public fun replyAskYes(): Unit = Unit
 
-    public fun replyAskNo() = Unit
+    public fun replyAskNo(): Unit = Unit
 
-    public fun replyAskSkip() = Unit
+    public fun replyAskSkip(): Unit = Unit
 
-    public fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse) = Unit
+    public fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse): Unit = Unit
 
-    public fun replyAskMenuClosed() = Unit
+    public fun replyAskMenuClosed(): Unit = Unit
 
-    public fun replyAskStar() = Unit
+    public fun replyAskStar(): Unit = Unit
 
-    public fun replyAskReport() = Unit
+    public fun replyAskReport(): Unit = Unit
 
     /** Back (button, gesture or Esc): pops when nothing is lost (07 §3.4). */
     public fun leaveRequested()
