@@ -240,4 +240,72 @@ class RealGitTest {
         // A name that is not a commit id never reaches a script.
         assertIs<GitDiffResult.Failed>(repository.commitPatch("--output=/tmp/x"))
     }
+
+    @Test
+    fun `B-GIT-157 get latest links a branch the remote already has and gets its commits`() = runTest {
+        val origin = repo("origin")
+        File(origin, "a.txt").writeText("a\n")
+        git(origin, "add", "a.txt")
+        git(origin, "commit", "-q", "-m", "first")
+        git(root, "clone", "-q", origin.absolutePath, "copy")
+        val copy = File(root, "copy")
+        // The copy lost its link to origin/main, and origin then moved on.
+        git(copy, "branch", "--unset-upstream")
+        File(origin, "b.txt").writeText("b\n")
+        git(origin, "add", "b.txt")
+        git(origin, "commit", "-q", "-m", "second")
+        val repository = GitRepository(shell, copy.absolutePath)
+
+        val result = repository.pull()
+
+        assertTrue(result.ok, "${result.problem} ${result.failure?.details}")
+        assertEquals(GitActionNote.Pulled, result.note)
+        assertEquals(1, result.count)
+        assertEquals("origin/main", result.target)
+        assertTrue(File(copy, "b.txt").isFile)
+        assertEquals("origin/main", gitOut(copy, "rev-parse", "--abbrev-ref", "main@{u}").trim())
+        // Linked now: the second Get latest takes the normal path.
+        assertEquals(GitActionNote.UpToDate, repository.pull().note)
+
+        // An unborn branch (git init plus a remote, no commit yet) links and pulls too.
+        val fresh = repo("fresh")
+        val unborn = GitRepository(shell, fresh.absolutePath)
+        assertTrue(unborn.addRemote("origin", origin.absolutePath).ok)
+        val born = unborn.pull()
+        assertTrue(born.ok, "${born.problem} ${born.failure?.details}")
+        assertTrue(File(fresh, "b.txt").isFile)
+        assertEquals("origin/main", gitOut(fresh, "rev-parse", "--abbrev-ref", "main@{u}").trim())
+    }
+
+    @Test
+    fun `B-GIT-157 get latest on a branch the remote lacks still says push it first`() = runTest {
+        val origin = repo("origin")
+        File(origin, "a.txt").writeText("a\n")
+        git(origin, "add", "a.txt")
+        git(origin, "commit", "-q", "-m", "first")
+        git(root, "clone", "-q", origin.absolutePath, "copy")
+        val copy = File(root, "copy")
+        git(copy, "config", "user.name", "Copy")
+        git(copy, "config", "user.email", "copy\u0040example.invalid")
+        git(copy, "switch", "-c", "only-here")
+        File(copy, "mine.txt").writeText("mine\n")
+        val repository = GitRepository(shell, copy.absolutePath)
+        assertTrue(repository.commit(listOf("mine.txt"), "mine").ok)
+
+        val result = repository.pull()
+
+        // A guard: the same words as before the fix, and nothing was linked.
+        assertEquals(GitProblem.NoUpstream, result.problem)
+        assertFalse(assertIs<GitSnapshotResult.Ready>(repository.snapshot()).snapshot.status.branch.hasUpstream)
+    }
+
+    @Test
+    fun `B-GIT-157 get latest with no remote says there is no remote`() = runTest {
+        val dir = repo("alone")
+        File(dir, "a.txt").writeText("a\n")
+        val repository = GitRepository(shell, dir.absolutePath)
+        assertTrue(repository.commit(listOf("a.txt"), "first").ok)
+
+        assertEquals(GitProblem.NoRemote, repository.pull().problem)
+    }
 }

@@ -1,9 +1,12 @@
 package io.github.eslamasabry.oc.feature.git
 
 import io.github.eslamasabry.oc.feature.git.presentation.GitSection
+import io.github.eslamasabry.oc.feature.git.presentation.gitPullLinksBranch
 import io.github.eslamasabry.oc.feature.git.presentation.gitSections
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** B-GIT-147 the Git page puts what a person came for first (issue 147 walk F-021). */
 class GitPageOrderTest {
@@ -37,6 +40,15 @@ class GitPageOrderTest {
             listOf(GitSection.Notices, GitSection.Changes, GitSection.Save, GitSection.Result, GitSection.Sync, GitSection.Tools),
             gitSections(hasChanges = false, hasHistory = false, needsIdentity = true),
         )
+    }
+
+    @Test
+    fun `B-GIT-157 Get latest is open when the remote has the same-named branch`() {
+        assertTrue(gitPullLinksBranch(false, "main", "origin", listOf("origin/main")))
+        assertFalse(gitPullLinksBranch(false, "main", "origin", listOf("origin/dev")))
+        assertFalse(gitPullLinksBranch(false, null, "origin", listOf("origin/main")))
+        assertFalse(gitPullLinksBranch(false, "main", null, listOf("origin/main")))
+        assertFalse(gitPullLinksBranch(true, "main", "origin", listOf("origin/main")))
     }
 }
 

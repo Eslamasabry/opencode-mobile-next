@@ -45,3 +45,14 @@ public fun gitSections(hasChanges: Boolean, hasHistory: Boolean, needsIdentity: 
  */
 public fun gitSyncOpensRemotes(hasRemote: Boolean, detached: Boolean, operationInProgress: Boolean): Boolean =
     !hasRemote && !detached && !operationInProgress
+
+/**
+ * Red row for B-GIT-157: whether Get latest can link a branch that tracks nothing yet, because the remote a first push
+ * would go to lists a branch of the same name. The stub answers false until the fix lands.
+ */
+public fun gitPullLinksBranch(
+    hasUpstream: Boolean,
+    head: String?,
+    pushRemote: String?,
+    remoteBranches: List<String>,
+): Boolean = false
