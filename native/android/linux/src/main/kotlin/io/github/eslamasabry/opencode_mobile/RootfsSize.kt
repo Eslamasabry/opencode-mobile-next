@@ -1,25 +1,35 @@
 package io.github.eslamasabry.opencode_mobile
 
-import java.io.File
 import java.io.IOException
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
-import java.nio.file.LinkOption.NOFOLLOW_LINKS
 import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 internal object RootfsWalk {
-    fun size(root: Path): Long = sizeOf(root.toFile())
+    fun size(root: Path): Long {
+        var total = 0L
+        val visitor =
+            object : SimpleFileVisitor<Path>() {
+                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (!attrs.isSymbolicLink) total += attrs.size()
+                    return FileVisitResult.CONTINUE
+                }
 
-    private fun sizeOf(file: File): Long {
-        val attrs =
-            try {
-                Files.readAttributes(file.toPath(), BasicFileAttributes::class.java, NOFOLLOW_LINKS)
-            } catch (_: IOException) {
-                return 0
+                override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult =
+                    FileVisitResult.CONTINUE
+
+                override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult =
+                    FileVisitResult.CONTINUE
+
+                override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult =
+                    FileVisitResult.CONTINUE
             }
-        if (attrs.isSymbolicLink) return 0
-        if (!file.isDirectory) return attrs.size()
-        return file.listFiles()?.sumOf { sizeOf(it) } ?: 0
+        Files.walkFileTree(root, emptySet(), Int.MAX_VALUE, visitor)
+        return total
     }
 }
 
@@ -28,22 +38,33 @@ internal class RootfsSizeMeter(
     private val now: () -> Long,
     private val everyMs: Long,
 ) {
-    @Volatile private var measured: Pair<Long, Long>? = null
+    private data class State(val generation: Int, val endedAt: Long?, val size: Long?)
 
-    fun last(): Long? = measured?.second?.takeIf { it >= 0 }
+    private val wanted = AtomicBoolean(false)
+    private val running = AtomicBoolean(false)
+    private val state = AtomicReference(State(0, null, null))
 
-    fun want(shown: Boolean) = Unit
+    fun last(): Long? = state.get().size
+
+    fun want(shown: Boolean) = wanted.set(shown)
 
     fun measureIfDue(allowed: Boolean): Boolean {
-        val last = measured
-        val due = last == null || now() - last.first > everyMs
-        if (!due || !(last == null || allowed)) return false
-        measured = now() to (last?.second ?: -1L)
-        measured = now() to walk()
-        return true
+        if (!wanted.get() || !allowed || !running.compareAndSet(false, true)) return false
+        try {
+            val seen = state.get()
+            val endedAt = seen.endedAt
+            val due = endedAt == null || now() - endedAt > everyMs
+            if (due) {
+                val size = walk()
+                state.compareAndSet(seen, State(seen.generation, now(), size))
+            }
+            return due
+        } finally {
+            running.set(false)
+        }
     }
 
     fun forget() {
-        measured = null
+        state.updateAndGet { State(it.generation + 1, null, null) }
     }
 }

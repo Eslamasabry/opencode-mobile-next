@@ -6862,7 +6862,7 @@ exec gc supervisor run
         phoneEngine.eraseAllCredentialCopies()
         // Migration must succeed before any runtime data is removed.
         projectStorage.removeRuntime(alsoDeleteProjects)
-        measured = null
+        rootfsSize.forget()
         phase = "idle"
         message = null
     }
@@ -6880,41 +6880,23 @@ exec gc supervisor run
     }
 
     /**
-     * Disk used by Ubuntu and what is installed in it. Measuring walks every file in Ubuntu, and
-     * the app reads status every few seconds, so it is measured at most every ten minutes, at
-     * background priority, and not while a reply runs (the walk would compete with it for the
-     * disk).
+     * Disk used by Ubuntu and what is installed in it. Measuring walks every file in Ubuntu, so
+     * it runs only while This phone is on screen, at most every ten minutes, and not while a
+     * reply runs (the walk would compete with it for the disk). [bytesUsed] only reads the last
+     * finished walk; it never starts one.
      */
-    @Volatile private var measured: Pair<Long, Long>? = null
+    private val rootfsSize =
+        RootfsSizeMeter(
+            { RootfsWalk.size(rootfs.toPath()) },
+            System::currentTimeMillis,
+            MEASURE_EVERY_MS,
+        )
 
-    fun bytesUsed(): Long? {
-        val now = System.currentTimeMillis()
-        val last = measured
-        val due = last == null || now - last.first > MEASURE_EVERY_MS
-        if (due && (last == null || !workHeld)) {
-            measured = now to (last?.second ?: -1L)
-            Thread {
-                AndroidProcess.setThreadPriority(AndroidProcess.THREAD_PRIORITY_BACKGROUND)
-                measured = System.currentTimeMillis() to sizeOf(rootfs)
-            }
-                .start()
-        }
-        return measured?.second?.takeIf { it >= 0 }
-    }
+    fun bytesUsed(): Long? = rootfsSize.last()
 
-    private fun sizeOf(file: File): Long {
-        // lstat, not the link target: Ubuntu's links point at absolute paths
-        // that resolve outside the tree from here.
-        val stat =
-            try {
-                Os.lstat(file.absolutePath)
-            } catch (_: Exception) {
-                return 0
-            }
-        if (OsConstants.S_ISLNK(stat.st_mode)) return 0
-        if (!file.isDirectory) return stat.st_size
-        return file.listFiles()?.sumOf { sizeOf(it) } ?: 0
-    }
+    fun sizeWanted(shown: Boolean) = rootfsSize.want(shown)
+
+    fun measureBytesUsed(): Boolean = rootfsSize.measureIfDue(rootfsSize.last() == null || !workHeld)
 
     /**
      * Fetches [image] into [target], continuing a partial [target] with an HTTP Range request. The
