@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -67,6 +69,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -362,7 +365,7 @@ private fun BoxScope.KitJumpDock(
             // On the row's bottom line: where the list's own live line rests.
             Row(
                 Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = Space.S4.dp),
-                verticalAlignment = Alignment.Vertical.Bottom,
+                verticalAlignment = Alignment.Bottom,
             ) {
                 DockContent(label, dockLive)
             }
@@ -414,7 +417,7 @@ private fun Modifier.clearBandForDock(
         if (state.following) return@drawWithContent
         // The two paddings the docked row stands on, in whole pixels.
         val rest = (chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()).roundToPx()
-        val bandTop = (size.height - rest - target.roundToPx()).coerceAtLeast(0)
+        val bandTop = (size.height.roundToInt() - rest - target.roundToPx()).coerceAtLeast(0)
         val from = (bandTop - DOCK_CLEAR_FADE_DP.dp.roundToPx()).coerceAtLeast(0)
         if (bandTop > from) {
             drawRect(
