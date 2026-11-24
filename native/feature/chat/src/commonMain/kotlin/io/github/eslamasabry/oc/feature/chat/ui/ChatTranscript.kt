@@ -496,7 +496,7 @@ internal fun ChatTranscriptList(
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
-    val anchored = list.anchor != io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.Today
+    val anchored = list.isNormalOrder
     SideEffect {
         folds.onPerson = if (anchored) ({ list.following = false }) else null
     }
@@ -569,8 +569,7 @@ internal fun ChatTranscriptList(
                 },
             )
         }
-    val normalOrder = list.anchor == io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.NormalOrder
-    KeepScrollPlace(list, if (normalOrder) itemKeys.asReversed() else itemKeys, placeKey)
+    KeepScrollPlace(list, itemKeys, placeKey)
     // F-023: a waiting decision is brought back into view whenever a newer row arrives or the person asks. The list is
     // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
     val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }

@@ -9,13 +9,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -43,9 +46,12 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.FlickerMode
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiOptions
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -54,7 +60,10 @@ import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptAnchor
+import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptProbe
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
+import java.io.File
+import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -78,14 +87,46 @@ internal object ScrollAnchorWalks {
     private const val TOTAL_STEPS = 10
     private const val FRAMES_PER_STEP = 12
     private const val END_FRAMES = 40
+    private const val GLIDE_FRAMES = 60
     private const val SETTLE_MS = 900L
     private const val TOLERANCE_PX = 0.5f
     private const val PHONE_W = 360
     private const val PHONE_H = 800
     private const val WIDE_W = 840
+    private const val PROBE_CAP = 120
+    private const val PROBE_TAIL = 3
+    private const val TAP_LEFT_INSET_PX = 24f
+    private val REPORT_OPTIONS = KitUiOptions(mode = FlickerMode.Report)
 
     private object FixedClock : Clock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
+    }
+
+    private class ProbeLog {
+        private val lines = ArrayDeque<String>(PROBE_CAP)
+        private val flips = mutableListOf<String>()
+        private var lastOrder: String? = null
+        private var lastLine: String? = null
+
+        val sink: (String) -> Unit = { line ->
+            if (lines.size >= PROBE_CAP) lines.removeFirst()
+            lines.addLast(line)
+            val order = line.substringAfter("order=", "").substringBefore(' ')
+            if (lastOrder != null && order != lastOrder) {
+                lastLine?.let { flips += "before: $it" }
+                flips += "after:  $line"
+            }
+            lastOrder = order
+            lastLine = line
+        }
+
+        fun latest(): String? = lines.lastOrNull()
+
+        fun tail(): String = " | probe=" + lines.takeLast(PROBE_TAIL).joinToString(" ; ")
+
+        fun printFlips(label: String) {
+            for (f in flips) println("PROBE_FLIP [$label] $f")
+        }
     }
 
     private val composer =
@@ -112,11 +153,13 @@ internal object ScrollAnchorWalks {
     private fun Root(
         anchor: TranscriptAnchor,
         direction: LayoutDirection = LayoutDirection.Ltr,
+        probe: ((String) -> Unit)? = null,
         content: @Composable () -> Unit,
     ) {
         CompositionLocalProvider(
             LocalTranscriptAnchor provides anchor,
             LocalLayoutDirection provides direction,
+            LocalTranscriptProbe provides probe,
         ) {
             KitTheme(
                 platform = DesktopKitPlatform(),
@@ -126,6 +169,26 @@ internal object ScrollAnchorWalks {
             ) {
                 CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
             }
+        }
+    }
+
+    private fun findingsFile(): File {
+        val pid = ProcessHandle.current().pid()
+        val dir = File(System.getProperty("oc.flicker.dir") ?: "build/flicker")
+        return File(dir, "findings-$pid.tsv")
+    }
+
+    private fun readFindingLines(): List<String> =
+        findingsFile().takeIf { it.isFile }?.readLines().orEmpty().filter { !it.startsWith("#") && it.isNotBlank() }
+
+    private fun withFlickerReport(label: String, block: () -> Unit) {
+        val before = readFindingLines().toSet()
+        block()
+        val added = readFindingLines().filter { it !in before }
+        if (added.isEmpty()) {
+            println("FLICKER [$label] none")
+        } else {
+            for (row in added) println("FLICKER [$label] $row")
         }
     }
 
@@ -145,19 +208,11 @@ internal object ScrollAnchorWalks {
         val userA =
             MessageWithParts(
                 info = base[0].info.copy(id = TURN_A),
-                parts =
-                    base[0]
-                        .parts
-                        .map { p -> p.copy(id = "a-${p.id}", messageId = TURN_A) }
-                        .toImmutableList(),
+                parts = base[0].parts.map { p -> p.copy(id = "a-${p.id}", messageId = TURN_A) }.toImmutableList(),
             )
         val baseAssistantParts =
             base[1].parts.map { p ->
-                p.copy(
-                    id = "a-${p.id}",
-                    messageId = MSG_A,
-                    callId = p.callId?.let { "a-$it" },
-                )
+                p.copy(id = "a-${p.id}", messageId = MSG_A, callId = p.callId?.let { "a-$it" })
             }
         val extraReplies =
             (1..EXTRA_REPLY_BLOCKS).map { i ->
@@ -284,6 +339,13 @@ internal object ScrollAnchorWalks {
             ?.boundsInRoot
             ?.top ?: Float.MAX_VALUE
 
+    private fun ComposeUiTest.newestRowBottom(): Float? {
+        val live = onAllNodesWithTag("chat-live-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+        if (live != null) return live.boundsInRoot.bottom
+        val work = onAllNodesWithTag("chat-work-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+        return work?.boundsInRoot?.bottom
+    }
+
     private fun ComposeUiTest.visibleNodes(): Map<Int, TrackedNode> {
         val listNode = onNodeWithTag("transcript-list", useUnmergedTree = true).fetchSemanticsNode()
         val topBound = headerBottom()
@@ -310,11 +372,7 @@ internal object ScrollAnchorWalks {
         return out
     }
 
-    private fun ComposeUiTest.checkFrame(
-        baseline: Map<Int, TrackedNode>,
-        frame: Int,
-        worst: Drift,
-    ): Drift {
+    private fun ComposeUiTest.checkFrame(baseline: Map<Int, TrackedNode>, frame: Int, worst: Drift): Drift {
         val now = currentTops()
         var best = worst
         for ((id, tracked) in baseline) {
@@ -330,15 +388,16 @@ internal object ScrollAnchorWalks {
             .fetchSemanticsNodes()
             .any { it.boundsInRoot.height > 0f && it.boundsInRoot.width > 0f }
 
-    private fun assertNoDrift(drift: Drift, context: String) {
+    private fun assertNoDrift(drift: Drift, context: String, probe: ProbeLog) {
         assertTrue(
             drift.maxPx <= TOLERANCE_PX,
-            "$context: max=${"%.1f".format(drift.maxPx)} frame=${drift.frame} node=${drift.node}",
+            "$context: max=${"%.1f".format(drift.maxPx)} frame=${drift.frame} node=${drift.node}${probe.tail()}",
         )
     }
 
     private fun assertPageSpan(anchor: TranscriptAnchor, width: Int, required: Float) {
-        kitUiTest(width, 4000) {
+        kitUiTest(width, 4000, options = REPORT_OPTIONS) {
+            ScrollPlaceStore.clear()
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             mainClock.autoAdvance = false
             setContent {
@@ -381,10 +440,29 @@ internal object ScrollAnchorWalks {
                 remaining -= chunk
             }
         }
-        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeBy(SETTLE_MS)
     }
 
-    private fun ComposeUiTest.dragDownToEnd() {
+    private fun ComposeUiTest.assertDragPrecondition(context: String, probe: ProbeLog) {
+        assertTrue(
+            jumpControlShown(),
+            "$context: jump-to-latest hidden after drag: max=0.0 frame=0 node=precondition${probe.tail()}",
+        )
+        val live = onAllNodesWithTag("chat-live-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+        val boxTop = composerTop()
+        if (live != null) {
+            assertTrue(
+                live.boundsInRoot.bottom > boxTop,
+                "$context: live bottom ${live.boundsInRoot.bottom} <= composerTop $boxTop: " +
+                    "max=0.0 frame=0 node=precondition${probe.tail()}",
+            )
+        }
+    }
+
+    private fun ComposeUiTest.dragDownToEndCheckingBlank(baseBottom: Float, probe: ProbeLog) {
+        var minBottom = Float.MAX_VALUE
+        var worstFrame = 0
+        var frame = 0
         repeat(3) {
             onNodeWithTag("transcript-list", useUnmergedTree = true).performTouchInput {
                 val slop = viewConfiguration.touchSlop
@@ -395,7 +473,23 @@ internal object ScrollAnchorWalks {
                 advanceEventTime(200)
                 up()
             }
-            repeat(5) { mainClock.advanceTimeByFrame() }
+            repeat(5) {
+                frame++
+                mainClock.advanceTimeByFrame()
+                val cur = newestRowBottom()
+                if (cur != null && cur < minBottom) {
+                    minBottom = cur
+                    worstFrame = frame
+                }
+            }
+        }
+        if (minBottom != Float.MAX_VALUE) {
+            val blankPast = (baseBottom - minBottom).coerceAtLeast(0f)
+            assertTrue(
+                blankPast <= TOLERANCE_PX,
+                "006 blank past newest during drag: max=${"%.1f".format(blankPast)} " +
+                    "frame=$worstFrame node=chat-work-line${probe.tail()}",
+            )
         }
     }
 
@@ -407,32 +501,76 @@ internal object ScrollAnchorWalks {
         throw AssertionError("neither chat-work-summary nor $STEP_FOLD_ROW_TAG is on screen")
     }
 
+    private fun ComposeUiTest.tapGroupOutsideControl(tag: String, tapNum: Int, frame: Int, probe: ProbeLog) {
+        val rowBounds = onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val tapX = rowBounds.left + TAP_LEFT_INSET_PX
+        val tapY = (rowBounds.top + rowBounds.bottom) / 2f
+        val jumps = onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes()
+        for (j in jumps) {
+            val jb = j.boundsInRoot
+            val inside = tapX in jb.left..jb.right && tapY in jb.top..jb.bottom
+            assertTrue(
+                !inside,
+                "004 tap #$tapNum ($tapX,$tapY) inside jump-to-latest $jb (row $rowBounds): " +
+                    "max=0.0 frame=$frame node=tap-overlap${probe.tail()}",
+            )
+        }
+        onRoot().performTouchInput {
+            down(Offset(tapX, tapY))
+            up()
+        }
+    }
+
+    private fun ComposeUiTest.captureO5BlankRoom() {
+        val out = File("build/s1-o5-render/o5-blank-room-360.png")
+        out.parentFile.mkdirs()
+        ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out)
+    }
+
+    private fun probeHasOrderAndRoom(line: String?): Boolean {
+        if (line == null) return false
+        val isNormal = "order=N" in line
+        val room = line.substringAfter("room=", "0").substringBefore(' ').toIntOrNull() ?: 0
+        return isNormal && room > 0
+    }
+
     fun walk001Following(anchor: TranscriptAnchor) {
         assertPageTwoScreensTall(anchor)
-        kitUiTest(PHONE_W, PHONE_H) {
-            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
-            var step by mutableIntStateOf(1)
-            mainClock.autoAdvance = false
-            setContent {
-                Root(anchor) {
-                    ChatScreen(sceneState(step, ended = false), actions, composer, facts = sceneFacts(step, false))
+        withFlickerReport("001") {
+            kitUiTest(PHONE_W, PHONE_H, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                val probe = ProbeLog()
+                val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+                var step by mutableIntStateOf(1)
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(anchor, probe = probe.sink) {
+                        ChatScreen(sceneState(step, ended = false), actions, composer, facts = sceneFacts(step, false))
+                    }
                 }
-            }
-            mainClock.advanceTimeBy(SETTLE_MS)
-            val baseBottom = boundsOfTag("chat-live-line").bottom
-            var worst = Drift(0f, 0, "chat-live-line")
-            var frame = 0
-            for (k in 2..TOTAL_STEPS) {
-                step = k
-                repeat(FRAMES_PER_STEP) {
-                    frame++
-                    mainClock.advanceTimeByFrame()
-                    val now = boundsOfTag("chat-live-line").bottom
-                    val delta = abs(now - baseBottom)
-                    if (delta > worst.maxPx) worst = Drift(delta, frame, "chat-live-line")
+                mainClock.advanceTimeBy(SETTLE_MS)
+                val baseBottom = boundsOfTag("chat-live-line").bottom
+                var worst = Drift(0f, 0, "chat-live-line")
+                var badOrderFrame = -1
+                var frame = 0
+                for (k in 2..TOTAL_STEPS) {
+                    step = k
+                    repeat(FRAMES_PER_STEP) {
+                        frame++
+                        mainClock.advanceTimeByFrame()
+                        val now = boundsOfTag("chat-live-line").bottom
+                        val delta = abs(now - baseBottom)
+                        if (delta > worst.maxPx) worst = Drift(delta, frame, "chat-live-line")
+                        val p = probe.latest()
+                        if (p != null && "order=R" !in p && badOrderFrame < 0) badOrderFrame = frame
+                    }
                 }
+                assertNoDrift(worst, "001 following", probe)
+                assertTrue(
+                    badOrderFrame < 0,
+                    "001 expected order=R: max=0.0 frame=$badOrderFrame node=probe-order${probe.tail()}",
+                )
             }
-            assertNoDrift(worst, "001 following")
         }
     }
 
@@ -443,135 +581,204 @@ internal object ScrollAnchorWalks {
         direction: LayoutDirection = LayoutDirection.Ltr,
     ) {
         if (width == PHONE_W && direction == LayoutDirection.Ltr) assertPageTwoScreensTall(anchor)
-        kitUiTest(width, height) {
-            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
-            var step by mutableIntStateOf(1)
-            var ended by mutableStateOf(false)
-            mainClock.autoAdvance = false
-            setContent {
-                Root(anchor, direction) {
-                    ChatScreen(sceneState(step, ended), actions, composer, facts = sceneFacts(step, ended))
+        val label = "002-${width}x$height-$direction"
+        withFlickerReport(label) {
+            kitUiTest(width, height, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                val probe = ProbeLog()
+                val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+                var step by mutableIntStateOf(1)
+                var ended by mutableStateOf(false)
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(anchor, direction, probe.sink) {
+                        ChatScreen(sceneState(step, ended), actions, composer, facts = sceneFacts(step, ended))
+                    }
                 }
-            }
-            mainClock.advanceTimeBy(SETTLE_MS)
-            dragUp(40f)
-            val baseline = visibleNodes()
-            assertTrue(baseline.isNotEmpty(), "visible set must not be empty after 40 dp drag")
-            var worst = Drift(0f, 0, "none")
-            var frame = 0
-            var missingControlFrame = -1
-            for (k in 2..TOTAL_STEPS) {
-                step = k
-                repeat(FRAMES_PER_STEP) {
+                mainClock.advanceTimeBy(SETTLE_MS)
+                dragUp(40f)
+                assertDragPrecondition(label, probe)
+                val baseline = visibleNodes()
+                assertTrue(baseline.isNotEmpty(), "visible set must not be empty after 40 dp drag${probe.tail()}")
+                var worst = Drift(0f, 0, "none")
+                var frame = 0
+                var missingControlFrame = -1
+                var badProbeFrame = -1
+                var maxBlank = 0f
+                val captureBlank = width == PHONE_W && direction == LayoutDirection.Ltr
+                var captured = false
+                fun stepFrame() {
                     frame++
                     mainClock.advanceTimeByFrame()
                     worst = checkFrame(baseline, frame, worst)
                     if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
+                    if (!probeHasOrderAndRoom(probe.latest()) && badProbeFrame < 0) badProbeFrame = frame
+                    val bottom = newestRowBottom()
+                    if (bottom != null) {
+                        val blank = (composerTop() - bottom).coerceAtLeast(0f)
+                        if (blank > maxBlank) maxBlank = blank
+                        if (captureBlank && !captured && frame == 1 && blank > 1f) {
+                            captureO5BlankRoom()
+                            captured = true
+                        }
+                    }
                 }
+                for (k in 2..TOTAL_STEPS) {
+                    step = k
+                    repeat(FRAMES_PER_STEP) { stepFrame() }
+                }
+                ended = true
+                repeat(END_FRAMES) { stepFrame() }
+                println("ScrollAnchorWalks blank ($label)=${"%.1f".format(maxBlank)} px")
+                probe.printFlips(label)
+                assertNoDrift(worst, "002 scrolled up 40dp (${width}x$height $direction)", probe)
+                assertTrue(
+                    missingControlFrame < 0,
+                    "002 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest${probe.tail()}",
+                )
+                assertTrue(
+                    badProbeFrame < 0,
+                    "002 expected order=N room>0: max=0.0 frame=$badProbeFrame node=probe${probe.tail()}",
+                )
             }
-            ended = true
-            repeat(END_FRAMES) {
-                frame++
-                mainClock.advanceTimeByFrame()
-                worst = checkFrame(baseline, frame, worst)
-                if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
-            }
-            assertNoDrift(worst, "002 scrolled up 40dp (${width}x$height $direction)")
-            assertTrue(
-                missingControlFrame < 0,
-                "002 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest",
-            )
         }
     }
 
     fun walk003ScrolledUpScreen(anchor: TranscriptAnchor) {
         assertPageTwoScreensTall(anchor)
-        kitUiTest(PHONE_W, PHONE_H) {
-            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
-            var step by mutableIntStateOf(1)
-            var ended by mutableStateOf(false)
-            mainClock.autoAdvance = false
-            setContent {
-                Root(anchor) {
-                    ChatScreen(sceneState(step, ended), actions, composer, facts = sceneFacts(step, ended))
+        withFlickerReport("003") {
+            kitUiTest(PHONE_W, PHONE_H, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                val probe = ProbeLog()
+                val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+                var step by mutableIntStateOf(1)
+                var ended by mutableStateOf(false)
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(anchor, probe = probe.sink) {
+                        ChatScreen(sceneState(step, ended), actions, composer, facts = sceneFacts(step, ended))
+                    }
                 }
-            }
-            mainClock.advanceTimeBy(SETTLE_MS)
-            dragUp(PHONE_H.toFloat())
-            val baseline = visibleNodes()
-            assertTrue(baseline.isNotEmpty(), "visible set must not be empty after full-screen drag")
-            var worst = Drift(0f, 0, "none")
-            var frame = 0
-            for (k in 2..TOTAL_STEPS) {
-                step = k
-                repeat(FRAMES_PER_STEP) {
+                mainClock.advanceTimeBy(SETTLE_MS)
+                dragUp(PHONE_H.toFloat())
+                assertDragPrecondition("003", probe)
+                val baseline = visibleNodes()
+                assertTrue(baseline.isNotEmpty(), "visible set must not be empty after full-screen drag${probe.tail()}")
+                var worst = Drift(0f, 0, "none")
+                var frame = 0
+                var missingControlFrame = -1
+                var badProbeFrame = -1
+                fun stepFrame() {
                     frame++
                     mainClock.advanceTimeByFrame()
                     worst = checkFrame(baseline, frame, worst)
+                    if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
+                    if (!probeHasOrderAndRoom(probe.latest()) && badProbeFrame < 0) badProbeFrame = frame
                 }
+                for (k in 2..TOTAL_STEPS) {
+                    step = k
+                    repeat(FRAMES_PER_STEP) { stepFrame() }
+                }
+                ended = true
+                repeat(END_FRAMES) { stepFrame() }
+                assertNoDrift(worst, "003 scrolled up screen", probe)
+                assertTrue(
+                    missingControlFrame < 0,
+                    "003 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest${probe.tail()}",
+                )
+                assertTrue(
+                    badProbeFrame < 0,
+                    "003 expected order=N room>0: max=0.0 frame=$badProbeFrame node=probe${probe.tail()}",
+                )
             }
-            ended = true
-            repeat(END_FRAMES) {
-                frame++
-                mainClock.advanceTimeByFrame()
-                worst = checkFrame(baseline, frame, worst)
-            }
-            assertNoDrift(worst, "003 scrolled up screen")
         }
     }
 
-    fun walk004TapGroup(
-        anchor: TranscriptAnchor,
-        width: Int = PHONE_W,
-        height: Int = PHONE_H,
-    ) {
+    fun walk004TapGroup(anchor: TranscriptAnchor, width: Int = PHONE_W, height: Int = PHONE_H) {
         if (width == PHONE_W) assertPageTwoScreensTall(anchor)
-        kitUiTest(width, height) {
-            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
-            mainClock.autoAdvance = false
-            setContent {
-                Root(anchor) {
-                    ChatScreen(
-                        sceneState(TOTAL_STEPS, ended = true),
-                        actions,
-                        composer,
-                        facts = sceneFacts(TOTAL_STEPS, ended = true),
-                    )
+        val label = "004-${width}x$height"
+        withFlickerReport(label) {
+            kitUiTest(width, height, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                val probe = ProbeLog()
+                val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(anchor, probe = probe.sink) {
+                        ChatScreen(
+                            sceneState(TOTAL_STEPS, ended = true),
+                            actions,
+                            composer,
+                            facts = sceneFacts(TOTAL_STEPS, ended = true),
+                        )
+                    }
                 }
-            }
-            mainClock.advanceTimeBy(SETTLE_MS)
-            val tag = findGroupTag()
-            val baseline = visibleNodes()
-            assertTrue(baseline.isNotEmpty(), "visible set must not be empty before tap")
-            var worst = Drift(0f, 0, "none")
-            var frame = 0
-            var missingControlFrame = -1
-            fun tapGroup() {
-                onNodeWithTag(tag, useUnmergedTree = true).performTouchInput {
-                    down(center)
-                    up()
+                mainClock.advanceTimeBy(SETTLE_MS)
+                val tag = findGroupTag()
+                val baseBottom = boundsOfTag("chat-work-line").bottom
+                val baseline = visibleNodes()
+                assertTrue(baseline.isNotEmpty(), "visible set must not be empty before tap${probe.tail()}")
+                var worst = Drift(0f, 0, "none")
+                var frame = 0
+                var missingControlFrame = -1
+                tapGroupOutsideControl(tag, tapNum = 1, frame = frame, probe = probe)
+                repeat(END_FRAMES) {
+                    frame++
+                    mainClock.advanceTimeByFrame()
+                    worst = checkFrame(baseline, frame, worst)
+                    if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
                 }
+                tapGroupOutsideControl(tag, tapNum = 2, frame = frame, probe = probe)
+                repeat(END_FRAMES) {
+                    frame++
+                    mainClock.advanceTimeByFrame()
+                    worst = checkFrame(baseline, frame, worst)
+                    if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
+                }
+                probe.printFlips(label)
+                assertNoDrift(worst, "004 tap group (${width}x$height)", probe)
+                assertTrue(
+                    missingControlFrame < 0,
+                    "004 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest${probe.tail()}",
+                )
+                verifyJumpControlGlide(baseBottom, probe)
             }
-            tapGroup()
-            repeat(END_FRAMES) {
-                frame++
-                mainClock.advanceTimeByFrame()
-                worst = checkFrame(baseline, frame, worst)
-                if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
-            }
-            tapGroup()
-            repeat(END_FRAMES) {
-                frame++
-                mainClock.advanceTimeByFrame()
-                worst = checkFrame(baseline, frame, worst)
-                if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
-            }
-            assertNoDrift(worst, "004 tap group (${width}x$height)")
-            assertTrue(
-                missingControlFrame < 0,
-                "004 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest",
-            )
         }
+    }
+
+    private fun ComposeUiTest.verifyJumpControlGlide(baseBottom: Float, probe: ProbeLog) {
+        val jumpNode = onNodeWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNode()
+        val startBottom = boundsOfTag("chat-work-line").bottom
+        onRoot().performTouchInput {
+            down(jumpNode.boundsInRoot.center)
+            up()
+        }
+        var shownFrame = -1
+        val bottoms = ArrayList<Float>(GLIDE_FRAMES)
+        repeat(GLIDE_FRAMES) { i ->
+            mainClock.advanceTimeByFrame()
+            if (jumpControlShown() && shownFrame < 0) shownFrame = i + 1
+            bottoms += boundsOfTag("chat-work-line").bottom
+        }
+        val endBottom = bottoms.last()
+        val lo = minOf(startBottom, endBottom) + TOLERANCE_PX
+        val hi = maxOf(startBottom, endBottom) - TOLERANCE_PX
+        val midFrames = bottoms.count { it > lo && it < hi }
+        assertTrue(
+            shownFrame < 0,
+            "004 control still shown after jump tap: max=0.0 frame=$shownFrame node=jump-to-latest${probe.tail()}",
+        )
+        val endDelta = abs(endBottom - baseBottom)
+        assertTrue(
+            endDelta <= TOLERANCE_PX,
+            "004 newest row not back on box: max=${"%.1f".format(endDelta)} " +
+                "frame=$GLIDE_FRAMES node=chat-work-line${probe.tail()}",
+        )
+        assertTrue(
+            midFrames >= 2,
+            "004 jump did not glide (start=$startBottom end=$endBottom midFrames=$midFrames): " +
+                "max=0.0 frame=1 node=jump-to-latest${probe.tail()}",
+        )
     }
 
     fun walk005WideAndRtl(anchor: TranscriptAnchor) {
@@ -583,40 +790,49 @@ internal object ScrollAnchorWalks {
 
     fun walk006OnlyPersonResumesFollow(anchor: TranscriptAnchor) {
         assertPageTwoScreensTall(anchor)
-        kitUiTest(PHONE_W, PHONE_H) {
-            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
-            mainClock.autoAdvance = false
-            setContent {
-                Root(anchor) {
-                    ChatScreen(
-                        sceneState(TOTAL_STEPS, ended = true),
-                        actions,
-                        composer,
-                        facts = sceneFacts(TOTAL_STEPS, ended = true),
-                    )
+        withFlickerReport("006") {
+            kitUiTest(PHONE_W, PHONE_H, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                val probe = ProbeLog()
+                val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(anchor, probe = probe.sink) {
+                        ChatScreen(
+                            sceneState(TOTAL_STEPS, ended = true),
+                            actions,
+                            composer,
+                            facts = sceneFacts(TOTAL_STEPS, ended = true),
+                        )
+                    }
                 }
+                mainClock.advanceTimeBy(SETTLE_MS)
+                val tag = findGroupTag()
+                val baseBottom = boundsOfTag("chat-work-line").bottom
+                tapGroupOutsideControl(tag, tapNum = 1, frame = 0, probe = probe)
+                var missingFrame = -1
+                repeat(GLIDE_FRAMES) { i ->
+                    mainClock.advanceTimeByFrame()
+                    if (!jumpControlShown() && missingFrame < 0) missingFrame = i + 1
+                }
+                assertTrue(
+                    missingFrame < 0,
+                    "006 control did not stay shown: max=0.0 frame=$missingFrame node=jump-to-latest${probe.tail()}",
+                )
+                dragDownToEndCheckingBlank(baseBottom, probe)
+                mainClock.advanceTimeBy(SETTLE_MS)
+                assertTrue(
+                    !jumpControlShown(),
+                    "006 control still shown after drag to end: max=0.0 frame=61 node=jump-to-latest${probe.tail()}",
+                )
+                val endBottom = boundsOfTag("chat-work-line").bottom
+                val endDelta = abs(endBottom - baseBottom)
+                assertTrue(
+                    endDelta <= TOLERANCE_PX,
+                    "006 newest row not on box after drag: max=${"%.1f".format(endDelta)} " +
+                        "frame=61 node=chat-work-line${probe.tail()}",
+                )
             }
-            mainClock.advanceTimeBy(SETTLE_MS)
-            val tag = findGroupTag()
-            onNodeWithTag(tag, useUnmergedTree = true).performTouchInput {
-                down(center)
-                up()
-            }
-            var missingFrame = -1
-            repeat(60) { i ->
-                mainClock.advanceTimeByFrame()
-                if (!jumpControlShown() && missingFrame < 0) missingFrame = i + 1
-            }
-            assertTrue(
-                missingFrame < 0,
-                "006 control did not stay shown: max=0.0 frame=$missingFrame node=jump-to-latest",
-            )
-            dragDownToEnd()
-            mainClock.advanceTimeBy(SETTLE_MS)
-            assertTrue(
-                !jumpControlShown(),
-                "006 control still shown after drag to end: max=0.0 frame=61 node=jump-to-latest",
-            )
         }
     }
 }

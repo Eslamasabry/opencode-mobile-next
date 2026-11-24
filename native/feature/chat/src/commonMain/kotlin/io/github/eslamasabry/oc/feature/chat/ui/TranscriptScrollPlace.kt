@@ -19,7 +19,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
-import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import kotlinx.coroutines.flow.first
 
@@ -189,7 +188,7 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             snapshotFlow { current }.first { it.isNotEmpty() }
             ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
                 // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
-                val newestIndex = if (list.anchor == TranscriptAnchor.NormalOrder) current.lastIndex else 0
+                val newestIndex = if (list.isNormalOrder) current.lastIndex else 0
                 list.following = holder.following && index == newestIndex
                 list.lazy.scrollToItem(index, offset)
             }
@@ -239,7 +238,7 @@ internal fun FindJump(find: FindUi?, loaded: Boolean, itemsBelowRows: Int, list:
             val room = info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding
             val delta = findScrollDelta(item.offset, item.size, room)
             if (room > 0) {
-                list.lazy.dispatchRawDelta(if (list.anchor == TranscriptAnchor.NormalOrder) -delta else delta)
+                list.lazy.dispatchRawDelta(if (list.isNormalOrder) -delta else delta)
             }
         }
     }
