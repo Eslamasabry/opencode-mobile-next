@@ -211,7 +211,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             // checkout_bloc.dart"), so a list of steps scans as one column of verbs. From 1.3x text the subject
             // drops under the verb.
             if (wide || subject == null) {
-                KitLiveSweep(working = view.status == KitToolStatus.Running, step = true) {
+                KitLiveSweep(working = view.status == KitToolStatus.Running && !view.still, step = true) {
                     StepTitle(view.title, lines)
                 }
                 if (subject != null) {
@@ -225,7 +225,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    KitLiveSweep(working = view.status == KitToolStatus.Running, step = true) {
+                    KitLiveSweep(working = view.status == KitToolStatus.Running && !view.still, step = true) {
                         StepTitle(view.title, 1)
                     }
                     Spacer(Modifier.width(Space.S2.dp))
