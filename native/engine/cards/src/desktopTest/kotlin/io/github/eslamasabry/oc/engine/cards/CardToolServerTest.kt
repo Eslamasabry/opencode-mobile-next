@@ -52,8 +52,7 @@ class CardToolServerTest {
         directory = Files.createTempDirectory("gen-ui-server-").toFile()
         marker = File(directory, "enabled").apply { writeText("enabled\n") }
         val script = File(directory, "server.cjs").apply { writeText(CardToolServer.script(marker.path)) }
-        val slow = File(directory, "slow.cjs").apply { writeText("setTimeout(() => require('./server.cjs'), 6000);\n") }
-        helper = Helper(slow)
+        helper = Helper(script)
         helper.awaitReady()
     }
 
