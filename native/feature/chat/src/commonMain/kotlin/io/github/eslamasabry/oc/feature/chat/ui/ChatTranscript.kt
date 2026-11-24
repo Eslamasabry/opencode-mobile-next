@@ -146,6 +146,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyNote
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptDockLive
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.revertReview
@@ -585,6 +586,30 @@ internal fun ChatTranscriptList(
         list.lazy.scrollToItem(at)
         androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { list.following = false }
     }
+    // B-CHAT-547 (owner decision O2 = D, 2026-11-24): the running turn's live line is worked out once, here. The LIVE
+    // item reads it, and the docked "Jump to latest" row repeats it while the person reads older rows.
+    val runTurn = unique.firstOrNull()?.turnId
+    val runWork = runTurn?.let { facts.work[it] }
+    val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
+    val onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming
+    val liveStyled = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
+    val liveTurn = if (liveRow) live else null
+    val line =
+        if (liveTurn != null && listWords != null && liveStyled)
+            liveLineWords(
+                live = liveTurn,
+                listWords = listWords,
+                notice = facts.live,
+                work = runWork,
+                writing = streaming,
+                // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
+                elapsedMs =
+                    (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
+                        ?.let { facts.nowMs - it },
+            )
+        else null
+    val dockLive =
+        line?.let { KitTranscriptDockLive(words = it.words, tone = it.tone, spoken = it.spoken, onRail = onRail) }
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -594,6 +619,8 @@ internal fun ChatTranscriptList(
         // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
         // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
         contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
+        // The live line, repeated at the docked "Jump to latest" row's start while the person reads older rows.
+        dockLive = dockLive,
         // Reading back to the top of what is loaded brings the earlier messages by itself; the row stays the visible
         // way to them (and the way to try again after a read that failed).
         onReachOldest = if (older != null && !older.loading && older.failure == null) onLoadOlder else null,
@@ -638,23 +665,8 @@ internal fun ChatTranscriptList(
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }
-                val runTurn = unique.firstOrNull()?.turnId
-                val runWork = runTurn?.let { facts.work[it] }
-                if (LocalKitAppearance.current.style != KitSurfaceStyle.Signal) {
-                    val line =
-                        liveLineWords(
-                            live = live,
-                            listWords = listWords,
-                            notice = notice,
-                            work = runWork,
-                            writing = unique.firstOrNull().let { it is BlockRow && it.live },
-                            // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
-                            elapsedMs =
-                                (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { facts.nowMs - it },
-                        )
+                if (liveStyled) {
                     // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
-                    val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
                     // A retry that keeps failing offers another model besides waiting or Stop.
                     val retryWayOut =
                         notice is LiveNoticeUi.Retry && notice.facts.offerWayOut && !live.canUndoStopAfterStep &&
@@ -710,7 +722,7 @@ internal fun ChatTranscriptList(
                         ask = null,
                         // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
                         // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
-                        onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming,
+                        onRail = onRail,
                     )
                 } else if (
                     RunTailRules.liveLineShown(

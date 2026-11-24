@@ -313,7 +313,10 @@ class ChatJumpDockTest {
                 moveBy(Offset(0f, 2.dp.toPx()))
             }
             mainClock.advanceTimeByFrame()
-            assertTrue(rowShown(), "the row is not in the tree one frame into the drag (following = ${list.following})")
+            val why =
+                "following = ${list.following}, the touch slop is ${viewConfiguration.touchSlop} px, " +
+                    "the list is at ${list.lazy.firstVisibleItemIndex}/${list.lazy.firstVisibleItemScrollOffset}"
+            assertTrue(rowShown(), "the row is not in the tree one frame into the drag: $why")
         }
 
     @Test

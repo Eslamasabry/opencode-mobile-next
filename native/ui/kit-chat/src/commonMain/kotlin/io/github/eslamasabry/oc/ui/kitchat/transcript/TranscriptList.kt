@@ -1,21 +1,23 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import androidx.compose.foundation.lazy.LazyItemScope
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,21 +44,28 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
-import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenListEdges
-import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
-import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
-import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportScrolledUnder
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -67,8 +76,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
  * entry.
  * - [following] is true at open and after the person's own send; their drag turns it off; reaching
  *   the live edge or the jump control turns it back on.
- * - [awayFromLatest] drives the jump control and is read only by it, so scrolling never recomposes
- *   the screen.
+ * - [awayFromLatest] folds the phrase row (the frame draws it) and is read only by that, so scrolling never
+ *   recomposes the screen. The docked "Jump to latest" row reads [following], not this.
  */
 @Stable
 public class TranscriptListState
@@ -210,17 +219,15 @@ public fun KitTranscriptList(
     // Chat edge A (owner 2026-11-09): the frame shows its scrolled-container ground only while older rows lie under the
     // header (the list is reversed: older rows are forward, above).
     KitReportScrolledUnder { state.lazy.canScrollForward }
-    // Reading history: the phrase row folds away, so the jump pill rises out of the message box (owner 2026-11-14).
+    // Reading history: the phrase row folds away, so nothing stands above the message box (owner 2026-11-14).
     io.github.eslamasabry.oc.ui.kit.frame.KitReportAwayFromLatest { state.awayFromLatest }
     val chrome = kitScreenChromePadding()
     // The chrome's padding follows the bottom block's measured height, which moves on every frame the keyboard
-    // travels: it is read where the list is measured (its content padding, its pin) and placed (the pill, the
-    // fade), never while composing, so the list is not composed again on each of those frames.
+    // travels: it is read where the list is measured (its content padding, its pin) and placed (the docked
+    // row, its clear band), never while composing, so the list is not composed again on each of those frames.
     val insetPadding = remember(contentPadding, chrome) { SumPadding(contentPadding, chrome) }
     val pin = remember(state) { BottomPin(state) }
     Box(modifier) {
-        // E20-S30: what the list draws, recorded for the pill's blur (the pill itself is never in it).
-        val backdrop = rememberKitFrostState()
         LazyColumn(
             state = state.lazy,
             reverseLayout = true,
@@ -230,75 +237,27 @@ public fun KitTranscriptList(
             contentPadding = insetPadding,
             // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
             // list measures, so the newest row rides the slot's edge frame by frame.
-            // The list ends its own words before the page's floating controls (kitScreenListEdges): the jump pill and
-            // "N earlier messages" lie beside it, whole, on ground with no text under them (owner 2026-11-14). The pill's
-            // recording is made of the list as it shows, so its glass bends no words either; it is the list's own, never
-            // the page's (the pill lies in the page's recording: reading that would draw the pill into itself).
+            // The list ends its own words before the page's bottom block (kitScreenListEdges): the docked "Jump to
+            // latest" row and "N earlier messages" lie beside it, whole, on ground with no text under them (owner
+            // 2026-11-14). While the row shows, the list also clears the band the row stands on.
             modifier =
                 Modifier.fillMaxSize()
                     .keepsBottom(pin) { insetPadding.calculateBottomPadding().value }
-                    .kitFrostSource(backdrop)
+                    .clearBandForDock(state, contentPadding, chrome)
                     .kitScreenListEdges()
                     .testTag("transcript-list"),
             content = content,
         )
-        // E20-S30 (owner 2026-11-07, "Big gap not required"): no solid lane behind the pill. The words scroll on under
-        // the translucent composer; while the pill shows, only a short soft fade (never a block) settles them where
-        // the viewport meets the composer, so letters do not run into the pill.
-        val ground = LocalKitColors.current.ground
-        val fadeState =
-            animateFloatAsState(
-                if (state.awayFromLatest) 1f else 0f,
-                // KitMotion's STANDARD on the kit's Enter curve, not Compose's default curve.
-                if (motion == KitMotionLevel.Off) snap() else KitMotion.specs.enter(),
-                label = "jump-fade",
-            )
-        // Owner 2026-11-09 ("a rough line just below Jump to latest"): the fade ended where the composer's room
-        // starts, at its strongest, so wherever nothing lay below it (liquid glass, a live background) it cut straight
-        // across. It now settles over its 28 dp and holds on down to the list's edge; the screen's own scroll edge
-        // fades it out with the words under the bottom block, so it has no edge of its own.
-        // Over a glass slab (owner 2026-11-10) there is no fade at all: the words run sharp under the one pane, and the
-        // pill is a drop of glass over them.
-        // The fade's value is read only when it draws; composition sees just whether it shows at all (twice per fade),
-        // not every frame of it.
-        val fadeShown by remember { derivedStateOf { fadeState.value > 0f } }
-        // A page that records its body ends the list itself above the pill (kitScreenListEdges): no band of ground there.
-        val pageEnds = io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomGlass() != null || io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenFloating.current
-        if (fadeShown && !pageEnds && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
-            Box(
-                Modifier.align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .heightAtLayout { JUMP_FADE_DP.dp + chrome.calculateBottomPadding() }
-                    .testTag("transcript-jump-fade")
-                    .drawBehind {
-                        drawRect(
-                            Brush.verticalGradient(
-                                0f to ground.copy(alpha = 0f),
-                                1f to ground.copy(alpha = JUMP_FADE_ALPHA),
-                                startY = 0f,
-                                endY = JUMP_FADE_DP.dp.toPx(),
-                            ),
-                            alpha = fadeState.value,
-                        )
-                    }
-            )
-        val floating = io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenFloating.current
-        KitJumpToLatest(
-            state,
-            jumpLabel,
-            motion,
-            backdrop,
-            if (floating)
-                // A floating chat (owner 2026-11-17): the pill's place, centred above the message box, as a round arrow only;
-                // its target stands on the block's top.
-                Modifier.align(Alignment.BottomCenter).liftAtLayout { chrome.calculateBottomPadding() }
-            // Bottom centre, its face 8 dp above the composer's veil (the 48 dp target's own margin counts toward it).
-            else {
-                val lift = jumpPillLift(LocalKitTokens.current.minTarget).dp
-                Modifier.align(Alignment.BottomCenter).liftAtLayout { chrome.calculateBottomPadding() + lift }
-            },
-            round = floating,
-        )
+        // Owner decision O2 = D (2026-11-24): the docked "Jump to latest" row is in the tree exactly while the person
+        // does not follow the newest end (not merely hidden), so it appears and leaves in the same frame as
+        // [TranscriptListState.following] changes, with no fade, slide or scale (a cross-fade would show two live
+        // lines).
+        if (!state.following) {
+            // Read at layout, as the list's own content padding is, never while composing.
+            KitJumpDock(state, jumpLabel, motion, dockLive) {
+                chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()
+            }
+        }
     }
 }
 
@@ -313,14 +272,6 @@ public fun KitTranscriptList(
 @Composable
 public fun LazyItemScope.kitTranscriptItemMotion(fadeIn: Boolean = true): Modifier =
     kitItemMotion(fadeIn = fadeIn, fadeOut = false, placement = false)
-
-/** E20-S30: the gap between the pill and the composer, the soft fade's height and its strongest alpha. */
-internal const val JUMP_GAP_DP = 8
-internal const val JUMP_FADE_DP = 28
-internal const val JUMP_FADE_ALPHA = 0.72f
-
-/** How far above the chrome the pill's target sits so its visible face is [JUMP_GAP_DP] above it. */
-internal fun jumpPillLift(minTarget: Int): Int = (JUMP_GAP_DP - (minTarget - JUMP_PILL_FACE_DP) / 2).coerceAtLeast(0)
 
 /**
  * For a part under the transcript that changes height while it animates (M-005: the request slot's `KitReveal`; M-002:
@@ -361,48 +312,130 @@ private fun Modifier.keepsBottom(pin: BottomPin, bottomInsetDp: () -> Float): Mo
     })
 
 /**
- * The pill (plan 08 §5.1 "Jump pill"). It alone reads [TranscriptListState.awayFromLatest]. Plain
- * tap: no haptic.
+ * The docked "Jump to latest" row (owner decision O2 = D, 2026-11-24; O4 = the first pixel): the whole content width
+ * and one target tall, with no fill, border, plate or glass, its bottom where the newest line rests, so it stands in
+ * the live line's place. At its start the running turn's live words ([dockLive]), at its end the label and a down
+ * arrow. One tappable runs the jump. Plain tap: no haptic. The list clears what lies under it ([clearBandForDock]).
+ *
+ * @param lift how far the row's bottom stands above the list's bottom (the chrome's room and the list's own padding),
+ * read at layout
  */
 @Composable
-private fun KitJumpToLatest(
+private fun BoxScope.KitJumpDock(
     state: TranscriptListState,
     label: String,
     motion: KitMotionLevel,
-    backdrop: KitFrostState,
-    modifier: Modifier,
-    round: Boolean = false,
+    dockLive: KitTranscriptDockLive?,
+    lift: () -> Dp,
 ) {
     val scope = rememberCoroutineScope()
+    val minTarget = LocalKitTokens.current.minTarget.dp
     val jump: () -> Unit = {
-                state.following = true
-                scope.launch {
-                    val lazy = state.lazy
-                    val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
-                    when {
-                        motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
-                        lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
-                        else -> {
-                            lazy.scrollToItem(
-                                2
-                            ) // jump close, glide the last stretch (never animate across thousands)
-                            lazy.animateScrollToItem(0)
-                        }
-                    }
+        state.following = true
+        scope.launch {
+            val lazy = state.lazy
+            val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
+            when {
+                motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
+                lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
+                else -> {
+                    // jump close, glide the last stretch (never animate across thousands)
+                    lazy.scrollToItem(2)
+                    lazy.animateScrollToItem(0)
                 }
             }
-    // The kit's own jump pill (small, chevron and words), or a floating chat's round arrow, shown while away from the
-    // newest end.
-    if (round)
-        io.github.eslamasabry.oc.ui.kit.frame.KitJumpButton(label, jump, state.awayFromLatest, modifier.testTag("jump-to-latest"))
-    else
-        KitJumpPill(
-            label = label,
-            visible = state.awayFromLatest,
-            modifier = modifier.testTag("jump-to-latest"),
-            backdrop = backdrop,
+        }
+    }
+    Box(
+        Modifier.align(Alignment.BottomCenter)
+            .liftAtLayout(lift)
+            .fillMaxWidth()
+            .testTag("jump-to-latest")
+            .semantics(mergeDescendants = true) { contentDescription = label },
+    ) {
+        KitTappable(
             onClick = jump,
+            modifier = Modifier.fillMaxWidth().height(minTarget),
+            onClickLabel = label,
+            shape = KitShapeId.Button,
+        ) {
+            // On the row's bottom line: where the list's own live line rests.
+            Row(
+                Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = Space.S4.dp),
+                verticalAlignment = Alignment.Vertical.Bottom,
+            ) {
+                DockContent(label, dockLive)
+            }
+        }
+    }
+}
+
+/** The row's inside: the live words first (or the room they would take), then the label and the arrow. */
+@Composable
+private fun RowScope.DockContent(label: String, live: KitTranscriptDockLive?) {
+    if (live != null) {
+        KitTurnLiveLine(
+            live.words,
+            Modifier.weight(1f).testTag("transcript-dock-live"),
+            tone = live.tone,
+            spoken = live.spoken,
+            onRail = live.onRail,
         )
+    } else {
+        Spacer(Modifier.weight(1f))
+    }
+    KitText(label, role = TypeRole.Secondary, tone = TextTone.Primary)
+    Spacer(Modifier.width(Space.S2.dp))
+    KitIcon(KitIcons.down, size = KitIconSize.Small, tone = TextTone.Primary)
+}
+
+/** The soft edge above the docked row's clear band: the list's content fades out over this, then is gone. */
+internal const val DOCK_CLEAR_FADE_DP = 16
+
+/**
+ * The clear band under the docked "Jump to latest" row (owner decision O2 = D): while the person does not follow the
+ * newest end, the list's content is cleared from one target above the place the newest line rests on down to the list's
+ * bottom edge, and fades out over [DOCK_CLEAR_FADE_DP] above that, so no line of text lies under the row. The list is
+ * drawn in its own offscreen layer for it, only while the band shows. What it reads, it reads while drawing: no layout
+ * changes, so nothing moves.
+ */
+@Composable
+private fun Modifier.clearBandForDock(
+    state: TranscriptListState,
+    contentPadding: PaddingValues,
+    chrome: PaddingValues,
+): Modifier {
+    val target = LocalKitTokens.current.minTarget.dp
+    return graphicsLayer {
+        // Offscreen only while the band shows: the clearing works on the list's own pixels, alone.
+        compositingStrategy = if (state.following) CompositingStrategy.Auto else CompositingStrategy.Offscreen
+    }.drawWithContent {
+        drawContent()
+        if (state.following) return@drawWithContent
+        // The two paddings the docked row stands on, in whole pixels.
+        val rest = (chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()).roundToPx()
+        val bandTop = (size.height - rest - target.roundToPx()).coerceAtLeast(0)
+        val from = (bandTop - DOCK_CLEAR_FADE_DP.dp.roundToPx()).coerceAtLeast(0)
+        if (bandTop > from) {
+            drawRect(
+                Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    1f to Color.Black,
+                    startY = from.toFloat(),
+                    endY = bandTop.toFloat(),
+                ),
+                topLeft = Offset(0f, from.toFloat()),
+                size = Size(size.width, (bandTop - from).toFloat()),
+                blendMode = BlendMode.DstOut,
+            )
+        }
+        drawRect(
+            Color.Black,
+            topLeft = Offset(0f, bandTop.toFloat()),
+            size = Size(size.width, (size.height - bandTop).toFloat()),
+            blendMode = BlendMode.DstOut,
+        )
+    }
 }
 
 /** [a] plus [b], each side read only when asked (at measure), never while composing. */
@@ -417,14 +450,6 @@ private class SumPadding(private val a: PaddingValues, private val b: PaddingVal
 
     override fun calculateBottomPadding(): Dp = a.calculateBottomPadding() + b.calculateBottomPadding()
 }
-
-/** This part's height, [height], read at measure. */
-private fun Modifier.heightAtLayout(height: () -> Dp): Modifier =
-    layout { measurable, constraints ->
-        val h = height().roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
-        val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
-        layout(placeable.width, h) { placeable.place(0, 0) }
-    }
 
 /** This part raised by [lift] from its place (as a bottom padding would), read at measure. */
 private fun Modifier.liftAtLayout(lift: () -> Dp): Modifier =
