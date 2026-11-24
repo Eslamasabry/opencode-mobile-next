@@ -152,3 +152,5 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10135 | seen | 2026-11-23 | on the branch native/test-10135: owner phone test build (crash, memory and steps fixes) |
 | 10136 | seen | 2026-11-23 | on the branch native/test-10136: owner phone test build (crash, memory and steps fixes) |
 | 10137 | build | 2026-11-23 | 3.0.2 release candidate build 2 |
+| 10139 | seen | 2026-11-24 | on the branch native/test-10139: owner phone test build with the agent pins of pins-303, not the candidate |
+| 10141 | build | 2026-11-24 | 3.0.2 release candidate build 3 |
