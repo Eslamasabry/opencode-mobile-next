@@ -118,6 +118,8 @@ private const val SAVED_RECENT_MODELS = 8
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
+// one collaborator added to an existing constructor; splitting it is its own refactor
+@Suppress("LongParameterList")
 public class GraphChatWorlds(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
@@ -210,6 +212,8 @@ public class GraphChatWorlds(
  * fences the registry generation. Draft saving remains unavailable until the adopted drafts store
  * is connected; send admission requires storage.
  */
+// one collaborator added to an existing constructor; splitting it is its own refactor
+@Suppress("LongParameterList")
 internal class GraphChatWorld(
     override val ref: ConversationRef,
     private val registry: ConnectionRegistry,
