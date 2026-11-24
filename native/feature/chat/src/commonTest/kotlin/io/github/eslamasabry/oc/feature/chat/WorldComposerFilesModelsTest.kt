@@ -1935,6 +1935,56 @@ class WorldComposerFilesModelsTest {
         val seen = secondSendAfter(opensBeforeAccepted = true)
         assertTrue(seen.contains("wire:Hi"), seen.toString())
     }
+
+    @Test
+    fun `B-523-005 an unlisted session model falls back to the provider's first enabled model and rides the send`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "gone"))
+            f.operations.catalog =
+                Outcome.Ok(
+                    snapshot(
+                        catalogModel("m1", enabled = false),
+                        catalogModel("m2", enabled = true),
+                        catalogModel("m3", enabled = true),
+                    )
+                )
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "gone"), null))
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val models = f.world.models.value
+            assertEquals("m2", models.selected?.modelId)
+            assertFalse(models.usesDefault)
+            assertFalse(models.displayOnly)
+            f.world.draftChanged("hi")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("hi"))
+            runCurrent()
+            assertEquals(ModelRef("prov", "m2"), f.base.sentPrompts.single().second.model?.model)
+        }
+
+    @Test
+    fun `B-523-006 an unlisted server default is replaced, while a provider with no listed model stays null`() =
+        runTest {
+            val f = Fixture(this, selection = null)
+            f.operations.catalog =
+                Outcome.Ok(snapshot(catalogModel("m1", enabled = false), catalogModel("m2", enabled = true)))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "gone"), null))
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val models = f.world.models.value
+            assertEquals("m2", models.selected?.modelId)
+            assertFalse(models.usesDefault)
+            assertFalse(models.displayOnly)
+
+            val stale = Fixture(this, selection = ModelRef("other", "gone"))
+            stale.operations.catalog = Outcome.Ok(snapshot(catalogModel("m2", enabled = true)))
+            stale.operations.defaults = Outcome.Ok(ChatDefaults(null, null))
+            stale.switchesModels()
+            stale.open()
+            assertIs<Outcome.Ok<Unit>>(stale.world.loadModels())
+            assertNull(stale.world.models.value.selected)
+        }
 }
 
 /** The header port's context-usage memory, unused by these tests. */
