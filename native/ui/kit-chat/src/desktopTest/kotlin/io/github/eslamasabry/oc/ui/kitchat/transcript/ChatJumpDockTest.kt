@@ -26,9 +26,9 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -273,8 +273,8 @@ class ChatJumpDockTest {
     private fun ComposeUiTest.assertTops(rest: Map<String, List<Float>>, moment: String) {
         val now = tops()
         for ((words, was) in rest) for (top in was) {
-            val tops = now[words].orEmpty()
-            assertTrue(tops.any { abs(it - top) <= 0.5f }, "$moment: \"$words\" moved from $top to $tops")
+            val nowTops = now[words].orEmpty()
+            assertTrue(nowTops.any { abs(it - top) <= 0.5f }, "$moment: \"$words\" moved from $top to $nowTops")
         }
     }
 

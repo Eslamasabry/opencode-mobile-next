@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -76,7 +75,7 @@ class ChatJumpDockRenders {
     )
 
     private val rows =
-        (0 until 40).map { "Row $i: the build finished and every check passed, then the notes were written." }
+        (0 until 40).map { i -> "Row $i: the build finished and every check passed, then the notes were written." }
 
     /** The page's list state, hoisted out of the composition. */
     private lateinit var list: TranscriptListState
