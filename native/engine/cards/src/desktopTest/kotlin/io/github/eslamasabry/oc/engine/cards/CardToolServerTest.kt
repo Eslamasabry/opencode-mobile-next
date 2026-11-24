@@ -56,6 +56,7 @@ class CardToolServerTest {
             writeText("Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 6000); require('./server.cjs');")
         }
         helper = Helper(slow)
+        helper.awaitReady()
     }
 
     @AfterTest
@@ -360,6 +361,13 @@ class CardToolServerTest {
             thread(isDaemon = true) { stderrBytes += process.errorStream.readBytes().size }
         }
 
+        fun awaitReady() {
+            raw(("""{"jsonrpc":"2.0","id":"ready","method":"ping"}""" + "\n").encodeToByteArray())
+            val line = lines.poll(READY_SECONDS, TimeUnit.SECONDS)
+            assertNotNull(line, "helper not ready after $READY_SECONDS s")
+            assertEquals("""{"jsonrpc":"2.0","id":"ready","result":{}}""", line)
+        }
+
         fun initialize(version: String = "2025-11-25"): JsonObject {
             val reply = request("initialize", initParams(version))
             notification("notifications/initialized")
@@ -412,6 +420,8 @@ class CardToolServerTest {
     }
 
     private companion object {
+        const val READY_SECONDS = 60L
+
         fun node(): String =
             System.getenv("PATH").orEmpty().split(File.pathSeparator).map { File(it, "node") }.firstOrNull { it.canExecute() }?.path
                 ?: File("/opt/node22/bin/node").takeIf { it.canExecute() }?.path
