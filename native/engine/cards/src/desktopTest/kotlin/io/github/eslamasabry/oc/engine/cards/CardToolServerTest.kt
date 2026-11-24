@@ -52,7 +52,10 @@ class CardToolServerTest {
         directory = Files.createTempDirectory("gen-ui-server-").toFile()
         marker = File(directory, "enabled").apply { writeText("enabled\n") }
         val script = File(directory, "server.cjs").apply { writeText(CardToolServer.script(marker.path)) }
-        helper = Helper(script)
+        val slow = File(directory, "slow.cjs").apply {
+            writeText("Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 6000); require('./server.cjs');")
+        }
+        helper = Helper(slow)
     }
 
     @AfterTest
