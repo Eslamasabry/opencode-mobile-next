@@ -1991,10 +1991,19 @@ internal class GraphChatWorld(
         val previous = mutableModels.value
         // A choice verified while this load ran is newer than anything this load read.
         val newer = selectionEpoch != epoch
+        val missing = if (failure == null && !newer && resolved == null) effective else null
+        val fallback =
+            if (missing != null && choices.isNotEmpty())
+                ModelFallback.pick(
+                    ModelKey(missing.providerId, missing.modelId),
+                    ModelFallback.answered(transcript.value.rows),
+                    choices,
+                )
+            else null
         mutableModels.value =
             ComposerModels(
                 choices,
-                if (newer || failure != null) previous.selected else resolved,
+                if (newer || failure != null) previous.selected else resolved ?: fallback,
                 failure = failure,
                 variant =
                     if (newer || failure != null) previous.variant else session?.variant.orEmpty(),
@@ -2002,7 +2011,8 @@ internal class GraphChatWorld(
                 subagents = subagents,
                 agent = if (newer) previous.agent else session?.agent ?: catalogDefaults?.agent,
                 usesDefault =
-                    if (newer) previous.usesDefault else session?.model == null && failure == null,
+                    if (newer) previous.usesDefault
+                    else fallback == null && session?.model == null && failure == null,
                 serverDefault =
                     catalogDefaults?.model?.let { ref ->
                         choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }

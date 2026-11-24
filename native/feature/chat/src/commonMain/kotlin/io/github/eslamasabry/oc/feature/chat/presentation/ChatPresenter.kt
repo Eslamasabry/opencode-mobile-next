@@ -1147,19 +1147,31 @@ public class ChatPresenter(
         }
     }
 
+    private val resendingTurns = HashSet<String>()
+
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
-        val t = world.transcript.value
-        val words = t.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow
-        val text = words?.text?.takeIf { it.isNotBlank() } ?: return
+        val text =
+            if (turnId in resendingTurns) null
+            else
+                (world.transcript.value.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow)
+                    ?.text
+                    ?.takeIf { it.isNotBlank() }
         val choice =
-            world.models.value.choices.firstOrNull {
-                it.providerId == providerId && it.modelId == modelId
-            } ?: return
+            if (text == null) null
+            else
+                world.models.value.choices.firstOrNull {
+                    it.providerId == providerId && it.modelId == modelId
+                }
+        if (text == null || choice == null || !resendingTurns.add(turnId)) return
         launcher.launch {
-            when (val picked = world.selectModel(choice)) {
-                // A refused switch keeps the old model and sends nothing.
-                is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
-                is Outcome.Ok -> world.sendAgain(text)
+            try {
+                when (val picked = world.selectModel(choice)) {
+                    // A refused switch keeps the old model and sends nothing.
+                    is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
+                    is Outcome.Ok -> world.sendAgain(text)
+                }
+            } finally {
+                resendingTurns.remove(turnId)
             }
         }
     }

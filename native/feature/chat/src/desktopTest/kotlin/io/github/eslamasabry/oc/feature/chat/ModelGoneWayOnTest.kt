@@ -84,37 +84,64 @@ class ModelGoneWayOnTest {
         assertTrue(abs(now.bottom - base.bottom) <= 0.5f, "$tag bottom drifted on frame $frame: $now vs $base")
     }
 
+    private fun twoTurnWorld(m2: ComposerModel): ModelWorld =
+        ModelWorld(listOf(m2)).apply {
+            transcript.value =
+                stateOf(
+                    prompt("u1", "first"),
+                    block("u1", "a1", "p1", 0, "ok"),
+                    FooterRow(
+                        "footer:u1",
+                        "u1",
+                        failed = false,
+                        createdMs = 100L,
+                        providerId = "prov",
+                        modelId = "m2",
+                    ),
+                    prompt("u2", "go"),
+                    FooterRow(
+                        "footer:u2",
+                        "u2",
+                        failed = true,
+                        reason = "Model not found",
+                        errorKind = MessageErrorKind.ModelNotFound,
+                        createdMs = 200L,
+                        providerId = "prov",
+                        modelId = "gone",
+                    ),
+                )
+        }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.assertSixtyFramesStable() {
+        mainClock.advanceTimeByFrame()
+        val baseUse = onNodeWithTag("error-action-use-model").fetchSemanticsNode().boundsInRoot
+        val baseChoose = onNodeWithTag("error-action-choose-model").fetchSemanticsNode().boundsInRoot
+        for (frame in 1..60) {
+            mainClock.advanceTimeByFrame()
+            val use = onNodeWithTag("error-action-use-model").fetchSemanticsNode().boundsInRoot
+            val choose = onNodeWithTag("error-action-choose-model").fetchSemanticsNode().boundsInRoot
+            assertStable(baseUse, use, frame, "use")
+            assertStable(baseChoose, choose, frame, "choose")
+            assertTrue(use.left >= 0f && use.right <= 360f, "use outside 360dp on frame $frame: $use")
+            assertTrue(
+                choose.left >= 0f && choose.right <= 360f,
+                "choose outside 360dp on frame $frame: $choose",
+            )
+            val tags = mutableListOf<String>()
+            collectTags(onRoot().fetchSemanticsNode(), tags)
+            val useIdx = tags.indexOf("error-action-use-model")
+            val chooseIdx = tags.indexOf("error-action-choose-model")
+            assertTrue(useIdx >= 0 && chooseIdx > useIdx, "Use must precede Choose: $tags")
+        }
+    }
+
     private fun walk(locale: String, scale: Float, motion: MotionLevel) {
         val beforeLocale = Locale.getDefault()
         try {
             Locale.setDefault(Locale.forLanguageTag(locale))
             kitUiTest(360, 800) {
                 val m2 = ComposerModel("prov", "m2", "M2", supportsAttachments = false, enabled = true)
-                val world = ModelWorld(listOf(m2))
-                world.transcript.value =
-                    stateOf(
-                        prompt("u1", "first"),
-                        block("u1", "a1", "p1", 0, "ok"),
-                        FooterRow(
-                            "footer:u1",
-                            "u1",
-                            failed = false,
-                            createdMs = 100L,
-                            providerId = "prov",
-                            modelId = "m2",
-                        ),
-                        prompt("u2", "go"),
-                        FooterRow(
-                            "footer:u2",
-                            "u2",
-                            failed = true,
-                            reason = "Model not found",
-                            errorKind = MessageErrorKind.ModelNotFound,
-                            createdMs = 200L,
-                            providerId = "prov",
-                            modelId = "gone",
-                        ),
-                    )
+                val world = twoTurnWorld(m2)
                 val scene = ChatScene(world = world)
                 val state = scene.live().copy(status = null, rows = world.transcript.value.rows)
 
@@ -132,28 +159,7 @@ class ModelGoneWayOnTest {
                         )
                     }
                 }
-
-                mainClock.advanceTimeByFrame()
-                val baseUse = onNodeWithTag("error-action-use-model").fetchSemanticsNode().boundsInRoot
-                val baseChoose = onNodeWithTag("error-action-choose-model").fetchSemanticsNode().boundsInRoot
-
-                for (frame in 1..60) {
-                    mainClock.advanceTimeByFrame()
-                    val use = onNodeWithTag("error-action-use-model").fetchSemanticsNode().boundsInRoot
-                    val choose = onNodeWithTag("error-action-choose-model").fetchSemanticsNode().boundsInRoot
-                    assertStable(baseUse, use, frame, "use")
-                    assertStable(baseChoose, choose, frame, "choose")
-                    assertTrue(use.left >= 0f && use.right <= 360f, "use outside 360dp on frame $frame: $use")
-                    assertTrue(
-                        choose.left >= 0f && choose.right <= 360f,
-                        "choose outside 360dp on frame $frame: $choose",
-                    )
-                    val tags = mutableListOf<String>()
-                    collectTags(onRoot().fetchSemanticsNode(), tags)
-                    val useIdx = tags.indexOf("error-action-use-model")
-                    val chooseIdx = tags.indexOf("error-action-choose-model")
-                    assertTrue(useIdx >= 0 && chooseIdx > useIdx, "Use must precede Choose: $tags")
-                }
+                assertSixtyFramesStable()
 
                 val expectedLabel = if (locale == "en") "Use M2 and resend" else "استخدام M2 وإعادة الإرسال"
                 onNodeWithText(expectedLabel).assertExists()

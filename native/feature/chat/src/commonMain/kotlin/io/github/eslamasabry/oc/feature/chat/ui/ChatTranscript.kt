@@ -280,6 +280,7 @@ internal class ReplyActions(
     val onRerunCommand: ((String) -> Unit)? = null,
     /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
     val onOpenChanges: (() -> Unit)? = null,
+    val answered: () -> List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptyList() },
 )
 
 /**
@@ -1595,9 +1596,24 @@ private fun ChatRow(
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
                                             kind == ReplyFailureKind.Model
-                                    )
+                                    ) {
+                                        val goneKey =
+                                            row.providerId
+                                                ?.takeIf { it.isNotBlank() }
+                                                ?.let { p ->
+                                                    row.modelId
+                                                        ?.takeIf { it.isNotBlank() }
+                                                        ?.let { m ->
+                                                            io.github.eslamasabry.oc.feature.chat.world.ModelKey(p, m)
+                                                        }
+                                                }
                                         ErrorRecovery.suggestedModel(reason, reply.models)
-                                    else null
+                                            ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
+                                                goneKey,
+                                                reply.answered(),
+                                                reply.models,
+                                            )
+                                    } else null
                                 val showSignIn =
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                         reply.signInSettingsLabel != null
@@ -1647,7 +1663,7 @@ private fun ChatRow(
                                                                 suggestion.modelId,
                                                             )
                                                         },
-                                                        role = KitButtonRole.Secondary,
+                                                        role = KitButtonRole.Primary,
                                                         modifier = Modifier.testTag("error-action-use-model"),
                                                     )
                                             ErrorFix.ChooseModel ->
