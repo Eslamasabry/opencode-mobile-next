@@ -114,4 +114,5 @@
     <string name="editor40SaveChanges">変更を保存</string>
     <string name="editor40Stale">この保存済みサーバーまたはそのサインインが変更されました。やり直す前にこの画面を閉じてサーバーを開き直してください。</string>
     <string name="editor40Deleted">このサーバーは削除されました。この画面を閉じて保存済みサーバー一覧に戻ってください。</string>
+    <string name="serversEditNamed">%1$sを編集</string>
 </resources>

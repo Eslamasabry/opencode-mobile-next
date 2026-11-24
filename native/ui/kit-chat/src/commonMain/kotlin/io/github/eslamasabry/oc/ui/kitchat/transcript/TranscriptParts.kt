@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kitchat.code.CodeOverflow
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeColors
@@ -49,18 +51,16 @@ public enum class KitBlockKind {
     Code,
 }
 
-/** Plan 09 R13: the conversation column is capped at 700 dp. */
-private val Column =
-    Modifier.fillMaxWidth()
-        .widthIn(max = 700.dp)
-        .padding(horizontal = Space.S4.dp, vertical = Space.S1.dp)
-
-/** The same column inside a [KitTurn]: the turn gives every gap (C-001), so the row keeps no padding of its own. */
-private val TurnColumn = Modifier.fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp)
-
-/** The column for a part: its own 4 dp row padding only outside a [KitTurn]. */
+/**
+ * The column for a part: plan 09 R13 caps the conversation column at 700 dp (the pane's column beside a list, big
+ * screens); its own 4 dp row padding only outside a [KitTurn] (the turn gives every gap, C-001).
+ */
 @Composable
-internal fun column(): Modifier = if (LocalKitTurn.current) TurnColumn else Column
+internal fun column(): Modifier {
+    val column = Modifier.fillMaxWidth().widthIn(max = kitConversationCap())
+    return if (LocalKitTurn.current) column.padding(horizontal = Space.S4.dp)
+    else column.padding(horizontal = Space.S4.dp, vertical = Space.S1.dp)
+}
 
 /** A quiet line inside an opened step's body: the step's own edge, no page gutter. */
 private val StepLine = Modifier.fillMaxWidth().padding(vertical = Space.S1.dp / 2)
@@ -110,7 +110,7 @@ public fun KitReplyBlock(
     val shown = reveal?.shown?.coerceAtMost(text.length) ?: text.length
     val visible = if (shown >= text.length) text else text.substring(0, shown)
     val revealing = reveal != null && (live || reveal.active)
-    var m = modifier.then(if (LocalKitTurn.current) TurnColumn else columnOf(continued, continues))
+    var m = modifier.then(if (LocalKitTurn.current) column() else columnOf(continued, continues, kitConversationCap()))
     if (revealing) {
         m = m.clipToBounds().growOnly(enabled = live && motion == KitMotionLevel.Full)
         if (motion == KitMotionLevel.Full)
@@ -153,12 +153,12 @@ public fun KitReplyBlock(
  * The column with the row gap only on the sides where the block does not continue into another
  * chunk.
  */
-private fun columnOf(continued: Boolean, continues: Boolean): Modifier =
+private fun columnOf(continued: Boolean, continues: Boolean, cap: Dp): Modifier =
     if (!continued && !continues) {
-        Column
+        Modifier.fillMaxWidth().widthIn(max = cap).padding(horizontal = Space.S4.dp, vertical = Space.S1.dp)
     } else {
         Modifier.fillMaxWidth()
-            .widthIn(max = 700.dp)
+            .widthIn(max = cap)
             .padding(
                 start = Space.S4.dp,
                 end = Space.S4.dp,

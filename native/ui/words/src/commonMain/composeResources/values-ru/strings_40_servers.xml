@@ -144,4 +144,5 @@
     <string name="editor40SaveChanges">Сохранить изменения</string>
     <string name="editor40Stale">Этот сохранённый сервер или вход в него изменился. Закройте эту страницу и снова откройте сервер, прежде чем продолжить.</string>
     <string name="editor40Deleted">Этот сервер удалён. Закройте страницу, чтобы вернуться к сохранённым серверам.</string>
+    <string name="serversEditNamed">Изменить %1$s</string>
 </resources>

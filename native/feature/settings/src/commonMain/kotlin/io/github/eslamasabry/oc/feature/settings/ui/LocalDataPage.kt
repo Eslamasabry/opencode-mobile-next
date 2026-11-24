@@ -10,7 +10,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.feature.settings.presentation.*
+import io.github.eslamasabry.oc.feature.settings.presentation.LocalDataKind
+import io.github.eslamasabry.oc.feature.settings.presentation.LocalDataUi
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction

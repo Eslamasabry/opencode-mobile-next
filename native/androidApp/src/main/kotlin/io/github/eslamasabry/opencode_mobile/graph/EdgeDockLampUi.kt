@@ -218,7 +218,8 @@ internal fun lampPanelWords(t: LampTexts, ui: LampUi): KitLampPanelWords {
 /**
  * The panel, grown out of the light: the list drawn by the kit from the rows presenter, every act connected to the
  * list's controller (open and Back, Allow once / Deny with Undo, Answer…, Stop with Undo, Edit mode: pin, rename, hide,
- * reorder, Move…, Turn off, New conversation, All conversations). Notes after an act come as toasts and the hide's Undo bar.
+ * reorder, Move…, Turn off, New conversation, All conversations). Notes after an act come as toasts and the hide's
+ * Undo bar.
  */
 @Composable
 internal fun EdgeLightPanelLayer(

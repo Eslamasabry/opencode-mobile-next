@@ -134,4 +134,5 @@
     <string name="editor40SaveChanges">Salvar alterações</string>
     <string name="editor40Stale">Este servidor salvo ou o login dele mudou. Feche esta página e abra o servidor de novo antes de tentar.</string>
     <string name="editor40Deleted">Este servidor foi removido. Feche esta página para voltar aos seus servidores salvos.</string>
+    <string name="serversEditNamed">Editar %1$s</string>
 </resources>

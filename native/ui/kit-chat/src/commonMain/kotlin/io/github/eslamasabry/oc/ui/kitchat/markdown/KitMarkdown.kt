@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.markdown
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import androidx.compose.foundation.background
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedDecoration
 import io.github.eslamasabry.oc.ui.kit.foundation.edgeColor
@@ -207,7 +208,7 @@ public fun KitMarkdown(
         LocalMdRole provides (if (secondary) TypeRole.Secondary else TypeRole.Body),
         LocalMdTone provides (if (secondary) LocalKitColors.current.text2 else LocalMdTone.current),
     ) {
-    Column(modifier.widthIn(max = 700.dp)) {
+    Column(modifier.widthIn(max = kitConversationCap())) {
         val last = blocks.lastIndex
         blocks.forEachIndexed { i, block ->
             key(block.key) {

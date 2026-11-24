@@ -134,4 +134,5 @@
     <string name="editor40SaveChanges">Enregistrer les modifications</string>
     <string name="editor40Stale">Ce serveur enregistré ou sa connexion a changé. Fermez cette page et rouvrez le serveur avant de réessayer.</string>
     <string name="editor40Deleted">Ce serveur a été supprimé. Fermez cette page pour revenir à vos serveurs enregistrés.</string>
+    <string name="serversEditNamed">Modifier %1$s</string>
 </resources>
