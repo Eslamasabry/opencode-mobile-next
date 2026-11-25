@@ -69,7 +69,7 @@ internal fun TurnChangedFiles(
     ) {
         // F: kit_turn.dart:498 space3 from the reply's last block, plus chat_files.dart:356 `margin: top space2`; the
         // reply block above already brings space1.
-        KitRowGroup(Modifier.padding(top = Space.S4.dp), surface = true) {
+        KitRowGroup(surface = true, modifier = Modifier.padding(top = Space.S4.dp)) {
             for (file in shown) {
                 val counts =
                     listOfNotNull(

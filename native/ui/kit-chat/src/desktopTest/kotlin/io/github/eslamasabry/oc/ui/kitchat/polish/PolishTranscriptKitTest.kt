@@ -167,6 +167,15 @@ class PolishTranscriptKitTest {
         )
     }
 
+    private fun stepView(
+        id: String,
+        kind: KitToolKind,
+        title: String,
+        status: KitToolStatus,
+        duration: String?,
+        statusLabel: String,
+    ) = KitToolView(id, kind, title, null, null, status, duration, null, null, statusLabel)
+
     @Test
     fun `B-568 durations share one right edge`() =
         kitUiTest(260, 480) {
@@ -175,51 +184,21 @@ class PolishTranscriptKitTest {
                     ChatTestTheme(dark = true) {
                         Box(Modifier.width(260.dp).background(LocalKitColors.current.ground)) {
                             KitStepList {
+                                val s1 = stepView("s1", KitToolKind.Shell, "Ran 3", KitToolStatus.Done, "26.7s", "Done")
+                                KitToolRow(s1, opened = false, onToggle = {}, group = true)
                                 KitToolRow(
-                                    KitToolView(
-                                        id = "s1",
-                                        kind = KitToolKind.Shell,
-                                        title = "Ran 3 commands",
-                                        subject = null,
-                                        detail = null,
-                                        status = KitToolStatus.Done,
-                                        durationLabel = "26.7s",
-                                        added = null,
-                                        removed = null,
-                                        statusLabel = "Done",
-                                    ),
-                                    opened = false,
-                                    onToggle = {},
-                                    group = true,
-                                )
-                                KitToolRow(
-                                    KitToolView(
-                                        id = "s2",
-                                        kind = KitToolKind.Read,
-                                        title = "Read",
-                                        subject = "app.kt",
-                                        detail = null,
-                                        status = KitToolStatus.Done,
-                                        durationLabel = "0.2s",
-                                        added = null,
-                                        removed = null,
-                                        statusLabel = "Done",
-                                    ),
+                                    stepView("s2", KitToolKind.Read, "Read app.kt", KitToolStatus.Done, "0.2s", "Done"),
                                     opened = false,
                                     onToggle = {},
                                 )
                                 KitToolRow(
-                                    KitToolView(
-                                        id = "s3",
-                                        kind = KitToolKind.Shell,
-                                        title = "Run integration tests for checkout",
-                                        subject = null,
-                                        detail = null,
-                                        status = KitToolStatus.WaitingForYou,
-                                        durationLabel = null,
-                                        added = null,
-                                        removed = null,
-                                        statusLabel = "Waiting for you",
+                                    stepView(
+                                        "s3",
+                                        KitToolKind.Shell,
+                                        "Run integration tests for checkout",
+                                        KitToolStatus.WaitingForYou,
+                                        null,
+                                        "Waiting for you",
                                     ),
                                     opened = false,
                                     onToggle = {},
@@ -244,7 +223,7 @@ class PolishTranscriptKitTest {
                 .action!!
                 .invoke(statusLayout)
             val wrapped = statusLayout.first()
-            assertTrue(wrapped.lineCount >= 2, "expected wrapped status at 1.3x, got ${wrapped.lineCount}")
+            assertTrue(wrapped.lineCount >= 2, "expected wrapped status, got ${wrapped.lineCount}")
             val r0 = wrapped.getLineRight(0)
             val rLast = wrapped.getLineRight(wrapped.lineCount - 1)
             assertTrue(abs(rLast - r0) <= 2f, "wrapped status lines must right-align: line0=$r0, last=$rLast")

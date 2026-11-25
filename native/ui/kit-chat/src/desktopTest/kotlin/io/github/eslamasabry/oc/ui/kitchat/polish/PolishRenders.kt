@@ -43,22 +43,17 @@ class PolishRenders {
     }
 
     private fun render(
-        n: String,
-        scene: String,
-        dark: Boolean = true,
-        scale: Float = 1f,
+        name: String,
         locale: String = "en",
         height: Int = 480,
         content: @Composable () -> Unit,
     ) {
         val dir = File("build/polish-render").also { it.mkdirs() }
-        val mode = if (dark) "dark" else "light"
-        val scaleTag = if (scale > 1.05f) "1.3" else "1.0"
-        val file = File(dir, "$n-$PHASE-$scene-360-$scaleTag-$mode.png")
+        val file = File(dir, name)
         kitUiTest(360, height) {
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(1f, scale)) {
-                    ChatTestTheme(dark = dark, localeTag = locale, fontScale = scale) {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    ChatTestTheme(dark = true, localeTag = locale, fontScale = 1f) {
                         val dirLayout = if (locale == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
                         CompositionLocalProvider(LocalLayoutDirection provides dirLayout) {
                             Box(
@@ -78,9 +73,9 @@ class PolishRenders {
     }
 
     @Test
-    fun `render kit-chat polish scenes`() {
+    fun `render 551 inplace card`() {
         val diff = KitDiffPreview.fromText("val a = 1\nval b = 2\nval c = 3")
-        render("551", "inplace-card") {
+        render("551-$PHASE-inplace-card-360-1.0-dark.png") {
             KitPermissionCard(
                 title = "Edit src/app.kt?",
                 summary = "The agent waits until you answer.",
@@ -97,7 +92,11 @@ class PolishRenders {
                 change = KitRequestChange(diff, "Change to src/app.kt", null, {}),
             )
         }
-        render("568", "step-rail") {
+    }
+
+    @Test
+    fun `render 568 step rail`() {
+        render("568-$PHASE-step-rail-360-1.0-dark.png") {
             KitStepList {
                 KitToolRow(
                     KitToolView(
@@ -134,12 +133,20 @@ class PolishRenders {
                 )
             }
         }
-        render("584", "prompt-bubble", height = 220) {
+    }
+
+    @Test
+    fun `render 584 prompt bubble`() {
+        render("584-$PHASE-prompt-bubble-360-1.0-dark.png", height = 220) {
             Column(Modifier.width(328.dp)) {
                 KitPromptBubble("Look into why the player closes on the TV")
             }
         }
-        render("588", "rtl-targets", locale = "ar", height = 220) {
+    }
+
+    @Test
+    fun `render 588 rtl targets`() {
+        render("588-$PHASE-rtl-targets-360-1.0-dark.png", locale = "ar", height = 220) {
             KitRequestTargets(
                 targets = listOf(KitRequestTarget("npm test")),
                 copyLabel = "Copy",

@@ -27,6 +27,7 @@ public enum class KitViewerKind { Text, Code, Markdown, Image, Pdf, Svg, Delimit
  * wrapped on a compact window. `KitCodeBlock.defaultWrap(context, kind == code ? code : output)`: only the output kind
  * wraps, and only on a compact window.
  */
+@Suppress("UnusedParameter")
 public fun kitViewerDefaultWrap(window: WindowClass, kind: KitViewerKind?): Boolean =
     window == WindowClass.Compact // B-580: wrap by default on compact phone windows for every viewer kind
 

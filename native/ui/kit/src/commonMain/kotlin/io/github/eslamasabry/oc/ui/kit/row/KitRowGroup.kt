@@ -62,63 +62,128 @@ public fun KitRowGroup(
     destructive: (@Composable () -> Unit)? = null,
     section: Boolean = false,
     afterGroup: Boolean = false,
-    surface: Boolean = false,
+    rows: @Composable () -> Unit,
+) {
+    KitRowGroupContent(
+        modifier = modifier,
+        opts = RowGroupOptions(label, note, leadingTiles, section, afterGroup, surface = false),
+        destructive = destructive,
+        rows = rows,
+    )
+}
+
+/** A [KitRowGroup] that always draws the kit panel surface, even in flat-list styles (B-580). */
+@Composable
+public fun KitRowGroup(
+    surface: Boolean,
+    modifier: Modifier = Modifier,
+    rows: @Composable () -> Unit,
+) {
+    KitRowGroupContent(
+        modifier = modifier,
+        opts = RowGroupOptions(surface = surface),
+        destructive = null,
+        rows = rows,
+    )
+}
+
+private data class RowGroupOptions(
+    val label: String? = null,
+    val note: String? = null,
+    val leadingTiles: Boolean = false,
+    val section: Boolean = false,
+    val afterGroup: Boolean = false,
+    val surface: Boolean = false,
+)
+
+@Composable
+private fun KitRowGroupContent(
+    modifier: Modifier,
+    opts: RowGroupOptions,
+    destructive: (@Composable () -> Unit)?,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
     val hairline = LocalKitColors.current.hairline
-    // The rows inside a panel keep their gutter (the panel is a surface of its own), so read it inside the panel.
-    val rowGutter = kitRowGutterDp(LocalKitOnRail.current && LocalKitStyle.current.spec.tokens.flatLists, tokens.gutter)
-    val inset = (rowGutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
-    val colors = LocalKitColors.current
-    // Solid and Signal run lists flat on the page unless [surface] asks for the kit panel surface (B-580).
-    val panel = surface || !LocalKitStyle.current.spec.tokens.flatLists
-    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
-    // A sheet's body already sits on the sheet's rail: the panel lines up with the sheet's title instead of stepping in
-    // a second gutter (the owner's project sheet, 2026-11-06).
+    val flat = LocalKitStyle.current.spec.tokens.flatLists
     val onRail = LocalKitOnRail.current
-    // Glass keeps its pane inset inside the panel (owner 2026-11-09): the rows sit clear of its rim and sheen.
-    val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
-    val panelMargin = if (onRail) 0.dp else if (surface) Space.S2.dp else tokens.gutter.dp
-    val panelModifier =
-        if (panel) {
-            Modifier.padding(horizontal = panelMargin)
-                .then(look.modifier)
-                .clip(KitShapeId.Panel.shape())
-                .padding(paneInset)
-        } else Modifier
-    // A group with no rows and nothing destructive draws nothing at all: no panel, hairline box, label or note
-    // (a list's empty state stands alone). The rows report their count while they are measured.
+    val rowGutter = kitRowGutterDp(onRail && flat, tokens.gutter)
+    val inset = (rowGutter + if (opts.leadingTiles) tokens.iconTile + Space.S3 else 0).dp
+    val panel = opts.surface || !flat
+    val panelModifier = rowGroupPanelModifier(panel, opts.surface)
     val rowSeams = remember { Seams() }
     val endSeams = remember { Seams() }
-    Column(modifier.layout { measurable, constraints ->
-            val placeable = measurable.measure(constraints)
-            if (rowSeams.count <= 0 && endSeams.count <= 0) layout(0, 0) {}
-            else layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
-        }.kitContainer().fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
-        label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
-        val seam = kitRowGroupSeam(labelled = label != null, gapBefore = 0, frames = panel, afterGroup = afterGroup && LocalKitStack.current == null, gap = Space.S3)
+    Column(
+        modifier
+            .hideEmptyGroup(rowSeams, endSeams)
+            .kitContainer()
+            .fillMaxWidth()
+            .kitMaxWidth(CapRole.List)
+            .testTag("kit-row-group")
+            .kitList("KitRowGroup")
+    ) {
+        opts.label?.let { KitSectionLabel(it, gapBefore = if (opts.section) tokens.sectionGap.dp else null) }
+        val seam =
+            kitRowGroupSeam(
+                labelled = opts.label != null,
+                gapBefore = 0,
+                frames = panel,
+                afterGroup = opts.afterGroup && LocalKitStack.current == null,
+                gap = Space.S3,
+            )
         if (seam > 0) androidx.compose.foundation.layout.Spacer(Modifier.height(seam.dp).testTag("kit-row-group-seam"))
         Column(panelModifier) {
-            // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).
-            // A panel is its rows' container: a chosen row's face is inset from the panel's inner edge (ChosenFaceRules).
-            val style = LocalKitStyle.current
-            val container =
-                if (!panel) LocalKitRowContainer.current
-                else KitRowContainer(
-                    paneInset.value,
-                    io.github.eslamasabry.oc.ui.design.style.StyleResolver.paneCorner(
-                        io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens,
-                    ),
-                )
-            androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides (onRail && !panel), LocalKitRowContainer provides container) {
+            val container = rowGroupContainer(panel)
+            androidx.compose.runtime.CompositionLocalProvider(
+                LocalKitOnRail provides (onRail && !panel),
+                LocalKitRowContainer provides container,
+            ) {
                 HairlineColumn(inset, rowGutter.dp, hairline, rows, seams = rowSeams)
-                destructive?.let { HairlineColumn(rowGutter.dp, rowGutter.dp, hairline, it, ruleAbove = true, seams = endSeams) }
+                destructive?.let {
+                    HairlineColumn(rowGutter.dp, rowGutter.dp, hairline, it, ruleAbove = true, seams = endSeams)
+                }
             }
         }
-        note?.let { KitGroupNote(it) }
+        opts.note?.let { KitGroupNote(it) }
     }
 }
+
+@Composable
+private fun rowGroupPanelModifier(panel: Boolean, surface: Boolean): Modifier {
+    if (!panel) return Modifier
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val look = kitSurfaceLook(
+        KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1)
+    )
+    val margin = if (LocalKitOnRail.current) 0.dp else if (surface) Space.S2.dp else tokens.gutter.dp
+    val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
+    return Modifier.padding(horizontal = margin)
+        .then(look.modifier)
+        .clip(KitShapeId.Panel.shape())
+        .padding(paneInset)
+}
+
+@Composable
+private fun rowGroupContainer(panel: Boolean): KitRowContainer? {
+    if (!panel) return LocalKitRowContainer.current
+    val style = LocalKitStyle.current
+    val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
+    val corner =
+        io.github.eslamasabry.oc.ui.design.style.StyleResolver.paneCorner(
+            io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(),
+            style.knobs.corners,
+            style.spec.tokens,
+        )
+    return KitRowContainer(paneInset.value, corner)
+}
+
+private fun Modifier.hideEmptyGroup(rowSeams: Seams, endSeams: Seams): Modifier =
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        if (rowSeams.count <= 0 && endSeams.count <= 0) layout(0, 0) {}
+        else layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+    }
 
 /**
  * The space above a row group (Dart `_KitGroupSeam` and its use in `KitRowGroup.build`, kit_row.dart:1309,1339): [gap]

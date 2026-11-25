@@ -647,7 +647,9 @@ public fun KitScreen(
                                             barBody,
                                             border = glassLightBar,
                                         )
-                                    } else if (frostedFace != null) KitLiquidBarPane(frostedFace, border = glassLightBar)
+                                    } else if (frostedFace != null) {
+                                        KitLiquidBarPane(frostedFace, border = glassLightBar)
+                                    }
                                     if (floatChrome && barFace == null && frostedFace == null) {
                                         KitHeaderCapsule { barAndLine() }
                                     } else if (floatChrome) {
