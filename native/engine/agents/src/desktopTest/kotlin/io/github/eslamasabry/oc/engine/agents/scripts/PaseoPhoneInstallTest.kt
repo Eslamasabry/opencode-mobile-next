@@ -410,6 +410,7 @@ sync() {
     @Test
     fun `B-LINUX-311 the Paseo read sweeps old leftovers while install size stays unchanged`() {
         val installScript = PaseoPhoneScripts.install(lock, JvmPaseoLockCodec)
+        assertEquals(65249, installScript.toByteArray().size, "install size changed from base")
         assertEquals(1783, ScriptPrune.FUNCTION.toByteArray().size)
         for (moved in listOf("oc_prune_stale", "oc_prune_downloads", "oc_prune_probes", "oc_prune_node_parts")) {
             assertFalse(moved in installScript, moved)
