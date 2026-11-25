@@ -4,8 +4,10 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -29,9 +31,11 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -150,6 +154,47 @@ class PolishSettingsTest {
             val check = onNodeWithText("Check now").getBoundsInRoot()
             assertTrue(abs(update.top.value - check.top.value) < 4f, "actions should share a row: $update vs $check")
         }
+
+    /**
+     * French has the longest shipped pair ("Mettre à jour vers 3.1.0" + "Vérifier maintenant", longer than Russian's
+     * "Обновить до 3.1.0" + "Проверить сейчас"), so it is the hardest case for the side-by-side pair at 360 dp.
+     */
+    @Test
+    fun `B-SET-566 Updates pair never cuts its labels at 360 dp`() {
+        val before = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag("fr"))
+            runDesktopComposeUiTest(360, 915) {
+                val ui =
+                    SettingsUi(
+                        stack = persistentListOf(SettingsPage.Hub, SettingsPage.Updates),
+                        updates = UpdateFacts("3.0.0", "10001", state = UpdateState.Available("3.1.0", "41")),
+                    )
+                setContent {
+                    SettingsThemed(locale = "fr", fontScale = 1f, width = 360f) {
+                        SettingsScreen(ui, RecordingActions())
+                    }
+                }
+                for (label in listOf("Mettre à jour vers 3.1.0", "Vérifier maintenant")) {
+                    val query = onNodeWithText(label, useUnmergedTree = true)
+                    query.assertIsDisplayed()
+                    val node = query.fetchSemanticsNode()
+                    val layouts = mutableListOf<TextLayoutResult>()
+                    node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+                    assertTrue(layouts.isNotEmpty(), "the label's text layout is inspectable: $label")
+                    for (layout in layouts) {
+                        assertFalse(layout.hasVisualOverflow, "label cut: $label")
+                        assertTrue((0 until layout.lineCount).none(layout::isLineEllipsized), "ellipsis: $label")
+                        assertTrue(layout.size.width <= node.boundsInRoot.width + 1, "label wider than shown: $label")
+                    }
+                    val bounds = query.getUnclippedBoundsInRoot()
+                    assertTrue(bounds.left.value >= 0f && bounds.right.value <= 360f, "label off screen: $label")
+                }
+            }
+        } finally {
+            Locale.setDefault(before)
+        }
+    }
 
     @Test
     fun `B-SET-586 Colours wizard shows matching mode and leaves second swatch row crisp`() =
