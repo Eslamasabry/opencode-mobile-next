@@ -33,4 +33,14 @@ class ScrollAnchorHybridTest {
     fun `STEPS-SCROLL-006 hybrid only the person brings following back`() {
         ScrollAnchorWalks.walk006OnlyPersonResumesFollow(TranscriptAnchor.Hybrid)
     }
+
+    @Test
+    fun `STEPS-SCROLL-007 hybrid screen reader scroll leaves following and comes back`() {
+        ScrollAnchorWalks.walk007ScreenReaderScrollBy(TranscriptAnchor.Hybrid)
+    }
+
+    @Test
+    fun `STEPS-SCROLL-008 hybrid screen reader scroll to a row leaves following and comes back`() {
+        ScrollAnchorWalks.walk008ScreenReaderScrollToIndex(TranscriptAnchor.Hybrid)
+    }
 }

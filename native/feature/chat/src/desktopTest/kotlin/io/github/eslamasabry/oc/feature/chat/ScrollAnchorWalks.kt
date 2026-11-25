@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
@@ -19,6 +20,8 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -261,6 +264,9 @@ internal object ScrollAnchorWalks {
     private const val PHONE_H = 800
     private const val WIDE_W = 840
     private const val TAP_LEFT_INSET_PX = 24f
+    private const val A11Y_UP_PX = 480f
+    private const val A11Y_DOWN_PX = 2400f
+    private const val A11Y_INDEX = 6
     private val REPORT_OPTIONS = KitUiOptions(mode = FlickerMode.Report)
 
     @Composable
@@ -881,5 +887,88 @@ internal object ScrollAnchorWalks {
                 )
             }
         }
+    }
+
+    fun walk007ScreenReaderScrollBy(anchor: TranscriptAnchor) {
+        walkScreenReader(anchor, "007") {
+            onNodeWithTag("transcript-list", useUnmergedTree = true)
+                .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, -A11Y_UP_PX) }
+        }
+    }
+
+    fun walk008ScreenReaderScrollToIndex(anchor: TranscriptAnchor) {
+        walkScreenReader(anchor, "008") {
+            onNodeWithTag("transcript-list", useUnmergedTree = true).performScrollToIndex(A11Y_INDEX)
+        }
+    }
+
+    private fun walkScreenReader(
+        anchor: TranscriptAnchor,
+        label: String,
+        firstMove: ComposeUiTest.() -> Unit,
+    ) {
+        withFlickerReport(label) {
+            kitUiTest(PHONE_W, PHONE_H, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                val probe = ProbeLog()
+                val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(anchor, probe = probe.sink) {
+                        ChatScreen(
+                            sceneState(TOTAL_STEPS, ended = true),
+                            actions,
+                            composer,
+                            facts = sceneFacts(TOTAL_STEPS, ended = true),
+                        )
+                    }
+                }
+                mainClock.advanceTimeBy(SETTLE_MS)
+                val baseBottom = boundsOfTag("chat-work-line").bottom
+                firstMove()
+                repeat(GLIDE_FRAMES) { mainClock.advanceTimeByFrame() }
+                assertTrue(
+                    jumpControlShown(),
+                    "$label control hidden after first move: " +
+                        "max=0.0 frame=$GLIDE_FRAMES node=jump-to-latest${probe.tail()}",
+                )
+                onNodeWithTag("transcript-list", useUnmergedTree = true)
+                    .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, A11Y_DOWN_PX) }
+                verifyScreenReaderReturn(label, baseBottom, probe)
+            }
+        }
+    }
+
+    private fun ComposeUiTest.verifyScreenReaderReturn(label: String, baseBottom: Float, probe: ProbeLog) {
+        var minBottom = Float.MAX_VALUE
+        var worstFrame = 0
+        repeat(GLIDE_FRAMES) { i ->
+            mainClock.advanceTimeByFrame()
+            val cur = newestRowBottom()
+            if (cur != null && cur < minBottom) {
+                minBottom = cur
+                worstFrame = i + 1
+            }
+        }
+        if (minBottom != Float.MAX_VALUE) {
+            val blankPast = (baseBottom - minBottom).coerceAtLeast(0f)
+            assertTrue(
+                blankPast <= TOLERANCE_PX,
+                "$label newest row rose into room: max=${"%.1f".format(blankPast)} " +
+                    "frame=$worstFrame node=chat-work-line${probe.tail()}",
+            )
+        }
+        assertTrue(
+            !jumpControlShown(),
+            "$label control still shown after return: " +
+                "max=0.0 frame=$GLIDE_FRAMES node=jump-to-latest${probe.tail()}",
+        )
+        val endBottom = boundsOfTag("chat-work-line").bottom
+        val endDelta = abs(endBottom - baseBottom)
+        assertTrue(
+            endDelta <= TOLERANCE_PX,
+            "$label newest row not back on box: max=${"%.1f".format(endDelta)} " +
+                "frame=$GLIDE_FRAMES node=chat-work-line${probe.tail()}",
+        )
     }
 }
