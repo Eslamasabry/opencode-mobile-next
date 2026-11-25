@@ -23,7 +23,7 @@
     <string name="collectBackground">Lý do dịch vụ nền dừng</string>
     <string name="collectUpdates">Bản cập nhật có cài được không, và loại lỗi</string>
     <string name="collectPages">Loại trang và tính năng sử dụng, phản hồi đầu tiên sau khi đồng ý (và đã từng thấy phản hồi trước đó hay chưa, không gửi thông tin về phản hồi ấy), thời gian mỗi lần sử dụng và số tin nhắn đã gửi</string>
-    <string name="collectJourney">Bạn đã đi đến đâu trong các bước đầu (mở ứng dụng, thiết lập, kết nối, gửi tin nhắn, nhận phản hồi đầu tiên) và khoảng bao lâu sau khi bạn đồng ý. Mỗi bước chỉ được đếm một lần</string>
+    <string name="collectJourney">Bạn đã đi đến đâu trong các bước đầu (mở ứng dụng, thiết lập, kết nối, gửi tin nhắn, nhận phản hồi đầu tiên; step) và khoảng bao lâu sau khi bạn đồng ý (after_range), cùng với cách tin nhắn đầu tiên của bạn kết thúc (first_prompt_ended: một phản hồi, dừng lại, loại lỗi hoặc gửi bị từ chối; outcome và fail_kind, chỉ bằng các từ chỉ loại, không bao giờ gửi nội dung). Mỗi bước chỉ được đếm một lần cho mỗi lần cài đặt</string>
     <string name="collectStarters">Loại gợi ý bạn đã chạm trong cuộc trò chuyện mới, và câu trả lời một từ của bạn về việc bạn muốn được giúp gì. Không bao giờ gồm lời của gợi ý hay điều nó yêu cầu</string>
     <string name="collectStart">Tốc độ khởi động ứng dụng. Cả lần tiến trình trước kết thúc (app_exit), lý do cố định (exit_reason) và, nếu Android có ghi nhận, tiến trình có ở phía trước hay không (foreground, yes/no)</string>
     <string name="collectSmooth">Độ mượt của trang (tỷ lệ khung hình trễ, chậm và bị đứng), tần số quét màn hình và hoạt động trong cuộc trò chuyện (phản hồi đang đến, cuộn, menu hoặc bảng đang mở, bàn phím hiện hay không có gì)</string>

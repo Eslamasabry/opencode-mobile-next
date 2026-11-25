@@ -26,7 +26,7 @@
     <string name="collectBackground">Why the background service stopped</string>
     <string name="collectUpdates">Whether an update installed, and the kind of failure</string>
     <string name="collectPages">Which kinds of pages and features you use, the first reply after you agreed (and that you had seen one before agreeing, never anything about it), how long a visit lasts and how many messages you sent in it</string>
-    <string name="collectJourney">How far you got in your first steps (opened the app, set up, connected, sent a message, got a first reply) and roughly how long after you agreed. Each step is counted once</string>
+    <string name="collectJourney">How far you got in your first steps (opened the app, set up, connected, sent a message, got a first reply; step) and roughly how long after you agreed (after_range), plus how your first message ended (first_prompt_ended: a reply, a stop, an error kind or a refused send; outcome and fail_kind, as kind words only, never its text). Each step is counted once per install</string>
     <string name="collectStarters">Which kind of suggestion you tapped on a new conversation, and your one-word answer to what you want help with. Never a suggestion’s words or what it asks</string>
     <string name="collectShareIn">How many pictures or files you shared into the app, and whether they were images or files. Never their names or contents</string>
     <string name="collectStarAsk">Whether the one-time ask to star the project on GitHub was shown, tapped or dismissed</string>
