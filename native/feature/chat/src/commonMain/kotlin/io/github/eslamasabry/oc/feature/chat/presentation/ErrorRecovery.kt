@@ -89,10 +89,12 @@ public object ErrorRecovery {
         hasSuggestion: Boolean,
         canCompact: Boolean,
     ): List<ErrorFix> {
-        val model = if (hasSuggestion) ErrorFix.UseModel else ErrorFix.ChooseModel
+        val model =
+            if (hasSuggestion) listOf(ErrorFix.UseModel, ErrorFix.ChooseModel)
+            else listOf(ErrorFix.ChooseModel)
         val cause = AgentErrorText.classify(reason.orEmpty())
         return when {
-            typed == MessageErrorKind.ModelNotFound -> listOf(model)
+            typed == MessageErrorKind.ModelNotFound -> model
             typed == MessageErrorKind.ContextOverflow ->
                 if (canCompact) listOf(ErrorFix.Compact) else emptyList()
             typed == MessageErrorKind.ProviderAuth ->
@@ -101,7 +103,7 @@ public object ErrorRecovery {
                 listOfNotNull(ErrorFix.Compact.takeIf { canCompact }, ErrorFix.ChooseModel)
             reply == ReplyFailureKind.SignIn -> listOf(ErrorFix.OpenProviders, ErrorFix.ChooseModel)
             reply == ReplyFailureKind.NoCredit -> listOf(ErrorFix.OpenAccount, ErrorFix.ChooseModel)
-            reply == ReplyFailureKind.Model -> listOf(model)
+            reply == ReplyFailureKind.Model -> model
             reply == ReplyFailureKind.Busy -> listOf(ErrorFix.ChooseModel)
             else -> emptyList()
         }
