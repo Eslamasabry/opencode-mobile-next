@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.homeAppNoticeStatus
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.FlickerFailure
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.logo.KitLogoLoader
@@ -142,11 +143,10 @@ class PolishHomeTest {
             phase = ChatsPhase.List,
             settingsAvailable = true,
             allCount = 2,
-            onlyProject = "api",
             recent =
                 persistentListOf(
                     openCodeRow("login", "Fix the login bug", "api"),
-                    openCodeRow("notes", "Plan the release notes", "api"),
+                    openCodeRow("notes", "Plan the release notes", "docs"),
                 ),
             home =
                 ChatsHomeExtraState(
@@ -210,18 +210,24 @@ class PolishHomeTest {
     ) {
         Locale.setDefault(Locale.forLanguageTag(locale))
         Numbers.pinned = if (locale == "ar") arabicSymbols else NumberSymbols.Latin
+        var flicker: FlickerFailure? = null
         for (dark in listOf(true, false)) {
             for ((scaleTag, fontScale) in listOf("100" to 1f, "130" to 1.3f)) {
                 val tone = if (dark) "dark" else "light"
-                kitUiTest(360, 800) {
-                    showHome(state, dark = dark, locale = locale, fontScale = fontScale, notice = notice)
-                    val file = File(outDir, "$finding-$PHASE-$tone-$locale-$scaleTag.png")
-                    file.parentFile.mkdirs()
-                    ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
-                    assertTrue(file.isFile)
+                try {
+                    kitUiTest(360, 800) {
+                        showHome(state, dark = dark, locale = locale, fontScale = fontScale, notice = notice)
+                        val file = File(outDir, "$finding-$PHASE-$tone-$locale-$scaleTag.png")
+                        file.parentFile.mkdirs()
+                        ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
+                        assertTrue(file.isFile)
+                    }
+                } catch (e: FlickerFailure) {
+                    if (flicker == null) flicker = e
                 }
             }
         }
+        flicker?.let { throw it }
     }
 
     @Test
