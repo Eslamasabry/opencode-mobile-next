@@ -11,6 +11,7 @@ import android.content.pm.ApplicationInfo
 import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.PixelFormat
 import android.graphics.RectF
 import android.os.Build
 import android.os.Handler
@@ -21,12 +22,15 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.Window
 import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.compose.foundation.Indication
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
@@ -34,6 +38,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
 import com.caverock.androidsvg.SVG
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.DynamicSource
@@ -249,12 +256,41 @@ public class AndroidKitPlatform(
     /**
      * Plan 06 §5.6 (Dart `KitSystemBars`): transparent status bar and the navigation bar in the
      * ground, icons opposite the theme (the app's own dark choice is not a configuration change, so
-     * the kit sets it), and no grey contrast scrim on 3-button navigation.
+     * the kit sets it), and no grey contrast scrim on 3-button navigation. Set again whenever the
+     * window's configuration changes: `enableEdgeToEdge()` puts the phone's own look back then.
      */
     @Composable
     override fun SystemBars(darkContent: Boolean, ground: androidx.compose.ui.graphics.Color) {
         val hostWindow = window ?: return
-        SideEffect { applySystemBars(hostWindow, darkContent, ground.toArgb()) }
+        LaunchedEffect(hostWindow, darkContent, ground, LocalConfiguration.current) {
+            applySystemBars(hostWindow, darkContent, ground.toArgb())
+        }
+    }
+
+    /**
+     * System bars for a popup's own window (`KitPageOverlay`, `KitMenu`, `KitTip`): edge to edge,
+     * a transparent navigation bar and icons that contrast with [ground]. Re-applied on attach,
+     * recomposition and configuration changes so Compose's popup updates cannot reset the flags.
+     */
+    @Composable
+    override fun PopupSystemBars(darkContent: Boolean, ground: androidx.compose.ui.graphics.Color) {
+        val popupView = LocalView.current
+        val config = LocalConfiguration.current
+        val argb = ground.toArgb()
+        SideEffect {
+            if (popupView.isAttachedToWindow) applyPopupSystemBars(popupView, darkContent, argb)
+        }
+        DisposableEffect(popupView, darkContent, argb, config) {
+            val apply = { applyPopupSystemBars(popupView, darkContent, argb) }
+            if (popupView.isAttachedToWindow) apply()
+            val listener =
+                object : View.OnAttachStateChangeListener {
+                    override fun onViewAttachedToWindow(v: View) = apply()
+                    override fun onViewDetachedFromWindow(v: View) = Unit
+                }
+            popupView.addOnAttachStateChangeListener(listener)
+            onDispose { popupView.removeOnAttachStateChangeListener(listener) }
+        }
     }
 
     override fun dateTime(atMs: Long, localeTag: String): String {
@@ -378,5 +414,90 @@ internal fun applySystemBars(window: Window, darkContent: Boolean, ground: Int) 
         decor.systemUiVisibility =
             if (darkContent) decor.systemUiVisibility or bits
             else decor.systemUiVisibility and bits.inv()
+    }
+}
+
+internal fun applyPopupSystemBars(view: View, darkContent: Boolean, ground: Int) {
+    val dialogWindow = (view.parent as? DialogWindowProvider)?.window
+    if (dialogWindow != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            dialogWindow.setDecorFitsSystemWindows(false)
+        }
+        applySystemBars(dialogWindow, darkContent, ground)
+        return
+    }
+    val root = view.rootView
+    applyPopupLayoutParams(root)
+    applyPopupBarAppearance(root, darkContent)
+}
+
+@Suppress("DEPRECATION")
+private fun applyPopupLayoutParams(root: View) {
+    val params = root.layoutParams as? WindowManager.LayoutParams ?: return
+    var changed = false
+    val clearFlags =
+        WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
+            WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
+    val addFlags =
+        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+    val nextFlags = (params.flags and clearFlags.inv()) or addFlags
+    if (params.flags != nextFlags) {
+        params.flags = nextFlags
+        changed = true
+    }
+    if (params.format != PixelFormat.TRANSLUCENT) {
+        params.format = PixelFormat.TRANSLUCENT
+        changed = true
+    }
+    if (applyPopupEdgeInsets(params)) changed = true
+    if (changed && root.isAttachedToWindow) {
+        val wm = root.context.getSystemService(WindowManager::class.java) ?: return
+        try {
+            wm.updateViewLayout(root, params)
+        } catch (_: IllegalArgumentException) {
+            // Not registered directly with WindowManager (e.g. a synthetic host in tests).
+        }
+    }
+}
+
+private fun applyPopupEdgeInsets(params: WindowManager.LayoutParams): Boolean {
+    var changed = false
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (params.fitInsetsTypes != 0) {
+            params.fitInsetsTypes = 0
+            changed = true
+        }
+        val cutout = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        if (params.layoutInDisplayCutoutMode != cutout) {
+            params.layoutInDisplayCutoutMode = cutout
+            changed = true
+        }
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val cutout = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        if (params.layoutInDisplayCutoutMode != cutout) {
+            params.layoutInDisplayCutoutMode = cutout
+            changed = true
+        }
+    }
+    return changed
+}
+
+@Suppress("DEPRECATION")
+private fun applyPopupBarAppearance(root: View, darkContent: Boolean) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val bits =
+            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+        root.windowInsetsController?.setSystemBarsAppearance(if (darkContent) bits else 0, bits)
+    } else {
+        val edgeFlags =
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        val lightBits =
+            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        val base = root.systemUiVisibility or edgeFlags
+        root.systemUiVisibility = if (darkContent) base or lightBits else base and lightBits.inv()
     }
 }

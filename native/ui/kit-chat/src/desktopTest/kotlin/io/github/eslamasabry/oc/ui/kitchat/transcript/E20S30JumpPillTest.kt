@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.getBoundsInRoot
@@ -37,20 +38,24 @@ import kotlin.test.assertTrue
 
 /**
  * E20-S30 (owner phone screenshot 2026-11-07, "Big gap not required … why not translucent"): no solid lane behind
- * "Jump to latest"; the pill sits bottom centre 8 dp above the composer, a short soft fade (not a block) settles the
- * words under it, and the newest message still rests just above the composer.
+ * "Jump to latest", and the newest message still rests just above the composer. Since owner decision O2 = D
+ * (2026-11-24) the control is a docked row in the live line's place: the whole width, one target tall, its bottom
+ * one list padding above the composer's room, shown exactly while the person does not follow the newest message.
  */
 class E20S30JumpPillTest {
     private val rows = (0 until 80).map { "Message $it" }
 
+    /** The scene's list state, hoisted out of the composition so a test sets the person's choice by hand. */
+    private lateinit var list: TranscriptListState
+
     /** The top edge of the composer's veil: KitScreen's bottom block, whose tag sits inside its 8 dp padding. */
     private fun androidx.compose.ui.test.ComposeUiTest.veilTop() = onNodeWithTag("kit-screen-bottom").getBoundsInRoot().top - 8.dp
 
-    private fun scene(): @androidx.compose.runtime.Composable () -> Unit = {
+    private fun scene(): @Composable () -> Unit = {
         KitTheme(appearance = KitAppearance(style = Style.Solid), platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
             Box(Modifier.size(412.dp, 800.dp)) {
                 val source = rememberKitFrostState()
-                val state = rememberTranscriptListState()
+                list = rememberTranscriptListState()
                 KitScreen(
                     page = true,
                     overlayChrome = true,
@@ -59,7 +64,12 @@ class E20S30JumpPillTest {
                     edges = KitScreenEdges.Bleed,
                 ) {
                     Box(Modifier.fillMaxSize().kitFrostSource(source)) {
-                        KitTranscriptList(state, newestKey = rows.first(), jumpLabel = "Jump to latest", motion = KitMotionLevel.Off) {
+                        KitTranscriptList(
+                            list,
+                            newestKey = rows.first(),
+                            jumpLabel = "Jump to latest",
+                            motion = KitMotionLevel.Off,
+                        ) {
                             items(rows, key = { it }, contentType = { "row" }) { KitText(it) }
                         }
                     }
@@ -82,47 +92,43 @@ class E20S30JumpPillTest {
         onNodeWithTag("transcript-jump-fade").assertDoesNotExist()
     }
 
+    /** The list at row [index]: a scroll from code keeps following, so the person's choice is set by hand. */
+    private fun androidx.compose.ui.test.ComposeUiTest.readOlder(index: Int) {
+        onNodeWithTag("transcript-list").performScrollToIndex(index)
+        runOnUiThread { list.following = false }
+        waitForIdle()
+    }
+
     @Test
-    fun `E20-S30 away from the latest the calm pill sits bottom centre 8 dp above the composer with no band of ground`() =
+    fun `E20-S30 away from the latest the docked row spans the width above the composer, no band of ground`() =
         runComposeUiTest {
             setContent(scene())
             waitForIdle()
-            onNodeWithTag("transcript-list").performScrollToIndex(60)
-            waitForIdle()
+            readOlder(60)
             val veil = veilTop()
-            val face = onNodeWithTag("kit-jump-pill-veiled", useUnmergedTree = true).getBoundsInRoot()
-            // Centred (it used to sit at the end of the line).
-            val centre = (face.left + face.right) / 2
-            assertTrue(abs((centre - 206.dp).value) <= 1f, "pill centre $centre")
-            // The calmer 32 dp face. Audit 2026-11-14 (finding 25): its 48 dp target sits on the block's first part (the
-            // composer), so the face is the target's own 8 dp clear of the composer and no dead band stands above it.
-            assertEquals(32.dp, face.bottom - face.top)
-            val composer = onNodeWithTag("composer").getBoundsInRoot().top
-            assertTrue(abs((composer - face.bottom - 8.dp).value) <= .5f, "gap ${composer - face.bottom}, veil at $veil")
-            // 2026-11-14: a page that records its body ends the list itself above the pill (kitScreenListEdges), so no
-            // band of ground is laid there any more.
+            val row = onNodeWithTag("jump-to-latest").getBoundsInRoot()
+            // Full width and one target tall (it used to be a 32 dp pill, centred).
+            assertEquals(412.dp, row.right - row.left, "the row's width")
+            assertEquals(48.dp, row.bottom - row.top, "the row's height")
+            // The list's own 16 dp padding and the chrome's 8 dp lead stand between the row and the composer's room.
+            val gap = veil - row.bottom
+            assertTrue(abs((gap - 24.dp).value) <= 1f, "gap $gap, veil at $veil")
+            // 2026-11-14: a page that records its body ends the list itself above the row (kitScreenListEdges), so no
+            // band of ground is laid there.
             onNodeWithTag("transcript-jump-fade").assertDoesNotExist()
         }
 
     @Test
-    fun `E20-S30 the pill brings the reader back and leaves at once with motion off`() = runComposeUiTest {
+    fun `E20-S30 the row brings the reader back and leaves at once with motion off`() = runComposeUiTest {
         setContent(scene())
         waitForIdle()
-        onNodeWithTag("transcript-list").performScrollToIndex(60)
-        waitForIdle()
+        readOlder(60)
         onNodeWithTag("jump-to-latest").performClick()
         waitForIdle()
         onNodeWithTag("jump-to-latest").assertDoesNotExist()
         onNodeWithTag("transcript-jump-fade").assertDoesNotExist()
         val newest = onNodeWithText("Message 0").getBoundsInRoot()
         assertTrue(newest.bottom <= veilTop())
-    }
-
-    @Test
-    fun `E20-S30 the pill's lift leaves 8 dp between its face and the composer`() {
-        // 48 dp target, 32 dp face: the target's own 8 dp margin is the gap.
-        assertEquals(0, jumpPillLift(48))
-        assertEquals(8, jumpPillLift(32))
     }
 
     @Test

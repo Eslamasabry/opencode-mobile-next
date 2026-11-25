@@ -9,7 +9,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.runtime.Composable
@@ -32,7 +30,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -74,8 +71,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
@@ -108,8 +105,8 @@ public object ChoiceCardRules {
 /**
  * One large answer to one question (Dart `_KitChoiceCard`, lib/ui/kit/kit_choice_cards.dart): an icon drawn large,
  * the answer in title size (headline at large text) and one calm line of what it costs. The chosen card has its icon
- * in the accent, a filled accent check and the style's chosen surface (Solid: a ring twice the focus ring and a
- * breath of the accent); the others a muted icon and an empty ring. A tap chooses; it does not go anywhere.
+ * in the accent, the kit's bare accent check ([KitSelectedCheck]) and the style's chosen surface; the others a muted
+ * icon and no mark. A tap chooses; it does not go anywhere.
  *
  * States: default, selected, disabled (the reason first on the line), working ([busy]: a small progress mark where
  * the check goes; [waiting]: every card waits).
@@ -164,7 +161,6 @@ public fun KitChoiceCard(
         specs.quick(),
         label = "kit-choice-card-icon",
     )
-    val ringAlpha by animateFloatAsState(if (selected || busy) 0f else 1f, specs.quick(), label = "kit-choice-card-ring")
     val checkAlpha by animateFloatAsState(if (selected) 1f else 0f, specs.quick(), label = "kit-choice-card-check")
     val checkScale by animateFloatAsState(if (selected) 1f else MotionTokens.MARK_FROM, specs.enter(), label = "kit-choice-card-mark")
     val tap = ChoiceCardRules.tappable(enabled, waiting)
@@ -211,26 +207,17 @@ public fun KitChoiceCard(
                 }
             }
             Spacer(Modifier.weight(1f))
-            Box(contentAlignment = Alignment.Center) {
-                Box(Modifier.size(markSize).alpha(ringAlpha).choiceEdge(focusRing, colors.text3, CircleShape))
+            Box(Modifier.size(markSize), contentAlignment = Alignment.Center) {
                 if (busy) {
                     KitChoiceBusyMark(markSize, Space.S1.dp, Modifier.testTag("kit-choice-card-busy"))
                 } else if (checkAlpha > 0f) {
-                    Box(
-                        Modifier.size(markSize)
-                            .graphicsLayer {
-                                scaleX = checkScale
-                                scaleY = checkScale
-                                alpha = checkAlpha
-                            }
-                            ,
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        // C04: the bare accent check, no disc behind it.
-                        CompositionLocalProvider(LocalKitColors provides colors.copy(text1 = colors.accent)) {
-                            KitIcon(KitIcons.check, size = KitIconSize.Small)
-                        }
-                    }
+                    KitSelectedCheck(
+                        Modifier.graphicsLayer {
+                            scaleX = checkScale
+                            scaleY = checkScale
+                            alpha = checkAlpha
+                        }.testTag("kit-choice-card-check"),
+                    )
                 }
             }
         }

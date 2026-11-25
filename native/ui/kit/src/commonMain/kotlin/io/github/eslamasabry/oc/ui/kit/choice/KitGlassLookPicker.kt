@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -81,12 +80,11 @@ import io.github.eslamasabry.oc.ui.kit.effects.LiquidFlip
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassLookOverride
 import io.github.eslamasabry.oc.ui.kit.effects.kitFrostPane
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPlateHost
-import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
@@ -505,26 +503,12 @@ public fun KitGlassLookPreview(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     KitText(name, Modifier.weight(1f), role = TypeRole.RowTitle, maxLines = 2)
-                    if (selected) ChosenCheck(colors.accent, colors.onAccent)
+                    if (selected) KitSelectedCheck(Modifier.testTag("kit-glass-look-check"))
                 }
                 Spacer(Modifier.height(Space.S1.dp))
                 KitText(line, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
             }
         }
-    }
-}
-
-/**
- * The chosen preview's check: a filled accent disc with the check in the accent's ink, so it reads over any colour of
- * the field behind the glass (a bare accent check vanished over the field's own accent-coloured blob).
- */
-@Composable
-private fun ChosenCheck(accent: Color, onAccent: Color) {
-    Box(
-        Modifier.size(Space.S6.dp).drawBehind { drawCircle(accent) }.testTag("kit-glass-look-check"),
-        contentAlignment = Alignment.Center,
-    ) {
-        KitGlyph(KitIcons.check, onAccent, Space.S4.dp)
     }
 }
 

@@ -4,9 +4,11 @@ package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -34,6 +36,10 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook
 import io.github.eslamasabry.oc.ui.kit.effects.kitClearPanesOn
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidGlassOn
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -199,6 +205,53 @@ class KitGlassLookPickerTest {
         assertEquals(glossy.top, frosted.top, .5f, "Glossy and Frosted share the row")
         assertEquals(glossy.width, frosted.width, .5f)
         assertEquals(1, onAllNodesWithTag("kit-glass-look-check", useUnmergedTree = true).fetchSemanticsNodes().size, "one check, on the chosen look")
+    }
+
+    @Test
+    fun `B-545 glass look preview uses bare KitSelectedCheck with no filled disc`() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        var accent = Color.Unspecified
+        setContent {
+            val appearance = KitAppearance(
+                mode = AppearanceMode.Dark,
+                style = Style.Glass,
+                motion = MotionLevel.Off,
+            )
+            KitTheme(
+                appearance = appearance,
+                platform = FakeKitPlatform(frost = true),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                accent = LocalKitColors.current.accent
+                Column(Modifier.size(412.dp, 800.dp)) {
+                    KitRow("Row", selected = true, onClick = {})
+                    KitGlassLookPicker(options, GlassLookId.Frosted, {}, "Bright on purpose.")
+                }
+            }
+        }
+        mainClock.advanceTimeBy(300)
+        val rowSize = onNodeWithTag("kit-row-check", useUnmergedTree = true).fetchSemanticsNode().size
+        val checks = onAllNodesWithTag("kit-glass-look-check", useUnmergedTree = true)
+        checks.assertCountEquals(1)
+        val node = checks.fetchSemanticsNodes().single()
+        assertEquals(rowSize, node.size, "glass look check must match KitRow check size")
+        val px = onRoot().captureToImage().toPixelMap()
+        val b = node.boundsInRoot
+        val area = (b.width * b.height).roundToInt()
+        val xs = b.left.roundToInt().coerceIn(0, px.width - 1)..b.right.roundToInt().coerceIn(0, px.width - 1)
+        val ys = b.top.roundToInt().coerceIn(0, px.height - 1)..b.bottom.roundToInt().coerceIn(0, px.height - 1)
+        var accentPx = 0
+        for (x in xs) {
+            for (y in ys) {
+                val c = px[x, y]
+                val hit = abs(c.red - accent.red) < 0.12f &&
+                    abs(c.green - accent.green) < 0.12f &&
+                    abs(c.blue - accent.blue) < 0.12f
+                if (hit) accentPx++
+            }
+        }
+        assertTrue(accentPx in 1..(area / 3), "glass look check must be bare accent, not a disc ($accentPx/$area)")
     }
 
     // ---- each look applies to the kit

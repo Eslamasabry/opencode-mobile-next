@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">Звезда на GitHub помогает другим найти приложение.</string>
     <string name="chatStarAskAction">Поставить звезду на GitHub</string>
     <string name="chatStarAskDismiss">Не сейчас</string>
+    <string name="firstReplyAskQuestion">Нравится?</string>
+    <string name="firstReplyAskYes">Да</string>
+    <string name="firstReplyAskNo">Нет</string>
+    <string name="firstReplyAskUseTitle">Для чего используете?</string>
+    <string name="firstReplyAskUseEveryday">Повседневные задачи</string>
+    <string name="firstReplyAskUseCode">Написание кода</string>
+    <string name="firstReplyAskUseBoth">И то, и другое</string>
+    <string name="firstReplyAskUseLooking">Просто смотрю</string>
+    <string name="firstReplyAskThanks">Спасибо.</string>
+    <string name="firstReplyAskSorry">Извините.</string>
 </resources>
