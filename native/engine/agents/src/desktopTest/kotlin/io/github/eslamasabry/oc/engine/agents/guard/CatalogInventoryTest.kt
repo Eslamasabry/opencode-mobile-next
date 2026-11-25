@@ -115,45 +115,45 @@ class CatalogInventoryTest {
             number("installedBytes", 340226576, 381121040),
         ),
         "codex" to listOf(
-            text("0.167.0", "0.171.0"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.171.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
-            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "d8c43bee6cf11b01eb18b95f4d7961092bc40228180808859e70dabb7784c1c9"),
-            number("downloadBytes", 114300898, 199315347),
-            number("installedBytes", 278794648, 516528332),
+            text("0.167.0", "0.172.0"),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.172.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
+            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "faf17b8071927f33346a805dc8cb45de4e08c0d75cf0e5e68cecddca28b8861e"),
+            number("downloadBytes", 114300898, 201917755),
+            number("installedBytes", 278794648, 521575724),
             // Issue 147: the official package, whose entry is bin/codex beside its code-mode host.
             text("codex-aarch64-unknown-linux-musl", "bin/codex"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.171.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
-            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "8391d67757496bfd14893eca6cbf0c96994bf2627566ff1f018f70600c9ef6b3"),
-            number("downloadBytes", 122587028, 197763180),
-            number("installedBytes", 320575976, 521571182),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.172.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
+            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "63e3b00065ed7f62166d0522e17f663cb866a31d80d03e63365482ed34a1d991"),
+            number("downloadBytes", 122587028, 200434347),
+            number("installedBytes", 320575976, 527693622),
             text("codex-x86_64-unknown-linux-musl", "bin/codex"),
         ),
         "antigravity" to listOf(
-            text("1.5.3", "1.5.15"),
+            text("1.5.3", "1.5.17"),
             text(
                 "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/" +
                     "cli_linux_arm64.tar.gz",
-                "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-arm/" +
+                "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/linux-arm/" +
                     "cli_linux_arm64.tar.gz",
             ),
             text(
                 "2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675",
-                "e5b5d7ca1dda2cfdc0b09c72931320c3ef5c481a14dbda137304107ce6e776b1",
+                "d6d2b88493e6e02854da478b215cd1dd98fd8cf985b6be37829dacadea4ffc07",
             ),
-            number("downloadBytes", 69843447, 92373221),
-            number("installedBytes", 235622776, 256660144),
+            number("downloadBytes", 69843447, 93662528),
+            number("installedBytes", 235622776, 260657840),
             text(
                 "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/" +
                     "cli_linux_x64.tar.gz",
-                "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-x64/" +
+                "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/linux-x64/" +
                     "cli_linux_x64.tar.gz",
             ),
             text(
                 "1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807",
-                "8d9913298602049ef29e9669f35252b6b79571979ce1bd0fb27753c7bac84114",
+                "6304b4f592ae97e59231cfb1b365ee29c155750c9a881f0cc8efe5f5281077cf",
             ),
-            number("downloadBytes", 73694700, 101464790),
-            number("installedBytes", 246837648, 273879752),
+            number("downloadBytes", 73694700, 102886235),
+            number("installedBytes", 246837648, 278438600),
         ),
         "qwen" to listOf(
             text("0.26.4", "0.28.4"),
