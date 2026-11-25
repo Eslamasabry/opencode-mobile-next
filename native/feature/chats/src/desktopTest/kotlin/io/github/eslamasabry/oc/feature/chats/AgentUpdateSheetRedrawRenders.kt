@@ -78,16 +78,15 @@ private fun helperItem(): AgentUpdateItem =
 private fun optionalItem(
     id: String,
     name: String,
-    from: String,
-    to: String,
+    versions: Pair<String, String>,
     downloadMb: Long,
     notKeptReason: AgentKeepBlock? = null,
 ): AgentUpdateItem =
     AgentUpdateItem(
         id = AgentId(id),
         name = name,
-        fromVersion = from,
-        toVersion = to,
+        fromVersion = versions.first,
+        toVersion = versions.second,
         downloadBytes = downloadMb * REDRAW_MB,
         installedBytes = downloadMb * 2 * REDRAW_MB,
         group = AgentUpdateGroup.Optional,
@@ -104,18 +103,17 @@ internal fun redrawFiveOffer(): AgentUpdateOffer =
         items =
             listOf(
                 helperItem(),
-                optionalItem("claude", "Claude Code", "2.1.330", "2.1.341", 64),
-                optionalItem("codex", "Codex", "0.171.0", "0.174.0", 48),
-                optionalItem("antigravity", "Antigravity", "1.5.13", "1.5.14", 92),
+                optionalItem("claude", "Claude Code", "2.1.330" to "2.1.341", 64),
+                optionalItem("codex", "Codex", "0.171.0" to "0.174.0", 48),
+                optionalItem("antigravity", "Antigravity", "1.5.13" to "1.5.14", 92),
                 optionalItem(
                     id = "gemini",
                     name = "Gemini CLI",
-                    from = "0.66.0",
-                    to = "0.68.1",
+                    versions = "0.66.0" to "0.68.1",
                     downloadMb = 71,
                     notKeptReason = AgentKeepBlock.HelperTooNew,
                 ),
-                optionalItem("qwen", "Qwen Code", "0.28.0", "0.29.0", 55),
+                optionalItem("qwen", "Qwen Code", "0.28.0" to "0.29.0", 55),
             ),
         network = AgentUpdateNetwork.Metered,
         freeBytes = 6_000 * REDRAW_MB,
@@ -127,7 +125,7 @@ internal fun redrawFiveOffer(): AgentUpdateOffer =
 internal fun redrawOneOffer(): AgentUpdateOffer =
     AgentUpdateOffer(
         appUpdateKey = "10150",
-        items = listOf(helperItem(), optionalItem("antigravity", "Antigravity", "1.5.13", "1.5.14", 92)),
+        items = listOf(helperItem(), optionalItem("antigravity", "Antigravity", "1.5.13" to "1.5.14", 92)),
         network = AgentUpdateNetwork.Unmetered,
         freeBytes = 6_000 * REDRAW_MB,
         neededGoesAhead = false,
