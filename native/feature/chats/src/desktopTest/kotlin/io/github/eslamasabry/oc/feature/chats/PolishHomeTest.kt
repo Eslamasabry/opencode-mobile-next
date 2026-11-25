@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +26,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -415,11 +415,11 @@ class PolishHomeTest {
     /** The surface a row's words are drawn on: its own top corner, inside the row and outside every word. */
     private fun rowGround(map: PixelMap, row: Rect): Color = map[(row.left + 6f).toInt(), (row.top + 4f).toInt()]
 
-    /** Every column from [x0] to [x1] that holds ink within [band] pixels of the height [cy]. */
-    private fun inkColumns(map: PixelMap, x0: Int, x1: Int, cy: Float, band: Int, ground: Color): List<Int> {
+    /** Every column of [columns] that holds ink within [band] pixels of the height [cy]. */
+    private fun inkColumns(map: PixelMap, columns: IntRange, cy: Float, band: Int, ground: Color): List<Int> {
         val xs = mutableListOf<Int>()
-        for (x in minOf(x0, x1)..maxOf(x0, x1)) {
-            val drawn = (-band..band).any { dy -> far(map[x, (cy + dy).toInt()], ground]) }
+        for (x in columns) {
+            val drawn = ((-band)..band).any { dy -> far(map[x, (cy + dy).toInt()], ground) }
             if (drawn) {
                 xs += x
             }
@@ -435,7 +435,9 @@ class PolishHomeTest {
         val map = onRoot().captureToImage().toPixelMap()
         val edge = if (rtl) row.left.toInt() + 2 else row.right.toInt() - 2
         val step = if (rtl) 1 else -1
-        val columns = inkColumns(map, edge, edge + step * END_ROOM, row.center.y, END_BAND, rowGround(map, row))
+        val room = edge..(edge + step * END_ROOM)
+        val scan = minOf(room.first, room.last)..maxOf(room.first, room.last)
+        val columns = inkColumns(map, scan, row.center.y, END_BAND, rowGround(map, row))
         val first = columns.firstOrNull() ?: return 0f
         var last = first
         for (x in columns) {
@@ -450,7 +452,7 @@ class PolishHomeTest {
     /** The first ink at the row's start on its middle line (the agent's mark): its leftmost to its rightmost pixel. */
     private fun ComposeUiTest.markInk(row: Rect): IntRange? {
         val map = onRoot().captureToImage().toPixelMap()
-        val xs = inkColumns(map, row.left.toInt() + 4, row.left.toInt() + 44, row.center.y, 0, rowGround(map, row))
+        val xs = inkColumns(map, (row.left.toInt() + 4)..(row.left.toInt() + 44), row.center.y, 0, rowGround(map, row))
         return if (xs.isEmpty()) null else xs.min()..xs.max()
     }
 
@@ -481,22 +483,26 @@ class PolishHomeTest {
         (config.getOrNull(SemanticsProperties.Text)?.map { it.text } ?: emptyList()) +
             children.flatMap { it.textsDeep() }
 
+    /** One glyph, drawn as a notice draws its mark. */
+    @Composable
+    private fun Glyph(icon: ImageVector) {
+        ChatEnvironment {
+            KitTheme(
+                appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off),
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                Box(Modifier.testTag("glyph")) { KitIcon(icon, size = KitIconSize.Small) }
+            }
+        }
+    }
+
     /** The one letter the kit draws [icon] with (a glyph is a character of the icon font, so it can be read back). */
     private fun glyphOf(icon: ImageVector): String {
         var out = ""
         kitUiTest(120, 120) {
-            setContent {
-                ChatEnvironment {
-                    KitTheme(
-                        appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off),
-                        platform = DesktopKitPlatform(),
-                        localeTag = "en",
-                        stillFrame = true,
-                    ) {
-                        Box(Modifier.testTag("glyph")) { KitIcon(icon, size = KitIconSize.Small) }
-                    }
-                }
-            }
+            setContent { Glyph(icon) }
             waitForIdle()
             out = onNodeWithTag("glyph", useUnmergedTree = true).fetchSemanticsNode().textsDeep().single()
         }
@@ -580,9 +586,9 @@ class PolishHomeTest {
             for (count in listOf(2, 1)) {
                 swap(longTitlesState("ar").copy(needsYou = count))
                 val links = texts().filter { "إليك" in it || "بانتظارك" in it }
-                val one =links.isNotEmpty() && links.all { "بانتظارك" in it && "يحتاج" !in it }
+                val one = links.isNotEmpty() && links.all { "بانتظارك" in it && "يحتاج" !in it }
                 assertTrue(one, "count $count: the link under the title says Needs you with one word: $links")
-                val rows = onAllNodes(hasContentDescription("بانتظارك", substring = true)).fetchSemanticsNodes())
+                val rows = onAllNodes(hasContentDescription("بانتظارك", substring = true)).fetchSemanticsNodes()
                 assertTrue(rows.isNotEmpty(), "count $count: the row says the same word")
             }
         }
@@ -673,28 +679,27 @@ class PolishHomeTest {
         renderScene(Scene(121, "ar", failedComputer(), phase = ROUND))
         renderScene(Scene(30, "en", laptopNotAnsweringState(), phase = ROUND))
     }
-
-    private companion object {
-        const val PHASE = "after"
-
-        /** The lead's rounds: their pictures before the fix. */
-        const val ROUND = "before"
-
-        /** A row's agent mark, in dp (KitRecentRowRules.MARK_DP). */
-        const val MARK_DP = 28f
-
-        /** The side of the lattice a mark's windows are read on. */
-        const val LATTICE = 8
-
-        /** How far from a row's end its time may lie, how tall a band of it is read, and the blank that ends it. */
-        const val END_ROOM = 160
-        const val END_BAND = 22
-        const val GAP_PX = 8
-
-        /** The widest a short time ("5m", "٢ س") is at 1.3 text; the whole "5 min ago" is about twice that. */
-        const val BRIEF_PX = 40f
-
-        /** How far Try again may sit from the notice's edge (a button's own padding at most). */
-        const val EDGE_PX = 20f
-    }
 }
+
+/** The first round's pictures are named "after": they were taken after that round's fix. */
+private const val PHASE = "after"
+
+/** The lead's rounds: their pictures before the fix (the "after" ones follow it). */
+private const val ROUND = "before"
+
+/** A row's agent mark, in dp (KitRecentRowRules.MARK_DP). */
+private const val MARK_DP = 28f
+
+/** The side of the lattice a mark's windows are read on. */
+private const val LATTICE = 8
+
+/** How far from a row's end its time may lie, how tall a band of it is read, and the blank that ends it. */
+private const val END_ROOM = 160
+private const val END_BAND = 22
+private const val GAP_PX = 8
+
+/** The widest a short time ("5m") is at 1.3 text; the whole "5 min ago" is about twice that. */
+private const val BRIEF_PX = 40f
+
+/** How far Try again may sit from the notice's edge (a button's own padding at most). */
+private const val EDGE_PX = 20f
