@@ -27,7 +27,6 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
-import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -43,21 +42,18 @@ public sealed interface KitLanguageMark {
 }
 
 /**
- * The round mark at the start of a language row: a flag, two letters or a glyph, 40 dp, round. The chosen row's mark
- * wears an accent ring (the row itself takes the kit's chosen band). Plan 06 §7.5 neighbours: [KitChoiceRow] takes it
- * as its `leading`.
+ * The round mark at the start of a language row: a flag, two letters or a glyph, 40 dp, round. Plan 06 §7.5
+ * neighbours: [KitChoiceRow] takes it as its `leading` and draws the row's one selection mark at the trailing edge.
  */
 @Composable
-public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
-    val ring = if (selected) Modifier.kitHairlineBorder(RING_WIDTH, colors.accent, CircleShape) else Modifier
+public fun KitLanguageMark(mark: KitLanguageMark, modifier: Modifier = Modifier) {
     when (mark) {
         is KitLanguageMark.Flag ->
-            if (KitFlagShapes.flags.containsKey(mark.country)) KitCircleFlag(mark.country, modifier.then(ring))
-            else Letters(mark.fallback, selected, modifier)
+            if (KitFlagShapes.flags.containsKey(mark.country)) KitCircleFlag(mark.country, modifier)
+            else Letters(mark.fallback, modifier)
         is KitLanguageMark.Glyph ->
             KitSurface(
-                modifier.size(MARK_SIZE).then(ring),
+                modifier.size(MARK_SIZE),
                 level = SurfaceLevel.Surface3,
                 shape = KitShapeId.Circle,
                 padding = KitSurfacePadding.None,
@@ -66,7 +62,7 @@ public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: M
                     KitIcon(
                         mark.icon,
                         size = KitIconSize.Large,
-                        tone = if (selected) TextTone.Accent else TextTone.Secondary,
+                        tone = TextTone.Secondary,
                     )
                 }
             }
@@ -74,19 +70,19 @@ public fun KitLanguageMark(mark: KitLanguageMark, selected: Boolean, modifier: M
 }
 
 @Composable
-private fun Letters(text: String, selected: Boolean, modifier: Modifier) {
+private fun Letters(text: String, modifier: Modifier) {
     val colors = LocalKitColors.current
     Box(
         modifier
             .size(MARK_SIZE)
             .clip(CircleShape)
-            .background(if (selected) colors.accent else colors.accent.copy(alpha = LETTERS_FILL_ALPHA)),
+            .background(colors.accent.copy(alpha = LETTERS_FILL_ALPHA)),
         contentAlignment = Alignment.Center,
     ) {
         KitText(
             text,
             role = TypeRole.Label,
-            tone = if (selected) TextTone.OnAccent else TextTone.Accent,
+            tone = TextTone.Accent,
             kind = KitTextKind.Frame,
             maxLines = 1,
         )
@@ -110,8 +106,6 @@ public fun KitCircleFlag(country: String, modifier: Modifier = Modifier, size: D
 }
 
 private val MARK_SIZE = 40.dp
-/** The chosen mark's accent ring, drawn by the kit's own edge helper. */
-private val RING_WIDTH = 2.dp
 private const val OPAQUE = "FF"
 private const val HEX = 16
 private const val FLAG_CANVAS = 512f

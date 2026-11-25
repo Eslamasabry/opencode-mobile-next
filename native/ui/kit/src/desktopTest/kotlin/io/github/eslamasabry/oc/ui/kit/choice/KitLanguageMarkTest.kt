@@ -71,7 +71,6 @@ class KitLanguageMarkTest {
                                 leading = {
                                     KitLanguageMark(
                                         KitLanguageMark.Flag("US", "Aa"),
-                                        selected = true,
                                         Modifier.testTag("lang-flag-chosen"),
                                     )
                                 },
@@ -82,7 +81,6 @@ class KitLanguageMarkTest {
                                 leading = {
                                     KitLanguageMark(
                                         KitLanguageMark.Flag("EG", "أب"),
-                                        selected = false,
                                         Modifier.testTag("lang-flag-unchosen"),
                                     )
                                 },
@@ -119,12 +117,10 @@ class KitLanguageMarkTest {
                     ) {
                         KitLanguageMark(
                             KitLanguageMark.Glyph(KitIcons.phone),
-                            selected = true,
                             Modifier.testTag("lang-glyph-chosen"),
                         )
                         KitLanguageMark(
                             KitLanguageMark.Flag("ZZ", "Zz"),
-                            selected = true,
                             Modifier.testTag("lang-letters-chosen"),
                         )
                     }

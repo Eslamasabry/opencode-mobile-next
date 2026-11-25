@@ -67,7 +67,7 @@ class LanguageB545RendersTest {
                 waitForIdle()
                 onAllNodesWithTag("kit-choice-tick", useUnmergedTree = true).assertCountEquals(1)
                 val img = onRoot().captureToImage()
-                ImageIO.write(img.toAwtImage(), "png", File(out, "b545-before-language-dark.png"))
+                ImageIO.write(img.toAwtImage(), "png", File(out, "b545-after-language-dark.png"))
                 val rowBounds = languageRow("English").fetchSemanticsNode().boundsInRoot
                 val flagAccentPx = leadingAccentCount(img.toPixelMap(), rowBounds, 64f * density.density, accent)
                 assertEquals(
