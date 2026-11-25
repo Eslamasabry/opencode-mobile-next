@@ -1935,6 +1935,91 @@ class WorldComposerFilesModelsTest {
         val seen = secondSendAfter(opensBeforeAccepted = true)
         assertTrue(seen.contains("wire:Hi"), seen.toString())
     }
+
+    @Test
+    fun `B-523-005 an unlisted session model falls back to the provider's first enabled model and rides the send`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "gone"))
+            f.operations.catalog =
+                Outcome.Ok(
+                    snapshot(
+                        catalogModel("m1", enabled = false),
+                        catalogModel("m2", enabled = true),
+                        catalogModel("m3", enabled = true),
+                    )
+                )
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "gone"), null))
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val models = f.world.models.value
+            assertEquals("m2", models.selected?.modelId)
+            assertFalse(models.usesDefault)
+            assertFalse(models.displayOnly)
+            f.world.draftChanged("hi")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("hi"))
+            runCurrent()
+            assertEquals(ModelRef("prov", "m2"), f.base.sentPrompts.single().second.model?.model)
+        }
+
+    @Test
+    fun `B-523-006 an unlisted server default is replaced, while a provider with no listed model stays null`() =
+        runTest {
+            val f = Fixture(this, selection = null)
+            f.operations.catalog =
+                Outcome.Ok(snapshot(catalogModel("m1", enabled = false), catalogModel("m2", enabled = true)))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "gone"), null))
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val models = f.world.models.value
+            assertEquals("m2", models.selected?.modelId)
+            assertFalse(models.usesDefault)
+            assertFalse(models.displayOnly)
+
+            val stale = Fixture(this, selection = ModelRef("other", "gone"))
+            stale.operations.catalog = Outcome.Ok(snapshot(catalogModel("m2", enabled = true)))
+            stale.operations.defaults = Outcome.Ok(ChatDefaults(null, null))
+            stale.switchesModels()
+            stale.open()
+            assertIs<Outcome.Ok<Unit>>(stale.world.loadModels())
+            assertNull(stale.world.models.value.selected)
+        }
+
+    @Test
+    fun `B-523-010 loadModels records replaced model on stale fallback and clears it on send or selectModel`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "gone"))
+            f.operations.catalog =
+                Outcome.Ok(snapshot(catalogModel("m1", enabled = false), catalogModel("m2", name = "Model Two")))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "gone"), null))
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            assertEquals(
+                io.github.eslamasabry.oc.feature.chat.world.ReplacedModel("Gone", "Model Two"),
+                f.world.models.value.replaced,
+            )
+            f.world.draftChanged("hi")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("hi"))
+            runCurrent()
+            assertNull(f.world.models.value.replaced)
+
+            val byDefault = Fixture(this, selection = null)
+            byDefault.operations.catalog =
+                Outcome.Ok(snapshot(catalogModel("m2", name = "Model Two"), catalogModel("m3", name = "Model Three")))
+            byDefault.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "old-free"), null))
+            byDefault.switchesModels()
+            byDefault.open()
+            assertIs<Outcome.Ok<Unit>>(byDefault.world.loadModels())
+            assertEquals(
+                io.github.eslamasabry.oc.feature.chat.world.ReplacedModel("Old Free", "Model Two"),
+                byDefault.world.models.value.replaced,
+            )
+            val m3 = byDefault.world.models.value.choices.first { it.modelId == "m3" }
+            assertIs<Outcome.Ok<Unit>>(byDefault.world.selectModel(m3))
+            assertNull(byDefault.world.models.value.replaced)
+        }
 }
 
 /** The header port's context-usage memory, unused by these tests. */

@@ -26,6 +26,8 @@ public data class MessageInfo(
     val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
     /** The provider (agent) that wrote the message; names whom a lapsed sign-in belongs to. */
     val providerId: String? = null,
+    /** The model that wrote the message; names what failed when a model is gone. */
+    val modelId: String? = null,
 )
 
 /** Switch/Notice/Compaction = the Dart "v2:*" tags (plan 09 §2.2, trap T9). */
