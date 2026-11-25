@@ -11,7 +11,7 @@ base=${1:?base ref or sha}; line=${2:?line ref}; branch=${3:?branch name}
 cd "$(dirname "$0")/../.."
 mb=$(git merge-base HEAD "$line" 2>/dev/null) || { echo "base_check: cannot find the merge-base with $line; not checked"; exit 2; }
 short=${mb:0:12}
-sel() { tool/ci/fast_tasks.sh "$1" 2>/dev/null || echo ALL; }
+sel() { tool/ci/fast_tasks.sh "$1" 30 "$branch" 2>/dev/null || echo ALL; }
 from_base=$(sel "$base"); from_mb=$(sel "$mb")
 if [ "$from_base" != ALL ] || [ "$from_mb" = ALL ]; then
   echo "base_check: base=$base selects $(printf '%s\n' "$from_base" | grep -c . ) module task(s); fine"; exit 0

@@ -128,6 +128,7 @@ jobs:
       count: ${{ steps.p.outputs.count }}
       mode: ${{ steps.p.outputs.mode }}
       tasks: ${{ steps.p.outputs.tasks }}
+      run_apk: ${{ steps.p.outputs.run_apk }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -177,8 +178,9 @@ jobs:
         env:
           LANE: ${{ inputs.lane || 'full' }}
           BASE: ${{ inputs.base || 'native/screens-merge41' }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          out=ALL
+          out=ALL; ref=""
           if [ "$LANE" = fast ]; then
             # base is a branch name, or a commit sha (the native/next batcher passes the last green sha)
             if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else
@@ -187,7 +189,7 @@ jobs:
                 git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
               fi
             fi
-            out="$(tool/ci/fast_tasks.sh "$ref" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
+            out="$(tool/ci/fast_tasks.sh "$ref" 30 "$BRANCH" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
             cat "$RUNNER_TEMP/why.txt"
             # an empty selection (nothing under native/ changed) runs only the quality shard
           fi
@@ -196,11 +198,24 @@ jobs:
           # happened to list :quality:test, and never when the plan fell back to ALL (the shard picker drops :quality:test
           # from the rotation), so a green fast run could mean the gates never ran. Details: tool/ci/plan_shards.sh.
           eval "$(tool/ci/plan_shards.sh "$LANE" "$out" | sed -E 's/^([a-z]+)=(.*)$/\1=\"\2\"/')"
+          # Protected, line, and merge-proof branches always assemble the preview APK; job-branch fast checks skip the
+          # 13-17 min APK assembly unless androidApp, packaging, manifests, resources, or build files changed (compile still
+          # checks :androidApp:compilePreviewBenchmarkKotlin and android-unit still runs :androidApp:testPreviewDebugUnitTest).
+          run_apk=true
+          if [ "$LANE" = fast ] && [ "$mode" = list ] && [ -n "$ref" ]; then
+            case "$BRANCH" in
+              master|native/glass-next|native/next|native/screens-merge*|native/merge-proof-*|native/rf-merge-proof-*) ;;
+              *)
+                if ! git diff --name-only "$ref"...HEAD -- . 2>/dev/null | grep -qE '^native/(androidApp/|benchmark/|build-logic/|gradle/|build\.gradle\.kts$|settings\.gradle\.kts$|gradle\.properties$|version\.properties$|.*/AndroidManifest\.xml$|.*/res/|.*/assets/|.*proguard|.*consumer-rules\.pro$)'; then
+                  run_apk=false
+                fi ;;
+            esac
+          fi
           shards="$(python3 -c "import json,sys; print(json.dumps(list(range(int(sys.argv[1])))))" "$total")"
-          { echo "lane=$LANE"; echo "mode=$mode"; echo "count=$count"; echo "shards=$shards"; echo "tasks=$tasks"; } >> "$GITHUB_OUTPUT"
+          { echo "lane=$LANE"; echo "mode=$mode"; echo "count=$count"; echo "shards=$shards"; echo "tasks=$tasks"; echo "run_apk=$run_apk"; } >> "$GITHUB_OUTPUT"
           {
             echo "### Plan: lane \`$LANE\`, base \`$BASE\`"
-            echo; echo "- test selection: $mode, $count shard(s)"
+            echo; echo "- test selection: $mode, $count shard(s); apk: $run_apk"
             if [ "$mode" = list ]; then echo "- tasks:"; printf '%s\n' $tasks | sed 's/^/  - `/; s/$/`/'; fi
             echo; echo '```'; cat "$RUNNER_TEMP/why.txt" 2>/dev/null || true; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -341,6 +356,9 @@ jobs:
           if [ "$LANE" = candidate ]; then
             flags="-I tool/ci/candidate.init.gradle -PskipGoldens=false -PonlyGoldens=false -Poc.recordGoldens=false -PrunQuarantined=true"
           fi
+          # Parallel CI shards and the compile/android-unit jobs already verify test compilation; skip :quality's
+          # duplicate 1529-task compileAllTestSources while keeping every :quality:test and :quality:secTest assertion.
+          case " ${{ steps.pick.outputs.tasks }} " in *" :quality:test "*) flags="$flags -Poc.testCompileGuard=off" ;; esac
           echo "TEST_FLAGS=$flags" >> "$GITHUB_ENV"
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/gradle.log" ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
       - name: Candidate build-logic tests
@@ -388,14 +406,20 @@ jobs:
           path: native/reports/report-*.json
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 14 || 3 }}
           if-no-files-found: ignore
-      - name: Upload test reports
-        if: ${{ steps.gradle.outcome == 'failure' }}
+      - name: Upload JUnit XML test reports
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-reports-${{ matrix.shard }}
-          path: |
-            native/**/build/reports/tests/
-            native/**/build/test-results/
+          path: native/**/build/test-results/**/*.xml
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 5 || 3 }}
+          if-no-files-found: ignore
+      - name: Upload HTML test reports on failure
+        if: ${{ steps.gradle.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports-html-${{ matrix.shard }}
+          path: native/**/build/reports/tests/
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
@@ -456,8 +480,8 @@ jobs:
 
   apk:
     name: apk
-    needs: where
-    if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' && (inputs.lane != 'candidate' || inputs.apk_only) }}
+    needs: [where, plan]
+    if: ${{ always() && needs.where.result == 'success' && inputs.tasks == '' && inputs.lane != 'goldens' && (inputs.apk_only || (needs.plan.result == 'success' && inputs.lane != 'candidate' && (inputs.apk == true || needs.plan.outputs.run_apk != 'false'))) }}
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
@@ -632,6 +656,14 @@ jobs:
             native/build/reports/detekt/
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
+      # The JUnit XML files of the custom run, so every class's duration can be measured after passing runs too.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-junit-custom
+          path: native/**/build/test-results/**/*.xml
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 5 || 3 }}
+          if-no-files-found: ignore
 
   detekt:
     name: detekt
@@ -678,14 +710,6 @@ jobs:
             native/reports/detekt.json
             native/build/reports/detekt/
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
-          if-no-files-found: ignore
-      # The JUnit files of the custom run, so a test's duration can be read after the run (small: xml only).
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: report-junit-custom
-          path: native/**/build/test-results/**/*.xml
-          retention-days: 7
           if-no-files-found: ignore
 
   android-unit:
@@ -752,6 +776,14 @@ jobs:
             native/reports/android-unit.json
             native/reports/report-android-unit.json
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
+          if-no-files-found: ignore
+      - name: Upload Android unit JUnit XML reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports-android-unit-xml
+          path: native/**/build/test-results/**/*.xml
+          retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 5 || 3 }}
           if-no-files-found: ignore
       - name: Android unit and picture evidence
         if: failure()
