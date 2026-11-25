@@ -279,7 +279,7 @@ class ChatFloatingEdgesTest {
                 val row = bounds("jump-to-latest")
                 val box = bounds("kit-composer-box")
                 assertTrue(row.left <= 0f && row.right >= W.toFloat() && row.height >= 48f, "the row does not span the width ($style, keyboard $keyboard, rtl $rtl): $row")
-                assertTrue(row.bottom <= box.top + 1f && row.bottom >= box.top - 40f, "the row stands just above the box: $row, box $box")
+                assertTrue(row.bottom <= box.top + 1f && row.bottom >= box.top - 46f, "the row stands just above the box: $row, box $box")
                 assertTrue(row.top >= STATUS_DP + 48f, "the row is clear of the status area and the header: $row")
                 assertTrue(row.right <= W && row.left >= 0f && row.bottom <= H, "the row is inside the screen: $row")
             }

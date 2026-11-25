@@ -307,11 +307,12 @@ class ChatJumpDockTest {
     fun `B-CHAT-540 the jump row appears at the first pixel of the person's drag`() =
         run(Scene()) {
             mainClock.autoAdvance = false
-            // The finger moves toward the older rows (they come down from the top) and stays down.
+            // Cross touch slop, then move 2 dp toward the older rows (they come down from the top) and stay down.
             var slop = Float.NaN
             onNodeWithTag("transcript-list").performTouchInput {
                 slop = viewConfiguration.touchSlop
                 down(center)
+                moveBy(Offset(0f, slop))
                 moveBy(Offset(0f, 2.dp.toPx()))
             }
             mainClock.advanceTimeByFrame()

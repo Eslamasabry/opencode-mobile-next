@@ -71,8 +71,6 @@ import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 
 /**
  * The transcript list's scroll state (plan 09 §7.3, plan 08 §5.1 follow-scroll). Hoisted per chat
@@ -168,6 +166,7 @@ public data class KitTranscriptDockLive(
  * the same frame as the insert.
  */
 @Composable
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 public fun KitTranscriptList(
     state: TranscriptListState,
     newestKey: String?,
@@ -349,16 +348,14 @@ private fun BoxScope.KitJumpDock(
             }
         }
     }
-    Box(
-        Modifier.align(Alignment.BottomCenter)
-            .liftAtLayout(lift)
-            .fillMaxWidth()
-            .testTag("jump-to-latest")
-            .semantics(mergeDescendants = true) { contentDescription = label },
-    ) {
+    Box(Modifier.align(Alignment.BottomCenter).liftAtLayout(lift).fillMaxWidth()) {
         KitTappable(
             onClick = jump,
-            modifier = Modifier.fillMaxWidth().height(minTarget),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(minTarget)
+                    .testTag("jump-to-latest")
+                    .semantics(mergeDescendants = true) { contentDescription = label },
             onClickLabel = label,
             shape = KitShapeId.Button,
         ) {
