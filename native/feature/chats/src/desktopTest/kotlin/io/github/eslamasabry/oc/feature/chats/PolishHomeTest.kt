@@ -404,14 +404,6 @@ class PolishHomeTest {
 
     // ---- reading the page: ink on the picture, words of the tree ----
 
-    /** Far from [ground]: a pixel the eye reads as drawn (ink on a surface of [ground]'s colour). */
-    private fun far(c: Color, ground: Color): Boolean =
-        abs(c.red - ground.red) + abs(c.green - ground.green) + abs(c.blue - ground.blue) > .25f
-
-    /** Two colours of the same ink (one fill, read twice). */
-    private fun sameInk(a: Color, b: Color): Boolean =
-        abs(a.red - b.red) < .06f && abs(a.green - b.green) < .06f && abs(a.blue - b.blue) < .06f
-
     /** The surface a row's words are drawn on: its own top corner, inside the row and outside every word. */
     private fun rowGround(map: PixelMap, row: Rect): Color = map[(row.left + 6f).toInt(), (row.top + 4f).toInt()]
 
@@ -703,3 +695,11 @@ private const val BRIEF_PX = 40f
 
 /** How far Try again may sit from the notice's edge (a button's own padding at most). */
 private const val EDGE_PX = 20f
+
+/** Far from [ground]: a pixel the eye reads as drawn (ink on a surface of [ground]'s colour). */
+private fun far(c: Color, ground: Color): Boolean =
+    abs(c.red - ground.red) + abs(c.green - ground.green) + abs(c.blue - ground.blue) > .25f
+
+/** Two colours of the same ink (one fill, read twice). */
+private fun sameInk(a: Color, b: Color): Boolean =
+    abs(a.red - b.red) < .06f && abs(a.green - b.green) < .06f && abs(a.blue - b.blue) < .06f
