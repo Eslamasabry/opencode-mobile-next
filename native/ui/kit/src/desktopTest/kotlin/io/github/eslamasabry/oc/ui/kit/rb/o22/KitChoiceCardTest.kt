@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -222,10 +223,73 @@ class KitChoiceCardTest {
             assertEquals(0, mark, "unchosen first card must draw no empty ring or mark")
         }
 
+    private fun boxAccentCount(px: PixelMap, bounds: Rect, accent: Color): Int {
+        val left = bounds.left.roundToInt().coerceIn(0, px.width - 1)
+        val right = bounds.right.roundToInt().coerceIn(0, px.width - 1)
+        val top = bounds.top.roundToInt().coerceIn(0, px.height - 1)
+        val bottom = bounds.bottom.roundToInt().coerceIn(0, px.height - 1)
+        var count = 0
+        for (x in left..right) {
+            for (y in top..bottom) {
+                if (near(px[x, y], accent, tol = 0.12f)) count++
+            }
+        }
+        return count
+    }
+
+    @Composable
+    private fun PickerCardsShowcase() {
+        val tiles = listOf(KitChoice("a", "Default", "Claude"), KitChoice("b", "Fast", "Haiku"))
+        KitRow("Row", selected = true, onClick = {})
+        Row(
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            KitAgentChoice(
+                KitAgentGridItem("OpenCode", KitIcons.terminal, {}, selected = true),
+                Modifier.weight(1f),
+                wide = true,
+            )
+            KitAgentChoice(
+                KitAgentGridItem("Claude", KitIcons.terminal, {}, selected = false),
+                Modifier.weight(1f),
+                wide = true,
+            )
+        }
+        Row(
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            AgentCardChoice("Codex", "Fast edits", "", KitAgentChoiceState.Selected, {}, Modifier.weight(1f))
+            AgentCardChoice("Gemini", "Broad context", "", KitAgentChoiceState.Available, {}, Modifier.weight(1f))
+        }
+        KitChoiceTiles(tiles, "a", {})
+    }
+
+    @Composable
+    private fun OptionCardsShowcase() {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KitStyleOptionCard(Style.Solid, "Solid", true, {}, Modifier.weight(1f))
+            KitStyleOptionCard(Style.Glass, "Glass", false, {}, Modifier.weight(1f))
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KitPlainOptionCard("Full", "All motion", KitIcons.waveform, true, {}, Modifier.weight(1f))
+            KitPlainOptionCard("Off", "No motion", KitIcons.waveform, false, {}, Modifier.weight(1f))
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KitThemeOptionCard(PackId.Opencode, "OpenCode", true, {}, Modifier.weight(1f).height(110.dp))
+            KitThemeOptionCard(PackId.Nord, "Nord", false, {}, Modifier.weight(1f).height(110.dp))
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KitLookOptionCard(null, "Off", true, {}, Modifier.weight(1f).height(120.dp))
+            KitLookOptionCard("aurora", "Aurora", false, {}, Modifier.weight(1f).height(120.dp))
+        }
+    }
+
     @Test
     fun `B-545 every picker card uses the same KitSelectedCheck mark with no filled disc`() =
         runDesktopComposeUiTest(412, 1100) {
-            val tiles = listOf(KitChoice("a", "Default", "Claude"), KitChoice("b", "Fast", "Haiku"))
+            var accent = Color.Unspecified
             setContent {
                 KitTheme(
                     KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off, style = Style.Glass),
@@ -233,86 +297,34 @@ class KitChoiceCardTest {
                     stillFrame = true,
                 ) {
                     val colors = LocalKitColors.current
+                    accent = colors.accent
                     Column(
                         Modifier.fillMaxSize().background(colors.ground).padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        KitRow("Row", selected = true, onClick = {})
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            KitAgentChoice(
-                                KitAgentGridItem("OpenCode", KitIcons.terminal, {}, selected = true),
-                                Modifier.weight(1f),
-                                wide = true,
-                            )
-                            KitAgentChoice(
-                                KitAgentGridItem("Claude", KitIcons.terminal, {}, selected = false),
-                                Modifier.weight(1f),
-                                wide = true,
-                            )
-                        }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            AgentCardChoice(
-                                "Codex",
-                                "Fast edits",
-                                "",
-                                KitAgentChoiceState.Selected,
-                                {},
-                                Modifier.weight(1f),
-                            )
-                            AgentCardChoice(
-                                "Gemini",
-                                "Broad context",
-                                "",
-                                KitAgentChoiceState.Available,
-                                {},
-                                Modifier.weight(1f),
-                            )
-                        }
-                        KitChoiceTiles(tiles, "a", {})
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            KitStyleOptionCard(Style.Solid, "Solid", true, {}, Modifier.weight(1f))
-                            KitStyleOptionCard(Style.Glass, "Glass", false, {}, Modifier.weight(1f))
-                        }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            KitPlainOptionCard("Full", "All motion", KitIcons.waveform, true, {}, Modifier.weight(1f))
-                            KitPlainOptionCard("Off", "No motion", KitIcons.waveform, false, {}, Modifier.weight(1f))
-                        }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            KitThemeOptionCard(
-                                PackId.Opencode,
-                                "OpenCode",
-                                true,
-                                {},
-                                Modifier.weight(1f).height(110.dp),
-                            )
-                            KitThemeOptionCard(
-                                PackId.Nord,
-                                "Nord",
-                                false,
-                                {},
-                                Modifier.weight(1f).height(110.dp),
-                            )
-                        }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            KitLookOptionCard(null, "Off", true, {}, Modifier.weight(1f).height(120.dp))
-                            KitLookOptionCard("aurora", "Aurora", false, {}, Modifier.weight(1f).height(120.dp))
-                        }
+                        PickerCardsShowcase()
+                        OptionCardsShowcase()
                     }
                 }
             }
             waitForIdle()
             val out = File("build/b545-renders").also { it.mkdirs() }
-            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "b545-before-kit-pickers-dark.png"))
+            val image = onRoot().captureToImage()
+            ImageIO.write(image.toAwtImage(), "png", File(out, "b545-after-kit-pickers-dark.png"))
+            val px = image.toPixelMap()
             val rowSize = onNodeWithTag("kit-row-check", useUnmergedTree = true).fetchSemanticsNode().size
-            val agentChoiceChecks = onAllNodesWithTag("kit-agent-choice-check", useUnmergedTree = true)
-            agentChoiceChecks.assertCountEquals(1)
-            assertEquals(rowSize, agentChoiceChecks.fetchSemanticsNodes().single().size)
-            val agentBadgeChecks = onAllNodesWithTag("kit-agent-badge-check", useUnmergedTree = true)
-            agentBadgeChecks.assertCountEquals(1)
-            assertEquals(rowSize, agentBadgeChecks.fetchSemanticsNodes().single().size)
-            val tileChecks = onAllNodesWithTag("kit-choice-tile-check", useUnmergedTree = true)
-            tileChecks.assertCountEquals(1)
-            assertEquals(rowSize, tileChecks.fetchSemanticsNodes().single().size)
+            listOf("kit-agent-choice-check", "kit-agent-badge-check", "kit-choice-tile-check").forEach { tag ->
+                val nodes = onAllNodesWithTag(tag, useUnmergedTree = true)
+                nodes.assertCountEquals(1)
+                val node = nodes.fetchSemanticsNodes().single()
+                assertEquals(rowSize, node.size, "$tag must match KitRow check size")
+                val area = (node.boundsInRoot.width * node.boundsInRoot.height).roundToInt()
+                val accentPx = boxAccentCount(px, node.boundsInRoot, accent)
+                assertTrue(
+                    accentPx in 1..(area / 3),
+                    "$tag must be a bare accent check, not a filled disc ($accentPx/$area)",
+                )
+            }
             val optionChecks = onAllNodesWithTag("kit-option-card-check", useUnmergedTree = true)
             optionChecks.assertCountEquals(4)
             optionChecks.fetchSemanticsNodes().forEach { assertEquals(rowSize, it.size) }

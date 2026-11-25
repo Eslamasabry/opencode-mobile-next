@@ -2,7 +2,9 @@ package io.github.eslamasabry.oc.feature.settings
 
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
@@ -42,8 +44,9 @@ class AppearanceB545RendersTest {
                     }
                 }
                 waitForIdle()
+                onAllNodesWithTag("kit-option-card-check", useUnmergedTree = true).assertCountEquals(1)
                 val img = onRoot().captureToImage().toAwtImage()
-                ImageIO.write(img, "png", File(out, "b545-before-appearance-dark.png"))
+                ImageIO.write(img, "png", File(out, "b545-after-appearance-dark.png"))
             }
         } finally {
             Locale.setDefault(prev)

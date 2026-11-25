@@ -71,6 +71,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.*
 import androidx.compose.runtime.SideEffect
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import io.github.eslamasabry.oc.ui.kit.theme.*
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -158,25 +159,28 @@ private fun optionFrame(selected: Boolean): Modifier {
     return look.modifier.then(ring)
 }
 
-/** The chosen card's check (Dart `_CheckBadge`): a 20 dp accent disc that fades in from slightly smaller. */
+/** The chosen card's check (C04): the kit's bare accent check that fades in from slightly smaller. */
 @Composable
 private fun CheckBadge(selected: Boolean, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
     val shown by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.enter(), label = "option-check")
-    val scale by animateFloatAsState(if (selected) 1f else MotionTokens.MARK_FROM, KitMotion.specs.enter(), label = "option-check-scale")
+    val scale by animateFloatAsState(
+        if (selected) 1f else MotionTokens.MARK_FROM,
+        KitMotion.specs.enter(),
+        label = "option-check-scale",
+    )
     Box(
-        modifier
-            .size(Space.S5.dp)
-            .graphicsLayer {
-                alpha = shown
-                scaleX = scale
-                scaleY = scale
-            }
-            .clearAndSetSemantics {},
+        modifier.size(Space.S5.dp).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
-        // C04 (audit 2026-11-09): the bare accent check, no disc behind it.
-        KitGlyph(KitIcons.check, colors.accent, (Space.S4).dp) // F: lib/ui/kit/kit_option_card.dart:381
+        if (shown > 0f) {
+            KitSelectedCheck(
+                Modifier.graphicsLayer {
+                    alpha = shown
+                    scaleX = scale
+                    scaleY = scale
+                }.testTag("kit-option-card-check"),
+            )
+        }
     }
 }
 
@@ -188,7 +192,11 @@ private fun CheckBadge(selected: Boolean, modifier: Modifier = Modifier) {
 private fun PictureCheck(selected: Boolean, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     val shown by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.enter(), label = "picture-check")
-    val scale by animateFloatAsState(if (selected) 1f else MotionTokens.MARK_FROM, KitMotion.specs.enter(), label = "picture-check-scale")
+    val scale by animateFloatAsState(
+        if (selected) 1f else MotionTokens.MARK_FROM,
+        KitMotion.specs.enter(),
+        label = "picture-check-scale",
+    )
     Box(
         modifier
             .padding(Space.S1.dp)
@@ -203,7 +211,7 @@ private fun PictureCheck(selected: Boolean, modifier: Modifier = Modifier) {
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
-        KitGlyph(KitIcons.check, colors.accent, (Space.S4).dp)
+        if (shown > 0f) KitSelectedCheck(Modifier.testTag("kit-option-card-check"))
     }
 }
 

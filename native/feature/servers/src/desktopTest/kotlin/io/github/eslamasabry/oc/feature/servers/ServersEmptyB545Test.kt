@@ -8,8 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -77,8 +81,12 @@ class ServersEmptyB545Test {
                     }
                 }
                 waitForIdle()
+                onAllNodesWithTag("kit-choice-card-check", useUnmergedTree = true).assertCountEquals(1)
                 val img = onRoot().captureToImage().toAwtImage()
-                ImageIO.write(img, "png", File(out, "b545-before-servers-empty-dark.png"))
+                ImageIO.write(img, "png", File(out, "b545-after-servers-empty-dark.png"))
+                onNodeWithContentDescription("On my computer. Pair with a code, or type its address").performClick()
+                waitForIdle()
+                onAllNodesWithTag("kit-choice-card-check", useUnmergedTree = true).assertCountEquals(1)
             }
         } finally {
             Locale.setDefault(prev)

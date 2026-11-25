@@ -8,7 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -64,7 +67,12 @@ class WelcomeB545RendersTest {
                                 Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                                     WelcomeScreen(
                                         WelcomeUi(
-                                            phone = PhoneWelcomeUi(available = true, seconds = 240, bytes = 208_000_000),
+                                            phone =
+                                                PhoneWelcomeUi(
+                                                    available = true,
+                                                    seconds = 240,
+                                                    bytes = 208_000_000,
+                                                ),
                                             place = WelcomePlace.Phone,
                                         ),
                                         actions(calls),
@@ -75,8 +83,10 @@ class WelcomeB545RendersTest {
                     }
                 }
                 waitForIdle()
+                onAllNodesWithContentDescription("Report a problem", useUnmergedTree = true).assertCountEquals(0)
+                onAllNodesWithTag("kit-choice-card-check", useUnmergedTree = true).assertCountEquals(1)
                 val img = onRoot().captureToImage().toAwtImage()
-                ImageIO.write(img, "png", File(out, "b545-before-welcome-dark.png"))
+                ImageIO.write(img, "png", File(out, "b545-after-welcome-dark.png"))
             }
         } finally {
             Locale.setDefault(prev)

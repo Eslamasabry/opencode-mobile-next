@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -49,7 +47,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitList
-import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
@@ -60,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -166,32 +164,16 @@ private fun <T> ChoiceTile(
     val enabled = if (tap) KitEnabled.Enabled else KitEnabled.Disabled(choice.enabled.reason.orEmpty())
     val label = ChoiceCardRules.label(choice.title, supporting)
     val mark: @Composable () -> Unit = {
-        Box(Modifier.clearAndSetSemantics {}) {
+        Box(Modifier.size(markSize).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
             when {
                 busy -> KitChoiceBusyMark(markSize, 0.dp, Modifier.testTag("kit-choice-tile-busy"))
-                flat ->
-                    // The platform's chosen-row mark: the check alone, in the accent.
-                    KitIcon(
-                        KitIcons.check,
+                markScale > 0f ->
+                    KitSelectedCheck(
                         Modifier.graphicsLayer {
                             scaleX = markScale
                             scaleY = markScale
-                        },
-                        size = KitIconSize.Large,
-                        tone = TextTone.Accent,
-                        growsWithText = true,
+                        }.testTag("kit-choice-tile-check"),
                     )
-                else ->
-                    // The check on an accent disc: the one solid accent on the tile.
-                    Box(
-                        Modifier.size(markSize + Space.S1.dp)
-                            .graphicsLayer {
-                                scaleX = markScale
-                                scaleY = markScale
-                            }
-                            .background(colors.accent, CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) { KitGlyph(KitIcons.check, colors.onAccent, markSize - Space.S1.dp) }
             }
         }
     }
