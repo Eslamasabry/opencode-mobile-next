@@ -169,12 +169,11 @@ class PolishTranscriptKitTest {
 
     private fun stepView(
         id: String,
-        kind: KitToolKind,
         title: String,
         status: KitToolStatus,
         duration: String?,
         statusLabel: String,
-    ) = KitToolView(id, kind, title, null, null, status, duration, null, null, statusLabel)
+    ) = KitToolView(id, KitToolKind.Shell, title, null, null, status, duration, null, null, statusLabel)
 
     @Test
     fun `B-568 durations share one right edge`() =
@@ -184,17 +183,16 @@ class PolishTranscriptKitTest {
                     ChatTestTheme(dark = true) {
                         Box(Modifier.width(260.dp).background(LocalKitColors.current.ground)) {
                             KitStepList {
-                                val s1 = stepView("s1", KitToolKind.Shell, "Ran 3", KitToolStatus.Done, "26.7s", "Done")
+                                val s1 = stepView("s1", "Ran 3 commands", KitToolStatus.Done, "26.7s", "Done")
                                 KitToolRow(s1, opened = false, onToggle = {}, group = true)
                                 KitToolRow(
-                                    stepView("s2", KitToolKind.Read, "Read app.kt", KitToolStatus.Done, "0.2s", "Done"),
+                                    stepView("s2", "Read app.kt", KitToolStatus.Done, "0.2s", "Done"),
                                     opened = false,
                                     onToggle = {},
                                 )
                                 KitToolRow(
                                     stepView(
                                         "s3",
-                                        KitToolKind.Shell,
                                         "Run integration tests for checkout",
                                         KitToolStatus.WaitingForYou,
                                         null,

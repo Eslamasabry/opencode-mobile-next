@@ -94,7 +94,44 @@ private data class RowGroupOptions(
     val section: Boolean = false,
     val afterGroup: Boolean = false,
     val surface: Boolean = false,
-)
+) {
+    @Composable
+    fun panelModifier(panel: Boolean): Modifier {
+        if (!panel) return Modifier
+        val colors = LocalKitColors.current
+        val tokens = LocalKitTokens.current
+        val look = kitSurfaceLook(
+            KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1)
+        )
+        val margin = if (LocalKitOnRail.current) 0.dp else if (surface) Space.S2.dp else tokens.gutter.dp
+        val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
+        return Modifier.padding(horizontal = margin)
+            .then(look.modifier)
+            .clip(KitShapeId.Panel.shape())
+            .padding(paneInset)
+    }
+
+    @Composable
+    fun container(panel: Boolean): KitRowContainer? {
+        if (!panel) return LocalKitRowContainer.current
+        val style = LocalKitStyle.current
+        val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
+        val corner =
+            io.github.eslamasabry.oc.ui.design.style.StyleResolver.paneCorner(
+                io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(),
+                style.knobs.corners,
+                style.spec.tokens,
+            )
+        return KitRowContainer(paneInset.value, corner)
+    }
+
+    fun hideEmpty(modifier: Modifier, rowSeams: Seams, endSeams: Seams): Modifier =
+        modifier.layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
+            if (rowSeams.count <= 0 && endSeams.count <= 0) layout(0, 0) {}
+            else layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+        }
+}
 
 @Composable
 private fun KitRowGroupContent(
@@ -110,12 +147,11 @@ private fun KitRowGroupContent(
     val rowGutter = kitRowGutterDp(onRail && flat, tokens.gutter)
     val inset = (rowGutter + if (opts.leadingTiles) tokens.iconTile + Space.S3 else 0).dp
     val panel = opts.surface || !flat
-    val panelModifier = rowGroupPanelModifier(panel, opts.surface)
+    val panelModifier = opts.panelModifier(panel)
     val rowSeams = remember { Seams() }
     val endSeams = remember { Seams() }
     Column(
-        modifier
-            .hideEmptyGroup(rowSeams, endSeams)
+        opts.hideEmpty(modifier, rowSeams, endSeams)
             .kitContainer()
             .fillMaxWidth()
             .kitMaxWidth(CapRole.List)
@@ -133,7 +169,7 @@ private fun KitRowGroupContent(
             )
         if (seam > 0) androidx.compose.foundation.layout.Spacer(Modifier.height(seam.dp).testTag("kit-row-group-seam"))
         Column(panelModifier) {
-            val container = rowGroupContainer(panel)
+            val container = opts.container(panel)
             androidx.compose.runtime.CompositionLocalProvider(
                 LocalKitOnRail provides (onRail && !panel),
                 LocalKitRowContainer provides container,
@@ -147,43 +183,6 @@ private fun KitRowGroupContent(
         opts.note?.let { KitGroupNote(it) }
     }
 }
-
-@Composable
-private fun rowGroupPanelModifier(panel: Boolean, surface: Boolean): Modifier {
-    if (!panel) return Modifier
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    val look = kitSurfaceLook(
-        KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1)
-    )
-    val margin = if (LocalKitOnRail.current) 0.dp else if (surface) Space.S2.dp else tokens.gutter.dp
-    val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
-    return Modifier.padding(horizontal = margin)
-        .then(look.modifier)
-        .clip(KitShapeId.Panel.shape())
-        .padding(paneInset)
-}
-
-@Composable
-private fun rowGroupContainer(panel: Boolean): KitRowContainer? {
-    if (!panel) return LocalKitRowContainer.current
-    val style = LocalKitStyle.current
-    val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
-    val corner =
-        io.github.eslamasabry.oc.ui.design.style.StyleResolver.paneCorner(
-            io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(),
-            style.knobs.corners,
-            style.spec.tokens,
-        )
-    return KitRowContainer(paneInset.value, corner)
-}
-
-private fun Modifier.hideEmptyGroup(rowSeams: Seams, endSeams: Seams): Modifier =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        if (rowSeams.count <= 0 && endSeams.count <= 0) layout(0, 0) {}
-        else layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
-    }
 
 /**
  * The space above a row group (Dart `_KitGroupSeam` and its use in `KitRowGroup.build`, kit_row.dart:1309,1339): [gap]

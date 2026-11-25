@@ -45,7 +45,7 @@ class PolishRenders {
     }
 
     @Test
-    fun `render kit polish scenes`() {
+    fun `render 584 loading bar`() {
         val dir = File("build/polish-render").also { it.mkdirs() }
         runDesktopComposeUiTest(360, 80) {
             setContent {
@@ -73,6 +73,11 @@ class PolishRenders {
                 File(dir, "584-$PHASE-loading-bar-360-1.0-light.png"),
             )
         }
+    }
+
+    @Test
+    fun `render 584 glass light header`() {
+        val dir = File("build/polish-render").also { it.mkdirs() }
         runDesktopComposeUiTest(360, 160) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
