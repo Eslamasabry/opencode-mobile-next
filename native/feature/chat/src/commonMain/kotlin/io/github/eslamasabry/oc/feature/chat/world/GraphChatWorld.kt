@@ -556,6 +556,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     /** True while Try again opens the connection of a computer that is not open; a second tap opens nothing more. */
     private var opening = false
 
+    /** Quiet retry loop while a computer chat has no open connection. */
+    private var autoReopenJob: Job? = null
+
     /** A failure page held back for [FAILED_SETTLE_MS], so a success right after it never crosses in and out. */
     private var failedSettleJob: Job? = null
     /**
@@ -1089,10 +1092,17 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             // This phone's server: the app opens its connection by itself (after a start or an update), so the page
             // waits for it instead of failing. A computer's lost connection says so at once, as before.
             if ((appStartsServer || agentsUpdating()) && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
-            else mutableLoad.value = ChatLoad.Failed(OFFLINE)
+            else {
+                mutableLoad.value = ChatLoad.Failed(OFFLINE)
+                startAutoReopen(OFFLINE)
+            }
             publishVoiceConversation()
             return
         }
+        val quiet = autoReopenJob?.isActive == true
+        autoReopenJob?.cancel()
+        autoReopenJob = null
+        mutableRetryAt.value = null
         val gateway = (graph as ChatGraphAccessors).chatGateway
         refreshReadOnly(gateway)
         userMessageKeys.clear()
@@ -1163,7 +1173,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         }
         var refreshes = handle.refreshes.value
         var connects = gateway.events.connects.value
-        mutableLoad.value = ChatLoad.Loading
+        if (!quiet) mutableLoad.value = ChatLoad.Loading
         if (connects > 0) handle.submit(GatewayEvent.Connected)
         val stops = ArrayList<() -> Unit>()
         attached =
@@ -1451,6 +1461,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val wasAttached = stopWatching != null
         stopWatching?.invoke()
         stopWatching = null
+        autoReopenJob?.cancel()
+        autoReopenJob = null
+        mutableRetryAt.value = null
         endWait()
         mutableServerWait.value = null
         attached?.handle?.let(::keepLastKnown)
@@ -3206,6 +3219,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
     override suspend fun reload(): Outcome<Unit> {
         if (opening) return Outcome.Ok(Unit)
+        autoReopenJob?.cancel()
+        autoReopenJob = null
+        mutableRetryAt.value = null
         // A person's Try again waits for a server that is not ready yet afresh.
         endWait()
         if (connectionOpener == null || registry.graphFor(ref) != null || appStartsServer) {
@@ -3241,7 +3257,56 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val graph = registry.graphFor(ref)
         // The registry watch may have bound the new graph already; the same graph is never bound twice.
         if (graph == null || graph !== attached?.graph) bind(graph)
-        if (opened is Outcome.Failed && graph == null) mutableLoad.value = ChatLoad.Failed(opened.failure)
+        if (opened is Outcome.Failed && graph == null) {
+            mutableLoad.value = ChatLoad.Failed(opened.failure)
+            if (isAutoReopenFailure(opened.failure)) {
+                startAutoReopen(opened.failure)
+            } else {
+                autoReopenJob?.cancel()
+                autoReopenJob = null
+                mutableRetryAt.value = null
+            }
+        }
+    }
+
+    private val canAutoReopen: Boolean
+        get() {
+            val blocked = stopWatching == null || opening || registry.graphFor(ref) != null
+            return !blocked && !appStartsServer && !agentsUpdating()
+        }
+
+    /** Quietly retries opening a lost computer connection without flashing Loading or Connecting. */
+    private fun startAutoReopen(failure: Failure) {
+        val opener = connectionOpener ?: return
+        if (autoReopenJob?.isActive == true || !isAutoReopenFailure(failure) || !canAutoReopen) return
+        autoReopenJob =
+            registry.appScope.launch(registry.mainContext) {
+                var attempt = 0
+                var running = true
+                while (running) {
+                    val wait = AUTO_REOPEN_WAITS_MS.getOrElse(attempt++) { AUTO_REOPEN_EVERY_MS }
+                    mutableRetryAt.value = clock?.now()?.toEpochMilliseconds()?.plus(wait)
+                    delay(wait)
+                    mutableRetryAt.value = null
+                    opener.awaitChance(ref.profileId)
+                    val opened = if (canAutoReopen) opener.open(ref.profileId).takeIf { stopWatching != null } else null
+                    running =
+                        when (opened) {
+                            null -> false
+                            is Outcome.Ok -> {
+                                val graph = registry.graphFor(ref)
+                                if (graph == null || graph !== attached?.graph) bind(graph)
+                                false
+                            }
+                            is Outcome.Failed -> {
+                                val keep = isAutoReopenFailure(opened.failure)
+                                if (!keep) mutableLoad.value = ChatLoad.Failed(opened.failure)
+                                keep
+                            }
+                        }
+                }
+                autoReopenJob = null
+            }
     }
 
     override suspend fun isChildSession(id: String): Outcome<Boolean> {
@@ -3541,8 +3606,17 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
         /** F23: how long a page kept mid-reply waits for the live read before it is drawn anyway. */
         const val KEPT_MID_REPLY_WAIT_MS = 1_200L
+
+        /** Backoff delays for the quiet computer reconnect loop. */
+        val AUTO_REOPEN_WAITS_MS = longArrayOf(2_000, 4_000, 8_000)
+
+        /** Steady-state interval after [AUTO_REOPEN_WAITS_MS] is spent. */
+        const val AUTO_REOPEN_EVERY_MS = 10_000L
     }
 }
+
+private fun isAutoReopenFailure(failure: Failure): Boolean =
+    failure is Failure.Network || failure is Failure.TimedOut || failure is Failure.ComputerDidNotAnswer
 
 /**
  * 20 MB of picture as base64 (Flutter's attachment cap); a bigger file is not opened in the chat.
