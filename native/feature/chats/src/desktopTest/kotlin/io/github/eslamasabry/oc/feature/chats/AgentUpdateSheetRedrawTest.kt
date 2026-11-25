@@ -411,18 +411,18 @@ class AgentUpdateSheetRedrawTest {
             val high = tops.maxOrNull() ?: 0f
             assertTrue(high - low <= ONE_DP_PX, "the main button moved while its words changed: $tops")
         }
-    }
 
-    private fun runs(shown: BooleanArray): List<Triple<Boolean, Int, Int>> {
-        val found = mutableListOf<Triple<Boolean, Int, Int>>()
-        var start = 0
-        for (i in 1..shown.size) {
-            if (i == shown.size || shown[i] != shown[start]) {
-                found += Triple(shown[start], start, i - 1)
-                start = i
+        private fun runs(shown: BooleanArray): List<Triple<Boolean, Int, Int>> {
+            val found = mutableListOf<Triple<Boolean, Int, Int>>()
+            var start = 0
+            for (i in 1..shown.size) {
+                if (i == shown.size || shown[i] != shown[start]) {
+                    found += Triple(shown[start], start, i - 1)
+                    start = i
+                }
             }
+            return found
         }
-        return found
     }
 
     private companion object {
