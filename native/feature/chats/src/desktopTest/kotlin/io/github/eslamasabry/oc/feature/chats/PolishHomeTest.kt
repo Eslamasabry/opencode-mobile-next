@@ -194,15 +194,18 @@ class PolishHomeTest {
                 ),
         )
 
-    private fun laptopNotAnsweringState() =
-        ChatsUi(
+    private fun laptopNotAnsweringState(locale: String = "en"): ChatsUi {
+        val titles =
+            if (locale == "en") listOf("Fix the login bug", "Plan the release notes")
+            else listOf("إصلاح خطأ تسجيل الدخول", "ملاحظات الإصدار")
+        return ChatsUi(
             phase = ChatsPhase.List,
             settingsAvailable = true,
             allCount = 2,
             recent =
                 persistentListOf(
-                    openCodeRow("login", "Fix the login bug", "api"),
-                    openCodeRow("notes", "Plan the release notes", "api"),
+                    openCodeRow("login", titles[0], "api"),
+                    openCodeRow("notes", titles[1], "api"),
                 ),
             home =
                 ChatsHomeExtraState(
@@ -219,24 +222,44 @@ class PolishHomeTest {
                         ),
                 ),
         )
+    }
 
     /** OpenCode rows beside a Claude Code row and a Codex row (finding 10). No saved server, so there is no pill. */
-    private fun openCodeRowsState() =
-        ChatsUi(
+    private fun openCodeRowsState(locale: String = "en"): ChatsUi {
+        val titles =
+            if (locale == "en") {
+                listOf(
+                    "Fix the login bug",
+                    "Run the tests before the release",
+                    "Write the release notes",
+                    "Explain this project",
+                    "Review the pull request",
+                )
+            } else {
+                listOf(
+                    "إصلاح خطأ تسجيل الدخول",
+                    "تشغيل الاختبارات قبل الإصدار",
+                    "كتابة ملاحظات الإصدار",
+                    "شرح هذا المشروع",
+                    "مراجعة طلب السحب",
+                )
+            }
+        return ChatsUi(
             phase = ChatsPhase.List,
             settingsAvailable = true,
             allCount = 5,
             recent =
                 persistentListOf(
-                    openCodeRow("login", "Fix the login bug", "api"),
-                    openCodeRow("tests", "Run the tests before the release", "api"),
-                    openCodeRow("notes", "Write the release notes", "api"),
-                    openCodeRow("claude", "Explain this project", "api")
+                    openCodeRow("login", titles[0], "api"),
+                    openCodeRow("tests", titles[1], "api"),
+                    openCodeRow("notes", titles[2], "api"),
+                    openCodeRow("claude", titles[3], "api")
                         .copy(agentMark = "claude", agentName = "Claude Code"),
-                    openCodeRow("codex", "Review the pull request", "api")
+                    openCodeRow("codex", titles[4], "api")
                         .copy(agentMark = "codex", agentName = "Codex"),
                 ),
         )
+    }
 
     /** The test's now. */
     private val now: Long = 1_760_000_000_000L
@@ -666,6 +689,35 @@ class PolishHomeTest {
     }
 
     @Test
+    fun `B-573 Not answering appears once, in the server pill, and the notice gives the reason`() {
+        for (locale in listOf("en", "ar")) {
+            inLanguage(locale)
+            val pillWord = if (locale == "ar") "لا يستجيب" else "Not answering"
+            val repeatStem = if (locale == "ar") "يستجيب" else "answering"
+            val tryAgain = if (locale == "ar") "إعادة المحاولة" else "Try again"
+            kitUiTest(360, 800) {
+                showHome(laptopNotAnsweringState(locale), locale, dark)
+                val pill =
+                    onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNode().textsDeep()
+                assertTrue(pill.any { pillWord in it }, "[$locale] pill names $pillWord: $pill")
+                val notice =
+                    onNodeWithTag("kit-notice-message", useUnmergedTree = true).fetchSemanticsNode().textsDeep()
+                assertTrue(
+                    notice.isNotEmpty() && notice.any { "Laptop" in it },
+                    "[$locale] notice names server: $notice",
+                )
+                assertTrue(
+                    notice.none { repeatStem in it.lowercase() },
+                    "[$locale] notice must not repeat '$repeatStem': $notice",
+                )
+                val hits = texts().filter { repeatStem in it.lowercase() }
+                assertEquals(1, hits.size, "[$locale] '$repeatStem' appears once, in the pill only: $hits")
+                onNodeWithText(tryAgain).assertExists()
+            }
+        }
+    }
+
+    @Test
     fun `polish renders`() {
         // The lead's rounds (before and after): 10 the mark, 15 times and Needs you, 27 the Glass +,
         // 12 This phone's card, 121 a computer's card with its checks, 30 the offline notice.
@@ -673,16 +725,18 @@ class PolishHomeTest {
             listOf(
                 Scene(42, "ar", arabicChipState()),
                 Scene(11, "ar", appClosedArabicState(), appClosedArabicNotice()),
-                Scene(10, "en", openCodeRowsState(), phase = ROUND),
+                Scene(10, "en", openCodeRowsState("en"), phase = ROUND),
+                Scene(10, "ar", openCodeRowsState("ar"), phase = ROUND),
                 Scene(15, "en", longTitlesState("en"), phase = ROUND),
                 Scene(15, "ar", longTitlesState("ar"), phase = ROUND),
-                Scene(27, "en", openCodeRowsState(), phase = ROUND, style = Style.Glass),
-                Scene(27, "ar", openCodeRowsState(), phase = ROUND, style = Style.Glass),
+                Scene(27, "en", openCodeRowsState("en"), phase = ROUND, style = Style.Glass),
+                Scene(27, "ar", openCodeRowsState("ar"), phase = ROUND, style = Style.Glass),
                 Scene(12, "en", failedOnThisPhone(), phase = ROUND),
                 Scene(12, "ar", failedOnThisPhone(), phase = ROUND),
                 Scene(121, "en", failedComputer(), phase = ROUND),
                 Scene(121, "ar", failedComputer(), phase = ROUND),
-                Scene(30, "en", laptopNotAnsweringState(), phase = ROUND),
+                Scene(30, "en", laptopNotAnsweringState("en"), phase = NOTICE_ROUND),
+                Scene(30, "ar", laptopNotAnsweringState("ar"), phase = NOTICE_ROUND),
             ).mapNotNull { renderScene(it) }
         if (flickers.isNotEmpty()) throw AssertionError(flickers.joinToString(" ; "))
     }
@@ -693,6 +747,9 @@ private const val PHASE = "after"
 
 /** The lead's rounds: their pictures after the fix (the "before" ones were written by the red commit). */
 private const val ROUND = "after"
+
+/** Finding 30's non-repeating notice copy: "before" on its red commit, "after" on its fix. */
+private const val NOTICE_ROUND = "before"
 
 /** A row's agent mark, in dp (KitRecentRowRules.MARK_DP). */
 private const val MARK_DP = 28f
