@@ -3233,6 +3233,8 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             } finally {
                 opening = false
                 loadWaiting.value = false
+                if (stopWatching == null && attached == null && mutableLoad.value is ChatLoad.Loading)
+                    mutableLoad.value = ChatLoad.Failed(OFFLINE)
             }
         // The chat closed meanwhile: nothing of it is left to show.
         if (stopWatching == null) return
