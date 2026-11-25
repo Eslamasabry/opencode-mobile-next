@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.Health
+import io.github.eslamasabry.oc.core.model.ServerAutomation
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
@@ -50,6 +51,7 @@ interface ServerSettingsConnection {
 
 /** Saved-profile reads and live commands never resolve through the currently selected server. */
 @ContributesBinding(AppScope::class, binding = binding<ServerSettingsSource>())
+@ContributesBinding(AppScope::class, binding = binding<ServerAutomationsSource>())
 @SingleIn(AppScope::class)
 @Inject
 class NativeServerSettings(
@@ -58,7 +60,7 @@ class NativeServerSettings(
     private val connections: ServerConnections,
     private val editor: ServerEditorPort,
     private val runtime: PreviewRuntime,
-) : ServerSettingsSource {
+) : ServerSettingsSource, ServerAutomationsSource {
     private val shellWrites = Mutex()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -355,6 +357,44 @@ class NativeServerSettings(
         val result = gateway.hostAgentProviders(refresh = true)
         return if (current(profile, graph) && gateway.location.value == location)
             result.map { it.selectable.map { p -> p.displayName }.toImmutableList() }
+        else Failure.Refused(RefusalReason.StaleScope).failed()
+    }
+
+    override suspend fun automations(
+        profile: ProfileId
+    ): Outcome<ImmutableList<ServerAutomation>> =
+        withAutomations(profile) { it.listAutomations() }
+
+    override suspend fun pauseAutomation(
+        profile: ProfileId,
+        id: String,
+    ): Outcome<ServerAutomation> = withAutomations(profile) { it.pauseAutomation(id) }
+
+    override suspend fun resumeAutomation(
+        profile: ProfileId,
+        id: String,
+    ): Outcome<ServerAutomation> = withAutomations(profile) { it.resumeAutomation(id) }
+
+    override suspend fun deleteAutomation(profile: ProfileId, id: String): Outcome<Unit> =
+        withAutomations(profile) { it.deleteAutomation(id) }
+
+    private suspend fun <T> withAutomations(
+        profile: ProfileId,
+        block: suspend (ServerOperationsGateway) -> Outcome<T>,
+    ): Outcome<T> {
+        when (val warm = stores.warm()) {
+            is Outcome.Failed -> return warm
+            is Outcome.Ok -> Unit
+        }
+        val graph =
+            when (val read = live(profile)) {
+                is Outcome.Ok -> read.value
+                is Outcome.Failed -> return read
+            }
+        if (!graph.session.capabilities.value.serverAutomations)
+            return Failure.Unavailable(FeatureId("serverAutomations")).failed()
+        val result = block((graph as ServerSettingsConnection).serverSettingsOperations)
+        return if (current(profile, graph)) result
         else Failure.Refused(RefusalReason.StaleScope).failed()
     }
 }

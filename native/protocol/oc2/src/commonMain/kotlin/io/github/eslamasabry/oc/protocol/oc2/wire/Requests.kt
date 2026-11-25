@@ -20,6 +20,7 @@ public data class Oc2InboxItem(
     public val type: String = "unknown",
     public val payload: JsonObject = EmptyObject,
     public val delivery: Oc2Delivery? = null,
+    public val metadata: JsonObject? = null,
 ) {
     public val promptText: String?
         get() = payload.str("text")

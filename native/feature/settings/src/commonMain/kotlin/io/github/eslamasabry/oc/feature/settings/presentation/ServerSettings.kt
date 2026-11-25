@@ -10,21 +10,26 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.AutomationStatus
 import io.github.eslamasabry.oc.core.model.Health
 import io.github.eslamasabry.oc.core.model.ModelRef
+import io.github.eslamasabry.oc.core.model.ServerAutomation
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.core.model.realShells
 import io.github.eslamasabry.oc.core.model.sameShellPath
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
+import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -173,6 +178,16 @@ public data class ServerSettingsUi(
     val resetDone: Boolean = false,
     val disconnectConfirm: Boolean = false,
     val agents: ImmutableList<String>? = null,
+    val automations: ImmutableList<ServerAutomation> = persistentListOf(),
+    val automationsLoading: Boolean = false,
+    val automationsWorking: Boolean = false,
+    val automationsLoadFailed: Boolean = false,
+    val automationsHidden: Boolean = false,
+    val selectedAutomationId: String? = null,
+    val deleteAutomationConfirmId: String? = null,
+    val stopAllAutomationsConfirm: Boolean = false,
+    val automationsNotice: AutomationsNotice? = null,
+    val nowMs: Long = 0L,
 ) {
     /** What the Home page's top bar names (the screen turns it into words). */
     public val homeTitle: ServerSettingsTitle
@@ -183,6 +198,21 @@ public data class ServerSettingsUi(
             return if (f.managedOnPhone) ServerSettingsTitle.PhoneServer
             else ServerSettingsTitle.Named(f.name)
         }
+
+    public val showAutomations: Boolean
+        get() =
+            facts?.connected == true &&
+                facts.capabilities?.serverAutomations == true &&
+                !automationsHidden
+
+    public val selectedAutomation: ServerAutomation?
+        get() = selectedAutomationId?.let { id -> automations.firstOrNull { it.id == id } }
+
+    public val deleteAutomationTarget: ServerAutomation?
+        get() = deleteAutomationConfirmId?.let { id -> automations.firstOrNull { it.id == id } }
+
+    public val activeAutomationsCount: Int
+        get() = automations.count { it.status == AutomationStatus.Active }
 }
 
 /** The Home page title: the saved name, the phone's own server, or "Server settings" while loading. */
@@ -240,14 +270,40 @@ public interface ServerSettingsActions {
     public fun recheckAgents()
 
     public fun integration(page: ServerIntegrationPage)
+
+    public fun openSchedules()
+
+    public fun refreshAutomations()
+
+    public fun openAutomation(id: String)
+
+    public fun closeAutomation()
+
+    public fun pauseAutomation(id: String)
+
+    public fun resumeAutomation(id: String)
+
+    public fun askDeleteAutomation(id: String)
+
+    public fun cancelDeleteAutomation()
+
+    public fun confirmDeleteAutomation()
+
+    public fun askStopAllAutomations()
+
+    public fun cancelStopAllAutomations()
+
+    public fun confirmStopAllAutomations()
 }
 
 @AssistedInject
 public class ServerSettingsViewModel(
     @Assisted private val route: ServerSettingsRoute,
     private val source: ServerSettingsSource,
+    private val automationsSource: ServerAutomationsSource,
     private val preferences: ServerPreferencesSource,
     private val nav: AppNavigator,
+    private val clock: Clock,
 ) : ViewModel(), ServerSettingsActions {
     private val mutable = MutableStateFlow(ServerSettingsUi(page = route.page))
     public val state: StateFlow<ServerSettingsUi> = mutable.asStateFlow()
@@ -264,11 +320,40 @@ public class ServerSettingsViewModel(
         }
         viewModelScope.launch {
             source.watch(route.profile).collect { facts ->
-                val firstLive = facts?.connected == true && mutable.value.facts?.connected != true
-                mutable.update { it.copy(loading = false, facts = facts) }
+                val previous = mutable.value.facts
+                val firstLive = facts?.connected == true && previous?.connected != true
+                val supportsAutomations =
+                    facts?.connected == true && facts.capabilities?.serverAutomations == true
+                val automationsBecameReady =
+                    supportsAutomations &&
+                        (previous?.connected != true ||
+                            previous.capabilities?.serverAutomations != true)
+                mutable.update { current ->
+                    val resetAutomations = !supportsAutomations
+                    current.copy(
+                        loading = false,
+                        facts = facts,
+                        automations =
+                            if (resetAutomations) persistentListOf() else current.automations,
+                        automationsLoadFailed =
+                            if (resetAutomations) false else current.automationsLoadFailed,
+                        automationsHidden =
+                            if (resetAutomations) false else current.automationsHidden,
+                        selectedAutomationId =
+                            if (resetAutomations) null else current.selectedAutomationId,
+                        deleteAutomationConfirmId =
+                            if (resetAutomations) null else current.deleteAutomationConfirmId,
+                        stopAllAutomationsConfirm =
+                            if (resetAutomations) false else current.stopAllAutomationsConfirm,
+                        nowMs = clock.now().toEpochMilliseconds(),
+                    )
+                }
                 if (firstLive && route.page == ServerSettingsPage.Home) {
                     refresh()
                     loadModelNames()
+                }
+                if (automationsBecameReady && route.page == ServerSettingsPage.Home) {
+                    refreshAutomations()
                 }
             }
         }
@@ -499,6 +584,234 @@ public class ServerSettingsViewModel(
 
     override fun integration(page: ServerIntegrationPage): Unit =
         nav.open(ServerIntegrationRoute(route.profile, page))
+
+    override fun openSchedules(): Unit = nav.open(SchedulesRoute.List(route.profile))
+
+    override fun refreshAutomations() {
+        if (!mutable.value.showAutomations || mutable.value.automationsLoading) return
+        mutable.update {
+            it.copy(
+                automationsLoading = true,
+                automationsLoadFailed = false,
+                nowMs = clock.now().toEpochMilliseconds(),
+            )
+        }
+        viewModelScope.launch {
+            when (val result = automationsSource.automations(route.profile)) {
+                is Outcome.Ok -> {
+                    val sorted = sortAutomations(result.value)
+                    mutable.update { current ->
+                        current.copy(
+                            automationsLoading = false,
+                            automations = sorted,
+                            automationsLoadFailed = false,
+                            selectedAutomationId =
+                                current.selectedAutomationId?.takeIf { id ->
+                                    sorted.any { it.id == id }
+                                },
+                            deleteAutomationConfirmId =
+                                current.deleteAutomationConfirmId?.takeIf { id ->
+                                    sorted.any { it.id == id }
+                                },
+                            nowMs = clock.now().toEpochMilliseconds(),
+                        )
+                    }
+                }
+                is Outcome.Failed ->
+                    if (result.failure is Failure.Unavailable) {
+                        mutable.update {
+                            it.copy(
+                                automationsLoading = false,
+                                automations = persistentListOf(),
+                                automationsLoadFailed = false,
+                                automationsHidden = true,
+                                selectedAutomationId = null,
+                                deleteAutomationConfirmId = null,
+                                stopAllAutomationsConfirm = false,
+                            )
+                        }
+                    } else {
+                        mutable.update {
+                            it.copy(automationsLoading = false, automationsLoadFailed = true)
+                        }
+                    }
+            }
+        }
+    }
+
+    override fun openAutomation(id: String) {
+        if (mutable.value.automations.any { it.id == id }) {
+            mutable.update {
+                it.copy(
+                    selectedAutomationId = id,
+                    nowMs = clock.now().toEpochMilliseconds(),
+                )
+            }
+        }
+    }
+
+    override fun closeAutomation() {
+        mutable.update { it.copy(selectedAutomationId = null) }
+    }
+
+    override fun pauseAutomation(id: String) {
+        mutateAutomation(id) { automationsSource.pauseAutomation(route.profile, id) }
+    }
+
+    override fun resumeAutomation(id: String) {
+        mutateAutomation(id) { automationsSource.resumeAutomation(route.profile, id) }
+    }
+
+    private fun mutateAutomation(id: String, call: suspend () -> Outcome<ServerAutomation>) {
+        if (mutable.value.automationsWorking) return
+        mutable.update { it.copy(automationsWorking = true, automationsNotice = null) }
+        viewModelScope.launch {
+            when (val result = call()) {
+                is Outcome.Ok -> {
+                    val updated = result.value
+                    mutable.update { current ->
+                        val replaced =
+                            sortAutomations(
+                                current.automations.map { if (it.id == id) updated else it }
+                            )
+                        current.copy(
+                            automationsWorking = false,
+                            automations = replaced,
+                            nowMs = clock.now().toEpochMilliseconds(),
+                        )
+                    }
+                }
+                is Outcome.Failed ->
+                    handleAutomationMutationFailure(result.failure)
+            }
+        }
+    }
+
+    override fun askDeleteAutomation(id: String) {
+        if (mutable.value.automationsWorking) return
+        if (mutable.value.automations.any { it.id == id }) {
+            mutable.update { it.copy(deleteAutomationConfirmId = id) }
+        }
+    }
+
+    override fun cancelDeleteAutomation() {
+        if (!mutable.value.automationsWorking) {
+            mutable.update { it.copy(deleteAutomationConfirmId = null) }
+        }
+    }
+
+    override fun confirmDeleteAutomation() {
+        val targetId = mutable.value.deleteAutomationConfirmId ?: return
+        if (mutable.value.automationsWorking) return
+        mutable.update {
+            it.copy(
+                deleteAutomationConfirmId = null,
+                automationsWorking = true,
+                automationsNotice = null,
+            )
+        }
+        viewModelScope.launch {
+            when (val result = automationsSource.deleteAutomation(route.profile, targetId)) {
+                is Outcome.Ok ->
+                    mutable.update { current ->
+                        current.copy(
+                            automationsWorking = false,
+                            automations =
+                                current.automations
+                                    .filterNot { it.id == targetId }
+                                    .toImmutableList(),
+                            selectedAutomationId =
+                                current.selectedAutomationId?.takeUnless { it == targetId },
+                            nowMs = clock.now().toEpochMilliseconds(),
+                        )
+                    }
+                is Outcome.Failed -> handleAutomationMutationFailure(result.failure)
+            }
+        }
+    }
+
+    override fun askStopAllAutomations() {
+        if (mutable.value.automationsWorking || mutable.value.activeAutomationsCount <= 0) return
+        mutable.update { it.copy(stopAllAutomationsConfirm = true) }
+    }
+
+    override fun cancelStopAllAutomations() {
+        if (!mutable.value.automationsWorking) {
+            mutable.update { it.copy(stopAllAutomationsConfirm = false) }
+        }
+    }
+
+    override fun confirmStopAllAutomations() {
+        if (!mutable.value.stopAllAutomationsConfirm || mutable.value.automationsWorking) return
+        val active = mutable.value.automations.filter { it.status == AutomationStatus.Active }
+        mutable.update {
+            it.copy(
+                stopAllAutomationsConfirm = false,
+                automationsWorking = active.isNotEmpty(),
+                automationsNotice = null,
+            )
+        }
+        if (active.isNotEmpty()) {
+            viewModelScope.launch { runStopAll(active) }
+        }
+    }
+
+    private suspend fun runStopAll(active: List<ServerAutomation>) {
+        val updatedById = mutableMapOf<String, ServerAutomation>()
+        var unavailable = false
+        for (item in active) {
+            when (val result = automationsSource.pauseAutomation(route.profile, item.id)) {
+                is Outcome.Ok -> updatedById[item.id] = result.value
+                is Outcome.Failed ->
+                    if (result.failure is Failure.Unavailable) {
+                        unavailable = true
+                        break
+                    }
+            }
+        }
+        if (unavailable) {
+            handleAutomationMutationFailure(Failure.Unavailable(FeatureId("serverAutomations")))
+        } else {
+            val stopped = updatedById.size
+            val notice =
+                when {
+                    stopped == active.size -> AutomationsNotice.StoppedAll(stopped)
+                    stopped > 0 -> AutomationsNotice.StoppedPartial(stopped, active.size)
+                    else -> AutomationsNotice.ActionFailed
+                }
+            mutable.update { current ->
+                val merged = sortAutomations(current.automations.map { updatedById[it.id] ?: it })
+                current.copy(
+                    automationsWorking = false,
+                    automations = merged,
+                    automationsNotice = notice,
+                    nowMs = clock.now().toEpochMilliseconds(),
+                )
+            }
+        }
+    }
+
+    private fun handleAutomationMutationFailure(failure: Failure) {
+        if (failure is Failure.Unavailable) {
+            mutable.update {
+                it.copy(
+                    automationsWorking = false,
+                    automations = persistentListOf(),
+                    automationsHidden = true,
+                    selectedAutomationId = null,
+                    deleteAutomationConfirmId = null,
+                    stopAllAutomationsConfirm = false,
+                )
+            }
+        } else {
+            mutable.update {
+                it.copy(
+                    automationsWorking = false,
+                    automationsNotice = AutomationsNotice.ActionFailed,
+                )
+            }
+        }
+    }
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

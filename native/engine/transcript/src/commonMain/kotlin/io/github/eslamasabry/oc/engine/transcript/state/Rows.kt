@@ -51,6 +51,9 @@ public data class PromptRow(
     val createdMs: Long? = null,
     /** Pictures and files the prompt carried, in order (a prompt may have no words at all). */
     val files: List<PromptFile> = emptyList(),
+    /** B-605: server automation that sent this prompt, if any. */
+    val automationName: String? = null,
+    val automationRun: Int? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Prompt

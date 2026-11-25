@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverAutomationsSection">Автоматизации</string>
+    <string name="serverAutomationsEmpty">На сервере %1$s нет автоматизаций.</string>
+    <string name="serverAutomationsLoading">Загрузка автоматизаций…</string>
+    <string name="serverAutomationsLoadFailed">Не удалось загрузить автоматизации с %1$s.</string>
+    <string name="serverAutomationsActionFailed">Не удалось обновить автоматизации на %1$s. Попробуйте снова.</string>
+    <string name="serverAutomationsNext">Следующий запуск: %1$s</string>
+    <string name="serverAutomationsOnEvent">Запускается по событию</string>
+    <string name="serverAutomationsStatusPaused">На паузе</string>
+    <string name="serverAutomationsStatusDone">Завершена</string>
+    <string name="serverAutomationsStatusActive">Активна</string>
+    <string name="serverAutomationsLastFired">Запускалась %1$s</string>
+    <string name="serverAutomationsLastLate">Запустилась с опозданием %1$s</string>
+    <string name="serverAutomationsLastSkipped">Пропущена %1$s</string>
+    <string name="serverAutomationsLastDisabled">Приостановлена сервером %1$s</string>
+    <string name="serverAutomationsLastFailed">Последний запуск не удался %1$s</string>
+    <string name="serverAutomationsLastExpired">Срок истёк %1$s</string>
+    <string name="serverAutomationsLastUnknown">Запускалась %1$s</string>
+    <string name="serverAutomationsNeverRan">Ещё не запускалась</string>
+    <string name="serverAutomationsPause">Пауза</string>
+    <string name="serverAutomationsResume">Возобновить</string>
+    <string name="serverAutomationsDeleteFrom">Удалить %1$s с %2$s</string>
+    <string name="serverAutomationsDeleteTitle">Удалить %1$s с %2$s?</string>
+    <string name="serverAutomationsDeleteBody">Автоматизация будет удалена с %1$s. Уже отправленные сообщения останутся в чатах.</string>
+    <string name="serverAutomationsStopAll">Остановить все автоматизации на %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Остановить все автоматизации на %1$s?</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="one">Будет приостановлена %1$d активная автоматизация на %2$s. Вы сможете возобновить её позже.</item>
+        <item quantity="few">Будут приостановлены %1$d активные автоматизации на %2$s. Вы сможете возобновить их позже.</item>
+        <item quantity="many">Будут приостановлены %1$d активных автоматизаций на %2$s. Вы сможете возобновить их позже.</item>
+        <item quantity="other">Будут приостановлены %1$d активных автоматизаций на %2$s. Вы сможете возобновить их позже.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="one">Остановлена %1$d автоматизация на %2$s.</item>
+        <item quantity="few">Остановлены %1$d автоматизации на %2$s.</item>
+        <item quantity="many">Остановлено %1$d автоматизаций на %2$s.</item>
+        <item quantity="other">Остановлено %1$d автоматизаций на %2$s.</item>
+    </plurals>
+    <string name="serverAutomationsStoppedPartial">Остановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте снова для остальных.</string>
+    <string name="serverAutomationsDetailSchedule">Расписание</string>
+    <string name="serverAutomationsDetailAction">Действие</string>
+    <string name="serverAutomationsDetailLastRun">Последний запуск</string>
+    <string name="serverAutomationsDetailRuns">Запусков</string>
+    <string name="serverAutomationsDetailOutput">Последний вывод</string>
+    <string name="serverAutomationsTriggerEvery">Каждые %1$s</string>
+    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Один раз · %1$s</string>
+    <string name="serverAutomationsTriggerEvent">Когда %1$s отправляет %2$s</string>
+    <string name="serverAutomationsTriggerEventAny">Когда срабатывает %1$s</string>
+    <string name="serverAutomationsActionPrompt">Запрос</string>
+    <string name="serverAutomationsActionPromptAgent">Запрос (%1$s)</string>
+    <string name="serverAutomationsActionShell">Команда оболочки</string>
+    <string name="serverAutomationsActionCode">Скрипт Code Mode</string>
+    <string name="serverAutomationsToday">Сегодня</string>
+    <string name="serverAutomationsTomorrow">Завтра</string>
+    <string name="serverAutomationsYesterday">Вчера</string>
+    <string name="chatAutomationOrigin">Из автоматизации · %1$s</string>
+    <string name="chatAutomationOriginRun">Из автоматизации · %1$s · запуск %2$d</string>
+</resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverAutomationsSection">Otomatisasi</string>
+    <string name="serverAutomationsEmpty">Tidak ada otomatisasi di %1$s.</string>
+    <string name="serverAutomationsLoading">Memuat otomatisasi…</string>
+    <string name="serverAutomationsLoadFailed">Tidak dapat memuat otomatisasi dari %1$s.</string>
+    <string name="serverAutomationsActionFailed">Tidak dapat memperbarui otomatisasi di %1$s. Coba lagi.</string>
+    <string name="serverAutomationsNext">Berikutnya: %1$s</string>
+    <string name="serverAutomationsOnEvent">Berjalan saat peristiwa terjadi</string>
+    <string name="serverAutomationsStatusPaused">Dijeda</string>
+    <string name="serverAutomationsStatusDone">Selesai</string>
+    <string name="serverAutomationsStatusActive">Aktif</string>
+    <string name="serverAutomationsLastFired">Berjalan %1$s</string>
+    <string name="serverAutomationsLastLate">Berjalan terlambat %1$s</string>
+    <string name="serverAutomationsLastSkipped">Dilewati %1$s</string>
+    <string name="serverAutomationsLastDisabled">Dijeda oleh server %1$s</string>
+    <string name="serverAutomationsLastFailed">Proses terakhir gagal %1$s</string>
+    <string name="serverAutomationsLastExpired">Kedaluwarsa %1$s</string>
+    <string name="serverAutomationsLastUnknown">Berjalan %1$s</string>
+    <string name="serverAutomationsNeverRan">Belum pernah berjalan</string>
+    <string name="serverAutomationsPause">Jeda</string>
+    <string name="serverAutomationsResume">Lanjutkan</string>
+    <string name="serverAutomationsDeleteFrom">Hapus %1$s dari %2$s</string>
+    <string name="serverAutomationsDeleteTitle">Hapus %1$s dari %2$s?</string>
+    <string name="serverAutomationsDeleteBody">Ini menghapus otomatisasi dari %1$s. Pesan yang sudah dikirim tetap ada di percakapan Anda.</string>
+    <string name="serverAutomationsStopAll">Hentikan semua otomatisasi di %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Hentikan semua otomatisasi di %1$s?</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="other">Ini menjeda %1$d otomatisasi aktif di %2$s. Anda dapat melanjutkannya nanti.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="other">Menghentikan %1$d otomatisasi di %2$s.</item>
+    </plurals>
+    <string name="serverAutomationsStoppedPartial">Menghentikan %1$d dari %2$d otomatisasi aktif di %3$s. Coba lagi untuk sisanya.</string>
+    <string name="serverAutomationsDetailSchedule">Jadwal</string>
+    <string name="serverAutomationsDetailAction">Tindakan</string>
+    <string name="serverAutomationsDetailLastRun">Proses terakhir</string>
+    <string name="serverAutomationsDetailRuns">Jumlah proses</string>
+    <string name="serverAutomationsDetailOutput">Keluaran terakhir</string>
+    <string name="serverAutomationsTriggerEvery">Setiap %1$s</string>
+    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Sekali · %1$s</string>
+    <string name="serverAutomationsTriggerEvent">Saat %1$s mengirim %2$s</string>
+    <string name="serverAutomationsTriggerEventAny">Saat %1$s terpicu</string>
+    <string name="serverAutomationsActionPrompt">Perintah</string>
+    <string name="serverAutomationsActionPromptAgent">Perintah (%1$s)</string>
+    <string name="serverAutomationsActionShell">Perintah shell</string>
+    <string name="serverAutomationsActionCode">Skrip Code Mode</string>
+    <string name="serverAutomationsToday">Hari ini</string>
+    <string name="serverAutomationsTomorrow">Besok</string>
+    <string name="serverAutomationsYesterday">Kemarin</string>
+    <string name="chatAutomationOrigin">Dari otomatisasi · %1$s</string>
+    <string name="chatAutomationOriginRun">Dari otomatisasi · %1$s · proses %2$d</string>
+</resources>

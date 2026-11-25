@@ -34,6 +34,7 @@ class CapabilitySnapshotTest {
             "worktreeInspection",
             "promptModelChoice",
             "customProviders",
+            "serverAutomations",
         )
 
     @Test

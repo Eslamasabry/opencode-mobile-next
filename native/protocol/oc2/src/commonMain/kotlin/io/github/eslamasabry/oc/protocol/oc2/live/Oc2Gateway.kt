@@ -126,6 +126,34 @@ internal class Oc2Gateway(
 
     private val signIns by lazy { Oc2ProviderSignIn(this, { location.value }, redactor) }
 
+    @kotlin.concurrent.Volatile private var automationsDisabled: Boolean = false
+
+    private val automations by lazy {
+        Oc2Automations(this, redactor) {
+            automationsDisabled = true
+            mutableCapabilities.update { it.copy(serverAutomations = false) }
+        }
+    }
+
+    override suspend fun listAutomations(
+        sessionId: SessionId?,
+        directory: String?,
+    ): Outcome<ImmutableList<ServerAutomation>> =
+        if (automationsDisabled) unavailable("serverAutomations")
+        else automations.list(sessionId, directory)
+
+    override suspend fun automation(id: String): Outcome<ServerAutomation> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.get(id)
+
+    override suspend fun pauseAutomation(id: String): Outcome<ServerAutomation> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.pause(id)
+
+    override suspend fun resumeAutomation(id: String): Outcome<ServerAutomation> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.resume(id)
+
+    override suspend fun deleteAutomation(id: String): Outcome<Unit> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.delete(id)
+
     override suspend fun integrations(): Outcome<ImmutableList<IntegrationInfo>> =
         signIns.integrations()
 
@@ -822,7 +850,13 @@ internal class Oc2Gateway(
                 if (known != null && known != detected) return@withLock mismatch.failed()
                 if (healthy) {
                     dialect.value = detected
-                    if (detected == Oc2Dialect.Stable) mutableCapabilities.update { it.stableWrites() }
+                    if (detected == Oc2Dialect.Stable) {
+                        val hasAutomations =
+                            !automationsDisabled && Oc2Dialect.supportsAutomations(version)
+                        mutableCapabilities.update {
+                            it.stableWrites().copy(serverAutomations = hasAutomations)
+                        }
+                    }
                 }
                 Health(healthy, version).ok()
             }

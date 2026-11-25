@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverAutomationsSection">Automações</string>
+    <string name="serverAutomationsEmpty">Nenhuma automação em %1$s.</string>
+    <string name="serverAutomationsLoading">Carregando automações…</string>
+    <string name="serverAutomationsLoadFailed">Não foi possível carregar as automações de %1$s.</string>
+    <string name="serverAutomationsActionFailed">Não foi possível atualizar as automações em %1$s. Tente novamente.</string>
+    <string name="serverAutomationsNext">Próxima: %1$s</string>
+    <string name="serverAutomationsOnEvent">Executa por evento</string>
+    <string name="serverAutomationsStatusPaused">Pausada</string>
+    <string name="serverAutomationsStatusDone">Concluída</string>
+    <string name="serverAutomationsStatusActive">Ativa</string>
+    <string name="serverAutomationsLastFired">Executada %1$s</string>
+    <string name="serverAutomationsLastLate">Executada com atraso %1$s</string>
+    <string name="serverAutomationsLastSkipped">Ignorada %1$s</string>
+    <string name="serverAutomationsLastDisabled">Pausada pelo servidor %1$s</string>
+    <string name="serverAutomationsLastFailed">Última execução falhou %1$s</string>
+    <string name="serverAutomationsLastExpired">Expirada %1$s</string>
+    <string name="serverAutomationsLastUnknown">Executada %1$s</string>
+    <string name="serverAutomationsNeverRan">Ainda não executada</string>
+    <string name="serverAutomationsPause">Pausar</string>
+    <string name="serverAutomationsResume">Retomar</string>
+    <string name="serverAutomationsDeleteFrom">Excluir %1$s de %2$s</string>
+    <string name="serverAutomationsDeleteTitle">Excluir %1$s de %2$s?</string>
+    <string name="serverAutomationsDeleteBody">Isso remove a automação de %1$s. As mensagens que ela já enviou continuam nas suas conversas.</string>
+    <string name="serverAutomationsStopAll">Parar todas as automações em %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Parar todas as automações em %1$s?</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="one">Isso pausa %1$d automação ativa em %2$s. Você pode retomá-la depois.</item>
+        <item quantity="many">Isso pausa %1$d automações ativas em %2$s. Você pode retomá-las depois.</item>
+        <item quantity="other">Isso pausa %1$d automações ativas em %2$s. Você pode retomá-las depois.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="one">%1$d automação parada em %2$s.</item>
+        <item quantity="many">%1$d automações paradas em %2$s.</item>
+        <item quantity="other">%1$d automações paradas em %2$s.</item>
+    </plurals>
+    <string name="serverAutomationsStoppedPartial">%1$d de %2$d automações ativas paradas em %3$s. Tente novamente para o restante.</string>
+    <string name="serverAutomationsDetailSchedule">Agenda</string>
+    <string name="serverAutomationsDetailAction">Ação</string>
+    <string name="serverAutomationsDetailLastRun">Última execução</string>
+    <string name="serverAutomationsDetailRuns">Execuções</string>
+    <string name="serverAutomationsDetailOutput">Última saída</string>
+    <string name="serverAutomationsTriggerEvery">A cada %1$s</string>
+    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Uma vez · %1$s</string>
+    <string name="serverAutomationsTriggerEvent">Quando %1$s envia %2$s</string>
+    <string name="serverAutomationsTriggerEventAny">Quando %1$s dispara</string>
+    <string name="serverAutomationsActionPrompt">Prompt</string>
+    <string name="serverAutomationsActionPromptAgent">Prompt (%1$s)</string>
+    <string name="serverAutomationsActionShell">Comando shell</string>
+    <string name="serverAutomationsActionCode">Script Code Mode</string>
+    <string name="serverAutomationsToday">Hoje</string>
+    <string name="serverAutomationsTomorrow">Amanhã</string>
+    <string name="serverAutomationsYesterday">Ontem</string>
+    <string name="chatAutomationOrigin">Da automação · %1$s</string>
+    <string name="chatAutomationOriginRun">Da automação · %1$s · execução %2$d</string>
+</resources>

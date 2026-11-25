@@ -133,6 +133,7 @@ public fun KitPromptBubble(
     photos: List<KitPromptPhoto> = emptyList(),
     attachments: List<KitPromptAttachment> = emptyList(),
     time: String? = null,
+    origin: String? = null,
 ) {
     val colors = LocalKitColors.current
     val shape = kitBubbleShape()
@@ -160,6 +161,24 @@ public fun KitPromptBubble(
                     .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(kitPromptBubbleFill(colors), shape).border(kitHairline(), colors.hairline, shape))
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
             ) {
+                if (!origin.isNullOrBlank()) {
+                    Row(
+                        Modifier.testTag(PROMPT_ORIGIN_TAG),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                    ) {
+                        KitIcon(KitIcons.clock, size = KitIconSize.Small, tone = TextTone.Tertiary)
+                        KitText(
+                            origin,
+                            role = TypeRole.Caption,
+                            tone = TextTone.Tertiary,
+                            maxLines = 2,
+                        )
+                    }
+                    if (text.isNotEmpty() || photos.isNotEmpty() || attachments.isNotEmpty()) {
+                        Spacer(Modifier.height(Space.S1.dp))
+                    }
+                }
                 if (text.isNotEmpty()) PromptWords(text)
                 if (photos.isNotEmpty()) {
                     if (text.isNotEmpty()) Spacer(Modifier.height(Space.S2.dp))
@@ -237,6 +256,7 @@ private fun PromptAttachmentChip(item: KitPromptAttachment) {
 
 public const val PROMPT_BUBBLE_TAG: String = "kit-prompt-bubble"
 public const val PROMPT_PHOTO_TAG: String = "kit-prompt-photo"
+public const val PROMPT_ORIGIN_TAG: String = "kit-prompt-origin"
 
 /**
  * The prompt's words, hugging their longest line (Flutter `_hugWidth`): a wrapped paragraph would otherwise take the

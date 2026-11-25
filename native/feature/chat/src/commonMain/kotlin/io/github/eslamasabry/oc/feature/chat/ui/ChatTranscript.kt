@@ -166,6 +166,8 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatAutomationOrigin
+import io.github.eslamasabry.oc.ui.words.res.chatAutomationOriginRun
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
@@ -2088,10 +2090,17 @@ private fun SentPromptBubble(row: PromptRow) {
         rememberKitSentFiles(
             remember(row.files) { row.files.map { KitSentFile(it.name, it.mime, it.url) } }
         )
+    val origin =
+        row.automationName?.takeIf { it.isNotBlank() }?.let { name ->
+            val run = row.automationRun?.takeIf { it > 0 }
+            if (run != null) stringResource(Res.string.chatAutomationOriginRun, name, run)
+            else stringResource(Res.string.chatAutomationOrigin, name)
+        }
     KitPromptBubble(
         CardAnswerDisplay.text(row.text),
         photos = sent.photos,
         attachments = sent.attachments,
+        origin = origin,
     )
 }
 

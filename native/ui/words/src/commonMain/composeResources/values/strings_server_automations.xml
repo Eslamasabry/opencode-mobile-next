@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="serverAutomationsSection">Automations</string>
+    <string name="serverAutomationsEmpty">No automations on %1$s.</string>
+    <string name="serverAutomationsLoading">Loading automations…</string>
+    <string name="serverAutomationsLoadFailed">Could not load automations from %1$s.</string>
+    <string name="serverAutomationsActionFailed">Could not update automations on %1$s. Try again.</string>
+    <string name="serverAutomationsNext">Next: %1$s</string>
+    <string name="serverAutomationsOnEvent">Runs on event</string>
+    <string name="serverAutomationsStatusPaused">Paused</string>
+    <string name="serverAutomationsStatusDone">Finished</string>
+    <string name="serverAutomationsStatusActive">Active</string>
+    <string name="serverAutomationsLastFired">Ran %1$s</string>
+    <string name="serverAutomationsLastLate">Ran late %1$s</string>
+    <string name="serverAutomationsLastSkipped">Skipped %1$s</string>
+    <string name="serverAutomationsLastDisabled">Paused by server %1$s</string>
+    <string name="serverAutomationsLastFailed">Last run failed %1$s</string>
+    <string name="serverAutomationsLastExpired">Expired %1$s</string>
+    <string name="serverAutomationsLastUnknown">Ran %1$s</string>
+    <string name="serverAutomationsNeverRan">Not run yet</string>
+    <string name="serverAutomationsPause">Pause</string>
+    <string name="serverAutomationsResume">Resume</string>
+    <string name="serverAutomationsDeleteFrom">Delete %1$s from %2$s</string>
+    <string name="serverAutomationsDeleteTitle">Delete %1$s from %2$s?</string>
+    <string name="serverAutomationsDeleteBody">This removes the automation from %1$s. Messages it already sent stay in your conversations.</string>
+    <string name="serverAutomationsStopAll">Stop all automations on %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Stop all automations on %1$s?</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="one">This pauses %1$d active automation on %2$s. You can resume it later.</item>
+        <item quantity="other">This pauses %1$d active automations on %2$s. You can resume them later.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="one">Stopped %1$d automation on %2$s.</item>
+        <item quantity="other">Stopped %1$d automations on %2$s.</item>
+    </plurals>
+    <string name="serverAutomationsStoppedPartial">Stopped %1$d of %2$d active automations on %3$s. Try again for the rest.</string>
+    <string name="serverAutomationsDetailSchedule">Schedule</string>
+    <string name="serverAutomationsDetailAction">Action</string>
+    <string name="serverAutomationsDetailLastRun">Last run</string>
+    <string name="serverAutomationsDetailRuns">Runs</string>
+    <string name="serverAutomationsDetailOutput">Last output</string>
+    <string name="serverAutomationsTriggerEvery">Every %1$s</string>
+    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Once · %1$s</string>
+    <string name="serverAutomationsTriggerEvent">When %1$s sends %2$s</string>
+    <string name="serverAutomationsTriggerEventAny">When %1$s triggers</string>
+    <string name="serverAutomationsActionPrompt">Prompt</string>
+    <string name="serverAutomationsActionPromptAgent">Prompt (%1$s)</string>
+    <string name="serverAutomationsActionShell">Shell command</string>
+    <string name="serverAutomationsActionCode">Code Mode script</string>
+    <string name="serverAutomationsToday">Today</string>
+    <string name="serverAutomationsTomorrow">Tomorrow</string>
+    <string name="serverAutomationsYesterday">Yesterday</string>
+    <string name="chatAutomationOrigin">From automation · %1$s</string>
+    <string name="chatAutomationOriginRun">From automation · %1$s · run %2$d</string>
+</resources>

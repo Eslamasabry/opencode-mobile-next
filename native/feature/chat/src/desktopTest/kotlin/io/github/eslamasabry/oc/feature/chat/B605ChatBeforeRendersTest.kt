@@ -52,10 +52,10 @@ class B605ChatBeforeRendersTest {
                 val rows =
                     persistentListOf(
                         footer("t2"),
-                        block("t2", "Checked CI: all 14 checks are green."),
+                        block("t2", "m2", "text-0", 0, "Checked CI: all 14 checks are green."),
                         prompt("t2", "Check CI and summarize any failures"),
                         footer("t1"),
-                        block("t1", "Sure, I will look at the checkout test."),
+                        block("t1", "m1", "text-0", 0, "Sure, I will look at the checkout test."),
                         prompt("t1", "Can you inspect the checkout test?"),
                     )
                 val state = scene.live().copy(status = null, rows = rows, live = null)

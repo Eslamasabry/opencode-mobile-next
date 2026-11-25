@@ -28,6 +28,9 @@ public data class MessageInfo(
     val providerId: String? = null,
     /** The model that wrote the message; names what failed when a model is gone. */
     val modelId: String? = null,
+    /** B-605: name and run number when a server automation sent this user message. */
+    val automationName: String? = null,
+    val automationRun: Int? = null,
 )
 
 /** Switch/Notice/Compaction = the Dart "v2:*" tags (plan 09 §2.2, trap T9). */

@@ -1,11 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings
 
-import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.Health
@@ -16,16 +14,13 @@ import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsFact
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsUi
 import io.github.eslamasabry.oc.feature.settings.ui.ServerSettingsScreen
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
-import java.io.File
 import java.lang.reflect.Proxy
 import java.util.Locale
-import javax.imageio.ImageIO
 import kotlin.test.AfterTest
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
 class B605ServerAutomationsBeforeRendersTest {
-    private val out = File("build/b605-renders").also { it.mkdirs() }
     private val savedLocale: Locale = Locale.getDefault()
 
     @AfterTest
@@ -73,29 +68,6 @@ class B605ServerAutomationsBeforeRendersTest {
         )
 
     @Test
-    fun `B-605 before pictures of server page at 360dp light and dark text 1_0 and 1_3`() {
-        Locale.setDefault(Locale.ENGLISH)
-        val variants =
-            listOf(
-                Triple("light-10", false, 1.0f),
-                Triple("dark-10", true, 1.0f),
-                Triple("light-13", false, 1.3f),
-                Triple("dark-13", true, 1.3f),
-            )
-        for ((name, dark, scale) in variants) {
-            runDesktopComposeUiTest(360, 800) {
-                setContent {
-                    SettingsThemed(dark = dark, locale = "en", fontScale = scale, width = 360f) {
-                        ServerSettingsScreen(laptop, actions)
-                    }
-                }
-                waitForIdle()
-                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "before-server-$name.png"))
-            }
-        }
-    }
-
-    @Test
     fun `B-AUTO-002 server page lists Scheduled prompts when supported`() {
         Locale.setDefault(Locale.ENGLISH)
         runDesktopComposeUiTest(360, 800) {
@@ -105,7 +77,7 @@ class B605ServerAutomationsBeforeRendersTest {
                 }
             }
             waitForIdle()
-            onNodeWithText("Scheduled prompts").assertIsDisplayed()
+            onNodeWithText("Scheduled prompts").performScrollTo().assertIsDisplayed()
         }
     }
 }

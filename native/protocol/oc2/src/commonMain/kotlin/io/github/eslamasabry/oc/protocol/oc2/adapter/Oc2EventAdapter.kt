@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.protocol.oc2.adapter
 
+import io.github.eslamasabry.oc.core.model.transcript.MessageAutomation
 import io.github.eslamasabry.oc.protocol.oc2.events.Oc2Envelope
 import io.github.eslamasabry.oc.protocol.oc2.events.Oc2Event
 import io.github.eslamasabry.oc.protocol.oc2.events.Oc2Phase
@@ -63,6 +64,7 @@ internal data class Oc2AdaptedMessage(
     public val tokens: Oc2Tokens? = null,
     public val finish: String? = null,
     public val error: Oc2StepError? = null,
+    public val automation: MessageAutomation? = null,
 )
 
 internal enum class Oc2ToolStatus {
@@ -648,6 +650,10 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                         e.sessionID,
                         Oc2MessageRole.User,
                         item.timeCreated ?: created,
+                        automation =
+                            io.github.eslamasabry.oc.protocol.oc2.live.parseAutomationMetadata(
+                                item.metadata ?: item.payload["metadata"] as? JsonObject
+                            ),
                     )
                 )
             )
