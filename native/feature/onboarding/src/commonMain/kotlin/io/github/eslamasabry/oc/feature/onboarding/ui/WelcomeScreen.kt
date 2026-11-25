@@ -62,18 +62,13 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
     KitScreen(
         width = KitScreenWidth.Reading,
         page = true,
-        // Flutter's welcome sits under the product bar; its menu's ways out are here as the bar's actions.
+        // Settings is the bar's one action; Report a problem is a row in Settings, under Help.
         topBar = {
             KitTopBar(
                 title = stringResource(Res.string.openCodeConnectionLabel),
                 brand = true,
                 actions =
                     listOf(
-                        KitLineAction(
-                            stringResource(Res.string.e7LibraryReportABug),
-                            actions::reportProblem,
-                            icon = KitIcons.bug,
-                        ),
                         // Native addition: language and appearance before anything else, for a person who cannot
                         // read the default language.
                         KitLineAction(
