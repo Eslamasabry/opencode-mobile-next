@@ -307,8 +307,9 @@ class KitFilterChipsFlickerTest {
     }
 
     private fun ComposeUiTest.assertAfterTap(tag: String) {
+        val beforeLabels = currentLabels()
         onAllNodes(hasText("+", substring = true), useUnmergedTree = true).onLast().performClick()
-        val tapOneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES)
+        val tapOneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES, beforeLabels)
         assertTrue(tapOneFrame.isEmpty(), "$tag after tap 1-frame nodes: $tapOneFrame")
         mainClock.advanceTimeBy(SETTLE_MS * 2)
         mainClock.advanceTimeByFrame()
@@ -333,9 +334,10 @@ class KitFilterChipsFlickerTest {
     }
 
     private fun ComposeUiTest.assertAtScrollEnd(tag: String) {
+        val beforeLabels = currentLabels()
         onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange), useUnmergedTree = true)
             .performSemanticsAction(SemanticsActions.ScrollBy) { it(SCROLL_TO_END_PX, 0f) }
-        val scrollOneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES)
+        val scrollOneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES, beforeLabels)
         assertTrue(scrollOneFrame.isEmpty(), "$tag scroll-end 1-frame nodes: $scrollOneFrame")
         mainClock.advanceTimeBy(SETTLE_MS * 2)
         mainClock.advanceTimeByFrame()
@@ -358,16 +360,25 @@ class KitFilterChipsFlickerTest {
         assertEdgeCleared(mapEnd, lineEnd, atStart = true, label = "$tag scroll end start")
     }
 
-    private fun ComposeUiTest.walkFramesForSingleFrameNodes(frames: Int): Map<String, List<Int>> {
+    private fun ComposeUiTest.currentLabels(): Set<String> {
+        val roots = onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes(atLeastOneRootRequired = false)
+        return FrameRecorder.read(roots).nodes.map { it.label }.toSet()
+    }
+
+    private fun ComposeUiTest.walkFramesForSingleFrameNodes(
+        frames: Int,
+        alreadyVisible: Set<String> = emptySet(),
+    ): Map<String, List<Int>> {
         val seen = LinkedHashMap<String, MutableList<Int>>()
         repeat(frames) { frame ->
             mainClock.advanceTimeByFrame()
-            val roots = onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes(atLeastOneRootRequired = false)
-            for (label in FrameRecorder.read(roots).nodes.map { it.label }.distinct()) {
+            for (label in currentLabels()) {
                 seen.getOrPut(label) { mutableListOf() }.add(frame)
             }
         }
-        return seen.filterValues { it.size == 1 }
+        return seen.filter { (label, shown) ->
+            shown.size == 1 && !(label in alreadyVisible && shown[0] == 0)
+        }
     }
 
     private fun assertEdgeCleared(

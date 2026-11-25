@@ -321,7 +321,7 @@ private class ChipLine(
      */
     fun tail(): Int = if (wholeActive && sizes.isNotEmpty()) (roomPx - sizes.last()).coerceAtLeast(0) else 0
 
-    /** Scroll offset that brings chip [first] in whole while keeping a peeking edge cue on both sides when room allows. */
+    /** Scroll offset bringing chip [first] in whole while keeping an edge cue on both sides when room allows. */
     fun revealTarget(first: Int, padPx: Float, fadePx: Float): Int {
         if (sizes.isEmpty()) return 0
         val viewport = viewportPx.toFloat().coerceAtLeast(1f)
@@ -480,7 +480,12 @@ public fun KitFilterChips(
                     val gEnd = if (!wantWhole) 0f else (if (rtl) growStart else growEnd).toPx()
                     if (left > 0f) {
                         if (gStart > 0f) {
-                            drawRect(Color.Transparent, Offset.Zero, Size(gStart, size.height), blendMode = BlendMode.DstIn)
+                            drawRect(
+                                Color.Transparent,
+                                Offset.Zero,
+                                Size(gStart, size.height),
+                                blendMode = BlendMode.DstIn,
+                            )
                         }
                         drawRect(
                             edgeMask(gStart, gStart + left, clear, clearAtStart = true),

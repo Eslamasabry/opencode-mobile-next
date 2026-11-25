@@ -180,9 +180,10 @@ class HomeChipsCueRenders {
     }
 
     private fun ComposeUiTest.tapCueAndCaptureAfter(out: File, tag: String) {
+        val beforeLabels = currentLabels()
         mainClock.autoAdvance = false
         onAllNodes(hasText("+", substring = true), useUnmergedTree = true).onLast().performClick()
-        val oneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES)
+        val oneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES, beforeLabels)
         assertTrue(oneFrame.isEmpty(), "$tag after tap 1-frame nodes: $oneFrame")
         mainClock.autoAdvance = true
         waitForIdle()
@@ -237,16 +238,25 @@ class HomeChipsCueRenders {
         assertTrue(File(out, "$tag-end.png").isFile)
     }
 
-    private fun ComposeUiTest.walkFramesForSingleFrameNodes(frames: Int): Map<String, List<Int>> {
+    private fun ComposeUiTest.currentLabels(): Set<String> {
+        val roots = onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes(atLeastOneRootRequired = false)
+        return FrameRecorder.read(roots).nodes.map { it.label }.toSet()
+    }
+
+    private fun ComposeUiTest.walkFramesForSingleFrameNodes(
+        frames: Int,
+        alreadyVisible: Set<String> = emptySet(),
+    ): Map<String, List<Int>> {
         val seen = LinkedHashMap<String, MutableList<Int>>()
         repeat(frames) { frame ->
             mainClock.advanceTimeByFrame()
-            val roots = onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes(atLeastOneRootRequired = false)
-            for (label in FrameRecorder.read(roots).nodes.map { it.label }.distinct()) {
+            for (label in currentLabels()) {
                 seen.getOrPut(label) { mutableListOf() }.add(frame)
             }
         }
-        return seen.filterValues { it.size == 1 }
+        return seen.filter { (label, shown) ->
+            shown.size == 1 && !(label in alreadyVisible && shown[0] == 0)
+        }
     }
 
     private fun findScroller(roots: List<SemanticsNode>): SemanticsNode {
