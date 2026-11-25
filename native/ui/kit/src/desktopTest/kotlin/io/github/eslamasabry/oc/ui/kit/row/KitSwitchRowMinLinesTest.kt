@@ -139,4 +139,23 @@ class KitSwitchRowMinLinesTest {
         assertEquals(oneMap.height, defaultMap.height)
         assertTrue(defaultMap.buffer.contentEquals(oneMap.buffer), "existing caller picture must stay pixel-identical")
     }
+
+    @Test
+    fun `B-KIT-027 kitSwitchSupportingLines computes 1 at text 1_0 and 2 at text 1_3 for Codex copy`() =
+        runComposeUiTest {
+            val texts = listOf("Version 0.171.0 → 0.174.0 · 48 MB", "Stays on 0.171.0")
+            var linesAt10 = -1
+            var linesAt13 = -1
+            setContent {
+                Harness(fontScale = 1f) {
+                    linesAt10 = kitSwitchSupportingLines(texts, rowWidth = 320.dp, supportingMaxLines = 3)
+                }
+                Harness(fontScale = 1.3f) {
+                    linesAt13 = kitSwitchSupportingLines(texts, rowWidth = 320.dp, supportingMaxLines = 3)
+                }
+            }
+            waitForIdle()
+            assertEquals(1, linesAt10, "at 320 dp and text 1.0 both texts fit on 1 line")
+            assertEquals(2, linesAt13, "at 320 dp and text 1.3 the taller text needs 2 lines")
+        }
 }

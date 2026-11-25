@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -45,6 +46,11 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -54,6 +60,7 @@ import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
@@ -71,6 +78,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -80,6 +88,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitRiskNotNow
 import io.github.eslamasabry.oc.ui.words.res.kitRiskTurnOff
@@ -186,7 +195,8 @@ public data class KitRisk(
  * line; nothing is dimmed. With [riskSpec] (or the older [risk] scope alone), turning on first unfolds a step under the
  * row that states the scope and asks for how long ("Until I turn it off", …, "Not now"); while on, the row puts
  * [KitRisk.onLabel] on the screen's one status line with "Turn off". [locked] with [lockedLabel] ("Always included")
- * draws the lock and the word instead of a switch.
+ * draws the lock and the word instead of a switch. [supportingMinLines] reserves at least that many lines for the
+ * supporting text (default 1 keeps every existing caller unchanged).
  *
  * States: off, on, disabled with its reason, risk step unfolded, risk on, locked
  * Text: reading (title), frame (risk actions)
@@ -284,12 +294,14 @@ public fun KitSwitchRow(
                 )
                 line?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
+                    val maxSupporting = kitRowSupportingLines(kitFontScale(), supportingMaxLines)
                     KitText(
                         it,
                         Modifier.testTag("kit-row-supporting"),
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
-                        maxLines = kitRowSupportingLines(kitFontScale(), supportingMaxLines),
+                        maxLines = maxSupporting,
+                        minLines = supportingMinLines.coerceIn(1, maxSupporting),
                     )
                 }
                 below?.let {
@@ -327,6 +339,62 @@ public fun KitSwitchRow(
             } else null,
         )
     }
+}
+
+/**
+ * How many lines the tallest of [texts] takes in a [KitSwitchRow]'s supporting column at [rowWidth] and the current
+ * text scale, capped by [supportingMaxLines]. Pass the result as `supportingMinLines` when flipping a switch changes
+ * its supporting copy so the row keeps one height.
+ */
+@Composable
+public fun kitSwitchSupportingLines(
+    texts: List<String>,
+    rowWidth: Dp,
+    supportingMaxLines: Int = 2,
+    hasLeading: Boolean = false,
+): Int {
+    if (texts.isEmpty()) return 1
+    val tokens = LocalKitTokens.current
+    val density = LocalDensity.current
+    val textScale = kitTextScale()
+    val limit = kitRowSupportingLines(kitFontScale(), supportingMaxLines)
+    val gutter = kitRowGutter()
+    val widthPx =
+        with(density) {
+            val rowPx = minOf(rowWidth.roundToPx(), CapRole.List.capDp?.dp?.roundToPx() ?: Int.MAX_VALUE)
+            val leadPx =
+                if (hasLeading) {
+                    (tokens.iconTile * minOf(textScale, TextScalePolicy.ICON_CAP)).dp.roundToPx() +
+                        Space.S3.dp.roundToPx()
+                } else {
+                    0
+                }
+            val trailPx =
+                Space.S2.dp.roundToPx() + KitSwitchGeometry.BOX_W.dp.roundToPx() +
+                    Space.S2.dp.roundToPx() + Space.S1.dp.roundToPx()
+            val raw = (rowPx - gutter.roundToPx() - leadPx - trailPx).coerceAtLeast(1)
+            CapRole.Reading.capDp?.dp?.roundToPx()?.let { minOf(raw, it) } ?: raw
+        }
+    val style =
+        LocalKitTypography.current.style(TypeRole.Secondary).copy(
+            textDirection = TextDirection.Content,
+            textAlign = TextAlign.Start,
+        )
+    val measurer = rememberTextMeasurer()
+    val constraints = Constraints(maxWidth = widthPx)
+    return texts
+        .maxOf { text ->
+            measurer
+                .measure(
+                    text = text,
+                    style = style,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = limit,
+                    constraints = constraints,
+                )
+                .lineCount
+        }
+        .coerceIn(1, limit)
 }
 
 /** The risk step under the row (Dart `_riskStep`, kit_row_parts.dart:455-495). */

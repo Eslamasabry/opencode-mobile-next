@@ -67,6 +67,7 @@ public fun KitText(
      * (E-4). The frame size is kept.
      */
     ownDirection: Boolean = false,
+    minLines: Int = 1,
 ) {
     // pageTitle / sectionLabel are role hints; the head typography resolves the role alone.
     val base = LocalKitTypography.current.style(role)
@@ -97,6 +98,7 @@ public fun KitText(
             modifier,
             style = style,
             maxLines = maxLines,
+            minLines = minLines,
             overflow = TextOverflow.Ellipsis,
             autoSize = wholeWordsSize(wholeWords, style.fontSize),
         )
@@ -121,6 +123,7 @@ public fun KitText(
             modifier,
             style = sized,
             maxLines = maxLines,
+            minLines = minLines,
             overflow = TextOverflow.Ellipsis,
             autoSize = wholeWordsSize(wholeWords, sized.fontSize),
         )
