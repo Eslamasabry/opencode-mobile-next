@@ -54,6 +54,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.ScrollFadeRules
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -321,19 +323,31 @@ private class ChipLine(
      */
     fun tail(): Int = if (wholeActive && sizes.isNotEmpty()) (roomPx - sizes.last()).coerceAtLeast(0) else 0
 
-    /** Scroll offset bringing chip [first] in whole while keeping an edge cue on both sides when room allows. */
-    fun revealTarget(first: Int, padPx: Float, fadePx: Float): Int {
+    /**
+     * Scroll offset bringing chip [first] in whole inside the visible window (shadow room left out), keeping an edge
+     * cue on both sides when room allows. If the chip is wider than that room, starts it at the visible start so no
+     * start fade dims its beginning.
+     */
+    fun revealTarget(first: Int, insets: RevealInsets, fadePx: Float): Int {
         if (sizes.isEmpty()) return 0
         val viewport = viewportPx.toFloat().coerceAtLeast(1f)
-        val contentW = sizes.sum().toFloat() + (sizes.size - 1).coerceAtLeast(0) * gapPx + padPx
+        val contentW =
+            sizes.sum().toFloat() + (sizes.size - 1).coerceAtLeast(0) * gapPx + insets.startPadPx + insets.endPadPx
         val maxNoTail = (contentW - viewport).roundToInt().coerceAtLeast(0)
         val clamped = first.coerceIn(0, sizes.lastIndex)
         var chipStart = 0f
         for (i in 0 until clamped) chipStart += sizes[i] + gapPx
         val chipW = sizes[clamped].toFloat()
-        val slack = (viewport - padPx - chipW).coerceAtLeast(0f)
+        val visibleRoom = (viewport - insets.growStartPx - insets.growEndPx).coerceAtLeast(0f)
+        val atVisibleStart = (insets.startPadPx - insets.growStartPx) + chipStart
+        if (chipW > visibleRoom) return floor(atVisibleStart).toInt().coerceIn(0, maxNoTail)
+        val slack = visibleRoom - chipW
         val leftPeek = if (clamped > 0 && clamped < sizes.lastIndex) minOf(fadePx, slack / HALF_DIVISOR) else 0f
-        return (chipStart - leftPeek).roundToInt().coerceIn(0, maxNoTail)
+        val minScroll = ceil(atVisibleStart - slack).toInt()
+        val maxScroll = floor(atVisibleStart).toInt()
+        val desired = (atVisibleStart - leftPeek).roundToInt()
+        val fitted = if (minScroll <= maxScroll) desired.coerceIn(minScroll, maxScroll) else maxScroll
+        return fitted.coerceIn(0, maxNoTail)
     }
 
     override val spacing: Dp get() = gap
@@ -455,38 +469,33 @@ public fun KitFilterChips(
                     if (line.wholeActive) return@drawWithContent // cues, not fades, say there is more
                     if (scroll.maxValue <= 0 || scroll.maxValue == Int.MAX_VALUE) return@drawWithContent
                     val fade = FilterChipsRules.CHIP_FADE_DP.dp.toPx()
-                    val (startFade, endFade) =
-                        if (wantWhole) {
-                            // Expanded or narrow fallback of a rest-whole line: show the kit's edge fade at every
-                            // edge where more chips lie hidden, so no hidden side is left without a cue.
-                            val edges = ScrollFadeRules.edges(scroll.value, scroll.maxValue)
-                            val cap = minOf(fade, size.width / HALF_DIVISOR)
-                            (if (edges.start) cap else 0f) to (if (edges.end) cap else 0f)
-                        } else {
-                            val spans = FilterChipsRules.spans(
-                                line.sizes,
-                                line.gapPx,
-                                startPad.toPx(),
-                                scroll.value.toFloat(),
-                            )
-                            FilterChipsRules.edgeFades(spans, size.width, fade)
-                        }
                     val rtl = layoutDirection == LayoutDirection.Rtl
+                    val gStart = if (!wantWhole) 0f else (if (rtl) growEnd else growStart).toPx()
+                    val gEnd = if (!wantWhole) 0f else (if (rtl) growStart else growEnd).toPx()
+                    val visibleEnd = (size.width - gEnd).coerceAtLeast(gStart)
+                    val visibleW = (visibleEnd - gStart).coerceAtLeast(0f)
+                    val spans = FilterChipsRules.spans(
+                        line.sizes,
+                        line.gapPx,
+                        if (wantWhole) startPad.toPx() - gStart else startPad.toPx(),
+                        scroll.value.toFloat(),
+                    )
+                    val (startFade, endFade) =
+                        FilterChipsRules.edgeFades(spans, if (wantWhole) visibleW else size.width, fade)
                     val left = if (rtl) endFade else startFade
                     val right = if (rtl) startFade else endFade
                     // The third of a full fade nearest the edge is always clear, even over a short piece.
                     val clear = fade * FilterChipsRules.CLEAR_PART
-                    val gStart = if (!wantWhole) 0f else (if (rtl) growEnd else growStart).toPx()
-                    val gEnd = if (!wantWhole) 0f else (if (rtl) growStart else growEnd).toPx()
-                    if (left > 0f) {
-                        if (gStart > 0f) {
-                            drawRect(
-                                Color.Transparent,
-                                Offset.Zero,
-                                Size(gStart, size.height),
-                                blendMode = BlendMode.DstIn,
-                            )
+                    val (hasLeft, hasRight) =
+                        if (wantWhole) {
+                            ScrollFadeRules.leftRight(ScrollFadeRules.edges(scroll.value, scroll.maxValue), rtl)
+                        } else {
+                            false to false
                         }
+                    if (gStart > 0f && (left > 0f || hasLeft)) {
+                        drawRect(Color.Transparent, Offset.Zero, Size(gStart, size.height), blendMode = BlendMode.DstIn)
+                    }
+                    if (left > 0f) {
                         drawRect(
                             edgeMask(gStart, gStart + left, clear, clearAtStart = true),
                             Offset(gStart, 0f),
@@ -495,22 +504,21 @@ public fun KitFilterChips(
                         )
                     }
                     if (right > 0f) {
-                        val visibleEnd = (size.width - gEnd).coerceAtLeast(0f)
-                        val startX = (visibleEnd - right).coerceAtLeast(0f)
+                        val startX = (visibleEnd - right).coerceAtLeast(gStart)
                         drawRect(
                             edgeMask(startX, visibleEnd, clear, clearAtStart = false),
                             Offset(startX, 0f),
                             Size(visibleEnd - startX, size.height),
                             blendMode = BlendMode.DstIn,
                         )
-                        if (gEnd > 0f) {
-                            drawRect(
-                                Color.Transparent,
-                                Offset(visibleEnd, 0f),
-                                Size(gEnd, size.height),
-                                blendMode = BlendMode.DstIn,
-                            )
-                        }
+                    }
+                    if (gEnd > 0f && (right > 0f || hasRight)) {
+                        drawRect(
+                            Color.Transparent,
+                            Offset(visibleEnd, 0f),
+                            Size(gEnd, size.height),
+                            blendMode = BlendMode.DstIn,
+                        )
                     }
                 }
                 // Inside the clip and the fade: a line that rests whole is cut to the end of its last whole chip in the
@@ -577,9 +585,16 @@ public fun KitFilterChips(
                 onMore = { hidden ->
                     line.expanded = true
                     val first = (line.sizes.size - hidden).coerceAtLeast(0)
-                    val padPx = with(density) { (startPad + endPad).toPx() }
+                    val revealInsets = with(density) {
+                        RevealInsets(
+                            startPadPx = startPad.toPx(),
+                            endPadPx = endPad.toPx(),
+                            growStartPx = growStart.toPx(),
+                            growEndPx = growEnd.toPx(),
+                        )
+                    }
                     val fadePx = with(density) { FilterChipsRules.CHIP_FADE_DP.dp.toPx() }
-                    val target = line.revealTarget(first, padPx, fadePx)
+                    val target = line.revealTarget(first, revealInsets, fadePx)
                     scope.launch { scroll.animateScrollTo(target) }
                 },
             )
@@ -588,6 +603,13 @@ public fun KitFilterChips(
 }
 
 private const val REST_SNAP_DELAY_MS = 120L
+
+private class RevealInsets(
+    val startPadPx: Float,
+    val endPadPx: Float,
+    val growStartPx: Float,
+    val growEndPx: Float,
+)
 
 private class WholeInsets(
     val startPad: Dp,
