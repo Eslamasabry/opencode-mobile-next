@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import androidx.compose.foundation.lazy.LazyItemScope
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -431,6 +432,10 @@ private fun DockInside(
         { KitText(label, role = TypeRole.Secondary, tone = TextTone.Primary) }
     }
     val arrow: @Composable () -> Unit = { KitIcon(KitIcons.down, size = KitIconSize.Small, tone = TextTone.Primary) }
+    val firstLine = LocalKitTypography.current.style(TypeRole.Secondary).lineHeight
+    val rail = if (live?.onRail == true) railMeasures() else null
+    val above = if (rail != null) (rail.stepLine - rail.first) / 2 else 0.dp
+    val firstLinePx = with(LocalDensity.current) { (firstLine.toDp() + above).roundToPx() }
     SubcomposeLayout(Modifier.fillMaxSize()) { constraints ->
         val width = constraints.maxWidth
         val height = constraints.maxHeight
@@ -440,15 +445,17 @@ private fun DockInside(
         val icon = subcompose(DockSlot.ARROW, arrow).single().measure(Constraints())
         val free = width - 2 * inset - text.width - gap - icon.width
         // Only a row with a status to carry reads the list's layout: an idle row costs nothing while the list scrolls.
-        // A reverse list's offsets start at beforeContentPadding above the list's bottom edge; the clear band ends at
-        // lift + height above that edge, so the list's own line is on screen whenever any part of it rises above that.
+        // A reverse list's offsets start at beforeContentPadding above the list's bottom edge; the clear band and its
+        // fade end at lift + height + fade above that edge, so the list's own words are readable once their first line
+        // sits at or above that edge.
         val own =
             if (status == null || live?.key == null) false
             else {
                 val info = state.lazy.layoutInfo
                 val item = info.visibleItemsInfo.firstOrNull { it.key == live.key }
                 val fromBottom = if (item == null) 0 else info.beforeContentPadding + item.offset
-                item != null && fromBottom + item.size > lift().roundToPx() + height &&
+                val fadeTop = lift().roundToPx() + height + DOCK_CLEAR_FADE_DP.dp.roundToPx()
+                item != null && fromBottom + item.size - firstLinePx >= fadeTop &&
                     fromBottom < info.viewportSize.height
             }
         val carried = if (status != null && !own) dockStatus(status, free, gap) else null
