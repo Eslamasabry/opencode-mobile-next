@@ -13,4 +13,5 @@
     <string name="stateDemoModel">نموذج تجريبي</string>
     <string name="stateDemoReset">إعادة التجربة</string>
     <string name="stateDemoLeave">مغادرة التجربة</string>
+    <string name="stateDemoOwn">لا يمكن لهذه التجربة الإجابة عن أسئلتك الخاصة. فهي تعرض مثالًا واحدًا فقط: أرسل “%1$s” لرؤيته. لطرح أسئلتك الخاصة، غادر التجربة وأعدّ التطبيق للعمل الفعلي.</string>
 </resources>
