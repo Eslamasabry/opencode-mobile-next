@@ -127,14 +127,16 @@ class UsagePolishTest {
             projects = persistentListOf(UsageProject("prj_app", "app")),
         )
 
+    /** [inside] runs under the theme, where a test may read the kit's tokens. */
     @Composable
-    private fun Screen(state: UsageUi, actions: UsageActions) {
+    private fun Screen(state: UsageUi, actions: UsageActions, inside: @Composable () -> Unit = {}) {
         KitTheme(
             platform = DesktopKitPlatform(),
             appearance = KitAppearance(motion = MotionLevel.Off),
             localeTag = "en",
             stillFrame = true,
         ) {
+            inside()
             Box(Modifier.width(360.dp)) { UsageScreen(state, actions) }
         }
     }
@@ -184,8 +186,7 @@ class UsagePolishTest {
     fun `B-USE-559 the spend panel spans the content width`() = runDesktopComposeUiTest(360, 2600) {
         var gutter = 0
         setContent {
-            gutter = LocalKitTokens.current.gutter
-            Screen(ready(), Actions())
+            Screen(ready(), Actions()) { gutter = LocalKitTokens.current.gutter }
         }
         val panel = onNodeWithTag("usage-total-panel").fetchSemanticsNode().boundsInRoot
         assertTrue(abs(panel.left - gutter) < 0.5f, "the panel starts a gutter in: left ${panel.left}, gutter $gutter")
