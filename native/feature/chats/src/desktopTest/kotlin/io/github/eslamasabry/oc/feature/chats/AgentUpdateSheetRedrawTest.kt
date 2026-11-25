@@ -210,6 +210,8 @@ class AgentUpdateSheetRedrawTest {
             waitForIdle()
             assertEquals(before, codex.fetchSemanticsNode().size.height, "Codex row height changed when turned off")
             onNodeWithText("Update 4 agents").assertExists()
+            // Wait past the 60-frame ABA window before toggling back on so the second tap is a separate user action.
+            mainClock.advanceTimeBy(1_500)
             codex.performClick()
             waitForIdle()
             assertEquals(before, codex.fetchSemanticsNode().size.height, "Codex row height changed when turned on")
