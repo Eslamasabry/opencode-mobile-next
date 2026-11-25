@@ -257,6 +257,6 @@ class PolishHomeTest {
     }
 
     private companion object {
-        const val PHASE = "before"
+        const val PHASE = "after"
     }
 }

@@ -367,7 +367,7 @@ public fun ChatsScreen(
                 KitFootBar(
                     label = stringResource(Res.string.chats_all_title),
                     // Nothing is counted yet while the server first opens (the skeleton): no number, never a 0.
-                    count = if (state.phase == ChatsPhase.Opening) null else Numbers.format(state.shownCount ?: state.allCount),
+                    count = HomeFootBarRules.count(state)?.let(Numbers::format),
                     onLink = actions::showAll,
                     fabLabel = stringResource(Res.string.chatsHomeNewChat),
                     fabIcon = KitIcons.add,
@@ -820,7 +820,9 @@ private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = fals
         HomeFilterChips(state, actions)
         val runningNow = state.runningShown
         KitChip(
-            label = if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, runningNow) else stringResource(Res.string.chatsHomeRunning),
+            label =
+                if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, Numbers.format(runningNow))
+                else stringResource(Res.string.chatsHomeRunning),
             kind = KitChipKind.Action,
             selected = state.filters.running, onClick = actions::toggleRunning,
         )

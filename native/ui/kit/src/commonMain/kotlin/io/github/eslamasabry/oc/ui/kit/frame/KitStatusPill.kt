@@ -100,7 +100,7 @@ public fun KitStatusPill(
                 )
                 if (shownWord != null) {
                     KitText(
-                        "\u00b7 $shownWord",
+                        " \u00b7 $shownWord",
                         Modifier.testTag("kit-status-pill-word"),
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
@@ -125,20 +125,24 @@ public fun KitStatusPill(
             // Decided from the word's intrinsic width (a child is measured once): a word that does not fit is given no
             // room at all, so it is neither drawn nor tapped nor read.
             val wordNeeds = if (measurables.size > 3) measurables[2].maxIntrinsicWidth(constraints.maxHeight.takeIf { it != androidx.compose.ui.unit.Constraints.Infinity } ?: 0) else 0
-            val wordFits0 = measurables.size > 3 && (unbounded || name.width + gap + wordNeeds <= room)
+            val wordFits0 = measurables.size > 3 && (unbounded || name.width + wordNeeds <= room)
             val wordPlaceable =
                 if (measurables.size > 3)
                     measurables[2].measure(if (wordFits0) loose.copy(maxWidth = androidx.compose.ui.unit.Constraints.Infinity) else androidx.compose.ui.unit.Constraints(0, 0, 0, 0))
                 else null
             val wordFits = wordFits0
-            val width = mark.width + gap + name.width + (if (wordFits) gap + wordPlaceable!!.width else 0) + gap + chevron.width
+            val wordWidth = if (wordFits) wordPlaceable!!.width else 0
+            val width = mark.width + gap + name.width + wordWidth + gap + chevron.width
             val height = constraints.maxHeight.takeIf { it != androidx.compose.ui.unit.Constraints.Infinity } ?: maxOf(mark.height, name.height)
             layout(width, height) {
                 var x = 0
                 mark.placeRelative(x, (height - mark.height) / 2); x += mark.width + gap
-                name.placeRelative(x, (height - name.height) / 2); x += name.width + gap
-                if (wordFits) { wordPlaceable!!.placeRelative(x, (height - wordPlaceable.height) / 2); x += wordPlaceable.width + gap }
-                chevron.placeRelative(x, (height - chevron.height) / 2)
+                name.placeRelative(x, (height - name.height) / 2); x += name.width
+                if (wordFits) {
+                    wordPlaceable!!.placeRelative(x, (height - wordPlaceable.height) / 2)
+                    x += wordPlaceable.width
+                }
+                chevron.placeRelative(x + gap, (height - chevron.height) / 2)
             }
         }
         Box(
