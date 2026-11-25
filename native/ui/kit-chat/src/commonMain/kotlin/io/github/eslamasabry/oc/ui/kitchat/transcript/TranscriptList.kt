@@ -385,21 +385,20 @@ public fun KitTranscriptList(
             // the page's (the pill lies in the page's recording: reading that would draw the pill into itself).
             modifier =
                 Modifier.fillMaxSize()
+                    .semantics {
+                        scrollBy { _, y ->
+                            a11yScope.launch { personScroll.a11yScrollBy(a11yDispatcher, motion, y) }
+                            true
+                        }
+                        scrollToIndex { index ->
+                            if (index < 0) return@scrollToIndex false
+                            a11yScope.launch { personScroll.a11yScrollToIndex(index) }
+                            true
+                        }
+                    }
                     .then(
                         if (isHybrid) {
-                            Modifier.semantics {
-                                scrollBy { _, y ->
-                                    a11yScope.launch { personScroll.a11yScrollBy(a11yDispatcher, motion, y) }
-                                    true
-                                }
-                                scrollToIndex { index ->
-                                    if (index < 0) return@scrollToIndex false
-                                    a11yScope.launch { personScroll.a11yScrollToIndex(index) }
-                                    true
-                                }
-                            }
-                                .nestedScroll(personScroll)
-                                .nestedScroll(NoopNestedScroll, a11yDispatcher)
+                            Modifier.nestedScroll(personScroll).nestedScroll(NoopNestedScroll, a11yDispatcher)
                         } else {
                             Modifier
                         }
@@ -595,7 +594,10 @@ private class PersonScroll(
     var personScrolled: Boolean = false
     var scrolledTowardNewest: Boolean = false
     var jumpedToIndex: Boolean = false
-    var actionActive: Boolean = false
+    private var actionSeq: Int = 0
+    private var activeActionId: Int = 0
+    val actionActive: Boolean
+        get() = activeActionId != 0
 
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
         if (source == NestedScrollSource.UserInput || source == NestedScrollSource.SideEffect) {
@@ -634,7 +636,12 @@ private class PersonScroll(
     }
 
     suspend fun a11yScrollBy(dispatcher: NestedScrollDispatcher, motion: KitMotionLevel, y: Float) {
-        actionActive = true
+        if (state.anchor != TranscriptAnchor.Hybrid) {
+            scrollTodayBy(motion, y)
+            return
+        }
+        val id = ++actionSeq
+        activeActionId = id
         try {
             state.lazy.scroll {
                 if (motion == KitMotionLevel.Off) {
@@ -650,9 +657,30 @@ private class PersonScroll(
             }
             withFrameNanos { }
         } finally {
-            actionActive = false
-            end()
+            if (activeActionId == id) {
+                activeActionId = 0
+                end()
+            }
         }
+    }
+
+    private suspend fun scrollTodayBy(motion: KitMotionLevel, y: Float) {
+        if (y == 0f) return
+        state.lazy.scroll {
+            if (y > 0f) state.following = false
+            if (motion == KitMotionLevel.Off) {
+                scrollBy(y)
+            } else {
+                var prev = 0f
+                animate(0f, y) { value, _ ->
+                    val stepDelta = value - prev
+                    prev = value
+                    if (stepDelta != 0f) scrollBy(stepDelta)
+                }
+            }
+        }
+        withFrameNanos { }
+        if (y < 0f && state.atLiveEdge) state.following = true
     }
 
     private fun ScrollScope.scrollA11yDelta(dispatcher: NestedScrollDispatcher, delta: Float) {
@@ -664,10 +692,11 @@ private class PersonScroll(
         while (abs(remaining) > 0f && !hitRoom) {
             val piece = remaining.coerceIn(-maxStep, maxStep)
             remaining -= piece
-            val pre = dispatcher.dispatchPreScroll(Offset(0f, -piece), NestedScrollSource.UserInput)
-            val v = piece + pre.y
             val normal = Snapshot.withoutReadObservation { state.laidOutNormal }
-            if (v != 0f) scrollBy(if (normal) v else -v)
+            val preOffset = if (normal) Offset(0f, -piece) else Offset(0f, piece)
+            val pre = dispatcher.dispatchPreScroll(preOffset, NestedScrollSource.UserInput)
+            val v = if (normal) piece + pre.y else piece - pre.y
+            if (v != 0f) scrollBy(v)
             if (normal && v > 0f) {
                 val overshoot = TranscriptAnchorOps.roomOvershoot(state.lazy, pin.roomPx)
                 if (overshoot > 0f) {
@@ -679,15 +708,32 @@ private class PersonScroll(
     }
 
     suspend fun a11yScrollToIndex(index: Int) {
-        actionActive = true
+        if (state.anchor != TranscriptAnchor.Hybrid) {
+            state.following = false
+            state.lazy.scrollToItem(index)
+            withFrameNanos { }
+            if (state.atLiveEdge) state.following = true
+            return
+        }
+        val id = ++actionSeq
+        activeActionId = id
         personScrolled = true
         jumpedToIndex = true
         try {
             state.lazy.scrollToItem(index)
             withFrameNanos { }
+            if (Snapshot.withoutReadObservation { state.laidOutNormal }) {
+                val overshoot = TranscriptAnchorOps.roomOvershoot(state.lazy, pin.roomPx)
+                if (overshoot > 0f) {
+                    state.lazy.scroll { scrollBy(-overshoot) }
+                    withFrameNanos { }
+                }
+            }
         } finally {
-            actionActive = false
-            end()
+            if (activeActionId == id) {
+                activeActionId = 0
+                end()
+            }
         }
     }
 }
