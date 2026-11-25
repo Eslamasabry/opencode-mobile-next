@@ -19,10 +19,8 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.RequestId

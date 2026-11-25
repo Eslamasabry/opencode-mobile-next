@@ -17,9 +17,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
