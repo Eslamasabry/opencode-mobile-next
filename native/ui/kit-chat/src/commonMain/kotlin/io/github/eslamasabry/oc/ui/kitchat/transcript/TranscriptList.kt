@@ -113,8 +113,11 @@ internal constructor(
     /** Plain item count maintained when [anchor] is [TranscriptAnchor.Hybrid]. */
     internal var itemCount: Int = 0
 
-    /** Newest-first item keys from the last Hybrid recording pass. */
-    internal var recordedKeys: List<Any?> = emptyList()
+    /** Interval recording from the last Hybrid composition pass (walked only at an order flip). */
+    internal var recordedScope: RecordingLazyListScope? = null
+
+    /** Looks up [key] in newest-first order by walking recorded intervals (-1 when not found). */
+    internal fun newestFirstIndexOf(key: Any?): Int = recordedScope?.newestFirstIndexOf(key) ?: -1
 
     /** True while the last measured layout ran in normal order (oldest-first). */
     internal var laidOutNormal by mutableStateOf(false)
@@ -303,8 +306,8 @@ public fun KitTranscriptList(
     val recorded =
         if (isHybrid) {
             RecordingLazyListScope().apply(content).also {
-                state.itemCount = it.entries.size
-                state.recordedKeys = it.entries.map { entry -> entry.key }
+                state.itemCount = it.itemCount
+                state.recordedScope = it
             }
         } else {
             null
@@ -749,7 +752,7 @@ private object TranscriptAnchorOps {
             } ?: items.last()
         val top = h - prevBottomPad - (picked.offset + picked.size)
         val total = if (state.itemCount > 0) state.itemCount else info.totalItemsCount
-        val revIdx = state.recordedKeys.indexOf(picked.key).takeIf { it >= 0 } ?: picked.index
+        val revIdx = state.newestFirstIndexOf(picked.key).takeIf { it >= 0 } ?: picked.index
         val normalIdx = (total - 1 - revIdx).coerceIn(0, (total - 1).coerceAtLeast(0))
         return normalIdx to (newTopPad - top).coerceAtLeast(0)
     }
@@ -772,7 +775,7 @@ private object TranscriptAnchorOps {
         } else {
             val bottom = prevTopPad + picked.offset + picked.size
             val revIdx =
-                state.recordedKeys.indexOf(picked.key).takeIf { it >= 0 }
+                state.newestFirstIndexOf(picked.key).takeIf { it >= 0 }
                     ?: (info.totalItemsCount - 1 - picked.index)
             revIdx.coerceAtLeast(0) to (bottom - line).coerceAtLeast(0)
         }
@@ -884,17 +887,39 @@ private object TranscriptAnchorOps {
     }
 }
 
-private class RecordedItem(
-    val key: Any?,
-    val contentType: Any?,
-    val content: @Composable LazyItemScope.() -> Unit,
-)
+internal class RecordedInterval(
+    val count: Int,
+    val key: ((index: Int) -> Any)?,
+    val contentType: (index: Int) -> Any?,
+    val itemContent: @Composable LazyItemScope.(index: Int) -> Unit,
+) {
+    fun indexOf(targetKey: Any): Int {
+        val keyFn = key ?: return -1
+        var found = -1
+        var i = 0
+        while (i < count && found < 0) {
+            if (keyFn(i) == targetKey) found = i
+            i++
+        }
+        return found
+    }
+}
 
-private class RecordingLazyListScope : LazyListScope {
-    val entries: MutableList<RecordedItem> = ArrayList()
+internal class RecordingLazyListScope : LazyListScope {
+    val intervals: MutableList<RecordedInterval> = ArrayList()
+    var itemCount: Int = 0
+        private set
 
     override fun item(key: Any?, contentType: Any?, content: @Composable LazyItemScope.() -> Unit) {
-        entries.add(RecordedItem(key, contentType, content))
+        intervals.add(
+            RecordedInterval(
+                count = 1,
+                key = key?.let { k -> { k } },
+                contentType = { contentType },
+                itemContent = { content() },
+            )
+        )
+        itemCount += 1
     }
 
     override fun items(
@@ -903,25 +928,44 @@ private class RecordingLazyListScope : LazyListScope {
         contentType: (index: Int) -> Any?,
         itemContent: @Composable LazyItemScope.(index: Int) -> Unit,
     ) {
-        for (i in 0 until count) {
-            val k = key?.invoke(i)
-            val ct = contentType(i)
-            entries.add(RecordedItem(k, ct) { itemContent(i) })
-        }
+        if (count <= 0) return
+        intervals.add(RecordedInterval(count, key, contentType, itemContent))
+        itemCount += count
     }
 
     fun replayForward(target: LazyListScope) {
-        for (i in entries.indices) {
-            val entry = entries[i]
-            target.item(key = entry.key, contentType = entry.contentType, content = entry.content)
+        for (i in intervals.indices) {
+            val iv = intervals[i]
+            target.items(iv.count, key = iv.key, contentType = iv.contentType, itemContent = iv.itemContent)
         }
     }
 
     fun replayReversed(target: LazyListScope) {
-        for (i in entries.indices.reversed()) {
-            val entry = entries[i]
-            target.item(key = entry.key, contentType = entry.contentType, content = entry.content)
+        for (i in intervals.indices.reversed()) {
+            val iv = intervals[i]
+            val last = iv.count - 1
+            val content = iv.itemContent
+            target.items(
+                count = iv.count,
+                key = iv.key?.let { k -> { idx -> k(last - idx) } },
+                contentType = { idx -> iv.contentType(last - idx) },
+                itemContent = { idx -> content(last - idx) },
+            )
         }
+    }
+
+    fun newestFirstIndexOf(targetKey: Any?): Int {
+        if (targetKey == null) return -1
+        var offset = 0
+        var found = -1
+        var i = 0
+        while (i < intervals.size && found < 0) {
+            val iv = intervals[i]
+            val at = iv.indexOf(targetKey)
+            if (at >= 0) found = offset + at else offset += iv.count
+            i++
+        }
+        return found
     }
 }
 
