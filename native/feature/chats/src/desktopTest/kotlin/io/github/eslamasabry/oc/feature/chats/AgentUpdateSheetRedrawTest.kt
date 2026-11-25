@@ -28,6 +28,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
+import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
@@ -366,6 +367,64 @@ class AgentUpdateSheetRedrawTest {
             assertTrue(helperFrames >= 2, "the agent helper left in $helperFrames frame(s) after the tap")
             onNodeWithText("Node.js", substring = true).assertExists()
         }
+
+    @Test
+    fun `B-UPD-022 turning an agent switch off still shows both versions and size with no Stays`() =
+        runSheet(redrawFiveOffer()) {
+            val codex = onNode(isToggleable() and hasText("Codex", substring = true))
+            codex.performScrollTo().performClick()
+            waitForIdle()
+            codex.assertIsOff()
+            onNodeWithText("Stays", substring = true, useUnmergedTree = true).assertDoesNotExist()
+            onNodeWithText("0.171.0", substring = true, useUnmergedTree = true).assertExists()
+            onNodeWithText("0.174.0", substring = true, useUnmergedTree = true).assertExists()
+            onNodeWithText(PhoneSizes.text(48_000_000L), substring = true, useUnmergedTree = true).assertExists()
+        }
+
+    @Test
+    fun `B-UPD-023 with every agent off Update all with size is primary above Keep and Not now`() =
+        runSheet(noLockedFiveOffer()) {
+            ALL_AGENTS.forEach { switchOff(it) }
+            onNodeWithText("Stays", substring = true, useUnmergedTree = true).assertDoesNotExist()
+            val updateAll = onNodeWithText("Update all · ${PhoneSizes.text(660_000_000L)}")
+            val keep = onNodeWithText("Keep these versions")
+            val notNow = onNodeWithText("Not now")
+            updateAll.assertExists()
+            keep.assertExists()
+            notNow.assertExists()
+            val updateAllBounds = updateAll.fetchSemanticsNode().boundsInRoot
+            val keepBounds = keep.fetchSemanticsNode().boundsInRoot
+            val notNowBounds = notNow.fetchSemanticsNode().boundsInRoot
+            assertTrue(
+                updateAllBounds.bottom <= keepBounds.top && keepBounds.bottom <= notNowBounds.top,
+                "expected Update all ($updateAllBounds) above Keep ($keepBounds) above Not now ($notNowBounds)",
+            )
+        }
+
+    @Test
+    fun `B-UPD-024 tapping Update all when every agent is off turns all on and starts`() {
+        val offered = RedrawOffered(noLockedFiveOffer())
+        runSheet(noLockedFiveOffer(), offered = offered) {
+            ALL_AGENTS.forEach { switchOff(it) }
+            onNodeWithText("Update all · ${PhoneSizes.text(660_000_000L)}").performClick()
+            waitUntil(timeoutMillis = 2_000) { offered.lastChoices != null }
+            assertEquals(5, offered.lastChoices?.size)
+            assertTrue(offered.lastChoices?.values?.all { it == AgentUpdateChoice.Update } == true)
+            assertEquals(true, offered.lastWaitForWifi)
+        }
+    }
+
+    @Test
+    fun `B-UPD-025 tapping Keep these versions when every agent is off keeps all`() {
+        val offered = RedrawOffered(noLockedFiveOffer())
+        runSheet(noLockedFiveOffer(), offered = offered) {
+            ALL_AGENTS.forEach { switchOff(it) }
+            onNodeWithText("Keep these versions").performClick()
+            waitUntil(timeoutMillis = 2_000) { offered.lastChoices != null }
+            assertEquals(5, offered.lastChoices?.size)
+            assertTrue(offered.lastChoices?.values?.all { it == AgentUpdateChoice.Keep } == true)
+        }
+    }
 
     /** [noLockedFiveOffer] with a second needed part that is always needed, right after the agent helper. */
     private fun alwaysNeededOffer(): AgentUpdateOffer =

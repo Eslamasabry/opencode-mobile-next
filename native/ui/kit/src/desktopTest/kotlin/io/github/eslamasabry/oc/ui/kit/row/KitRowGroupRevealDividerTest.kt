@@ -34,7 +34,6 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.math.abs
 import kotlin.test.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -60,13 +59,14 @@ class KitRowGroupRevealDividerTest {
         }
     }
 
-    private fun hasInk(map: PixelMap, ground: Color, x: Int, yRange: IntRange): Boolean =
+    private fun maxDelta(map: PixelMap, ground: Color, x: Int, yRange: IntRange): Float =
         yRange
             .filter { it in 0 until height }
-            .any { y ->
+            .maxOfOrNull { y ->
                 val p = map[x, y]
-                abs(p.red - ground.red) + abs(p.green - ground.green) + abs(p.blue - ground.blue) > 0.01f
+                abs(p.red - ground.red) + abs(p.green - ground.green) + abs(p.blue - ground.blue)
             }
+            ?: 0f
 
     private fun ComposeUiTest.bottomPx(tag: String): Int =
         onNodeWithTag(tag, useUnmergedTree = true).getUnclippedBoundsInRoot().bottom.value.toInt()
@@ -84,10 +84,14 @@ class KitRowGroupRevealDividerTest {
                     ground = LocalKitColors.current.ground
                     Column(Modifier.fillMaxSize().background(ground)) {
                         KitRowGroup {
-                            KitReveal(visible = shown) { KitRow("Alpha", Modifier.testTag("r0")) }
-                            KitReveal(visible = shown) { KitRow("Beta", Modifier.testTag("r1")) }
-                            KitRow("Gamma", Modifier.testTag("r2"))
-                            KitRow("Delta", Modifier.testTag("r3"))
+                            KitReveal(visible = shown) {
+                                KitRow("Alpha", Modifier.testTag("r0"), supporting = "First line")
+                            }
+                            KitReveal(visible = shown) {
+                                KitRow("Beta", Modifier.testTag("r1"), supporting = "Second line")
+                            }
+                            KitRow("Gamma", Modifier.testTag("r2"), supporting = "Third line")
+                            KitRow("Delta", Modifier.testTag("r3"), supporting = "Fourth line")
                         }
                     }
                 }
@@ -95,9 +99,10 @@ class KitRowGroupRevealDividerTest {
             waitForIdle()
             val x = width - 40
             val rest = onRoot().captureToImage().toPixelMap()
-            assertTrue(hasInk(rest, ground, x, bottomPx("r0") - 1..bottomPx("r0") + 1), "rest Alpha-Beta divider")
-            assertTrue(hasInk(rest, ground, x, bottomPx("r1") - 1..bottomPx("r1") + 1), "rest Beta-Gamma divider")
-            assertTrue(hasInk(rest, ground, x, bottomPx("r2") - 1..bottomPx("r2") + 1), "rest Gamma-Delta divider")
+            val fullDelta = maxDelta(rest, ground, x, bottomPx("r2") - 1..bottomPx("r2") + 1)
+            assertTrue(fullDelta > 0.02f, "expected visible hairline at rest (delta=$fullDelta)")
+            assertTrue(maxDelta(rest, ground, x, bottomPx("r0") - 1..bottomPx("r0") + 1) > fullDelta * 0.9f)
+            assertTrue(maxDelta(rest, ground, x, bottomPx("r1") - 1..bottomPx("r1") + 1) > fullDelta * 0.9f)
 
             mainClock.autoAdvance = false
             shown = false
@@ -107,20 +112,23 @@ class KitRowGroupRevealDividerTest {
                 mainClock.advanceTimeByFrame()
                 val elapsed = mainClock.currentTime - start
                 val gammaTop = topPx("r2")
-                if (elapsed > MotionTokens.QUICK && gammaTop > 4) {
+                if (elapsed >= MotionTokens.QUICK / 2 && gammaTop > 4) {
                     checkedMidFold++
                     val map = onRoot().captureToImage().toPixelMap()
-                    assertFalse(
-                        hasInk(map, ground, x, 0..gammaTop + 1),
-                        "divider drawn above Gamma at elapsed=${elapsed}ms while leaving rows already faded out",
-                    )
+                    val aboveGamma = maxDelta(map, ground, x, 0..gammaTop + 1)
+                    val limit = if (elapsed > MotionTokens.QUICK) 0.01f else fullDelta * 0.35f
                     assertTrue(
-                        hasInk(map, ground, x, bottomPx("r2") - 1..bottomPx("r2") + 1),
-                        "staying Gamma-Delta divider must stay drawn at elapsed=${elapsed}ms",
+                        aboveGamma <= limit,
+                        "divider above Gamma not faded at elapsed=${elapsed}ms (delta=$aboveGamma, full=$fullDelta)",
+                    )
+                    val staying = maxDelta(map, ground, x, bottomPx("r2") - 1..bottomPx("r2") + 1)
+                    assertTrue(
+                        staying >= fullDelta * 0.9f,
+                        "staying Gamma-Delta divider changed at elapsed=${elapsed}ms (delta=$staying, full=$fullDelta)",
                     )
                 }
             }
-            assertTrue(checkedMidFold > 0, "expected at least one mid-fold frame after fadeOut(Quick)")
+            assertTrue(checkedMidFold > 0, "expected at least one mid-fold frame during collapse")
         }
 
     @Test
@@ -133,15 +141,21 @@ class KitRowGroupRevealDividerTest {
                     ground = LocalKitColors.current.ground
                     Column(Modifier.fillMaxSize().background(ground)) {
                         KitRowGroup {
-                            KitRow("Top", Modifier.testTag("r0"))
-                            KitReveal(visible = shown) { KitRow("Middle", Modifier.testTag("r1")) }
-                            KitRow("Bottom", Modifier.testTag("r2"))
+                            KitRow("Top", Modifier.testTag("r0"), supporting = "First line")
+                            KitReveal(visible = shown) {
+                                KitRow("Middle", Modifier.testTag("r1"), supporting = "Second line")
+                            }
+                            KitRow("Bottom", Modifier.testTag("r2"), supporting = "Third line")
                         }
                     }
                 }
             }
             waitForIdle()
             val x = width - 40
+            val rest = onRoot().captureToImage().toPixelMap()
+            val fullDelta = maxDelta(rest, ground, x, bottomPx("r0") - 1..bottomPx("r0") + 1)
+            assertTrue(fullDelta > 0.02f, "expected visible hairline at rest (delta=$fullDelta)")
+
             mainClock.autoAdvance = false
             shown = false
             val start = mainClock.currentTime
@@ -151,20 +165,23 @@ class KitRowGroupRevealDividerTest {
                 val elapsed = mainClock.currentTime - start
                 val topBottom = bottomPx("r0")
                 val bottomTop = topPx("r2")
-                if (elapsed > MotionTokens.QUICK && bottomTop > topBottom + 4) {
+                if (elapsed >= MotionTokens.QUICK / 2 && bottomTop > topBottom + 4) {
                     checkedMidFold++
                     val map = onRoot().captureToImage().toPixelMap()
-                    assertFalse(
-                        hasInk(map, ground, x, topBottom - 1..topBottom + 1),
-                        "leaving Middle's top divider still drawn at elapsed=${elapsed}ms",
-                    )
+                    val leaving = maxDelta(map, ground, x, topBottom - 1..topBottom + 1)
+                    val limit = if (elapsed > MotionTokens.QUICK) 0.01f else fullDelta * 0.35f
                     assertTrue(
-                        hasInk(map, ground, x, bottomTop - 1..bottomTop + 1),
-                        "staying Bottom's divider must remain drawn at elapsed=${elapsed}ms",
+                        leaving <= limit,
+                        "leaving Middle's divider not faded at elapsed=${elapsed}ms (delta=$leaving, full=$fullDelta)",
+                    )
+                    val staying = maxDelta(map, ground, x, bottomTop - 1..bottomTop + 1)
+                    assertTrue(
+                        staying >= fullDelta * 0.9f,
+                        "staying Bottom's divider changed at elapsed=${elapsed}ms (delta=$staying, full=$fullDelta)",
                     )
                 }
             }
-            assertTrue(checkedMidFold > 0, "expected at least one mid-fold frame after fadeOut(Quick)")
+            assertTrue(checkedMidFold > 0, "expected at least one mid-fold frame during collapse")
         }
 
     @Test
@@ -186,7 +203,7 @@ class KitRowGroupRevealDividerTest {
             waitForIdle()
             val x = width - 40
             val map = onRoot().captureToImage().toPixelMap()
-            assertTrue(hasInk(map, ground, x, bottomPx("r0") - 1..bottomPx("r0") + 1), "Alpha-Beta divider")
-            assertTrue(hasInk(map, ground, x, bottomPx("r1") - 1..bottomPx("r1") + 1), "Beta-Gamma divider")
+            assertTrue(maxDelta(map, ground, x, bottomPx("r0") - 1..bottomPx("r0") + 1) > 0.02f, "Alpha-Beta divider")
+            assertTrue(maxDelta(map, ground, x, bottomPx("r1") - 1..bottomPx("r1") + 1) > 0.02f, "Beta-Gamma divider")
         }
 }
