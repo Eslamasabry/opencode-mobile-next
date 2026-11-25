@@ -209,6 +209,7 @@ public fun KitSwitchRow(
     supportingMaxLines: Int = 2, // F: lib/ui/kit/kit_row_parts.dart:287
     riskSpec: KitRisk? = null,
     switchTag: String? = null,
+    supportingMinLines: Int = 1,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val tokens = LocalKitTokens.current
