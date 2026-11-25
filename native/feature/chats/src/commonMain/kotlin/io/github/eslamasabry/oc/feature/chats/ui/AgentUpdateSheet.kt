@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -36,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.kitSwitchSupportingLines
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -128,11 +130,14 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
     if (shown.network == AgentUpdateNetwork.Unknown) {
         KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
     }
-    val metered = shown.network == AgentUpdateNetwork.Metered && (shown.updating > 0 || shown.needed.isNotEmpty())
+    val downloading = shown.updating > 0 || shown.needed.isNotEmpty()
+    val metered = shown.network == AgentUpdateNetwork.Metered && downloading
     if (metered || shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
         KitRowGroup {
-            if (metered) WifiOnlyRow(shown.wifiOnly, actions)
-            shown.needed.forEach { row -> NeededRow(row, shown.neededWhy) }
+            if (shown.network == AgentUpdateNetwork.Metered) {
+                KitReveal(visible = metered) { WifiOnlyRow(shown.wifiOnly, actions) }
+            }
+            NeededRows(shown)
             shown.optional.forEach { row -> OptionalRow(row, actions) }
         }
     }
@@ -227,6 +232,17 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
     }
 }
 
+@Composable
+private fun NeededRows(shown: AgentUpdateSheetUi) {
+    val lastShown = remember { arrayOfNulls<List<AgentNeededRowUi>>(1) }
+    if (shown.needed.isNotEmpty()) lastShown[0] = shown.needed
+    val shownNow = shown.needed.mapTo(mutableSetOf()) { it.id }
+    val leaving = (lastShown[0] ?: emptyList()).filterNot { it.id in shownNow }
+    (shown.needed + leaving).forEach { row ->
+        key(row.id) { KitReveal(visible = row.id in shownNow) { NeededRow(row, shown.neededWhy) } }
+    }
+}
+
 /** A part the updates need: its name, versions, size and why it is needed, with no choice. */
 @Composable
 private fun NeededRow(row: AgentNeededRowUi, why: AgentNeedRule) {
@@ -245,18 +261,21 @@ private fun NeededRow(row: AgentNeededRowUi, why: AgentNeedRule) {
 /** The totals: what downloads (the Update choices and the shown Needed parts) and what Remove frees. */
 @Composable
 private fun Totals(sheet: AgentUpdateSheetUi) {
-    if (sheet.updating > 0 || sheet.needed.isNotEmpty()) {
-        KitText(
-            stringResource(Res.string.agentUpdatesTotalDownload),
-            role = TypeRole.Label,
-            tone = TextTone.Secondary,
-        )
-        // Hold the rail width so LargeTitle's negative tracking + LRI isolate never wraps "About 610 MB" to 2 lines.
-        KitText(
-            amount(sheet.downloadBytes, sheet.downloadKnown),
-            Modifier.fillMaxWidth(),
-            role = TypeRole.LargeTitle,
-        )
+    KitReveal(visible = sheet.updating > 0 || sheet.needed.isNotEmpty()) {
+        Column {
+            KitText(
+                stringResource(Res.string.agentUpdatesTotalDownload),
+                role = TypeRole.Label,
+                tone = TextTone.Secondary,
+            )
+            // Hold the rail width so LargeTitle's negative tracking + LRI isolate never wraps "About 610 MB"
+            // to 2 lines.
+            KitText(
+                amount(sheet.downloadBytes, sheet.downloadKnown),
+                Modifier.fillMaxWidth(),
+                role = TypeRole.LargeTitle,
+            )
+        }
     }
     if (sheet.removing > 0) {
         KitRowGroup {
