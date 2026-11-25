@@ -76,10 +76,12 @@ public object StepListRules {
     public const val SHOWN: Int = 3
 
     /**
-     * A turn in [state] shows its work as one summary row: it ended well. A turn that runs, waits for the person, was
-     * stopped or ended on a failure stays open at its newest steps, so the step where it stands is in view.
+     * A turn in [state] shows its work as one summary row: it ended well. A turn that runs ([turnRuns], including the
+     * gap between two steps), waits for the person, was stopped or ended on a failure stays open at its newest steps,
+     * so the step where it stands is in view.
      */
-    public fun sums(state: WorkLineState): Boolean = state == WorkLineState.Done
+    public fun sums(state: WorkLineState, turnRuns: Boolean = false): Boolean =
+        state == WorkLineState.Done && !turnRuns
 
     /**
      * The rows of [work] in the order they happened. [entries] is the reading's order of steps and folded words (empty

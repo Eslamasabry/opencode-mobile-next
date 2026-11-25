@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
+import io.github.eslamasabry.oc.feature.chat.world.ChatConnectionOpener
 import io.github.eslamasabry.oc.feature.chat.world.ChatPhoneServer
 import io.github.eslamasabry.oc.feature.chat.world.PhoneServerWait
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
+import java.util.concurrent.ConcurrentHashMap
 
 /*
  * S24-CHAT story 1: the chat's connection line restarts this phone's OpenCode through the phone
@@ -144,6 +146,30 @@ class AndroidChatPhoneServer(
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()
         else Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
+}
+
+/**
+ * Try again in a chat opens the connection of a computer that is not open, by the home's own path
+ * ([PreviewRuntime.connectInBackground]: the server on the home stays the one the person chose). Each open chat
+ * holds its computer while it is shown; the queued-servers watch keeps a held connection.
+ */
+@ContributesIntoSet(AppScope::class, binding = binding<ChatConnectionOpener>())
+@SingleIn(AppScope::class)
+@Inject
+class AndroidChatConnectionOpener(private val runtime: Lazy<PreviewRuntime>) : ChatConnectionOpener {
+    private val holds = ConcurrentHashMap<ProfileId, Int>()
+
+    override suspend fun open(profile: ProfileId): Outcome<Unit> = runtime.value.connectInBackground(profile)
+
+    override fun hold(profile: ProfileId, held: Boolean) {
+        holds.compute(profile) { _, count ->
+            val next = (count ?: 0) + if (held) 1 else -1
+            if (next <= 0) null else next
+        }
+    }
+
+    /** True while an open chat shows [profile]. */
+    fun held(profile: ProfileId) = (holds[profile] ?: 0) > 0
 }
 
 private val NOT_WAITING: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)

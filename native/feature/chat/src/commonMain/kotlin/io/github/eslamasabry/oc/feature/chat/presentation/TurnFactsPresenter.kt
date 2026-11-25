@@ -109,8 +109,8 @@ public data class TurnFactsUi(
     val live: LiveNoticeUi? = null,
     /** B-CHAT-007/008: background commands still running, oldest first. */
     val background: List<BackgroundTask> = emptyList(),
-    /** The clock these facts were read at (a running step's own time). */
-    val nowMs: Long = 0,
+    /** The presenter's live clock, read only where a time label is drawn. */
+    val clock: FactsClock = FactsClock.Still,
     val reading: TranscriptReadingUi = TranscriptReadingUi(),
     val tasks: ChatTaskList? = null,
     val runStartedAtMs: Long? = null,
@@ -127,6 +127,7 @@ public data class TurnFactsUi(
  * nothing.
  */
 public class TurnFactsPresenter(private val clock: Clock) {
+    private val factsClock = FactsClock()
     private val stall = TurnStallTracker()
     private val workCache = TurnWorkCache()
     private var lastProgress: Long? = null
@@ -211,28 +212,14 @@ public class TurnFactsPresenter(private val clock: Clock) {
         declinedCalls: Set<String> = emptySet(),
         waitingCalls: Set<String> = emptySet(),
     ): TurnFactsUi {
+        factsClock.set(nowMs)
         askedCalls += waitingCalls
         val snapshot = feed.ledger
         // W4: a run the person's refusal ended is not a stop, nor a server restart (OC2 reports it as "shutdown").
         val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
         // B8: a reply waiting on the person (a request card) is never cut off, whatever the status said.
         val idleSaid = feed.idleSaid && !waitingForYou
-        val coreChanged = readingSnapshot !== snapshot || readingBusy != feed.busy || readingOutcome != outcome
-        val stopChanged = readingIdleSaid != idleSaid || readingStoppedByPerson != feed.stoppedByPerson
-        if (coreChanged || stopChanged) {
-            reading =
-                withPersonStop(
-                    transcriptReading(snapshot, feed.busy, outcome, idleSaid),
-                    snapshot,
-                    feed.busy,
-                    feed.stoppedByPerson,
-                )
-            readingSnapshot = snapshot
-            readingBusy = feed.busy
-            readingOutcome = outcome
-            readingIdleSaid = idleSaid
-            readingStoppedByPerson = feed.stoppedByPerson
-        }
+        updateReading(snapshot, feed, outcome, idleSaid)
         val stopped = outcome is RunOutcome.Interrupted
         // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.
         val work =
@@ -266,11 +253,34 @@ public class TurnFactsPresenter(private val clock: Clock) {
             background =
                 runningBackgroundTasks(snapshot.messages, nowMs) +
                     LeftRunningCommands.tasks(snapshot.messages, work, nowMs, busy = feed.busy),
-            nowMs = nowMs,
+            clock = factsClock,
             reading = reading,
             tasks = latestChatTasks(snapshot.messages),
             runStartedAtMs = feed.runStartedAtMs,
         )
+    }
+
+    private fun updateReading(
+        snapshot: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerSnapshot,
+        feed: TurnFeed,
+        outcome: RunOutcome?,
+        idleSaid: Boolean,
+    ) {
+        val coreChanged = readingSnapshot !== snapshot || readingBusy != feed.busy || readingOutcome != outcome
+        val stopChanged = readingIdleSaid != idleSaid || readingStoppedByPerson != feed.stoppedByPerson
+        if (!coreChanged && !stopChanged) return
+        reading =
+            withPersonStop(
+                transcriptReading(snapshot, feed.busy, outcome, idleSaid),
+                snapshot,
+                feed.busy,
+                feed.stoppedByPerson,
+            )
+        readingSnapshot = snapshot
+        readingBusy = feed.busy
+        readingOutcome = outcome
+        readingIdleSaid = idleSaid
+        readingStoppedByPerson = feed.stoppedByPerson
     }
 
     private fun result(turn: LedgerTurn, timing: ReplyTiming?, work: TurnWork?): TurnResultUi? {

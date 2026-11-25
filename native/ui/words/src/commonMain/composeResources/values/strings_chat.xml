@@ -886,6 +886,8 @@
     <string name="promptStashOlderDraftsWaiting">Some older drafts have not moved here yet. They are kept on this device.</string>
     <string name="promptStashOlderDraftsFull">Older drafts are waiting to move here. Delete saved prompts to make room.</string>
     <string name="chatErrorModelNotFound">The server doesn't have this model.</string>
+    <string name="chatErrorModelNotFoundNamed">%1$s is not available on %2$s any more.</string>
+    <string name="chatModelReplacedNotice">%1$s is gone. Using %2$s.</string>
     <string name="chatErrorContextOverflow">This conversation is too long for the model.</string>
     <string name="chatErrorProviderAuth">The model provider needs you to sign in again.</string>
     <string name="chatErrorOutputLength">The reply reached the model's length limit.</string>
