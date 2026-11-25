@@ -23,7 +23,7 @@
     <string name="collectBackground">后台服务为何停止</string>
     <string name="collectUpdates">更新是否已安装，以及失败的类型</string>
     <string name="collectPages">使用的页面和功能类型，同意后的首个回复（以及同意前是否已看过回复，不发送该回复的任何信息），每次使用的时长和发送的消息数</string>
-    <string name="collectJourney">你的最初几步进行到了哪里（打开应用、设置、连接、发送消息、收到首次回复；step），以及大约在你同意后多久（after_range），还有你的第一条消息如何结束（first_prompt_ended：收到回复、停止、错误类型或发送被拒；outcome与fail_kind，仅发送类型词，从不发送文字内容）。每一步每次安装只计一次</string>
+    <string name="collectJourney">你的最初几步进行到了哪里（打开应用、设置、连接、发送消息、收到首次回复），以及大约在你同意后多久，还有你的第一条消息如何结束（收到回复、停止、错误类型或发送被拒），仅以类型词表示，绝不含文字内容。每一步每次安装只计一次。</string>
     <string name="collectStarters">在新对话中点击的建议类型，以及对用途问题的一词回答。绝不包含建议的文字或它要求的内容</string>
     <string name="collectStart">应用启动速度，以及上次进程退出（app_exit）的固定原因（exit_reason）。如果 Android 有记录，还包括进程当时是否在前台（foreground，yes/no）</string>
     <string name="collectSmooth">页面的流畅度（逾期、缓慢和冻结帧的比例）、屏幕刷新率，以及对话中当时的活动（回复到达、滚动、菜单或面板打开、键盘显示或空闲）</string>

@@ -26,7 +26,7 @@
     <string name="collectBackground">バックグラウンドサービスが停止した理由</string>
     <string name="collectUpdates">更新をインストールできたか、失敗の種類</string>
     <string name="collectPages">使うページや機能の種類、同意後の最初の応答（同意前にも応答を見たことがあったかどうかだけで、その内容は含みません）、一回の利用時間、送ったメッセージ数</string>
-    <string name="collectJourney">初回利用の進み具合（起動、セットアップ、接続、送信、最初の応答、step）と同意からのおおよその時間（after_range）、および最初のメッセージがどう終わったか（first_prompt_ended：応答、停止、エラーの種類、送信の拒否。outcomeとfail_kindを種類の語のみで送り、本文は送りません）。各段階はインストールごとに一度だけ数えます</string>
+    <string name="collectJourney">初回利用の進み具合（起動、セットアップ、接続、送信、最初の応答）と同意からのおおよその時間に加え、最初のメッセージがどう終わったか（応答、停止、エラーの種類、送信の拒否）を種類の語のみで送り、本文は送りません。各段階はインストールごとに一度だけ数えます。</string>
     <string name="collectStarters">新しい会話で選んだ提案の種類と、用途への回答を一語にしたもの。提案の文章や依頼内容は含みません</string>
     <string name="collectShareIn">アプリに共有した画像やファイルの件数と、画像・ファイルの別。名前や内容は含みません</string>
     <string name="collectStarAsk">GitHubでプロジェクトにスターを付ける一度限りの依頼を、表示・選択・閉じたかどうか</string>

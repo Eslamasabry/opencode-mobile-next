@@ -2425,7 +2425,7 @@ collectCrashesLabel	9ecbc9dad7
 collectDevice	04a7036c58
 collectDrop	13bd95a3dd
 collectExit	34768d63e2
-collectJourney	457e9425cb
+collectJourney	f9c2065de3
 collectMemory	39a3b87916
 collectNever	0b27a37bc6
 collectNeverLabel	67bbd8aef0
@@ -7945,7 +7945,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	c2994ddbac
+nativeBundledPrivacy	4ee21ff9fe
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
