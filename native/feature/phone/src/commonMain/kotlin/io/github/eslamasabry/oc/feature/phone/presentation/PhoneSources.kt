@@ -125,6 +125,8 @@ public interface PhoneServerSource {
      * after (R7).
      */
     public suspend fun updateOpenCode(): Outcome<Unit>
+
+    public fun sizeShown(visible: Boolean) {}
 }
 
 private val NoHeat: StateFlow<PhoneHeatFacts?> = kotlinx.coroutines.flow.MutableStateFlow(null)

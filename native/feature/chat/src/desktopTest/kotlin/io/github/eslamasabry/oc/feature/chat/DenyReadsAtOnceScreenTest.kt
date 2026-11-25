@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.StepRequestReading
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.AnswerWords
@@ -36,7 +37,9 @@ class DenyReadsAtOnceScreenTest {
         val folds = TranscriptFolds(mutableStateMapOf("work:m1" to true), mutableStateMapOf(), mutableStateMapOf())
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true, localeTag = "en") {
-                CompositionLocalProvider(LocalKitRedactor provides Redactor()) { TurnWorkLine(work, 58_000, folds) }
+                CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                    TurnWorkLine(work, FactsClock.at(58_000), folds)
+                }
             }
         }
     }
