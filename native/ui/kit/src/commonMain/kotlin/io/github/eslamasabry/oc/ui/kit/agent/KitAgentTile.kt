@@ -209,7 +209,9 @@ public fun KitAgentTile(
 private fun ReadyCheck() {
     val ok = LocalKitColors.current.success
     Box(
-        Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S2).dp).drawBehind { drawCircle(ok) }.clearAndSetSemantics {},
+        Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S2).dp)
+            .drawBehind { drawCircle(ok) }
+            .clearAndSetSemantics { testTag = "kit-agent-tile-ready" },
         contentAlignment = Alignment.Center,
     ) {
         KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.OnAccent)
