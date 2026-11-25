@@ -6314,6 +6314,9 @@ kitRelDaysAgo	46d83f018e
 kitRelHoursAgo	74d1083a63
 kitRelJustNow	45ec77c15d
 kitRelMinutesAgo	40510cad32
+kitRelShortDays	7dcdf9ed4e
+kitRelShortHours	27f483131c
+kitRelShortMinutes	46a6240f04
 kitRelYesterday	e9933d4553
 kitReportProblem	bbbbb87df8
 kitRequestAge	e10dd91cdc

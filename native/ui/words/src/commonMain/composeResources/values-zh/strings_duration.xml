@@ -67,4 +67,13 @@
     <string name="kitDurLessThanMinute">不到一分钟</string>
     <string name="kitRelJustNow">刚刚</string>
     <string name="kitRelYesterday">昨天</string>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="other">%1$s分钟</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="other">%1$s小时</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="other">%1$s天</item>
+    </plurals>
 </resources>

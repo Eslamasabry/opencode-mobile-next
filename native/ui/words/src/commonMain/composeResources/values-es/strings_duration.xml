@@ -105,4 +105,19 @@
     <string name="kitDurLessThanMinute">menos de un minuto</string>
     <string name="kitRelJustNow">Hace un momento</string>
     <string name="kitRelYesterday">Ayer</string>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="one">%1$s d</item>
+        <item quantity="many">%1$s d</item>
+        <item quantity="other">%1$s d</item>
+    </plurals>
 </resources>

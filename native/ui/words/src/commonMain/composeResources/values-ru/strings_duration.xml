@@ -124,4 +124,22 @@
     <string name="kitDurLessThanMinute">несколько секунд</string>
     <string name="kitRelJustNow">Только что</string>
     <string name="kitRelYesterday">Вчера</string>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="one">%1$s мин</item>
+        <item quantity="few">%1$s мин</item>
+        <item quantity="many">%1$s мин</item>
+        <item quantity="other">%1$s мин</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="one">%1$s д</item>
+        <item quantity="few">%1$s д</item>
+        <item quantity="many">%1$s д</item>
+        <item quantity="other">%1$s д</item>
+    </plurals>
 </resources>

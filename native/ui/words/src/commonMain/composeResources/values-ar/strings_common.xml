@@ -409,14 +409,14 @@
     <string name="kitAttachmentImage">صورة، %1$s</string>
     <string name="kitSuggestionsShowAll">عرض الكل</string>
     <plurals name="kitNeedsYouSpan">
-        <item quantity="zero">%1$s يحتاجون إليك · </item>
-        <item quantity="one">يحتاج إليك · </item>
-        <item quantity="two">%1$s يحتاجون إليك · </item>
-        <item quantity="few">%1$s يحتاجون إليك · </item>
-        <item quantity="many">%1$s يحتاجون إليك · </item>
-        <item quantity="other">%1$s يحتاجون إليك · </item>
+        <item quantity="zero">%1$s بانتظارك · </item>
+        <item quantity="one">بانتظارك · </item>
+        <item quantity="two">%1$s بانتظارك · </item>
+        <item quantity="few">%1$s بانتظارك · </item>
+        <item quantity="many">%1$s بانتظارك · </item>
+        <item quantity="other">%1$s بانتظارك · </item>
     </plurals>
-    <string name="kitNeedsYouSpan__eq1">يحتاج إليك · </string>
+    <string name="kitNeedsYouSpan__eq1">بانتظارك · </string>
     <string name="kitTopBarBack">رجوع</string>
     <string name="kitTopBarSearch">بحث</string>
     <string name="kitCodeCopyCode">نسخ الشيفرة</string>
