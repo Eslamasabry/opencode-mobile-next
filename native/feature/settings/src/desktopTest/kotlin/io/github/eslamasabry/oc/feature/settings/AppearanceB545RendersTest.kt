@@ -45,6 +45,7 @@ class AppearanceB545RendersTest {
                 }
                 waitForIdle()
                 onAllNodesWithTag("kit-option-card-check", useUnmergedTree = true).assertCountEquals(1)
+                onAllNodesWithTag("kit-accent-swatch-check", useUnmergedTree = true).assertCountEquals(1)
                 val img = onRoot().captureToImage().toAwtImage()
                 ImageIO.write(img, "png", File(out, "b545-after-appearance-dark.png"))
             }

@@ -45,6 +45,8 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.agent.KitAgentChoice as AgentCardChoice
 import io.github.eslamasabry.oc.ui.kit.agent.KitAgentChoiceState
 import io.github.eslamasabry.oc.ui.kit.choice.ChoiceCardRules
+import io.github.eslamasabry.oc.ui.kit.choice.KitAccentRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitAccentSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitAgentChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitAgentGridItem
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
@@ -223,7 +225,7 @@ class KitChoiceCardTest {
             assertEquals(0, mark, "unchosen first card must draw no empty ring or mark")
         }
 
-    private fun boxAccentCount(px: PixelMap, bounds: Rect, accent: Color): Int {
+    private fun boxColorCount(px: PixelMap, bounds: Rect, target: Color, tol: Float = 0.12f): Int {
         val left = bounds.left.roundToInt().coerceIn(0, px.width - 1)
         val right = bounds.right.roundToInt().coerceIn(0, px.width - 1)
         val top = bounds.top.roundToInt().coerceIn(0, px.height - 1)
@@ -231,11 +233,14 @@ class KitChoiceCardTest {
         var count = 0
         for (x in left..right) {
             for (y in top..bottom) {
-                if (near(px[x, y], accent, tol = 0.12f)) count++
+                if (near(px[x, y], target, tol = tol)) count++
             }
         }
         return count
     }
+
+    private fun boxAccentCount(px: PixelMap, bounds: Rect, accent: Color): Int =
+        boxColorCount(px, bounds, accent, tol = 0.12f)
 
     @Composable
     private fun PickerCardsShowcase() {
@@ -328,5 +333,87 @@ class KitChoiceCardTest {
             val optionChecks = onAllNodesWithTag("kit-option-card-check", useUnmergedTree = true)
             optionChecks.assertCountEquals(4)
             optionChecks.fetchSemanticsNodes().forEach { assertEquals(rowSize, it.size) }
+        }
+
+    @Test
+    fun `B-545 look card check is bare KitSelectedCheck with no surface disc`() =
+        runDesktopComposeUiTest(412, 320) {
+            var accent = Color.Unspecified
+            var surface1 = Color.Unspecified
+            setContent {
+                KitTheme(
+                    KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                    DesktopKitPlatform(),
+                    stillFrame = true,
+                ) {
+                    val colors = LocalKitColors.current
+                    accent = colors.accent
+                    surface1 = colors.surface1
+                    Column(
+                        Modifier.fillMaxSize().background(colors.ground).padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        KitRow("Row", selected = true, onClick = {})
+                        KitLookOptionCard(null, "Off", true, {}, Modifier.fillMaxWidth().height(140.dp))
+                    }
+                }
+            }
+            waitForIdle()
+            val px = onRoot().captureToImage().toPixelMap()
+            val rowSize = onNodeWithTag("kit-row-check", useUnmergedTree = true).fetchSemanticsNode().size
+            val checks = onAllNodesWithTag("kit-option-card-check", useUnmergedTree = true)
+            checks.assertCountEquals(1)
+            val node = checks.fetchSemanticsNodes().single()
+            assertEquals(rowSize, node.size, "look card check must match KitRow check size")
+            val area = (node.boundsInRoot.width * node.boundsInRoot.height).roundToInt()
+            val accentPx = boxAccentCount(px, node.boundsInRoot, accent)
+            assertTrue(accentPx in 1..(area / 3), "look card check must be bare accent ($accentPx/$area)")
+            val discPx = boxColorCount(px, node.boundsInRoot, surface1, tol = 0.02f)
+            assertEquals(0, discPx, "look card check must draw no surface1 disc behind it")
+        }
+
+    @Test
+    fun `B-545 accent swatch uses bare KitSelectedCheck with no filled disc`() =
+        runDesktopComposeUiTest(412, 320) {
+            var accent = Color.Unspecified
+            var ground = Color.Unspecified
+            setContent {
+                KitTheme(
+                    KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                    DesktopKitPlatform(),
+                    stillFrame = true,
+                ) {
+                    val colors = LocalKitColors.current
+                    accent = colors.accent
+                    ground = colors.ground
+                    Column(
+                        Modifier.fillMaxSize().background(colors.ground).padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        KitRow("Row", selected = true, onClick = {})
+                        KitAccentRow(
+                            semanticsLabel = "Accent",
+                            matchLabel = "Match",
+                            themeAccent = colors.accent,
+                            swatches = listOf(KitAccentSwatch("blue", Color(0xFF5AB0FF), "Blue")),
+                            selected = null,
+                            onChanged = {},
+                            grid = true,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            val px = onRoot().captureToImage().toPixelMap()
+            val rowSize = onNodeWithTag("kit-row-check", useUnmergedTree = true).fetchSemanticsNode().size
+            val checks = onAllNodesWithTag("kit-accent-swatch-check", useUnmergedTree = true)
+            checks.assertCountEquals(1)
+            val node = checks.fetchSemanticsNodes().single()
+            assertEquals(rowSize, node.size, "accent swatch check must match KitRow check size")
+            val area = (node.boundsInRoot.width * node.boundsInRoot.height).roundToInt()
+            val accentPx = boxAccentCount(px, node.boundsInRoot, accent)
+            assertTrue(accentPx in 1..(area / 3), "accent swatch check must be bare accent ($accentPx/$area)")
+            val groundPx = boxColorCount(px, node.boundsInRoot, ground, tol = 0.02f)
+            assertTrue(groundPx > area / 2, "accent swatch check must sit over ground, not a disc ($groundPx/$area)")
         }
 }
