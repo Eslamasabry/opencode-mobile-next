@@ -34,7 +34,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
 
-private const val STAGE = "before"
+private const val STAGE = "after"
 
 class PolishMessageBoxRenderTest {
     @Test

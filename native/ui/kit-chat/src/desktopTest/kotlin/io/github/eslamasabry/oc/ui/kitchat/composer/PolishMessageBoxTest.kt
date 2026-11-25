@@ -131,22 +131,13 @@ class PolishMessageBoxTest {
                         Box(Modifier.size(600.dp, 800.dp)) {
                             Column {
                                 KitComposerChip(
-                                    label = "Auto-approve on",
-                                    onClick = {},
-                                    icon = KitIcons.shield,
-                                    opensPicker = false,
-                                    active = true,
-                                    modifier = Modifier.testTag("a"),
+                                    "Auto-approve on", {}, icon = KitIcons.shield,
+                                    opensPicker = false, active = true, modifier = Modifier.testTag("a"),
                                 )
                                 KitComposerChip(
-                                    label = "Auto-approve on",
-                                    onClick = {},
-                                    icon = KitIcons.shield,
-                                    opensPicker = false,
-                                    active = true,
-                                    wordless = true,
-                                    semanticsLabel = "Approval",
-                                    modifier = Modifier.testTag("b"),
+                                    "Auto-approve on", {}, icon = KitIcons.shield,
+                                    opensPicker = false, active = true, wordless = true,
+                                    semanticsLabel = "Approval", modifier = Modifier.testTag("b"),
                                 )
                             }
                         }
@@ -155,26 +146,18 @@ class PolishMessageBoxTest {
             }
             waitForIdle()
             val target = requireNotNull(accent)
-            val worded =
-                onNode(
-                    hasTestTag(COMPOSER_CHIP_FACE_TAG) and hasAnyAncestor(hasTestTag("a")),
-                    useUnmergedTree = true,
-                ).captureToImage().toAwtImage()
-            val wordless =
-                onNode(
-                    hasTestTag(COMPOSER_CHIP_FACE_TAG) and hasAnyAncestor(hasTestTag("b")),
-                    useUnmergedTree = true,
-                ).captureToImage().toAwtImage()
+            val worded = onNode(
+                hasTestTag(COMPOSER_CHIP_FACE_TAG) and hasAnyAncestor(hasTestTag("a")),
+                useUnmergedTree = true,
+            ).captureToImage().toAwtImage()
+            val wordless = onNode(
+                hasTestTag(COMPOSER_CHIP_FACE_TAG) and hasAnyAncestor(hasTestTag("b")),
+                useUnmergedTree = true,
+            ).captureToImage().toAwtImage()
             val wordedHits = countMatching(worded, target, 12..31)
             val wordlessHits = countMatching(wordless, target)
-            assertTrue(
-                wordedHits >= 20,
-                "expected >= 20 accent pixels in columns 12..31 of worded shield, got $wordedHits",
-            )
-            assertTrue(
-                wordlessHits >= 20,
-                "expected >= 20 accent pixels in wordless shield, got $wordlessHits",
-            )
+            assertTrue(wordedHits >= 20, "expected >= 20 accent pixels in columns 12..31, got $wordedHits")
+            assertTrue(wordlessHits >= 20, "expected >= 20 accent pixels in wordless shield, got $wordlessHits")
         }
     }
 
