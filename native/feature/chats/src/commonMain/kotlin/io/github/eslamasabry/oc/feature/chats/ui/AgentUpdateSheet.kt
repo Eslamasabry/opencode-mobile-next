@@ -234,13 +234,41 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
 
 @Composable
 private fun NeededRows(shown: AgentUpdateSheetUi) {
-    val lastShown = remember { arrayOfNulls<List<AgentNeededRowUi>>(1) }
-    if (shown.needed.isNotEmpty()) lastShown[0] = shown.needed
+    // Every needed row seen stays listed, in offer order, so a part that leaves folds away over the kit's fold even
+    // while another stays; each keeps the need line it showed last.
+    val seen = remember { mutableListOf<Pair<AgentNeededRowUi, AgentNeedRule>>() }
+    keepSeen(seen, shown.needed, shown.neededWhy)
     val shownNow = shown.needed.mapTo(mutableSetOf()) { it.id }
-    val leaving = (lastShown[0] ?: emptyList()).filterNot { it.id in shownNow }
-    (shown.needed + leaving).forEach { row ->
-        key(row.id) { KitReveal(visible = row.id in shownNow) { NeededRow(row, shown.neededWhy) } }
+    seen.toList().forEach { (row, why) ->
+        key(row.id) { KitReveal(visible = row.id in shownNow) { NeededRow(row, why) } }
     }
+}
+
+/** Adds each new needed row next to its neighbour in [needed] and refreshes the rows still shown. */
+private fun keepSeen(
+    seen: MutableList<Pair<AgentNeededRowUi, AgentNeedRule>>,
+    needed: List<AgentNeededRowUi>,
+    why: AgentNeedRule,
+) {
+    needed.forEachIndexed { index, row ->
+        val at = seen.indexOfFirst { it.first.id == row.id }
+        if (at >= 0) {
+            seen[at] = row to why
+        } else {
+            val before = if (index > 0) seen.indexOfFirst { it.first.id == needed[index - 1].id } else -1
+            seen.add(if (before >= 0) before + 1 else nextSeen(seen, needed, index), row to why)
+        }
+    }
+}
+
+/** Where a new first row goes: before the first later row already seen, or at the end. */
+private fun nextSeen(
+    seen: List<Pair<AgentNeededRowUi, AgentNeedRule>>,
+    needed: List<AgentNeededRowUi>,
+    index: Int,
+): Int {
+    val later = needed.drop(index + 1).mapTo(mutableSetOf()) { it.id }
+    return seen.indexOfFirst { it.first.id in later }.takeIf { it >= 0 } ?: seen.size
 }
 
 /** A part the updates need: its name, versions, size and why it is needed, with no choice. */
@@ -261,7 +289,13 @@ private fun NeededRow(row: AgentNeededRowUi, why: AgentNeedRule) {
 /** The totals: what downloads (the Update choices and the shown Needed parts) and what Remove frees. */
 @Composable
 private fun Totals(sheet: AgentUpdateSheetUi) {
-    KitReveal(visible = sheet.updating > 0 || sheet.needed.isNotEmpty()) {
+    val downloading = sheet.updating > 0 || sheet.needed.isNotEmpty()
+    // While the total folds away it keeps the amount it showed: the new one would read "About 0 B".
+    val now = amount(sheet.downloadBytes, sheet.downloadKnown)
+    val kept = remember { arrayOfNulls<String>(1) }
+    if (downloading || kept[0] == null) kept[0] = now
+    val total = kept[0] ?: now
+    KitReveal(visible = downloading) {
         Column {
             KitText(
                 stringResource(Res.string.agentUpdatesTotalDownload),
@@ -271,7 +305,7 @@ private fun Totals(sheet: AgentUpdateSheetUi) {
             // Hold the rail width so LargeTitle's negative tracking + LRI isolate never wraps "About 610 MB"
             // to 2 lines.
             KitText(
-                amount(sheet.downloadBytes, sheet.downloadKnown),
+                total,
                 Modifier.fillMaxWidth(),
                 role = TypeRole.LargeTitle,
             )
