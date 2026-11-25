@@ -28,7 +28,17 @@ import kotlinx.coroutines.test.runTest
  */
 class DemoWorldTest {
     private val words =
-        DemoWords("Offline demo", "Make it friendlier.", "I'll change it.", "Done.", "Left as it is.", "Hello", "Welcome aboard!", "That's the demo.")
+        DemoWords(
+            "Offline demo",
+            "Make it friendlier.",
+            "I'll change it.",
+            "Done.",
+            "Left as it is.",
+            "Hello",
+            "Welcome aboard!",
+            "That's the demo.",
+            own = "Not in the demo.",
+        )
 
     private fun world(dispatcher: CoroutineDispatcher) =
         DemoWorld(
@@ -129,6 +139,7 @@ class DemoWorldTest {
         assertEquals(2, said.size)
         assertEquals("you: Which Excel formula adds up column B?", said.first())
         assertNotEquals("agent: I'll change it.", said.last())
+        assertEquals("agent: Not in the demo.", said.last())
     }
 
     @Test
