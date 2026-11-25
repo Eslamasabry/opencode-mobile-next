@@ -133,19 +133,27 @@ class FirstReplyAskTest {
         }
     }
 
-    @Test
-    fun `B-STAR-038 Yes shows Thanks with Star on GitHub and the four uses, No shows Sorry with Report a problem`() {
+    private class Branch(
+        val tapTag: String,
+        val nextStage: ReplyAskStage,
+        val pickText: String,
+        val expectedNote: String,
+        val expectedAction: String,
+        val checkAllUses: Boolean = false,
+    )
+
+    private fun runAskBranch(branch: Branch) {
         kitUiTest(WIDTH, HEIGHT) {
             var ask by mutableStateOf<ReplyAskUi?>(ReplyAskUi(turnId = "u1"))
             val base = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val actions =
                 object : ChatActions by base {
                     override fun replyAskYes() {
-                        ask = ReplyAskUi("u1", ReplyAskStage.Thanks, menu = true)
+                        ask = ReplyAskUi("u1", branch.nextStage, menu = true)
                     }
 
                     override fun replyAskNo() {
-                        ask = ReplyAskUi("u1", ReplyAskStage.Sorry, menu = true)
+                        ask = ReplyAskUi("u1", branch.nextStage, menu = true)
                     }
 
                     override fun replyAskUse(use: ReplyAskUse) {
@@ -158,33 +166,44 @@ class FirstReplyAskTest {
                 }
             setContent { Screen(ask, actions) }
             waitForIdle()
-
-            onNodeWithTag(REPLY_ASK_YES_TAG).performClick()
+            onNodeWithTag(branch.tapTag).performClick()
             waitForIdle()
             onNodeWithText("What do you use it for?").assertExists()
-            onNodeWithText("Everyday tasks").assertExists()
-            onNodeWithText("Writing code").assertExists()
-            onNodeWithText("Both").assertExists()
-            onNodeWithText("Just looking").assertExists()
-            onNodeWithText("Writing code").performClick()
+            if (branch.checkAllUses) {
+                for (use in listOf("Everyday tasks", "Writing code", "Both", "Just looking")) {
+                    onNodeWithText(use).assertExists()
+                }
+            }
+            onNodeWithText(branch.pickText).performClick()
             waitForIdle()
             onNodeWithTag(REPLY_ASK_AFTER_TAG).assertExists()
-            onNodeWithText("Thanks.").assertExists()
+            onNodeWithText(branch.expectedNote).assertExists()
             onNodeWithTag(REPLY_ASK_ACTION_TAG).assertExists()
-            onNodeWithText("Star on GitHub").assertExists()
-
-            ask = ReplyAskUi(turnId = "u1")
-            waitForIdle()
-            onNodeWithTag(REPLY_ASK_NO_TAG).performClick()
-            waitForIdle()
-            onNodeWithText("What do you use it for?").assertExists()
-            onNodeWithText("Everyday tasks").assertExists()
-            onNodeWithText("Everyday tasks").performClick()
-            waitForIdle()
-            onNodeWithTag(REPLY_ASK_AFTER_TAG).assertExists()
-            onNodeWithText("Sorry.").assertExists()
-            onNodeWithText("Report a problem").assertExists()
+            onNodeWithText(branch.expectedAction).assertExists()
         }
+    }
+
+    @Test
+    fun `B-STAR-038 Yes shows Thanks with Star on GitHub and the four uses, No shows Sorry with Report a problem`() {
+        runAskBranch(
+            Branch(
+                tapTag = REPLY_ASK_YES_TAG,
+                nextStage = ReplyAskStage.Thanks,
+                pickText = "Writing code",
+                expectedNote = "Thanks.",
+                expectedAction = "Star on GitHub",
+                checkAllUses = true,
+            ),
+        )
+        runAskBranch(
+            Branch(
+                tapTag = REPLY_ASK_NO_TAG,
+                nextStage = ReplyAskStage.Sorry,
+                pickText = "Everyday tasks",
+                expectedNote = "Sorry.",
+                expectedAction = "Report a problem",
+            ),
+        )
     }
 
     private companion object {
