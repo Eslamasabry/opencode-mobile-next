@@ -8,7 +8,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
@@ -55,7 +54,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededLabel
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNetworkUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNotRemoved
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReady
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesShortSpace
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTotalDownload
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTotalFrees
@@ -63,11 +61,9 @@ import io.github.eslamasabry.oc.ui.words.res.agentsRemoveAction
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBody
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUpdateWifi
-import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.m40UsageWifi
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReviewAction
 import org.jetbrains.compose.resources.stringResource
 
@@ -85,29 +81,15 @@ internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateAct
     val shown = if (sheet.visible) sheet else last[0] ?: sheet
     // After the answer, a removal that did not happen is told here with its reason, never left silent.
     val result = shown.refused.isNotEmpty()
-    // What is chosen does not fit: the button is off and says why right at it (pinned, never scrolled away); Keep or
-    // Remove choices that make it fit turn it on again. On 10110 it stayed on and a tap seemed to do nothing.
-    val noRoom =
-        shown.short?.let {
-            val needs = PhoneSizes.text(it.neededBytes)
-            KitEnabled.Disabled(stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes)))
-        }
+    val buttons = sheetButtons(shown, result, actions)
     KitSheet(
         visible = sheet.visible,
         onDismissRequest = if (result) actions::closeAgentUpdateResult else actions::agentUpdatesNotNow,
         title = stringResource(Res.string.agentUpdatesTitle),
         closeLabel = stringResource(Res.string.kitSheetClose),
-        primary =
-            if (result) KitAction(stringResource(Res.string.chatsHomeDone), actions::closeAgentUpdateResult)
-            else
-                KitAction(
-                    agentUpdatesButton(shown),
-                    actions::proceedAgentUpdates,
-                    enabled = noRoom ?: KitEnabled.Enabled,
-                    working = shown.working,
-                ),
-        secondary =
-            if (result) null else KitAction(stringResource(Res.string.appUpdateNotNow), actions::agentUpdatesNotNow),
+        primary = buttons.primary,
+        secondary = buttons.secondary,
+        tertiary = buttons.tertiary,
     ) {
         Column(Modifier.testTag("agent-updates-sheet")) {
             if (result) ResultBody(shown, actions) else QuestionBody(shown, actions)
@@ -211,18 +193,18 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
         return
     }
     val updating = row.choice == AgentUpdateChoice.Update
-    val offText = if (row.choice == AgentUpdateChoice.Remove) consequence(row) else stays(row.from)
+    val supporting = if (row.choice == AgentUpdateChoice.Remove) frees(row.installedBytes) else facts
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val minLines =
             kitSwitchSupportingLines(
-                texts = listOf(facts, offText),
+                texts = listOf(facts, supporting),
                 rowWidth = maxWidth,
                 supportingMaxLines = 3,
             )
         KitSwitchRow(
             title = KitBidi.auto(row.name),
             checked = updating,
-            supporting = if (updating) facts else offText,
+            supporting = supporting,
             supportingMaxLines = 3,
             supportingMinLines = minLines,
             onCheckedChange = {

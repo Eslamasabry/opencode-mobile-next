@@ -202,33 +202,39 @@ class AgentUpdateSheetRedrawRenders {
     private fun sheetState(
         offer: AgentUpdateOffer,
         waitForWifi: Boolean = true,
-        allOff: Boolean = false,
+        keepNames: Set<String> = emptySet(),
     ): ChatsUi {
         val scope = CoroutineScope(Job())
         val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
         if (!waitForWifi) model.chooseWifiOnly(false)
-        if (allOff) {
-            offer.items.filter { it.group == AgentUpdateGroup.Optional }.forEach {
-                model.choose(it.id, AgentUpdateChoice.Keep)
-            }
-        }
+        offer.items
+            .filter { it.group == AgentUpdateGroup.Optional && it.name in keepNames }
+            .forEach { model.choose(it.id, AgentUpdateChoice.Keep) }
         val home = mixed().copy(agentUpdates = model.current())
         scope.cancel()
         return home
     }
 
+    private fun shootMatrix(prefix: String, state: ChatsUi) {
+        shoot("$prefix-text100-dark", state, dark = true, fontScale = 1f)
+        shoot("$prefix-text100-light", state, dark = false, fontScale = 1f)
+        shoot("$prefix-text130-dark", state, dark = true, fontScale = 1.3f)
+        shoot("$prefix-text130-light", state, dark = false, fontScale = 1.3f)
+    }
+
     @Test
     fun `renders of the redrawn agents update sheet at 360 dp`() {
+        val allNames = setOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
         val five = sheetState(redrawFiveOffer())
         val fiveWifiOff = sheetState(redrawFiveOffer(), waitForWifi = false)
-        val fiveAllOff = sheetState(noLockedFiveOffer(), allOff = true)
+        val fiveOneOn = sheetState(noLockedFiveOffer(), keepNames = allNames - "Qwen Code")
+        val fiveAllOff = sheetState(noLockedFiveOffer(), keepNames = allNames)
         val one = sheetState(redrawOneOffer())
-        shoot("us-plus-five-agents-mobile-data-text100-dark", five, dark = true, fontScale = 1f)
-        shoot("us-plus-five-agents-mobile-data-text100-light", five, dark = false, fontScale = 1f)
-        shoot("us-plus-five-agents-mobile-data-text130-dark", five, dark = true, fontScale = 1.3f)
+        shootMatrix("us-plus-five-agents-mobile-data", five)
         shoot("us-plus-five-agents-mobile-data-wifi-off-text100-dark", fiveWifiOff, dark = true, fontScale = 1f)
-        shoot("us-plus-five-agents-all-off-text100-dark", fiveAllOff, dark = true, fontScale = 1f)
-        shoot("us-plus-one-agent-text100-dark", one, dark = true, fontScale = 1f)
+        shootMatrix("us-plus-five-agents-one-on", fiveOneOn)
+        shootMatrix("us-plus-five-agents-all-off", fiveAllOff)
+        shootMatrix("us-plus-one-agent", one)
     }
 
     @Test

@@ -78,6 +78,10 @@ public data class AgentUpdateSheetUi(
     val downloadBytes: Long = 0,
     /** False when a chosen part's size is not known: the total is then "at least". */
     val downloadKnown: Boolean = true,
+    /** Total bytes if every optional agent and needed part updates (for "Update all" when all are off). */
+    val allDownloadBytes: Long = 0,
+    val allDownloadKnown: Boolean = true,
+    val allShort: AgentUpdateShortSpace? = null,
     val freesBytes: Long = 0,
     val freesKnown: Boolean = true,
     val short: AgentUpdateShortSpace? = null,
@@ -176,6 +180,8 @@ public object AgentUpdateSheetRules {
         val removes = optional.filter { it.choice == AgentUpdateChoice.Remove }
         val downloads = updates.map { it.downloadBytes } + needed.map { it.downloadBytes }
         val download = downloads.sumOf { it ?: 0L }
+        val allDownloads = offer.items.map { it.downloadBytes }
+        val allDownload = allDownloads.sumOf { it ?: 0L }
         val free = offer.freeBytes
         return AgentUpdateSheetUi(
             visible = visible,
@@ -186,6 +192,9 @@ public object AgentUpdateSheetRules {
                 else AgentNeedRule.Always,
             downloadBytes = download,
             downloadKnown = downloads.all { it != null },
+            allDownloadBytes = allDownload,
+            allDownloadKnown = allDownloads.all { it != null },
+            allShort = if (free != null && allDownload > free) AgentUpdateShortSpace(allDownload, free) else null,
             freesBytes = removes.sumOf { it.installedBytes ?: 0L },
             freesKnown = removes.all { it.installedBytes != null },
             short = if (free != null && download > free) AgentUpdateShortSpace(download, free) else null,
@@ -252,23 +261,32 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         local.update { it.copy(wifiOnly = waitForWifi, failure = null) }
     }
 
-    /** The sheet's button: every removal is confirmed first, one by one; then the decision starts. */
-    public fun applyChoices() {
+    /** The sheet's button: confirms removals and starts chosen work, or turns all on when [updateAll] is set. */
+    public fun applyChoices(updateAll: Boolean = false) {
         val offer = offers.value ?: return
         val now = local.value
         if (now.working || choices == null) return
-        val asks =
-            AgentUpdateSheetRules.removals(offer, now.picked).map { id ->
-                val item = offer.items.first { it.id == id }
-                val facts = choices.removalFacts(id)
-                AgentRemovalAskUi(
-                    id = id,
-                    name = item.name,
-                    freesBytes = facts.freesBytes ?: item.installedBytes,
-                    keepsAccountsAndConversations = facts.keepsSignIn && facts.keepsConversations,
-                )
-            }
-        if (asks.isEmpty()) start() else local.update { it.copy(toConfirm = asks, failure = null) }
+        if (updateAll) {
+            val all =
+                offer.items
+                    .filter { it.group == AgentUpdateGroup.Optional }
+                    .associate { it.id to AgentUpdateChoice.Update }
+            local.update { it.copy(picked = all, toConfirm = emptyList(), failure = null) }
+            start()
+        } else {
+            val asks =
+                AgentUpdateSheetRules.removals(offer, now.picked).map { id ->
+                    val item = offer.items.first { it.id == id }
+                    val facts = choices.removalFacts(id)
+                    AgentRemovalAskUi(
+                        id = id,
+                        name = item.name,
+                        freesBytes = facts.freesBytes ?: item.installedBytes,
+                        keepsAccountsAndConversations = facts.keepsSignIn && facts.keepsConversations,
+                    )
+                }
+            if (asks.isEmpty()) start() else local.update { it.copy(toConfirm = asks, failure = null) }
+        }
     }
 
     /** The open removal is confirmed: the next one is asked, or, when none is left, the decision starts. */
@@ -351,8 +369,8 @@ public interface AgentUpdateActions {
     /** On mobile data: whether chosen updates wait for Wi-Fi (true by default) or download now. */
     public fun chooseAgentUpdateWifi(waitForWifi: Boolean) {}
 
-    /** The sheet's button ("Update 2 and remove 1"): asks before each removal, then starts the chosen work. */
-    public fun proceedAgentUpdates() {}
+    /** The sheet's button: confirms removals and starts chosen work, or turns all on when [updateAll] is set. */
+    public fun proceedAgentUpdates(updateAll: Boolean = false) {}
 
     /** The removal confirm's Remove. */
     public fun confirmAgentRemoval() {}

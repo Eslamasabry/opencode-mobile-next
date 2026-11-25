@@ -110,8 +110,8 @@ class AgentUpdateSheetRedrawTest {
                         model.chooseWifiOnly(waitForWifi)
                     }
 
-                    override fun proceedAgentUpdates() {
-                        model.applyChoices()
+                    override fun proceedAgentUpdates(updateAll: Boolean) {
+                        model.applyChoices(updateAll)
                     }
                 }
         }
@@ -383,7 +383,7 @@ class AgentUpdateSheetRedrawTest {
 
     @Test
     fun `B-UPD-023 with every agent off Update all with size is primary above Keep and Not now`() =
-        runSheet(noLockedFiveOffer()) {
+        runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
             onNodeWithText("Stays", substring = true, useUnmergedTree = true).assertDoesNotExist()
             val updateAll = onNodeWithText("Update all · ${PhoneSizes.text(660_000_000L)}")
@@ -404,7 +404,7 @@ class AgentUpdateSheetRedrawTest {
     @Test
     fun `B-UPD-024 tapping Update all when every agent is off turns all on and starts`() {
         val offered = RedrawOffered(noLockedFiveOffer())
-        runSheet(noLockedFiveOffer(), offered = offered) {
+        runSheet(noLockedFiveOffer(), offered = offered, motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
             onNodeWithText("Update all · ${PhoneSizes.text(660_000_000L)}").performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastChoices != null }
@@ -417,7 +417,7 @@ class AgentUpdateSheetRedrawTest {
     @Test
     fun `B-UPD-025 tapping Keep these versions when every agent is off keeps all`() {
         val offered = RedrawOffered(noLockedFiveOffer())
-        runSheet(noLockedFiveOffer(), offered = offered) {
+        runSheet(noLockedFiveOffer(), offered = offered, motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
             onNodeWithText("Keep these versions").performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastChoices != null }

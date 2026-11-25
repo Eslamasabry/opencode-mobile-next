@@ -1,37 +1,38 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.runtime.Composable
-import io.github.eslamasabry.oc.core.common.text.PhoneSizes
-import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
-import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateRowUi
-import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
-import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
+import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFailed
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNoSpace
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesShortSpace
-import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBusy
-import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnconfirmed
-import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnsupported
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAbout
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAtLeast
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonBoth
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonKeep
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonRemove
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonUpdate
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesDownloads
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonUpdateAll
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesDownloadsUnknown
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFailed
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFrees
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFreesUnknown
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesStays
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesStaysUnknown
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNoSpace
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesShortSpace
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesVersionNew
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesVersions
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBusy
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnconfirmed
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnsupported
+import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -46,6 +47,65 @@ internal fun agentUpdatesButton(sheet: AgentUpdateSheetUi): String =
         else -> stringResource(Res.string.agentUpdatesButtonKeep)
     }
 
+/** "Update all · 660 MB": primary button when every agent switch is off. */
+@Composable
+internal fun agentUpdatesUpdateAllButton(sheet: AgentUpdateSheetUi): String =
+    stringResource(Res.string.agentUpdatesButtonUpdateAll, PhoneSizes.text(sheet.allDownloadBytes))
+
+internal data class SheetButtons(
+    val primary: KitAction,
+    val secondary: KitAction?,
+    val tertiary: List<KitAction> = emptyList(),
+)
+
+/** The sheet's pinned actions: Update all + Keep + Not now when all switches are off, else Update/Remove + Not now. */
+@Composable
+internal fun sheetButtons(shown: AgentUpdateSheetUi, result: Boolean, actions: AgentUpdateActions): SheetButtons {
+    if (result) {
+        return SheetButtons(
+            primary = KitAction(stringResource(Res.string.chatsHomeDone), actions::closeAgentUpdateResult),
+            secondary = null,
+        )
+    }
+    val notNow = KitAction(stringResource(Res.string.appUpdateNotNow), actions::agentUpdatesNotNow)
+    val nothingChosen = shown.updating == 0 && shown.removing == 0
+    val short = if (nothingChosen) shown.allShort else shown.short
+    val noRoom =
+        short?.let {
+            val needs = PhoneSizes.text(it.neededBytes)
+            KitEnabled.Disabled(stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes)))
+        } ?: KitEnabled.Enabled
+    return if (nothingChosen) {
+        SheetButtons(
+            primary =
+                KitAction(
+                    agentUpdatesUpdateAllButton(shown),
+                    { actions.proceedAgentUpdates(updateAll = true) },
+                    enabled = noRoom,
+                    working = shown.working,
+                ),
+            secondary =
+                KitAction(
+                    stringResource(Res.string.agentUpdatesButtonKeep),
+                    { actions.proceedAgentUpdates() },
+                    working = shown.working,
+                ),
+            tertiary = listOf(notNow),
+        )
+    } else {
+        SheetButtons(
+            primary =
+                KitAction(
+                    agentUpdatesButton(shown),
+                    { actions.proceedAgentUpdates() },
+                    enabled = noRoom,
+                    working = shown.working,
+                ),
+            secondary = notNow,
+        )
+    }
+}
+
 /** "Version 0.16.1 → 0.17.2 · 330 MB", or "… · Download size not known" when the size is null. */
 @Composable
 internal fun versionAndSize(from: String?, to: String, downloadBytes: Long?): String {
@@ -53,30 +113,10 @@ internal fun versionAndSize(from: String?, to: String, downloadBytes: Long?): St
     return "${versions(from, to)} · $size"
 }
 
-/** What the chosen answer does: the download, the version it stays on, or the room it frees. */
-@Composable
-internal fun consequence(row: AgentUpdateRowUi): String =
-    when (row.choice) {
-        AgentUpdateChoice.Update -> downloads(row.downloadBytes)
-        AgentUpdateChoice.Keep -> stays(row.from)
-        AgentUpdateChoice.Remove -> frees(row.installedBytes)
-    }
-
-/** "Stays on 0.171.0", or the generic keep line when the current version is unknown. */
-@Composable
-internal fun stays(from: String?): String =
-    from?.let { stringResource(Res.string.agentUpdatesStays, KitBidi.ltr(it)) }
-        ?: stringResource(Res.string.agentUpdatesStaysUnknown)
-
 @Composable
 internal fun versions(from: String?, to: String): String =
     if (from != null) stringResource(Res.string.agentUpdatesVersions, KitBidi.ltr(from), KitBidi.ltr(to))
     else stringResource(Res.string.agentUpdatesVersionNew, KitBidi.ltr(to))
-
-@Composable
-internal fun downloads(bytes: Long?): String =
-    bytes?.let { stringResource(Res.string.agentUpdatesDownloads, PhoneSizes.text(it)) }
-        ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
 
 @Composable
 internal fun frees(bytes: Long?): String =
