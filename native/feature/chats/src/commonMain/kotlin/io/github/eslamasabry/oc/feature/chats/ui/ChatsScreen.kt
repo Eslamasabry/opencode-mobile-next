@@ -500,10 +500,11 @@ public fun ChatsScreen(
                         // on the content edge (the mark's edge), as the rows do, not indented under the words.
                         // When the server pill already says Not answering for this server, give the reason without
                         // repeating "Not answering".
+                        val connection = state.connection
                         val pillSaysNotAnswering =
                             shellBar &&
-                                state.connection?.state == HomeConnectionState.NotAnswering &&
-                                state.connection.server == source.name
+                                connection?.state == HomeConnectionState.NotAnswering &&
+                                connection.server == source.name
                         val shownName = KitBidi.auto(serverNameShown(source.name))
                         KitNotice(
                             message =
