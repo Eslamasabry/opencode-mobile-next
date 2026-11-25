@@ -3276,36 +3276,30 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         }
 
     /** Quietly retries opening a lost computer connection without flashing Loading or Connecting. */
-    private fun startAutoReopen(failure: Failure) {
+    private fun startAutoReopen(failure: Failure, attempt: Int = 0) {
         val opener = connectionOpener ?: return
         if (autoReopenJob?.isActive == true || !isAutoReopenFailure(failure) || !canAutoReopen) return
         autoReopenJob =
             registry.appScope.launch(registry.mainContext) {
-                var attempt = 0
-                var running = true
-                while (running) {
-                    val wait = AUTO_REOPEN_WAITS_MS.getOrElse(attempt++) { AUTO_REOPEN_EVERY_MS }
-                    mutableRetryAt.value = clock?.now()?.toEpochMilliseconds()?.plus(wait)
-                    delay(wait)
-                    mutableRetryAt.value = null
-                    opener.awaitChance(ref.profileId)
-                    val opened = if (canAutoReopen) opener.open(ref.profileId).takeIf { stopWatching != null } else null
-                    running =
-                        when (opened) {
-                            null -> false
-                            is Outcome.Ok -> {
-                                val graph = registry.graphFor(ref)
-                                if (graph == null || graph !== attached?.graph) bind(graph)
-                                false
-                            }
-                            is Outcome.Failed -> {
-                                val keep = isAutoReopenFailure(opened.failure)
-                                if (!keep) mutableLoad.value = ChatLoad.Failed(opened.failure)
-                                keep
-                            }
-                        }
+                val wait = AUTO_REOPEN_WAITS_MS.getOrElse(attempt) { AUTO_REOPEN_EVERY_MS }
+                mutableRetryAt.value = clock?.now()?.toEpochMilliseconds()?.plus(wait)
+                delay(wait)
+                mutableRetryAt.value = null
+                opener.awaitChance(ref.profileId)
+                val opened = if (canAutoReopen) opener.open(ref.profileId).takeIf { stopWatching != null } else null
+                when (opened) {
+                    null -> autoReopenJob = null
+                    is Outcome.Ok -> {
+                        val graph = registry.graphFor(ref)
+                        if (graph == null || graph !== attached?.graph) bind(graph)
+                        autoReopenJob = null
+                    }
+                    is Outcome.Failed -> {
+                        autoReopenJob = null
+                        if (isAutoReopenFailure(opened.failure)) startAutoReopen(opened.failure, attempt + 1)
+                        else mutableLoad.value = ChatLoad.Failed(opened.failure)
+                    }
                 }
-                autoReopenJob = null
             }
     }
 
