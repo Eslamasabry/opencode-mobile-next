@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
-import io.github.eslamasabry.oc.core.model.requests.PermissionRequest
+import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -39,7 +39,6 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
-import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedRequestAction
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.feature.chat.ui.ChatPane
 import io.github.eslamasabry.oc.feature.chat.ui.ReplyActions
@@ -77,16 +76,23 @@ class PolishRenders {
     private val noReqActions =
         object : ChatRequestActions {
             override fun shown(id: RequestId) = Unit
-            override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction) = Unit
-            override fun confirmAlwaysReviewed(card: RequestCardUi.Permission) = Unit
+            override fun allowOnce(id: RequestId) = Unit
+            override fun reject(id: RequestId) = Unit
+            override fun askAlwaysAllow(id: RequestId) = Unit
+            override fun confirmAlwaysAllow() = Unit
             override fun cancelAlwaysAllow() = Unit
             override fun keepAsking(id: RequestId) = Unit
-            override fun dismissQuestion(id: RequestId) = Unit
-            override fun sheetSetChoice(index: Int, option: String) = Unit
-            override fun sheetToggleChoice(index: Int, option: String) = Unit
-            override fun sheetEditCustom(index: Int, text: String) = Unit
-            override fun sheetSend() = Unit
-            override fun sheetClose() = Unit
+            override fun choose(id: RequestId, option: String) = Unit
+            override fun openOther(id: RequestId) = Unit
+            override fun editOther(id: RequestId, text: String) = Unit
+            override fun sendOther(id: RequestId) = Unit
+            override fun openSheet(id: RequestId) = Unit
+            override fun closeSheet(id: RequestId) = Unit
+            override fun chooseInSheet(id: RequestId, prompt: Int, label: String) = Unit
+            override fun editSheetOther(id: RequestId, prompt: Int, text: String) = Unit
+            override fun sendSheet(id: RequestId) = Unit
+            override fun undo(id: RequestId) = Unit
+            override fun retry(id: RequestId) = Unit
         }
 
     private fun out(n: String, scene: String, scale: String = "1.0", mode: String = "dark"): File =
@@ -96,7 +102,7 @@ class PolishRenders {
     fun `render 561 loading glass`() =
         kitUiTest(360, 780) {
             val scene = ChatScene()
-            val model = ComposerModel("anthropic", "claude-sonnet-4", "Claude Sonnet 4")
+            val model = ComposerModel("anthropic", "claude-sonnet-4", "Claude Sonnet 4", false)
             scene.composer = scene.composer.copy(models = ComposerModels(usesDefault = true, serverDefault = model))
             val state = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())
             mainClock.autoAdvance = false
@@ -161,9 +167,9 @@ class PolishRenders {
             val content = (1..24).joinToString("\n") { "val line$it = \"content of line $it\"" }
             val state =
                 ToolState(
-                    ToolStatus.Completed,
-                    JsonObject(mapOf("filePath" to JsonPrimitive(path), "content" to JsonPrimitive(content))),
-                    "ok",
+                    status = ToolStatus.Completed,
+                    input = JsonObject(mapOf("filePath" to JsonPrimitive(path), "content" to JsonPrimitive(content))),
+                    output = "ok",
                     startedAtMs = 1_000,
                     completedAtMs = 1_040,
                 )

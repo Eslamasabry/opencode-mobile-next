@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
-import io.github.eslamasabry.oc.core.model.requests.PermissionRequest
+import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -47,7 +47,6 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
-import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedRequestAction
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.feature.chat.ui.ChatPane
 import io.github.eslamasabry.oc.feature.chat.ui.ReplyActions
@@ -90,16 +89,23 @@ class PolishTranscriptChatTest {
     private val noReqActions =
         object : ChatRequestActions {
             override fun shown(id: RequestId) = Unit
-            override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction) = Unit
-            override fun confirmAlwaysReviewed(card: RequestCardUi.Permission) = Unit
+            override fun allowOnce(id: RequestId) = Unit
+            override fun reject(id: RequestId) = Unit
+            override fun askAlwaysAllow(id: RequestId) = Unit
+            override fun confirmAlwaysAllow() = Unit
             override fun cancelAlwaysAllow() = Unit
             override fun keepAsking(id: RequestId) = Unit
-            override fun dismissQuestion(id: RequestId) = Unit
-            override fun sheetSetChoice(index: Int, option: String) = Unit
-            override fun sheetToggleChoice(index: Int, option: String) = Unit
-            override fun sheetEditCustom(index: Int, text: String) = Unit
-            override fun sheetSend() = Unit
-            override fun sheetClose() = Unit
+            override fun choose(id: RequestId, option: String) = Unit
+            override fun openOther(id: RequestId) = Unit
+            override fun editOther(id: RequestId, text: String) = Unit
+            override fun sendOther(id: RequestId) = Unit
+            override fun openSheet(id: RequestId) = Unit
+            override fun closeSheet(id: RequestId) = Unit
+            override fun chooseInSheet(id: RequestId, prompt: Int, label: String) = Unit
+            override fun editSheetOther(id: RequestId, prompt: Int, text: String) = Unit
+            override fun sendSheet(id: RequestId) = Unit
+            override fun undo(id: RequestId) = Unit
+            override fun retry(id: RequestId) = Unit
         }
 
     private fun permission(id: String, perm: String, pattern: String): RequestCardUi.Permission {
@@ -129,7 +135,7 @@ class PolishTranscriptChatTest {
     fun `B-561 loading chat keeps Back and no raw Server default`() =
         kitUiTest(360, 780) {
             val scene = ChatScene()
-            val defaultModel = ComposerModel("anthropic", "claude-sonnet-4", "Claude Sonnet 4")
+            val defaultModel = ComposerModel("anthropic", "claude-sonnet-4", "Claude Sonnet 4", false)
             scene.composer =
                 scene.composer.copy(
                     models = ComposerModels(usesDefault = true, serverDefault = defaultModel),
