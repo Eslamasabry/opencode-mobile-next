@@ -32,6 +32,9 @@ public enum class Milestone(public val wire: String) {
     /** A message was sent, whatever came of it. */
     FirstPrompt("first_prompt"),
 
+    /** How the first message ended: a reply, a stop, an error, or a send the server refused. Kind words only. */
+    FirstPromptEnded("first_prompt_ended"),
+
     /** The first reply this install saw. */
     FirstReply("first_reply"),
     ;
@@ -76,16 +79,23 @@ public object JourneyCodec {
 /**
  * Turns the events the app already sends into milestones, so no call site needs to know about the funnel. It is fed
  * only what [TelemetryService] has already cleaned and sent (so only while `usage` is on), and sends each milestone
- * once: [emit] gets the milestone and its `after_range` word, [stage] the word of the furthest milestone reached
- * (the `journey_stage` user property, which splits every other report into "still new" and "has had a reply").
+ * once: [emit] gets the milestone, its `after_range` word and the kind words a step adds (`first_prompt_ended`: how
+ * the first message ended, never its text), [stage] the word of the furthest milestone reached (the `journey_stage`
+ * user property, which splits every other report into "still new" and "has had a reply").
  */
 public class JourneyMilestones(
     private val now: () -> Long,
     private val memory: JourneyMemory,
-    private val emit: (Milestone, String) -> Unit,
+    private val emit: (Milestone, String, Map<String, String>) -> Unit,
     private val stage: (String) -> Unit,
 ) {
     private val state = MutableStateFlow(JourneyCodec.decode(memory.load()) ?: JourneySaved(-1, emptySet()))
+
+    /**
+     * The first message was sent in this run and its turn has not ended yet. Kept in memory only and never saved, so
+     * an app killed in between sends no ending.
+     */
+    private var awaitingEnding = false
 
     /** The furthest milestone reached so far, or null before the first. */
     public fun furthest(): Milestone? = state.value.reached.maxByOrNull { it.ordinal }
@@ -113,10 +123,49 @@ public class JourneyMilestones(
                 ProductEvent.FirstReply -> Milestone.FirstReply
                 else -> null
             }
-        if (milestone != null) reach(milestone)
+        // A send whose first_prompt was already reached sends nothing more; a turn goes on to its ending.
+        if (milestone != null && !reach(milestone)) return
+        firstMessageEnding(event, props)
     }
 
-    public fun reach(milestone: Milestone) {
+    /**
+     * How the person's first message ended, in kind words only, once per install. A send the server refused ends at
+     * once (`send_failed` with its `fail_kind`); a send it took waits for the turn's `chat_turn` (`outcome` and
+     * `fail_kind`). Only the send that made `first_prompt` new gets here, so a second message, a repeat or an upgraded
+     * install sends nothing; the wait lasts this run only, so an app killed in between sends no ending.
+     */
+    private fun firstMessageEnding(event: ProductEvent, props: Map<String, String>) {
+        when (event) {
+            ProductEvent.SendResult ->
+                // The first send: refused ends here, taken waits for its turn.
+                if (props["result"] == "fail") {
+                    reach(
+                        Milestone.FirstPromptEnded,
+                        buildMap {
+                            put("outcome", "send_failed")
+                            props["fail_kind"]?.let { put("fail_kind", it) }
+                        },
+                    )
+                } else {
+                    awaitingEnding = true
+                }
+            ProductEvent.ChatTurn ->
+                if (awaitingEnding) {
+                    awaitingEnding = false
+                    reach(
+                        Milestone.FirstPromptEnded,
+                        buildMap {
+                            props["outcome"]?.let { put("outcome", it) }
+                            props["fail_kind"]?.let { put("fail_kind", it) }
+                        },
+                    )
+                }
+            else -> Unit
+        }
+    }
+
+    /** Reaches [milestone] for this install, sending it with [extra] when it is new; true only when it was new. */
+    public fun reach(milestone: Milestone, extra: Map<String, String> = emptyMap()): Boolean {
         val at = now()
         var fresh = false
         var after = 0L
@@ -132,10 +181,11 @@ public class JourneyMilestones(
                     JourneySaved(started, saved.reached + milestone)
                 }
             }
-        if (!fresh) return
+        if (!fresh) return false
         memory.save(JourneyCodec.encode(next))
-        emit(milestone, HealthRanges.sinceStartOf(after))
+        emit(milestone, HealthRanges.sinceStartOf(after), extra)
         // The stage is the furthest point, not the newest: reaching an earlier one late changes nothing.
         stage(next.reached.maxBy { it.ordinal }.wire)
+        return true
     }
 }

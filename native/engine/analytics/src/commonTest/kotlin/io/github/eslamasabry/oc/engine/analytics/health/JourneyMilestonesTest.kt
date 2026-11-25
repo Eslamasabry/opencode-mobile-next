@@ -88,7 +88,7 @@ class JourneyMilestonesTest {
         assertEquals(listOf("opened"), r.milestones().map { it.first })
         // A send that failed still counts as trying: the person reached the message box.
         r.service.track(ProductEvent.SendResult, mapOf("result" to "fail", "fail_kind" to "refused"))
-        assertEquals("first_prompt", r.milestones().last().first)
+        assertEquals(listOf("opened", "first_prompt", "first_prompt_ended"), r.milestones().map { it.first })
     }
 
     @Test
