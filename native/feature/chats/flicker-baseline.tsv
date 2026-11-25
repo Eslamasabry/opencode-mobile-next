@@ -6,7 +6,6 @@ AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a r
 AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a restart	BLINK	Connect a computer	17
 AgentUpdateChainTest.B-UPD-002 Not now leaves a Review action on Home across a restart	JUMP	#kit-screen-header	13
 AgentUpdateChainTest.B-UPD-005 the update button explains low space and enables when the reading fits	JUMP	Not now	17
-AgentsStartHomeRenders.renders of Home while the agents start	BLINK	+#	10
 AllConversationsScreenTest.B12 paging control yields to loading and returns after the read	ABA	Load more conversations	13
 AllConversationsScreenTest.B12 paging control yields to loading and returns after the read	BLINK	Load more conversations	13
 AllConversationsScreenTest.SCREENS-NAV-34 reaching the end keeps asking for older pages as each one arrives without a match	ABA	Load more conversations	13
@@ -68,4 +67,3 @@ NewConversationProjectTest.B07 project picker starts from the loaded project and
 NewConversationTapAuditTest.every control on the New conversation page answers its first tap in every state	FIRST	#kit-sheet	19
 NewConversationTapAuditTest.every control on the New conversation page answers its first tap in every state	JUMP	#kit-sheet	19
 OwnStopHomeRenders.renders of Home after the person's own stop	ABA	#kit-chip-chevron	10
-OwnStopHomeRenders.renders of Home after the person's own stop	BLINK	+#	10

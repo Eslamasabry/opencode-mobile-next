@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
 import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,21 +25,33 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.layout.SubcomposeMeasureScope
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLayoutMarks
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitOnFloatingPane
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.runtime.LaunchedEffect
@@ -51,7 +64,6 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import io.github.eslamasabry.oc.ui.kit.foundation.kitRestsWhole
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
@@ -135,25 +147,109 @@ public object FilterChipsRules {
         val end = spans.firstOrNull { (a, b) -> a < width && b > width }?.let { (a, _) -> minOf(fade, width - a) } ?: 0f
         return start to end
     }
+
+    /**
+     * Single-pass rest-whole layout plan: decides whether the chip line fits at least its first chip beside any
+     * needed "+N" cues, how many chips lie before/after the visible window, and the window's clipped inner width.
+     * When even the first chip cannot fit beside the cues, returns `whole = false` with zero cues so no "+N" mark
+     * is ever drawn for a frame.
+     */
+    internal fun planWhole(metrics: WholeMetrics, budget: WholeBudget): WholePlan {
+        val fullInner = budget.innerBudget(budget.totalWidth)
+        if (metrics.sizes.isEmpty()) return WholePlan(whole = true, before = 0, after = 0, clippedWidth = fullInner)
+        var before = 0
+        var after = 0
+        var clipped = fullInner
+        var whole = true
+        var done = false
+        var step = 0
+        while (!done && step < MAX_WHOLE_PASSES) {
+            val reserved = cueSpace(before, budget) + cueSpace(after, budget)
+            val availInner = budget.innerBudget((budget.totalWidth - reserved).coerceAtLeast(0))
+            if (metrics.sizes[0] + metrics.startPad > availInner + HALF_PX) {
+                whole = false
+                before = 0
+                after = 0
+                clipped = fullInner
+                done = true
+            } else {
+                val edge = wholeEnd(metrics.sizes, metrics.gap, metrics.startPad, metrics.scroll, availInner.toFloat())
+                clipped = edge.roundToInt().coerceIn(0, availInner)
+                val (gone, past) = countHidden(metrics, clipped)
+                done = gone == before && past == after
+                before = gone
+                after = past
+            }
+            step++
+        }
+        return WholePlan(whole = whole, before = before, after = after, clippedWidth = clipped)
+    }
+
+    private const val HALF_PX = 0.5f
+    private const val MAX_WHOLE_PASSES = 4
+
+    private fun cueSpace(count: Int, budget: WholeBudget): Int =
+        if (count > 0) budget.cueWidth(count) + budget.cueGap else 0
+
+    private fun countHidden(metrics: WholeMetrics, clipped: Int): Pair<Int, Int> {
+        var x = metrics.startPad - metrics.scroll
+        var gone = 0
+        var past = 0
+        for (w in metrics.sizes) {
+            if (x + w <= metrics.startPad + HALF_PX) gone++ else if (x + w > clipped + HALF_PX) past++
+            x += w + metrics.gap
+        }
+        return gone to past
+    }
 }
 
+/** Chip geometry for one pass of [FilterChipsRules.planWhole]. */
+internal class WholeMetrics(
+    val sizes: IntArray,
+    val gap: Float,
+    val startPad: Float,
+    val scroll: Float,
+)
+
+/** Available width and cue-chip sizing for one pass of [FilterChipsRules.planWhole]. */
+internal class WholeBudget(
+    val totalWidth: Int,
+    val cueGap: Int,
+    val innerBudget: (Int) -> Int,
+    val cueWidth: (Int) -> Int,
+)
+
+/** Result of [FilterChipsRules.planWhole]: computed in layout before anything is placed or drawn. */
+internal data class WholePlan(
+    val whole: Boolean,
+    val before: Int,
+    val after: Int,
+    val clippedWidth: Int,
+)
+
+private enum class WholeSlot { Line, Before, After }
+
 /** Where a chip line keeps its chips' widths and its resting gap, between laying the chips out and drawing the fade. */
-private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private val restWhole: Boolean = false) : Arrangement.Horizontal {
+private class ChipLine(
+    private val baseGap: Dp,
+    private val minPeek: Dp,
+    private val restWhole: Boolean = false,
+) : Arrangement.Horizontal {
     var gap by mutableStateOf(baseGap)
+
     /** The window's room from the first chip's start to the end edge, set while the line measures. */
     var roomPx = 0
     var sizes = IntArray(0)
     var gapPx = 0f
 
-    /** `restWhole`: chips lie past the window's end (the visible end was drawn in to the last whole chip). */
-    var more by mutableStateOf(false)
+    /** `restWhole`: true when at least the first chip fits beside any needed "+N" cues; false falls back to fades. */
+    var wholeActive: Boolean = restWhole
 
-    /** `restWhole`: chips scrolled off before the window's start and chips past its end (the cues' counts). */
-    var before by mutableStateOf(0)
+    /** Latest single-pass plan computed during [WholeFilterChips] layout. */
+    var lastPlan: WholePlan = WholePlan(whole = restWhole, before = 0, after = 0, clippedWidth = 0)
 
-    /** `restWhole`: not even the first chip fits beside the cues; the line then scrolls as a plain line (nothing else can hold it). */
-    var noRoom by mutableStateOf(false)
-    var after by mutableStateOf(0)
+    /** Hook invoked inside the chip box's measure pass to compute the clipped width and cue counts in one pass. */
+    var onMeasureWhole: ((innerPlaceableWidth: Int, hasBoundedWidth: Boolean, scrollPx: Float) -> Int)? = null
 
     /**
      * [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. Read by
@@ -250,120 +346,244 @@ public fun KitFilterChips(
     val endPad = restEnd + growEnd
     val wantWhole = restWhole && LocalLayoutDirection.current == LayoutDirection.Ltr
     val line = remember(wantWhole) { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp, wantWhole) }
-    val whole = wantWhole && !line.noRoom
-    if (whole) {
+    if (wantWhole) {
         val density = LocalDensity.current
         LaunchedEffect(scroll, line) {
             snapshotFlow { if (scroll.isScrollInProgress) null else scroll.value }.filterNotNull().collectLatest { at ->
-                delay(120)
-                val goal = FilterChipsRules.restStart(line.sizes, line.gapPx, with(density) { startPad.toPx() }, at.toFloat(), scroll.maxValue)
+                delay(REST_SNAP_DELAY_MS)
+                if (!line.wholeActive) return@collectLatest
+                val padPx = with(density) { startPad.toPx() }
+                val goal = FilterChipsRules.restStart(line.sizes, line.gapPx, padPx, at.toFloat(), scroll.maxValue)
                 if (goal != at) scroll.animateScrollTo(goal)
             }
         }
     }
     val scope = rememberCoroutineScope()
     val lineBox: @Composable (Modifier) -> Unit = { outer ->
-    Box(
-        outer.kitMaxWidth(CapRole.Reading)
-            .then(if (onPane) Modifier.padding(start = if (bleed) 0.dp else paneEdge, end = paneEdge) else Modifier)
-            .kitShadowRoom(room, start = growStart, end = growEnd)
-            .layout { measurable, constraints ->
-                line.roomPx = if (constraints.hasBoundedWidth) constraints.maxWidth - startPad.roundToPx() else 0
-                val placeable = measurable.measure(constraints)
-                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-            }
-            .clipToBounds()
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .drawWithContent {
-                drawContent()
-                if (whole) return@drawWithContent // cues, not fades, say there is more
-                if (scroll.maxValue <= 0 || scroll.maxValue == Int.MAX_VALUE) return@drawWithContent
-                val spans = FilterChipsRules.spans(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat())
-                val fade = FilterChipsRules.CHIP_FADE_DP.dp.toPx()
-                val (startFade, endFade) = FilterChipsRules.edgeFades(spans, size.width, fade)
-                val rtl = layoutDirection == LayoutDirection.Rtl
-                val left = if (rtl) endFade else startFade
-                val right = if (rtl) startFade else endFade
-                // The third of a full fade nearest the edge is always clear, even over a short piece.
-                val clear = fade * FilterChipsRules.CLEAR_PART
-                if (left > 0f)
-                    drawRect(
-                        edgeMask(0f, left, clear, clearAtStart = true),
-                        Offset.Zero,
-                        Size(left, size.height),
-                        blendMode = BlendMode.DstIn,
-                    )
-                if (right > 0f)
-                    drawRect(
-                        edgeMask(size.width - right, size.width, clear, clearAtStart = false),
-                        Offset(size.width - right, 0f),
-                        Size(right, size.height),
-                        blendMode = BlendMode.DstIn,
-                    )
-            }
-            // Inside the clip and the fade: a line that rests whole is cut to the end of its last whole chip, so the clip,
-            // the fade and the guard all see that edge (a chip past it is simply not shown).
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-                var width = placeable.width
-                if (whole && constraints.hasBoundedWidth) {
-                    val edge = FilterChipsRules.wholeEnd(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat(), width.toFloat())
-                    line.more = edge < width.toFloat() - .5f
-                    if (line.sizes.isNotEmpty() && line.sizes[0] + startPad.toPx() > width + .5f) line.noRoom = true
-                    width = edge.roundToInt().coerceIn(0, width)
-                    var x = startPad.toPx() - scroll.value
-                    var gone = 0
-                    var past = 0
-                    for (w in line.sizes) {
-                        if (x + w <= startPad.toPx() + .5f) gone++ else if (x + w > width + .5f) past++
-                        x += w + line.gapPx
-                    }
-                    if (gone != line.before) line.before = gone
-                    if (past != line.after) line.after = past
+        Box(
+            outer.kitMaxWidth(CapRole.Reading)
+                .then(if (onPane) Modifier.padding(start = if (bleed) 0.dp else paneEdge, end = paneEdge) else Modifier)
+                .kitShadowRoom(room, start = growStart, end = growEnd)
+                .layout { measurable, constraints ->
+                    line.roomPx = if (constraints.hasBoundedWidth) constraints.maxWidth - startPad.roundToPx() else 0
+                    val placeable = measurable.measure(constraints)
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 }
-                layout(width, placeable.height) { placeable.place(0, 0) }
-            }
-            .testTag("kit-filter-chips"),
-    ) {
-        Row(
-            Modifier.horizontalScroll(scroll).kitScrollCue("edge fade").then(if (whole) Modifier.kitRestsWhole("filter chips") else Modifier)
-                .padding(start = startPad, end = endPad, top = room, bottom = room)
-                // Inside the padding, in the same pass that lays the chips out: the room kept after the last chip.
+                .clipToBounds()
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    if (line.wholeActive) return@drawWithContent // cues, not fades, say there is more
+                    if (scroll.maxValue <= 0 || scroll.maxValue == Int.MAX_VALUE) return@drawWithContent
+                    val spans = FilterChipsRules.spans(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat())
+                    val fade = FilterChipsRules.CHIP_FADE_DP.dp.toPx()
+                    val (startFade, endFade) = FilterChipsRules.edgeFades(spans, size.width, fade)
+                    val rtl = layoutDirection == LayoutDirection.Rtl
+                    val left = if (rtl) endFade else startFade
+                    val right = if (rtl) startFade else endFade
+                    // The third of a full fade nearest the edge is always clear, even over a short piece.
+                    val clear = fade * FilterChipsRules.CLEAR_PART
+                    if (left > 0f) {
+                        drawRect(
+                            edgeMask(0f, left, clear, clearAtStart = true),
+                            Offset.Zero,
+                            Size(left, size.height),
+                            blendMode = BlendMode.DstIn,
+                        )
+                    }
+                    if (right > 0f) {
+                        drawRect(
+                            edgeMask(size.width - right, size.width, clear, clearAtStart = false),
+                            Offset(size.width - right, 0f),
+                            Size(right, size.height),
+                            blendMode = BlendMode.DstIn,
+                        )
+                    }
+                }
+                // Inside the clip and the fade: a line that rests whole is cut to the end of its last whole chip in the
+                // same measure pass, so the clip, the fade, the guard and any "+N" cue agree on frame 0.
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)
-                    layout(placeable.width + line.tail(), placeable.height) { placeable.place(0, 0) }
-                },
-            horizontalArrangement = line,
-            verticalAlignment = Alignment.CenterVertically,
-            content = chips,
-        )
+                    val hook = line.onMeasureWhole
+                    val width =
+                        if (wantWhole && hook != null) {
+                            hook(placeable.width, constraints.hasBoundedWidth, scroll.value.toFloat())
+                        } else {
+                            placeable.width
+                        }
+                    layout(width, placeable.height) { placeable.place(0, 0) }
+                }
+                .testTag("kit-filter-chips"),
+        ) {
+            Row(
+                Modifier.horizontalScroll(scroll)
+                    .kitScrollCue("edge fade")
+                    .semantics { if (line.wholeActive) this[KitLayoutMarks.RestsWhole] = "filter chips" }
+                    .padding(start = startPad, end = endPad, top = room, bottom = room)
+                    // Inside the padding, in the same pass that lays the chips out: the room kept after the last chip.
+                    .layout { measurable, constraints ->
+                        val placeable = measurable.measure(constraints)
+                        layout(placeable.width + line.tail(), placeable.height) { placeable.place(0, 0) }
+                    },
+                horizontalArrangement = line,
+                verticalAlignment = Alignment.CenterVertically,
+                content = chips,
+            )
+        }
     }
-    }
-    if (!whole) {
+    if (!wantWhole) {
         lineBox(modifier)
     } else {
-        // Chips past either edge are never cut: a chip says how many lie beyond ("+1") and one tap brings them in.
-        Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            if (line.before > 0) {
-                KitChip(
-                    "+${line.before}", kind = KitChipKind.Action, spoken = stringResource(Res.string.kitChipsFirst),
-                    onClick = { scope.launch { scroll.animateScrollTo(0) } },
-                )
+        val wholeConfig =
+            WholeChipsConfig(
+                line = line,
+                scroll = scroll,
+                insets =
+                    WholeInsets(
+                        startPad = startPad,
+                        panePad = if (onPane) (if (bleed) 0.dp else paneEdge) + paneEdge else 0.dp,
+                        shadowExtra = growStart + growEnd,
+                    ),
+                onFirst = { scope.launch { scroll.animateScrollTo(0) } },
+                onMore = { hidden ->
+                    scope.launch {
+                        val first = (line.sizes.size - hidden).coerceAtLeast(0)
+                        var at = 0f
+                        for (i in 0 until first) at += line.sizes[i] + line.gapPx
+                        scroll.animateScrollTo(at.roundToInt().coerceIn(0, scroll.maxValue))
+                    }
+                },
+            )
+        WholeFilterChips(modifier = modifier, config = wholeConfig, lineBox = lineBox)
+    }
+}
+
+private const val REST_SNAP_DELAY_MS = 120L
+
+private class WholeInsets(val startPad: Dp, val panePad: Dp, val shadowExtra: Dp)
+
+private class WholeChipsConfig(
+    val line: ChipLine,
+    val scroll: ScrollState,
+    val insets: WholeInsets,
+    val onFirst: () -> Unit,
+    val onMore: (Int) -> Unit,
+)
+
+@Composable
+private fun WholeFilterChips(
+    modifier: Modifier,
+    config: WholeChipsConfig,
+    lineBox: @Composable (Modifier) -> Unit,
+) {
+    val tokens = LocalKitTokens.current
+    val track = LocalKitStyle.current.spec.tokens.track
+    val baseStyle = LocalKitTypography.current.style(TypeRole.Secondary)
+    val cueStyle =
+        baseStyle.copy(
+            fontWeight = if (track) FontWeight.SemiBold else baseStyle.fontWeight,
+            fontFeatureSettings = "tnum",
+        )
+    val measurer = rememberTextMeasurer()
+    val chipHPad = if (track) Space.S4.dp else Space.S3.dp
+    val firstSpoken = stringResource(Res.string.kitChipsFirst)
+    val moreSpoken = stringResource(Res.string.kitChipsMore)
+
+    // Chips past either edge are never cut: measure first and decide "+N" cues in the same pass before placing.
+    SubcomposeLayout(modifier) { constraints ->
+        val scrollNow = config.scroll.value
+        val gapPx = Space.S2.dp.roundToPx()
+        val minTargetPx = tokens.minTarget.dp.roundToPx()
+        val chipHPadPx = chipHPad.roundToPx()
+        val cueWidth: (Int) -> Int = { count ->
+            val textW = measurer.measure("+$count", cueStyle, maxLines = 1).size.width
+            maxOf(minTargetPx, textW + chipHPadPx * 2)
+        }
+        config.line.onMeasureWhole = buildWholeHook(config, constraints, gapPx, cueWidth)
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val linePlaceable = subcompose(WholeSlot.Line) { lineBox(Modifier) }.single().measure(loose)
+        val plan = config.line.lastPlan.also { check(scrollNow >= 0) }
+        val beforeCue =
+            measureWholeCue(WholeSlot.Before, if (plan.whole) plan.before else 0, firstSpoken, loose) {
+                config.onFirst()
             }
-            lineBox(Modifier.weight(1f, fill = false))
-            if (line.after > 0) {
-                KitChip(
-                    "+${line.after}", kind = KitChipKind.Action, spoken = stringResource(Res.string.kitChipsMore),
-                    onClick = {
-                        scope.launch {
-                            val first = line.sizes.size - line.after
-                            var at = 0f
-                            for (i in 0 until first) at += line.sizes[i] + line.gapPx
-                            scroll.animateScrollTo(at.roundToInt().coerceIn(0, scroll.maxValue))
-                        }
-                    },
-                )
+        val afterCue =
+            measureWholeCue(WholeSlot.After, if (plan.whole) plan.after else 0, moreSpoken, loose) {
+                config.onMore(plan.after)
             }
+        placeWholeRow(constraints, gapPx, beforeCue, linePlaceable, afterCue)
+    }
+}
+
+private fun SubcomposeMeasureScope.buildWholeHook(
+    config: WholeChipsConfig,
+    constraints: Constraints,
+    gapPx: Int,
+    cueWidth: (Int) -> Int,
+): (Int, Boolean, Float) -> Int {
+    val totalOuterW = if (constraints.hasBoundedWidth) constraints.maxWidth else Int.MAX_VALUE
+    val panePadPx = config.insets.panePad.roundToPx()
+    val shadowExtraPx = config.insets.shadowExtra.roundToPx().coerceAtLeast(0)
+    val capPx = CapRole.Reading.capDp?.dp?.roundToPx() ?: Int.MAX_VALUE
+    val startPadPx = config.insets.startPad.toPx()
+    return { innerPlaceableW, hasBound, scrollPx ->
+        val plan =
+            if (!hasBound) {
+                WholePlan(whole = true, before = 0, after = 0, clippedWidth = innerPlaceableW)
+            } else {
+                val budget: (Int) -> Int = { outerW ->
+                    val innerMax = (minOf(outerW, capPx) - panePadPx + shadowExtraPx).coerceAtLeast(0)
+                    minOf(innerPlaceableW, innerMax)
+                }
+                val metrics = WholeMetrics(config.line.sizes, config.line.gapPx, startPadPx, scrollPx)
+                val wholeBudget = WholeBudget(totalOuterW, gapPx, budget, cueWidth)
+                FilterChipsRules.planWhole(metrics, wholeBudget)
+            }
+        config.line.lastPlan = plan
+        config.line.wholeActive = plan.whole
+        plan.clippedWidth
+    }
+}
+
+private fun SubcomposeMeasureScope.measureWholeCue(
+    slot: WholeSlot,
+    count: Int,
+    spoken: String,
+    loose: Constraints,
+    onClick: () -> Unit,
+): Placeable? =
+    if (count > 0) {
+        subcompose(slot) {
+            KitChip("+$count", kind = KitChipKind.Action, spoken = spoken, onClick = onClick)
+        }.single().measure(loose)
+    } else {
+        null
+    }
+
+private fun SubcomposeMeasureScope.placeWholeRow(
+    constraints: Constraints,
+    gapPx: Int,
+    before: Placeable?,
+    line: Placeable,
+    after: Placeable?,
+): MeasureResult {
+    val height = maxOf(constraints.minHeight, line.height, before?.height ?: 0, after?.height ?: 0)
+    val contentW =
+        (before?.let { it.width + gapPx } ?: 0) +
+            line.width +
+            (after?.let { gapPx + it.width } ?: 0)
+    val width = contentW.coerceIn(constraints.minWidth, constraints.maxWidth)
+    return layout(width, height) {
+        var x = 0
+        before?.let {
+            it.placeRelative(x, (height - it.height) / 2)
+            x += it.width + gapPx
+        }
+        line.placeRelative(x, (height - line.height) / 2)
+        x += line.width
+        after?.let {
+            x += gapPx
+            it.placeRelative(x, (height - it.height) / 2)
         }
     }
 }
