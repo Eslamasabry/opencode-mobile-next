@@ -22,7 +22,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -317,10 +323,14 @@ class ChatFloatingEdgesTest {
     fun `B-CHAT-EDGE-014 the jump row is announced as one button named exactly Jump to latest`() =
         run(Scene()) {
             scrollAway()
-            // The row's own node merges its tappable and its label: what a screen reader meets.
+            // The row's own node merges its tappable and its label: what a screen reader meets, one control.
             val node = onNodeWithTag("jump-to-latest").fetchSemanticsNode()
-            assertEquals(listOf("Jump to latest"), node.config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription])
-            assertEquals(androidx.compose.ui.semantics.Role.Button, node.config[androidx.compose.ui.semantics.SemanticsProperties.Role])
+            val words = SemanticsProperties.ContentDescription
+            assertEquals(listOf("Jump to latest"), node.config[words])
+            val taps = SemanticsActions.OnClick in node.config
+            assertEquals(Role.Button, node.config.getOrNull(SemanticsProperties.Role), "the row takes a tap: $taps")
+            assertTrue(taps, "the row announces no tap")
+            onAllNodesWithContentDescription("Jump to latest").assertCountEquals(1)
         }
 
     @Test
