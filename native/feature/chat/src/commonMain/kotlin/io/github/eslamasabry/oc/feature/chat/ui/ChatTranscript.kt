@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyBlock
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
@@ -282,6 +283,7 @@ internal class ReplyActions(
     /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
     val onOpenChanges: (() -> Unit)? = null,
     val answered: () -> List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptyList() },
+    val refused: () -> Set<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptySet() },
     val modelGoneLabel: ((model: String, provider: String) -> String)? = null,
 )
 
@@ -1513,11 +1515,13 @@ private fun ChatRow(
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
                         val goneKey = goneModelKey(row)
-                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
-                        // B-523: a known gone model names the model and offers Use/Choose; omit "send a message to
-                        // carry on" so the card does not contradict the primary button.
-                        val modelGoneKnown = modelGone != null && setUp == null && limit == null
-                        if (signInAgainEarly == null && (stillWorking || !modelGoneKnown))
+                        val block = ReplyBlock.of(reason)
+                        val modelGone = modelGoneWords(row, kind, block, goneKey, reply)
+                        // B-523: a known gone model or free daily limit already states the block; omit "send a
+                        // message to carry on" so the card does not contradict the primary action.
+                        val omitCarryOn =
+                            (modelGone != null || block == ReplyBlock.FreeDailyLimit) && setUp == null && limit == null
+                        if (signInAgainEarly == null && (stillWorking || !omitCarryOn))
                             KitQuietLine(
                                 stringResource(
                                     if (stillWorking) Res.string.liveFailedStillWorking
@@ -1611,13 +1615,15 @@ private fun ChatRow(
                                 val suggestion =
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
-                                            kind == ReplyFailureKind.Model
+                                            kind == ReplyFailureKind.Model ||
+                                            block == ReplyBlock.CountryRefusal
                                     ) {
                                         ErrorRecovery.suggestedModel(reason, reply.models)
                                             ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
                                                 goneKey,
                                                 reply.answered(),
                                                 reply.models,
+                                                reply.refused(),
                                             )
                                     } else null
                                 val showSignIn =
@@ -1824,9 +1830,11 @@ private fun goneModelKey(row: FooterRow): io.github.eslamasabry.oc.feature.chat.
 private fun modelGoneWords(
     row: FooterRow,
     kind: ReplyFailureKind,
+    block: ReplyBlock?,
     goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
     reply: ReplyActions?,
 ): String? {
+    if (block == ReplyBlock.FreeDailyLimit || block == ReplyBlock.Limit) return null
     val format = reply?.modelGoneLabel
     val isModelError = row.errorKind == MessageErrorKind.ModelNotFound || kind == ReplyFailureKind.Model
     return if (format == null || goneKey == null || !isModelError) null

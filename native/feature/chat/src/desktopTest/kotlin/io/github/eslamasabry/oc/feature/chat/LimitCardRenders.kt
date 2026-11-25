@@ -103,23 +103,19 @@ class LimitCardRenders {
         }
     }
 
-    @Test
-    fun `limit card renders`() {
-        if (out == null) return
-        val limitRows =
-            listOf(
-                prompt("u1", "go"),
-                FooterRow(
-                    "footer:u1",
-                    "u1",
-                    failed = true,
-                    reason = FREE,
-                    createdMs = 200L,
-                    providerId = "opencode",
-                    modelId = "big-pickle",
-                ),
-            )
-        val limitChoices =
+    private fun limitFixture(): Pair<List<TranscriptRow>, List<ComposerModel>> =
+        listOf(
+            prompt("u1", "go"),
+            FooterRow(
+                "footer:u1",
+                "u1",
+                failed = true,
+                reason = FREE,
+                createdMs = 200L,
+                providerId = "opencode",
+                modelId = "big-pickle",
+            ),
+        ) to
             listOf(
                 ComposerModel(
                     "opencode",
@@ -130,32 +126,32 @@ class LimitCardRenders {
                     enabled = true,
                 ),
             )
-        val countryRows =
-            listOf(
-                prompt("u1", "first"),
-                FooterRow(
-                    "footer:u1",
-                    "u1",
-                    failed = true,
-                    reason = COUNTRY,
-                    errorKind = MessageErrorKind.ProviderAuth,
-                    createdMs = 100L,
-                    providerId = "opencode",
-                    modelId = "beam-free",
-                ),
-                prompt("u2", "second"),
-                FooterRow(
-                    "footer:u2",
-                    "u2",
-                    failed = true,
-                    reason = COUNTRY,
-                    errorKind = MessageErrorKind.ProviderAuth,
-                    createdMs = 200L,
-                    providerId = "opencode",
-                    modelId = "muse-spark-1.3-contributor-free",
-                ),
-            )
-        val countryChoices =
+
+    private fun countryFixture(): Pair<List<TranscriptRow>, List<ComposerModel>> =
+        listOf(
+            prompt("u1", "first"),
+            FooterRow(
+                "footer:u1",
+                "u1",
+                failed = true,
+                reason = COUNTRY,
+                errorKind = MessageErrorKind.ProviderAuth,
+                createdMs = 100L,
+                providerId = "opencode",
+                modelId = "beam-free",
+            ),
+            prompt("u2", "second"),
+            FooterRow(
+                "footer:u2",
+                "u2",
+                failed = true,
+                reason = COUNTRY,
+                errorKind = MessageErrorKind.ProviderAuth,
+                createdMs = 200L,
+                providerId = "opencode",
+                modelId = "muse-spark-1.3-contributor-free",
+            ),
+        ) to
             listOf(
                 ComposerModel(
                     "opencode",
@@ -174,6 +170,12 @@ class LimitCardRenders {
                     enabled = true,
                 ),
             )
+
+    @Test
+    fun `limit card renders`() {
+        if (out == null) return
+        val (limitRows, limitChoices) = limitFixture()
+        val (countryRows, countryChoices) = countryFixture()
         shoot(limitRows, limitChoices, "limit-text1.0", 1.0f)
         shoot(limitRows, limitChoices, "limit-text1.3", 1.3f)
         shoot(countryRows, countryChoices, "country-text1.0", 1.0f)
