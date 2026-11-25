@@ -125,6 +125,7 @@ import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFile
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFileStatus
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffModel
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffRow
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffOptions
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
@@ -893,7 +894,6 @@ private fun Listing(file: DiffFile, onComment: ((String) -> Unit)?) {
     }
     KitDiffView(
         file,
-        maxLines = MAX_DIFF_LINES,
         hunkLabel = { oldStart, oldEnd, newStart, newEnd ->
             // The new side, or the old side when the hunk only removes lines
             // (kit_diff_rows.dart:67-76).
@@ -902,9 +902,12 @@ private fun Listing(file: DiffFile, onComment: ((String) -> Unit)?) {
             linesWord.replace("%1\$s", from.toString()).replace("%2\$s", to.toString())
         },
         gapLabel = { hidden -> folds[hidden] ?: "… $hidden" },
+        options = KitDiffOptions(
+            maxLines = MAX_DIFF_LINES,
+            onComment = onComment,
+            showName = false,
+        ),
         modifier = Modifier.fillMaxWidth().testTag("review-diff"),
-        onComment = onComment,
-        showName = false,
     )
     if (rows.cut) {
         Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
