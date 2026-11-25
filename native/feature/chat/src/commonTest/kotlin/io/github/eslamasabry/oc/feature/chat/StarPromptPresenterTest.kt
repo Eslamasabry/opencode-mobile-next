@@ -1,5 +1,20 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.model.PendingQuestion
+import io.github.eslamasabry.oc.core.model.PermissionReply
+import io.github.eslamasabry.oc.core.model.PermissionRequest
+import io.github.eslamasabry.oc.core.testing.FakeGatewayEvents
+import io.github.eslamasabry.oc.core.testing.TestClock
+import io.github.eslamasabry.oc.core.testing.TestDispatchers
+import io.github.eslamasabry.oc.core.testing.TestPacer
+import io.github.eslamasabry.oc.engine.requests.RequestsEngine
+import io.github.eslamasabry.oc.engine.requests.RequestsPort
 import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptAnswer
 import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptRules
 import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptState
@@ -10,19 +25,27 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyAskStage
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyAskUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestPlace
 import io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt
 import io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer
 import io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse
 import io.github.eslamasabry.oc.feature.chat.starprompt.StarPromptEvent
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -96,7 +119,7 @@ class StarPromptPresenterTest {
         override fun openOwnLink(url: String): Boolean = true.also { ownLinks += url }
     }
 
-    private val world = FakeChatWorld()
+    private var world: FakeChatWorld = FakeChatWorld()
     private val star = MemoryStar()
     private val outside = Outside()
     private val nav = RecordingNavigator()
@@ -308,5 +331,131 @@ class StarPromptPresenterTest {
         assertNull(ui.value.replyAsk, "a new turn takes the ask down")
         ended(1, 2)
         assertNull(ui.value.replyAsk, "ask never returns")
+    }
+
+    private class FakeRequestsPort : RequestsPort {
+        override val events = FakeGatewayEvents()
+        override val capabilities = MutableStateFlow(ServerCapabilities())
+        var permissions: List<PermissionRequest> = emptyList()
+
+        override suspend fun awaitActionTransport(): Outcome<Unit> = Unit.ok()
+
+        override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
+            permissions.toImmutableList().ok()
+
+        override suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> =
+            persistentListOf<PendingQuestion>().ok()
+
+        override suspend fun replyPermission(
+            session: SessionId,
+            request: RequestId,
+            reply: PermissionReply,
+            note: String?,
+        ): Outcome<Unit> = Unit.ok()
+
+        override suspend fun answerQuestion(
+            session: SessionId,
+            request: RequestId,
+            answers: ImmutableList<ImmutableList<String>>,
+        ): Outcome<Unit> = Unit.ok()
+
+        override suspend fun rejectQuestion(session: SessionId, request: RequestId): Outcome<Unit> = Unit.ok()
+    }
+
+    private class RequestWorld(model: ChatRequestsModel) : FakeChatWorld() {
+        override val requests: StateFlow<ChatRequestsModel?> = MutableStateFlow(model)
+    }
+
+    private fun permission(id: String): PermissionRequest =
+        PermissionRequest(
+            RequestId(id),
+            Ref.sessionId,
+            "edit",
+            persistentListOf("a.txt"),
+            JsonObject(emptyMap()),
+            persistentListOf("*"),
+            null,
+            true,
+            null,
+        )
+
+    private fun TestScope.worldWithWaitingCard(id: String): Pair<FakeRequestsPort, ChatRequestsModel> {
+        val port = FakeRequestsPort()
+        val engine =
+            RequestsEngine(
+                port,
+                backgroundScope,
+                TestDispatchers(StandardTestDispatcher(testScheduler)),
+                TestClock(),
+                TestPacer(),
+            )
+        val model =
+            ChatRequestsModel(
+                engine,
+                Ref.sessionId,
+                port.capabilities,
+                MutableStateFlow(RequestPlace("p", "/root/p")),
+                backgroundScope,
+            )
+        runCurrent()
+        val perm = permission(id)
+        port.permissions = listOf(perm)
+        port.events.emit(GatewayEvent.PermissionAsked(perm))
+        runCurrent()
+        world = RequestWorld(model)
+        return port to model
+    }
+
+    @Test
+    fun `B-STAR-039 a waiting request card does not burn the ask unseen and shows once when cleared`() = runTest {
+        val (port, model) = worldWithWaitingCard("perm1")
+        assertTrue(model.state.value.card != null, "request card is waiting")
+        val (_, ui) = chat()
+        running(asking = 1)
+        ended(1)
+        assertNull(ui.value.replyAsk, "no ask while a request card is waiting")
+        assertFalse(star.state.shown, "a blocked first reply must not mark the ask as shown unseen")
+        assertEquals(emptyList(), star.events, "Shown is not reported while unseen")
+
+        port.permissions = emptyList()
+        port.events.emit(GatewayEvent.PermissionSettled(Ref.sessionId, RequestId("perm1")))
+        runCurrent()
+        assertNull(model.state.value.card, "request card has cleared")
+        assertEquals(ReplyAskUi(turnId = "u1", stage = ReplyAskStage.Ask, menu = false), ui.value.replyAsk)
+        assertTrue(star.state.shown, "ask is marked shown once it actually shows")
+        assertEquals(listOf(StarPromptEvent.Shown), star.events)
+
+        running(1, asking = 2)
+        ended(1, 2)
+        assertNull(ui.value.replyAsk, "never shows a second time")
+        assertEquals(listOf(StarPromptEvent.Shown), star.events)
+    }
+
+    @Test
+    fun `B-STAR-040 a waiting card that stays past the first reply lets the next good reply ask once`() = runTest {
+        val (port, model) = worldWithWaitingCard("perm2")
+        val (_, ui) = chat()
+        running(asking = 1)
+        ended(1)
+        assertNull(ui.value.replyAsk)
+        assertFalse(star.state.shown, "must not be used up unseen")
+
+        running(1, asking = 2)
+        port.permissions = emptyList()
+        port.events.emit(GatewayEvent.PermissionSettled(Ref.sessionId, RequestId("perm2")))
+        runCurrent()
+        assertNull(model.state.value.card)
+        assertNull(ui.value.replyAsk, "never shows while the next turn runs")
+        assertFalse(star.state.shown, "still not shown while running")
+
+        ended(1, 2)
+        assertEquals(ReplyAskUi(turnId = "u2", stage = ReplyAskStage.Ask, menu = false), ui.value.replyAsk)
+        assertTrue(star.state.shown)
+        assertEquals(listOf(StarPromptEvent.Shown), star.events)
+
+        running(1, 2, asking = 3)
+        ended(1, 2, 3)
+        assertNull(ui.value.replyAsk, "never shows a second time")
+        assertEquals(listOf(StarPromptEvent.Shown), star.events)
     }
 }

@@ -6,15 +6,20 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -22,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -37,13 +43,32 @@ class ReplyAskTest {
         val onSkip: () -> Unit = {},
     )
 
+    private data class AskCopy(
+        val locale: String,
+        val question: String,
+        val yes: String,
+        val no: String,
+        val skip: String,
+    )
+
+    private data class AfterCopy(
+        val locale: String,
+        val note: String,
+        val action: String,
+        val star: Boolean,
+    )
+
+    private val english = AskCopy("en", "Enjoying it?", "Yes", "No", "Skip")
+
     private fun ComposeUiTest.showFooter(
         rtl: Boolean = false,
         fontScale: Float? = null,
         showAsk: Boolean = true,
         taps: Taps = Taps(),
+        copy: AskCopy = english,
     ) = setContent {
-        ChatTestTheme(localeTag = if (rtl) "ar" else "en", fontScale = fontScale) {
+        val locale = if (rtl) "ar" else copy.locale
+        ChatTestTheme(localeTag = locale, fontScale = fontScale) {
             val dir = if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
             CompositionLocalProvider(LocalLayoutDirection provides dir) {
                 Column(Modifier.width(phoneWidth)) {
@@ -56,10 +81,10 @@ class ReplyAskTest {
                     ) {
                         if (showAsk) {
                             KitReplyAsk(
-                                question = "Enjoying it?",
-                                yes = "Yes",
-                                no = "No",
-                                skip = "Skip",
+                                question = copy.question,
+                                yes = copy.yes,
+                                no = copy.no,
+                                skip = copy.skip,
                                 onYes = taps.onYes,
                                 onNo = taps.onNo,
                                 onSkip = taps.onSkip,
@@ -69,6 +94,70 @@ class ReplyAskTest {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun ComposeUiTest.showAfterFooter(after: AfterCopy, fontScale: Float) = setContent {
+        ChatTestTheme(localeTag = after.locale, fontScale = fontScale) {
+            Column(Modifier.width(phoneWidth)) {
+                KitReplyFooter(
+                    copyLabel = "Copy reply",
+                    moreLabel = "More",
+                    onCopy = {},
+                    onMore = {},
+                    modifier = Modifier.testTag("footer"),
+                ) {
+                    KitReplyAskAfter(
+                        note = after.note,
+                        action = after.action,
+                        onAction = {},
+                        star = after.star,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun assertWordUnclipped(node: SemanticsNodeInteraction, row: DpRect, label: String) {
+        val sem = node.fetchSemanticsNode()
+        val results = mutableListOf<TextLayoutResult>()
+        val get = sem.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action
+        assertTrue(get != null && get(results) && results.isNotEmpty(), "$label: missing text layout")
+        val layout = results.first()
+        val wide =
+            (0 until layout.lineCount).any {
+                layout.getLineRight(it) - layout.getLineLeft(it) > layout.size.width + 1f
+            }
+        val ellipsized = (0 until layout.lineCount).any { layout.isLineEllipsized(it) }
+        assertFalse(layout.hasVisualOverflow, "$label: visual overflow")
+        assertFalse(layout.multiParagraph.didExceedMaxLines, "$label: exceeded maxLines")
+        assertFalse(ellipsized, "$label: ellipsized")
+        assertFalse(wide, "$label: line wider than box")
+        val box = node.getBoundsInRoot()
+        assertTrue(box.right > box.left && box.bottom > box.top, "$label: zero box ($box)")
+        assertInside(box, row, label)
+    }
+
+    private fun assertInside(box: DpRect, container: DpRect, label: String) {
+        val msg = "$label: box=$box outside row=$container"
+        assertTrue(box.left >= container.left - 0.5.dp, msg)
+        assertTrue(box.right <= container.right + 0.5.dp, msg)
+        assertTrue(box.top >= container.top - 0.5.dp, msg)
+        assertTrue(box.bottom <= container.bottom + 0.5.dp, msg)
+    }
+
+    private fun assertDisjoint(boxes: List<Pair<String, DpRect>>, locale: String) {
+        for (i in boxes.indices) {
+            for (j in i + 1 until boxes.size) {
+                val (aName, a) = boxes[i]
+                val (bName, b) = boxes[j]
+                val clear =
+                    a.right <= b.left + 0.5.dp ||
+                        b.right <= a.left + 0.5.dp ||
+                        a.bottom <= b.top + 0.5.dp ||
+                        b.bottom <= a.top + 0.5.dp
+                assertTrue(clear, "$locale: $aName ($a) overlaps $bName ($b)")
             }
         }
     }
@@ -123,24 +212,86 @@ class ReplyAskTest {
         assertEquals(Triple(1, 1, 1), Triple(yes, no, skip))
     }
 
-    @Test
-    fun `B-STAR-035 at text 1_3 on 360 dp no word is cut`() = runComposeUiTest {
-        showFooter(fontScale = 1.3f)
+    private fun checkAskAtLargeScale(copy: AskCopy) = runComposeUiTest {
+        showFooter(fontScale = 1.3f, copy = copy)
         val ask = onNodeWithTag(REPLY_ASK_TAG).getBoundsInRoot()
-        val question = onNodeWithText("Enjoying it?").getBoundsInRoot()
-        val yes = onNodeWithTag(REPLY_ASK_YES_TAG).getBoundsInRoot()
-        val no = onNodeWithTag(REPLY_ASK_NO_TAG).getBoundsInRoot()
-        val skip = onNodeWithTag(REPLY_ASK_SKIP_TAG).getBoundsInRoot()
-        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
-        near(48.dp, ask.bottom - ask.top, "at 1.3 the start line is 48 dp tall")
-        assertTrue(ask.bottom <= copy.top + 0.5.dp, "at 1.3 the start line sits above Copy and More")
-        assertTrue(question.right <= yes.left + 0.5.dp, "question clear of Yes")
-        assertTrue(yes.right <= no.left + 0.5.dp, "Yes clear of No")
-        assertTrue(no.right <= skip.left + 0.5.dp, "No clear of Skip")
+        val copyBtn = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        val askHeight = ask.bottom - ask.top
+        assertTrue(ask.left >= Space.S4.dp - 0.5.dp, "${copy.locale}: ask starts inside gutter")
         assertTrue(
-            skip.right <= phoneWidth - Space.S4.dp + 0.5.dp,
-            "Skip stays inside the 360 dp row (skipRight=${skip.right})",
+            ask.right <= phoneWidth - Space.S4.dp + 0.5.dp,
+            "${copy.locale}: ask ends inside gutter (right=${ask.right})",
         )
+        assertTrue(ask.bottom <= copyBtn.top + 0.5.dp, "${copy.locale}: ask sits above Copy and More")
+        if (copy.locale == "en") {
+            near(48.dp, askHeight, "en at 1.3 fits on one 48 dp line")
+        } else {
+            assertTrue(
+                askHeight >= 47.5.dp && askHeight <= 96.5.dp,
+                "${copy.locale}: ask is 1 or 2 rows tall (was $askHeight)",
+            )
+        }
+        for (word in listOf(copy.question, copy.yes, copy.no, copy.skip)) {
+            assertWordUnclipped(onNodeWithText(word, useUnmergedTree = true), ask, "${copy.locale} '$word'")
+        }
+        for (tag in listOf(REPLY_ASK_YES_TAG, REPLY_ASK_NO_TAG, REPLY_ASK_SKIP_TAG)) {
+            val b = onNodeWithTag(tag).getBoundsInRoot()
+            assertTrue(b.bottom - b.top >= 47.5.dp, "${copy.locale} $tag is 48 dp tall")
+            assertInside(b, ask, "${copy.locale} $tag")
+        }
+        assertDisjoint(
+            listOf(
+                "question" to onNodeWithText(copy.question, useUnmergedTree = true).getBoundsInRoot(),
+                "yes" to onNodeWithTag(REPLY_ASK_YES_TAG).getBoundsInRoot(),
+                "no" to onNodeWithTag(REPLY_ASK_NO_TAG).getBoundsInRoot(),
+                "skip" to onNodeWithTag(REPLY_ASK_SKIP_TAG).getBoundsInRoot(),
+            ),
+            copy.locale,
+        )
+    }
+
+    private fun checkAfterAtLargeScale(after: AfterCopy) = runComposeUiTest {
+        showAfterFooter(after, fontScale = 1.3f)
+        val row = onNodeWithTag(REPLY_ASK_AFTER_TAG).getBoundsInRoot()
+        val copyBtn = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        assertTrue(row.right <= phoneWidth - Space.S4.dp + 0.5.dp, "${after.locale}: after inside gutter")
+        assertTrue(row.bottom <= copyBtn.top + 0.5.dp, "${after.locale}: after sits above Copy and More")
+        assertWordUnclipped(
+            onNodeWithText(after.note, useUnmergedTree = true),
+            row,
+            "${after.locale} '${after.note}'",
+        )
+        assertWordUnclipped(
+            onNodeWithText(after.action, useUnmergedTree = true),
+            row,
+            "${after.locale} '${after.action}'",
+        )
+        val actionBox = onNodeWithTag(REPLY_ASK_ACTION_TAG).getBoundsInRoot()
+        assertTrue(actionBox.bottom - actionBox.top >= 47.5.dp, "${after.locale}: action is 48 dp tall")
+        assertInside(actionBox, row, "${after.locale} action")
+    }
+
+    @Test
+    fun `B-STAR-035 at text 1_3 on 360 dp no word is cut`() {
+        val shipped =
+            listOf(
+                english,
+                AskCopy("vi", "Bạn thích chứ?", "Có", "Không", "Bỏ qua"),
+                AskCopy("id", "Menyukainya?", "Ya", "Tidak", "Lewati"),
+                AskCopy("ru", "Нравится?", "Да", "Нет", "Пропустить"),
+                AskCopy("fr", "Vous aimez\u00A0?", "Oui", "Non", "Passer"),
+                AskCopy("ja", "気に入りましたか？", "はい", "いいえ", "スキップ"),
+            )
+        shipped.forEach(::checkAskAtLargeScale)
+        val longestAfter =
+            listOf(
+                AfterCopy("id", "Terima kasih.", "Beri bintang di GitHub", star = true),
+                AfterCopy("fr", "Merci.", "Mettre une étoile sur GitHub", star = true),
+                AfterCopy("ru", "Спасибо.", "Поставить звезду на GitHub", star = true),
+                AfterCopy("ja", "ありがとうございます。", "GitHubでスターを付ける", star = true),
+                AfterCopy("es", "Lo sentimos.", "Informar de un problema", star = false),
+            )
+        longestAfter.forEach(::checkAfterAtLargeScale)
     }
 
     @Test
