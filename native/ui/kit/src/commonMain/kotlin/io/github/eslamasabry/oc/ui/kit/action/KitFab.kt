@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -125,33 +126,30 @@ public fun KitFab(
     }
 }
 
-/**
- * The round face (kit_floating_action.dart:136-176): a stadium in the accent, from the style resolver. The + is the
- * one primary action of its screen, so under Glass too it is the accent disc (polish sweep #27, 2026-11-25; from
- * 2026-11-14 Glass drew it as its colourless floating glass). Only a drop of liquid glass over a recorded list stays
- * clear glass, its glyph the page's ink.
- */
+/** The round face (kit_floating_action.dart:136-176): a stadium in the accent, from the style resolver. */
 @Composable
 private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, backdrop: KitFrostState?, light: Boolean) {
     val colors = LocalKitColors.current
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
-    // Glass, over a recorded list: a clear drop of liquid glass over what the button floats over; null keeps the
-    // style's own face.
-    val liquid = kitLiquidFace(LiquidRole.Action, backdrop, CircleShape)
-    val clear = liquid != null
+    // Owner 2026-11-14: "When in glass the + button shouldn't have a color, just pure glass." Under Glass the button
+    // is the style's own floating glass, as the pill beside it, never an accent disc; its glyph is the page's ink.
+    val clear = LocalKitStyle.current.style == Style.Glass
     val look =
         kitSurfaceLook(
             KitSurfaceInput(
                 role = SurfaceRole.Floating,
                 shape = KitShapeId.Circle,
-                ownFill = colors.accent,
-                color = colors.accent,
+                ownFill = if (clear) null else colors.accent,
+                color = if (clear) null else colors.accent,
                 pressed = pressed,
-                action = true,
+                action = !clear,
             )
         )
     val words = look.words ?: colors.onAccent // F: lib/ui/kit/kit_floating_action.dart:168-173
+    // Glass, over a recorded list: a clear drop of liquid glass over what the button floats over; null keeps the
+    // style's own face (Glass's plain floating glass, the accent disc elsewhere).
+    val liquid = kitLiquidFace(LiquidRole.Action, backdrop, CircleShape)
     val glyph = if (clear) TextTone.Primary else TextTone.OnAccent
     val liquidPress = rememberKitLiquidPress(interactions, on = liquid != null)
     Box(

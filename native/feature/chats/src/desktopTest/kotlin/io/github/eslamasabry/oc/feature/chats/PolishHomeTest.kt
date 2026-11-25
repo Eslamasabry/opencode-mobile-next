@@ -620,10 +620,10 @@ class PolishHomeTest {
         }
     }
 
-    // ---- the lead's rounds: the Glass + ----
+    // ---- the lead's rounds: the Glass + (closed: owner 2026-11-14 decided pure glass) ----
 
     @Test
-    fun `B-570 under Glass the New conversation button keeps the accent it has in Solid`() {
+    fun `B-570 Solid New conversation button keeps the accent while Glass stays pure glass`() {
         for (darkNow in listOf(true, false)) {
             for (style in listOf(Style.Solid, Style.Glass)) {
                 kitUiTest(360, 800) {
@@ -633,9 +633,12 @@ class PolishHomeTest {
                     val cy = button.center.y.toInt()
                     val start = map[(button.left + button.width * .22f).toInt(), cy]
                     val end = map[(button.right - button.width * .22f).toInt(), cy]
+                    val bothAccent = sameInk(start, accent) && sameInk(end, accent)
+                    val anyAccent = sameInk(start, accent) || sameInk(end, accent)
+                    val ok = if (style == Style.Solid) bothAccent else !anyAccent
                     assertTrue(
-                        sameInk(start, accent) && sameInk(end, accent),
-                        "$style dark=$darkNow: the + is drawn in the accent $accent, here $start and $end",
+                        ok,
+                        "$style dark=$darkNow: Solid uses accent $accent, Glass stays pure glass ($start, $end)",
                     )
                 }
             }
