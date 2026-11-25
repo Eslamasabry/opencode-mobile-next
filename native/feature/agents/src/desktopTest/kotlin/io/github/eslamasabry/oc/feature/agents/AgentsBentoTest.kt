@@ -484,7 +484,11 @@ class AgentsBentoTest {
                         chips[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                         val layout = layouts.single()
                         val text = layout.layoutInput.text.text
-                        assertEquals(expectedSize, layout.layoutInput.style.fontSize, "[$locale/$scale] font shrank on: $text")
+                        assertEquals(
+                            expectedSize,
+                            layout.layoutInput.style.fontSize,
+                            "[$locale/$scale] font shrank on: $text",
+                        )
                         assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $text")
                         assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: $text")
                         assertTrue(layout.lineCount <= 2, "[$locale/$scale] expected <= 2 lines for '$text', got ${layout.lineCount}")

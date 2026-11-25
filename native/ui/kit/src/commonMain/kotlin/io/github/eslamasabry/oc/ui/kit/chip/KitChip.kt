@@ -28,8 +28,6 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,15 +47,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
@@ -83,6 +82,9 @@ public enum class KitChipKind { Plain, Action, Removable, Count, Summary }
 
 /** True inside a card that stretches its action chip to its full inner width (`KitAgentTile`). */
 internal val LocalKitChipFullWidth = staticCompositionLocalOf { false }
+
+/** Inner slot width available to a full-width action chip ([Dp.Unspecified] elsewhere). */
+internal val LocalKitChipSlotWidth = staticCompositionLocalOf { Dp.Unspecified }
 
 /** Flutter's worded pill, with independent body/remove targets and a decorative custom glyph slot. */
 @Composable
@@ -236,7 +238,24 @@ public fun KitChip(
         val pillH = ChipLayoutRules.horizontalPadding(adaptiveModel, narrow, track, fullWidth)
         val pillV = if (fullWidth) Space.S1.dp else 0.dp
         val wrapsLabel = ChipLayoutRules.wraps(wraps, kind, adaptiveModel)
-        val labelStyle = ChipLayoutRules.labelStyle(style, baseStyle, fullWidth)
+        val labelMaxLines = ChipLayoutRules.maxLines(wraps, kind, adaptiveModel, density.fontScale)
+        val glyphEnd = if (narrow) 0.dp else if (adaptiveModel) Space.S2.dp else Space.S1.dp
+        val iconWidthPx =
+            if (fullWidth && wrapsLabel && !adaptiveModel) {
+                ChipLayoutRules.availableWithIconPx(
+                    LocalKitChipSlotWidth.current,
+                    pillH * 2 + iconSize + glyphEnd,
+                    density,
+                )
+            } else {
+                null
+            }
+        val showIcon =
+            icon != null &&
+                (iconWidthPx == null ||
+                    ChipLayoutRules.fitsWholeWords(measurer, text, style, labelMaxLines, iconWidthPx))
+        val hasStart = selected == true || glyph != null || showIcon
+        val labelStyle = if (fullWidth && !hasStart) style.copy(textAlign = TextAlign.Center) else style
         Row(
             Modifier.onSizeChanged { faceSize = it }
                 .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
@@ -258,21 +277,23 @@ public fun KitChip(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = if (fullWidth) Arrangement.Center else Arrangement.Start,
         ) {
-            val hasStart = selected == true || glyph != null || icon != null
             if (hasStart) {
                 AnimatedContent(
                     targetState = selected == true,
                     transitionSpec = { fadeIn(specs.quick()) togetherWith fadeOut(specs.quick()) },
                     label = "kit-chip-glyph",
                 ) { checked ->
-                    val glyphEnd = if (narrow) 0.dp else if (adaptiveModel) Space.S2.dp else Space.S1.dp
                     Box(
-                        Modifier.padding(end = glyphEnd).size(iconSize).clearAndSetSemantics {},
+                        Modifier.padding(end = glyphEnd).size(iconSize).clearAndSetSemantics {
+                            if (!checked && glyph == null && showIcon) testTag = "kit-chip-icon"
+                        },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (checked) KitGlyph(KitIcons.check, c.accent, iconSize, Modifier.testTag("kit-chip-check"))
                         else if (glyph != null) glyph()
-                        else if (icon != null) KitGlyph(icon, if (adaptiveModel) c.text2 else words, iconSize)
+                        else if (showIcon && icon != null) {
+                            KitGlyph(icon, if (adaptiveModel) c.text2 else words, iconSize)
+                        }
                     }
                 }
             }
@@ -286,10 +307,9 @@ public fun KitChip(
                     .then(ChipLayoutRules.truncateModifier(adaptiveModel, kind)),
                 style = labelStyle,
                 // Action chips wrap on whole words to at most two lines ("New conversation" on a half-width tile).
-                maxLines = ChipLayoutRules.maxLines(wraps, kind, adaptiveModel, density.fontScale),
+                maxLines = labelMaxLines,
                 softWrap = adaptiveModel || wrapsLabel,
                 overflow = TextOverflow.Ellipsis,
-                autoSize = if (wrapsLabel) ChipLayoutRules.wholeWords(labelStyle.fontSize) else null,
             )
             if (kind == KitChipKind.Removable || (opensMenu && (!narrow || modelPairFits)) || expanded != null) {
                 KitGlyph(if (kind == KitChipKind.Removable) KitIcons.close else KitIcons.chevronDown, if (adaptiveModel || kind == KitChipKind.Removable) c.text2 else c.text1, iconSize,
@@ -392,13 +412,6 @@ private object ChipLayoutRules {
             else -> 1
         }
 
-    fun labelStyle(style: TextStyle, baseStyle: TextStyle, fullWidth: Boolean): TextStyle =
-        if (fullWidth && baseStyle.fontSize.isSpecified && baseStyle.lineHeight.isSpecified) {
-            style.copy(lineHeight = (baseStyle.lineHeight.value / baseStyle.fontSize.value).em)
-        } else {
-            style
-        }
-
     fun truncateModifier(adaptiveModel: Boolean, kind: KitChipKind): Modifier =
         when {
             adaptiveModel -> Modifier.kitMayTruncate("model-chip")
@@ -406,29 +419,33 @@ private object ChipLayoutRules {
             else -> Modifier
         }
 
-    fun wholeWords(full: TextUnit): TextAutoSize? = if (full.isSpecified) ChipWholeWords(full) else null
-}
+    fun availableWithIconPx(slotWidth: Dp, reserved: Dp, density: Density): Int? {
+        if (!slotWidth.isSpecified) return null
+        val capped = CapRole.Chip.capDp?.dp?.let { minOf(slotWidth, it) } ?: slotWidth
+        return with(density) { (capped - reserved).toPx().toInt() } - 1
+    }
 
-/** Keeps a wrapping chip label on whole words within its maxLines without ellipsis, shrinking only if needed. */
-private data class ChipWholeWords(val full: TextUnit) : TextAutoSize {
-    override fun TextAutoSizeLayoutScope.getFontSize(constraints: Constraints, text: AnnotatedString): TextUnit {
-        var size = full
-        var factor = 1f
-        while (factor > FLOOR) {
-            val layout = performLayout(constraints, text, size)
-            val whole =
-                !layout.hasVisualOverflow &&
-                    (0 until layout.lineCount).none { layout.isLineEllipsized(it) } &&
-                    KitWholeWordsRules.whole(layout, text.text)
-            if (whole) return size
-            factor -= STEP
-            size = full * factor
+    fun fitsWholeWords(
+        measurer: TextMeasurer,
+        text: AnnotatedString,
+        style: TextStyle,
+        maxLines: Int,
+        maxWidthPx: Int,
+    ): Boolean =
+        if (maxWidthPx <= 0) {
+            false
+        } else {
+            val layout =
+                measurer.measure(
+                    text = text,
+                    style = style,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = true,
+                    maxLines = maxLines,
+                    constraints = Constraints(maxWidth = maxWidthPx),
+                )
+            !layout.hasVisualOverflow &&
+                (0 until layout.lineCount).none { layout.isLineEllipsized(it) } &&
+                KitWholeWordsRules.whole(layout, text.text)
         }
-        return full * FLOOR
-    }
-
-    private companion object {
-        const val FLOOR = 0.6f
-        const val STEP = 0.05f
-    }
 }

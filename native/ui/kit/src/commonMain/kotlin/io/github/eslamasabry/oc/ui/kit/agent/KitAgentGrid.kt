@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -20,6 +21,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 
 /** Dart `KitAgentGridSpan`: true for the card that spans the whole row and lays out sideways. */
 internal val LocalKitAgentGridSpan = staticCompositionLocalOf { false }
+
+/** Width of each tile cell in [KitAgentTiles] (`Dp.Unspecified` outside a bounded grid). */
+internal val LocalKitAgentTileWidth = staticCompositionLocalOf { Dp.Unspecified }
 
 /** One column of full-width cards above 1.3x text (Dart `textScaler.scale(1) > 1.3`). */
 internal fun agentGridOneColumn(textScale: Float): Boolean = textScale > 1.3f // F: lib/ui/kit/kit_agent_grid.dart:29
@@ -110,20 +114,30 @@ public fun KitAgentTiles(children: List<@Composable () -> Unit>, modifier: Modif
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
         val columns = agentTileColumns(maxWidth.value, scale)
         val rows = agentTileRows(children.size, columns)
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            for (row in rows) {
-                if (columns == 1) {
-                    children[row[0]]()
-                } else {
-                    Row(
-                        Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                    ) {
-                        for (i in row) {
-                            androidx.compose.foundation.layout.Box(Modifier.weight(1f).fillMaxHeight()) { children[i]() }
+        val tileWidth =
+            if (!constraints.hasBoundedWidth) Dp.Unspecified
+            else if (columns == 1) maxWidth
+            else (maxWidth - Space.S3.dp * (columns - 1)) / columns
+        CompositionLocalProvider(LocalKitAgentTileWidth provides tileWidth) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                for (row in rows) {
+                    if (columns == 1) {
+                        children[row[0]]()
+                    } else {
+                        Row(
+                            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                            horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                        ) {
+                            for (i in row) {
+                                androidx.compose.foundation.layout.Box(Modifier.weight(1f).fillMaxHeight()) {
+                                    children[i]()
+                                }
+                            }
+                            // A short last row keeps the column width: the empty cells hold their place.
+                            repeat(columns - row.size) {
+                                androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                            }
                         }
-                        // A short last row keeps the column width: the empty cells hold their place.
-                        repeat(columns - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                     }
                 }
             }

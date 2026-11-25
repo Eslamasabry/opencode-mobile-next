@@ -20,7 +20,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -36,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.chip.LocalKitChipFullWidth
+import io.github.eslamasabry.oc.ui.kit.chip.LocalKitChipSlotWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -107,6 +110,8 @@ public fun KitAgentTile(
     val hairline = kitHairline()
     val edge = if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, look.shape) else Modifier
     val inset = Space.S4.dp + if (solid) hairline else 0.dp
+    val tileWidth = LocalKitAgentTileWidth.current
+    val chipSlotWidth = if (tileWidth.isSpecified) (tileWidth - inset * 2).coerceAtLeast(0.dp) else Dp.Unspecified
     val markSize = (FlutterKitTokens.MARK_SIZE + Space.S2).dp // owner 2026-11-09: bigger logos
     val lineTone =
         when (tone) {
@@ -140,7 +145,10 @@ public fun KitAgentTile(
     }
     val chip: @Composable () -> Unit = {
         if (action != null) {
-            CompositionLocalProvider(LocalKitChipFullWidth provides true) {
+            CompositionLocalProvider(
+                LocalKitChipFullWidth provides true,
+                LocalKitChipSlotWidth provides chipSlotWidth,
+            ) {
                 KitChip(
                     action.label,
                     kind = KitChipKind.Action,
