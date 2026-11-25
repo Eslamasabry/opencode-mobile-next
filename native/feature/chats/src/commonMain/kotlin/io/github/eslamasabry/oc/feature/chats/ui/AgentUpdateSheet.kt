@@ -1,14 +1,12 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
+import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateNetwork
@@ -19,7 +17,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateHomeUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
-import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -44,7 +41,11 @@ import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsAction
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsLine
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepHelperTooNew
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepNotSupported
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesMetered
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededAlways
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededLabel
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNetworkUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNotRemoved
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReady
@@ -124,9 +125,6 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
         AgentUpdateNetwork.Unmetered -> Unit
     }
     if (shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
-        val hasTotal = shown.updating > 0 || shown.removing > 0 || shown.needed.isNotEmpty()
-        val hasNetwork = shown.network != AgentUpdateNetwork.Unmetered
-        if (hasTotal || hasNetwork) Spacer(Modifier.height(Space.S3.dp))
         KitRowGroup {
             shown.needed.forEach { row -> NeededRow(row, shown.neededWhy) }
             shown.optional.forEach { row -> OptionalRow(row, actions) }
@@ -159,10 +157,17 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
     val facts = versionAndSize(row.from, row.to, row.downloadBytes)
     val block = row.keepBlock
     if (block != null) {
+        val reason =
+            stringResource(
+                when (block) {
+                    AgentKeepBlock.HelperTooNew -> Res.string.agentUpdatesKeepHelperTooNew
+                    AgentKeepBlock.NotSupportedAnyMore -> Res.string.agentUpdatesKeepNotSupported
+                }
+            )
         KitSwitchRow(
             title = KitBidi.auto(row.name),
             checked = true,
-            enabled = KitEnabled.Disabled(keepBlockReason(block)),
+            enabled = KitEnabled.Disabled(reason),
             supportingMaxLines = 4,
             below = { KitText(facts, role = TypeRole.Secondary, tone = TextTone.Secondary) },
             onCheckedChange = { actions.chooseAgentUpdate(row.id, AgentUpdateChoice.Update) },
@@ -184,9 +189,14 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
 /** A part the updates need: its name, versions, size and why it is needed, with no choice. */
 @Composable
 private fun NeededRow(row: AgentNeededRowUi, why: AgentNeedRule) {
+    val need =
+        stringResource(
+            if (why == AgentNeedRule.WithAnyUpdate) Res.string.agentUpdatesNeededLabel
+            else Res.string.agentUpdatesNeededAlways
+        )
     KitRow(
         title = KitBidi.auto(row.name),
-        supporting = "${versionAndSize(row.from, row.to, row.downloadBytes)}\n${neededLine(why)}",
+        supporting = "${versionAndSize(row.from, row.to, row.downloadBytes)}\n$need",
         supportingMaxLines = 4,
     )
 }

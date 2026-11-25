@@ -81,7 +81,6 @@ private fun optionalItem(
     from: String,
     to: String,
     downloadMb: Long,
-    keepAllowed: Boolean = true,
     notKeptReason: AgentKeepBlock? = null,
 ): AgentUpdateItem =
     AgentUpdateItem(
@@ -92,8 +91,8 @@ private fun optionalItem(
         downloadBytes = downloadMb * REDRAW_MB,
         installedBytes = downloadMb * 2 * REDRAW_MB,
         group = AgentUpdateGroup.Optional,
-        keepAllowed = keepAllowed,
-        removeAllowed = keepAllowed,
+        keepAllowed = notKeptReason == null,
+        removeAllowed = notKeptReason == null,
         notKeptReason = notKeptReason,
         choice = null,
         neededWhen = null,
@@ -114,7 +113,6 @@ internal fun redrawFiveOffer(): AgentUpdateOffer =
                     from = "0.66.0",
                     to = "0.68.1",
                     downloadMb = 71,
-                    keepAllowed = false,
                     notKeptReason = AgentKeepBlock.HelperTooNew,
                 ),
                 optionalItem("qwen", "Qwen Code", "0.28.0", "0.29.0", 55),

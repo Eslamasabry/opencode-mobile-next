@@ -152,7 +152,7 @@ class AgentUpdateSheetRedrawTest {
         runSheet(redrawFiveOffer()) {
             onAllNodes(isToggleable()).assertCountEquals(5)
             onNodeWithText("Keep").assertDoesNotExist()
-            onNodeWithText("Codex", substring = true).performScrollTo().performClick()
+            onNodeWithText("Codex", substring = true).performClick()
             waitForIdle()
             onNodeWithText("Update 4 agents").assertExists()
         }
