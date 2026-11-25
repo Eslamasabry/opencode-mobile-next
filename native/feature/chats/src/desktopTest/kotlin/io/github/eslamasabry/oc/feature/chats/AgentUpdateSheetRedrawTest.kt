@@ -284,6 +284,34 @@ class AgentUpdateSheetRedrawTest {
             assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only height changed when turned on")
         }
 
+    @Test
+    fun `B-UPD-017 on mobile data with every agent off the Wi-Fi only row is gone`() {
+        runSheet(redrawFiveOffer()) {
+            listOf("Claude Code", "Codex", "Antigravity", "Qwen Code").forEach { switchOff(it) }
+            onNodeWithText("Update 1 agent").assertExists()
+            onNode(isToggleable() and hasText("Wi-Fi only", substring = true)).assertExists()
+        }
+        runSheet(noLockedFiveOffer()) {
+            listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code").forEach { switchOff(it) }
+            onNodeWithText("Keep these versions").assertExists()
+            onNodeWithText("Wi-Fi only").assertDoesNotExist()
+            onNodeWithText("Will update on Wi-Fi", substring = true, useUnmergedTree = true).assertDoesNotExist()
+        }
+    }
+
+    private fun KitUiTest.switchOff(name: String) {
+        onNode(isToggleable() and hasText(name, substring = true)).performScrollTo().performClick()
+        waitForIdle()
+        mainClock.advanceTimeBy(1_500)
+    }
+
+    private fun noLockedFiveOffer(): AgentUpdateOffer =
+        redrawFiveOffer().let { offer ->
+            offer.copy(
+                items = offer.items.map { if (it.id == AgentId("gemini")) it.copy(keepAllowed = true) else it },
+            )
+        }
+
     private companion object {
         const val HELPER_TOO_NEW = "Its version can't work with the new agent helper, so it can't be kept."
         const val METERED_LINE = "You're on mobile data. The updates download over it."
