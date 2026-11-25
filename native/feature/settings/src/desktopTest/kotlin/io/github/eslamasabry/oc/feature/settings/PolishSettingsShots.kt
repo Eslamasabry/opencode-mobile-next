@@ -13,14 +13,19 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
+import io.github.eslamasabry.oc.engine.analytics.ConsentState
+import io.github.eslamasabry.oc.engine.analytics.WhatWeCollectSource
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideRecord
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.BackgroundState
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.PrivacyUi
 import io.github.eslamasabry.oc.feature.settings.presentation.QuietHours
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
+import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -57,7 +62,7 @@ class PolishSettingsShots {
 
     /** [SettingsThemed]'s set-up at the picture's whole size, so one picture holds the whole page. */
     @Composable
-    private fun Themed(v: Variant, content: @Composable () -> Unit) {
+    private fun Themed(v: Variant, locale: String = "en", height: Float = 2600f, content: @Composable () -> Unit) {
         CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, v.scale)) {
             KitTheme(
                 appearance =
@@ -66,12 +71,12 @@ class PolishSettingsShots {
                         motion = MotionLevel.Off,
                     ),
                 platform = DesktopKitPlatform(),
-                localeTag = "en",
+                localeTag = locale,
                 stillFrame = true,
             ) {
                 CompositionLocalProvider(
                     LocalKitRedactor provides Redactor(),
-                    LocalKitWindow provides KitWindowInfo(360f, 2600f),
+                    LocalKitWindow provides KitWindowInfo(360f, height),
                 ) {
                     Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
                 }
@@ -90,11 +95,12 @@ class PolishSettingsShots {
                 ),
         )
 
-    private val emptyThemes =
+    private fun emptyThemes(dark: Boolean) =
         SettingsUi(
             stack = persistentListOf(SettingsPage.Hub, SettingsPage.Appearance),
             appearance =
                 AppearanceUi(
+                    mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light,
                     guide = AppearanceGuideRecord(seen = listOf(AppearanceQuestion.Mode)),
                     question = AppearanceQuestion.Theme,
                     questions =
@@ -107,8 +113,20 @@ class PolishSettingsShots {
                 ),
         )
 
-    private fun shot(out: File, name: String, content: @Composable () -> Unit) {
-        runDesktopComposeUiTest(360, 2600) {
+    private val whatWeCollect =
+        SettingsUi(
+            stack = persistentListOf(SettingsPage.Hub, SettingsPage.Privacy, SettingsPage.WhatWeCollect),
+            privacy = PrivacyUi(WhatWeCollectSource.build(ConsentState(), RemoteSink), crashReports = false, usage = false),
+        )
+
+    private val updates =
+        SettingsUi(
+            stack = persistentListOf(SettingsPage.Hub, SettingsPage.Updates),
+            updates = UpdateFacts("3.0.0", "10001", state = UpdateState.Available("3.1.0", "41")),
+        )
+
+    private fun shot(out: File, name: String, height: Int = 2600, content: @Composable () -> Unit) {
+        runDesktopComposeUiTest(360, height) {
             setContent { content() }
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
@@ -128,7 +146,16 @@ class PolishSettingsShots {
                     Themed(v) { SettingsScreen(blocked, RecordingActions()) }
                 }
                 shot(out, "22-$PHASE-theme-${v.name}") {
-                    Themed(v) { SettingsScreen(emptyThemes, RecordingActions()) }
+                    Themed(v) { SettingsScreen(emptyThemes(v.dark), RecordingActions()) }
+                }
+                shot(out, "23-$PHASE-collect-${v.name}") {
+                    Themed(v) { SettingsScreen(whatWeCollect, RecordingActions()) }
+                }
+                shot(out, "23-$PHASE-updates-${v.name}") {
+                    Themed(v) { SettingsScreen(updates, RecordingActions()) }
+                }
+                shot(out, "43-$PHASE-wizard-${v.name}", height = 915) {
+                    Themed(v, height = 915f) { SettingsScreen(emptyThemes(v.dark), RecordingActions()) }
                 }
             }
         } finally {

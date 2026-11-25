@@ -10,9 +10,12 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.text.NumberSymbols
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
@@ -71,6 +74,7 @@ class UsagePolishTest {
 
     @AfterTest
     fun localeAfter() {
+        Numbers.pinned = null
         Locale.setDefault(previousLocale)
     }
 
@@ -129,11 +133,16 @@ class UsagePolishTest {
 
     /** [inside] runs under the theme, where a test may read the kit's tokens. */
     @Composable
-    private fun Screen(state: UsageUi, actions: UsageActions, inside: @Composable () -> Unit = {}) {
+    private fun Screen(
+        state: UsageUi,
+        actions: UsageActions,
+        locale: String = "en",
+        inside: @Composable () -> Unit = {},
+    ) {
         KitTheme(
             platform = DesktopKitPlatform(),
             appearance = KitAppearance(motion = MotionLevel.Off),
-            localeTag = "en",
+            localeTag = locale,
             stillFrame = true,
         ) {
             inside()
@@ -142,11 +151,11 @@ class UsagePolishTest {
     }
 
     @Composable
-    private fun LimitsPage(state: LimitsUi) {
+    private fun LimitsPage(state: LimitsUi, locale: String = "en") {
         KitTheme(
             platform = DesktopKitPlatform(),
             appearance = KitAppearance(motion = MotionLevel.Off),
-            localeTag = "en",
+            localeTag = locale,
             stillFrame = true,
         ) {
             CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
@@ -206,5 +215,34 @@ class UsagePolishTest {
         onAllNodesWithText("Weekly").assertCountEquals(1)
         onNodeWithText("Sonnet").assertExists()
         onNodeWithText("Opus").assertExists()
+    }
+
+    @Test
+    fun `B-USE-559 usage cost has one time-range selector offering every range`() = runDesktopComposeUiTest(360, 2600) {
+        setContent { Screen(ready(), Actions()) }
+        onNodeWithTag("usage-segment").assertDoesNotExist()
+        onNodeWithTag("usage-range").performClick()
+        onNodeWithText("Today").assertExists()
+        onNodeWithText("All time").assertExists()
+    }
+
+    @Test
+    fun `B-USE-559 Arabic usage cost uses one numeral script`() = runDesktopComposeUiTest(360, 2600) {
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        Numbers.pinned = NumberSymbols(zeroDigit = '٠', grouping = '٬', decimal = '٫', minus = '-')
+        setContent { Screen(ready(), Actions(), locale = "ar") }
+        onNodeWithText("إنفاق آخر ٣٠ يومًا").assertExists()
+        onNodeWithText("إنفاق آخر 30 يومًا").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-USE-572 Arabic limits uses one numeral script and says قبل ساعتين`() = runDesktopComposeUiTest(360, 2600) {
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        Numbers.pinned = NumberSymbols(zeroDigit = '٠', grouping = '٬', decimal = '٫', minus = '-')
+        setContent { LimitsPage(LimitsFixtures.state(), locale = "ar") }
+        onNodeWithText("متبقٍّ ٦٠%").assertExists()
+        onNodeWithText("متبقٍّ 60%").assertDoesNotExist()
+        onNodeWithText("قُرئت قبل ساعتين").assertExists()
+        onNodeWithText("قُرئت قبل ساعتان").assertDoesNotExist()
     }
 }
