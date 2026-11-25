@@ -340,14 +340,18 @@ private class ChipLine(
         val chipW = sizes[clamped].toFloat()
         val visibleRoom = (viewport - insets.growStartPx - insets.growEndPx).coerceAtLeast(0f)
         val atVisibleStart = (insets.startPadPx - insets.growStartPx) + chipStart
-        if (chipW > visibleRoom) return floor(atVisibleStart).toInt().coerceIn(0, maxNoTail)
-        val slack = visibleRoom - chipW
-        val leftPeek = if (clamped > 0 && clamped < sizes.lastIndex) minOf(fadePx, slack / HALF_DIVISOR) else 0f
-        val minScroll = ceil(atVisibleStart - slack).toInt()
-        val maxScroll = floor(atVisibleStart).toInt()
-        val desired = (atVisibleStart - leftPeek).roundToInt()
-        val fitted = if (minScroll <= maxScroll) desired.coerceIn(minScroll, maxScroll) else maxScroll
-        return fitted.coerceIn(0, maxNoTail)
+        val target =
+            if (chipW > visibleRoom) {
+                floor(atVisibleStart).toInt()
+            } else {
+                val slack = visibleRoom - chipW
+                val leftPeek = if (clamped > 0 && clamped < sizes.lastIndex) minOf(fadePx, slack / HALF_DIVISOR) else 0f
+                val minScroll = ceil(atVisibleStart - slack).toInt()
+                val maxScroll = floor(atVisibleStart).toInt()
+                val desired = (atVisibleStart - leftPeek).roundToInt()
+                if (minScroll <= maxScroll) desired.coerceIn(minScroll, maxScroll) else maxScroll
+            }
+        return target.coerceIn(0, maxNoTail)
     }
 
     override val spacing: Dp get() = gap
