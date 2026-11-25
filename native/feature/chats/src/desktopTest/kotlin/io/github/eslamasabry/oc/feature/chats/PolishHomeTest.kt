@@ -202,6 +202,22 @@ class PolishHomeTest {
         waitForIdle()
     }
 
+    private data class RenderShot(val name: String, val dark: Boolean, val locale: String, val fontScale: Float)
+
+    private fun renderOne(shot: RenderShot, state: ChatsUi, notice: AppNotice?): FlickerFailure? =
+        try {
+            kitUiTest(360, 800) {
+                showHome(state, dark = shot.dark, locale = shot.locale, fontScale = shot.fontScale, notice = notice)
+                val file = File(outDir, "${shot.name}.png")
+                file.parentFile.mkdirs()
+                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
+                assertTrue(file.isFile)
+            }
+            null
+        } catch (e: FlickerFailure) {
+            e
+        }
+
     private fun renderScene(
         finding: Int,
         locale: String,
@@ -210,24 +226,14 @@ class PolishHomeTest {
     ) {
         Locale.setDefault(Locale.forLanguageTag(locale))
         Numbers.pinned = if (locale == "ar") arabicSymbols else NumberSymbols.Latin
-        var flicker: FlickerFailure? = null
-        for (dark in listOf(true, false)) {
-            for ((scaleTag, fontScale) in listOf("100" to 1f, "130" to 1.3f)) {
-                val tone = if (dark) "dark" else "light"
-                try {
-                    kitUiTest(360, 800) {
-                        showHome(state, dark = dark, locale = locale, fontScale = fontScale, notice = notice)
-                        val file = File(outDir, "$finding-$PHASE-$tone-$locale-$scaleTag.png")
-                        file.parentFile.mkdirs()
-                        ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
-                        assertTrue(file.isFile)
-                    }
-                } catch (e: FlickerFailure) {
-                    if (flicker == null) flicker = e
+        val shots =
+            listOf(true to "dark", false to "light").flatMap { (dark, tone) ->
+                listOf("100" to 1f, "130" to 1.3f).map { (scaleTag, fontScale) ->
+                    RenderShot("$finding-$PHASE-$tone-$locale-$scaleTag", dark, locale, fontScale)
                 }
             }
-        }
-        flicker?.let { throw it }
+        val firstFlicker = shots.mapNotNull { renderOne(it, state, notice) }.firstOrNull()
+        firstFlicker?.let { throw it }
     }
 
     @Test
