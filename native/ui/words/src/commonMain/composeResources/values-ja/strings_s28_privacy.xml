@@ -21,7 +21,7 @@
     <string name="collectApprovals">求められた要求の種類（実行、編集、読み取り、ウェブ、質問）、回答または保存済みの選択による回答や実行の停止、回答した場所（会話、ホーム、通知、ウィジェット）、待ち時間。コマンド、ファイル、質問の本文は含みません</string>
     <string name="collectStall">長い待機の段階、時間、原因（cause）。確認済みの無出力の思考、実行中のツール、再試行、接続や終了通知の喪失、未確認の無応答な接続、または不明な原因</string>
     <string name="collectQueue">送信待ちのメッセージのうち、送信または失敗した件数</string>
-    <string name="collectPhoneSetup">端末のセットアップがどこまで進んだか、各手順の時間、失敗の種類、途中で離れて戻ったかどうか</string>
+    <string name="collectPhoneSetup">端末のセットアップがどこまで進んだか、各手順の時間、失敗の種類（サーバー起動時の終了exited、拒否refused、パスワードpassword、中断withdrawn、ポート競合port_busyの固定値を含む。端末やサーバーの文章は送信しません）、途中で離れて戻ったかどうか</string>
     <string name="collectAgents">エージェントが起動したか、失敗の種類</string>
     <string name="collectBackground">バックグラウンドサービスが停止した理由</string>
     <string name="collectUpdates">更新をインストールできたか、失敗の種類</string>

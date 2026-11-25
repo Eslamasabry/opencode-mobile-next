@@ -18,7 +18,7 @@
     <string name="collectSend">发送消息是成功了还是在队列中等待，采用输入、语音还是附件，使用哪个智能体，以及首个回复的等待时间</string>
     <string name="collectStall">长时间等待的阶段、时长和原因（cause）：已确认的静默思考、工具运行、重试、连接中断或结束通知丢失、尚未检查的静默连接，或未知原因</string>
     <string name="collectQueue">排队的消息有多少已发送或失败</string>
-    <string name="collectPhoneSetup">这部手机的设置进行到哪一步、每一步的耗时、失败类型，以及是否中途离开后又返回</string>
+    <string name="collectPhoneSetup">这部手机的设置进行到哪一步、每一步的耗时、失败类型（包括启动服务器时的固定词：exited、refused、password、withdrawn、port_busy，绝不发送手机或服务器上的文本），以及是否中途离开后又返回</string>
     <string name="collectAgents">智能体是否已启动，以及失败的类型</string>
     <string name="collectBackground">后台服务为何停止</string>
     <string name="collectUpdates">更新是否已安装，以及失败的类型</string>
