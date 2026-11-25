@@ -96,7 +96,7 @@ public fun KitActionBlock(
 ) {
     if (primary == null && secondary == null && tertiary.isEmpty()) return
     val (shown, overflow) = ActionBlockRules.split(tertiary)
-    val gap = Space.S2.dp
+    val gap = stackedGap
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading)) {
         // Flutter decides on the window's class, not the block's own width (`KitLayout.windowOf(context) ==
         // KitWindow.compact`, kit_buttons.dart:1043-1045): a block inside a 560 dp panel on a PC is still one row.
@@ -150,7 +150,7 @@ public fun KitActionBlock(
             }
             else -> {
                 val oneOnEachLine = tertiary.any { it.destructive } || shown.any { it.enabled.reason != null }
-                StackedActionColumn(primary, secondary, shown, overflow, oneOnEachLine, gap)
+                StackedActionColumn(primary, secondary, shown, overflow, oneOnEachLine)
             }
         }
     }
@@ -168,8 +168,8 @@ private fun StackedActionColumn(
     shown: List<KitAction>,
     overflow: List<KitAction>,
     oneOnEachLine: Boolean,
-    gap: Dp,
 ) {
+    val gap = stackedGap
     val hasTertiaryLine = shown.isNotEmpty() || overflow.isNotEmpty()
     val room = remember { mutableIntStateOf(0) }
     // Flutter stretches the column; each button holds its control cap centred (KitMaxWidth.control).
@@ -251,6 +251,9 @@ private fun TertiaryActions(shown: List<KitAction>, overflow: List<KitAction>, o
 
 /** Dart `KitActionBlock`: above 1.3× text a pair stacks, as two labels side by side would wrap. */
 private const val PAIR_TEXT_LIMIT: Float = 1.3f // F: lib/ui/kit/kit_buttons.dart:1057
+
+/** The space between two actions of a stack. */
+private val stackedGap: Dp = Space.S2.dp
 
 /** A stacked primary or secondary: full width, then its reason. */
 @Composable
