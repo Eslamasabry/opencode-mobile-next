@@ -558,6 +558,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
     /** Quiet retry loop while a computer chat has no open connection. */
     private var autoReopenJob: Job? = null
+    private var autoOpening = false
 
     /** A failure page held back for [FAILED_SETTLE_MS], so a success right after it never crosses in and out. */
     private var failedSettleJob: Job? = null
@@ -1099,9 +1100,11 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             publishVoiceConversation()
             return
         }
-        val quiet = autoReopenJob?.isActive == true
-        autoReopenJob?.cancel()
-        autoReopenJob = null
+        val quiet = autoOpening || autoReopenJob?.isActive == true
+        if (!autoOpening) {
+            autoReopenJob?.cancel()
+            autoReopenJob = null
+        }
         mutableRetryAt.value = null
         val gateway = (graph as ChatGraphAccessors).chatGateway
         refreshReadOnly(gateway)
@@ -1461,8 +1464,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val wasAttached = stopWatching != null
         stopWatching?.invoke()
         stopWatching = null
-        autoReopenJob?.cancel()
-        autoReopenJob = null
+        if (!autoOpening) {
+            autoReopenJob?.cancel()
+            autoReopenJob = null
+        }
         mutableRetryAt.value = null
         endWait()
         mutableServerWait.value = null
@@ -3219,8 +3224,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
     override suspend fun reload(): Outcome<Unit> {
         if (opening) return Outcome.Ok(Unit)
-        autoReopenJob?.cancel()
-        autoReopenJob = null
+        if (!autoOpening) {
+            autoReopenJob?.cancel()
+            autoReopenJob = null
+        }
         mutableRetryAt.value = null
         // A person's Try again waits for a server that is not ready yet afresh.
         endWait()
@@ -3262,8 +3269,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             if (isAutoReopenFailure(opened.failure)) {
                 startAutoReopen(opened.failure)
             } else {
-                autoReopenJob?.cancel()
-                autoReopenJob = null
+                if (!autoOpening) {
+                    autoReopenJob?.cancel()
+                    autoReopenJob = null
+                }
                 mutableRetryAt.value = null
             }
         }
@@ -3286,7 +3295,17 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 delay(wait)
                 mutableRetryAt.value = null
                 opener.awaitChance(ref.profileId)
-                val opened = if (canAutoReopen) opener.open(ref.profileId).takeIf { stopWatching != null } else null
+                val opened =
+                    if (canAutoReopen) {
+                        autoOpening = true
+                        val result =
+                            try {
+                                opener.open(ref.profileId)
+                            } finally {
+                                autoOpening = false
+                            }
+                        result.takeIf { stopWatching != null }
+                    } else null
                 when (opened) {
                     null -> autoReopenJob = null
                     is Outcome.Ok -> {
