@@ -444,8 +444,8 @@ private fun Total(report: UsageReport, range: UsageRange, timezone: String?, sta
         KitSurfacePanel(Modifier.fillMaxWidth().testTag("usage-total-panel")) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                 val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
-                val first = zone?.let { Numbers.digits(UsageCalendar.dayLabel(report.fromMs, it)) }
-                val last = zone?.let { Numbers.digits(UsageCalendar.dayLabel(report.toMs - 1, it)) }
+                val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it)?.let(Numbers::digits) }
+                val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it)?.let(Numbers::digits) }
                 val days =
                     if (first != null && last != null)
                         stringResource(Res.string.usagePeriod, first, last)

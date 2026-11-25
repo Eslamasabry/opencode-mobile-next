@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -201,7 +202,14 @@ class KitRowValueChevronEdgeTest {
         val freeInk =
             swatchLabelInk {
                 Box(Modifier.width(90.dp).height(90.dp), contentAlignment = Alignment.BottomCenter) {
-                    KitText(label, role = TypeRole.Caption, tone = TextTone.Secondary)
+                    KitText(
+                        label,
+                        role = TypeRole.Caption,
+                        tone = TextTone.Secondary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        wholeWords = true,
+                    )
                 }
             }
         assertTrue(freeInk > 0, "reference drew label")

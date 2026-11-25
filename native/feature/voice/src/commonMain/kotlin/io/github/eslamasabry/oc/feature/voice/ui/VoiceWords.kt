@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.engine.voice.language.VoiceLanguage
 import io.github.eslamasabry.oc.engine.voice.state.PackId
-import io.github.eslamasabry.oc.engine.voice.state.SpeechEngineKind
+import io.github.eslamasabry.oc.feature.voice.presentation.SpeechEngineKind
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiAccurate
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiAccurateDetail

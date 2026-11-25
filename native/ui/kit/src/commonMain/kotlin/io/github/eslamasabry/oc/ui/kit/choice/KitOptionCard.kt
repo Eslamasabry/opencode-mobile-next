@@ -663,7 +663,8 @@ private fun AccentCircle(swatch: KitAccentSwatch, selected: Boolean, onTap: () -
         shape = press,
         pressClip = pressClip,
     ) {
-        val columnPad = caption?.let { Modifier.padding(horizontal = Space.S1.dp, bottom = Space.S1.dp) } ?: Modifier
+        val columnPad =
+            caption?.let { Modifier.padding(start = Space.S1.dp, end = Space.S1.dp, bottom = Space.S1.dp) } ?: Modifier
         Column(columnPad.clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(tokens.minTarget.dp), contentAlignment = Alignment.Center) {
                 Box(
