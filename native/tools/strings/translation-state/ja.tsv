@@ -2284,6 +2284,7 @@ chatsHomeStopped	de2f135c98
 chatsHomeTitle	7fd3ccb9ee
 chatsHomeToday	6b1be5a6a0
 chatsHomeUnreachable	5fd14af36f
+chatsHomeUnreachableReason	cb96e828b0
 chatsHomeUnreachableShort	526e6c53d0
 chatsNewAddAgent	c3c155e5e8
 chatsNewAgentChipSpoken	76d550a8cd

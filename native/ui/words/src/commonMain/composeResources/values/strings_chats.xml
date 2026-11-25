@@ -321,6 +321,9 @@
     <string name="chatsNewModelRow">Model</string>
     <string name="chatsNewSeparateCopyDetail">Works on its own copy, so your files stay as they are.</string>
     <string name="chatsHomeUnreachableShort">%1$s isn't answering</string>
+    <!-- Shown under the server pill when the pill already says "Not answering" for this server (B-573):
+         gives the reason with Try again without repeating "not answering". -->
+    <string name="chatsHomeUnreachableReason">Couldn't reach %1$s, so this list may be out of date.</string>
     <string name="inboxEmptyTitle">Nothing waits for you</string>
     <string name="inboxFinishedLabel">Finished, not opened yet</string>
     <string name="inboxOpenLabel">Open %1$s</string>

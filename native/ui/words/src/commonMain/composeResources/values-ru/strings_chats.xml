@@ -355,4 +355,5 @@
     <string name="chatsNewRunsOn">Где работает</string>
     <string name="chatsNewWhereSpoken">Где работает: %1$s. Открывает выбор проекта и подключения.</string>
     <string name="chatsNewAgentChipSpoken">Кто работает: %1$s, %2$s. Открывает выбор агента и модели.</string>
+    <string name="chatsHomeUnreachableReason">Не удалось связаться с %1$s, поэтому этот список может быть устаревшим.</string>
 </resources>

@@ -350,4 +350,5 @@
     <string name="chatsNewRunsOn">Gira su</string>
     <string name="chatsNewWhereSpoken">Dove gira: %1$s. Apre la scelta di progetto e connessione.</string>
     <string name="chatsNewAgentChipSpoken">Chi ci lavora: %1$s, %2$s. Apre la scelta di agente e modello.</string>
+    <string name="chatsHomeUnreachableReason">Impossibile raggiungere %1$s, quindi questo elenco potrebbe non essere aggiornato.</string>
 </resources>

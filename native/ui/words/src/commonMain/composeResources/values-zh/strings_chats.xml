@@ -343,4 +343,5 @@
     <string name="chatsNewRunsOn">运行于</string>
     <string name="chatsNewWhereSpoken">运行位置：%1$s。会打开项目和连接的选项。</string>
     <string name="chatsNewAgentChipSpoken">由谁处理：%1$s，%2$s。会打开智能体和模型的选项。</string>
+    <string name="chatsHomeUnreachableReason">无法连接到 %1$s，因此此列表可能不是最新的。</string>
 </resources>

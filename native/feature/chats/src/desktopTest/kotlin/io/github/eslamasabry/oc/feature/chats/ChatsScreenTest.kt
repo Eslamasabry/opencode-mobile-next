@@ -215,7 +215,9 @@ class ChatsScreenTest {
             val home = ChatsHomeExtraState(sources = persistentListOf(phone))
             setContent { Themed { ChatsScreen(ui(*rows).copy(home = home), RecordingChatsActions()) } }
             onAllNodesWithText("You stopped OpenCode on this phone").assertCountEquals(0)
-            onAllNodesWithText("isn't answering", substring = true).assertCountEquals(1)
+            // B-573: Not answering appears once, in the server pill; the notice gives the reason and Try again.
+            onAllNodesWithText("Not answering", substring = true, useUnmergedTree = true).assertCountEquals(1)
+            onAllNodesWithText("Couldn't reach", substring = true).assertCountEquals(1)
             onAllNodesWithText("Try again").assertCountEquals(1)
         }
 

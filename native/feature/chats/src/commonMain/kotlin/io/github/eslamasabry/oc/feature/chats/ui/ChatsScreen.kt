@@ -200,6 +200,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableReason
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
@@ -497,10 +498,21 @@ public fun ChatsScreen(
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         // B-573: a connection that did not answer is a warning, not information; its Try again sits
                         // on the content edge (the mark's edge), as the rows do, not indented under the words.
+                        // When the server pill already says Not answering for this server, give the reason without
+                        // repeating "Not answering".
+                        val pillSaysNotAnswering =
+                            shellBar &&
+                                state.connection?.state == HomeConnectionState.NotAnswering &&
+                                state.connection.server == source.name
+                        val shownName = KitBidi.auto(serverNameShown(source.name))
                         KitNotice(
                             message =
-                                if (source.agents) stringResource(Res.string.chatsHomeAgentsUnreachable)
-                                else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(serverNameShown(source.name))),
+                                when {
+                                    source.agents -> stringResource(Res.string.chatsHomeAgentsUnreachable)
+                                    pillSaysNotAnswering ->
+                                        stringResource(Res.string.chatsHomeUnreachableReason, shownName)
+                                    else -> stringResource(Res.string.chatsHomeUnreachableShort, shownName)
+                                },
                             tone = StatusTone.Attention,
                             actionsAtEdge = true,
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),

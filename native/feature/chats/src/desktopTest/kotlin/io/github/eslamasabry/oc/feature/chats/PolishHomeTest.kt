@@ -749,7 +749,7 @@ private const val PHASE = "after"
 private const val ROUND = "after"
 
 /** Finding 30's non-repeating notice copy: "before" on its red commit, "after" on its fix. */
-private const val NOTICE_ROUND = "before"
+private const val NOTICE_ROUND = "after"
 
 /** A row's agent mark, in dp (KitRecentRowRules.MARK_DP). */
 private const val MARK_DP = 28f
