@@ -66,6 +66,34 @@ class Oc2AutomationsTest {
             newer.gateway.close()
         }
 
+    private val sampleListJson =
+        """{
+          "data": [
+            {
+              "id": "aut_1",
+              "name": "CI check",
+              "status": "active",
+              "trigger": {"type": "every", "every": "1h"},
+              "action": {"type": "prompt", "prompt": "Check CI"},
+              "nextDueAt": "2026-11-26T09:00:00Z",
+              "runCount": 4,
+              "lastRunAt": 1795676400000,
+              "lastOutcome": "fired",
+              "lastOutput": "token sk-live-secret-token leaked"
+            },
+            {
+              "id": "aut_2",
+              "name": "Cleanup",
+              "status": "paused",
+              "trigger": {"type": "cron", "cron": "0 3 * * *"},
+              "action": {"type": "shell", "command": "git gc"},
+              "lastRunAt": 1795590000000,
+              "lastOutcome": "failed",
+              "pauseReason": "too many failures with sk-live-secret-token"
+            }
+          ]
+        }"""
+
     @Test
     fun `B-AUTO-005 list decodes automations and redacts secrets in output and pause reason`() =
         runTest {
@@ -75,34 +103,7 @@ class Oc2AutomationsTest {
                 RowServer(redactor = redactor) { seen ->
                     when {
                         seen.method == "GET" && seen.path == "/api/experimental/automation" ->
-                            json(
-                                """{
-                                  "data": [
-                                    {
-                                      "id": "aut_1",
-                                      "name": "CI check",
-                                      "status": "active",
-                                      "trigger": {"type": "every", "every": "1h"},
-                                      "action": {"type": "prompt", "prompt": "Check CI"},
-                                      "nextDueAt": "2026-11-26T09:00:00Z",
-                                      "runCount": 4,
-                                      "lastRunAt": 1795676400000,
-                                      "lastOutcome": "fired",
-                                      "lastOutput": "token sk-live-secret-token leaked"
-                                    },
-                                    {
-                                      "id": "aut_2",
-                                      "name": "Cleanup",
-                                      "status": "paused",
-                                      "trigger": {"type": "cron", "cron": "0 3 * * *"},
-                                      "action": {"type": "shell", "command": "git gc"},
-                                      "lastRunAt": 1795590000000,
-                                      "lastOutcome": "failed",
-                                      "pauseReason": "too many failures with sk-live-secret-token"
-                                    }
-                                  ]
-                                }"""
-                            )
+                            json(sampleListJson)
                         else -> error("Unexpected ${seen.method} ${seen.path}")
                     }
                 }

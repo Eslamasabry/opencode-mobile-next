@@ -86,7 +86,6 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
         actions::disconnect,
         actions::cancelDisconnect,
     )
-    ServerAutomationsOverlays(state, actions)
     LifecycleResumeEffect(actions) {
         if (state.page == ServerSettingsPage.Shell) actions.refresh()
         if (state.page == ServerSettingsPage.Home && state.showAutomations)
@@ -112,6 +111,7 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                 state.automationsLoading ||
                 state.automationsWorking,
     ) {
+        ServerAutomationsOverlays(state, actions)
         Column(
             Modifier.verticalScroll(kitPageScrollState()).padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,7 +11,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
-import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.AutomationAction
 import io.github.eslamasabry.oc.core.model.AutomationOutcome
@@ -18,12 +19,14 @@ import io.github.eslamasabry.oc.core.model.AutomationTrigger
 import io.github.eslamasabry.oc.core.model.Health
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ServerAutomation
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.settings.presentation.AutomationsNotice
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLocalFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsUi
 import io.github.eslamasabry.oc.feature.settings.ui.ServerSettingsScreen
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
 import java.io.File
 import java.lang.reflect.Proxy
@@ -83,7 +86,7 @@ class B605ServerAutomationsUiAndRendersTest {
                 runCount = 12,
                 lastRunAtMs = yesterday,
                 lastOutcome = AutomationOutcome.Failed,
-                lastOutput = Redacted("exit code 1: lock file exists"),
+                lastOutput = Redactor().details("exit code 1: lock file exists"),
             ),
             ServerAutomation(
                 id = "aut_3",
@@ -149,7 +152,9 @@ class B605ServerAutomationsUiAndRendersTest {
             runDesktopComposeUiTest(360, 800) {
                 setContent {
                     SettingsThemed(dark = dark, locale = "en", fontScale = scale, width = 360f) {
-                        ServerSettingsScreen(laptopUi(), actions)
+                        KitSheetHost(Modifier.fillMaxSize()) {
+                            ServerSettingsScreen(laptopUi(), actions)
+                        }
                     }
                 }
                 waitForIdle()
@@ -175,7 +180,9 @@ class B605ServerAutomationsUiAndRendersTest {
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(laptopUi(supportsAutomations = false), actions)
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(laptopUi(supportsAutomations = false), actions)
+                    }
                 }
             }
             waitForIdle()
@@ -185,10 +192,12 @@ class B605ServerAutomationsUiAndRendersTest {
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(
-                        laptopUi(supportsAutomations = true, automations = persistentListOf()),
-                        actions,
-                    )
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi(supportsAutomations = true, automations = persistentListOf()),
+                            actions,
+                        )
+                    }
                 }
             }
             waitForIdle()
@@ -211,10 +220,12 @@ class B605ServerAutomationsUiAndRendersTest {
             runDesktopComposeUiTest(360, 800) {
                 setContent {
                     SettingsThemed(dark = dark, locale = "en", fontScale = scale, width = 360f) {
-                        ServerSettingsScreen(
-                            laptopUi().copy(selectedAutomationId = "aut_2"),
-                            actions,
-                        )
+                        KitSheetHost(Modifier.fillMaxSize()) {
+                            ServerSettingsScreen(
+                                laptopUi().copy(selectedAutomationId = "aut_2"),
+                                actions,
+                            )
+                        }
                     }
                 }
                 waitForIdle()
@@ -235,10 +246,12 @@ class B605ServerAutomationsUiAndRendersTest {
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(
-                        laptopUi().copy(deleteAutomationConfirmId = "aut_2"),
-                        actions,
-                    )
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi().copy(deleteAutomationConfirmId = "aut_2"),
+                            actions,
+                        )
+                    }
                 }
             }
             waitForIdle()
@@ -248,10 +261,12 @@ class B605ServerAutomationsUiAndRendersTest {
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(
-                        laptopUi().copy(stopAllAutomationsConfirm = true),
-                        actions,
-                    )
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi().copy(stopAllAutomationsConfirm = true),
+                            actions,
+                        )
+                    }
                 }
             }
             waitForIdle()
@@ -262,10 +277,12 @@ class B605ServerAutomationsUiAndRendersTest {
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(
-                        laptopUi().copy(automationsNotice = AutomationsNotice.StoppedAll(2)),
-                        actions,
-                    )
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi().copy(automationsNotice = AutomationsNotice.StoppedAll(2)),
+                            actions,
+                        )
+                    }
                 }
             }
             waitForIdle()

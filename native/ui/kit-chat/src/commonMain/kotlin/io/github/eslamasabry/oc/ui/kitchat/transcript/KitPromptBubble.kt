@@ -162,7 +162,10 @@ public fun KitPromptBubble(
                     .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(kitPromptBubbleFill(colors), shape).border(kitHairline(), colors.hairline, shape))
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
             ) {
-                PromptOriginHeader(origin, hasBody = text.isNotEmpty() || photos.isNotEmpty() || attachments.isNotEmpty())
+                PromptOriginHeader(
+                    origin = origin,
+                    hasBody = text.isNotEmpty() || photos.isNotEmpty() || attachments.isNotEmpty(),
+                )
                 if (text.isNotEmpty()) PromptWords(text)
                 if (photos.isNotEmpty()) {
                     if (text.isNotEmpty()) Spacer(Modifier.height(Space.S2.dp))
