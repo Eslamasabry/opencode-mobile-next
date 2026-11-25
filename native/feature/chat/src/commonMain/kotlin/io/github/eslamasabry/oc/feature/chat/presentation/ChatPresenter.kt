@@ -282,6 +282,18 @@ public class ChatPresenter(
     private fun watchTurns(scope: CoroutineScope) {
         val port = star ?: return
         var wasBusy: Boolean? = null
+        var heldTurnId: String? = null
+        val hold: (String?) -> Unit = { heldTurnId = it }
+        world.requests
+            .latest { req -> req?.state?.map { it.card != null } ?: flowOf(false) }
+            .onEach { hasCard ->
+                val turnId = heldTurnId
+                if (!hasCard && turnId != null && isAskLiveAtRest()) {
+                    heldTurnId = null
+                    askAfterReply(port, turnId, hold)
+                }
+            }
+            .launchIn(scope)
         world.transcript
             .onEach { t ->
                 val busy = t.run.busy
@@ -289,25 +301,37 @@ public class ChatPresenter(
                 wasBusy = busy
                 if (before == false && busy && world.link.value == ChatLink.Live) {
                     // Never while a turn runs: a new turn takes the ask down, and counting it asks nothing.
+                    heldTurnId = null
                     local.update { it.copy(replyAsk = null) }
                     launcher.launch { port.promptStarted() }
                 } else if (before == true && !busy) {
+                    heldTurnId = null
                     local.update { it.copy(replyAsk = null) }
                     val turnId = StarPromptTurn.succeededTurnId(t.rows)
-                    val good = turnId != null
-                    launcher.launch {
-                        // The ask comes at rest: this turn is over and nothing new started meanwhile.
-                        val asked = port.replyEnded(good) && turnId != null
-                        val liveAtRest = !world.transcript.value.run.busy && world.link.value == ChatLink.Live
-                        val noCard = world.requests.value?.state?.value?.card == null
-                        if (asked && liveAtRest && noCard) {
-                            local.update { it.copy(replyAsk = ReplyAskUi(turnId = turnId)) }
-                            port.report(StarPromptEvent.Shown)
-                        }
-                    }
+                    if (turnId != null) askAfterReply(port, turnId, hold)
+                    else launcher.launch { port.replyEnded(false) }
                 }
             }
             .launchIn(scope)
+    }
+
+    private fun isAskLiveAtRest(): Boolean =
+        !world.transcript.value.run.busy && world.link.value == ChatLink.Live
+
+    private fun askAfterReply(port: ChatStarPrompt, turnId: String, hold: (String?) -> Unit) {
+        launcher.launch {
+            if (!isAskLiveAtRest()) return@launch
+            if (world.requests.value?.state?.value?.card != null) {
+                hold(turnId)
+            } else {
+                val asked = port.replyEnded(true)
+                val clear = isAskLiveAtRest() && world.requests.value?.state?.value?.card == null
+                if (asked && clear) {
+                    local.update { it.copy(replyAsk = ReplyAskUi(turnId = turnId)) }
+                    port.report(StarPromptEvent.Shown)
+                }
+            }
+        }
     }
 
     override fun replyAskYes() {

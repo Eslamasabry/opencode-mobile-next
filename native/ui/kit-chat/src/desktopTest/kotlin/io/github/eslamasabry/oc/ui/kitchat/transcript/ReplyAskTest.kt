@@ -254,13 +254,13 @@ class ReplyAskTest {
         showAfterFooter(after, fontScale = 1.3f)
         val row = onNodeWithTag(REPLY_ASK_AFTER_TAG).getBoundsInRoot()
         val copyBtn = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        val rowHeight = row.bottom - row.top
+        assertTrue(row.left >= Space.S4.dp - 0.5.dp, "${after.locale}: after starts inside gutter")
         assertTrue(row.right <= phoneWidth - Space.S4.dp + 0.5.dp, "${after.locale}: after inside gutter")
         assertTrue(row.bottom <= copyBtn.top + 0.5.dp, "${after.locale}: after sits above Copy and More")
-        assertWordUnclipped(
-            onNodeWithText(after.note, useUnmergedTree = true),
-            row,
-            "${after.locale} '${after.note}'",
-        )
+        assertTrue(rowHeight in 47.5.dp..96.5.dp, "${after.locale}: after is 1 or 2 rows tall (was $rowHeight)")
+        val noteNode = onNodeWithText(after.note, useUnmergedTree = true)
+        assertWordUnclipped(noteNode, row, "${after.locale} '${after.note}'")
         assertWordUnclipped(
             onNodeWithText(after.action, useUnmergedTree = true),
             row,
@@ -269,6 +269,7 @@ class ReplyAskTest {
         val actionBox = onNodeWithTag(REPLY_ASK_ACTION_TAG).getBoundsInRoot()
         assertTrue(actionBox.bottom - actionBox.top >= 47.5.dp, "${after.locale}: action is 48 dp tall")
         assertInside(actionBox, row, "${after.locale} action")
+        assertDisjoint(listOf("note" to noteNode.getBoundsInRoot(), "action" to actionBox), after.locale)
     }
 
     @Test

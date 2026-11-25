@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -46,6 +48,7 @@ public const val REPLY_ASK_ACTION_TAG: String = "kit-reply-ask-action"
  * "Enjoying it?" (Caption, Tertiary), then Yes / No (Secondary, Primary) and Skip (Secondary, Tertiary),
  * each word centred in a 48 dp tall target with 8 dp horizontal padding.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("LongParameterList")
 @Composable
 public fun KitReplyAsk(
@@ -58,22 +61,24 @@ public fun KitReplyAsk(
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier.testTag(REPLY_ASK_TAG), verticalAlignment = Alignment.CenterVertically) {
+    FlowRow(
+        modifier = modifier.testTag(REPLY_ASK_TAG),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
         KitText(
             question,
             Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             role = TypeRole.Caption,
             tone = TextTone.Tertiary,
-            maxLines = 1,
         )
         ReplyAskTarget(onYes, TextTone.Primary, REPLY_ASK_YES_TAG) {
-            KitText(yes, role = TypeRole.Secondary, tone = TextTone.Primary, maxLines = 1)
+            KitText(yes, role = TypeRole.Secondary, tone = TextTone.Primary)
         }
         ReplyAskTarget(onNo, TextTone.Primary, REPLY_ASK_NO_TAG) {
-            KitText(no, role = TypeRole.Secondary, tone = TextTone.Primary, maxLines = 1)
+            KitText(no, role = TypeRole.Secondary, tone = TextTone.Primary)
         }
         ReplyAskTarget(onSkip, TextTone.Tertiary, REPLY_ASK_SKIP_TAG) {
-            KitText(skip, role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
+            KitText(skip, role = TypeRole.Secondary, tone = TextTone.Tertiary)
         }
     }
 }
@@ -82,6 +87,7 @@ public fun KitReplyAsk(
  * Follow-up line shown in [KitReplyFooter]'s metadata slot after Yes ("Thanks." + star + "Star on GitHub")
  * or No ("Sorry." + "Report a problem").
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 public fun KitReplyAskAfter(
     note: String,
@@ -90,14 +96,17 @@ public fun KitReplyAskAfter(
     star: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier.testTag(REPLY_ASK_AFTER_TAG), verticalAlignment = Alignment.CenterVertically) {
-        KitText(note, role = TypeRole.Caption, tone = TextTone.Tertiary, maxLines = 1)
+    FlowRow(
+        modifier = modifier.testTag(REPLY_ASK_AFTER_TAG),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        KitText(note, role = TypeRole.Caption, tone = TextTone.Tertiary)
         ReplyAskTarget(onAction, TextTone.Accent, REPLY_ASK_ACTION_TAG) {
             if (star) {
                 KitIcon(KitIcons.starFilled, size = KitIconSize.Tiny, tone = TextTone.Accent)
                 Spacer(Modifier.width(Space.S1.dp))
             }
-            KitText(action, role = TypeRole.Secondary, tone = TextTone.Accent, maxLines = 1)
+            KitText(action, role = TypeRole.Secondary, tone = TextTone.Accent)
         }
     }
 }
