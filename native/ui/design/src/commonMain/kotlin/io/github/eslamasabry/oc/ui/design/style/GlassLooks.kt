@@ -50,7 +50,7 @@ public object GlassLooks {
     /** The default (D4): exactly [GlassLook.Default], what glass-live ships. Nothing extra. */
     public val Glossy: GlassLookPreset = GlassLookPreset(GlassLookId.Glossy, GlassLook.Default, lens = true, tintFactor = 1f)
 
-    /** [GlassLook.Default] with its speculars at [CLEAR_SPECULAR] and a thinner starting tint. */
+    /** [GlassLook.Default] with its speculars at [CLEAR_SPECULAR] and a thinner starting tint (B-614 Clear variant). */
     public val Clear: GlassLookPreset =
         GlassLookPreset(
             GlassLookId.Clear,
@@ -63,7 +63,7 @@ public object GlassLooks {
                 )
             },
             lens = true,
-            tintFactor = .7f,
+            tintFactor = .30f,
         )
 
     /**
@@ -99,7 +99,8 @@ public object GlassLooks {
      * backdrops, and the gloss-kept count never differs, so Clear is cut and three looks ship. The test fails if a
      * retune opens the gap, so this flag is never stale.
      */
-    public const val clearEarnsItsPlace: Boolean = false
+    /** B-614: Clear now carries a real optical tint gap (>= 0.08) to Glossy in both themes, offering Clear / Glossy / Frosted. */
+    public const val clearEarnsItsPlace: Boolean = true
 
     public const val CLEAR_TINT_GAP: Float = .08f
     public const val CLEAR_GLOSS_GAP: Float = .25f

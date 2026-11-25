@@ -91,9 +91,8 @@ internal object AndroidLiquidGlass {
                 }
             },
             highlight = {
-                // A crisp rim (owner 2026-11-09): 1 dp, no blur; the directional light makes its top-start (and
-                // bottom-end) arc the brightest, and its floor keeps a hairline at the two other corners (owner
-                // 2026-11-13: a pane whose edge disappears at a corner reads as a broken shape).
+                // Live tilt & scroll-reactive specular rim (B-610): reads liveLightDir() in draw phase (0 recomposition).
+                val dir = spec.liveLightDir()
                 Highlight(
                     width = spec.rimDp.dp,
                     blurRadius = 0.dp,
@@ -104,8 +103,8 @@ internal object AndroidLiquidGlass {
                             blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver,
                             falloff = spec.rimFalloff,
                             floor = spec.rimFloor,
-                            lightX = spec.lightDir[0],
-                            lightY = spec.lightDir[1],
+                            lightX = dir[0],
+                            lightY = dir[1],
                         ),
                 )
             },

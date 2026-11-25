@@ -185,6 +185,11 @@ public class AndroidKitPlatform(
     override val liquidGlass: Boolean =
         glassTier == KitGlassTier.AppleLiquid || glassTier == KitGlassTier.StandardLiquid
 
+    @Composable
+    override fun ObserveGlassLight(active: Boolean, onAngleDeg: (Float) -> Unit) {
+        AndroidGlassLightSensor.Observe(context, active && appleLiquidGlass, onAngleDeg)
+    }
+
     override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
         val shader = (program as? AndroidLiveShader)?.shader ?: return null

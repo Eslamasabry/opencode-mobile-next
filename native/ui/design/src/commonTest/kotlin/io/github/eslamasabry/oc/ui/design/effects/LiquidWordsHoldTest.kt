@@ -21,9 +21,9 @@ class LiquidWordsHoldTest {
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
             assertEquals(LiquidEdge.MODAL_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
             assertEquals(sheet.blurDp, menu.blurDp)
-            assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
+            assertEquals(36f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
-            assertEquals(if (dark) .20f else .10f, menu.tint, "menu tint dark=$dark")
+            assertEquals(if (dark) .20f else .14f, menu.tint, "menu tint dark=$dark")
         }
     }
 

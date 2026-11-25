@@ -110,9 +110,11 @@ class GlassTuningKitTest {
                 rtl = false,
                 rim = Color.White.copy(alpha = .72f),
                 rimAdds = true,
-                rimDp = 1f,
-                shadow = Color.Transparent,
+                rimDp = GlassTuning.RIM_WIDTH_DP,
+                shadow = Color.Black.copy(alpha = LiquidEdge.recipe(LiquidRole.Bar, true).shadowAlpha),
                 frostBlurDp = 8f,
+                specular = Color.White.copy(alpha = GlassTuning.SHIPPED_SPECULAR_DARK),
+                bendShape = GlassTuning.SHIPPED_BEND_SHAPE,
             )
         val shipped = GlassTuning.shipped(GlassPaneKind.Bar, true)
         assertSame(base, base.tuned(shipped, shipped, 1f))

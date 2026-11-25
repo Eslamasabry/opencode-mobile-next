@@ -17,12 +17,12 @@ class LiquidMenuFrostTest {
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
             val bar = LiquidEdge.recipe(LiquidRole.Bar, dark)
-            assertEquals(4f, menu.blurDp, "menu blur dark=$dark")
-            assertTrue(menu.blurDp - bar.blurDp <= 1f, "one family: the menu frosts at most 1 dp more than the bar it grows from (dark=$dark)")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
+            assertTrue(menu.blurDp > bar.blurDp, "scale-dependent weight: modals carry deeper blur than slim bars (dark=$dark)")
             assertEquals(sheet.blurDp, menu.blurDp)
-            assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
+            assertEquals(36f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
-            assertEquals(if (dark) .20f else .10f, menu.tint, "menu tint dark=$dark")
+            assertEquals(if (dark) .20f else .14f, menu.tint, "menu tint dark=$dark")
             assertEquals(1.6f, menu.saturation, "menu saturation dark=$dark")
         }
     }
@@ -30,7 +30,7 @@ class LiquidMenuFrostTest {
     @Test
     fun `the dock's strip and swell keep their numbers - the swell is the menu's old glass, the list a menu's`() {
         for (dark in listOf(true, false)) {
-            assertEquals(3f, LiquidEdge.dockRecipe(dark, 0f).blurDp, "strip (dark=$dark)")
+            assertEquals(2f, LiquidEdge.dockRecipe(dark, 0f).blurDp, "strip (dark=$dark)")
             assertEquals(if (dark) 6f else 3f, LiquidEdge.dockRecipe(dark, 1f).blurDp, "swell (dark=$dark)")
             assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.dockRecipe(dark, 1f, GlassLooks.Glossy, list = 1f).blurDp, "list (dark=$dark): a menu's frost (cut audit 2)")
             assertEquals(3f + if (dark) 3f else 0f, LiquidEdge.swellRecipe(dark).blurDp)
@@ -41,12 +41,12 @@ class LiquidMenuFrostTest {
     @Test
     fun `only the menu's blur moved - every other role keeps its frost`() {
         for (dark in listOf(true, false)) {
-            assertEquals(3f, LiquidEdge.recipe(LiquidRole.Bar, dark).blurDp)
-            assertEquals(3f, LiquidEdge.recipe(LiquidRole.Dock, dark).blurDp)
-            assertEquals(2f, LiquidEdge.recipe(LiquidRole.Composer, dark).blurDp)
-            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
-            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
-            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Action, dark).blurDp)
+            assertEquals(2f, LiquidEdge.recipe(LiquidRole.Bar, dark).blurDp)
+            assertEquals(2f, LiquidEdge.recipe(LiquidRole.Dock, dark).blurDp)
+            assertEquals(1.5f, LiquidEdge.recipe(LiquidRole.Composer, dark).blurDp)
+            assertEquals(.5f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
+            assertEquals(.5f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
+            assertEquals(.5f, LiquidEdge.recipe(LiquidRole.Action, dark).blurDp)
             assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
         }
     }

@@ -270,9 +270,44 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             // A clear content pane (a card, a row group) keeps its first line of words below Glass's pane inset, where its
             // top sheen has mostly faded (GlassFinish.sheenAt); a chip's or a field's words may lie anywhere on it.
             val wordsDp = if (clear && input.role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
-            remember(resolved, spots, solid, roles, clear, request.look, input.role, input.cell) {
-                glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look, even = input.role == SurfaceRole.Field)
-                    .let { d -> input.cell?.let { d.asCell(it) } ?: d }
+            remember(resolved, spots, solid, roles, clear, request.look, input.role, input.cell, request.nested, request.selected) {
+                val base =
+                    glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look, even = input.role == SurfaceRole.Field)
+                        .let { d -> input.cell?.let { d.asCell(it) } ?: d }
+                val none = io.github.eslamasabry.oc.ui.design.color.Argb(0)
+                when {
+                    // B-611: ZERO glass stacked on glass — nested controls (segmented thumbs, chips inside composer)
+                    // sit calmly inside their parent pane with no second blur, sheen, specular, or double wireframe rim.
+                    request.nested ->
+                        base.copy(
+                            frost = 0f,
+                            sheen = none,
+                            specular = none,
+                            innerGlow = none,
+                            edgeStart = if (request.selected) roles.accent.withAlpha(0.45f) else none,
+                            edgeEnd = if (request.selected) roles.accent.withAlpha(0.25f) else none,
+                            edgeRest = null,
+                            edgeWidthDp = if (request.selected) 1f else 0f,
+                            shadows = emptyList(),
+                        )
+                    // B-611: Apple HIG placement — content layer (lists, cards, settings rows) stays calm & non-glass
+                    // so the floating Liquid Glass control layer stands out unmistakably above it.
+                    input.role == SurfaceRole.Content && !request.selected ->
+                        base.copy(
+                            fill = roles.surface1.withAlpha(if (roles.dark) .72f else .84f),
+                            fillStart = roles.surface1.withAlpha(if (roles.dark) .72f else .84f),
+                            frost = 0f,
+                            sheen = none,
+                            specular = none,
+                            innerGlow = none,
+                            edgeStart = roles.hairline,
+                            edgeEnd = roles.hairline,
+                            edgeRest = null,
+                            edgeWidthDp = .5f,
+                            shadows = emptyList(),
+                        )
+                    else -> base
+                }
             }
         }
     // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree

@@ -169,8 +169,19 @@ public fun KitTheme(
     androidx.compose.runtime.SideEffect { io.github.eslamasabry.oc.ui.kit.foundation.KitLayerCycles.strict = platform.isDebug }
     // One live background for every page under this root (smoothness round 2): one clock, one picture per page size.
     val live = io.github.eslamasabry.oc.ui.kit.live.rememberKitLiveShare()
+    // Live tilt & scroll specular light (B-610): strictly gated on Glass + AppleLiquid (API 35+) + visible + motion on.
+    val glassLight = remember { io.github.eslamasabry.oc.ui.kit.effects.KitGlassLight() }
+    val lightActive =
+        styleState.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
+            !motion.reduced &&
+            !stillFrame &&
+            platform.appleLiquidGlass &&
+            io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility.current.shown
+    if (!lightActive) androidx.compose.runtime.SideEffect { glassLight.reset() }
+    platform.ObserveGlassLight(active = lightActive) { deg -> glassLight.onTiltDeg(deg) }
     CompositionLocalProvider(
         io.github.eslamasabry.oc.ui.kit.live.LocalKitLiveShare provides live,
+        io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassLight provides glassLight,
         LocalKitPlatform provides platform,
         LocalKitSignals provides signals,
         LocalKitIconFamilies provides iconFamilies,

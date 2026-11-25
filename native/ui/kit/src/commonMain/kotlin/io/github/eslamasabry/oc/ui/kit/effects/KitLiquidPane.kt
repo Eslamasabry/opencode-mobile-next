@@ -107,6 +107,8 @@ public data class KitLiquidPaneSpec(
     /** The inner shadow along the edge (alpha 0: none, the shipped glass) and its size in dp. */
     val innerShadow: Float = 0f,
     val innerShadowDp: Float = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.INNER_SHADOW_DP,
+    /** Live tilt + scroll specular light source read in draw phase (B-610); null uses static [lightDeg]. */
+    val liveLight: KitGlassLight? = null,
 ) {
     /** The light's direction as a unit vector in the pane's pixels (y down). */
     internal val lightDir: FloatArray
@@ -115,6 +117,9 @@ public data class KitLiquidPaneSpec(
             return if (lightDeg == io.github.eslamasabry.oc.ui.design.effects.GlassTuning.LIGHT_DEG) floatArrayOf(DIAGONAL, DIAGONAL)
             else floatArrayOf(kotlin.math.cos(a), kotlin.math.sin(a))
         }
+
+    /** Live light direction read strictly in the draw phase (tilts/scrolls with zero recomposition, B-610). */
+    internal fun liveLightDir(): FloatArray = liveLight?.lightDir(lightDeg) ?: lightDir
 }
 
 /** The shipped light's direction component (1/sqrt 2), as the shaders had it. */

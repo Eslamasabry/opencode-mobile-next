@@ -53,8 +53,8 @@ class GlassTuningTest {
             assertEquals(GlassTuning.WORDS_CLEAR_FLOATING, k.wordsClear, "$kind: floating chrome lets content enter the lens rim")
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }
-        // Apple Liquid Glass scale-dependent weight (B-609): clear 1 dp bar, deeper 6 dp modal.
-        assertEquals(1f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
+        // Apple Liquid Glass scale-dependent weight (B-609): clear 2 dp bar, deeper 6 dp modal.
+        assertEquals(2f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
         assertEquals(26f, GlassTuning.shipped(GlassPaneKind.Bar, true).lensStrengthDp)
         assertEquals(LiquidEdge.MODAL_BLUR_DP, GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp)
         assertEquals(38f, GlassTuning.shipped(GlassPaneKind.Dialog, false).lensStrengthDp)

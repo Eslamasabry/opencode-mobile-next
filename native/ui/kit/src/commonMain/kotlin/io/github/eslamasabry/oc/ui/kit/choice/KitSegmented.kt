@@ -250,6 +250,8 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             .testTag("kit-segmented-track")
             .selectableGroup(),
     ) {
+        // B-611: segments sit inside the track — mark nested so Glass never stacks glass-on-glass double rims.
+        CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true) {
         segments.forEachIndexed { i, s ->
             val chosen = s.value == selected
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
@@ -329,6 +331,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                 }
                 }
             }
+        }
         }
     }
 }

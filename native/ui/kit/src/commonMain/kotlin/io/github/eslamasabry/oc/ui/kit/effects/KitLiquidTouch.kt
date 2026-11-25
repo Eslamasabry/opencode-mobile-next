@@ -57,28 +57,33 @@ import kotlinx.coroutines.launch
  * nothing swells and the light comes and goes at once.
  */
 internal object LiquidTouchRules {
-    /** How much a small pane grows at full press (a share of its size). */
-    const val SWELL: Float = .05f
+    /** Gelatinous spring flex at full press (B-616: directional elastic stretch/squish, not flat uniform scale). */
+    const val SWELL: Float = .065f
+    const val FLEX_AXIS_BIAS: Float = .035f
+    const val GEL_STIFFNESS: Float = 520f
+    const val GEL_DAMPING: Float = 0.58f
 
-    /** The light under a finger on a large pane: its radius in dp, and how strong it is at its centre. */
-    const val BLOOM_DP: Float = 72f
-    const val BLOOM_DARK: Float = .16f
-    const val BLOOM_LIGHT: Float = .34f
+    /** Inner illumination glow under a finger on any liquid glass control (B-616): blooms and spills across joined panes. */
+    const val BLOOM_DP: Float = 84f
+    const val BLOOM_DARK: Float = .24f
+    const val BLOOM_LIGHT: Float = .42f
 
-    /** A pressed pane's brighter edge: light added in the dark theme, a firmer line in the light one. */
-    const val EDGE_DARK: Float = .42f
-    const val EDGE_LIGHT: Float = .14f
+    /** Pressed glass specular edge boost (luminous white in BOTH dark and light modes, B-612/B-616). */
+    const val EDGE_DARK: Float = .48f
+    const val EDGE_LIGHT: Float = .44f
 }
 
-/** How far a liquid pane is pressed (0 at rest, 1 held; it may pass 0 slightly as it settles). */
+/** How far a small liquid pane is pressed and where the finger landed (for gelatinous flex + inner glow, B-616). */
 @Stable
 internal class KitLiquidPress {
     val amount: Animatable<Float, AnimationVector1D> = Animatable(0f)
+    var localAt: Offset by mutableStateOf(Offset.Unspecified)
+    var origin: Offset by mutableStateOf(Offset.Zero)
 }
 
 /**
  * The press of the control [source] reports, for a small liquid pane; null when [on] is false (the part keeps its own
- * face). Pressing eases in fast; letting go first finishes the press (so a tap is seen), then springs back.
+ * face). Pressing flexes gelatinously with an elastic spring; letting go completes the impulse then rebounds smoothly.
  */
 @Composable
 internal fun rememberKitLiquidPress(source: InteractionSource?, on: Boolean): KitLiquidPress? {
@@ -86,11 +91,17 @@ internal fun rememberKitLiquidPress(source: InteractionSource?, on: Boolean): Ki
     val press = remember { KitLiquidPress() }
     val motion = KitMotion.state
     val specs = remember(motion) { KitMotionSpecs(motion) }
-    LaunchedEffect(source, specs) {
+    val gelSpring =
+        remember(motion) {
+            if (motion.reduced) specs.release()
+            else androidx.compose.animation.core.spring<Float>(dampingRatio = LiquidTouchRules.GEL_DAMPING, stiffness = LiquidTouchRules.GEL_STIFFNESS)
+        }
+    LaunchedEffect(source, specs, gelSpring) {
         var job: Job? = null
         source.interactions.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
+                    press.localAt = interaction.pressPosition
                     job?.cancel()
                     job = launch { press.amount.animateTo(1f, specs.effectsFast()) }
                 }
@@ -98,12 +109,12 @@ internal fun rememberKitLiquidPress(source: InteractionSource?, on: Boolean): Ki
                     job?.cancel()
                     job = launch {
                         if (press.amount.value < 1f) press.amount.animateTo(1f, specs.effectsFast())
-                        press.amount.animateTo(0f, specs.release())
+                        press.amount.animateTo(0f, gelSpring)
                     }
                 }
                 is PressInteraction.Cancel -> {
                     job?.cancel()
-                    job = launch { press.amount.animateTo(0f, specs.release()) }
+                    job = launch { press.amount.animateTo(0f, gelSpring) }
                 }
             }
         }
@@ -111,20 +122,28 @@ internal fun rememberKitLiquidPress(source: InteractionSource?, on: Boolean): Ki
     return press
 }
 
-/** Swells this part with its [press] (the whole part: its glass, its words, its ink). Nothing under reduced motion. */
+/**
+ * Gelatinous directional spring flex for a small liquid glass control (B-616): stretches slightly along the touch
+ * axis and squishes softly on the orthogonal axis like elastic liquid glass. Instant no-op under reduced motion.
+ */
 @Composable
 internal fun Modifier.kitLiquidSwell(press: KitLiquidPress?): Modifier {
     if (press == null || KitMotion.state.reduced) return this
-    return graphicsLayer {
-        val s = 1f + LiquidTouchRules.SWELL * press.amount.value
-        scaleX = s
-        scaleY = s
+    return onGloballyPositioned { press.origin = it.positionInWindow() }.graphicsLayer {
+        val a = press.amount.value
+        val at = press.localAt
+        val nx = if (at.isSpecified && size.width > 1f) ((at.x / size.width) * 2f - 1f).coerceIn(-1f, 1f) else 0f
+        val ny = if (at.isSpecified && size.height > 1f) ((at.y / size.height) * 2f - 1f).coerceIn(-1f, 1f) else 0f
+        val axisBias = (kotlin.math.abs(nx) - kotlin.math.abs(ny)) * LiquidTouchRules.FLEX_AXIS_BIAS * a
+        scaleX = (1f + LiquidTouchRules.SWELL * a + axisBias).coerceAtLeast(0.85f)
+        scaleY = (1f + LiquidTouchRules.SWELL * a - axisBias * 0.65f).coerceAtLeast(0.85f)
     }
 }
 
 /**
- * A pressed small pane's brighter edge along [shape], drawn over its glass. [join]: the pane's part of a joined body;
- * joined, the body's outline brightens instead (drawn by the joined panes).
+ * A pressed small pane's inner illumination glow and luminous specular edge along [shape] (B-616).
+ * When joined to another glass body, hands both touch position and glow intensity to the joined shader so inner
+ * illumination visibly spills onto the neighbouring glass body!
  */
 @Composable
 internal fun Modifier.kitLiquidPressLight(press: KitLiquidPress?, shape: Shape, join: KitLiquidJoinPart? = null): Modifier {
@@ -132,14 +151,32 @@ internal fun Modifier.kitLiquidPressLight(press: KitLiquidPress?, shape: Shape, 
     val dark = LocalKitRoles.current.dark
     if (join != null) {
         DisposableEffect(join, press) {
+            join.touchAt = { if (press.localAt.isSpecified) press.origin + press.localAt else Offset.Unspecified }
             join.touchLight = { press.amount.value }
-            onDispose { join.touchLight = NoTouchLight }
+            onDispose {
+                join.touchAt = NoTouchAt
+                join.touchLight = NoTouchLight
+            }
         }
     }
     return drawWithContent {
         drawContent()
         val a = press.amount.value.coerceIn(0f, 1f)
-        if (a > 0f && join?.composedJoined != true) drawPressedEdge(shape, dark, a)
+        if (a > 0f && join?.composedJoined != true) {
+            val centre = if (press.localAt.isSpecified) press.localAt else Offset(size.width * 0.5f, size.height * 0.5f)
+            val radius = maxOf(size.maxDimension * 0.85f, LiquidTouchRules.BLOOM_DP.dp.toPx() * 0.65f)
+            val strength = (if (dark) LiquidTouchRules.BLOOM_DARK else LiquidTouchRules.BLOOM_LIGHT) * a
+            val outline = shape.createOutline(size, layoutDirection, this)
+            clipPath(Path().apply { addOutline(outline) }) {
+                drawCircle(
+                    Brush.radialGradient(listOf(Color.White.copy(alpha = strength), Color.Transparent), center = centre, radius = radius),
+                    radius = radius,
+                    center = centre,
+                    blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver,
+                )
+            }
+            drawPressedEdge(shape, dark, a)
+        }
     }
 }
 
@@ -147,8 +184,8 @@ private fun androidx.compose.ui.graphics.drawscope.ContentDrawScope.drawPressedE
     val outline = shape.createOutline(size, layoutDirection, this)
     drawOutline(
         outline,
-        color = if (dark) Color.White.copy(alpha = LiquidTouchRules.EDGE_DARK * a) else Color.Black.copy(alpha = LiquidTouchRules.EDGE_LIGHT * a),
-        style = Stroke(1.dp.toPx()),
+        color = Color.White.copy(alpha = (if (dark) LiquidTouchRules.EDGE_DARK else LiquidTouchRules.EDGE_LIGHT) * a),
+        style = Stroke(1.25.dp.toPx()),
         blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver,
     )
 }

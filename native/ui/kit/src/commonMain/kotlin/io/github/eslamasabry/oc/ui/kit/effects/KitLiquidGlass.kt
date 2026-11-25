@@ -265,6 +265,18 @@ public fun kitLiquidFace(
     return liquidFace(role, source, backdrop, shape, transform, chosen, join, rimless = rimless)
 }
 
+/**
+ * Floating drop liquid face for kit controls that bud from or merge into a liquid body (e.g. round jump button,
+ * fluid chips; B-616). Delegates cleanly through the effects engine.
+ */
+@Composable
+internal fun kitLiquidDropFace(
+    role: LiquidRole,
+    source: KitFrostState?,
+    shape: Shape,
+    join: KitLiquidJoinPart? = null,
+): Modifier? = kitLiquidFace(role, source, shape, join = join)
+
 /** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
 @Composable
 internal fun kitLiquidFace(
@@ -513,8 +525,9 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
     // alone, not for every picture the app can draw, so the motion behind it shows through.
     val picture = kitLivePictureSpots()
     val look = kitGlassLook()
+    val glassLight = LocalKitGlassLight.current
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, swell, picture, look, platform.liquidResolution) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, swell, picture, look, platform.liquidResolution, glassLight) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
@@ -570,6 +583,7 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
                 resolution = liquidResolutionOf(recipe, platform.liquidResolution),
                 bendShape = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_BEND_SHAPE,
                 specularReachDp = if (small) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SMALL_SPECULAR_REACH_DP else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SPECULAR_REACH_DP,
+                liveLight = glassLight,
             )
         }
     // The Glass lab's tuning (null: the shipped glass). The dock's grown swell keeps the menu's old glass.

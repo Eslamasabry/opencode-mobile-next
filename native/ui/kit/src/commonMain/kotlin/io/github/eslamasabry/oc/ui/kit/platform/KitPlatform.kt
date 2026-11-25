@@ -183,6 +183,13 @@ public interface KitPlatform {
         get() = glassTier == KitGlassTier.AppleLiquid
 
     /**
+     * Observes device gravity tilt for live Apple Liquid Glass specular highlights while [active] is true (B-610).
+     * Must immediately unregister sensors when [active] is false (hidden, Reduced Motion, or non-Glass) for 0% idle CPU.
+     */
+    @Composable
+    public fun ObserveGlassLight(active: Boolean, onAngleDeg: (Float) -> Unit): Unit = Unit
+
+    /**
      * The share of a liquid pane's pixels (per side) its blurred, bent backdrop is drawn at before it is scaled up to the
      * pane (smoothness 2026-11-09: Glass over 120 Hz). The rim light, the specular and the tint stay at full resolution.
      * Only panes whose frost hides the lower resolution take it ([io.github.eslamasabry.oc.ui.kit.effects.liquidResolutionOf]).

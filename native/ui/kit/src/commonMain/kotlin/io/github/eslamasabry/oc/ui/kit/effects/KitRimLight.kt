@@ -124,7 +124,7 @@ internal fun DrawScope.drawKitRim(spec: KitLiquidPaneSpec, shape: CornerBasedSha
     if (program == null || spec.rim.alpha <= 0f || spec.rimDp <= 0f || size.width <= 0f || size.height <= 0f) return
     val outline = shape.createOutline(size, layoutDirection, this)
     val w = ceil(spec.rimDp.dp.toPx().coerceAtMost(size.minDimension / 2f)) * 2f
-    KitRimShader.set(program, size, KitRimShader.cornerRadii(shape, size, this, layoutDirection), spec.rim.copy(alpha = 1f), spec.rimFalloff, spec.rimFloor, spec.lightDir)
+    KitRimShader.set(program, size, KitRimShader.cornerRadii(shape, size, this, layoutDirection), spec.rim.copy(alpha = 1f), spec.rimFalloff, spec.rimFloor, spec.liveLightDir())
     clipPath(Path().apply { addOutline(outline) }) {
         drawOutline(
             outline,

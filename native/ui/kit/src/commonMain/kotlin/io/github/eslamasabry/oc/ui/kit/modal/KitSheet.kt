@@ -627,18 +627,23 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 entry.height == KitSheetHeight.Half -> Modifier.height(half)
                                 else -> Modifier.height(maxSheet)
                             }
+                        // B-613: partial-height Glass sheets float inset with concentric rounded corners so the live
+                        // background peeks around all edges (Apple iOS 26 sheet geometry). Full sheets stay edge-anchored.
+                        val glassInset = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && entry.height != KitSheetHeight.Full
+                        val sheetShape = if (glassInset) KitShapeId.Dialog else KitShapeId.Sheet
                         SheetPanel(
                             entry,
-                            Modifier.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp)
+                            Modifier.then(if (glassInset) Modifier.padding(horizontal = Space.S2.dp, vertical = Space.S2.dp) else Modifier)
+                                .widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp)
                                 .fillMaxWidth()
                                 .then(sized)
                                 .kitMorphTarget(entry.morph, state.shown.targetState, KitGrowMotion.ROW_CORNER)
                                 .onSizeChanged { drag.height = it.height }
                                 .graphicsLayer { translationY = drag.offset.value }
                                 .predictiveShrink(back, TransformOrigin(0.5f, 1f))
-                                .clip(KitShapeId.Sheet.shape()),
+                                .clip(sheetShape.shape()),
                             handle = true,
-                            shape = KitShapeId.Sheet,
+                            shape = sheetShape,
                             open = state.shown.targetState,
                             drag = drag,
                             stillShown = { state.shown.targetState },

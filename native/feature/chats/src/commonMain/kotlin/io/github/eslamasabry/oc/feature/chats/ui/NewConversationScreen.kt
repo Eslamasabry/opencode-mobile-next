@@ -248,6 +248,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                 )
             },
             width = KitScreenWidth.Reading,
+            floatingBar = io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar(),
             loading = state.busy,
             loadingLabel = if (preparing) gettingReady else working,
             bottom = {

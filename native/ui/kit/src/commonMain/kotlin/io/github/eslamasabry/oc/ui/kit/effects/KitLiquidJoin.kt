@@ -244,10 +244,17 @@ public class KitLiquidJoin internal constructor() {
     internal val drops = mutableStateListOf<KitLiquidJoinDrop>()
     private var compiled: Any? = null
 
-    /** The pane [part] is joined to now, or null (drawn as a lone pane). Snapshot reads: callers redraw as it changes. */
+    /**
+     * The pane [part] is joined to now, or null (drawn as a lone pane). Snapshot reads: callers redraw as it changes.
+     * Modal drops (menus, `reachesCentre == true`) take precedence over resting pill drops on the same body (e.g., a
+     * composer menu temporarily superseding the round jump button, then smoothly restoring it on dismiss).
+     */
     internal fun partnerOf(part: KitLiquidJoinPart): KitLiquidJoinPart? =
         when (part) {
-            is KitLiquidJoinBody -> drops.firstOrNull { it.body == part.name && it.granted }?.takeIf { part.granted }
+            is KitLiquidJoinBody ->
+                (drops.firstOrNull { it.body == part.name && it.granted && it.reachesCentre }
+                    ?: drops.firstOrNull { it.body == part.name && it.granted })
+                    ?.takeIf { part.granted }
             is KitLiquidJoinDrop -> bodies[part.body]?.takeIf { it.granted && part.granted && partnerOf(it) === part }
         }
 
@@ -519,7 +526,7 @@ private class JoinedPaneNode(
                 rimPx = spec.rimDp.dp.toPx(),
                 falloff = spec.rimFalloff,
                 rimFloor = spec.rimFloor,
-                lightDir = spec.lightDir,
+                lightDir = spec.liveLightDir(),
                 bendShape = spec.bendShape,
             )
         // 1. The backdrop at the body's resolution, blurred by the body's frost, bent and pressed by the lens pass.
@@ -561,11 +568,11 @@ private class JoinedPaneNode(
                     drawRect(programs.brush.brush, size = full.toSize(), blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver)
                 }
                 val edge = (if (dark) LiquidTouchRules.EDGE_DARK else LiquidTouchRules.EDGE_LIGHT) * a
-                u.set(programs.brush, mode = 5f, res = 1f, light = floatArrayOf(0f, 0f, 1.dp.toPx(), edge))
+                u.set(programs.brush, mode = 5f, res = 1f, light = floatArrayOf(0f, 0f, 1.25f.dp.toPx(), edge))
                 drawRect(
                     programs.brush.brush,
                     size = full.toSize(),
-                    colorFilter = if (dark) null else ColorFilter.tint(Color.Black),
+                    colorFilter = ColorFilter.tint(Color.White),
                     blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver,
                 )
             }
@@ -850,8 +857,10 @@ half4 main(float2 q) {
     }
     if (mode < 2.5) {
         float gl = max(length(bend), 0.05);
-        // The plain pane's light (KitRimShader): its two lit arcs the brightest, never below the floor elsewhere.
-        float lit = rimLit(dot(bend / gl, lightDir), falloff, rimFloor);
+        float nd = dot(bend / gl, lightDir);
+        // Live Fresnel rim + crisp concave-meniscus specular glint along the merged liquid neck (B-610, B-616).
+        float spec = pow(max(nd, 0.0), 8.0) * 0.42;
+        float lit = min(1.0, rimLit(nd, falloff, rimFloor) + spec);
         float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
         return half4(edge * lit * mine);
     }

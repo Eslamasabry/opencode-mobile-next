@@ -204,14 +204,14 @@ class LiquidJoinTest {
 
     @Test
     fun `liquid join material - the blur is cut and the saturation kept`() {
-        // Owner 2026-11-11: "Cut the blur and leave the saturation as is."
+        // Apple Liquid Glass (B-609): clear optical centers on bars/composer/pills, deeper modal weight on menus/sheets.
         for (dark in listOf(true, false)) {
-            assertEquals(3f, LiquidEdge.recipe(LiquidRole.Bar, dark).blurDp)
-            assertEquals(2f, LiquidEdge.recipe(LiquidRole.Composer, dark).blurDp)
-            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Menu, dark).blurDp, "menus frost as sheets do, the bar's clear glass (glass liquid)")
-            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
-            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
-            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp, "sheets as menus")
+            assertEquals(2f, LiquidEdge.recipe(LiquidRole.Bar, dark).blurDp)
+            assertEquals(1.5f, LiquidEdge.recipe(LiquidRole.Composer, dark).blurDp)
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Menu, dark).blurDp, "menus carry heavier modal depth")
+            assertEquals(.5f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
+            assertEquals(.5f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp, "sheets carry heavier modal depth")
             assertEquals(if (dark) 6f else 3f, LiquidEdge.swellRecipe(dark).blurDp, "the dock's swell keeps the menu's old glass")
             for (role in LiquidRole.entries) assertEquals(1.6f, LiquidEdge.recipe(role, dark).saturation, "$role saturation")
         }

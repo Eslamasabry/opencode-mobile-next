@@ -566,6 +566,7 @@ public fun KitScreen(
                 ) {
                     Box(
                         Modifier.fillMaxSize()
+                            .then(io.github.eslamasabry.oc.ui.kit.effects.kitGlassScrollLightModifier(active = kitLiquidGlassOn() && !KitMotion.state.reduced))
                             // The bar's copy of the recording is made once the body has drawn (the status edge, drawn next,
                             // reads it). B-608: on floating chrome, start the soft fade AT the bar's bottom edge over the
                             // bar's lens rim so scrolling content visibly enters and bends in the rim instead of vanishing early.
@@ -757,22 +758,20 @@ public fun KitScreen(
                     else -> header
                 }
             val runs = (frost == null && stackTop != null && pageHeader != null && lens) || floats
-            // What the bar's glass (and the status bar's edge) sees of a body that runs under it: the kit's recording,
-            // cleared as the page itself is (audit 2, 2026-11-14: Settings' glass bar and status bar showed blurred copies
-            // of the page's words). A pinned glass bar reads it; a floating bar has no glass to read it (below).
-            val underFade = if (runs && !floats) rememberKitWordsFade(under, KitWordsClear.Above) else null
+            // What the bar's glass (and the status bar's edge) sees of a body that runs under it: the kit's recording.
+            val floatsCapsule = floats && floatingBar?.scrollsElsewhere == false
+            val underFade = if (runs && (!floats || floatsCapsule)) rememberKitWordsFade(under, KitWordsClear.Above) else null
             val barFace =
                 when {
                     stackTop == null -> null
-                    // Owner 2026-11-16 ("remove the background below the conversations area which includes search, This
-                    // phone etc."; "no solid plates over the background"): a floating bar paints no pane, plate or band of
-                    // its own. Its words and controls lie on the page's own background, a live one included; what scrolls
-                    // under them is gone above the chrome's foot and dissolves in below it (topClear, the page edges).
-                    floats -> null
-                    // A page's top pane (the home's title and chips, a Settings bar) has no outline: glass by its
-                    // bend alone (owner 2026-11-14: "Get rid of the border around the top conversation area").
-                    frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape, rimless = true)
-                    runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape, rimless = true)
+                    // Home (scrollsElsewhere == true, owner 2026-11-16 "no solid plates over the background"): keeps
+                    // the page background unbroken behind the big Conversations heading and filter chips.
+                    floats && !floatsCapsule -> null
+                    // Settings / Appearance / New Conversation (B-616): coherent floating Apple Liquid Glass capsule
+                    // with curved lensing and live specular highlight (no rimless fog strip, no hard rectangular cut).
+                    floatsCapsule -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
+                    frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
+                    runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
                     else -> null
                 }
             var barPx by remember { mutableIntStateOf(0) }
@@ -810,6 +809,7 @@ public fun KitScreen(
             // chrome.
             val topClear: () -> Float = {
                 when {
+                    floatsCapsule -> statusRun.toFloat()
                     runs -> runPx.toFloat()
                     else -> 0f
                 }
@@ -823,6 +823,7 @@ public fun KitScreen(
                     .testTag("kit-screen")
             ) {
                 if (stackTop != null) {
+                    val floatBarRimPx = with(density) { io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.recipe(LiquidRole.Bar, dark = true).rimMaxDp.dp.toPx().coerceAtLeast(1f) }
                     Box(
                         Modifier.windowInsetsPadding(
                             WindowInsets.safeDrawing.only(
@@ -830,12 +831,20 @@ public fun KitScreen(
                             )
                         ).then(
                             when {
-                                // The floating bar: the bar and its second row pinned over the body, on no ground of
-                                // their own. A bar that is the page's own heading keeps the body's width.
+                                // B-616: Settings / Appearance / New Conversation float an Apple Liquid Glass capsule
+                                // over live scrolling content (not a rimless fog strip, not a flat opaque plate).
+                                floatsCapsule && barFace != null -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
+                                    .then(kitLiquidWordsHost(LiquidRole.Bar, underFade?.fadedSource ?: under))
+                                    .then(
+                                        if (underFade == null) Modifier
+                                        else Modifier.kitTopPaneReport(floatPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
+                                            .kitWordsFadeRecorder(underFade, { floatPane.bottom }, { floatBarRimPx }, clear = { barClear })
+                                    )
+                                    .kitTouchSink()
+                                // The floating bar on Home (scrollsElsewhere == true): no pane or plate behind the
+                                // heading and filter chips (owner 2026-11-16).
                                 floats -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
                                     .then(if (floatingBar?.scrollsElsewhere == true) Modifier.kitMaxWidth(cap) else Modifier)
-                                    // A touch on the floating chrome (its title, the gaps between its controls) is the chrome's:
-                                    // it never reaches a row that has scrolled under it.
                                     .kitTouchSink()
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, underFade?.fadedSource ?: under) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
@@ -851,10 +860,8 @@ public fun KitScreen(
                         )
                     ) {
                         if (floats) {
-                            // The bar and its second row, one block with one foot, on the page's own background: no pane
-                            // (owner 2026-11-16). The page clears what scrolls under them above that foot (the block's
-                            // bottom) and dissolves it in below it, so nothing passes behind their words.
                             Box(Modifier.fillMaxWidth().testTag(FLOATING_CHROME_TAG)) {
+                                if (floatsCapsule && barFace != null) KitLiquidBarPane(barFace)
                                 Column(Modifier.fillMaxWidth()) {
                                     stackTop()
                                     // The second row keeps the room under it the title has above it, and its sideways

@@ -437,11 +437,18 @@ public fun KitJumpPillLayer(
  * Tag `kit-jump-button`. States: hidden, shown, pressed. Cap: none. Motion: scale + fade.
  */
 @Composable
-public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, modifier: Modifier = Modifier) {
+public fun KitJumpButton(
+    label: String,
+    onClick: () -> Unit,
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    backdrop: KitFrostState? = null,
+) {
     kitAssert(label.isNotBlank()) { "KitJumpButton: a button always carries words for a screen reader" }
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    // The face is the style's own, a little see-through (the one part of a floating chat that is).
+    val motionState = KitMotion.state
+    val specs = KitMotion.specs
     val look =
         io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
             io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
@@ -452,38 +459,86 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
                 faceAlpha = JUMP_BUTTON_FILL_ALPHA,
             )
         )
-    // The caller's place (align, padding) belongs on the node the caller put in its Box: the transition's own
-    // node. Given to
-    // the face inside AnimatedVisibility it is ignored, and on a phone, where motion is on, the arrow lay at the origin
-    // under the status bar (device check 46, build 10077).
     val spoken = modifier.semantics(mergeDescendants = true) {
         contentDescription = label
         role = androidx.compose.ui.semantics.Role.Button
         this.onClick(null) { onClick(); true }
     }
-    val face: @Composable () -> Unit = {
+    val joinBody = io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin.current?.bodies?.get("bottom")
+    val joinable = backdrop != null && motionState.travels && kitScreenBottomIsSlab() && !kitScreenBottomIsStacked() && joinBody?.granted == true
+
+    @Composable
+    fun RoundLiquidFace(
+        faceModifier: Modifier,
+        drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop? = null,
+    ) {
+        val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+        val circleShape = androidx.compose.foundation.shape.CircleShape
+        val liquid =
+            if (backdrop != null) io.github.eslamasabry.oc.ui.kit.effects.kitLiquidDropFace(LiquidRole.Pill, backdrop, circleShape, join = drop)
+            else null
+        val press = rememberKitLiquidPress(interactions, on = liquid != null)
+        val joined = drop?.composedJoined == true
         Box(
-            Modifier
+            faceModifier
                 .testTag("kit-jump-button")
                 .heightIn(min = tokens.minTarget.dp)
                 .widthIn(min = tokens.minTarget.dp)
-                .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
-                // The words and the role are on the caller's node (below), the one a screen reader and a test find.
+                .kitLiquidSwell(press)
+                .kitTappable(onClick = onClick, shape = KitShapeId.Circle, interactionSource = interactions)
                 .clearAndSetSemantics {},
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 Modifier.size(JUMP_BUTTON_FACE_DP.dp)
-                    .then(look.modifier)
-                    .kitHairlineBorder(1.dp, colors.hairline, look.shape),
+                    .kitLiquidJoinRest(drop, circleShape)
+                    .then(liquid ?: look.modifier)
+                    .kitLiquidPressLight(press, circleShape, join = drop)
+                    .then(if (liquid == null && !joined) Modifier.kitHairlineBorder(1.dp, colors.hairline, look.shape) else Modifier),
                 contentAlignment = Alignment.Center,
             ) {
                 KitGlyph(KitIcons.down, colors.text1, 20.dp)
             }
         }
     }
-    if (KitMotion.state.reduced) {
-        if (visible) Box(spoken) { face() }
+
+    if (motionState.reduced) {
+        if (visible) Box(spoken) { RoundLiquidFace(Modifier) }
+        return
+    }
+    if (joinable && joinBody != null) {
+        AnimatedVisibility(
+            visible,
+            spoken,
+            enter = EnterTransition.None,
+            exit = fadeOut(specs.hold(io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.CLOSE_MS)),
+            label = "kit.jump.button",
+        ) {
+            val leaving = transition.targetState == EnterExitState.PostExit
+            val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinDrop("bottom", ownPicture = true)
+            if (drop != null) kitJumpJoinMotion(drop, leaving)
+            val outer = remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+            val sinkPx = with(LocalDensity.current) { io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.PILL_SINK_DP.dp.toPx() }
+            val joinedNow = drop != null && drop.owner.partnerOf(drop) != null
+            val waited = remember { androidx.compose.runtime.mutableStateOf(false) }
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(JOIN_WAIT_MS)
+                waited.value = true
+            }
+            RoundLiquidFace(
+                Modifier.kitLeaving(leaving)
+                    .graphicsLayer { alpha = if (drop == null || joinedNow || waited.value) 1f else 0f }
+                    .onGloballyPositioned { outer.value = androidx.compose.ui.geometry.Rect(it.positionInWindow(), it.size.toSize()) }
+                    .offset {
+                        val box = joinBody.rest
+                        val faceH = drop?.rest?.height ?: 0f
+                        val o = outer.value
+                        if (box.height <= 0f || o.height <= 0f || faceH <= 0f) IntOffset.Zero
+                        else IntOffset(0, kotlin.math.round(box.top + sinkPx - (o.center.y + faceH / 2f)).toInt())
+                    },
+                drop = drop,
+            )
+        }
         return
     }
     AnimatedVisibility(
@@ -491,7 +546,7 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
         spoken,
         enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(initialScale = 0.8f),
         exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 0.8f),
-    ) { face() }
+    ) { RoundLiquidFace(Modifier) }
 }
 
 /** The round jump button's visible face, dp (its target is the kit's minimum target). */
