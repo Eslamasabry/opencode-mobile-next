@@ -211,11 +211,18 @@ class PrivacyNoticeSyncTest {
             if (token !in known) out += "PRIVACY.md names `$token`, which the code cannot send"
         }
 
-        // 3. The in-app policy: every name; every word that looks like a name is a real one.
+        // 3. The in-app policy: every name, every event's own fields, and no ghost names.
         for (name in code.events.keys + code.properties + code.keys + code.failures) {
             if (!has(n.policy, name)) out += "The in-app policy does not name `$name`"
         }
         for (name in code.allFields) if (!has(n.policy, name)) out += "The in-app policy does not name the field `$name`"
+        for ((event, fields) in code.events) {
+            if (fields.isEmpty()) continue
+            val scope = policyEventScope(n.policy, event)
+            for (field in fields.keys) {
+                if (!has(scope, field)) out += "The in-app policy `$event` entry does not name `$field`"
+            }
+        }
         for (token in snake.findAll(n.policy).map { it.value }.toSet()) {
             if (token !in known) out += "The in-app policy names `$token`, which the code cannot send"
         }
@@ -606,6 +613,11 @@ class PrivacyNoticeSyncTest {
         }
     }
 
+    /** Owner-approved English wording (2026-11-26) required verbatim in What we collect and the bundled policy. */
+    private val approvedEndingLine =
+        "plus how your first message ended (a reply, a stop, an error kind or a refused send), " +
+            "as kind words only, never its text. Each step is counted once per install."
+
     /** Localized plain-words phrase for how the first message ended, checked in every offered language. */
     private val firstMessageEnding = mapOf(
         "en" to Regex("(?i)how your first message ended"),
@@ -621,25 +633,60 @@ class PrivacyNoticeSyncTest {
         "zh" to Regex("你的第一条消息如何结束"),
     )
 
-    private fun journeyMilestoneEntry(policy: String): String? =
-        Regex("""journey_milestone\s*[(\uFF08]([^)\uFF09]*)[)\uFF09]""").find(policy)?.value
+    private fun balancedEventEntry(text: String, event: String): String? {
+        val pattern = """(?<![A-Za-z0-9_])${Regex.escape(event)}(?![A-Za-z0-9_])\s*[(\uFF08]"""
+        val open = Regex(pattern).find(text) ?: return null
+        var depth = 0
+        for (i in open.range.last until text.length) {
+            when (text[i]) {
+                '(', '\uFF08' -> depth++
+                ')', '\uFF09' -> {
+                    depth--
+                    if (depth == 0) return text.substring(open.range.first, i + 1)
+                }
+            }
+        }
+        return null
+    }
 
-    private fun journeyNoticeViolation(
+    private fun policyEventScope(policy: String, event: String): String {
+        val parts = mutableListOf<String>()
+        balancedEventEntry(policy, event)?.let { parts += it }
+        for (para in policy.split("\\n\\n")) {
+            if (!para.startsWith("- ") && has(para, event)) parts += para
+        }
+        return parts.joinToString("\n")
+    }
+
+    private fun collectNoticeViolation(
         where: String,
-        text: String?,
+        tag: String,
+        text: String,
+        ending: Regex,
+    ): String? {
+        val parts = mutableListOf<String>()
+        if (tag == "en" && approvedEndingLine !in text) parts += "missing approved ending line"
+        if (!ending.containsMatchIn(text)) parts += "missing first-message ending"
+        val rawTokens = listOf("first_prompt_ended", "after_range", "fail_kind").filter { has(text, it) }
+        if (rawTokens.isNotEmpty()) parts += "raw wire names in plain copy $rawTokens"
+        return parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
+    }
+
+    private fun policyJourneyViolation(
+        where: String,
+        tag: String,
+        entry: String?,
         fields: Set<String>,
         ending: Regex,
-    ): String? =
-        if (text == null) {
-            "$where: missing journey_milestone entry"
-        } else {
-            val missingFields = fields.filterNot { has(text, it) }
-            val parts = mutableListOf<String>()
-            if (missingFields.isNotEmpty()) parts += "missing fields $missingFields"
-            if (!has(text, "first_prompt_ended")) parts += "missing first_prompt_ended"
-            if (!ending.containsMatchIn(text)) parts += "missing first-message ending"
-            parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
-        }
+    ): String? {
+        if (entry == null) return "$where: missing journey_milestone entry"
+        val missingFields = fields.filterNot { has(entry, it) }
+        val parts = mutableListOf<String>()
+        if (missingFields.isNotEmpty()) parts += "missing fields $missingFields"
+        if (tag == "en" && approvedEndingLine !in entry) parts += "missing approved ending line"
+        if (!ending.containsMatchIn(entry)) parts += "missing first-message ending"
+        return parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
+    }
 
     private fun privacyMdFieldViolations(): List<String> {
         val md = File(repo, "PRIVACY.md").readText()
@@ -672,12 +719,25 @@ class PrivacyNoticeSyncTest {
             val ending = firstMessageEnding.getValue(tag)
             val collect = xmlString(File(dir, "strings_s28_privacy.xml"), "collectJourney")
             val policy = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
-            journeyNoticeViolation("${dir.name} collectJourney", collect, journeyFields, ending)
+            collectNoticeViolation("${dir.name} collectJourney", tag, collect, ending)
                 ?.let { failures += it }
-            val policyEntry = journeyMilestoneEntry(policy)
-            journeyNoticeViolation("${dir.name} nativeBundledPrivacy", policyEntry, journeyFields, ending)
+            val policyEntry = balancedEventEntry(policy, "journey_milestone")
+            policyJourneyViolation("${dir.name} nativeBundledPrivacy", tag, policyEntry, journeyFields, ending)
                 ?.let { failures += it }
         }
         assertEquals(emptyList(), failures, "event notice line mismatches:\n" + failures.joinToString("\n"))
+    }
+
+    @Test
+    fun `B-SEC-228 guard catches journey_milestone missing outcome and fail_kind even when other events name them`() {
+        val notices = liveNotices()
+        val oldEntry = balancedEventEntry(notices.policy, "journey_milestone")!!
+        val stripped = notices.policy.replace(
+            oldEntry,
+            "journey_milestone (step and after_range: a first-use step and how long after you first agreed)",
+        )
+        val found = violations(liveCode(), Notices(notices.privacyMd, stripped, notices.contract))
+        assertTrue(found.any { "journey_milestone" in it && "outcome" in it }, found.toString())
+        assertTrue(found.any { "journey_milestone" in it && "fail_kind" in it }, found.toString())
     }
 }
