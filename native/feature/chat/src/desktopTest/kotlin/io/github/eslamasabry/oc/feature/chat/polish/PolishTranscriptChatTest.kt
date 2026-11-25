@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
@@ -290,27 +291,8 @@ class PolishTranscriptChatTest {
                     .fetchSemanticsNodes()
                     .firstOrNull()
                     ?.boundsInRoot
-                    ?: onNodeWithTag("kit-liquid-bar", useUnmergedTree = true)
-                        .fetchSemanticsNode()
-                        .boundsInRoot
-            val pixels = onRoot().captureToImage().toPixelMap()
-            val pillTop = pill.top.toInt().coerceIn(0, pixels.height - 1)
-            val pillBottom = pill.bottom.toInt().coerceIn(0, pixels.height - 1)
-            val pillLeft = (pill.left.toInt() - 2).coerceIn(0, pixels.width - 1)
-            val pillRight = (pill.right.toInt() + 2).coerceIn(0, pixels.width - 1)
-            assertTrue(pillTop > 0 && pillBottom > pillTop, "expected visible header pill bounds, got $pill")
-            val bodyXs = 16 until (pixels.width - 16)
-            val belowBottom = (pillBottom + 2).coerceAtMost(pixels.height)
-            val leaks =
-                countNonGround(pixels, ground, bodyXs, 0 until pillTop) +
-                    countNonGround(pixels, ground, 2 until pillLeft, pillTop until pillBottom) +
-                    countNonGround(pixels, ground, pillRight until (pixels.width - 2), pillTop until pillBottom) +
-                    countNonGround(pixels, ground, bodyXs, pillBottom until belowBottom)
-            assertTrue(leaks == 0, "found $leaks non-ground pixels above/at header pill bottom ($pill)")
-            val fadeEnd = (pillBottom + 22).coerceAtMost(pixels.height)
-            val sampleEnd = (pillBottom + 80).coerceAtMost(pixels.height)
-            val visibleBelow = countNonGround(pixels, ground, bodyXs, fadeEnd until sampleEnd, threshold = 0.15f)
-            assertTrue(visibleBelow > 20, "expected scrolled transcript below fade, found $visibleBelow pixels")
+                    ?: onNodeWithTag("kit-liquid-bar", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertClearedAbovePillBottom(pill, onRoot().captureToImage().toPixelMap(), ground)
         }
 
     @Test
@@ -341,6 +323,26 @@ class PolishTranscriptChatTest {
                 "file row glyph x ($glyphX) must be 16 dp from column edge",
             )
         }
+
+    private fun assertClearedAbovePillBottom(pill: Rect, pixels: PixelMap, ground: Color) {
+        val pillTop = pill.top.toInt().coerceIn(0, pixels.height - 1)
+        val pillBottom = pill.bottom.toInt().coerceIn(0, pixels.height - 1)
+        val pillLeft = (pill.left.toInt() - 2).coerceIn(0, pixels.width - 1)
+        val pillRight = (pill.right.toInt() + 2).coerceIn(0, pixels.width - 1)
+        assertTrue(pillTop > 0 && pillBottom > pillTop, "expected visible header pill bounds, got $pill")
+        val bodyXs = 16 until (pixels.width - 16)
+        val belowBottom = (pillBottom + 2).coerceAtMost(pixels.height)
+        val leaks =
+            countNonGround(pixels, ground, bodyXs, 0 until pillTop) +
+                countNonGround(pixels, ground, 2 until pillLeft, pillTop until pillBottom) +
+                countNonGround(pixels, ground, pillRight until (pixels.width - 2), pillTop until pillBottom) +
+                countNonGround(pixels, ground, bodyXs, pillBottom until belowBottom)
+        assertTrue(leaks == 0, "found $leaks non-ground pixels above/at header pill bottom ($pill)")
+        val fadeEnd = (pillBottom + 22).coerceAtMost(pixels.height)
+        val sampleEnd = (pillBottom + 80).coerceAtMost(pixels.height)
+        val visibleBelow = countNonGround(pixels, ground, bodyXs, fadeEnd until sampleEnd, threshold = 0.15f)
+        assertTrue(visibleBelow > 20, "expected scrolled transcript below fade, found $visibleBelow pixels")
+    }
 
     private fun countNonGround(
         pixels: PixelMap,
