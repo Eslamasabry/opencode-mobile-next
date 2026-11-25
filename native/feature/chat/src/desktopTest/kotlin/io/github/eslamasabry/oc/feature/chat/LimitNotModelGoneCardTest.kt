@@ -216,4 +216,27 @@ class LimitNotModelGoneCardTest {
             }
         }
     }
+
+    @Test
+    fun `B-523-020 a model named in the refusal text is never suggested once refused`() {
+        val (baseRows, choices) = countryFixture()
+        val rows =
+            baseRows.dropLast(1) +
+                FooterRow(
+                    "footer:u2",
+                    "u2",
+                    failed = true,
+                    reason = "$country Did you mean: opencode/beam-free?",
+                    errorKind = MessageErrorKind.ProviderAuth,
+                    createdMs = 200L,
+                    providerId = "opencode",
+                    modelId = "muse-spark-1.3-contributor-free",
+                )
+        for (scale in listOf(1.0f, 1.3f)) {
+            checkFailedCard(rows, choices, scale) {
+                onAllNodesWithText("Use Beam Free and resend").assertCountEquals(0)
+                onAllNodesWithText("Use Big Pickle and resend").assertCountEquals(2)
+            }
+        }
+    }
 }
