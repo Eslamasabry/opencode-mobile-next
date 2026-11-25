@@ -244,4 +244,24 @@ class ChatReopenConnectionTest {
         assertEquals(ChatLoad.Live, world.load.value)
         world.detach()
     }
+
+    @Test
+    fun `B-CHAT-428 a chat closed while Try again connects shows its failure when reopened`() = runTest {
+        val registry = registry()
+        val opener = Opener(registry, profile)
+        val world = GraphChatWorld(ref, registry, connectionOpener = opener)
+        world.attach()
+        runCurrent()
+        backgroundScope.launch { world.reload() }
+        runCurrent()
+        world.detach()
+        opener.failure = Failure.TimedOut()
+        opener.gate.complete(Unit)
+        runCurrent()
+        world.attach()
+        runCurrent()
+        assertIs<ChatLoad.Failed>(world.load.value)
+        assertEquals(ChatLink.Offline, world.link.value)
+        world.detach()
+    }
 }
