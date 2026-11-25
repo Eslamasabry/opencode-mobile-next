@@ -126,6 +126,7 @@ internal fun kitPromptBubbleFill(colors: KitColors): Color =
  * [photos] (C-010) show under the words as 96 dp square tiles (tile corners, cropped to fill), 8 dp below the words
  * and 8 dp apart; a tile whose picture is still loading is a quiet square that fades into the picture.
  */
+@Suppress("LongParameterList")
 @Composable
 public fun KitPromptBubble(
     text: String,
@@ -161,24 +162,7 @@ public fun KitPromptBubble(
                     .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(kitPromptBubbleFill(colors), shape).border(kitHairline(), colors.hairline, shape))
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
             ) {
-                if (!origin.isNullOrBlank()) {
-                    Row(
-                        Modifier.testTag(PROMPT_ORIGIN_TAG),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
-                    ) {
-                        KitIcon(KitIcons.clock, size = KitIconSize.Small, tone = TextTone.Tertiary)
-                        KitText(
-                            origin,
-                            role = TypeRole.Caption,
-                            tone = TextTone.Tertiary,
-                            maxLines = 2,
-                        )
-                    }
-                    if (text.isNotEmpty() || photos.isNotEmpty() || attachments.isNotEmpty()) {
-                        Spacer(Modifier.height(Space.S1.dp))
-                    }
-                }
+                PromptOriginHeader(origin, hasBody = text.isNotEmpty() || photos.isNotEmpty() || attachments.isNotEmpty())
                 if (text.isNotEmpty()) PromptWords(text)
                 if (photos.isNotEmpty()) {
                     if (text.isNotEmpty()) Spacer(Modifier.height(Space.S2.dp))
@@ -206,6 +190,20 @@ public fun KitPromptBubble(
             }
         }
     }
+}
+
+@Composable
+private fun PromptOriginHeader(origin: String?, hasBody: Boolean) {
+    if (origin.isNullOrBlank()) return
+    Row(
+        Modifier.testTag(PROMPT_ORIGIN_TAG),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
+        KitIcon(KitIcons.clock, size = KitIconSize.Small, tone = TextTone.Tertiary)
+        KitText(origin, role = TypeRole.Caption, tone = TextTone.Tertiary, maxLines = 2)
+    }
+    if (hasBody) Spacer(Modifier.height(Space.S1.dp))
 }
 
 /** What a read-only attachment chip in a sent prompt is (Dart `KitAttachmentKind`). */

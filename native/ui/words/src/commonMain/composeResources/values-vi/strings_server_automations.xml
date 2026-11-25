@@ -32,14 +32,16 @@
     <plurals name="serverAutomationsStoppedAll">
         <item quantity="other">Đã dừng %1$d tác vụ tự động hóa trên %2$s.</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">Đã dừng %1$d trong số %2$d tác vụ đang hoạt động trên %3$s. Hãy thử lại với phần còn lại.</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="other">Đã dừng %1$d trong số %2$d tác vụ đang hoạt động trên %3$s. Hãy thử lại với phần còn lại.</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">Lịch chạy</string>
     <string name="serverAutomationsDetailAction">Hành động</string>
     <string name="serverAutomationsDetailLastRun">Lần chạy gần nhất</string>
     <string name="serverAutomationsDetailRuns">Số lần chạy</string>
     <string name="serverAutomationsDetailOutput">Kết quả gần nhất</string>
     <string name="serverAutomationsTriggerEvery">Mỗi %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerCron">Lịch cron: %1$s</string>
     <string name="serverAutomationsTriggerOnce">Một lần · %1$s</string>
     <string name="serverAutomationsTriggerEvent">Khi %1$s gửi %2$s</string>
     <string name="serverAutomationsTriggerEventAny">Khi %1$s kích hoạt</string>
@@ -51,5 +53,5 @@
     <string name="serverAutomationsTomorrow">Ngày mai</string>
     <string name="serverAutomationsYesterday">Hôm qua</string>
     <string name="chatAutomationOrigin">Từ tự động hóa · %1$s</string>
-    <string name="chatAutomationOriginRun">Từ tự động hóa · %1$s · lần chạy %2$d</string>
+    <string name="chatAutomationOriginRun">Từ tự động hóa · %1$s · lần chạy %2$s</string>
 </resources>

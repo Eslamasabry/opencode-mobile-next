@@ -765,11 +765,7 @@ internal class TranscriptModel(
         val cached = pe.promptRow
         if (
             cached != null &&
-                pe.promptVersion == pe.version &&
-                cached.turnId == turnId &&
-                cached.createdMs == createdMs &&
-                cached.automationName == automationName &&
-                cached.automationRun == automationRun
+                matchesCachedPrompt(cached, pe, turnId, createdMs, automationName, automationRun)
         )
             return cached
         val row =
@@ -786,6 +782,24 @@ internal class TranscriptModel(
         pe.promptRow = row
         pe.promptVersion = pe.version
         return row
+    }
+
+    @Suppress("LongParameterList")
+    private fun matchesCachedPrompt(
+        cached: PromptRow,
+        pe: PartEntry,
+        turnId: String,
+        createdMs: Long?,
+        automationName: String?,
+        automationRun: Int?,
+    ): Boolean {
+        val sameBase =
+            pe.promptVersion == pe.version &&
+                cached.turnId == turnId &&
+                cached.createdMs == createdMs
+        val sameOrigin =
+            cached.automationName == automationName && cached.automationRun == automationRun
+        return sameBase && sameOrigin
     }
 
     /** The reasoning part's whole thought text, copied once per part version and counted once. */

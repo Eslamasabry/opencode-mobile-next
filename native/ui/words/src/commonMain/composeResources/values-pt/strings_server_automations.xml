@@ -36,24 +36,28 @@
         <item quantity="many">%1$d automações paradas em %2$s.</item>
         <item quantity="other">%1$d automações paradas em %2$s.</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">%1$d de %2$d automações ativas paradas em %3$s. Tente novamente para o restante.</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="one">%1$d de %2$d automações ativas parada em %3$s. Tente novamente para o restante.</item>
+        <item quantity="many">%1$d de %2$d automações ativas paradas em %3$s. Tente novamente para o restante.</item>
+        <item quantity="other">%1$d de %2$d automações ativas paradas em %3$s. Tente novamente para o restante.</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">Agenda</string>
     <string name="serverAutomationsDetailAction">Ação</string>
     <string name="serverAutomationsDetailLastRun">Última execução</string>
     <string name="serverAutomationsDetailRuns">Execuções</string>
     <string name="serverAutomationsDetailOutput">Última saída</string>
     <string name="serverAutomationsTriggerEvery">A cada %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerCron">Agenda cron: %1$s</string>
     <string name="serverAutomationsTriggerOnce">Uma vez · %1$s</string>
     <string name="serverAutomationsTriggerEvent">Quando %1$s envia %2$s</string>
     <string name="serverAutomationsTriggerEventAny">Quando %1$s dispara</string>
-    <string name="serverAutomationsActionPrompt">Prompt</string>
-    <string name="serverAutomationsActionPromptAgent">Prompt (%1$s)</string>
+    <string name="serverAutomationsActionPrompt">Mensagem</string>
+    <string name="serverAutomationsActionPromptAgent">Mensagem (%1$s)</string>
     <string name="serverAutomationsActionShell">Comando shell</string>
     <string name="serverAutomationsActionCode">Script Code Mode</string>
     <string name="serverAutomationsToday">Hoje</string>
     <string name="serverAutomationsTomorrow">Amanhã</string>
     <string name="serverAutomationsYesterday">Ontem</string>
     <string name="chatAutomationOrigin">Da automação · %1$s</string>
-    <string name="chatAutomationOriginRun">Da automação · %1$s · execução %2$d</string>
+    <string name="chatAutomationOriginRun">Da automação · %1$s · execução %2$s</string>
 </resources>

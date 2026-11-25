@@ -45,16 +45,17 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun automationRowSummary(item: ServerAutomation, nowMs: Long): String {
+    val nextDue = item.nextDueAtMs
     val nextPart =
         when {
             item.status == AutomationStatus.Paused ->
                 stringResource(Res.string.serverAutomationsStatusPaused)
             item.status == AutomationStatus.Done ->
                 stringResource(Res.string.serverAutomationsStatusDone)
-            item.nextDueAtMs != null ->
+            nextDue != null ->
                 stringResource(
                     Res.string.serverAutomationsNext,
-                    formatAutomationMoment(item.nextDueAtMs, nowMs),
+                    formatAutomationMoment(nextDue, nowMs),
                 )
             item.trigger is AutomationTrigger.Event ->
                 stringResource(Res.string.serverAutomationsOnEvent)

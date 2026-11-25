@@ -42,7 +42,14 @@
         <item quantity="many">تم إيقاف %1$d عملية أتمتة على %2$s.</item>
         <item quantity="other">تم إيقاف %1$d عملية أتمتة على %2$s.</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">تم إيقاف %1$d من أصل %2$d عملية أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="zero">تم إيقاف %1$d من أصل %2$d عملية أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="one">تم إيقاف %1$d من أصل %2$d عملية أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="two">تم إيقاف %1$d من أصل %2$d عملية أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="few">تم إيقاف %1$d من أصل %2$d عمليات أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="many">تم إيقاف %1$d من أصل %2$d عملية أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="other">تم إيقاف %1$d من أصل %2$d عملية أتمتة نشطة على %3$s. حاول مرة أخرى للبقية.</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">الجدول</string>
     <string name="serverAutomationsDetailAction">الإجراء</string>
     <string name="serverAutomationsDetailLastRun">آخر تشغيل</string>
@@ -61,5 +68,5 @@
     <string name="serverAutomationsTomorrow">غدًا</string>
     <string name="serverAutomationsYesterday">أمس</string>
     <string name="chatAutomationOrigin">من أتمتة · %1$s</string>
-    <string name="chatAutomationOriginRun">من أتمتة · %1$s · التشغيل %2$d</string>
+    <string name="chatAutomationOriginRun">من أتمتة · %1$s · التشغيل %2$s</string>
 </resources>

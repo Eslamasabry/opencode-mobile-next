@@ -49,12 +49,16 @@ internal fun parseAutomation(obj: JsonObject, redactor: Redactor): ServerAutomat
 }
 
 internal fun parseAutomationMetadata(metadata: JsonObject?): MessageAutomation? {
-    val auto = metadata?.obj("automation") ?: return null
-    val name = auto.str("name")?.trim()?.takeIf { it.isNotEmpty() } ?: return null
-    val id = auto.str("id")?.takeIf { it.isNotBlank() }
-    val run = (auto["run"] as? JsonPrimitive)?.intOrNull?.takeIf { it > 0 }
-    val late = (auto["late"] as? JsonPrimitive)?.booleanOrNull ?: false
-    return MessageAutomation(id = id, name = name, run = run, late = late)
+    val auto = metadata?.obj("automation")
+    val name = auto?.str("name")?.trim()?.takeIf { it.isNotEmpty() }
+    return name?.let { validName ->
+        MessageAutomation(
+            id = auto.str("id")?.takeIf { it.isNotBlank() },
+            name = validName,
+            run = (auto["run"] as? JsonPrimitive)?.intOrNull?.takeIf { it > 0 },
+            late = (auto["late"] as? JsonPrimitive)?.booleanOrNull ?: false,
+        )
+    }
 }
 
 internal fun extractAutomationArray(element: JsonElement): List<JsonElement>? {
@@ -119,18 +123,21 @@ private fun parseAction(obj: JsonObject?): AutomationAction {
 }
 
 private fun parseTimestampMs(element: JsonElement?): Long? {
-    val primitive = element as? JsonPrimitive ?: return null
-    primitive.longOrNull?.let { num ->
-        return if (num in 1 until SECONDS_EPOCH_CUTOFF) num * MILLIS_PER_SECOND else num
+    val primitive = element as? JsonPrimitive
+    val numeric = primitive?.longOrNull
+    val raw = primitive?.takeIf { it.isString }?.content?.trim()?.takeIf { it.isNotEmpty() }
+    val scale: (Long) -> Long = { num ->
+        if (num in 1 until SECONDS_EPOCH_CUTOFF) num * MILLIS_PER_SECOND else num
     }
-    if (!primitive.isString) return null
-    val raw = primitive.content.trim().takeIf { it.isNotEmpty() } ?: return null
-    raw.toLongOrNull()?.let { num ->
-        return if (num in 1 until SECONDS_EPOCH_CUTOFF) num * MILLIS_PER_SECOND else num
-    }
-    return try {
-        Instant.parse(raw).toEpochMilliseconds()
-    } catch (_: IllegalArgumentException) {
-        null
+    return when {
+        numeric != null -> scale(numeric)
+        raw == null -> null
+        else ->
+            raw.toLongOrNull()?.let(scale)
+                ?: try {
+                    Instant.parse(raw).toEpochMilliseconds()
+                } catch (_: IllegalArgumentException) {
+                    null
+                }
     }
 }

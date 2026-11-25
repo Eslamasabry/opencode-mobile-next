@@ -93,7 +93,7 @@ class B605ChatAutomationLabelRendersTest {
                 }
                 waitForIdle()
                 onNodeWithText("From automation · CI check · run 4").assertIsDisplayed()
-                onAllNodesWithTag(PROMPT_ORIGIN_TAG).assertCountEquals(1)
+                onAllNodesWithTag(PROMPT_ORIGIN_TAG, useUnmergedTree = true).assertCountEquals(1)
                 ImageIO.write(
                     onRoot().captureToImage().toAwtImage(),
                     "png",

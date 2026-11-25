@@ -5,7 +5,7 @@
     <string name="serverAutomationsEmpty">На сервере %1$s нет автоматизаций.</string>
     <string name="serverAutomationsLoading">Загрузка автоматизаций…</string>
     <string name="serverAutomationsLoadFailed">Не удалось загрузить автоматизации с %1$s.</string>
-    <string name="serverAutomationsActionFailed">Не удалось обновить автоматизации на %1$s. Попробуйте снова.</string>
+    <string name="serverAutomationsActionFailed">Не удалось обновить автоматизации на %1$s. Попробуйте ещё раз.</string>
     <string name="serverAutomationsNext">Следующий запуск: %1$s</string>
     <string name="serverAutomationsOnEvent">Запускается по событию</string>
     <string name="serverAutomationsStatusPaused">На паузе</string>
@@ -38,14 +38,19 @@
         <item quantity="many">Остановлено %1$d автоматизаций на %2$s.</item>
         <item quantity="other">Остановлено %1$d автоматизаций на %2$s.</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">Остановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте снова для остальных.</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="one">Остановлена %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="few">Остановлены %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="many">Остановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="other">Остановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">Расписание</string>
     <string name="serverAutomationsDetailAction">Действие</string>
     <string name="serverAutomationsDetailLastRun">Последний запуск</string>
     <string name="serverAutomationsDetailRuns">Запусков</string>
     <string name="serverAutomationsDetailOutput">Последний вывод</string>
     <string name="serverAutomationsTriggerEvery">Каждые %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerCron">Расписание cron: %1$s</string>
     <string name="serverAutomationsTriggerOnce">Один раз · %1$s</string>
     <string name="serverAutomationsTriggerEvent">Когда %1$s отправляет %2$s</string>
     <string name="serverAutomationsTriggerEventAny">Когда срабатывает %1$s</string>
@@ -57,5 +62,5 @@
     <string name="serverAutomationsTomorrow">Завтра</string>
     <string name="serverAutomationsYesterday">Вчера</string>
     <string name="chatAutomationOrigin">Из автоматизации · %1$s</string>
-    <string name="chatAutomationOriginRun">Из автоматизации · %1$s · запуск %2$d</string>
+    <string name="chatAutomationOriginRun">Из автоматизации · %1$s · запуск %2$s</string>
 </resources>

@@ -2093,7 +2093,8 @@ private fun SentPromptBubble(row: PromptRow) {
     val origin =
         row.automationName?.takeIf { it.isNotBlank() }?.let { name ->
             val run = row.automationRun?.takeIf { it > 0 }
-            if (run != null) stringResource(Res.string.chatAutomationOriginRun, name, run)
+            if (run != null)
+                stringResource(Res.string.chatAutomationOriginRun, name, Numbers.digits(run.toString()))
             else stringResource(Res.string.chatAutomationOrigin, name)
         }
     KitPromptBubble(

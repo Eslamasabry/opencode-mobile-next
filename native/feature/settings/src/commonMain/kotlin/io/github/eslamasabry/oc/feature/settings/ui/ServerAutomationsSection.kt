@@ -185,8 +185,9 @@ private fun AutomationNoticeBanner(notice: AutomationsNotice, serverName: String
                     serverName,
                 )
             is AutomationsNotice.StoppedPartial ->
-                stringResource(
-                    Res.string.serverAutomationsStoppedPartial,
+                pluralStringResource(
+                    Res.plurals.serverAutomationsStoppedPartial,
+                    notice.stopped,
                     notice.stopped,
                     notice.total,
                     serverName,

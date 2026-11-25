@@ -10,7 +10,7 @@
     <string name="serverAutomationsOnEvent">Déclenchée par événement</string>
     <string name="serverAutomationsStatusPaused">En pause</string>
     <string name="serverAutomationsStatusDone">Terminée</string>
-    <string name="serverAutomationsStatusActive">Active</string>
+    <string name="serverAutomationsStatusActive">Activée</string>
     <string name="serverAutomationsLastFired">Exécutée %1$s</string>
     <string name="serverAutomationsLastLate">Exécutée en retard %1$s</string>
     <string name="serverAutomationsLastSkipped">Ignorée %1$s</string>
@@ -36,14 +36,18 @@
         <item quantity="many">%1$d automatisations arrêtées sur %2$s.</item>
         <item quantity="other">%1$d automatisations arrêtées sur %2$s.</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">%1$d automatisations actives sur %2$d arrêtées sur %3$s. Réessayez pour les autres.</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="one">%1$d automatisation active sur %2$d arrêtée sur %3$s. Réessayez pour les autres.</item>
+        <item quantity="many">%1$d automatisations actives sur %2$d arrêtées sur %3$s. Réessayez pour les autres.</item>
+        <item quantity="other">%1$d automatisations actives sur %2$d arrêtées sur %3$s. Réessayez pour les autres.</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">Planification</string>
-    <string name="serverAutomationsDetailAction">Action</string>
+    <string name="serverAutomationsDetailAction">Tâche</string>
     <string name="serverAutomationsDetailLastRun">Dernière exécution</string>
     <string name="serverAutomationsDetailRuns">Exécutions</string>
     <string name="serverAutomationsDetailOutput">Dernière sortie</string>
     <string name="serverAutomationsTriggerEvery">Toutes les %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron : %1$s</string>
+    <string name="serverAutomationsTriggerCron">Planification cron : %1$s</string>
     <string name="serverAutomationsTriggerOnce">Une fois · %1$s</string>
     <string name="serverAutomationsTriggerEvent">Quand %1$s envoie %2$s</string>
     <string name="serverAutomationsTriggerEventAny">Quand %1$s se déclenche</string>
@@ -55,5 +59,5 @@
     <string name="serverAutomationsTomorrow">Demain</string>
     <string name="serverAutomationsYesterday">Hier</string>
     <string name="chatAutomationOrigin">Depuis l’automatisation · %1$s</string>
-    <string name="chatAutomationOriginRun">Depuis l’automatisation · %1$s · exécution %2$d</string>
+    <string name="chatAutomationOriginRun">Depuis l’automatisation · %1$s · exécution %2$s</string>
 </resources>

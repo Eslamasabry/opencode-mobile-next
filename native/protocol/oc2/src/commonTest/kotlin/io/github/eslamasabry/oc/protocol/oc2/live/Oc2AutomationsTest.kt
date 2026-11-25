@@ -67,7 +67,7 @@ class Oc2AutomationsTest {
         }
 
     @Test
-    fun `B-AUTO-005 list, pause, resume, delete hit experimental automation endpoints and redact output`() =
+    fun `B-AUTO-005 list decodes automations and redacts secrets in output and pause reason`() =
         runTest {
             val redactor = Redactor()
             redactor.registerSecret("sk-live-secret-token")
@@ -103,32 +103,17 @@ class Oc2AutomationsTest {
                                   ]
                                 }"""
                             )
-                        seen.method == "POST" &&
-                            seen.path == "/api/experimental/automation/aut_1/pause" ->
-                            json(
-                                """{"data":{"id":"aut_1","name":"CI check","status":"paused",""" +
-                                    """"trigger":{"type":"every","every":"1h"},""" +
-                                    """"action":{"type":"prompt","prompt":"Check CI"}}}"""
-                            )
-                        seen.method == "POST" &&
-                            seen.path == "/api/experimental/automation/aut_1/resume" ->
-                            json(
-                                """{"data":{"id":"aut_1","name":"CI check","status":"active",""" +
-                                    """"trigger":{"type":"every","every":"1h"},""" +
-                                    """"action":{"type":"prompt","prompt":"Check CI"}}}"""
-                            )
-                        seen.method == "DELETE" && seen.path == "/api/experimental/automation/aut_2" ->
-                            respond("", HttpStatusCode.NoContent)
                         else -> error("Unexpected ${seen.method} ${seen.path}")
                     }
                 }
 
             val listed = assertIs<Outcome.Ok<*>>(server.gateway.listAutomations(SessionId("ses_1")))
-            val items = listed.value as List<*>
+            val items =
+                listed.value as List<io.github.eslamasabry.oc.core.model.ServerAutomation>
             assertEquals(2, items.size)
             assertEquals("ses_1", server.seen.first().query["sessionID"])
 
-            val first = (listed.value as List<io.github.eslamasabry.oc.core.model.ServerAutomation>)[0]
+            val first = items[0]
             assertEquals("aut_1", first.id)
             assertEquals("CI check", first.name)
             assertEquals(AutomationStatus.Active, first.status)
@@ -139,28 +124,55 @@ class Oc2AutomationsTest {
             assertNotNull(first.nextDueAtMs)
             assertFalse(first.lastOutput!!.text.contains("sk-live-secret-token"))
 
-            val second = (listed.value as List<io.github.eslamasabry.oc.core.model.ServerAutomation>)[1]
+            val second = items[1]
             assertEquals(AutomationStatus.Paused, second.status)
             assertEquals(AutomationTrigger.Cron("0 3 * * *"), second.trigger)
             assertEquals(AutomationAction.Shell("git gc"), second.action)
             assertEquals(AutomationOutcome.Failed, second.lastOutcome)
             assertFalse(second.pauseReason!!.text.contains("sk-live-secret-token"))
-
-            val paused =
-                assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerAutomation>>(
-                    server.gateway.pauseAutomation("aut_1")
-                )
-            assertEquals(AutomationStatus.Paused, paused.value.status)
-
-            val resumed =
-                assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerAutomation>>(
-                    server.gateway.resumeAutomation("aut_1")
-                )
-            assertEquals(AutomationStatus.Active, resumed.value.status)
-
-            assertIs<Outcome.Ok<Unit>>(server.gateway.deleteAutomation("aut_2"))
             server.gateway.close()
         }
+
+    @Test
+    fun `B-AUTO-005 pause, resume and delete hit experimental automation endpoints`() = runTest {
+        val server =
+            RowServer { seen ->
+                when {
+                    seen.method == "POST" &&
+                        seen.path == "/api/experimental/automation/aut_1/pause" ->
+                        json(
+                            """{"data":{"id":"aut_1","name":"CI check","status":"paused",""" +
+                                """"trigger":{"type":"every","every":"1h"},""" +
+                                """"action":{"type":"prompt","prompt":"Check CI"}}}"""
+                        )
+                    seen.method == "POST" &&
+                        seen.path == "/api/experimental/automation/aut_1/resume" ->
+                        json(
+                            """{"data":{"id":"aut_1","name":"CI check","status":"active",""" +
+                                """"trigger":{"type":"every","every":"1h"},""" +
+                                """"action":{"type":"prompt","prompt":"Check CI"}}}"""
+                        )
+                    seen.method == "DELETE" && seen.path == "/api/experimental/automation/aut_2" ->
+                        respond("", HttpStatusCode.NoContent)
+                    else -> error("Unexpected ${seen.method} ${seen.path}")
+                }
+            }
+
+        val paused =
+            assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerAutomation>>(
+                server.gateway.pauseAutomation("aut_1")
+            )
+        assertEquals(AutomationStatus.Paused, paused.value.status)
+
+        val resumed =
+            assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerAutomation>>(
+                server.gateway.resumeAutomation("aut_1")
+            )
+        assertEquals(AutomationStatus.Active, resumed.value.status)
+
+        assertIs<Outcome.Ok<Unit>>(server.gateway.deleteAutomation("aut_2"))
+        server.gateway.close()
+    }
 
     @Test
     fun `B-AUTO-006 404 on automation list disables capability and short-circuits later calls`() =

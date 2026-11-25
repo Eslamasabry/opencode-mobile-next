@@ -33,14 +33,17 @@
         <item quantity="one">Stopped %1$d automation on %2$s.</item>
         <item quantity="other">Stopped %1$d automations on %2$s.</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">Stopped %1$d of %2$d active automations on %3$s. Try again for the rest.</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="one">Stopped %1$d of %2$d active automations on %3$s. Try again for the rest.</item>
+        <item quantity="other">Stopped %1$d of %2$d active automations on %3$s. Try again for the rest.</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">Schedule</string>
     <string name="serverAutomationsDetailAction">Action</string>
     <string name="serverAutomationsDetailLastRun">Last run</string>
     <string name="serverAutomationsDetailRuns">Runs</string>
     <string name="serverAutomationsDetailOutput">Last output</string>
     <string name="serverAutomationsTriggerEvery">Every %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron: %1$s</string>
+    <string name="serverAutomationsTriggerCron">Cron schedule: %1$s</string>
     <string name="serverAutomationsTriggerOnce">Once · %1$s</string>
     <string name="serverAutomationsTriggerEvent">When %1$s sends %2$s</string>
     <string name="serverAutomationsTriggerEventAny">When %1$s triggers</string>
@@ -52,5 +55,5 @@
     <string name="serverAutomationsTomorrow">Tomorrow</string>
     <string name="serverAutomationsYesterday">Yesterday</string>
     <string name="chatAutomationOrigin">From automation · %1$s</string>
-    <string name="chatAutomationOriginRun">From automation · %1$s · run %2$d</string>
+    <string name="chatAutomationOriginRun">From automation · %1$s · run %2$s</string>
 </resources>

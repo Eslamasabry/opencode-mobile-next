@@ -33,12 +33,15 @@ internal class Oc2Automations(
                 sessionId?.raw?.takeIf { it.isNotBlank() }?.let { put("sessionID", it) }
                 directory?.takeIf { it.isNotBlank() }?.let { put("directory", it) }
             }
-        val result = gateway.json(BASE_PATH, HttpMethod.Get, query = query)
-        if (result is Outcome.Failed) return handleFailure(result, treatNotFoundAsUnsupported = true)
-        val body = (result as Outcome.Ok).value
-        val items = extractAutomationArray(body) ?: return Failure.UnreadableReply().failed()
-        val parsed = items.mapNotNull { (it as? JsonObject)?.let { obj -> parseAutomation(obj, redactor) } }
-        return parsed.toImmutableList().ok()
+        return when (val result = gateway.json(BASE_PATH, HttpMethod.Get, query = query)) {
+            is Outcome.Failed -> handleFailure(result, treatNotFoundAsUnsupported = true)
+            is Outcome.Ok ->
+                extractAutomationArray(result.value)
+                    ?.mapNotNull { (it as? JsonObject)?.let { obj -> parseAutomation(obj, redactor) } }
+                    ?.toImmutableList()
+                    ?.ok()
+                    ?: Failure.UnreadableReply().failed()
+        }
     }
 
     suspend fun get(id: String): Outcome<ServerAutomation> =
@@ -50,34 +53,37 @@ internal class Oc2Automations(
     suspend fun resume(id: String): Outcome<ServerAutomation> =
         readOne("$BASE_PATH/${id.encodeURLPathPart()}/resume", HttpMethod.Post)
 
-    suspend fun delete(id: String): Outcome<Unit> {
-        val result = gateway.json("$BASE_PATH/${id.encodeURLPathPart()}", HttpMethod.Delete)
-        if (result is Outcome.Failed) return handleFailure(result, treatNotFoundAsUnsupported = false)
-        return result.map {}
-    }
+    suspend fun delete(id: String): Outcome<Unit> =
+        when (val result = gateway.json("$BASE_PATH/${id.encodeURLPathPart()}", HttpMethod.Delete)) {
+            is Outcome.Failed -> handleFailure(result, treatNotFoundAsUnsupported = false)
+            is Outcome.Ok -> result.map {}
+        }
 
-    private suspend fun readOne(path: String, method: HttpMethod): Outcome<ServerAutomation> {
-        val result = gateway.json(path, method)
-        if (result is Outcome.Failed) return handleFailure(result, treatNotFoundAsUnsupported = false)
-        val body = (result as Outcome.Ok).value
-        val obj = extractAutomationObject(body) ?: return Failure.UnreadableReply().failed()
-        return parseAutomation(obj, redactor)?.ok() ?: Failure.UnreadableReply().failed()
-    }
+    private suspend fun readOne(path: String, method: HttpMethod): Outcome<ServerAutomation> =
+        when (val result = gateway.json(path, method)) {
+            is Outcome.Failed -> handleFailure(result, treatNotFoundAsUnsupported = false)
+            is Outcome.Ok ->
+                extractAutomationObject(result.value)
+                    ?.let { parseAutomation(it, redactor) }
+                    ?.ok()
+                    ?: Failure.UnreadableReply().failed()
+        }
 
     private fun handleFailure(
         failed: Outcome.Failed,
         treatNotFoundAsUnsupported: Boolean,
-    ): Outcome.Failed {
+    ): Outcome<Nothing> {
         val f = failed.failure
         val unsupported =
             (treatNotFoundAsUnsupported && f is Failure.NotFound) ||
                 (f is Failure.Rejected && f.status in UNSUPPORTED_STATUSES) ||
                 (f is Failure.Server && f.status == HTTP_NOT_IMPLEMENTED)
-        if (unsupported) {
+        return if (unsupported) {
             onUnsupported()
-            return Failure.Unavailable(FeatureId(FEATURE_NAME)).failed()
+            Failure.Unavailable(FeatureId(FEATURE_NAME)).failed()
+        } else {
+            failed
         }
-        return failed
     }
 
     private companion object {

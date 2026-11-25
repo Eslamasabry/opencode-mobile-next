@@ -32,14 +32,16 @@
     <plurals name="serverAutomationsStoppedAll">
         <item quantity="other">已停止 %2$s 上的 %1$d 个自动化任务。</item>
     </plurals>
-    <string name="serverAutomationsStoppedPartial">已停止 %3$s 上 %2$d 个活动自动化中的 %1$d 个，请重试其余任务。</string>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="other">已停止 %3$s 上 %2$d 个活动自动化中的 %1$d 个，请重试其余任务。</item>
+    </plurals>
     <string name="serverAutomationsDetailSchedule">计划</string>
     <string name="serverAutomationsDetailAction">操作</string>
     <string name="serverAutomationsDetailLastRun">上次运行</string>
     <string name="serverAutomationsDetailRuns">运行次数</string>
     <string name="serverAutomationsDetailOutput">上次输出</string>
     <string name="serverAutomationsTriggerEvery">每 %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron：%1$s</string>
+    <string name="serverAutomationsTriggerCron">Cron 计划：%1$s</string>
     <string name="serverAutomationsTriggerOnce">单次 · %1$s</string>
     <string name="serverAutomationsTriggerEvent">当 %1$s 发送 %2$s 时</string>
     <string name="serverAutomationsTriggerEventAny">当 %1$s 触发时</string>
@@ -51,5 +53,5 @@
     <string name="serverAutomationsTomorrow">明天</string>
     <string name="serverAutomationsYesterday">昨天</string>
     <string name="chatAutomationOrigin">来自自动化 · %1$s</string>
-    <string name="chatAutomationOriginRun">来自自动化 · %1$s · 第 %2$d 次运行</string>
+    <string name="chatAutomationOriginRun">来自自动化 · %1$s · 第 %2$s 次运行</string>
 </resources>

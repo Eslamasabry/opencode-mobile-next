@@ -101,10 +101,6 @@ class B605ServerAutomationsUiAndRendersTest {
         supportsAutomations: Boolean = true,
         automations: kotlinx.collections.immutable.ImmutableList<ServerAutomation> =
             sampleAutomations,
-        selectedId: String? = null,
-        deleteConfirmId: String? = null,
-        stopAllConfirm: Boolean = false,
-        notice: AutomationsNotice? = null,
     ) =
         ServerSettingsUi(
             page = ServerSettingsPage.Home,
@@ -136,10 +132,6 @@ class B605ServerAutomationsUiAndRendersTest {
                     sharingSaving = false,
                 ),
             automations = automations,
-            selectedAutomationId = selectedId,
-            deleteAutomationConfirmId = deleteConfirmId,
-            stopAllAutomationsConfirm = stopAllConfirm,
-            automationsNotice = notice,
             nowMs = nowMs,
         )
 
@@ -206,7 +198,7 @@ class B605ServerAutomationsUiAndRendersTest {
     }
 
     @Test
-    fun `B-AUTO-016 detail sheet, delete confirm naming server, stop all confirm and stopped count notice`() {
+    fun `B-AUTO-016 detail sheet shows controls and captures after pictures`() {
         Locale.setDefault(Locale.ENGLISH)
         val sheetVariants =
             listOf(
@@ -219,7 +211,10 @@ class B605ServerAutomationsUiAndRendersTest {
             runDesktopComposeUiTest(360, 800) {
                 setContent {
                     SettingsThemed(dark = dark, locale = "en", fontScale = scale, width = 360f) {
-                        ServerSettingsScreen(laptopUi(selectedId = "aut_2"), actions)
+                        ServerSettingsScreen(
+                            laptopUi().copy(selectedAutomationId = "aut_2"),
+                            actions,
+                        )
                     }
                 }
                 waitForIdle()
@@ -232,10 +227,18 @@ class B605ServerAutomationsUiAndRendersTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun `B-AUTO-016 delete confirm, stop all confirm and stopped count notice`() {
+        Locale.setDefault(Locale.ENGLISH)
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(laptopUi(deleteConfirmId = "aut_2"), actions)
+                    ServerSettingsScreen(
+                        laptopUi().copy(deleteAutomationConfirmId = "aut_2"),
+                        actions,
+                    )
                 }
             }
             waitForIdle()
@@ -245,7 +248,10 @@ class B605ServerAutomationsUiAndRendersTest {
         runDesktopComposeUiTest(360, 800) {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
-                    ServerSettingsScreen(laptopUi(stopAllConfirm = true), actions)
+                    ServerSettingsScreen(
+                        laptopUi().copy(stopAllAutomationsConfirm = true),
+                        actions,
+                    )
                 }
             }
             waitForIdle()
@@ -257,7 +263,7 @@ class B605ServerAutomationsUiAndRendersTest {
             setContent {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
                     ServerSettingsScreen(
-                        laptopUi(notice = AutomationsNotice.StoppedAll(2)),
+                        laptopUi().copy(automationsNotice = AutomationsNotice.StoppedAll(2)),
                         actions,
                     )
                 }
