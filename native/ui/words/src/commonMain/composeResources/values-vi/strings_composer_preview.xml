@@ -20,4 +20,5 @@
     <string name="composerPreviewAttachmentStorage">Không thể lưu tệp trên thiết bị này.</string>
     <string name="composerPreviewAttachmentDismiss">Đóng</string>
     <string name="composerPreviewAttachmentRetry">Thử lại</string>
+    <string name="composerModelDefaultShort">Mô hình mặc định</string>
 </resources>

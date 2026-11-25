@@ -20,4 +20,5 @@
     <string name="composerPreviewAttachmentStorage">Impossible d’enregistrer le fichier sur cet appareil.</string>
     <string name="composerPreviewAttachmentDismiss">Ignorer</string>
     <string name="composerPreviewAttachmentRetry">Réessayer</string>
+    <string name="composerModelDefaultShort">Modèle par défaut</string>
 </resources>

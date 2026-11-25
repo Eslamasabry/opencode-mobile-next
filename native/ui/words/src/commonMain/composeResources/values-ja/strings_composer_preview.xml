@@ -20,4 +20,5 @@
     <string name="composerPreviewAttachmentStorage">この端末にファイルを保存できませんでした。</string>
     <string name="composerPreviewAttachmentDismiss">閉じる</string>
     <string name="composerPreviewAttachmentRetry">再試行</string>
+    <string name="composerModelDefaultShort">既定のモデル</string>
 </resources>

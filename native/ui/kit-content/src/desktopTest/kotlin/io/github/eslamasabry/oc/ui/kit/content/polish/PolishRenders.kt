@@ -29,7 +29,7 @@ import kotlin.test.Test
 
 class PolishRenders {
     companion object {
-        const val PHASE = "before"
+        const val PHASE = "after"
     }
 
     @Test

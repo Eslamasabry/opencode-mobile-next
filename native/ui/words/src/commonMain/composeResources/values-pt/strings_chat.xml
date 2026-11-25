@@ -1377,4 +1377,5 @@
     <string name="kitToolUnanswered">Parou antes de você responder</string>
     <string name="chatErrorModelNotFoundNamed">%1$s não está mais disponível em %2$s.</string>
     <string name="chatModelReplacedNotice">%1$s não está mais disponível. Usando %2$s.</string>
+    <string name="chatStepViewAllChanges">Ver todas as alterações</string>
 </resources>

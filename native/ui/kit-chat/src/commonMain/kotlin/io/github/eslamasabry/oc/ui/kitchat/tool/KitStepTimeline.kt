@@ -405,7 +405,7 @@ internal fun RailNode(
         }
     }
     val density = LocalDensity.current
-    val nodeHalf = with(density) { (half ?: m.glyph / 2).toPx() }
+    val nodeHalf = with(density) { (half ?: (m.glyph / 2 + RAIL_NODE_GAP)).toPx() }
     // F: kit_step_light.dart:367 the last step's light runs a 14 dp tail below its node
     val light = remember(rail, key) { rail.light(key, with(density) { 14.dp.toPx() }) }
     // A row in a fold that moves (opening, folding, arriving) is drawn by how much of it is in view: a row the fold's
@@ -485,12 +485,8 @@ public fun KitStepItem(
 /** How far a run's own steps stand in from the rail, dp: one step of the spacing scale. */
 public const val STEP_RUN_INSET: Int = Space.S4
 
-/**
- * How far a still glyph's rail reaches into its node, as a share of the node's half: the glyph is drawn at
- * [GLYPH_SHARE] of the node and its ink fills about 80 % of that, so the rail meets the ink (about a dp clear of it)
- * instead of the node's empty box edge, and two glyph rows 32 dp apart are joined by one line, not an 8 dp dash.
- */
-internal const val GLYPH_RAIL_REACH: Float = .78f
+/** Clearance kept between the step rail and every node's box edge (B-568). */
+internal val RAIL_NODE_GAP: Dp = 2.dp
 
-/** The half height of a still glyph's node on the rail (a node drawn in an outline keeps its whole box). */
-internal fun railGlyphHalf(m: RailMeasures): Dp = m.glyph * GLYPH_RAIL_REACH / 2
+/** The half height of a node on the rail, stopping clear of its box edge. */
+internal fun railGlyphHalf(m: RailMeasures): Dp = m.glyph / 2 + RAIL_NODE_GAP

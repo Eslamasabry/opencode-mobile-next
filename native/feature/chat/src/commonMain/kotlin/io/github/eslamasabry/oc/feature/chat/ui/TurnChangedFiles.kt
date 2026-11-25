@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -58,13 +60,16 @@ internal fun TurnChangedFiles(
         if (files.size > shown.size)
             pluralStringResource(Res.plurals.chatTurnAllFilesMore, files.size - shown.size, files.size - shown.size)
         else stringResource(Res.string.chatTurnAllFiles)
-    // The reply column (plan 09 R13): 700 dp cap, on the transcript's gutter.
+    // The reply column (plan 09 R13): 700 dp cap. KitRowGroup draws the kit panel surface inset 8 dp, and each row
+    // aligns its glyph at 16 dp from the column edge, matching the "All files" glyph below (B-580).
+    val rowSide = (Space.S4.dp - Space.S2.dp - kitPaneInset()).coerceAtLeast(0.dp)
+    val rowPad = PaddingValues(start = rowSide, end = rowSide, top = Space.S2.dp, bottom = Space.S2.dp)
     Column(
-        modifier.fillMaxWidth().widthIn(max = REPLY_COLUMN_DP.dp).padding(horizontal = Space.S4.dp).testTag("chat-turn-files")
+        modifier.fillMaxWidth().widthIn(max = REPLY_COLUMN_DP.dp).testTag("chat-turn-files")
     ) {
         // F: kit_turn.dart:498 space3 from the reply's last block, plus chat_files.dart:356 `margin: top space2`; the
         // reply block above already brings space1.
-        KitRowGroup(Modifier.padding(top = Space.S4.dp)) {
+        KitRowGroup(surface = true, modifier = Modifier.padding(top = Space.S4.dp)) {
             for (file in shown) {
                 val counts =
                     listOfNotNull(
@@ -79,6 +84,7 @@ internal fun TurnChangedFiles(
                         if (counts.isEmpty()) KitRowTrailing.Chevron
                         else KitRowTrailing.Value(counts.joinToString(" ")),
                     onClick = onOpenFile?.let { open -> { open(ToolArtifact(file.path, null, null, file.name)) } },
+                    padding = rowPad,
                     modifier = Modifier.testTag("chat-turn-file-${file.path}"),
                 )
             }
@@ -86,7 +92,11 @@ internal fun TurnChangedFiles(
         if (onAllFiles != null)
             // A quiet link under the rows (concept 9): the folder glyph and the words in the secondary tone, one
             // 48 dp target whose glyph starts on the rows' own edge (chat_files.dart:411-454).
-            KitTappable(onClick = onAllFiles, onClickLabel = allFiles, modifier = Modifier.testTag("chat-turn-all-files")) {
+            KitTappable(
+                onClick = onAllFiles,
+                onClickLabel = allFiles,
+                modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-turn-all-files"),
+            ) {
                 Row(
                     Modifier.heightIn(min = LocalKitTokens.current.minTarget.dp).padding(end = Space.S2.dp),
                     verticalAlignment = Alignment.CenterVertically,

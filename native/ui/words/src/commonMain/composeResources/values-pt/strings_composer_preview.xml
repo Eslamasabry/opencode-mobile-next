@@ -20,4 +20,5 @@
     <string name="composerPreviewAttachmentStorage">Não foi possível salvar o arquivo neste aparelho.</string>
     <string name="composerPreviewAttachmentDismiss">Dispensar</string>
     <string name="composerPreviewAttachmentRetry">Tentar novamente</string>
+    <string name="composerModelDefaultShort">Modelo padrão</string>
 </resources>

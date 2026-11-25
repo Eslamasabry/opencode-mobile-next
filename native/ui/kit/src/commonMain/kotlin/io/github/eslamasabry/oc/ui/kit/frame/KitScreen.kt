@@ -569,24 +569,14 @@ public fun KitScreen(
                                 if (!edgesFade) Modifier
                                 else
                                     Modifier.kitScrollEdges(
-                                        // Owner 2026-11-14 ("Wtfff"): floating things own their ground. Nothing of the
-                                        // body is drawn under the status bar, the bar or its status line; it dissolves
-                                        // in below them over TOP_DISSOLVE_DP. Floating chrome (owner 2026-11-18, "text
-                                        // can flow around the capsule", "hard cuts are bad"): nothing is cleared around
-                                        // the capsule or the box. The body passes behind both and each covers it with
-                                        // its own fill (Glass shows it through). Only the status area is cleared,
-                                        // ending in a short soft fade under it, so text never meets the clock.
+                                        // B-571: clear everything above the header pill's bottom edge and fade 0->1
+                                        // over the 16 dp below it for every style and both scroll directions.
                                         clearAbove =
                                             if (topPart == null) null
-                                            else if (floatChrome) ({ statusPx.toFloat() })
                                             else ({ (statusPx + topPx).toFloat() }),
-                                        topReach = if (floatChrome) FLOW_FADE_DP.dp else TOP_DISSOLVE_DP.dp,
-                                        // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
-                                        // behind the chrome, so the body's dissolve alone ends the content before the
-                                        // bar; Glass's the same. It grows with what lies under the chrome (none at
-                                        // rest: a page at rest looks as it did; at once under reduced motion).
+                                        topReach = if (floatChrome) COMPOSER_FADE_DP.dp else TOP_DISSOLVE_DP.dp,
                                         topReachPx =
-                                            if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } })
+                                            if (floatChrome) ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } })
                                             else topDissolve,
                                         // And nothing in or under the bottom block (its chips row, the message box): the
                                         // body fades out over the 16 dp above it. A list that ends itself (above the jump
@@ -646,14 +636,36 @@ public fun KitScreen(
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, topFrost) else Modifier)
                             ) {
+                                val glassLightBar =
+                                    floatChrome &&
+                                        io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
+                                        io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
+                                        !LocalKitColors.current.dark
                                 CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
-                                    if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody), barBody)
-                                    else if (frostedFace != null) KitLiquidBarPane(frostedFace)
-                                    if (floatChrome && barFace == null && frostedFace == null) KitHeaderCapsule { barAndLine() }
-                                    // Glass and Frosted: the style's own pane is the capsule (it already floats); the title's
-                                    // line, and the status line under it, inside that pane.
-                                    else if (floatChrome) CompositionLocalProvider(LocalKitHeaderCapsule provides true) { barAndLine() }
-                                    else it()
+                                    if (barFace != null) {
+                                        KitLiquidBarPane(
+                                            barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody),
+                                            barBody,
+                                            border = glassLightBar,
+                                        )
+                                    } else if (frostedFace != null) {
+                                        KitLiquidBarPane(frostedFace, border = glassLightBar)
+                                    }
+                                    if (floatChrome && barFace == null && frostedFace == null) {
+                                        KitHeaderCapsule { barAndLine() }
+                                    } else if (floatChrome) {
+                                        // Match KitHeaderCapsule side inset so title width equals Solid (B-561).
+                                        CompositionLocalProvider(LocalKitHeaderCapsule provides true) {
+                                            Box(
+                                                Modifier.fillMaxWidth().padding(
+                                                    horizontal = HEADER_CAPSULE_SIDE_DP.dp,
+                                                    vertical = HEADER_CAPSULE_MARGIN_DP.dp,
+                                                )
+                                            ) {
+                                                barAndLine()
+                                            }
+                                        }
+                                    } else it()
                                 }
                             }
                         }
