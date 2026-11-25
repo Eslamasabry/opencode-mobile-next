@@ -128,7 +128,7 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
     if (shown.network == AgentUpdateNetwork.Unknown) {
         KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
     }
-    val metered = shown.network == AgentUpdateNetwork.Metered
+    val metered = shown.network == AgentUpdateNetwork.Metered && (shown.updating > 0 || shown.needed.isNotEmpty())
     if (metered || shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
         KitRowGroup {
             if (metered) WifiOnlyRow(shown.wifiOnly, actions)
