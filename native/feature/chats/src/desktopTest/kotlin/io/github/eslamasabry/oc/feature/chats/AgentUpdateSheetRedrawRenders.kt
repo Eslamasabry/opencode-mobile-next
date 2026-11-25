@@ -4,12 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
@@ -24,12 +31,15 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateNetwork
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStarted
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetModel
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -150,8 +160,8 @@ internal fun redrawOneOffer(): AgentUpdateOffer =
 
 /**
  * Pictures of the redrawn agents' update sheet, nothing asserted: FIVE on mobile data (dark, light, and text 1.3 dark),
- * FIVE with Wi-Fi only off, FIVE with every agent off (dark) and ONE on Wi-Fi (dark). Writes
- * `build/agent-update-sheet-redraw/<name>.png`.
+ * FIVE with Wi-Fi only off, FIVE with every agent off (dark) and ONE on Wi-Fi (dark), and a fold strip at Full motion
+ * (frames 00, 04, 08, 12 and 24 after the last agent goes off). Writes `build/agent-update-sheet-redraw/<name>.png`.
  */
 @OptIn(ExperimentalTestApi::class)
 class AgentUpdateSheetRedrawRenders {
@@ -219,5 +229,77 @@ class AgentUpdateSheetRedrawRenders {
         shoot("us-plus-five-agents-mobile-data-wifi-off-text100-dark", fiveWifiOff, dark = true, fontScale = 1f)
         shoot("us-plus-five-agents-all-off-text100-dark", fiveAllOff, dark = true, fontScale = 1f)
         shoot("us-plus-one-agent-text100-dark", one, dark = true, fontScale = 1f)
+    }
+
+    @Test
+    fun `fold strip of the last agent going off at full motion`() {
+        val previous = Locale.getDefault()
+        val scope = CoroutineScope(Job())
+        try {
+            Locale.setDefault(Locale.forLanguageTag("en"))
+            val offer = noLockedFiveOffer()
+            val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
+            offer.items
+                .filter { it.group == AgentUpdateGroup.Optional && it.name != "Qwen Code" }
+                .forEach { model.choose(it.id, AgentUpdateChoice.Keep) }
+            kitUiTest(900, 2000) {
+                setContent {
+                    val updates by model.ui.collectAsState(initial = remember { model.current() })
+                    CompositionLocalProvider(LocalDensity provides Density(2.5f, 1f)) {
+                        ChatEnvironment {
+                            KitTheme(
+                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Full),
+                                platform = DesktopKitPlatform(),
+                                localeTag = "en",
+                                stillFrame = true,
+                            ) {
+                                Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                    ChatsScreen(mixed().copy(agentUpdates = updates), foldActions(model))
+                                }
+                            }
+                        }
+                    }
+                }
+                val qwen = onNode(isToggleable() and hasText("Qwen Code", substring = true))
+                qwen.performScrollTo()
+                waitForIdle()
+                mainClock.advanceTimeBy(1_500)
+                waitForIdle()
+                mainClock.autoAdvance = false
+                write("us-plus-fold-frame-00")
+                qwen.performClick()
+                var frame = 0
+                FOLD_SHOTS.forEach { at ->
+                    while (frame < at) {
+                        mainClock.advanceTimeByFrame()
+                        frame++
+                    }
+                    write("us-plus-fold-frame-${at.toString().padStart(2, '0')}")
+                }
+                mainClock.autoAdvance = true
+                waitForIdle()
+            }
+        } finally {
+            scope.cancel()
+            Locale.setDefault(previous)
+        }
+    }
+
+    private fun KitUiTest.write(name: String) {
+        ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$name.png"))
+    }
+
+    private fun foldActions(model: AgentUpdateSheetModel): ChatsActions =
+        object : RecordingChatsActions() {
+            override val agentUpdates: AgentUpdateActions =
+                object : AgentUpdateActions {
+                    override fun chooseAgentUpdate(id: AgentId, choice: AgentUpdateChoice) {
+                        model.choose(id, choice)
+                    }
+                }
+        }
+
+    private companion object {
+        val FOLD_SHOTS = listOf(4, 8, 12, 24)
     }
 }
