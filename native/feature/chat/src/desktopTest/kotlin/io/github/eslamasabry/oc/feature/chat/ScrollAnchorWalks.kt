@@ -254,6 +254,7 @@ internal object ScrollAnchorWalks {
     private const val FRAMES_PER_STEP = 12
     private const val END_FRAMES = 40
     private const val GLIDE_FRAMES = 60
+    private const val GLIDE_DRAG_DP = 200f
     private const val SETTLE_MS = 900L
     private const val TOLERANCE_PX = 0.5f
     private const val PHONE_W = 360
@@ -757,51 +758,75 @@ internal object ScrollAnchorWalks {
                     worst = checkFrame(baseline, frame, worst)
                     if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
                 }
-                probe.printFlips(label)
                 assertNoDrift(worst, "004 tap group (${width}x$height)", probe)
                 assertTrue(
                     missingControlFrame < 0,
                     "004 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest${probe.tail()}",
                 )
-                verifyJumpControlGlide(baseBottom, probe)
+                verifyJumpControlGlide(label, baseBottom, probe)
+                probe.printFlips(label)
             }
         }
     }
 
-    private fun ComposeUiTest.verifyJumpControlGlide(baseBottom: Float, probe: ProbeLog) {
+    private fun ComposeUiTest.workLineBottom(): Float? =
+        onAllNodesWithTag("chat-work-line", useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .firstOrNull()
+            ?.boundsInRoot
+            ?.bottom
+
+    private fun ComposeUiTest.verifyJumpControlGlide(label: String, baseBottom: Float, probe: ProbeLog) {
+        dragUp(GLIDE_DRAG_DP)
+        assertTrue(
+            jumpControlShown(),
+            "004 jump-to-latest hidden after 200 dp drag: max=0.0 frame=0 node=jump-to-latest${probe.tail()}",
+        )
         val jumpNode = onNodeWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNode()
-        val startBottom = boundsOfTag("chat-work-line").bottom
+        val startBottom = workLineBottom()
         onRoot().performTouchInput {
             down(jumpNode.boundsInRoot.center)
             up()
         }
         var shownFrame = -1
-        val bottoms = ArrayList<Float>(GLIDE_FRAMES)
+        val bottoms = ArrayList<Float?>(GLIDE_FRAMES)
         repeat(GLIDE_FRAMES) { i ->
             mainClock.advanceTimeByFrame()
             if (jumpControlShown() && shownFrame < 0) shownFrame = i + 1
-            bottoms += boundsOfTag("chat-work-line").bottom
+            bottoms += workLineBottom()
         }
-        val endBottom = bottoms.last()
-        val lo = minOf(startBottom, endBottom) + TOLERANCE_PX
-        val hi = maxOf(startBottom, endBottom) - TOLERANCE_PX
-        val midFrames = bottoms.count { it > lo && it < hi }
         assertTrue(
             shownFrame < 0,
             "004 control still shown after jump tap: max=0.0 frame=$shownFrame node=jump-to-latest${probe.tail()}",
         )
-        val endDelta = abs(endBottom - baseBottom)
+        val endBottom = bottoms.lastOrNull()
+        assertTrue(
+            endBottom != null,
+            "004 chat-work-line missing after glide: max=0.0 frame=$GLIDE_FRAMES node=chat-work-line${probe.tail()}",
+        )
+        val endDelta = abs(endBottom!! - baseBottom)
         assertTrue(
             endDelta <= TOLERANCE_PX,
             "004 newest row not back on box: max=${"%.1f".format(endDelta)} " +
                 "frame=$GLIDE_FRAMES node=chat-work-line${probe.tail()}",
         )
+        val midFrames = countGlideMidFrames(startBottom, endBottom, bottoms)
+        println("ScrollAnchorWalks glide ($label): start=$startBottom end=$endBottom midFrames=$midFrames")
         assertTrue(
             midFrames >= 2,
             "004 jump did not glide (start=$startBottom end=$endBottom midFrames=$midFrames): " +
                 "max=0.0 frame=1 node=jump-to-latest${probe.tail()}",
         )
     }
+
+    private fun countGlideMidFrames(startBottom: Float?, endBottom: Float, bottoms: List<Float?>): Int =
+        if (startBottom != null) {
+            val lo = minOf(startBottom, endBottom) + TOLERANCE_PX
+            val hi = maxOf(startBottom, endBottom) - TOLERANCE_PX
+            bottoms.count { it != null && it > lo && it < hi }
+        } else {
+            bottoms.count { it != null && it > endBottom + TOLERANCE_PX }
+        }
 
     fun walk005WideAndRtl(anchor: TranscriptAnchor) {
         assertPageSpan(anchor, WIDE_W, PHONE_H + WIDE_MIN_EXTRA_PX)
