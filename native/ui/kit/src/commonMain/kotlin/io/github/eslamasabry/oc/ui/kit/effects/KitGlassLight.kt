@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.effects
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -20,6 +18,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import io.github.eslamasabry.oc.ui.design.effects.GlassTuning
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -143,13 +142,14 @@ internal fun Modifier.kitGlassScrollLight(active: Boolean): Modifier {
     val light = LocalKitGlassLight.current
     val density = LocalDensity.current.density
     val decay = remember(light) { Animatable(0f) }
+    val decaySpec = KitMotion.specs.effectsSlow<Float>()
     val pulse = light.scrollPulse
     LaunchedEffect(light, pulse) {
         if (pulse == 0 || abs(light.scrollOffsetDeg) < 0.1f) return@LaunchedEffect
         decay.snapTo(light.scrollOffsetDeg)
         decay.animateTo(
             targetValue = 0f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow),
+            animationSpec = decaySpec,
         ) {
             light.scrollOffsetDeg = value
         }

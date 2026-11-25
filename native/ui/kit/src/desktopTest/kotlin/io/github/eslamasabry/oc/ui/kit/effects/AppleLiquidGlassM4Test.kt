@@ -65,6 +65,7 @@ class AppleLiquidGlassM4Test {
                         segments = listOf(KitSegment("a", "Clear"), KitSegment("b", "Glossy"), KitSegment("c", "Frosted")),
                         selected = "b",
                         onChange = {},
+                        semanticsLabel = "Glass look",
                     )
                 }
             }

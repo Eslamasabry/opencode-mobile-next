@@ -112,9 +112,9 @@ internal object AndroidLiquidGlass {
                 if (spec.shadow.alpha > 0f) {
                     {
                         val flip = spec.flip?.progress?.value ?: 0f
-                        // Content-aware adaptive elevation shadow (B-613): soft over calm dark ground, firmer over
-                        // light/bright backdrops so edges separate cleanly without a heavy dark border.
-                        val baseAlpha = spec.shadow.alpha * (if (spec.rimAdds) (0.72f + 0.28f * flip) else (1.0f - 0.18f * flip))
+                        // Content-aware adaptive elevation shadow (B-613): featherlight over plain ground, deepening
+                        // smoothly when contrasting content/text scrolls underneath (both Dark and Light modes).
+                        val baseAlpha = spec.shadow.alpha * (0.70f + 0.30f * flip)
                         Shadow(
                             radius = 20.dp,
                             offset = DpOffset(0.dp, 4.dp),

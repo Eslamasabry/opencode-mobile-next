@@ -767,10 +767,9 @@ public fun KitScreen(
                     // Home (scrollsElsewhere == true, owner 2026-11-16 "no solid plates over the background"): keeps
                     // the page background unbroken behind the big Conversations heading and filter chips.
                     floats && !floatsCapsule -> null
-                    // Settings / Appearance / New Conversation (B-616): coherent floating Apple Liquid Glass capsule
-                    // with curved lensing and live specular highlight (no rimless fog strip, no hard rectangular cut).
-                    floatsCapsule -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
                     frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
+                    // Settings / Appearance / New Conversation (floatsCapsule) & pages running under the bar (B-616):
+                    // coherent floating Apple Liquid Glass capsule with curved lensing and live specular highlight.
                     runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
                     else -> null
                 }
