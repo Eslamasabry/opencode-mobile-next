@@ -722,4 +722,5 @@
     <string name="connectAgentNeedsSignIn">Votre agent a besoin que vous vous connectiez. Ouvrez Agents et touchez Se connecter ; la conversation s’ouvrira ensuite.</string>
     <string name="kitChipsMore">Afficher plus de filtres</string>
     <string name="kitChipsFirst">Afficher les premiers filtres</string>
+    <string name="appUpdateUpdateTo">Mettre à jour vers %1$s</string>
 </resources>

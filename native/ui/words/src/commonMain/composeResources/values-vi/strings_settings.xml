@@ -802,4 +802,5 @@
     <string name="languageNameFrench">Tiếng Pháp</string>
     <string name="languageNameChinese">Tiếng Trung</string>
     <string name="languageNameItalian">Tiếng Ý</string>
+    <string name="notifySendTestBlockedDetail">Vẫn hoạt động khi thông báo đang tắt để bạn kiểm tra thiết lập Android.</string>
 </resources>
