@@ -172,7 +172,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskNow
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskWait
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
-import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.words.res.kitRelJustNow
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutes
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeShort
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeDaysShort
