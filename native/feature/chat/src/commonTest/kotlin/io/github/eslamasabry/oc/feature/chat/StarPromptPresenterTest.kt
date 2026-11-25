@@ -239,7 +239,7 @@ class StarPromptPresenterTest {
             running(asking = 1)
             ended(1)
             p.replyAskReport()
-            assertEquals(emptyList(), nav.opened, "Report while at Ask does nothing")
+            assertTrue(nav.opened.isEmpty(), "Report while at Ask does nothing")
 
             p.replyAskNo()
             runCurrent()

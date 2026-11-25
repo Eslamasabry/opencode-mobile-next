@@ -84,7 +84,8 @@ class FirstReplyAskRenders {
     private fun Screen(ask: ReplyAskUi?, fontScale: Float) {
         CompositionLocalProvider(LocalDensity provides Density(DENSITY, fontScale)) {
             KitTheme(
-                appearance = KitAppearance(AppearanceMode.Dark, Style.Solid, MotionLevel.Off),
+                appearance =
+                    KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Off),
                 platform = DesktopKitPlatform(),
                 localeTag = "en",
                 stillFrame = true,

@@ -89,7 +89,8 @@ class FirstReplyAskTest {
     private fun Screen(ask: ReplyAskUi?, actions: ChatActions) {
         CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
             KitTheme(
-                appearance = KitAppearance(AppearanceMode.Dark, Style.Solid, MotionLevel.Off),
+                appearance =
+                    KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Off),
                 platform = DesktopKitPlatform(),
                 localeTag = "en",
                 stillFrame = true,
