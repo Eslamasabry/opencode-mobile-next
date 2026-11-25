@@ -158,9 +158,10 @@ class KitRowValueChevronEdgeTest {
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
             val strip = onNodeWithTag("kit-tab-strip").getBoundsInRoot()
-            val last = onAllNodesWithText("Text & motion", useUnmergedTree = true)[0].getBoundsInRoot()
-            assertTrue(last.right.value <= strip.right.value - 12f, "last tab $last too close to edge $strip")
             val tab = onNodeWithContentDescription("Colours").getBoundsInRoot()
+            val last = onAllNodesWithText("Text & motion", useUnmergedTree = true)[0].getBoundsInRoot()
+            assertTrue(tab.left.value >= strip.left.value + 15.5f, "first tab $tab scrolled into left fade of $strip")
+            assertTrue(last.right.value <= strip.right.value - 15.5f, "last tab $last too close to edge $strip")
             val first = onAllNodesWithText("Colours", useUnmergedTree = true)[0].getBoundsInRoot()
             val pad = (first.left - tab.left).value
             assertTrue(pad >= 7.5f, "1.0x pill padding cramped: $pad dp")

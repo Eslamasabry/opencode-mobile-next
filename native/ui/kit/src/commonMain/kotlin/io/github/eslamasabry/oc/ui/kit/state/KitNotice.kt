@@ -259,7 +259,7 @@ private fun NoticeBody(
     trailingParts: List<@Composable () -> Unit>,
     liveRegion: Boolean,
 ) {
-    val calmNeutral = title == null && tone == StatusTone.Neutral
+    val calmNeutral = title == null && tone == StatusTone.Neutral && !liveRegion
     val messageRole = if (title == null && !calmNeutral) TypeRole.Body else TypeRole.Secondary
     val messageTone = if (title == null && !calmNeutral) TextTone.Primary else TextTone.Secondary
     val mark = noticeMark(if (title == null) messageRole else TypeRole.RowTitle)
