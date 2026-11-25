@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onLast
@@ -50,6 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.InWindow
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLayoutMarks
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -261,8 +264,59 @@ class KitFilterChipsFlickerTest {
         }
     }
 
+    @Test
+    fun `B-KIT-CHIP-025 chip revealed by plus tap is whole and unfaded at 360dp`() {
+        for (style in listOf(Style.Solid, Style.Glass)) {
+            verifyRevealedWholeAndUnfaded(style, 1f, listOf("All projects", "All connections", "Running 1"))
+            verifyRevealedWholeAndUnfaded(style, LARGE_FONT_SCALE, listOf("site", "All connections", "Running 1"))
+        }
+    }
+
+    private fun verifyRevealedWholeAndUnfaded(style: Style, fontScale: Float, labels: List<String>) {
+        val tag = "360dp style=$style scale=$fontScale"
+        var growPx = 0f
+        runDesktopComposeUiTest(PHONE_W_PX, PHONE_H_PX) {
+            setContent { phoneHeaderRow(style, fontScale, labels) { growPx = it } }
+            waitForIdle()
+            mainClock.advanceTimeBy(SETTLE_MS)
+            waitForIdle()
+            onAllNodes(hasText("+", substring = true), useUnmergedTree = true).onLast().performClick()
+            waitForIdle()
+            mainClock.advanceTimeBy(SETTLE_MS * 2)
+            waitForIdle()
+
+            val line = onNodeWithTag("kit-filter-chips").fetchSemanticsNode().boundsInRoot
+            val visibleLeft = line.left + growPx
+            val visibleRight = line.right - growPx
+            val visibleW = (visibleRight - visibleLeft).coerceAtLeast(0f)
+            val spans = labels.map { label ->
+                val b = onNode(hasContentDescription(label), useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                (b.left - visibleLeft) to (b.right - visibleLeft)
+            }
+            val fadePx = FilterChipsRules.CHIP_FADE_DP * PHONE_DENSITY
+            val (startFade, endFade) = FilterChipsRules.edgeFades(spans, visibleW, fadePx)
+            val chip = onNode(hasContentDescription("All connections"), useUnmergedTree = true)
+                .fetchSemanticsNode().boundsInRoot
+            val safeLeft = visibleLeft + startFade
+            val safeRight = visibleRight - endFade
+            assertTrue(
+                chip.left >= safeLeft - EDGE_PX_SLACK && chip.right <= safeRight + EDGE_PX_SLACK,
+                "$tag: All connections $chip outside visible unfaded window [$safeLeft..$safeRight] " +
+                    "(line=$line grow=$growPx fades=$startFade/$endFade)",
+            )
+
+            val map = onRoot().captureToImage().toPixelMap()
+            assertChipEdgesUnfaded(map, chip, tag)
+        }
+    }
+
     @androidx.compose.runtime.Composable
-    private fun phoneHeaderRow(style: Style, fontScale: Float, labels: List<String>) {
+    private fun phoneHeaderRow(
+        style: Style,
+        fontScale: Float,
+        labels: List<String>,
+        onShadowReachPx: (Float) -> Unit = {},
+    ) {
         CompositionLocalProvider(LocalDensity provides Density(PHONE_DENSITY, fontScale)) {
             KitTheme(
                 appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off, style = style),
@@ -270,6 +324,7 @@ class KitFilterChipsFlickerTest {
                 localeTag = "en",
                 stillFrame = true,
             ) {
+                onShadowReachPx(with(LocalDensity.current) { kitShadowReach().toPx() })
                 Box(Modifier.fillMaxWidth().background(LocalKitColors.current.ground)) {
                     Row(
                         Modifier.fillMaxWidth().padding(start = Space.S4.dp),
@@ -381,6 +436,52 @@ class KitFilterChipsFlickerTest {
         }
     }
 
+    private fun assertChipEdgesUnfaded(
+        map: PixelMap,
+        chip: androidx.compose.ui.geometry.Rect,
+        label: String,
+    ) {
+        val midY = ((chip.top + chip.bottom) / 2f).roundToInt().coerceIn(0, map.height - 1)
+        val leftX = (chip.left + EDGE_PROBE_PX).roundToInt().coerceIn(0, map.width - 1)
+        val rightX = (chip.right - EDGE_PROBE_PX).roundToInt().coerceIn(0, map.width - 1)
+        val midStart = (chip.left + chip.width * MID_START_FRAC).roundToInt().coerceIn(0, map.width - 1)
+        val midEnd = (chip.left + chip.width * MID_END_FRAC).roundToInt().coerceIn(midStart, map.width - 1)
+        val middleBg = medianColor(map, midStart, midEnd, midY)
+        val leftSample = map[leftX, midY]
+        val rightSample = map[rightX, midY]
+        val leftDiff = colorDiff(leftSample, middleBg)
+        val rightDiff = colorDiff(rightSample, middleBg)
+        assertTrue(
+            leftDiff < CHIP_EDGE_DIFF,
+            "$label: chip left edge at x=$leftX dimmed (diff=$leftDiff sample=$leftSample mid=$middleBg)",
+        )
+        assertTrue(
+            rightDiff < CHIP_EDGE_DIFF,
+            "$label: chip right edge at x=$rightX dimmed (diff=$rightDiff sample=$rightSample mid=$middleBg)",
+        )
+    }
+
+    private fun medianColor(map: PixelMap, startX: Int, endX: Int, y: Int): Color {
+        val count = (endX - startX + 1).coerceAtLeast(1)
+        val reds = FloatArray(count)
+        val greens = FloatArray(count)
+        val blues = FloatArray(count)
+        for (i in 0 until count) {
+            val c = map[startX + i, y]
+            reds[i] = c.red
+            greens[i] = c.green
+            blues[i] = c.blue
+        }
+        reds.sort()
+        greens.sort()
+        blues.sort()
+        val m = count / 2
+        return Color(reds[m], greens[m], blues[m], 1f)
+    }
+
+    private fun colorDiff(a: Color, b: Color): Float =
+        abs(a.red - b.red) + abs(a.green - b.green) + abs(a.blue - b.blue)
+
     private fun assertEdgeCleared(
         map: PixelMap,
         line: androidx.compose.ui.geometry.Rect,
@@ -438,6 +539,9 @@ class KitFilterChipsFlickerTest {
         const val EDGE_PROBE_PX = 4f
         const val EDGE_REF_Y_PX = 2f
         const val EDGE_CLEAR_DIFF = 0.06f
+        const val CHIP_EDGE_DIFF = 0.06f
+        const val MID_START_FRAC = 0.35f
+        const val MID_END_FRAC = 0.65f
         const val SCROLL_TO_END_PX = 10_000f
         const val END_TAIL_MAX_PX = 36f
         const val WALK_FRAMES = 12
