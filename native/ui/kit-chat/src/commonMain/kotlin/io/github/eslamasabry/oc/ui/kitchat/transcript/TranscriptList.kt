@@ -157,8 +157,9 @@ internal constructor(
     /** The newest row is at the bottom edge, within the 48 dp follow slack (plan 08 §5.1). */
     public val atNewest: Boolean by derivedStateOf {
         val slack = with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
-        if (laidOutNormal) {
-            TranscriptAnchorOps.atNewestNormalOrder(lazy, roomPx, slack)
+        if (anchor == TranscriptAnchor.Hybrid) {
+            val gap = TranscriptAnchorOps.newestGapPx(lazy.layoutInfo, laidOutNormal, roomPx)
+            gap != null && gap <= slack
         } else {
             lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset <= slack
         }
@@ -181,8 +182,9 @@ internal constructor(
     /** Deep enough in history (> 480 dp from newest) to fold the phrase row away. */
     internal val awayForPhraseRow: Boolean by derivedStateOf {
         val awayPx = with(density) { AWAY_DP.dp.roundToPx() }
-        if (anchor == TranscriptAnchor.Hybrid && laidOutNormal) {
-            !TranscriptAnchorOps.atNewestNormalOrder(lazy, roomPx, awayPx)
+        if (anchor == TranscriptAnchor.Hybrid) {
+            val gap = TranscriptAnchorOps.newestGapPx(lazy.layoutInfo, laidOutNormal, roomPx)
+            !(gap != null && gap <= awayPx)
         } else {
             lazy.firstVisibleItemIndex > 0 || lazy.firstVisibleItemScrollOffset > awayPx
         }
@@ -563,6 +565,8 @@ private class PersonScroll(
     private val pin: BottomPin,
 ) : NestedScrollConnection {
     var personScrolled: Boolean = false
+    var scrolledTowardNewest: Boolean = false
+    var jumpedToIndex: Boolean = false
     var actionActive: Boolean = false
 
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -571,12 +575,18 @@ private class PersonScroll(
         }
         return when {
             available.y > 0f -> {
+                scrolledTowardNewest = false
                 state.following = false
                 Offset.Zero
             }
-            available.y < 0f && Snapshot.withoutReadObservation { state.laidOutNormal } -> {
-                val excess = TranscriptAnchorOps.roomExcess(state.lazy, pin.roomPx, -available.y)
-                if (excess > 0f) Offset(0f, -excess) else Offset.Zero
+            available.y < 0f -> {
+                scrolledTowardNewest = true
+                if (Snapshot.withoutReadObservation { state.laidOutNormal }) {
+                    val excess = TranscriptAnchorOps.roomExcess(state.lazy, pin.roomPx, -available.y)
+                    if (excess > 0f) Offset(0f, -excess) else Offset.Zero
+                } else {
+                    Offset.Zero
+                }
             }
             else -> Offset.Zero
         }
@@ -584,8 +594,15 @@ private class PersonScroll(
 
     fun end() {
         if (!personScrolled) return
+        val allowReturn = scrolledTowardNewest
+        val fromIndex = jumpedToIndex
         personScrolled = false
-        state.following = state.atNewest
+        scrolledTowardNewest = false
+        jumpedToIndex = false
+        when {
+            fromIndex -> state.following = state.atNewest
+            allowReturn && state.atNewest -> state.following = true
+        }
     }
 
     suspend fun a11yScrollBy(dispatcher: NestedScrollDispatcher, motion: KitMotionLevel, y: Float) {
@@ -636,6 +653,7 @@ private class PersonScroll(
     suspend fun a11yScrollToIndex(index: Int) {
         actionActive = true
         personScrolled = true
+        jumpedToIndex = true
         try {
             state.lazy.scrollToItem(index)
             withFrameNanos { }
@@ -786,17 +804,18 @@ private object TranscriptAnchorOps {
         }
     }
 
-    fun atNewestNormalOrder(lazy: LazyListState, roomPx: Int, slackPx: Int): Boolean {
-        val info = lazy.layoutInfo
-        val last = info.visibleItemsInfo.lastOrNull()
-        return when {
-            info.totalItemsCount == 0 -> true
-            last == null || last.index != info.totalItemsCount - 1 -> false
-            else -> {
-                val end = info.beforeContentPadding + last.offset + last.size
+    fun newestGapPx(info: LazyListLayoutInfo, normal: Boolean, roomPx: Int): Int? {
+        if (info.totalItemsCount == 0) return 0
+        return if (normal) {
+            val last = info.visibleItemsInfo.lastOrNull()?.takeIf { it.index == info.totalItemsCount - 1 }
+            last?.let {
+                val end = info.beforeContentPadding + it.offset + it.size
                 val line = info.viewportSize.height - info.afterContentPadding + roomPx
-                end - line <= slackPx
+                end - line
             }
+        } else {
+            val first = info.visibleItemsInfo.firstOrNull()?.takeIf { it.index == 0 }
+            first?.let { -it.offset }
         }
     }
 

@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class HybridAtNewestTest {
-    private fun runDrag(dragDp: Float): Boolean {
+    private fun runGesture(returnGapDp: Float?, leaveDp: Float = LEAVE_DP): Boolean {
         var result = false
         runComposeUiTest {
             lateinit var state: TranscriptListState
@@ -53,7 +53,10 @@ class HybridAtNewestTest {
                 val start = Offset(centerX, top + height * 0.2f)
                 down(start)
                 moveBy(Offset(0f, slop))
-                moveBy(Offset(0f, dragDp.dp.toPx()))
+                moveBy(Offset(0f, leaveDp.dp.toPx()))
+                if (returnGapDp != null) {
+                    moveBy(Offset(0f, -(leaveDp - returnGapDp).dp.toPx()))
+                }
                 advanceEventTime(HOLD_MS)
                 up()
             }
@@ -65,12 +68,26 @@ class HybridAtNewestTest {
 
     @Test
     fun `STEPS-SCROLL-009 hybrid newest row 40 dp under the line still counts as at newest`() {
-        assertTrue(runDrag(40f), "expected following == true when newest row is 40 dp under the line")
+        assertTrue(
+            runGesture(returnGapDp = 40f),
+            "expected following == true when returning to 40 dp under the line",
+        )
     }
 
     @Test
     fun `STEPS-SCROLL-009b hybrid 56 dp under the line is away`() {
-        assertFalse(runDrag(56f), "expected following == false when newest row is 56 dp under the line")
+        assertFalse(
+            runGesture(returnGapDp = 56f),
+            "expected following == false when returning to 56 dp under the line",
+        )
+    }
+
+    @Test
+    fun `STEPS-SCROLL-009c hybrid 40 dp upward drag leaves following`() {
+        assertFalse(
+            runGesture(returnGapDp = null, leaveDp = 40f),
+            "expected following == false after a 40 dp upward drag",
+        )
     }
 
     private companion object {
@@ -80,6 +97,7 @@ class HybridAtNewestTest {
         const val NEWEST_ROW_DP = 20
         const val OLDER_ROW_DP = 100
         const val OLDER_ROW_COUNT = 40
+        const val LEAVE_DP = 200f
         const val INITIAL_FRAMES = 5
         const val SETTLE_FRAMES = 60
         const val HOLD_MS = 200L
