@@ -245,8 +245,10 @@ class PolishB563Test {
             val calls = Calls()
             setContent { Scene { ChangesScreen(guidedChanges(drafts = 3), calls) } }
             waitForIdle()
-            val sendTop = onNodeWithText("Send 3 comments", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
-            val doneTop = onNodeWithText("Done", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
+            val sendTop =
+                onNodeWithText("Send 3 comments", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
+            val doneTop =
+                onNodeWithText("Done", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
             assertTrue(sendTop < doneTop, "expected Send 3 comments ($sendTop) above Done ($doneTop)")
             onNodeWithText("Send 3 comments").performClick()
             assertTrue("send" in calls.log, "expected send in ${calls.log}")

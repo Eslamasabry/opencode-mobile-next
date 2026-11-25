@@ -123,6 +123,7 @@ public data class KitDiffPosition(
  * Comment, Add to prompt, Copy lines, Clear). [loading], [error] and an empty file are the view's own states. Copies
  * use redacted source lines, never signs or line numbers.
  */
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
 @Composable
 public fun KitDiffView(
     file: DiffFile,
@@ -483,6 +484,7 @@ private fun Counts(added: Int, removed: Int) {
  * change bar under it; with one change, one line holding the name, the folder and status, the counts and the wrap
  * toggle.
  */
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun DiffHeader(
     file: DiffFile,

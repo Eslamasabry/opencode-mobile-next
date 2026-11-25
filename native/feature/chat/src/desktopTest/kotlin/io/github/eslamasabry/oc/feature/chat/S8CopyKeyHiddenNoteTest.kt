@@ -79,7 +79,9 @@ class S8CopyKeyHiddenNoteTest {
         kitUiTest(360, 640) {
             setContent {
                 E20Scene {
-                    CopyNoteScene { CopyKeyHiddenNotes(null, HeaderClip(3, "# Chat", ClipKind.Transcript, masked = true)) }
+                    CopyNoteScene {
+                        CopyKeyHiddenNotes(null, HeaderClip(3, "# Chat", ClipKind.Transcript, masked = true))
+                    }
                 }
             }
             waitForIdle()
