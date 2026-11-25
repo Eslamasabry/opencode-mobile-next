@@ -58,11 +58,15 @@ internal fun versionAndSize(from: String?, to: String, downloadBytes: Long?): St
 internal fun consequence(row: AgentUpdateRowUi): String =
     when (row.choice) {
         AgentUpdateChoice.Update -> downloads(row.downloadBytes)
-        AgentUpdateChoice.Keep ->
-            row.from?.let { stringResource(Res.string.agentUpdatesStays, KitBidi.ltr(it)) }
-                ?: stringResource(Res.string.agentUpdatesStaysUnknown)
+        AgentUpdateChoice.Keep -> stays(row.from)
         AgentUpdateChoice.Remove -> frees(row.installedBytes)
     }
+
+/** "Stays on 0.171.0", or the generic keep line when the current version is unknown. */
+@Composable
+internal fun stays(from: String?): String =
+    from?.let { stringResource(Res.string.agentUpdatesStays, KitBidi.ltr(it)) }
+        ?: stringResource(Res.string.agentUpdatesStaysUnknown)
 
 @Composable
 internal fun versions(from: String?, to: String): String =

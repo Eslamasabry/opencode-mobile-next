@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.row.kitSwitchSupportingLines
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
@@ -176,15 +178,25 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
         return
     }
     val updating = row.choice == AgentUpdateChoice.Update
-    KitSwitchRow(
-        title = KitBidi.auto(row.name),
-        checked = updating,
-        supporting = if (updating) facts else consequence(row),
-        supportingMaxLines = 3,
-        onCheckedChange = {
-            actions.chooseAgentUpdate(row.id, if (it) AgentUpdateChoice.Update else AgentUpdateChoice.Keep)
-        },
-    )
+    val offText = if (row.choice == AgentUpdateChoice.Remove) consequence(row) else stays(row.from)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val minLines =
+            kitSwitchSupportingLines(
+                texts = listOf(facts, offText),
+                rowWidth = maxWidth,
+                supportingMaxLines = 3,
+            )
+        KitSwitchRow(
+            title = KitBidi.auto(row.name),
+            checked = updating,
+            supporting = if (updating) facts else offText,
+            supportingMaxLines = 3,
+            supportingMinLines = minLines,
+            onCheckedChange = {
+                actions.chooseAgentUpdate(row.id, if (it) AgentUpdateChoice.Update else AgentUpdateChoice.Keep)
+            },
+        )
+    }
 }
 
 /** A part the updates need: its name, versions, size and why it is needed, with no choice. */
