@@ -43,4 +43,9 @@ class ScrollAnchorHybridTest {
     fun `STEPS-SCROLL-008 hybrid screen reader scroll to a row leaves following and comes back`() {
         ScrollAnchorWalks.walk008ScreenReaderScrollToIndex(TranscriptAnchor.Hybrid)
     }
+
+    @Test
+    fun `STEPS-SCROLL-017 today screen reader scroll up holds still when a step arrives`() {
+        ScrollAnchorWalks.walk017TodayScreenReaderHoldsStill()
+    }
 }

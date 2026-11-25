@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -75,6 +76,8 @@ import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -399,6 +402,118 @@ private fun ComposeUiTest.a11yScroll(amountPx: Float, towardNewer: Boolean, labe
         .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, y) }
 }
 
+@Composable
+private fun ScrollWalkRoot(
+    anchor: TranscriptAnchor,
+    direction: LayoutDirection = LayoutDirection.Ltr,
+    probe: ((String) -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalTranscriptAnchor provides anchor,
+        LocalLayoutDirection provides direction,
+        LocalTranscriptProbe provides probe,
+    ) {
+        KitTheme(
+            platform = DesktopKitPlatform(),
+            appearance = KitAppearance(motion = MotionLevel.Full),
+            localeTag = "en",
+            stillFrame = false,
+        ) {
+            CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
+        }
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.captureRender(fileName: String) {
+    val out = File("build/s1-o5-render/$fileName")
+    out.parentFile.mkdirs()
+    ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out)
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.assertTodayA11yHeld(
+    label: String,
+    firstRow: TrackedNode?,
+    worst: Drift,
+    probe: ProbeLog,
+) {
+    assertTrue(firstRow != null, "$label first visible row missing${probe.tail()}")
+    val endTop = currentTops()[firstRow!!.id]
+    val move = if (endTop != null) abs(endTop - firstRow.top) else Float.MAX_VALUE
+    assertTrue(
+        move <= WALK_TOLERANCE_PX,
+        "$label first visible row moved ${"%.1f".format(move)} px (node=${firstRow.label})${probe.tail()}",
+    )
+    assertNoDrift(worst, "$label today a11y holds still", probe)
+    assertTrue(
+        probe.latest()?.contains("following=false") == true,
+        "$label expected following=false after a11y scroll and new step${probe.tail()}",
+    )
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun runTodayA11yStep(
+    label: String,
+    fileName: String,
+    assertAfter: Boolean,
+    scrollUp: ComposeUiTest.(ProbeLog, CoroutineScope) -> Unit,
+) {
+    kitUiTest(A11Y_PHONE_W, A11Y_PHONE_H, options = KitUiOptions(mode = FlickerMode.Report)) {
+        ScrollPlaceStore.clear()
+        val probe = ProbeLog()
+        val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+        var step by mutableIntStateOf(A11Y_START_STEPS)
+        var ended by mutableStateOf(true)
+        lateinit var scope: CoroutineScope
+        mainClock.autoAdvance = false
+        setContent {
+            scope = rememberCoroutineScope()
+            ScrollWalkRoot(TranscriptAnchor.Today, probe = probe.sink) {
+                ChatScreen(
+                    ScrollWalkScene.state(step, ended),
+                    actions,
+                    ScrollWalkScene.composer,
+                    facts = ScrollWalkScene.facts(step, ended),
+                )
+            }
+        }
+        repeat(A11Y_STEP_FRAMES) { mainClock.advanceTimeByFrame() }
+        val initialTop = probe.latest()?.substringAfter("top=", "")
+        scrollUp(probe, scope)
+        repeat(A11Y_STEP_FRAMES) { mainClock.advanceTimeByFrame() }
+        assertTrue(
+            probe.latest()?.substringAfter("top=", "") != initialTop,
+            "$label did not scroll up before step arrived${probe.tail()}",
+        )
+        if (!assertAfter) {
+            assertTrue(
+                probe.latest()?.contains("following=true") == true,
+                "$label expected following=true on BEFORE path${probe.tail()}",
+            )
+        }
+        val baseline = visibleNodes()
+        val firstRow = baseline.values.minByOrNull { it.top }
+        step = A11Y_NEXT_STEPS
+        ended = false
+        var worst = Drift(0f, 0, "none")
+        repeat(A11Y_STEP_FRAMES) { i ->
+            mainClock.advanceTimeByFrame()
+            if (assertAfter) worst = checkFrame(baseline, i + 1, worst)
+        }
+        captureRender(fileName)
+        if (assertAfter) assertTodayA11yHeld(label, firstRow, worst, probe)
+    }
+}
+
+private const val A11Y_PHONE_W = 360
+private const val A11Y_PHONE_H = 800
+private const val A11Y_START_STEPS = 10
+private const val A11Y_NEXT_STEPS = 11
+private const val A11Y_STEP_FRAMES = 60
+private const val A11Y_SCROLL_UP_PX = 480f
+
 @OptIn(ExperimentalTestApi::class)
 internal object ScrollAnchorWalks {
     private const val WIDE_MIN_EXTRA_PX = 200f
@@ -424,22 +539,7 @@ internal object ScrollAnchorWalks {
         direction: LayoutDirection = LayoutDirection.Ltr,
         probe: ((String) -> Unit)? = null,
         content: @Composable () -> Unit,
-    ) {
-        CompositionLocalProvider(
-            LocalTranscriptAnchor provides anchor,
-            LocalLayoutDirection provides direction,
-            LocalTranscriptProbe provides probe,
-        ) {
-            KitTheme(
-                platform = DesktopKitPlatform(),
-                appearance = KitAppearance(motion = MotionLevel.Full),
-                localeTag = "en",
-                stillFrame = false,
-            ) {
-                CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
-            }
-        }
-    }
+    ) = ScrollWalkRoot(anchor, direction, probe, content)
 
     private val composer: ComposerHost = ScrollWalkScene.composer
 
@@ -1016,5 +1116,20 @@ internal object ScrollAnchorWalks {
             "$label newest row not back on box: max=${"%.1f".format(endDelta)} " +
                 "frame=$GLIDE_FRAMES node=chat-work-line${probe.tail()}",
         )
+    }
+
+    fun walk017TodayScreenReaderHoldsStill() {
+        withFlickerReport("017") {
+            runTodayA11yStep("017-before", "today-a11y-before-360.png", assertAfter = false) { _, scope ->
+                val scrollByOffset =
+                    onNodeWithTag("transcript-list", useUnmergedTree = true)
+                        .fetchSemanticsNode()
+                        .config[SemanticsActions.ScrollByOffset]
+                scope.launch { scrollByOffset(Offset(0f, A11Y_SCROLL_UP_PX)) }
+            }
+            runTodayA11yStep("017-after", "today-a11y-after-360.png", assertAfter = true) { probe, _ ->
+                a11yScroll(A11Y_SCROLL_UP_PX, towardNewer = false, label = "017-after", probe = probe)
+            }
+        }
     }
 }
