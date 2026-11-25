@@ -17,6 +17,7 @@ import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -105,7 +106,7 @@ class KitFilterChipsFlickerTest {
     @Test
     fun `B-KIT-CHIP-022 rest-whole mark refreshes when width flips between whole and plain scroll`() {
         var widthDp by mutableIntStateOf(MEDIUM_DP)
-        kitUiTest(WINDOW_W, WINDOW_H, options = strict) {
+        runComposeUiTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                     KitTheme(
@@ -169,7 +170,8 @@ class KitFilterChipsFlickerTest {
     }
 
     private fun verifyCueFitsAndTaps(widthDp: Int, style: Style, fontScale: Float) {
-        kitUiTest(WINDOW_W, WINDOW_H, options = strict) {
+        val tag = "w=$widthDp style=$style scale=$fontScale"
+        runComposeUiTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, fontScale)) {
                     KitTheme(
@@ -198,14 +200,8 @@ class KitFilterChipsFlickerTest {
             waitForIdle()
             val slot = onNodeWithTag("chip-slot").fetchSemanticsNode().boundsInRoot
             val cuesBefore = onAllNodes(hasText("+", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
-            assertTrue(cuesBefore.isNotEmpty(), "w=$widthDp style=$style scale=$fontScale: expected a +N cue")
-            for (cue in cuesBefore) {
-                val b = cue.boundsInRoot
-                assertTrue(
-                    b.left >= slot.left - HALF_PX && b.right <= slot.right + HALF_PX,
-                    "w=$widthDp style=$style scale=$fontScale: cue $b overflows slot $slot",
-                )
-            }
+            assertTrue(cuesBefore.isNotEmpty(), "$tag: expected a +N cue")
+            assertCuesInside(cuesBefore, slot, tag)
             onAllNodes(hasText("+", substring = true), useUnmergedTree = true).onLast().performClick()
             waitForIdle()
             mainClock.advanceTimeBy(SETTLE_MS * 2)
@@ -213,20 +209,24 @@ class KitFilterChipsFlickerTest {
             val line = onNodeWithTag("kit-filter-chips").fetchSemanticsNode().boundsInRoot
             val revealed =
                 onAllNodes(hasText("All connections"), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
-            assertTrue(revealed != null, "w=$widthDp style=$style scale=$fontScale: All connections missing after tap")
+            assertTrue(revealed != null, "$tag: All connections missing after tap")
             val b = revealed.boundsInRoot
             assertTrue(
                 b.left >= line.left - HALF_PX && b.right <= line.right + HALF_PX,
-                "w=$widthDp style=$style scale=$fontScale: All connections $b not whole in $line",
+                "$tag: All connections $b not whole in $line",
             )
             val cuesAfter = onAllNodes(hasText("+", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
-            for (cue in cuesAfter) {
-                val cb = cue.boundsInRoot
-                assertTrue(
-                    cb.left >= slot.left - HALF_PX && cb.right <= slot.right + HALF_PX,
-                    "w=$widthDp style=$style scale=$fontScale after tap: cue $cb overflows slot $slot",
-                )
-            }
+            assertCuesInside(cuesAfter, slot, "$tag after tap")
+        }
+    }
+
+    private fun assertCuesInside(cues: List<SemanticsNode>, slot: androidx.compose.ui.geometry.Rect, label: String) {
+        for (cue in cues) {
+            val b = cue.boundsInRoot
+            assertTrue(
+                b.left >= slot.left - HALF_PX && b.right <= slot.right + HALF_PX,
+                "$label: cue $b overflows slot $slot",
+            )
         }
     }
 

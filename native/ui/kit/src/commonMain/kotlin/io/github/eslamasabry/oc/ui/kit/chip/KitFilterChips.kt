@@ -30,10 +30,13 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.SubcomposeMeasureScope
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.SemanticsModifierNode
+import androidx.compose.ui.node.invalidateSemantics
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -41,7 +44,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLayoutMarks
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
@@ -49,9 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitOnFloatingPane
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.runtime.LaunchedEffect
@@ -156,51 +156,83 @@ public object FilterChipsRules {
      */
     internal fun planWhole(metrics: WholeMetrics, budget: WholeBudget): WholePlan {
         val fullInner = budget.innerBudget(budget.totalWidth)
-        if (metrics.sizes.isEmpty()) return WholePlan(whole = true, before = 0, after = 0, clippedWidth = fullInner)
-        var before = 0
-        var after = 0
-        var clipped = fullInner
-        var whole = true
-        var done = false
-        var step = 0
-        while (!done && step < MAX_WHOLE_PASSES) {
-            val reserved = cueSpace(before, budget) + cueSpace(after, budget)
-            val availInner = budget.innerBudget((budget.totalWidth - reserved).coerceAtLeast(0))
-            if (metrics.sizes[0] + metrics.startPad > availInner + HALF_PX) {
-                whole = false
-                before = 0
-                after = 0
-                clipped = fullInner
-                done = true
-            } else {
-                val edge = wholeEnd(metrics.sizes, metrics.gap, metrics.startPad, metrics.scroll, availInner.toFloat())
-                clipped = edge.roundToInt().coerceIn(0, availInner)
-                val (gone, past) = countHidden(metrics, clipped)
-                done = gone == before && past == after
-                before = gone
-                after = past
-            }
-            step++
+        if (metrics.sizes.isEmpty()) return WholePlan(true, 0, 0, fullInner, fullInner)
+        // Lower-bound pre-pass using minCueWidth (KitChip's minTarget floor) avoids subcomposing throwaway cue
+        // probes on narrow widths or intermediate counts before measuring the real KitChip measurables.
+        val floorWidths = CueMeasurers(beforeWidth = { budget.minCueWidth }, afterWidth = { budget.minCueWidth })
+        val seed = convergeWhole(metrics, budget, fullInner, floorWidths)
+        val noCues = !seed.whole || (seed.before == 0 && seed.after == 0)
+        return if (noCues) {
+            seed
+        } else {
+            val realWidths = CueMeasurers(budget.beforeCueWidth, budget.afterCueWidth)
+            convergeWhole(metrics, budget, fullInner, realWidths, seed.before to seed.after)
         }
-        return WholePlan(whole = whole, before = before, after = after, clippedWidth = clipped)
     }
+}
 
-    private const val HALF_PX = 0.5f
-    private const val MAX_WHOLE_PASSES = 4
+private const val WHOLE_HALF_PX = 0.5f
+private const val MAX_WHOLE_PASSES = 6
 
-    private fun cueSpace(count: Int, budget: WholeBudget): Int =
-        if (count > 0) budget.cueWidth(count) + budget.cueGap else 0
-
-    private fun countHidden(metrics: WholeMetrics, clipped: Int): Pair<Int, Int> {
-        var x = metrics.startPad - metrics.scroll
-        var gone = 0
-        var past = 0
-        for (w in metrics.sizes) {
-            if (x + w <= metrics.startPad + HALF_PX) gone++ else if (x + w > clipped + HALF_PX) past++
-            x += w + metrics.gap
+private fun convergeWhole(
+    metrics: WholeMetrics,
+    budget: WholeBudget,
+    fullInner: Int,
+    widths: CueMeasurers,
+    start: Pair<Int, Int> = 0 to 0,
+): WholePlan {
+    var before = start.first
+    var after = start.second
+    var converged: WholePlan? = null
+    var step = 0
+    while (converged == null && step < MAX_WHOLE_PASSES) {
+        val plan = resolveWholePass(metrics, budget, fullInner, widths, before to after)
+        if (!plan.whole || (plan.before == before && plan.after == after)) {
+            converged = plan
+        } else {
+            before = plan.before
+            after = plan.after
         }
-        return gone to past
+        step++
     }
+    return converged ?: resolveWholePass(metrics, budget, fullInner, widths, before to after).let { settled ->
+        if (settled.whole) settled.copy(before = before, after = after) else settled
+    }
+}
+
+private fun resolveWholePass(
+    metrics: WholeMetrics,
+    budget: WholeBudget,
+    fullInner: Int,
+    widths: CueMeasurers,
+    counts: Pair<Int, Int>,
+): WholePlan {
+    val reserved =
+        cueSpace(counts.first, widths.beforeWidth, budget.cueGap) +
+            cueSpace(counts.second, widths.afterWidth, budget.cueGap)
+    val availInner = budget.innerBudget((budget.totalWidth - reserved).coerceAtLeast(0))
+    if (metrics.sizes[0] + metrics.startPad > availInner + WHOLE_HALF_PX) {
+        return WholePlan(whole = false, before = 0, after = 0, availInner = fullInner, clippedWidth = fullInner)
+    }
+    val edge =
+        FilterChipsRules.wholeEnd(metrics.sizes, metrics.gap, metrics.startPad, metrics.scroll, availInner.toFloat())
+    val clipped = edge.roundToInt().coerceIn(0, availInner)
+    val (gone, past) = countHidden(metrics, clipped)
+    return WholePlan(whole = true, before = gone, after = past, availInner = availInner, clippedWidth = clipped)
+}
+
+private fun cueSpace(count: Int, measureWidth: (Int) -> Int, gap: Int): Int =
+    if (count > 0) measureWidth(count) + gap else 0
+
+private fun countHidden(metrics: WholeMetrics, clipped: Int): Pair<Int, Int> {
+    var x = metrics.startPad - metrics.scroll
+    var gone = 0
+    var past = 0
+    for (w in metrics.sizes) {
+        if (x + w <= metrics.startPad + WHOLE_HALF_PX) gone++ else if (x + w > clipped + WHOLE_HALF_PX) past++
+        x += w + metrics.gap
+    }
+    return gone to past
 }
 
 /** Chip geometry for one pass of [FilterChipsRules.planWhole]. */
@@ -211,12 +243,20 @@ internal class WholeMetrics(
     val scroll: Float,
 )
 
-/** Available width and cue-chip sizing for one pass of [FilterChipsRules.planWhole]. */
+/** Available width and real cue-chip measurements for one pass of [FilterChipsRules.planWhole]. */
 internal class WholeBudget(
     val totalWidth: Int,
     val cueGap: Int,
+    val minCueWidth: Int,
     val innerBudget: (Int) -> Int,
-    val cueWidth: (Int) -> Int,
+    val beforeCueWidth: (Int) -> Int,
+    val afterCueWidth: (Int) -> Int,
+)
+
+/** Measures real "+N" cue widths for [FilterChipsRules.planWhole]. */
+internal class CueMeasurers(
+    val beforeWidth: (Int) -> Int,
+    val afterWidth: (Int) -> Int,
 )
 
 /** Result of [FilterChipsRules.planWhole]: computed in layout before anything is placed or drawn. */
@@ -224,10 +264,15 @@ internal data class WholePlan(
     val whole: Boolean,
     val before: Int,
     val after: Int,
+    val availInner: Int,
     val clippedWidth: Int,
 )
 
-private enum class WholeSlot { Line, Before, After }
+private sealed interface WholeSlot {
+    data object Line : WholeSlot
+    data class Before(val count: Int) : WholeSlot
+    data class After(val count: Int) : WholeSlot
+}
 
 /** Where a chip line keeps its chips' widths and its resting gap, between laying the chips out and drawing the fade. */
 private class ChipLine(
@@ -243,13 +288,13 @@ private class ChipLine(
     var gapPx = 0f
 
     /** `restWhole`: true when at least the first chip fits beside any needed "+N" cues; false falls back to fades. */
-    var wholeActive: Boolean = restWhole
+    var wholeActive by mutableStateOf(restWhole)
 
     /** Latest single-pass plan computed during [WholeFilterChips] layout. */
-    var lastPlan: WholePlan = WholePlan(whole = restWhole, before = 0, after = 0, clippedWidth = 0)
+    var lastPlan: WholePlan = WholePlan(whole = restWhole, before = 0, after = 0, availInner = 0, clippedWidth = 0)
 
-    /** Hook invoked inside the chip box's measure pass to compute the clipped width and cue counts in one pass. */
-    var onMeasureWhole: ((innerPlaceableWidth: Int, hasBoundedWidth: Boolean, scrollPx: Float) -> Int)? = null
+    /** Hook invoked inside the chip box's measure pass to plan cues and return the available inner width. */
+    var onMeasureWhole: ((innerPlaceableWidth: Int, hasBoundedWidth: Boolean) -> Int)? = null
 
     /**
      * [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. Read by
@@ -407,7 +452,20 @@ public fun KitFilterChips(
                     val hook = line.onMeasureWhole
                     val width =
                         if (wantWhole && hook != null) {
-                            hook(placeable.width, constraints.hasBoundedWidth, scroll.value.toFloat())
+                            val availInner = hook(placeable.width, constraints.hasBoundedWidth)
+                            if (constraints.hasBoundedWidth && line.wholeActive) {
+                                // Read scroll.value here so this box re-measures when scrolled and clips right
+                                // after the last visible whole chip within availInner.
+                                FilterChipsRules.wholeEnd(
+                                    line.sizes,
+                                    line.gapPx,
+                                    startPad.toPx(),
+                                    scroll.value.toFloat(),
+                                    availInner.toFloat(),
+                                ).roundToInt().coerceIn(0, availInner)
+                            } else {
+                                availInner
+                            }
                         } else {
                             placeable.width
                         }
@@ -438,11 +496,14 @@ public fun KitFilterChips(
             WholeChipsConfig(
                 line = line,
                 scroll = scroll,
+                minCueWidthDp = tokens.minTarget.dp,
                 insets =
                     WholeInsets(
                         startPad = startPad,
-                        panePad = if (onPane) (if (bleed) 0.dp else paneEdge) + paneEdge else 0.dp,
-                        shadowExtra = growStart + growEnd,
+                        paneStart = if (onPane && !bleed) paneEdge else 0.dp,
+                        paneEnd = if (onPane) paneEdge else 0.dp,
+                        growStart = growStart,
+                        growEnd = growEnd,
                     ),
                 onFirst = { scope.launch { scroll.animateScrollTo(0) } },
                 onMore = { hidden ->
@@ -460,15 +521,90 @@ public fun KitFilterChips(
 
 private const val REST_SNAP_DELAY_MS = 120L
 
-private class WholeInsets(val startPad: Dp, val panePad: Dp, val shadowExtra: Dp)
+private class WholeInsets(
+    val startPad: Dp,
+    val paneStart: Dp,
+    val paneEnd: Dp,
+    val growStart: Dp,
+    val growEnd: Dp,
+)
 
 private class WholeChipsConfig(
     val line: ChipLine,
     val scroll: ScrollState,
+    val minCueWidthDp: Dp,
     val insets: WholeInsets,
     val onFirst: () -> Unit,
     val onMore: (Int) -> Unit,
 )
+
+private class CueSpec(
+    val slot: WholeSlot,
+    val count: Int,
+    val spoken: String,
+    val visibility: CueVisibility,
+    val onClick: () -> Unit,
+)
+
+/** Tracks whether a subcomposed "+N" cue is placed in this pass so unplaced probes expose no semantics. */
+private class CueVisibility {
+    var placed: Boolean = false
+        private set
+    private var node: CueSemanticsNode? = null
+
+    fun attach(target: CueSemanticsNode?) {
+        node = target
+    }
+
+    fun update(isPlaced: Boolean) {
+        if (placed != isPlaced) {
+            placed = isPlaced
+            node?.refresh()
+        }
+    }
+}
+
+private data class CueSemanticsElement(val visibility: CueVisibility) : ModifierNodeElement<CueSemanticsNode>() {
+    override fun create(): CueSemanticsNode = CueSemanticsNode(visibility)
+
+    override fun update(node: CueSemanticsNode) {
+        node.bind(visibility)
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "wholeChipCueSemantics"
+        properties["placed"] = visibility.placed
+    }
+}
+
+private class CueSemanticsNode(private var visibility: CueVisibility) : Modifier.Node(), SemanticsModifierNode {
+    override val shouldClearDescendantSemantics: Boolean get() = !visibility.placed
+
+    override fun onAttach() {
+        visibility.attach(this)
+    }
+
+    override fun onDetach() {
+        visibility.attach(null)
+    }
+
+    fun bind(next: CueVisibility) {
+        if (visibility !== next) {
+            visibility.attach(null)
+            visibility = next
+            if (isAttached) visibility.attach(this)
+            refresh()
+        }
+    }
+
+    fun refresh() {
+        if (isAttached) invalidateSemantics()
+    }
+
+    override fun SemanticsPropertyReceiver.applySemantics() {
+        // Visibility-only semantics gate: clears unplaced cue probes without adding properties.
+    }
+}
 
 @Composable
 private fun WholeFilterChips(
@@ -476,41 +612,48 @@ private fun WholeFilterChips(
     config: WholeChipsConfig,
     lineBox: @Composable (Modifier) -> Unit,
 ) {
-    val tokens = LocalKitTokens.current
-    val track = LocalKitStyle.current.spec.tokens.track
-    val baseStyle = LocalKitTypography.current.style(TypeRole.Secondary)
-    val cueStyle =
-        baseStyle.copy(
-            fontWeight = if (track) FontWeight.SemiBold else baseStyle.fontWeight,
-            fontFeatureSettings = "tnum",
-        )
-    val measurer = rememberTextMeasurer()
-    val chipHPad = if (track) Space.S4.dp else Space.S3.dp
     val firstSpoken = stringResource(Res.string.kitChipsFirst)
     val moreSpoken = stringResource(Res.string.kitChipsMore)
+    val visibilities = remember { mutableMapOf<WholeSlot, CueVisibility>() }
 
-    // Chips past either edge are never cut: measure first and decide "+N" cues in the same pass before placing.
+    // Chips past either edge are never cut: measure the chips and real "+N" cues in the same pass before placing.
     SubcomposeLayout(modifier) { constraints ->
-        val scrollNow = config.scroll.value
+        // Scroll offset decides which chips lie before/after the viewport; read it here so scrolling re-measures
+        // this layout to re-plan the "+N" cues and clipped chip window in the same layout pass.
+        val scrollPx = config.scroll.value.toFloat()
         val gapPx = Space.S2.dp.roundToPx()
-        val minTargetPx = tokens.minTarget.dp.roundToPx()
-        val chipHPadPx = chipHPad.roundToPx()
-        val cueWidth: (Int) -> Int = { count ->
-            val textW = measurer.measure("+$count", cueStyle, maxLines = 1).size.width
-            maxOf(minTargetPx, textW + chipHPadPx * 2)
-        }
-        config.line.onMeasureWhole = buildWholeHook(config, constraints, gapPx, cueWidth)
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
-        val linePlaceable = subcompose(WholeSlot.Line) { lineBox(Modifier) }.single().measure(loose)
-        val plan = config.line.lastPlan.also { check(scrollNow >= 0) }
-        val beforeCue =
-            measureWholeCue(WholeSlot.Before, if (plan.whole) plan.before else 0, firstSpoken, loose) {
-                config.onFirst()
+        val measured = mutableMapOf<WholeSlot, Placeable>()
+        val measureBefore: (Int) -> Placeable = { count ->
+            val slot = WholeSlot.Before(count)
+            val vis = visibilities.getOrPut(slot) { CueVisibility() }
+            measured.getOrPut(slot) {
+                measureWholeCue(CueSpec(slot, count, firstSpoken, vis, config.onFirst), loose)
             }
-        val afterCue =
-            measureWholeCue(WholeSlot.After, if (plan.whole) plan.after else 0, moreSpoken, loose) {
-                config.onMore(plan.after)
+        }
+        val measureAfter: (Int) -> Placeable = { count ->
+            val slot = WholeSlot.After(count)
+            val vis = visibilities.getOrPut(slot) { CueVisibility() }
+            measured.getOrPut(slot) {
+                measureWholeCue(CueSpec(slot, count, moreSpoken, vis) { config.onMore(count) }, loose)
             }
+        }
+        val cues = CueMeasurers(beforeWidth = { measureBefore(it).width }, afterWidth = { measureAfter(it).width })
+        config.line.onMeasureWhole = buildWholeHook(config, constraints, gapPx, scrollPx, cues)
+        val linePlaceable =
+            try {
+                subcompose(WholeSlot.Line) { lineBox(Modifier) }.single().measure(loose)
+            } finally {
+                config.line.onMeasureWhole = null
+            }
+        val plan = config.line.lastPlan
+        val activeBefore = if (plan.whole && plan.before > 0) WholeSlot.Before(plan.before) else null
+        val activeAfter = if (plan.whole && plan.after > 0) WholeSlot.After(plan.after) else null
+        val beforeCue = activeBefore?.let { measureBefore(plan.before) }
+        val afterCue = activeAfter?.let { measureAfter(plan.after) }
+        for (slot in measured.keys) {
+            visibilities[slot]?.update(slot == activeBefore || slot == activeAfter)
+        }
         placeWholeRow(constraints, gapPx, beforeCue, linePlaceable, afterCue)
     }
 }
@@ -519,46 +662,54 @@ private fun SubcomposeMeasureScope.buildWholeHook(
     config: WholeChipsConfig,
     constraints: Constraints,
     gapPx: Int,
-    cueWidth: (Int) -> Int,
-): (Int, Boolean, Float) -> Int {
+    scrollPx: Float,
+    cues: CueMeasurers,
+): (Int, Boolean) -> Int {
     val totalOuterW = if (constraints.hasBoundedWidth) constraints.maxWidth else Int.MAX_VALUE
-    val panePadPx = config.insets.panePad.roundToPx()
-    val shadowExtraPx = config.insets.shadowExtra.roundToPx().coerceAtLeast(0)
+    val panePadPx = config.insets.paneStart.roundToPx() + config.insets.paneEnd.roundToPx()
+    val shadowExtraPx =
+        config.insets.growStart.roundToPx().coerceAtLeast(0) + config.insets.growEnd.roundToPx().coerceAtLeast(0)
     val capPx = CapRole.Reading.capDp?.dp?.roundToPx() ?: Int.MAX_VALUE
     val startPadPx = config.insets.startPad.toPx()
-    return { innerPlaceableW, hasBound, scrollPx ->
+    val minCuePx = config.minCueWidthDp.roundToPx()
+    return { innerPlaceableW, hasBound ->
         val plan =
             if (!hasBound) {
-                WholePlan(whole = true, before = 0, after = 0, clippedWidth = innerPlaceableW)
+                WholePlan(
+                    whole = true,
+                    before = 0,
+                    after = 0,
+                    availInner = innerPlaceableW,
+                    clippedWidth = innerPlaceableW,
+                )
             } else {
                 val budget: (Int) -> Int = { outerW ->
-                    val innerMax = (minOf(outerW, capPx) - panePadPx + shadowExtraPx).coerceAtLeast(0)
+                    val innerMax = (minOf(outerW, capPx) - panePadPx).coerceAtLeast(0) + shadowExtraPx
                     minOf(innerPlaceableW, innerMax)
                 }
                 val metrics = WholeMetrics(config.line.sizes, config.line.gapPx, startPadPx, scrollPx)
-                val wholeBudget = WholeBudget(totalOuterW, gapPx, budget, cueWidth)
+                val wholeBudget = WholeBudget(totalOuterW, gapPx, minCuePx, budget, cues.beforeWidth, cues.afterWidth)
                 FilterChipsRules.planWhole(metrics, wholeBudget)
             }
         config.line.lastPlan = plan
-        config.line.wholeActive = plan.whole
-        plan.clippedWidth
+        if (config.line.wholeActive != plan.whole) config.line.wholeActive = plan.whole
+        plan.availInner
     }
 }
 
 private fun SubcomposeMeasureScope.measureWholeCue(
-    slot: WholeSlot,
-    count: Int,
-    spoken: String,
+    spec: CueSpec,
     loose: Constraints,
-    onClick: () -> Unit,
-): Placeable? =
-    if (count > 0) {
-        subcompose(slot) {
-            KitChip("+$count", kind = KitChipKind.Action, spoken = spoken, onClick = onClick)
-        }.single().measure(loose)
-    } else {
-        null
-    }
+): Placeable =
+    subcompose(spec.slot) {
+        KitChip(
+            label = "+${spec.count}",
+            modifier = CueSemanticsElement(spec.visibility),
+            kind = KitChipKind.Action,
+            spoken = spec.spoken,
+            onClick = spec.onClick,
+        )
+    }.single().measure(loose)
 
 private fun SubcomposeMeasureScope.placeWholeRow(
     constraints: Constraints,
