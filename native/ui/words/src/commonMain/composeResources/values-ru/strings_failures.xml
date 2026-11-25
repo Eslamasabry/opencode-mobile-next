@@ -102,4 +102,8 @@
     <string name="agentErrorServerDiskFullHintPhone">Освободите место на этом телефоне и повторите попытку.</string>
     <string name="chatSendPhoneHelperNoAnswer">Агенты на этом телефоне не ответили. Возможно, они ещё запускаются: подождите немного и повторите попытку.</string>
     <string name="chatSendFailureSignedInPast">%1$s: нужно было войти снова</string>
+    <string name="agentErrorFreeDailyLimit">Бесплатные сообщения на сегодня закончились.</string>
+    <string name="agentErrorFreeDailyLimitHint">Они вернутся завтра. Чтобы продолжить сейчас, подключите собственного провайдера.</string>
+    <string name="agentErrorModelCountryRefused">Модель %1$s недоступна в вашей стране.</string>
+    <string name="agentErrorModelCountryRefusedHint">Выберите другую модель, чтобы продолжить.</string>
 </resources>

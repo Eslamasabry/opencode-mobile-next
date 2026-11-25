@@ -102,4 +102,8 @@
     <string name="agentErrorFreeTier">OpenCodeの無料モデルがこの返信を停止しました。</string>
     <string name="agentErrorFreeTierHint">無料枠では、今日の使用量が少なくても長い会話が拒否されることがあります。この会話を短くするか、新しい会話を始めると改善する場合があります。</string>
     <string name="chatSendFailureSignedInPast">%1$sにもう一度サインインする必要がありました</string>
+    <string name="agentErrorFreeDailyLimit">本日の無料メッセージを使い切りました。</string>
+    <string name="agentErrorFreeDailyLimitHint">明日になると再び利用できます。今すぐ続けるには、ご自身のプロバイダーを接続してください。</string>
+    <string name="agentErrorModelCountryRefused">%1$sはお住まいの国では提供されていません。</string>
+    <string name="agentErrorModelCountryRefusedHint">続けるには別のモデルを選んでください。</string>
 </resources>

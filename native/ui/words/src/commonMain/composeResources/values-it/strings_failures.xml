@@ -102,4 +102,8 @@
     <string name="agentErrorServerDiskFullPhone">Questo telefono ha finito lo spazio di archiviazione.</string>
     <string name="agentErrorServerDiskFullHintPhone">Libera un po' di spazio su questo telefono, poi riprova.</string>
     <string name="chatSendPhoneHelperNoAnswer">Gli agenti su questo telefono non hanno risposto. Forse stanno ancora partendo: aspetta un momento, poi riprova.</string>
+    <string name="agentErrorFreeDailyLimit">I messaggi gratuiti di oggi sono esauriti.</string>
+    <string name="agentErrorFreeDailyLimitHint">Tornano domani. Per continuare ora, collega il tuo fornitore.</string>
+    <string name="agentErrorModelCountryRefused">%1$s non è disponibile nel tuo paese.</string>
+    <string name="agentErrorModelCountryRefusedHint">Scegli un altro modello per continuare.</string>
 </resources>

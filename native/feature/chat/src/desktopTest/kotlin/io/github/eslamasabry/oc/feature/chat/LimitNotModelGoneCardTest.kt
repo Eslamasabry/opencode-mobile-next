@@ -154,34 +154,31 @@ class LimitNotModelGoneCardTest {
         }
     }
 
-    @Test
-    fun `B-523-019 a country refusal offers one tap to a model not refused in this chat`() {
-        val rows =
-            listOf(
-                prompt("u1", "first"),
-                FooterRow(
-                    "footer:u1",
-                    "u1",
-                    failed = true,
-                    reason = country,
-                    errorKind = MessageErrorKind.ProviderAuth,
-                    createdMs = 100L,
-                    providerId = "opencode",
-                    modelId = "beam-free",
-                ),
-                prompt("u2", "second"),
-                FooterRow(
-                    "footer:u2",
-                    "u2",
-                    failed = true,
-                    reason = country,
-                    errorKind = MessageErrorKind.ProviderAuth,
-                    createdMs = 200L,
-                    providerId = "opencode",
-                    modelId = "muse-spark-1.3-contributor-free",
-                ),
-            )
-        val choices =
+    private fun countryFixture(): Pair<List<TranscriptRow>, List<ComposerModel>> =
+        listOf(
+            prompt("u1", "first"),
+            FooterRow(
+                "footer:u1",
+                "u1",
+                failed = true,
+                reason = country,
+                errorKind = MessageErrorKind.ProviderAuth,
+                createdMs = 100L,
+                providerId = "opencode",
+                modelId = "beam-free",
+            ),
+            prompt("u2", "second"),
+            FooterRow(
+                "footer:u2",
+                "u2",
+                failed = true,
+                reason = country,
+                errorKind = MessageErrorKind.ProviderAuth,
+                createdMs = 200L,
+                providerId = "opencode",
+                modelId = "muse-spark-1.3-contributor-free",
+            ),
+        ) to
             listOf(
                 ComposerModel(
                     "opencode",
@@ -200,6 +197,10 @@ class LimitNotModelGoneCardTest {
                     enabled = true,
                 ),
             )
+
+    @Test
+    fun `B-523-019 a country refusal offers one tap to a model not refused in this chat`() {
+        val (rows, choices) = countryFixture()
         for (scale in listOf(1.0f, 1.3f)) {
             checkFailedCard(rows, choices, scale) {
                 onNodeWithText("Beam Free isn't offered in your country.").assertExists()

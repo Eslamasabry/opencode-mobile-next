@@ -150,6 +150,10 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentErrorFreeDailyLimit
+import io.github.eslamasabry.oc.ui.words.res.agentErrorFreeDailyLimitHint
+import io.github.eslamasabry.oc.ui.words.res.agentErrorModelCountryRefused
+import io.github.eslamasabry.oc.ui.words.res.agentErrorModelCountryRefusedHint
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
@@ -1516,11 +1520,12 @@ private fun ChatRow(
                             else null
                         val goneKey = goneModelKey(row)
                         val block = ReplyBlock.of(reason)
-                        val modelGone = modelGoneWords(row, kind, block, goneKey, reply)
-                        // B-523: a known gone model or free daily limit already states the block; omit "send a
-                        // message to carry on" so the card does not contradict the primary action.
-                        val omitCarryOn =
-                            (modelGone != null || block == ReplyBlock.FreeDailyLimit) && setUp == null && limit == null
+                        val blockWords = failedBlockWords(block, row, reply)
+                        val modelGone =
+                            if (blockWords != null) null else modelGoneWords(row, kind, block, goneKey, reply)
+                        // B-523: a known gone model, free daily limit or country refusal already states the block;
+                        // omit "send a message to carry on" so the card does not contradict the primary action.
+                        val omitCarryOn = (modelGone != null || blockWords != null) && setUp == null && limit == null
                         if (signInAgainEarly == null && (stillWorking || !omitCarryOn))
                             KitQuietLine(
                                 stringResource(
@@ -1554,7 +1559,10 @@ private fun ChatRow(
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
-                        else if (modelGone != null) KitQuietLine(modelGone)
+                        else if (blockWords != null) {
+                            KitQuietLine(blockWords.first)
+                            KitQuietLine(blockWords.second)
+                        } else if (modelGone != null) KitQuietLine(modelGone)
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
@@ -1827,6 +1835,34 @@ private fun goneModelKey(row: FooterRow): io.github.eslamasabry.oc.feature.chat.
         }
     }
 
+private fun failedModelName(row: FooterRow, reply: ReplyActions?): String? =
+    row.modelId?.takeIf { it.isNotBlank() }?.let { modelId ->
+        val listed =
+            reply?.models?.firstOrNull {
+                it.modelId == modelId && (row.providerId.isNullOrBlank() || it.providerId == row.providerId)
+            }
+        listed?.label?.takeIf { it.isNotBlank() }
+            ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(modelId)
+    }
+
+@Composable
+private fun failedBlockWords(
+    block: ReplyBlock?,
+    row: FooterRow,
+    reply: ReplyActions?,
+): Pair<String, String>? =
+    when (block) {
+        ReplyBlock.FreeDailyLimit ->
+            stringResource(Res.string.agentErrorFreeDailyLimit) to
+                stringResource(Res.string.agentErrorFreeDailyLimitHint)
+        ReplyBlock.CountryRefusal ->
+            failedModelName(row, reply)?.let { model ->
+                stringResource(Res.string.agentErrorModelCountryRefused, model) to
+                    stringResource(Res.string.agentErrorModelCountryRefusedHint)
+            }
+        else -> null
+    }
+
 private fun modelGoneWords(
     row: FooterRow,
     kind: ReplyFailureKind,
@@ -1834,18 +1870,11 @@ private fun modelGoneWords(
     goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
     reply: ReplyActions?,
 ): String? {
-    if (block == ReplyBlock.FreeDailyLimit || block == ReplyBlock.Limit) return null
     val format = reply?.modelGoneLabel
     val isModelError = row.errorKind == MessageErrorKind.ModelNotFound || kind == ReplyFailureKind.Model
-    return if (format == null || goneKey == null || !isModelError) null
+    val modelName = if (block == null && goneKey != null && isModelError) failedModelName(row, reply) else null
+    return if (format == null || goneKey == null || modelName == null) null
     else {
-        val listed =
-            reply.models.firstOrNull {
-                it.providerId == goneKey.providerId && it.modelId == goneKey.modelId
-            }
-        val modelName =
-            listed?.label?.takeIf { it.isNotBlank() }
-                ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(goneKey.modelId)
         val providerName =
             reply.models
                 .firstOrNull { it.providerId == goneKey.providerId && it.providerName.isNotBlank() }
