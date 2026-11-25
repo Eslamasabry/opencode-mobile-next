@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -210,7 +211,12 @@ private fun Totals(sheet: AgentUpdateSheetUi) {
             role = TypeRole.Label,
             tone = TextTone.Secondary,
         )
-        KitText(amount(sheet.downloadBytes, sheet.downloadKnown), role = TypeRole.LargeTitle)
+        // Hold the rail width so LargeTitle's negative tracking + LRI isolate never wraps "About 610 MB" to 2 lines.
+        KitText(
+            amount(sheet.downloadBytes, sheet.downloadKnown),
+            Modifier.fillMaxWidth(),
+            role = TypeRole.LargeTitle,
+        )
     }
     if (sheet.removing > 0) {
         KitRowGroup {
