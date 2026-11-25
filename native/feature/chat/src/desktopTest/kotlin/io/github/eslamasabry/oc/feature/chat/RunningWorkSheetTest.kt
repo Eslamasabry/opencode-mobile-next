@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.BackgroundWorkSupport
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTask
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.ui.ChatWorkSheet
 import io.github.eslamasabry.oc.feature.chat.ui.runningWorkAction
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
@@ -69,7 +70,7 @@ class RunningWorkSheetTest {
                     model = model,
                     onDismiss = {},
                     tasks = tasks,
-                    nowMs = 4 * 60_000L,
+                    clock = FactsClock.at(4 * 60_000L),
                     subagents = subagents,
                     onShowSubagents = onShowSubagents,
                     onShowTask = onShowTask,

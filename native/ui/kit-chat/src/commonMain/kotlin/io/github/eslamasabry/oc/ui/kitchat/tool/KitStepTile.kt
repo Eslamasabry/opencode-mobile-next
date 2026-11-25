@@ -30,6 +30,7 @@ internal fun stepTileRadius(size: Float): Float = size * .3f // F: lib/ui/kit/ch
  * step light round the node and, on a timeline, down the rail from the step before to the next ([KitStepLight]; still
  * under reduced motion); a queued one a dim neutral outline; a waiting one the attention outline.
  */
+@Suppress("LongParameterList")
 @Composable
 internal fun KitStepTile(
     icon: ImageVector,
@@ -38,6 +39,7 @@ internal fun KitStepTile(
     modifier: Modifier = Modifier,
     glyphColor: Color? = null,
     glyphScale: Float = 1f,
+    animate: Boolean = true,
 ) {
     val colors = LocalKitColors.current
     val live = look == KitStepNodeLook.Running || look == KitStepNodeLook.Background
@@ -64,7 +66,7 @@ internal fun KitStepTile(
                     // F: lib/ui/kit/chat/kit_step_light.dart:288 calm background light at .6
                     if (look == KitStepNodeLook.Background) colors.accent.copy(alpha = colors.accent.alpha * .6f) else colors.accent, // F: lib/ui/kit/chat/kit_step_light.dart:284
                     size,
-                    animate = !KitMotion.state.reduced,
+                    animate = animate && !KitMotion.state.reduced,
                     rail = LocalStepLightRail.current,
                     railColor = colors.text3,
                 )

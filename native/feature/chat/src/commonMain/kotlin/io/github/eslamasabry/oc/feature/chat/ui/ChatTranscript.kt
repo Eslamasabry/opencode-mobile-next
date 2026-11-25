@@ -68,6 +68,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
@@ -561,6 +562,11 @@ internal fun ChatTranscriptList(
     var stepsShown by rememberSaveable { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    val liveTurn = if (live != null) unique.firstOrNull()?.turnId else null
+    val liveWorkId =
+        liveTurn?.let { id ->
+            facts.reading.stretches[id]?.lastOrNull()?.key?.removePrefix("work:") ?: id
+        }
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
         remember(unique, pending, liveRow, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
@@ -636,6 +642,7 @@ internal fun ChatTranscriptList(
                     }
                 val runTurn = unique.firstOrNull()?.turnId
                 val runWork = runTurn?.let { facts.work[it] }
+                val nowMs = facts.clock.read()
                 if (LocalKitAppearance.current.style != KitSurfaceStyle.Signal) {
                     val line =
                         liveLineWords(
@@ -647,7 +654,7 @@ internal fun ChatTranscriptList(
                             // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
                             elapsedMs =
                                 (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { facts.nowMs - it },
+                                    ?.let { nowMs - it },
                         )
                     // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
                     val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
@@ -672,18 +679,21 @@ internal fun ChatTranscriptList(
                                     else Res.string.chatSteerStopStep
                                 ),
                             onStop =
-                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, facts.nowMs))
+                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, nowMs))
                                     ({ onStopForSteer(steerWait.promptKey, steerWait.text) })
                                 else null,
                             stopping = live.stopping,
                             modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
+                    val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
                     if (line != null) KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
                         spoken = line.spoken,
-                        step = line.step,
+                        // On the step rail, a running command's own opened box already shows its live output; showing
+                        // it a second time here resizes the live line when each command starts and ends.
+                        step = if (onRail && notice == null) null else line.step,
                         // D1: the steps are always in view above, so the live line opens nothing.
                         onTap = null,
                         tapLabel =
@@ -702,9 +712,9 @@ internal fun ChatTranscriptList(
                             if (live.canUndoStopAfterStep) onUndoStopAfterStep
                             else if (retryWayOut) reply?.onChooseModel
                             else onStopLive,
-                        // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
-                        // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
-                        onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming,
+                        // D1: under a running turn's steps, the line stays on their rail (including between steps) so
+                        // its height and alignment never jump while the turn still runs.
+                        onRail = onRail,
                     )
                 } else if (
                     RunTailRules.liveLineShown(
@@ -719,7 +729,7 @@ internal fun ChatTranscriptList(
                     val mask = rememberKitMask()
                     KitRunningFeedLine(
                         sinceMs = step?.startedAtMs ?: facts.runStartedAtMs,
-                        nowMs = facts.nowMs,
+                        nowMs = nowMs,
                         command = step?.facts?.subject?.let(mask),
                         runningLabel = liveWords,
                     )
@@ -740,7 +750,7 @@ internal fun ChatTranscriptList(
                     io.github.eslamasabry.oc.ui.kitchat.transcript.KitBackgroundWorkLine(
                         backgroundWords(
                             facts.background,
-                            maxOf(facts.nowMs, first.sinceMs + since.elapsed.inWholeMilliseconds),
+                            maxOf(facts.clock.read(), first.sinceMs + since.elapsed.inWholeMilliseconds),
                         ),
                         lineModifier,
                         onOpen = onOpenBackground,
@@ -768,7 +778,7 @@ internal fun ChatTranscriptList(
                             writing = unique.firstOrNull().let { it is BlockRow && it.live },
                             elapsedMs =
                                 (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { facts.nowMs - it },
+                                    ?.let { facts.clock.read() - it },
                         )
                     else null
                 CompositionLocalProvider(LocalPendingLiveStatus provides status) {
@@ -789,6 +799,11 @@ internal fun ChatTranscriptList(
             }
         }
         itemsIndexed(unique, key = { _, it -> it.key }, contentType = { _, it -> it.kind }) { index, row ->
+            SideEffect {
+                if (TranscriptProbe.on) {
+                    TranscriptProbe.rows[row.key] = (TranscriptProbe.rows[row.key] ?: 0) + 1
+                }
+            }
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
             Column(
@@ -805,7 +820,11 @@ internal fun ChatTranscriptList(
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }
                   }
-              CompositionLocalProvider(LocalKitFindMarks provides marks, LocalReplyAsk provides replyAsk) {
+              CompositionLocalProvider(
+                  LocalKitFindMarks provides marks,
+                  LocalReplyAsk provides replyAsk,
+                  LocalLiveTurnId provides liveWorkId,
+              ) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
@@ -880,14 +899,14 @@ internal fun ChatTranscriptList(
                             is FooterRow -> row.createdMs
                             else -> null
                         }
-                    if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                    if (created != null) RowTime(created, facts.clock)
                 }
                 if (row is BlockRow && source != null && row.key == lastBlocks[source]) {
                     folds?.let { safeFolds ->
                         AnchoredStretches(row.turnId, source, facts) { stretchWork, stretchEntries ->
                             TurnWorkLine(
                                 stretchWork,
-                                facts.nowMs,
+                                facts.clock,
                                 safeFolds,
                                 onOpenSession,
                                 onOpenFile,
@@ -1409,7 +1428,7 @@ private fun ChatRow(
                     // the live one with its light); the live line under them no longer names the step they show.
                     TurnWorkLine(
                         shownWork,
-                        facts.nowMs,
+                        facts.clock,
                         folds,
                         onOpenSession,
                         onOpenFile,
@@ -2055,4 +2074,9 @@ private fun AnchoredStretches(
             }
         }
     }
+}
+
+@Composable
+private fun RowTime(createdMs: Long, clock: FactsClock) {
+    KitMessageTimestamp(createdMs, clock.read())
 }
