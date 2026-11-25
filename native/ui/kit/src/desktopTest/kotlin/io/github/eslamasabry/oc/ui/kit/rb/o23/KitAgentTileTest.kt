@@ -34,7 +34,7 @@ class KitAgentTileTest {
     @Test
     fun `B-KIT-280 two tiles a row on a phone, three or four on a wide window, one at large text`() {
         assertEquals(2, agentTileColumns(328f, 1f)) // a 360 dp phone less its gutters
-        assertEquals(1, agentTileColumns(328f, 1.3f)) // 1.3x on a 360 dp phone falls to 1 column so tile buttons fit
+        assertEquals(2, agentTileColumns(328f, 1.3f)) // 1.3x on a 360 dp phone keeps 2 columns side by side
         assertEquals(2, agentTileColumns(380f, 1f))
         assertEquals(3, agentTileColumns(688f, 1f)) // the Reading cap less its gutters
         assertEquals(4, agentTileColumns(2000f, 1f))

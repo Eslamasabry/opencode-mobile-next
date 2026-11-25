@@ -5,23 +5,34 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.text.KitWholeWordsRules
+import kotlin.math.abs
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** Polish checks for full-width ready agent tiles (B-560). */
+/** Polish checks for agent tiles: half-width lone tiles, two columns at 1.3x, and whole-word chip wrapping. */
 @OptIn(ExperimentalTestApi::class)
 class KitAgentTilePolishTest {
     @Test
-    fun `B-560 a full-width ready card keeps its check in the top corner`() =
+    fun `B-560 a lone last tile is half-width at the start edge with its check top-right`() =
         runDesktopComposeUiTest(328, 600) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
@@ -42,6 +53,7 @@ class KitAgentTilePolishTest {
                                             KitAgentTileAction(
                                                 label = "New conversation",
                                                 spoken = "New conversation with Claude Code",
+                                                icon = KitIcons.chat,
                                                 onClick = {},
                                             ),
                                         ready = true,
@@ -56,10 +68,151 @@ class KitAgentTilePolishTest {
             val tile = onNodeWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             val check = onNodeWithTag("kit-agent-tile-ready", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             val chip = onNodeWithTag("kit-chip-label", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertTrue(tile.left <= 1f, "expected lone tile at start edge, left=${tile.left}")
+            assertTrue(tile.width in 150f..166f, "expected half-width lone tile (~158 dp), got ${tile.width} dp")
             val rightGap = tile.right - check.right
             val topGap = check.top - tile.top
             assertTrue(rightGap <= 20f, "expected check near right edge (gap $rightGap dp > 20 dp)")
             assertTrue(topGap <= 20f, "expected check near top edge (gap $topGap dp > 20 dp)")
             assertTrue(chip.top >= check.bottom, "expected chip top (${chip.top}) >= check bottom (${check.bottom})")
+        }
+
+    @Test
+    fun `B-560 two tiles stay side by side at 360 dp and 1_3 with full-width actions and equal height`() =
+        runDesktopComposeUiTest(328 * 3, 600 * 3) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(3f, 1.3f)) {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        stillFrame = true,
+                    ) {
+                        Box(Modifier.width(328.dp)) {
+                            KitAgentTiles(
+                                listOf(
+                                    {
+                                        KitAgentTile(
+                                            name = "Claude Code",
+                                            state = "Ready",
+                                            markId = "claude",
+                                            onClick = {},
+                                            action =
+                                                KitAgentTileAction(
+                                                    label = "Nouvelle conversation",
+                                                    spoken = "Nouvelle conversation avec Claude Code",
+                                                    icon = KitIcons.chat,
+                                                    onClick = {},
+                                                ),
+                                            ready = true,
+                                        )
+                                    },
+                                    {
+                                        KitAgentTile(
+                                            name = "Codex",
+                                            state = "Sign in needed",
+                                            markId = "codex",
+                                            onClick = {},
+                                            action =
+                                                KitAgentTileAction(
+                                                    label = "Sign in",
+                                                    spoken = "Sign in to Codex",
+                                                    icon = KitIcons.login,
+                                                    prominent = true,
+                                                    onClick = {},
+                                                ),
+                                        )
+                                    },
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val tiles = onAllNodesWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNodes()
+            assertEquals(2, tiles.size)
+            val left = tiles[0].boundsInRoot
+            val right = tiles[1].boundsInRoot
+            assertTrue(abs(left.top - right.top) <= 2f, "expected side-by-side row: top ${left.top} vs ${right.top}")
+            assertTrue(right.left > left.right, "expected second tile to the right of first")
+            assertTrue(
+                abs(left.height - right.height) <= 2f,
+                "expected equal card height: ${left.height} vs ${right.height}",
+            )
+            val signIn =
+                onNode(hasContentDescription("Sign in to Codex") and hasClickAction())
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+            val minInnerPx = right.width - 38f * 3f
+            assertTrue(
+                signIn.width >= minInnerPx,
+                "expected Sign in action to fill card inner width (>= $minInnerPx px), got ${signIn.width} px",
+            )
+        }
+
+    @Test
+    fun `B-546 half-width tile action wraps on whole words to at most two lines at 360 dp and 1_3`() {
+        val labels =
+            listOf(
+                "New conversation",
+                "Nouvelle conversation",
+                "Nuova conversazione",
+                "Cuộc trò chuyện mới",
+                "Nueva conversación",
+            )
+        for (scale in listOf(1f, 1.3f)) {
+            for (label in labels) {
+                assertTileChipWrapsCleanly(label, scale)
+            }
+        }
+    }
+
+    private fun assertTileChipWrapsCleanly(label: String, scale: Float) =
+        runDesktopComposeUiTest(328 * 3, 600 * 3) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        stillFrame = true,
+                    ) {
+                        Box(Modifier.width(328.dp)) {
+                            KitAgentTiles(
+                                listOf {
+                                    KitAgentTile(
+                                        name = "Claude Code",
+                                        state = "Ready",
+                                        markId = "claude",
+                                        onClick = {},
+                                        action =
+                                            KitAgentTileAction(
+                                                label = label,
+                                                spoken = "$label with Claude Code",
+                                                icon = KitIcons.chat,
+                                                onClick = {},
+                                            ),
+                                        ready = true,
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val layouts = mutableListOf<TextLayoutResult>()
+            onNodeWithTag("kit-chip-label", useUnmergedTree = true).performSemanticsAction(
+                SemanticsActions.GetTextLayoutResult
+            ) {
+                it(layouts)
+            }
+            val layout = layouts.single()
+            assertFalse(layout.hasVisualOverflow, "[$label/$scale] visual overflow")
+            assertFalse(
+                (0 until layout.lineCount).any { layout.isLineEllipsized(it) },
+                "[$label/$scale] ellipsized",
+            )
+            assertTrue(layout.lineCount <= 2, "[$label/$scale] expected <= 2 lines, got ${layout.lineCount}")
+            assertTrue(KitWholeWordsRules.whole(layout, label), "[$label/$scale] broke mid-word")
         }
 }

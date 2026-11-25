@@ -33,15 +33,17 @@ import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.text.KitWholeWordsRules
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** Agents page polish tests (B-546, B-574, B-577). */
+/** Agents page polish tests (B-546, B-560, B-574, B-577). */
 @OptIn(ExperimentalTestApi::class)
 class AgentsPolishTest {
     private var previousLocale: Locale = Locale.getDefault()
@@ -58,7 +60,7 @@ class AgentsPolishTest {
     }
 
     @Composable
-    private fun Screen(state: AgentsUi, scale: Float = 1f) {
+    private fun Screen(state: AgentsUi, scale: Float = 1f, locale: String = "en") {
         CompositionLocalProvider(
             LocalDensity provides Density(3f, scale),
             LocalKitSecretSink provides KitSecretSink {},
@@ -67,7 +69,7 @@ class AgentsPolishTest {
             KitTheme(
                 platform = DesktopKitPlatform(),
                 appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
-                localeTag = "en",
+                localeTag = locale,
                 stillFrame = true,
             ) {
                 Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
@@ -119,23 +121,78 @@ class AgentsPolishTest {
     @Test
     fun `B-546 computer ready cards never cut New conversation`() {
         for (scale in listOf(1f, 1.3f)) {
-            runDesktopComposeUiTest(360 * 3, 780 * 3) {
-                setContent { Screen(COMPUTERS, scale) }
-                waitForIdle()
-                val chips = onAllNodesWithTag("kit-chip-label", useUnmergedTree = true)
-                val count = chips.fetchSemanticsNodes().size
-                assertTrue(count >= 3, "[scale=$scale] expected at least 3 tile chips, got $count")
-                for (i in 0 until count) {
-                    val layouts = mutableListOf<TextLayoutResult>()
-                    chips[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
-                    val layout = layouts.single()
-                    val text = layout.layoutInput.text.text
-                    assertFalse(layout.hasVisualOverflow, "[scale=$scale] visual overflow on: $text")
-                    assertFalse(
-                        (0 until layout.lineCount).any { layout.isLineEllipsized(it) },
-                        "[scale=$scale] ellipsized: $text",
-                    )
+            assertChipsWholeInTwoLines(COMPUTERS, "en", scale, minChips = 3)
+        }
+    }
+
+    @Test
+    fun `B-560 phone and computer grids keep two columns at 360 dp and 1_3 with lone tile half-width`() {
+        runDesktopComposeUiTest(360 * 3, 780 * 3) {
+            setContent { Screen(EVERY_STATE, scale = 1.3f) }
+            waitForIdle()
+            val tiles = onAllNodesWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNodes()
+            assertTrue(tiles.size >= 2, "expected at least 2 phone tiles")
+            val first = tiles[0].boundsInRoot
+            val second = tiles[1].boundsInRoot
+            assertTrue(abs(first.top - second.top) <= 2f, "phone row not side-by-side: ${first.top} vs ${second.top}")
+            assertTrue(second.left > first.right, "phone second tile not to the right of first")
+            assertTrue(
+                abs(first.height - second.height) <= 2f,
+                "phone row heights differ: ${first.height} vs ${second.height}",
+            )
+        }
+        runDesktopComposeUiTest(360 * 3, 780 * 3) {
+            setContent { Screen(COMPUTERS, scale = 1.3f) }
+            waitForIdle()
+            val tiles = onAllNodesWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNodes()
+            assertTrue(tiles.size >= 3, "expected at least 3 computer tiles")
+            val desk0 = tiles[0].boundsInRoot
+            val desk1 = tiles[1].boundsInRoot
+            val lone = tiles[2].boundsInRoot
+            assertTrue(abs(desk0.top - desk1.top) <= 2f, "Desk tiles not side-by-side: ${desk0.top} vs ${desk1.top}")
+            assertTrue(desk1.left > desk0.right, "Desk second tile not to the right of first")
+            assertTrue(abs(lone.width - desk0.width) <= 2f, "lone tile not half-width: ${lone.width} vs ${desk0.width}")
+            assertTrue(abs(lone.left - desk0.left) <= 2f, "lone tile not at start edge: ${lone.left} vs ${desk0.left}")
+        }
+    }
+
+    @Test
+    fun `B-546 tile actions wrap on whole words in at most two lines at 360 dp in longest translations`() {
+        try {
+            for (locale in listOf("en", "fr", "it", "vi")) {
+                for (scale in listOf(1f, 1.3f)) {
+                    assertChipsWholeInTwoLines(EVERY_STATE, locale, scale, minChips = 3)
+                    assertChipsWholeInTwoLines(COMPUTERS, locale, scale, minChips = 3)
                 }
+            }
+        } finally {
+            Locale.setDefault(Locale.ENGLISH)
+        }
+    }
+
+    private fun assertChipsWholeInTwoLines(state: AgentsUi, locale: String, scale: Float, minChips: Int) {
+        Locale.setDefault(Locale.forLanguageTag(locale))
+        runDesktopComposeUiTest(360 * 3, 780 * 3) {
+            setContent { Screen(state, scale, locale) }
+            waitForIdle()
+            val chips = onAllNodesWithTag("kit-chip-label", useUnmergedTree = true)
+            val count = chips.fetchSemanticsNodes().size
+            assertTrue(count >= minChips, "[$locale/$scale] expected at least $minChips tile chips, got $count")
+            for (i in 0 until count) {
+                val layouts = mutableListOf<TextLayoutResult>()
+                chips[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                val layout = layouts.single()
+                val text = layout.layoutInput.text.text
+                assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $text")
+                assertFalse(
+                    (0 until layout.lineCount).any { layout.isLineEllipsized(it) },
+                    "[$locale/$scale] ellipsized: $text",
+                )
+                assertTrue(
+                    layout.lineCount <= 2,
+                    "[$locale/$scale] expected <= 2 lines for '$text', got ${layout.lineCount}",
+                )
+                assertTrue(KitWholeWordsRules.whole(layout, text), "[$locale/$scale] broke mid-word: $text")
             }
         }
     }

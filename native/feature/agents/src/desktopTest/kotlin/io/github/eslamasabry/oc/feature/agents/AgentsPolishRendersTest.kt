@@ -41,12 +41,12 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-private const val PHASE = "after"
+private const val PHASE = "before"
 private const val WIDTH_DP = 360
 private const val HEIGHT_DP = 800
 private const val DENSITY = 2.625f
 
-/** Before/after polish review renders for the Agents page (findings 3, 17, 31, 32, 33, 34). */
+/** Before/after polish review renders for the Agents page (en and longest translation fr, t10 and t13). */
 @OptIn(ExperimentalTestApi::class)
 class AgentsPolishRendersTest {
     private var previousLocale: Locale = Locale.getDefault()
@@ -68,6 +68,7 @@ class AgentsPolishRendersTest {
         val mode: AppearanceMode,
         val state: AgentsUi,
         val fontScale: Float,
+        val locale: String = "en",
     )
 
     @Test
@@ -80,27 +81,34 @@ class AgentsPolishRendersTest {
     }
 
     private fun shootMainScenes(out: File, scales: List<Pair<Float, String>>) {
-        for (mode in listOf(AppearanceMode.Light, AppearanceMode.Dark)) {
-            val look = "${Style.Solid.storageName}-${mode.name.lowercase()}"
-            for ((scale, tag) in scales) {
-                shoot(
-                    Shot(
-                        files = listOf(3, 17, 31).map { File(out, "$it-$PHASE-phone-$look-$tag.png") },
-                        style = Style.Solid,
-                        mode = mode,
-                        state = EVERY_STATE,
-                        fontScale = scale,
+        for (locale in listOf("en", "fr")) {
+            val langPrefix = if (locale == "en") "" else "$locale-"
+            val phoneFindings = if (locale == "en") listOf(3, 17, 31) else listOf(3, 17)
+            val compFindings = if (locale == "en") listOf(3, 17, 34) else listOf(3, 17)
+            for (mode in listOf(AppearanceMode.Light, AppearanceMode.Dark)) {
+                val look = "${Style.Solid.storageName}-${mode.name.lowercase()}"
+                for ((scale, tag) in scales) {
+                    shoot(
+                        Shot(
+                            files = phoneFindings.map { File(out, "$it-$PHASE-${langPrefix}phone-$look-$tag.png") },
+                            style = Style.Solid,
+                            mode = mode,
+                            state = EVERY_STATE,
+                            fontScale = scale,
+                            locale = locale,
+                        )
                     )
-                )
-                shoot(
-                    Shot(
-                        files = listOf(3, 17, 34).map { File(out, "$it-$PHASE-computers-$look-$tag.png") },
-                        style = Style.Solid,
-                        mode = mode,
-                        state = COMPUTERS,
-                        fontScale = scale,
+                    shoot(
+                        Shot(
+                            files = compFindings.map { File(out, "$it-$PHASE-${langPrefix}computers-$look-$tag.png") },
+                            style = Style.Solid,
+                            mode = mode,
+                            state = COMPUTERS,
+                            fontScale = scale,
+                            locale = locale,
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -146,37 +154,42 @@ class AgentsPolishRendersTest {
     }
 
     private fun shoot(shot: Shot, then: ComposeUiTest.() -> Unit = {}) {
-        runDesktopComposeUiTest((WIDTH_DP * DENSITY).toInt(), (HEIGHT_DP * DENSITY).toInt()) {
-            setContent {
-                CompositionLocalProvider(
-                    LocalDensity provides Density(DENSITY, shot.fontScale),
-                    LocalKitSecretSink provides KitSecretSink {},
-                    LocalKitLogoLoader provides MARKS,
-                ) {
-                    KitTheme(
-                        appearance = KitAppearance(mode = shot.mode, style = shot.style, motion = MotionLevel.Off),
-                        platform = DesktopKitPlatform(),
-                        localeTag = "en",
-                        stillFrame = true,
+        Locale.setDefault(Locale.forLanguageTag(shot.locale))
+        try {
+            runDesktopComposeUiTest((WIDTH_DP * DENSITY).toInt(), (HEIGHT_DP * DENSITY).toInt()) {
+                setContent {
+                    CompositionLocalProvider(
+                        LocalDensity provides Density(DENSITY, shot.fontScale),
+                        LocalKitSecretSink provides KitSecretSink {},
+                        LocalKitLogoLoader provides MARKS,
                     ) {
-                        Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
-                            AgentsScreen(shot.state, AgentsBentoTest.Recorder())
+                        KitTheme(
+                            appearance = KitAppearance(mode = shot.mode, style = shot.style, motion = MotionLevel.Off),
+                            platform = DesktopKitPlatform(),
+                            localeTag = shot.locale,
+                            stillFrame = true,
+                        ) {
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                AgentsScreen(shot.state, AgentsBentoTest.Recorder())
+                            }
                         }
                     }
                 }
+                waitForIdle()
+                mainClock.advanceTimeBy(1_000)
+                waitForIdle()
+                then()
+                waitForIdle()
+                mainClock.advanceTimeBy(1_000)
+                waitForIdle()
+                val image = onAllNodes(isRoot()).onFirst().captureToImage().toAwtImage()
+                for (file in shot.files) {
+                    ImageIO.write(image, "png", file)
+                    assertTrue(file.isFile, "expected render file ${file.name}")
+                }
             }
-            waitForIdle()
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
-            then()
-            waitForIdle()
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
-            val image = onAllNodes(isRoot()).onFirst().captureToImage().toAwtImage()
-            for (file in shot.files) {
-                ImageIO.write(image, "png", file)
-                assertTrue(file.isFile, "expected render file ${file.name}")
-            }
+        } finally {
+            Locale.setDefault(Locale.ENGLISH)
         }
     }
 }
