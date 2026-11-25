@@ -143,7 +143,11 @@ class LimitNotModelGoneCardTest {
                 collectTags(onRoot().fetchSemanticsNode(), tags)
                 val firstAction = tags.firstOrNull { it.startsWith("error-action-") }
                 assertEquals("error-action-connect-provider", firstAction, "scale=$scale tags=$tags")
-                onNodeWithText("This model's usage limit is reached for now.").assertExists()
+                onNodeWithText("Free messages for today are used up.").assertExists()
+                onNodeWithText(
+                    "They come back tomorrow. To keep going now, connect your own provider."
+                ).assertExists()
+                onAllNodesWithText("This model's usage limit is reached for now.").assertCountEquals(0)
                 onAllNodesWithText("The agent has stopped. Send a message to ask it to carry on.")
                     .assertCountEquals(0)
             }
@@ -198,6 +202,13 @@ class LimitNotModelGoneCardTest {
             )
         for (scale in listOf(1.0f, 1.3f)) {
             checkFailedCard(rows, choices, scale) {
+                onNodeWithText("Beam Free isn't offered in your country.").assertExists()
+                onNodeWithText("Muse Spark 1.3 Contributor Free isn't offered in your country.")
+                    .assertExists()
+                onAllNodesWithText("Pick another model to keep going.").assertCountEquals(2)
+                onAllNodesWithText("any more", substring = true).assertCountEquals(0)
+                onAllNodesWithText("The agent has stopped. Send a message to ask it to carry on.")
+                    .assertCountEquals(0)
                 onAllNodesWithText("Use Big Pickle and resend").onFirst().assertExists()
                 onAllNodesWithText("Use Beam Free and resend").assertCountEquals(0)
                 onAllNodesWithTag("error-action-providers").assertCountEquals(0)
