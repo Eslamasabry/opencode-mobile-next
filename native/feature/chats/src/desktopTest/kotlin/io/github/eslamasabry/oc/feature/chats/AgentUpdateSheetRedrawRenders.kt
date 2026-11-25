@@ -130,6 +130,13 @@ internal fun redrawFiveOffer(): AgentUpdateOffer =
         answered = false,
     )
 
+internal fun noLockedFiveOffer(): AgentUpdateOffer =
+    redrawFiveOffer().let { offer ->
+        offer.copy(
+            items = offer.items.map { if (it.id == AgentId("gemini")) it.copy(keepAllowed = true) else it },
+        )
+    }
+
 internal fun redrawOneOffer(): AgentUpdateOffer =
     AgentUpdateOffer(
         appUpdateKey = "10150",
@@ -142,8 +149,9 @@ internal fun redrawOneOffer(): AgentUpdateOffer =
     )
 
 /**
- * Pictures of the redrawn agents' update sheet, nothing asserted: FIVE on mobile data (dark, light, and text 1.3 dark)
- * and ONE on Wi-Fi (dark). Writes `build/agent-update-sheet-redraw/<name>.png`.
+ * Pictures of the redrawn agents' update sheet, nothing asserted: FIVE on mobile data (dark, light, and text 1.3 dark),
+ * FIVE with Wi-Fi only off, FIVE with every agent off (dark) and ONE on Wi-Fi (dark). Writes
+ * `build/agent-update-sheet-redraw/<name>.png`.
  */
 @OptIn(ExperimentalTestApi::class)
 class AgentUpdateSheetRedrawRenders {
@@ -181,10 +189,19 @@ class AgentUpdateSheetRedrawRenders {
         }
     }
 
-    private fun sheetState(offer: AgentUpdateOffer, waitForWifi: Boolean = true): ChatsUi {
+    private fun sheetState(
+        offer: AgentUpdateOffer,
+        waitForWifi: Boolean = true,
+        allOff: Boolean = false,
+    ): ChatsUi {
         val scope = CoroutineScope(Job())
         val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
         if (!waitForWifi) model.chooseWifiOnly(false)
+        if (allOff) {
+            offer.items.filter { it.group == AgentUpdateGroup.Optional }.forEach {
+                model.choose(it.id, AgentUpdateChoice.Keep)
+            }
+        }
         val home = mixed().copy(agentUpdates = model.current())
         scope.cancel()
         return home
@@ -194,11 +211,13 @@ class AgentUpdateSheetRedrawRenders {
     fun `renders of the redrawn agents update sheet at 360 dp`() {
         val five = sheetState(redrawFiveOffer())
         val fiveWifiOff = sheetState(redrawFiveOffer(), waitForWifi = false)
+        val fiveAllOff = sheetState(noLockedFiveOffer(), allOff = true)
         val one = sheetState(redrawOneOffer())
         shoot("us-plus-five-agents-mobile-data-text100-dark", five, dark = true, fontScale = 1f)
         shoot("us-plus-five-agents-mobile-data-text100-light", five, dark = false, fontScale = 1f)
         shoot("us-plus-five-agents-mobile-data-text130-dark", five, dark = true, fontScale = 1.3f)
         shoot("us-plus-five-agents-mobile-data-wifi-off-text100-dark", fiveWifiOff, dark = true, fontScale = 1f)
+        shoot("us-plus-five-agents-all-off-text100-dark", fiveAllOff, dark = true, fontScale = 1f)
         shoot("us-plus-one-agent-text100-dark", one, dark = true, fontScale = 1f)
     }
 }

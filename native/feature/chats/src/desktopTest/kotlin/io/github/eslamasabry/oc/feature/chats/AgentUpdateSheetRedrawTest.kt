@@ -21,6 +21,7 @@ import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -59,6 +60,7 @@ class AgentUpdateSheetRedrawTest {
         offer: AgentUpdateOffer,
         fontScale: Float = 1f,
         offered: RedrawOffered = RedrawOffered(offer),
+        motion: MotionLevel = MotionLevel.Off,
         block: suspend KitUiTest.() -> Unit,
     ) {
         val previous = Locale.getDefault()
@@ -73,7 +75,7 @@ class AgentUpdateSheetRedrawTest {
                     CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
                         ChatEnvironment {
                             KitTheme(
-                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = motion),
                                 platform = DesktopKitPlatform(),
                                 localeTag = "en",
                                 stillFrame = true,
@@ -291,13 +293,54 @@ class AgentUpdateSheetRedrawTest {
             onNodeWithText("Update 1 agent").assertExists()
             onNode(isToggleable() and hasText("Wi-Fi only", substring = true)).assertExists()
         }
-        runSheet(noLockedFiveOffer()) {
-            listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code").forEach { switchOff(it) }
+        runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
+            ALL_AGENTS.forEach { switchOff(it) }
             onNodeWithText("Keep these versions").assertExists()
             onNodeWithText("Wi-Fi only").assertDoesNotExist()
             onNodeWithText("Will update on Wi-Fi", substring = true, useUnmergedTree = true).assertDoesNotExist()
         }
     }
+
+    @Test
+    fun `B-UPD-018 turning the last agent off folds the total, Wi-Fi only and the helper away without a jump`() =
+        runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
+            ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
+            val fold = walkSwitch("Qwen Code")
+            assertTrue(fold.heights.last() < fold.heights.first(), "the sheet kept its height: ${fold.heights}")
+            assertTrue(
+                fold.heights.distinct().size > 2,
+                "the total, Wi-Fi only and the helper left in one frame: ${fold.heights}",
+            )
+            fold.heights.zipWithNext().forEach { (was, now) ->
+                assertTrue(now <= was + ONE_DP_PX, "the sheet's height rose again while it shrank: ${fold.heights}")
+            }
+            fold.noRowForOneFrame("the fold")
+            fold.buttonStaysPut()
+            onNodeWithText("Keep these versions").assertExists()
+            onNodeWithText("Download").assertDoesNotExist()
+            onNodeWithText("Wi-Fi only").assertDoesNotExist()
+            onNodeWithText("Agent helper", substring = true).assertDoesNotExist()
+        }
+
+    @Test
+    fun `B-UPD-019 turning an agent back on unfolds the total, Wi-Fi only and the helper the same way`() =
+        runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
+            ALL_AGENTS.forEach { switchOff(it) }
+            val unfold = walkSwitch("Qwen Code")
+            assertTrue(unfold.heights.last() > unfold.heights.first(), "the sheet did not grow back: ${unfold.heights}")
+            assertTrue(
+                unfold.heights.distinct().size > 2,
+                "the total, Wi-Fi only and the helper came back in one frame: ${unfold.heights}",
+            )
+            unfold.heights.zipWithNext().forEach { (was, now) ->
+                assertTrue(now + ONE_DP_PX >= was, "the sheet's height fell again while it grew: ${unfold.heights}")
+            }
+            unfold.noRowForOneFrame("the unfold")
+            unfold.buttonStaysPut()
+            onNodeWithText("Update 1 agent").assertExists()
+            onNodeWithText("Wi-Fi only").assertExists()
+            onNodeWithText("Agent helper", substring = true).assertExists()
+        }
 
     private fun KitUiTest.switchOff(name: String) {
         onNode(isToggleable() and hasText(name, substring = true)).performScrollTo().performClick()
@@ -305,15 +348,89 @@ class AgentUpdateSheetRedrawTest {
         mainClock.advanceTimeBy(1_500)
     }
 
-    private fun noLockedFiveOffer(): AgentUpdateOffer =
-        redrawFiveOffer().let { offer ->
-            offer.copy(
-                items = offer.items.map { if (it.id == AgentId("gemini")) it.copy(keepAllowed = true) else it },
-            )
+    private fun KitUiTest.walkSwitch(name: String): Walk {
+        val last = onNode(isToggleable() and hasText(name, substring = true))
+        last.performScrollTo()
+        waitForIdle()
+        mainClock.advanceTimeBy(1_500)
+        val before = sheetWords()
+        val heights = mutableListOf(sheetHeight())
+        val frames = mutableListOf<Set<String>>()
+        val buttonTops = mutableListOf<Float>()
+        mainClock.autoAdvance = false
+        last.performClick()
+        repeat(FOLD_FRAMES) {
+            mainClock.advanceTimeByFrame()
+            heights += sheetHeight()
+            val now = sheetWords()
+            frames += now
+            buttonTops +=
+                MAIN_BUTTON_WORDS.filter { it in now }
+                    .firstNotNullOfOrNull { label ->
+                        onAllNodesWithText(label).fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
+                    }
+                    ?: Float.NaN
         }
+        mainClock.autoAdvance = true
+        waitForIdle()
+        return Walk(before, heights, frames, buttonTops)
+    }
+
+    private fun KitUiTest.sheetHeight(): Int =
+        onNodeWithTag("kit-sheet", useUnmergedTree = true).fetchSemanticsNode().size.height
+
+    private fun KitUiTest.sheetWords(): Set<String> =
+        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .mapTo(mutableSetOf()) { node ->
+                node.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }.orEmpty()
+            }
+
+    private class Walk(
+        val before: Set<String>,
+        val heights: List<Int>,
+        val frames: List<Set<String>>,
+        val buttonTops: List<Float>,
+    ) {
+        fun noRowForOneFrame(what: String) {
+            (before + frames.flatten()).forEach { words ->
+                val shown = booleanArrayOf(words in before) + BooleanArray(frames.size) { words in frames[it] }
+                runs(shown).drop(1).dropLast(1).forEach { (value, start, end) ->
+                    assertTrue(
+                        end > start,
+                        "$what: \"$words\" was ${if (value) "shown" else "gone"} for one frame (frame $start)",
+                    )
+                }
+            }
+        }
+
+        fun buttonStaysPut() {
+            val tops = buttonTops.filter { !it.isNaN() }
+            assertTrue(tops.size > 1, "the main button was not found on the frames: $buttonTops")
+            val low = tops.minOrNull() ?: 0f
+            val high = tops.maxOrNull() ?: 0f
+            assertTrue(high - low <= ONE_DP_PX, "the main button moved while its words changed: $tops")
+        }
+    }
+
+    private fun runs(shown: BooleanArray): List<Triple<Boolean, Int, Int>> {
+        val found = mutableListOf<Triple<Boolean, Int, Int>>()
+        var start = 0
+        for (i in 1..shown.size) {
+            if (i == shown.size || shown[i] != shown[start]) {
+                found += Triple(shown[start], start, i - 1)
+                start = i
+            }
+        }
+        return found
+    }
 
     private companion object {
         const val HELPER_TOO_NEW = "Its version can't work with the new agent helper, so it can't be kept."
         const val METERED_LINE = "You're on mobile data. The updates download over it."
+        const val FOLD_FRAMES = 40
+        const val ONE_DP_PX = 3
+        val ALL_AGENTS = listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
+        val MAIN_BUTTON_WORDS = listOf("Update 1 agent", "Keep these versions")
     }
 }
