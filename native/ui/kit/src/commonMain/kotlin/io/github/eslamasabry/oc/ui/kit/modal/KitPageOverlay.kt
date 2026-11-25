@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowTitle
+import io.github.eslamasabry.oc.ui.kit.platform.KitPopupSystemBars
 
 /**
  * A full-page local editor, with its own focus and modal host; the owning screen keeps its state.
@@ -28,6 +29,7 @@ public fun KitPageOverlay(visible: Boolean, title: String, onDismissRequest: () 
     if (!visible) return
     KitReportsModal()
     Popup(onDismissRequest = onDismissRequest, properties = PopupProperties(focusable = true)) {
+        KitPopupSystemBars()
         CompositionLocalProvider(LocalKitGrowHost provides null, LocalKitGrowTitle provides null) {
             OverlayPage(title, content)
         }
