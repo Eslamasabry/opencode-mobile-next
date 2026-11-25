@@ -142,6 +142,8 @@ public data class FooterRow(
     val createdMs: Long? = null,
     /** The provider (agent) that wrote the newest reply of this turn; names whom to sign in again. */
     val providerId: String? = null,
+    /** The model that wrote the newest reply of this turn; names what failed when a model is gone. */
+    val modelId: String? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer
