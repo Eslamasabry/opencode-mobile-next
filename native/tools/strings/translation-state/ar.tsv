@@ -4857,6 +4857,16 @@ filesUp	e7c0758381
 filesViewOptions	a5d597f167
 filesViewerScopeChanged	e0c557e563
 filesWrapCode	a06b6313e4
+firstReplyAskNo	15f65b6af6
+firstReplyAskQuestion	2f382e7c8a
+firstReplyAskSorry	84906d1ba4
+firstReplyAskThanks	1bae649fab
+firstReplyAskUseBoth	62154c4c14
+firstReplyAskUseCode	103243fd09
+firstReplyAskUseEveryday	185e932bdf
+firstReplyAskUseLooking	8da2f4ac0d
+firstReplyAskUseTitle	d7a32200f6
+firstReplyAskYes	56c1126b4a
 firstRunAgentCodex	dd0f5de210
 firstRunAgentOpenCode	964ef9de21
 firstRunAgentsSideBySide	d87c313aab

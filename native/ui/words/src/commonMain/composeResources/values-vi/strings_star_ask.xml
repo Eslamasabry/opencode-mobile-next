@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">Một sao trên GitHub giúp người khác tìm thấy ứng dụng.</string>
     <string name="chatStarAskAction">Gắn sao trên GitHub</string>
     <string name="chatStarAskDismiss">Để sau</string>
+    <string name="firstReplyAskQuestion">Bạn thích chứ?</string>
+    <string name="firstReplyAskYes">Có</string>
+    <string name="firstReplyAskNo">Không</string>
+    <string name="firstReplyAskUseTitle">Bạn dùng để làm gì?</string>
+    <string name="firstReplyAskUseEveryday">Việc hằng ngày</string>
+    <string name="firstReplyAskUseCode">Viết mã</string>
+    <string name="firstReplyAskUseBoth">Cả hai</string>
+    <string name="firstReplyAskUseLooking">Chỉ xem thử</string>
+    <string name="firstReplyAskThanks">Cảm ơn.</string>
+    <string name="firstReplyAskSorry">Rất tiếc.</string>
 </resources>

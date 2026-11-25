@@ -128,14 +128,30 @@ class StarPromptPresenterTest {
     }
 
     @Test
-    fun `B-STAR-010 the first prompt shows no ask, running or at rest`() = runTest {
-        val (_, ui) = chat()
-        running(asking = 1)
-        assertFalse(ui.value.replyAsk != null)
-        ended(1)
-        assertFalse(ui.value.replyAsk != null, "the first hour is never the moment")
-        assertEquals(emptyList(), star.events)
-    }
+    fun `B-STAR-010 ask shows once after first reply ends, never before, while running, or after Skip`() =
+        runTest {
+            val (p, ui) = chat()
+            assertNull(ui.value.replyAsk, "never at the beginning")
+            assertEquals(emptyList(), star.events)
+            running(asking = 1)
+            assertNull(ui.value.replyAsk, "never while a reply runs")
+            assertEquals(emptyList(), star.events)
+            ended(1)
+            assertEquals(ReplyAskUi(turnId = "u1", stage = ReplyAskStage.Ask, menu = false), ui.value.replyAsk)
+            assertEquals(listOf(StarPromptEvent.Shown), star.events)
+            p.replyAskSkip()
+            runCurrent()
+            assertNull(ui.value.replyAsk, "gone after Skip")
+            assertEquals(listOf(StarPromptEvent.Shown, StarPromptEvent.Dismissed), star.events)
+            running(1, asking = 2)
+            ended(1, 2)
+            assertNull(ui.value.replyAsk, "never a second time or after Skip")
+            assertEquals(listOf(StarPromptEvent.Shown, StarPromptEvent.Dismissed), star.events)
+            val (_, secondChat) = chat()
+            running(asking = 1)
+            ended(1)
+            assertNull(secondChat.value.replyAsk, "never in another conversation after Skip")
+        }
 
     @Test
     fun `B-STAR-011 the ask never shows while a turn runs and comes at rest after the finishing reply`() = runTest {

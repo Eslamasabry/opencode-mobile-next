@@ -142,7 +142,7 @@ With `usage` on, the app counts exactly these events, and no others. The page "W
 | `update_installed` | nothing |
 | `star_prompt_shown` | nothing (the one-time ask to star the project on GitHub came into view) |
 | `star_prompt_tapped` | nothing (you tapped Star on GitHub) |
-| `star_prompt_dismissed` | nothing (you tapped Not now) |
+| `star_prompt_dismissed` | nothing (you tapped Skip) |
 | `screen_view` | `screen`: the kind of page, one of conversations, chat, new_chat, servers, this_phone, setup, privacy, appearance, integrations, settings, files, git, review, team, usage, agents, about or other |
 | `feature_used` | `feature`: one of voice, camera, file_attach, agent_switch, model_switch, server_add, git_action, review_open |
 | `session_length` | `minutes_range` the app was in front before going to the background: under_1, 1_to_5, 5_to_15, 15_to_60 or over_60; `turns_range` (messages answered meanwhile): 0, 1, 2-5, 6-20 or >20 |

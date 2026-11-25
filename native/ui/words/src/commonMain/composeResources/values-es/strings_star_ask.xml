@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">Una estrella en GitHub ayuda a que otros lo encuentren.</string>
     <string name="chatStarAskAction">Dar una estrella en GitHub</string>
     <string name="chatStarAskDismiss">Ahora no</string>
+    <string name="firstReplyAskQuestion">¿Te gusta?</string>
+    <string name="firstReplyAskYes">Sí</string>
+    <string name="firstReplyAskNo">No</string>
+    <string name="firstReplyAskUseTitle">¿Para qué lo usas?</string>
+    <string name="firstReplyAskUseEveryday">Tareas diarias</string>
+    <string name="firstReplyAskUseCode">Escribir código</string>
+    <string name="firstReplyAskUseBoth">Ambos</string>
+    <string name="firstReplyAskUseLooking">Solo mirando</string>
+    <string name="firstReplyAskThanks">Gracias.</string>
+    <string name="firstReplyAskSorry">Lo sentimos.</string>
 </resources>
