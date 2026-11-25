@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportScrolledUnder
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import kotlin.math.abs
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -590,21 +592,14 @@ private class PersonScroll(
         actionActive = true
         try {
             state.lazy.scroll {
-                fun step(delta: Float) {
-                    if (delta == 0f) return
-                    val pre = dispatcher.dispatchPreScroll(Offset(0f, -delta), NestedScrollSource.UserInput)
-                    val v = delta + pre.y
-                    val normal = Snapshot.withoutReadObservation { state.laidOutNormal }
-                    scrollBy(if (normal) v else -v)
-                }
                 if (motion == KitMotionLevel.Off) {
-                    step(y)
+                    scrollA11yDelta(dispatcher, y)
                 } else {
                     var prev = 0f
                     animate(0f, y) { value, _ ->
                         val stepDelta = value - prev
                         prev = value
-                        step(stepDelta)
+                        scrollA11yDelta(dispatcher, stepDelta)
                     }
                 }
             }
@@ -612,6 +607,29 @@ private class PersonScroll(
         } finally {
             actionActive = false
             end()
+        }
+    }
+
+    private fun ScrollScope.scrollA11yDelta(dispatcher: NestedScrollDispatcher, delta: Float) {
+        if (delta == 0f) return
+        val viewportH = Snapshot.withoutReadObservation { state.lazy.layoutInfo.viewportSize.height }
+        val maxStep = if (viewportH > 0) viewportH / 2f else abs(delta)
+        var remaining = delta
+        var hitRoom = false
+        while (abs(remaining) > 0f && !hitRoom) {
+            val piece = remaining.coerceIn(-maxStep, maxStep)
+            remaining -= piece
+            val pre = dispatcher.dispatchPreScroll(Offset(0f, -piece), NestedScrollSource.UserInput)
+            val v = piece + pre.y
+            val normal = Snapshot.withoutReadObservation { state.laidOutNormal }
+            if (v != 0f) scrollBy(if (normal) v else -v)
+            if (normal && v > 0f) {
+                val overshoot = TranscriptAnchorOps.roomOvershoot(state.lazy, pin.roomPx)
+                if (overshoot > 0f) {
+                    scrollBy(-overshoot)
+                    hitRoom = true
+                }
+            }
         }
     }
 
@@ -727,6 +745,18 @@ private object TranscriptAnchorOps {
             val line = info.viewportSize.height - info.afterContentPadding + roomPx
             val allowed = (end - line).coerceAtLeast(0)
             (deltaDown - allowed).coerceAtLeast(0f)
+        }
+    }
+
+    fun roomOvershoot(lazy: LazyListState, roomPx: Int): Float {
+        val info = Snapshot.withoutReadObservation { lazy.layoutInfo }
+        val last = info.visibleItemsInfo.lastOrNull()
+        return if (last == null || last.index != info.totalItemsCount - 1) {
+            0f
+        } else {
+            val end = info.beforeContentPadding + last.offset + last.size
+            val line = info.viewportSize.height - info.afterContentPadding + roomPx
+            (line - end).coerceAtLeast(0).toFloat()
         }
     }
 
