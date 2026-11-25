@@ -112,6 +112,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.kitLeaving
+import io.github.eslamasabry.oc.ui.kit.platform.KitPopupSystemBars
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -572,6 +573,7 @@ private fun MenuPopup(
         onDismissRequest = { if (shown.targetState) onDismissRequest() },
         properties = PopupProperties(focusable = true),
     ) {
+        KitPopupSystemBars()
         MenuContent(shown, last, onDismissRequest, anchor, room, face = face)
     }
 }
