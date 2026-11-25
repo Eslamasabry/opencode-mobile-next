@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.feature.git.presentation.GitSection
 import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
 import io.github.eslamasabry.oc.feature.git.presentation.GitWay
+import io.github.eslamasabry.oc.feature.git.presentation.gitPullLinksBranch
 import io.github.eslamasabry.oc.feature.git.presentation.gitSavedNeedsSignIn
 import io.github.eslamasabry.oc.feature.git.presentation.gitSyncOpensRemotes
 import io.github.eslamasabry.oc.feature.git.presentation.gitSections
@@ -308,7 +309,15 @@ private fun Ready(
         if (operationInProgress)
             KitEnabled.Disabled(stringResource(Res.string.gitProblemOperationInProgress))
         else enabled
-    val canPull = !branch.detached && branch.hasUpstream && !operationInProgress
+    // A branch that tracks nothing is still linked and pulled when the remote has one of the same name (B-GIT-157).
+    val links =
+        gitPullLinksBranch(
+            hasUpstream = branch.hasUpstream,
+            head = branch.head,
+            pushRemote = snapshot.pushRemote?.name,
+            remoteBranches = snapshot.branches.remote.map { it.name },
+        )
+    val canPull = !branch.detached && (branch.hasUpstream || links) && !operationInProgress
     val noPullRemote = gitSyncOpensRemotes(snapshot.hasRemote, branch.detached, operationInProgress)
     val pullReason =
         (enabled as? KitEnabled.Disabled)?.reason
@@ -555,6 +564,7 @@ private fun Ready(
                         supporting =
                             when {
                                 !snapshot.hasRemote -> stringResource(Res.string.gitPullNoRemote)
+                                links -> stringResource(Res.string.gitStateFirstSend)
                                 !branch.hasUpstream -> stringResource(Res.string.gitPullNotOnRemote)
                                 state.check == GitCheck.Done && branch.behind > 0 ->
                                     pluralStringResource(

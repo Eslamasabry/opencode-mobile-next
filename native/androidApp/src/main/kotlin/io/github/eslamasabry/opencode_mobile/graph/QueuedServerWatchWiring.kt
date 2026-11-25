@@ -35,7 +35,8 @@ import kotlinx.coroutines.CoroutineScope
  */
 @SingleIn(AppScope::class)
 @Inject
-class AppQueuedServerWatch(
+// one collaborator added to an existing constructor; splitting it is its own refactor
+class AppQueuedServerWatch @Suppress("LongParameterList") constructor(
     private val application: Application,
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
@@ -44,6 +45,7 @@ class AppQueuedServerWatch(
     private val clock: Clock,
     dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
+    private val chatOpener: Lazy<AndroidChatConnectionOpener>,
 ) : QueuedServerPorts {
     private val scope = CoroutineScope(appScope.coroutineContext + dispatchers.serial("queued-servers"))
     private val opened = ConcurrentHashMap<ProfileId, ConnectionGraph>()
@@ -103,6 +105,8 @@ class AppQueuedServerWatch(
         // The server the person is using stays connected.
         if (stores.profiles.activeId.value != profile) registry.closeIfCurrent(profile, graph)
     }
+
+    override fun held(profile: ProfileId) = chatOpener.value.held(profile)
 }
 
 @ContributesTo(AppScope::class)

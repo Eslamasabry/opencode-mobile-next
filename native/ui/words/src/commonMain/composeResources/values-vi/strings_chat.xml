@@ -1250,4 +1250,6 @@
     <string name="kitTurnLiveStillThinking">Vẫn đang suy nghĩ</string>
     <string name="chatQuietThinkingHint">Một số mô hình suy nghĩ trong im lặng vài phút mà không hiện nội dung.</string>
     <string name="kitToolUnanswered">Đã dừng trước khi bạn trả lời</string>
+    <string name="chatErrorModelNotFoundNamed">%1$s không còn khả dụng trên %2$s.</string>
+    <string name="chatModelReplacedNotice">%1$s không còn khả dụng. Đang dùng %2$s.</string>
 </resources>

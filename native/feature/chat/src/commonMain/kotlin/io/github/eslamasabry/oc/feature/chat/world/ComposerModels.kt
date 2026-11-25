@@ -145,6 +145,9 @@ public interface RecentModelsBacking {
 /** A primary agent the conversation can run as (hidden agents and subagents are left out). */
 public data class ComposerAgent(val id: String, val description: String? = null)
 
+/** A stale session or server-default model replaced with a listed one before sending. */
+public data class ReplacedModel(val oldLabel: String, val newLabel: String)
+
 public data class ComposerModels(
     val choices: List<ComposerModel> = emptyList(),
     val selected: ComposerModel? = null,
@@ -166,6 +169,8 @@ public data class ComposerModels(
     val favorites: List<ComposerModel> = emptyList(),
     /** A restart preview never rides a send or overwrites server metadata. */
     val displayOnly: Boolean = false,
+    /** Non-null when loadModels replaced a gone choice with a listed fallback before sending. */
+    val replaced: ReplacedModel? = null,
 )
 
 /** One server slash command, safe for display. */

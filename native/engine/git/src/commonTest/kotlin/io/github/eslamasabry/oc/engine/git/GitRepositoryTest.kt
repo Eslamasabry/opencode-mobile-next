@@ -207,4 +207,33 @@ class GitRepositoryTest {
         val binary = FakeShell.steps(StepReply("work", 0, "Binary files a/logo.png and b/logo.png differ\n"), StepReply("index"))
         assertTrue(assertIs<GitDiffResult.Ready>(GitRepository(binary, "/p").diff(GitFileChange("logo.png", unstaged = GitChangeKind.Modified))).binary)
     }
+
+    @Test
+    fun `B-GIT-157 the link path uses the token only through credential files`() = runTest {
+        val token = "test-github-token"
+        val credentials = RecordingGitCredentialDrop()
+        val shell =
+            FakeShell.steps(
+                StepReply("head", 0, "main\n"),
+                StepReply("remotes", 0, "origin\n"),
+                StepReply("upstream", 128, "", "fatal: no upstream configured for branch 'main'"),
+                StepReply("fetch"),
+                StepReply("remote-branch"),
+                StepReply("link-remote"),
+                StepReply("link-merge"),
+                StepReply("pull", 0, "Fast-forward\n"),
+                StepReply("count", 0, "2\n"),
+            )
+        val repo = GitRepository(shell, "/p", credentials = credentials)
+
+        val result = repo.pull(token)
+
+        assertTrue(result.ok, result.toString())
+        assertEquals(GitActionNote.Pulled, result.note)
+        assertEquals(2, result.count)
+        assertEquals("origin/main", result.target)
+        assertEquals(listOf(token, token), credentials.placed)
+        assertEquals(2, credentials.removed.size)
+        assertTrue(shell.scripts.all { token !in it })
+    }
 }

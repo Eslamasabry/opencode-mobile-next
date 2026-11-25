@@ -68,6 +68,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
@@ -281,6 +282,8 @@ internal class ReplyActions(
     val onRerunCommand: ((String) -> Unit)? = null,
     /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
     val onOpenChanges: (() -> Unit)? = null,
+    val answered: () -> List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptyList() },
+    val modelGoneLabel: ((model: String, provider: String) -> String)? = null,
 )
 
 /**
@@ -549,6 +552,11 @@ internal fun ChatTranscriptList(
     var stepsShown by rememberSaveable { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    val liveTurn = if (live != null) unique.firstOrNull()?.turnId else null
+    val liveWorkId =
+        liveTurn?.let { id ->
+            facts.reading.stretches[id]?.lastOrNull()?.key?.removePrefix("work:") ?: id
+        }
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
         remember(unique, pending, liveRow, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
@@ -591,13 +599,14 @@ internal fun ChatTranscriptList(
     val runTurn = unique.firstOrNull()?.turnId
     val runWork = runTurn?.let { facts.work[it] }
     val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
-    val onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming
+    val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
     val liveStyled = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
-    val liveTurn = if (liveRow) live else null
+    val liveUi = if (liveRow) live else null
+    val nowMs = facts.clock.read()
     val line =
-        if (liveTurn != null && listWords != null && liveStyled)
+        if (liveUi != null && listWords != null && liveStyled)
             liveLineWords(
-                live = liveTurn,
+                live = liveUi,
                 listWords = listWords,
                 notice = facts.live,
                 work = runWork,
@@ -605,7 +614,7 @@ internal fun ChatTranscriptList(
                 // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
                 elapsedMs =
                     (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                        ?.let { facts.nowMs - it },
+                        ?.let { nowMs - it },
             )
         else null
     val dockLive =
@@ -688,7 +697,7 @@ internal fun ChatTranscriptList(
                                     else Res.string.chatSteerStopStep
                                 ),
                             onStop =
-                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, facts.nowMs))
+                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, nowMs))
                                     ({ onStopForSteer(steerWait.promptKey, steerWait.text) })
                                 else null,
                             stopping = live.stopping,
@@ -699,7 +708,9 @@ internal fun ChatTranscriptList(
                         words = line.words,
                         tone = line.tone,
                         spoken = line.spoken,
-                        step = line.step,
+                        // On the step rail, a running command's own opened box already shows its live output; showing
+                        // it a second time here resizes the live line when each command starts and ends.
+                        step = if (onRail && notice == null) null else line.step,
                         // D1: the steps are always in view above, so the live line opens nothing.
                         onTap = null,
                         tapLabel =
@@ -720,8 +731,8 @@ internal fun ChatTranscriptList(
                             else onStopLive,
                         // The star ask never rides a running turn: it has its own item at rest (ListKeys.STAR_ASK).
                         ask = null,
-                        // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
-                        // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
+                        // D1: under a running turn's steps, the line stays on their rail (including between steps) so
+                        // its height and alignment never jump while the turn still runs.
                         onRail = onRail,
                     )
                 } else if (
@@ -737,7 +748,7 @@ internal fun ChatTranscriptList(
                     val mask = rememberKitMask()
                     KitRunningFeedLine(
                         sinceMs = step?.startedAtMs ?: facts.runStartedAtMs,
-                        nowMs = facts.nowMs,
+                        nowMs = nowMs,
                         command = step?.facts?.subject?.let(mask),
                         runningLabel = liveWords,
                     )
@@ -758,7 +769,7 @@ internal fun ChatTranscriptList(
                     io.github.eslamasabry.oc.ui.kitchat.transcript.KitBackgroundWorkLine(
                         backgroundWords(
                             facts.background,
-                            maxOf(facts.nowMs, first.sinceMs + since.elapsed.inWholeMilliseconds),
+                            maxOf(facts.clock.read(), first.sinceMs + since.elapsed.inWholeMilliseconds),
                         ),
                         lineModifier,
                         onOpen = onOpenBackground,
@@ -786,7 +797,7 @@ internal fun ChatTranscriptList(
                             writing = unique.firstOrNull().let { it is BlockRow && it.live },
                             elapsedMs =
                                 (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { facts.nowMs - it },
+                                    ?.let { facts.clock.read() - it },
                         )
                     else null
                 CompositionLocalProvider(LocalPendingLiveStatus provides status) {
@@ -807,6 +818,11 @@ internal fun ChatTranscriptList(
             }
         }
         itemsIndexed(unique, key = { _, it -> it.key }, contentType = { _, it -> it.kind }) { index, row ->
+            SideEffect {
+                if (TranscriptProbe.on) {
+                    TranscriptProbe.rows[row.key] = (TranscriptProbe.rows[row.key] ?: 0) + 1
+                }
+            }
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
             Column(
@@ -823,7 +839,7 @@ internal fun ChatTranscriptList(
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }
                   }
-              CompositionLocalProvider(LocalKitFindMarks provides marks) {
+              CompositionLocalProvider(LocalKitFindMarks provides marks, LocalLiveTurnId provides liveWorkId) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
@@ -898,14 +914,14 @@ internal fun ChatTranscriptList(
                             is FooterRow -> row.createdMs
                             else -> null
                         }
-                    if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                    if (created != null) RowTime(created, facts.clock)
                 }
                 if (row is BlockRow && source != null && row.key == lastBlocks[source]) {
                     folds?.let { safeFolds ->
                         AnchoredStretches(row.turnId, source, facts) { stretchWork, stretchEntries ->
                             TurnWorkLine(
                                 stretchWork,
-                                facts.nowMs,
+                                facts.clock,
                                 safeFolds,
                                 onOpenSession,
                                 onOpenFile,
@@ -1427,7 +1443,7 @@ private fun ChatRow(
                     // the live one with its light); the live line under them no longer names the step they show.
                     TurnWorkLine(
                         shownWork,
-                        facts.nowMs,
+                        facts.clock,
                         folds,
                         onOpenSession,
                         onOpenFile,
@@ -1493,20 +1509,26 @@ private fun ChatRow(
                         val stillWorking =
                             facts.live is LiveNoticeUi.Retry ||
                                 facts.work[row.turnId]?.state == WorkLineState.Running
+                        val kind = ReplyFailureKind.of(reason)
+                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
+                        val limits = LocalLimitSwitchReply.current
+                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
+                        val setUpReply = LocalAgentSetUpReply.current
+                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". When it is the
                         // cause, that sentence REPLACES "send a message to carry on" (sending cannot work until the
                         // person signs in), and its one button is the only way on.
-                        val limitForSignIn = reply?.let { LocalLimitSwitchReply.current?.limitSwitch?.get(row.turnId) }
-                        val setUpForSignIn = LocalAgentSetUpReply.current?.needs?.get(row.turnId)
                         val signInAgainEarly =
-                            if (
-                                setUpForSignIn == null &&
-                                    limitForSignIn == null &&
-                                    AgentErrorText.signInExpired(reason)
-                            )
+                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
-                        if (signInAgainEarly == null)
+                        val goneKey = goneModelKey(row)
+                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
+                        // B-523: a known gone model names the model and offers Use/Choose; omit "send a message to
+                        // carry on" so the card does not contradict the primary button.
+                        val modelGoneKnown = modelGone != null && setUp == null && limit == null
+                        if (signInAgainEarly == null && (stillWorking || !modelGoneKnown))
                             KitQuietLine(
                                 stringResource(
                                     if (stillWorking) Res.string.liveFailedStillWorking
@@ -1516,7 +1538,6 @@ private fun ChatRow(
                                     liveRegion = LiveRegionMode.Polite
                                 },
                             )
-                        val kind = ReplyFailureKind.of(reason)
                         // The server's typed error class reads first (rest-1); the reason text only
                         // drives the generic words when there is no typed class.
                         val typed =
@@ -1524,12 +1545,6 @@ private fun ChatRow(
                                 ?.takeUnless { it == MessageErrorKind.Unknown }
                                 ?.let(listWords.messageError)
                                 ?.takeIf { it.isNotBlank() }
-                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
-                        val limits = LocalLimitSwitchReply.current
-                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
-                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
-                        val setUpReply = LocalAgentSetUpReply.current
-                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". B-458: once the agent
                         // is signed in again (or for an older turn), the same sentence in the past and no Sign in.
                         val signInTurns = LocalSignInTurnReply.current
@@ -1546,6 +1561,7 @@ private fun ChatRow(
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
+                        else if (modelGone != null) KitQuietLine(modelGone)
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
@@ -1607,9 +1623,14 @@ private fun ChatRow(
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
                                             kind == ReplyFailureKind.Model
-                                    )
+                                    ) {
                                         ErrorRecovery.suggestedModel(reason, reply.models)
-                                    else null
+                                            ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
+                                                goneKey,
+                                                reply.answered(),
+                                                reply.models,
+                                            )
+                                    } else null
                                 val showSignIn =
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                         reply.signInSettingsLabel != null
@@ -1659,7 +1680,7 @@ private fun ChatRow(
                                                                 suggestion.modelId,
                                                             )
                                                         },
-                                                        role = KitButtonRole.Secondary,
+                                                        role = KitButtonRole.Primary,
                                                         modifier = Modifier.testTag("error-action-use-model"),
                                                     )
                                             ErrorFix.ChooseModel ->
@@ -1803,6 +1824,39 @@ internal fun turnGap(row: TranscriptRow, older: TranscriptRow?): Int {
 
 /** NV: LAYOUT-RULES.md edge-tap: a target keeps 4 dp from the window edge. */
 private const val FOOTER_EDGE_INSET_DP = 4 // NV: LAYOUT-RULES.md edge-tap minimum
+
+private fun goneModelKey(row: FooterRow): io.github.eslamasabry.oc.feature.chat.world.ModelKey? =
+    row.providerId?.takeIf { it.isNotBlank() }?.let { provider ->
+        row.modelId?.takeIf { it.isNotBlank() }?.let { model ->
+            io.github.eslamasabry.oc.feature.chat.world.ModelKey(provider, model)
+        }
+    }
+
+private fun modelGoneWords(
+    row: FooterRow,
+    kind: ReplyFailureKind,
+    goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
+    reply: ReplyActions?,
+): String? {
+    val format = reply?.modelGoneLabel
+    val isModelError = row.errorKind == MessageErrorKind.ModelNotFound || kind == ReplyFailureKind.Model
+    return if (format == null || goneKey == null || !isModelError) null
+    else {
+        val listed =
+            reply.models.firstOrNull {
+                it.providerId == goneKey.providerId && it.modelId == goneKey.modelId
+            }
+        val modelName =
+            listed?.label?.takeIf { it.isNotBlank() }
+                ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(goneKey.modelId)
+        val providerName =
+            reply.models
+                .firstOrNull { it.providerId == goneKey.providerId && it.providerName.isNotBlank() }
+                ?.providerName
+                ?: goneKey.providerId
+        format(modelName, providerName)
+    }
+}
 
 /**
  * Plan 09 R13 column (as the kit's reply block): 700 dp cap, the row gap only where the block does
@@ -1991,4 +2045,9 @@ private fun AnchoredStretches(
             }
         }
     }
+}
+
+@Composable
+private fun RowTime(createdMs: Long, clock: FactsClock) {
+    KitMessageTimestamp(createdMs, clock.read())
 }
