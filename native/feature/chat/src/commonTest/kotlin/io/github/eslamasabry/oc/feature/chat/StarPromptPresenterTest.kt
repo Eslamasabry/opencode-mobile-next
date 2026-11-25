@@ -253,7 +253,7 @@ class StarPromptPresenterTest {
 
             p.replyAskReport()
             runCurrent()
-            assertEquals(listOf(SettingsRoute.ReportProblem), nav.opened)
+            assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(SettingsRoute.ReportProblem), nav.opened)
             assertNull(ui.value.replyAsk)
             assertEquals(listOf(StarPromptEvent.Shown), star.events)
         }
