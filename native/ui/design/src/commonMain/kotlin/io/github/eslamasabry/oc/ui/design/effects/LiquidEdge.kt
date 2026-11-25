@@ -161,10 +161,10 @@ public object LiquidEdge {
     public const val HOLD_CHROMA: Float = .26f
 
     /**
-     * The frost of a menu and a sheet, dp (12 until 2026-11-14): the bar's material with a touch more, so a menu out of
-     * the bar is one body of one glass and the content behind still bends visibly at the rim, in light mode too.
+     * The frost of a menu and a sheet, dp (B-609 / scale-dependent weight): larger modal surfaces carry visibly deeper
+     * optical thickness than slim bars/pills (1 dp / 0.5 dp) while still visibly bending content at the curved rim.
      */
-    public const val MODAL_BLUR_DP: Float = 4f
+    public const val MODAL_BLUR_DP: Float = 6f
 
     /**
      * What a menu and a sheet hold back behind their words: the knee and the colour ([HOLD_CHROMA]) as before, the fine
@@ -287,37 +287,19 @@ public object LiquidEdge {
 
     private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
-        // Crisp edges (owner 2026-11-09, "crisper glossy glass"): no soft shadow halo under any pane; the 1 dp rim light
-        // and the specular set it off what lies behind it.
-        @Suppress("UNUSED_PARAMETER")
+        // Apple Liquid Glass (B-609, B-612, B-613): scale-dependent optical weight, clear bar/pill centers, deeper
+        // modal glass, luminous low-tint light mode, and content-aware adaptive elevation shadow.
         fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false, hold: LiquidHold = LiquidHold.Off) =
-            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, NO_SHADOW, rimMax, share, depth, if (dark) tintDark else tintLight, hold)
-        // The blur is cut (owner 2026-11-11, docs/designs/liquid-merge-one-body.md "The material": "I think we added too
-        // much blur. Cut the blur and leave the saturation as is."): the bars 6 to 3 dp, the message box 4 to 2, menus
-        // 12 to 6 (light 6 to 3), the pills and chips 2 to 1. Sheets keep theirs. Bright content behind joined glass is
-        // held back inside its lens instead (LiquidJoin.held).
+            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, shadow, rimMax, share, depth, if (dark) tintDark else tintLight, hold)
         return when (role) {
-            // Bars and the message box carry words over moving text: their glass frosts it to colour and shape, while
-            // the rim still bends it. The dock at rest is a bar (dockRecipe mixes it towards a menu as it grows).
-            // glass-truth 2026-11-16: the plain bar and the plain message box hold back bright content behind their
-            // words with the same luminance knee as the joined body, menus and sheets (knee only: no colour limit, no
-            // detail hold; their scroll-edge fade already clears the content under the words).
-            LiquidRole.Bar -> r(3f, 34f, .14f, .18f, .12f, hold = WORDS_HOLD)
-            LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
-            LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f, hold = WORDS_HOLD)
-            // Sheets and menus are the bar's material (owner 2026-11-13, "half glass half frosting", "still no liquid it's
-            // frosted"): a menu that grows out of a clear bar is no longer a cloudy 12 dp pane but the same clear glass,
-            // a little more frost ([MODAL_BLUR_DP]). Their words read by holding back what is behind them, not by frost:
-            // the light past the knee and the colour (LiquidHold), and the fine detail round its local mean
-            // ([MODAL_HOLD]), all in the calm middle; the rim keeps what it bends.
-            LiquidRole.Sheet -> r(MODAL_BLUR_DP, 48f, 0f, .22f, .14f, rimMax = 30f, hold = SHEET_HOLD)
-            LiquidRole.Menu -> r(MODAL_BLUR_DP, 48f, .18f, .20f, .10f, rimMax = 26f, hold = MODAL_HOLD)
-            // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
-            // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
-            LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
-            // The + is a clear drop of glass: the pills' thin tint, never the accent (owner 2026-11-14: "When in
-            // glass the + button shouldn't have a color, just pure glass"); it keeps its lens to the middle.
-            LiquidRole.Action -> r(1f, 26f, .22f, .18f, .28f, rimMax = 40f, share = .5f, depth = true)
+            LiquidRole.Bar -> r(1f, 26f, .16f, .14f, .10f, rimMax = 28f, share = .42f, hold = WORDS_HOLD)
+            LiquidRole.Dock -> r(1f, 26f, .16f, .14f, .10f, rimMax = 28f, share = .42f)
+            LiquidRole.Composer -> r(1f, 26f, .18f, .16f, .12f, rimMax = 28f, share = .42f, hold = WORDS_HOLD)
+            LiquidRole.Sheet -> r(MODAL_BLUR_DP, 38f, .22f, .22f, .16f, rimMax = 32f, share = .42f, hold = SHEET_HOLD)
+            LiquidRole.Menu -> r(MODAL_BLUR_DP, 36f, .24f, .20f, .14f, rimMax = 30f, share = .42f, hold = MODAL_HOLD)
+            LiquidRole.Pill, LiquidRole.Status -> r(.5f, 14f, .14f, .14f, .10f, rimMax = 16f, share = .42f)
+            // Pure-glass + FAB (owner preference respected): jewel-like dome lensing, crisp specular, subtle shadow.
+            LiquidRole.Action -> r(.5f, 24f, .22f, .14f, .10f, rimMax = 36f, share = .5f, depth = true)
         }
     }
 
@@ -405,9 +387,6 @@ public object LiquidEdge {
 
     /** The resting dock's rank: below the status pill, the lowest page role. */
     public const val DOCK_REST_RANK: Int = 0
-
-    /** No liquid pane casts a shadow (owner 2026-11-09: crisp edges, no halo). */
-    private const val NO_SHADOW: Float = 0f
 
     /** The Glass surface role and level whose tint a liquid [role] pane keeps. */
     public fun glassRole(role: LiquidRole): Pair<SurfaceRole, SurfaceLevel> =
@@ -501,11 +480,11 @@ public object LiquidEdge {
     public data class FaceTint(val fill: Argb, val fillStart: Argb, val sheen: Argb)
 
     /** How much more the lit top-start corner of a liquid face holds than the rest. */
-    private const val LIT: Float = .06f
+    private const val LIT: Float = .03f
 
 
-    /** The share of a clear in-flow pane's sheen a liquid face takes: the lens and rim light already carry the gloss. */
-    private const val SHEEN_SHARE: Float = .85f
+    /** The share of a clear in-flow pane's sheen a liquid face takes: subtle glossy top catch that preserves WCAG text contrast. */
+    private const val SHEEN_SHARE: Float = .375f
 
     /** A liquid face's top sheen (owner 2026-11-08, "more glossy"): the theme's near-white, fading over the top 30 %. */
     public fun sheenOf(roles: Roles, look: GlassLookPreset = GlassLooks.Glossy): Argb = GlassSpec.sheenOf(roles, look.spec).let { it.withAlpha(it.alpha / 255f * SHEEN_SHARE) }
@@ -532,13 +511,9 @@ public object LiquidEdge {
                 // Marks a face that carries its own words (GlassFinish thickens only such faces); never drawn.
                 wordsPlate = base,
             )
-        // The same measure as Glass's in-flow panes: a dark face deepens with the ground's smoke, a light one with its
-        // own milk, the gloss goes first where it costs, then the Solid surface itself.
-        // Clear glass (2026-11-09 night, "real glass"): one thin tint, never thickened into a plate; the blur and the
-        // words' ink flip carry legibility. Kept for reference: GlassFinish.thickened(thin, …).
-        val d = thin.copy(fillStart = thin.fill, sheen = Argb(0))
-        // Glass, never a plate (owner 2026-11-09 retune, Apple's regular material): the face may thicken for its words
-        // only up to its role's cap; the backdrop's blur, not paint, does the rest.
+        // Restore physical glass top sheen (B-609) while keeping fillStart equal to fill so dark-mode text2/text3
+        // contrast over surface3 stays above 4.5:1 across every theme pack.
+        val d = thin.copy(fillStart = thin.fill)
         val cap = faceCap(role, roles.dark)
         fun Argb.capped(): Argb = if (alpha / 255f > cap) withAlpha(cap) else this
         val fill = (d.fill ?: base).capped()

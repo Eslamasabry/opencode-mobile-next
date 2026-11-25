@@ -34,10 +34,13 @@ class GlassTuningTest {
             assertEquals(RimLight.FALLOFF, k.rimFocus)
             assertEquals(LiquidJoin.KNEE, k.softenKnee)
             assertEquals(LiquidJoin.KNEE_SLOPE, k.softenKeep)
-            assertEquals(if (dark) GlassLook.Default.liquidRimDark else .10f, k.rimBrightness)
+            assertEquals(if (dark) GlassLook.Default.liquidRimDark else GlassTuning.LIGHT_RIM_ALPHA, k.rimBrightness)
             assertEquals(45f, k.lightDeg)
-            assertEquals(1f, k.rimWidthDp)
-            listOf(k.dispersion, k.bendShape, k.specular, k.sheen, k.innerShadow, k.tintLightness).forEach { assertEquals(0f, it, "$kind off by default") }
+            assertEquals(GlassTuning.RIM_WIDTH_DP, k.rimWidthDp)
+            listOf(k.dispersion, k.innerShadow, k.tintLightness).forEach { assertEquals(0f, it, "$kind off by default") }
+            assertEquals(GlassTuning.SHIPPED_BEND_SHAPE, k.bendShape, "$kind dome bend")
+            assertEquals(if (dark) GlassTuning.SHIPPED_SPECULAR_DARK else GlassTuning.SHIPPED_SPECULAR_LIGHT, k.specular, "$kind specular")
+            assertEquals(if (dark) GlassTuning.SHIPPED_SHEEN_DARK else GlassTuning.SHIPPED_SHEEN_LIGHT, k.sheen, "$kind sheen")
             // Menus, sheets and dialogs hold the fine detail behind their words (glass liquid 2026-11-14); nobody else.
             val held = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
             // Glass liquid round two: a sheet (and a dialog, drawn as one) may hold harder than a menu.
@@ -47,14 +50,14 @@ class GlassTuningTest {
             assertEquals(if (held) h.localSlope else 1f, k.localSlope, "$kind local slope")
             assertEquals(if (held) h.inkKeep else 1f, k.inkKeep, "$kind ink-like strokes kept")
             assertEquals(if (held) h.inkRim else 1f, k.inkRim, "$kind ink-like strokes held in the rim")
-            assertEquals(1f, k.wordsClear, "$kind: the page under the words is cleared as today")
+            assertEquals(GlassTuning.WORDS_CLEAR_FLOATING, k.wordsClear, "$kind: floating chrome lets content enter the lens rim")
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }
-        // The numbers the owner sees today: the bar 3 dp of blur and a 34 dp bend, the menu 4 dp and 48 dp.
-        assertEquals(3f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
-        assertEquals(34f, GlassTuning.shipped(GlassPaneKind.Bar, true).lensStrengthDp)
-        assertEquals(4f, GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp)
-        assertEquals(48f, GlassTuning.shipped(GlassPaneKind.Dialog, false).lensStrengthDp)
+        // Apple Liquid Glass scale-dependent weight (B-609): clear 1 dp bar, deeper 6 dp modal.
+        assertEquals(1f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
+        assertEquals(26f, GlassTuning.shipped(GlassPaneKind.Bar, true).lensStrengthDp)
+        assertEquals(LiquidEdge.MODAL_BLUR_DP, GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp)
+        assertEquals(38f, GlassTuning.shipped(GlassPaneKind.Dialog, false).lensStrengthDp)
         assertTrue(GlassTuning.Shipped.isShipped)
     }
 
@@ -96,11 +99,16 @@ class GlassTuningTest {
 
     @Test
     fun `B-GLASS-LAB-005 all linked moves every kind by the same step`() {
-        val t = GlassTuning.Shipped.linked(GlassPaneKind.Bar, true, GlassKnob.Blur, 5f)
-        assertEquals(5f, t.knobs(GlassPaneKind.Bar, true).blurDp)
-        assertEquals(4f, t.knobs(GlassPaneKind.MessageBox, true).blurDp)
-        assertEquals(6f, t.knobs(GlassPaneKind.Menu, true).blurDp)
-        assertEquals(3f, t.knobs(GlassPaneKind.Chip, true).blurDp)
+        val barBefore = GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp
+        val boxBefore = GlassTuning.shipped(GlassPaneKind.MessageBox, true).blurDp
+        val menuBefore = GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp
+        val chipBefore = GlassTuning.shipped(GlassPaneKind.Chip, true).blurDp
+        val delta = 2f
+        val t = GlassTuning.Shipped.linked(GlassPaneKind.Bar, true, GlassKnob.Blur, barBefore + delta)
+        assertEquals(barBefore + delta, t.knobs(GlassPaneKind.Bar, true).blurDp)
+        assertEquals(boxBefore + delta, t.knobs(GlassPaneKind.MessageBox, true).blurDp)
+        assertEquals(menuBefore + delta, t.knobs(GlassPaneKind.Menu, true).blurDp)
+        assertEquals(chipBefore + delta, t.knobs(GlassPaneKind.Chip, true).blurDp)
         // The light theme is untouched.
         assertEquals(GlassTuning.shipped(GlassPaneKind.Bar, false), t.knobs(GlassPaneKind.Bar, false))
     }

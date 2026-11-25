@@ -60,8 +60,10 @@ float3 localHold(float2 at, float3 rgb, float deep, float scale, float lightInk)
     float isum = ink0;
     float imin = ink0;
     float imax = ink0;
-    for (int i = 0; i < 36; i++) {
-        float r = local.x * scale * sqrt((float(i) + 0.5) / 36.0);
+    // Fast 12-tap Vogel / golden-angle stratified disc (B-615: replaces 36-tap per-pixel spiral for 3x lower GPU cost
+    // while keeping uniform area coverage across text line pitch).
+    for (int i = 0; i < 12; i++) {
+        float r = local.x * scale * sqrt((float(i) + 0.5) / 12.0);
         float t = 2.39996323 * float(i);
         float2 sp = at + float2(cos(t), sin(t)) * r;
         float4 s = holdSample(sp);

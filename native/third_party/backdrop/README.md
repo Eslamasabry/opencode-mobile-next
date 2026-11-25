@@ -46,6 +46,11 @@ the seven samples) and the bend's profile as a uniform (0 is upstream's `circleM
 1 to a sharp `x^8` bevel at the rim). With both at 0 the overload calls upstream's lens without dispersion, unchanged.
 Why: the kit's Glass lab (2026-11-13) lets the owner tune both as numbers. Nothing in the app moves them by default.
 
+**Asymmetric corner radii (B-607):** `internal/Shaders.kt` passes `centeredCoord` (instead of uncentered `coord >= 0`)
+into `radiusAt(...)` across all five rounded-rect refraction and highlight shaders so panes with different corner radii
+(such as bottom sheets with rounded top corners and square bottom corners) evaluate each corner's own radius instead of
+always picking `radii.z` (`bottomRight`).
+
 ## Updating
 
 To take a new upstream release: replace `src/` with the new sources jar's `commonMain` and `androidMain`, commit that

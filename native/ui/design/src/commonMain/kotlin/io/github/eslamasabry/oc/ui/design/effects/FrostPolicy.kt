@@ -54,6 +54,10 @@ public data class FrostConditions(
     val highContrast: Boolean = false,
     val styleAllows: Boolean = true,
     val lensSupported: Boolean = false,
+    /** OS cross-window blur enabled (`WindowManager.isCrossWindowBlurEnabled`, B-614). False steps glass down cleanly. */
+    val blurEnabled: Boolean = true,
+    /** Accessibility Reduce Transparency active (B-614): thickens/opaques glass cleanly like High Contrast. */
+    val reduceTransparency: Boolean = false,
 )
 
 /**
@@ -87,7 +91,7 @@ public object FrostPolicy {
     public fun heldBy(c: FrostConditions): FrostHold? =
         when {
             c.saver -> FrostHold.Saver
-            c.highContrast -> FrostHold.Contrast
+            c.highContrast || c.reduceTransparency -> FrostHold.Contrast
             !c.styleAllows -> FrostHold.Style
             else -> null
         }
@@ -95,7 +99,7 @@ public object FrostPolicy {
     /**
      * The first reason Glass's floating parts are not liquid glass, or null when they are: frost's own holds first (in
      * [heldBy]'s order), then frost strength Off, then a glass look without a lens ([GlassLookId.Frosted]), then the
-     * platform.
+     * platform (including OS blur disabled via `WindowManager.isCrossWindowBlurEnabled`, B-614).
      */
     public fun edgesHeldBy(c: FrostConditions, strength: FrostStrength, look: GlassLookId): EdgeHold? =
         when (heldBy(c)) {
@@ -107,7 +111,7 @@ public object FrostPolicy {
                 when {
                     strength == FrostStrength.Off -> EdgeHold.Off
                     !GlassLooks.of(look).lens -> EdgeHold.Frosted
-                    !c.lensSupported -> EdgeHold.Platform
+                    !c.lensSupported || !c.blurEnabled -> EdgeHold.Platform
                     else -> null
                 }
         }

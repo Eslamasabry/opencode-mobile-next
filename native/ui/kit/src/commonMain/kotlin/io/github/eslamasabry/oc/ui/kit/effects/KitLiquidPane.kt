@@ -100,8 +100,8 @@ public data class KitLiquidPaneSpec(
     val kneeSlope: Float = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.KNEE_SLOPE,
     /** The lens's colour split at the edge, 0-1 (0: none, the shipped glass). */
     val dispersion: Float = 0f,
-    /** The bend's profile: -1 a soft dome, 0 the shipped circle, 1 a sharp bevel at the rim. */
-    val bendShape: Float = 0f,
+    /** The bend's profile: -1 a soft dome, 0 the shipped circle, 1 a sharp bevel at the rim (B-609). */
+    val bendShape: Float = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_BEND_SHAPE,
     /** How far the specular's bright rim segment reaches from its corner, dp (the shipped glass draws no specular). */
     val specularReachDp: Float = io.github.eslamasabry.oc.ui.kit.foundation.SPECULAR_REACH_DP,
     /** The inner shadow along the edge (alpha 0: none, the shipped glass) and its size in dp. */

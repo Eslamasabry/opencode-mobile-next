@@ -30,8 +30,8 @@ class RimFloorShaderTest {
     private val h = 220
     private val radius = 28f
 
-    /** The least share of the peak the rim may show anywhere: the floor (RimLight.FLOOR, .35) less rounding. */
-    private val guard = .32f
+    /** The least share of the peak the rim may show anywhere: the floor (RimLight.FLOOR, .15) less rounding. */
+    private val guard = io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR - .03f
 
     /** Points just inside the outline of a [w] x [h] pane with corners of [radius], all the way round, [inset] px in. */
     private fun outline(left: Float, top: Float, inset: Float): List<Pair<String, Pair<Float, Float>>> {

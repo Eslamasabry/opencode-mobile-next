@@ -99,8 +99,10 @@ class KitWordsOnPlainGlassTest {
                 }
             }
             waitForIdle()
-            val bar = platform.liquidSpecs.lastOrNull { it.recipe.refractionDp == LiquidEdge.recipe(LiquidRole.Bar, true).refractionDp && it.recipe.blurDp == 3f }
-            val box = platform.liquidSpecs.lastOrNull { it.recipe.blurDp == 2f }
+            val barRecipe = LiquidEdge.recipe(LiquidRole.Bar, true)
+            val boxRecipe = LiquidEdge.recipe(LiquidRole.Composer, true)
+            val bar = platform.liquidSpecs.lastOrNull { it.recipe == barRecipe }
+            val box = platform.liquidSpecs.lastOrNull { it.recipe == boxRecipe }
             assertTrue(bar != null && box != null, "both panes were drawn liquid: ${platform.liquidSpecs.map { it.recipe }}")
             assertTrue(bar!!.recipe.hold.knee, "the bar holds back bright content behind its words")
             assertTrue(box!!.recipe.hold.knee, "the message box holds back bright content behind its words")

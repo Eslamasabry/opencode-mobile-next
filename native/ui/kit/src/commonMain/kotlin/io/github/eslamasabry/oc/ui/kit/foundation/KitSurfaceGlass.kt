@@ -962,16 +962,20 @@ internal fun rimLightMatrix(groundLuma: Float, gain: Float = RIM_LIGHT_GAIN): an
 /** The rim light's ground luma and the glass look's gain, most and band ([BackdropRimLight]). */
 internal data class KitRimLight(val groundLuma: Float, val gain: Float, val max: Float, val bandDp: Float)
 
-/** The rim light in a dark theme under a look that has one, or null (a light theme, or a look without it). */
+/** The rim light under a look that has one (dark and light themes, B-612), or null for a look without it. */
 @Composable
 internal fun kitRimLightGround(): KitRimLight? {
     val roles = io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current
-    if (!roles.dark) return null
     val look = io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec
     if (look.backdropLightGain <= 0f) return null
     val g = roles.ground
     val luma = (LUMA_R * g.red + LUMA_G * g.green + LUMA_B * g.blue) / 255f
-    return KitRimLight(luma, look.backdropLightGain, look.backdropLightMax, look.backdropLightBandDp)
+    return if (roles.dark) {
+        KitRimLight(luma, look.backdropLightGain, look.backdropLightMax, look.backdropLightBandDp)
+    } else {
+        // Light mode (B-612): luminous white specular catch along edges over bright/colorful passing backdrops.
+        KitRimLight(groundLuma = (luma * 0.55f).coerceIn(0f, 0.7f), gain = look.backdropLightGain * 0.45f, max = minOf(0.55f, look.backdropLightMax), bandDp = look.backdropLightBandDp)
+    }
 }
 
 /** The look's lit band inside a pane's edge, in dp; drawn no wider than the rim ([rimLightWidthDp]). */

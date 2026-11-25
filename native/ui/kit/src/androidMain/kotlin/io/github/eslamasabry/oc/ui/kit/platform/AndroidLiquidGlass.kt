@@ -109,7 +109,22 @@ internal object AndroidLiquidGlass {
                         ),
                 )
             },
-            shadow = if (spec.shadow.alpha > 0f) ({ Shadow(radius = 24.dp, color = spec.shadow) }) else null,
+            shadow =
+                if (spec.shadow.alpha > 0f) {
+                    {
+                        val flip = spec.flip?.progress?.value ?: 0f
+                        // Content-aware adaptive elevation shadow (B-613): soft over calm dark ground, firmer over
+                        // light/bright backdrops so edges separate cleanly without a heavy dark border.
+                        val baseAlpha = spec.shadow.alpha * (if (spec.rimAdds) (0.72f + 0.28f * flip) else (1.0f - 0.18f * flip))
+                        Shadow(
+                            radius = 20.dp,
+                            offset = DpOffset(0.dp, 4.dp),
+                            color = spec.shadow.copy(alpha = baseAlpha.coerceIn(0f, 1f)),
+                        )
+                    }
+                } else {
+                    null
+                },
             // None in the shipped glass; the Glass lab's inner shadow, dropped by half its size. The library cuts it with
             // a Clear blend, which some GPU emulators' renderers do not survive: it stays off unless someone moves it.
             innerShadow =

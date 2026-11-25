@@ -257,11 +257,14 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** Nothing moved: the app as it ships. */
         public val Shipped: GlassTuning = GlassTuning()
 
-        /** The light theme's glass edge: a faint dark line (the kit's `LIGHT_EDGE_ALPHA`). */
+        /** Light-mode glass specular rim strength (white specular light, B-612; replaces old 10% black outline). */
+        public const val LIGHT_RIM_ALPHA: Float = .68f
+
+        /** Kept for source compatibility; light liquid glass uses [LIGHT_RIM_ALPHA] white speculars (B-612). */
         public const val LIGHT_EDGE_ALPHA: Float = .10f
 
-        /** The rim light's shipped width, dp (the kit's `RIM_LIGHT_DP`). */
-        public const val RIM_WIDTH_DP: Float = 1f
+        /** The rim light's shipped width, dp: crisp specular contour (B-609). */
+        public const val RIM_WIDTH_DP: Float = 1.25f
 
         /** The rim light's shipped direction: along the top-start / bottom-end diagonal. */
         public const val LIGHT_DEG: Float = 45f
@@ -269,9 +272,27 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** The inner shadow's size when someone turns it on (the backdrop library's default). */
         public const val INNER_SHADOW_DP: Float = 24f
 
+        /** Shipped dome refraction bend profile (-0.6 soft thick-glass dome, B-609). */
+        public const val SHIPPED_BEND_SHAPE: Float = -.6f
+
+        /** Shipped specular highlight strength in dark and light themes (B-609, B-612). */
+        public const val SHIPPED_SPECULAR_DARK: Float = .55f
+        public const val SHIPPED_SPECULAR_LIGHT: Float = .72f
+
+        /** Shipped top sheen alpha in dark and light themes (B-609: matches LiquidEdge.sheenOf, preserves WCAG contrast). */
+        public const val SHIPPED_SHEEN_DARK: Float = .06f
+        public const val SHIPPED_SHEEN_LIGHT: Float = .11f
+
+        /** Specular reach along the rim for small pills and round buttons, dp (on 5 dp knob step). */
+        public const val SMALL_SPECULAR_REACH_DP: Float = 45f
+
+        /** Partial inner words clear on floating glass chrome so passing content enters and bends in the rim (B-608). */
+        public const val WORDS_CLEAR_FLOATING: Float = .20f
+
         /** [kind]'s numbers as the app ships them today, in a [dark] or light theme, under the default look. */
         public fun shipped(kind: GlassPaneKind, dark: Boolean): GlassKnobs {
             val r = LiquidEdge.recipe(kind.role, dark)
+            val small = kind == GlassPaneKind.Chip || kind == GlassPaneKind.Button
             return GlassKnobs(
                 blurDp = r.blurDp,
                 tint = r.tint,
@@ -284,23 +305,23 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
                 lensStrengthDp = r.refractionDp,
                 lensMiddle = if (r.depth) 1f else 0f,
                 dispersion = 0f,
-                rimBrightness = if (dark) io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidRimDark else LIGHT_EDGE_ALPHA,
+                rimBrightness = if (dark) io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidRimDark else LIGHT_RIM_ALPHA,
                 rimWidthDp = RIM_WIDTH_DP,
                 rimFloor = RimLight.FLOOR,
                 rimFocus = RimLight.FALLOFF,
                 lightDeg = LIGHT_DEG,
                 innerShadow = 0f,
                 innerShadowDp = INNER_SHADOW_DP,
-                sheen = 0f,
+                sheen = if (dark) SHIPPED_SHEEN_DARK else SHIPPED_SHEEN_LIGHT,
                 soften = if (r.hold.knee) 1f else 0f,
                 softenKnee = LiquidJoin.KNEE,
                 softenKeep = LiquidJoin.KNEE_SLOPE,
                 colourLimit = r.hold.chroma,
                 shadow = r.shadowAlpha,
-                bendShape = 0f,
-                specular = 0f,
+                bendShape = SHIPPED_BEND_SHAPE,
+                specular = if (dark) SHIPPED_SPECULAR_DARK else SHIPPED_SPECULAR_LIGHT,
                 specularLine = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.glintShare,
-                specularReachDp = SPECULAR_REACH_DP,
+                specularReachDp = if (small) SMALL_SPECULAR_REACH_DP else SPECULAR_REACH_DP,
                 passThrough = if (r.hold.knee) PASS_SHIPPED_HOLD else 1f,
                 localDp = r.hold.localDp,
                 localFree = r.hold.localFree,
@@ -308,7 +329,7 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
                 inkKeep = r.hold.inkKeep,
                 inkRim = r.hold.inkRim,
                 joinReachDp = if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP,
-                wordsClear = 1f,
+                wordsClear = WORDS_CLEAR_FLOATING,
                 pageKeepDp = LiquidEdge.modalBand(kind)?.keepDp ?: 0f,
                 pageFadeDp = LiquidEdge.modalBand(kind)?.fadeDp ?: 0f,
             )

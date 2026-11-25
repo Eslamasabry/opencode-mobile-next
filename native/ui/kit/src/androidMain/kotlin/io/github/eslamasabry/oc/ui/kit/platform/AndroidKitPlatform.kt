@@ -120,6 +120,35 @@ public class AndroidKitPlatform(
                 // No heat signal on this device.
             }
         }
+        // B-614: honour Android's live cross-window blur switch (API 31+, Developer Options / Battery Saver).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val wm = context.getSystemService(WindowManager::class.java)
+            if (wm != null) {
+                try {
+                    wm.addCrossWindowBlurEnabledListener(context.mainExecutor) { enabled ->
+                        state.update { it.copy(crossWindowBlurEnabled = enabled) }
+                    }
+                } catch (_: RuntimeException) {
+                    // Some headless/test window managers reject blur listeners.
+                }
+            }
+        }
+        // B-614: observe high-contrast text setting changes.
+        val contrastObserver =
+            object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    state.update { it.copy(highContrast = readHighContrast()) }
+                }
+            }
+        try {
+            context.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor("high_text_contrast_enabled"),
+                false,
+                contrastObserver,
+            )
+        } catch (_: RuntimeException) {
+            // Unavailable on some environments.
+        }
     }
 
     override fun pressIndication(ink: Color): Indication = ripple(bounded = true, color = ink)
@@ -145,7 +174,16 @@ public class AndroidKitPlatform(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) AndroidFrost.effect(spec, density)
         else null
 
-    override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    override val glassTier: KitGlassTier =
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM -> KitGlassTier.AppleLiquid
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> KitGlassTier.StandardLiquid
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> KitGlassTier.Frost
+            else -> KitGlassTier.Translucent
+        }
+
+    override val liquidGlass: Boolean =
+        glassTier == KitGlassTier.AppleLiquid || glassTier == KitGlassTier.StandardLiquid
 
     override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
@@ -330,6 +368,31 @@ public class AndroidKitPlatform(
             1f,
         )
 
+    private fun readHighContrast(): Boolean {
+        val textContrast =
+            try {
+                Settings.Secure.getInt(context.contentResolver, "high_text_contrast_enabled", 0) == 1
+            } catch (_: RuntimeException) {
+                false
+            }
+        val uiContrast =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val ui = context.getSystemService(android.app.UiModeManager::class.java)
+                (ui?.contrast ?: 0f) >= HIGH_CONTRAST_THRESHOLD
+            } else {
+                false
+            }
+        return textContrast || uiContrast
+    }
+
+    private fun readCrossWindowBlurEnabled(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val wm = context.getSystemService(WindowManager::class.java)
+            wm?.isCrossWindowBlurEnabled ?: true
+        } else {
+            true
+        }
+
     private fun readSignals(): KitSystemSignals {
         val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
         return KitSystemSignals(
@@ -338,8 +401,14 @@ public class AndroidKitPlatform(
             severeHeat =
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && power != null &&
                     power.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE,
+            highContrast = readHighContrast(),
             is24Hour = android.text.format.DateFormat.is24HourFormat(context),
+            crossWindowBlurEnabled = readCrossWindowBlurEnabled(),
         )
+    }
+
+    private companion object {
+        const val HIGH_CONTRAST_THRESHOLD: Float = 0.5f
     }
 }
 

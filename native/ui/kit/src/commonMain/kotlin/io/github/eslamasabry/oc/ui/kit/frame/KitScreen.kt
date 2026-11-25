@@ -359,11 +359,18 @@ public fun KitScreen(
     // rebuilt, so a chip row keeps its scroll and press state when the lens comes or goes (battery saver, reduced motion).
     val latestBelow = rememberUpdatedState(floatingBar?.below)
     val movableBelow = remember { movableContentOf { latestBelow.value?.invoke() } }
-    // The Glass lab's "Page behind the words" (shipped 1: what passes under a pane's words is cleared).
+    // The Glass lab's "Page behind the words" (B-608: floating chrome defaults to 0.20 so scrolling text & colour
+    // visibly enter and bend inside the header/composer rims; legacy non-floating chrome keeps 1.0).
     val tuning = io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassTuning.current
     val tuneDark = LocalKitColors.current.dark
-    val barClear by rememberUpdatedState(tuning?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.Bar, tuneDark)?.wordsClear ?: 1f)
-    val boxClear by rememberUpdatedState(tuning?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.MessageBox, tuneDark)?.wordsClear ?: 1f)
+    val barClear by rememberUpdatedState(
+        tuning?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.Bar, tuneDark)?.wordsClear
+            ?: if (floating) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.WORDS_CLEAR_FLOATING else 1f
+    )
+    val boxClear by rememberUpdatedState(
+        tuning?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.MessageBox, tuneDark)?.wordsClear
+            ?: if (floating) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.WORDS_CLEAR_FLOATING else 1f
+    )
     // A status line never decides the layout. It used to: a line arriving, leaving or folding away for typing moved the
     // bar, body and bottom block to the other layout, which made the transcript jump and dropped the message box's
     // focus, so the keyboard closed (emulator 2026-11-10, the demo chat; owner, a new install's first chat: "steals
@@ -560,10 +567,16 @@ public fun KitScreen(
                     Box(
                         Modifier.fillMaxSize()
                             // The bar's copy of the recording is made once the body has drawn (the status edge, drawn next,
-                            // reads it).
+                            // reads it). B-608: on floating chrome, start the soft fade AT the bar's bottom edge over the
+                            // bar's lens rim so scrolling content visibly enters and bends in the rim instead of vanishing early.
                             .then(
                                 if (topFade == null) Modifier
-                                else Modifier.kitWordsFadeRecorder(topFade, { topBottom + barDissolve() }, barDissolve, after = true, clear = { barClear })
+                                else if (floatChrome) {
+                                    val barRimPx = with(density) { io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.recipe(LiquidRole.Bar, dark = true).rimMaxDp.dp.toPx().coerceAtLeast(1f) }
+                                    Modifier.kitWordsFadeRecorder(topFade, { topBottom }, { barRimPx }, after = true, clear = { barClear })
+                                } else {
+                                    Modifier.kitWordsFadeRecorder(topFade, { topBottom + barDissolve() }, barDissolve, after = true, clear = { barClear })
+                                }
                             )
                             .then(
                                 if (!edgesFade) Modifier
@@ -687,7 +700,12 @@ public fun KitScreen(
                             }
                             .then(
                                 if (wordsFade == null) Modifier
-                                else Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.blockTop - bottomExtraTarget - fadeBottomPx }, { fadeBottomPx }, clear = { boxClear })
+                                else if (floatChrome) {
+                                    val boxRimPx = with(density) { io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.recipe(LiquidRole.Composer, dark = true).rimMaxDp.dp.toPx().coerceAtLeast(1f) }
+                                    Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.blockTop }, { boxRimPx }, clear = { boxClear })
+                                } else {
+                                    Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.blockTop - bottomExtraTarget - fadeBottomPx }, { fadeBottomPx }, clear = { boxClear })
+                                }
                             )
                             .then(
                                 if (edgesFade) Modifier

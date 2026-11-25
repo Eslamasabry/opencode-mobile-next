@@ -23,6 +23,20 @@ public enum class KitPlatformFamily {
 }
 
 /**
+ * Capability-gated Glass rendering tier (never raw API levels in UI or features).
+ * - [AppleLiquid]: Android 15+ (API 35+) — full dome AGSL refraction, live tilt/scroll speculars, fluid merges, gelatinous touch.
+ * - [StandardLiquid]: Android 13–14 (API 33–34) — AGSL edge refraction + specular + binary smooth-union joins.
+ * - [Frost]: Android 12 (API 31–32) — RenderEffect blur + colour vibrancy + white specular rim + adaptive shadow.
+ * - [Translucent]: Android <= 30, desktop, or system blur disabled — clean translucent surface + specular + shadow.
+ */
+public enum class KitGlassTier {
+    AppleLiquid,
+    StandardLiquid,
+    Frost,
+    Translucent,
+}
+
+/**
  * What the system says (plan 06 §6). Read only by `KitTheme`, which resolves motion and contrast
  * from it.
  */
@@ -34,6 +48,10 @@ public data class KitSystemSignals(
     val is24Hour: Boolean = true,
     val finePointer: Boolean = false,
     val accessibleNavigation: Boolean = false,
+    /** OS cross-window blur setting (`WindowManager.isCrossWindowBlurEnabled`, B-614). */
+    val crossWindowBlurEnabled: Boolean = true,
+    /** OS Reduce Transparency / elevated opacity preference (B-614). */
+    val reduceTransparency: Boolean = false,
 )
 
 /**
@@ -155,6 +173,14 @@ public interface KitPlatform {
      */
     public val liquidGlass: Boolean
         get() = false
+
+    /** Capability-gated Glass tier (Android 15+ full Apple Liquid Glass vs older tiers). */
+    public val glassTier: KitGlassTier
+        get() = if (liquidGlass) KitGlassTier.AppleLiquid else KitGlassTier.Translucent
+
+    /** Full Apple Liquid Glass capability (Android 15+ / API 35+: live tilt speculars, multi-body fluids, gelatinous flex). */
+    public val appleLiquidGlass: Boolean
+        get() = glassTier == KitGlassTier.AppleLiquid
 
     /**
      * The share of a liquid pane's pixels (per side) its blurred, bent backdrop is drawn at before it is scaled up to the

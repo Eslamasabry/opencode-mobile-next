@@ -133,6 +133,8 @@ private fun kitEdgesHeldBy(): io.github.eslamasabry.oc.ui.design.effects.EdgeHol
             highContrast = signals.highContrast,
             styleAllows = LocalKitStyle.current.style == Style.Glass,
             lensSupported = platform.liquidGlass,
+            blurEnabled = signals.crossWindowBlurEnabled,
+            reduceTransparency = signals.reduceTransparency,
         )
     return FrostPolicy.edgesHeldBy(conditions, appearance.frost, kitGlassLook().id)
 }
@@ -537,21 +539,28 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
             // The edge dock's grown end is the menu's old glass (6 dp dark, 3 light), not today's menu.
             val recipe = if (swell && role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, look) else LiquidEdge.recipe(role, faceDark, look)
             val rim = LiquidRim.Light
+            val small = role == LiquidRole.Pill || role == LiquidRole.Status || role == LiquidRole.Action
+            val specularScale =
+                if (faceDark) (look.spec.liquidSpecularDark / io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularDark).coerceIn(0f, 1.5f)
+                else (look.spec.liquidSpecularLight / io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularLight).coerceIn(0f, 1.5f)
+            val specularAlpha =
+                ((if (faceDark) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_SPECULAR_DARK
+                else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_SPECULAR_LIGHT) * specularScale).coerceIn(0f, 1f)
             KitLiquidPaneSpec(
                 recipe = recipe,
                 fill = fill,
                 fillStart = face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill,
                 rtl = rtl,
-                // Light glass: a white rim vanishes on a white page, so its edge is a faint dark line (the glass's own
-                // thickness seen edge-on); dark glass keeps the added light rim.
-                rim = if (faceDark) rim.copy(alpha = look.spec.liquidRimDark) else Color.Black.copy(alpha = LIGHT_EDGE_ALPHA),
+                // Apple Liquid Glass (B-612): crisp white specular rim in BOTH dark and light modes; soft elevation
+                // shadow separates light-mode glass cleanly without a dull black wireframe border.
+                rim = rim.copy(alpha = if (faceDark) look.spec.liquidRimDark else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.LIGHT_RIM_ALPHA),
                 rimAdds = faceDark,
                 rimDp = RIM_LIGHT_DP,
                 shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
                 frostBlurDp = GlassSpec.FLOAT_FROST,
                 sheen = Color(face.sheen.v),
-                // No painted glint: the edge's own light (the rim highlight) is the shine.
-                specular = Color.Transparent,
+                // Restore crisp specular glint along lit glass curve (B-609, B-612).
+                specular = rim.copy(alpha = specularAlpha),
                 flipFill = if (smoke != null) fill else otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipFillStart = if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipSheen = Color(otherFace.sheen.v),
@@ -559,6 +568,8 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
                 keepRim = keepRim,
                 glintShare = look.spec.glintShare,
                 resolution = liquidResolutionOf(recipe, platform.liquidResolution),
+                bendShape = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_BEND_SHAPE,
+                specularReachDp = if (small) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SMALL_SPECULAR_REACH_DP else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SPECULAR_REACH_DP,
             )
         }
     // The Glass lab's tuning (null: the shipped glass). The dock's grown swell keeps the menu's old glass.
@@ -849,8 +860,8 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode, TraversableNod
     }
 }
 
-/** The rim light's width, in dp: a sharp, thin 1 dp line with no blur (owner 2026-11-09, "crisper"). */
-internal const val RIM_LIGHT_DP: Float = 1f
+/** The rim light's width, in dp: crisp specular glass edge contour (B-609). */
+internal const val RIM_LIGHT_DP: Float = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.RIM_WIDTH_DP
 
 /** Light glass's dark edge line (see kitLiquidPaneSpec). */
 internal const val LIGHT_EDGE_ALPHA: Float = .10f

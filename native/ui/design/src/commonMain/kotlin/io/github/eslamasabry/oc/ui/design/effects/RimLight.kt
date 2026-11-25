@@ -16,16 +16,15 @@ import kotlin.math.pow
  * the two lit arcs keep their peak and the two weak arcs keep [FLOOR] of it, with no step anywhere.
  */
 public object RimLight {
-    /** How tightly the light gathers at its lit arcs (the library's default is 1): a brighter top-start segment. */
-    public const val FALLOFF: Float = 1.6f
+    /** How tightly the light gathers at its lit arcs: crisp Fresnel concentration like curved glass (B-610). */
+    public const val FALLOFF: Float = 2.2f
 
     /**
-     * The least the rim ever is, as a share of its peak, all the way round a pane. 35 %: on a dark page the dark theme's
-     * rim (white at .72, added) keeps about a quarter of white's light at the weak corners, a clear hairline over the
-     * ground and over Aurora's green and lilac, while the lit arcs stay almost three times brighter, so the pane still
-     * reads as lit from one side and never as a flat outlined box.
+     * The least the rim ever is, as a share of its peak, all the way round a pane (B-610). Low enough (15 %) that
+     * unlit edges recede organically instead of drawing a static wireframe border, while never dropping to zero so
+     * curved corners remain continuous.
      */
-    public const val FLOOR: Float = .35f
+    public const val FLOOR: Float = .15f
 
     /**
      * The rim's strength (0 to 1 of its peak) where the edge's outward direction makes [cosine] with the light: the
