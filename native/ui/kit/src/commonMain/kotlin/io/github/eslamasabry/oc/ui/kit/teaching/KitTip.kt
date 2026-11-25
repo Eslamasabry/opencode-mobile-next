@@ -254,11 +254,7 @@ public fun KitTip(
             // emulator's renderer. Drawn in the page's window it can do neither. Outside a host, the popup as before.
             val layer = LocalKitMenuLayer.current
             if (layer != null) TipInLayer(layer, place, { shownAt.takeIf { it != Rect.Zero } ?: bounds[0] }, bubble)
-            else Popup(
-                popupPositionProvider = place,
-                onDismissRequest = { dismiss() },
-                properties = PopupProperties(focusable = false, dismissOnClickOutside = true),
-            ) {
+            else Popup(place, { dismiss() }, PopupProperties(focusable = false, dismissOnClickOutside = true)) {
                 KitPopupSystemBars()
                 bubble()
             }
