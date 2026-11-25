@@ -5,15 +5,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toAwtImage
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
@@ -31,6 +40,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.gate.flicker.FrameRecorder
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -39,6 +49,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
@@ -150,13 +162,14 @@ class HomeChipsCueRenders {
                 }
                 settleAndCaptureBefore(out, tag)
                 tapCueAndCaptureAfter(out, tag)
+                scrollToEndAndCapture(out, tag)
             }
         } finally {
             Locale.setDefault(previous)
         }
     }
 
-    private fun androidx.compose.ui.test.ComposeUiTest.settleAndCaptureBefore(out: File, tag: String) {
+    private fun ComposeUiTest.settleAndCaptureBefore(out: File, tag: String) {
         waitForIdle()
         mainClock.advanceTimeBy(SETTLE_MS)
         waitForIdle()
@@ -166,8 +179,12 @@ class HomeChipsCueRenders {
         saveShot(File(out, "$tag-before.png"))
     }
 
-    private fun androidx.compose.ui.test.ComposeUiTest.tapCueAndCaptureAfter(out: File, tag: String) {
+    private fun ComposeUiTest.tapCueAndCaptureAfter(out: File, tag: String) {
+        mainClock.autoAdvance = false
         onAllNodes(hasText("+", substring = true), useUnmergedTree = true).onLast().performClick()
+        val oneFrame = walkFramesForSingleFrameNodes(WALK_FRAMES)
+        assertTrue(oneFrame.isEmpty(), "$tag after tap 1-frame nodes: $oneFrame")
+        mainClock.autoAdvance = true
         waitForIdle()
         mainClock.advanceTimeBy(SETTLE_MS)
         waitForIdle()
@@ -180,12 +197,88 @@ class HomeChipsCueRenders {
             rb.left >= line.left - EDGE_SLACK && rb.right <= line.right + EDGE_SLACK,
             "$tag after: All connections $rb not whole inside $line",
         )
-        val cues = onAllNodes(hasText("+", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
-        assertCuesInFrame(cues, "$tag after")
-        saveShot(File(out, "$tag-after.png"))
+        val scroller = findScroller(onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes())
+        val range = scroller.config[SemanticsProperties.HorizontalScrollAxisRange]
+        assertTrue(
+            range.value() > 0f && range.value() < range.maxValue(),
+            "$tag after: expected mid scroll with hidden chips on both sides, got ${range.value()}/${range.maxValue()}",
+        )
+        val shot = onRoot().captureToImage()
+        val map = shot.toPixelMap()
+        assertEdgeCleared(map, line, atStart = true, label = "$tag after start")
+        assertEdgeCleared(map, line, atStart = false, label = "$tag after end")
+        ImageIO.write(shot.toAwtImage(), "png", File(out, "$tag-after.png"))
+        assertTrue(File(out, "$tag-after.png").isFile)
     }
 
-    private fun assertCuesInFrame(cues: List<androidx.compose.ui.semantics.SemanticsNode>, label: String) {
+    private fun ComposeUiTest.scrollToEndAndCapture(out: File, tag: String) {
+        onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange), useUnmergedTree = true)
+            .performSemanticsAction(SemanticsActions.ScrollBy) { it(SCROLL_TO_END_PX, 0f) }
+        waitForIdle()
+        mainClock.advanceTimeBy(SETTLE_MS)
+        waitForIdle()
+        val cues = onAllNodes(hasText("+", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
+        assertTrue(cues.isEmpty(), "$tag end: +N cue must not reappear when scrolled to end")
+        val line = onNodeWithTag("kit-filter-chips").fetchSemanticsNode().boundsInRoot
+        val last = onAllNodes(hasText("Running 1"), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+        assertTrue(last != null, "$tag end: Running 1 missing")
+        val lb = last.boundsInRoot
+        assertTrue(
+            lb.left >= line.left - EDGE_SLACK && lb.right <= line.right + EDGE_SLACK,
+            "$tag end: Running 1 $lb not whole inside $line",
+        )
+        assertTrue(
+            line.right - lb.right <= END_TAIL_MAX_PX,
+            "$tag end: Running 1 $lb should sit near right edge of $line",
+        )
+        val shot = onRoot().captureToImage()
+        assertEdgeCleared(shot.toPixelMap(), line, atStart = true, label = "$tag end start")
+        ImageIO.write(shot.toAwtImage(), "png", File(out, "$tag-end.png"))
+        assertTrue(File(out, "$tag-end.png").isFile)
+    }
+
+    private fun ComposeUiTest.walkFramesForSingleFrameNodes(frames: Int): Map<String, List<Int>> {
+        val seen = LinkedHashMap<String, MutableList<Int>>()
+        repeat(frames) { frame ->
+            mainClock.advanceTimeByFrame()
+            val roots = onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes(atLeastOneRootRequired = false)
+            for (label in FrameRecorder.read(roots).nodes.map { it.label }.distinct()) {
+                seen.getOrPut(label) { mutableListOf() }.add(frame)
+            }
+        }
+        return seen.filterValues { it.size == 1 }
+    }
+
+    private fun findScroller(roots: List<SemanticsNode>): SemanticsNode {
+        val queue = ArrayDeque(roots)
+        while (queue.isNotEmpty()) {
+            val node = queue.removeFirst()
+            if (SemanticsProperties.HorizontalScrollAxisRange in node.config) return node
+            queue.addAll(node.children)
+        }
+        error("Horizontal scroller node not found")
+    }
+
+    private fun assertEdgeCleared(
+        map: PixelMap,
+        line: androidx.compose.ui.geometry.Rect,
+        atStart: Boolean,
+        label: String,
+    ) {
+        val x = if (atStart) (line.left + EDGE_PROBE_PX).roundToInt() else (line.right - EDGE_PROBE_PX).roundToInt()
+        val refY = (line.top + EDGE_REF_Y_PX).roundToInt().coerceIn(0, map.height - 1)
+        val midY = ((line.top + line.bottom) / 2f).roundToInt().coerceIn(0, map.height - 1)
+        val clampedX = x.coerceIn(0, map.width - 1)
+        val ref = map[clampedX, refY]
+        val sample = map[clampedX, midY]
+        val diff = abs(sample.red - ref.red) + abs(sample.green - ref.green) + abs(sample.blue - ref.blue)
+        assertTrue(
+            diff < EDGE_CLEAR_DIFF,
+            "$label: edge at x=$clampedX not cleared by fade (diff=$diff sample=$sample ref=$ref)",
+        )
+    }
+
+    private fun assertCuesInFrame(cues: List<SemanticsNode>, label: String) {
         for (cue in cues) {
             val b = cue.boundsInRoot
             assertTrue(
@@ -195,7 +288,7 @@ class HomeChipsCueRenders {
         }
     }
 
-    private fun androidx.compose.ui.test.ComposeUiTest.saveShot(file: File) {
+    private fun ComposeUiTest.saveShot(file: File) {
         ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
         assertTrue(file.isFile)
     }
@@ -224,5 +317,11 @@ class HomeChipsCueRenders {
         const val LARGE_SCALE = 1.3f
         const val SETTLE_MS = 1_000L
         const val EDGE_SLACK = 1f
+        const val EDGE_PROBE_PX = 4f
+        const val EDGE_REF_Y_PX = 2f
+        const val EDGE_CLEAR_DIFF = 0.06f
+        const val SCROLL_TO_END_PX = 10_000f
+        const val END_TAIL_MAX_PX = 36f
+        const val WALK_FRAMES = 12
     }
 }
