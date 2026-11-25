@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.onboarding
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
@@ -30,6 +31,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatformFamily
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -102,10 +105,12 @@ class WelcomeScreenTest {
                 stillFrame = true,
             ) {
                 Box(Modifier.width(360.dp)) {
-                    WelcomeScreen(
-                        WelcomeUi(phone = PhoneWelcomeUi(available = true), place = WelcomePlace.Phone),
-                        actions,
-                    )
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 800f)) {
+                        WelcomeScreen(
+                            WelcomeUi(phone = PhoneWelcomeUi(available = true), place = WelcomePlace.Phone),
+                            actions,
+                        )
+                    }
                 }
             }
         }
@@ -124,10 +129,12 @@ class WelcomeScreenTest {
                 stillFrame = true,
             ) {
                 Box(Modifier.width(360.dp)) {
-                    WelcomeScreen(
-                        WelcomeUi(phone = PhoneWelcomeUi(available = false)),
-                        actions,
-                    )
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 800f)) {
+                        WelcomeScreen(
+                            WelcomeUi(phone = PhoneWelcomeUi(available = false)),
+                            actions,
+                        )
+                    }
                 }
             }
         }
