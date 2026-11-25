@@ -123,4 +123,43 @@ class FirstRunFlowTest {
         WelcomeViewModel(nav).openSettings()
         assertEquals(SettingsRoute.Home, nav.top.value)
     }
+
+    @Test
+    fun `B-619 a language change during first run puts the welcome back under the open pages`() =
+        runTest {
+            val nav = StackNavigator()
+            val flow = FirstRunFlow(FirstRun(Prefs()), nav)
+            flow.start(active = null, saved = emptySet())
+            assertEquals(
+                listOf<AppRoute>(OnboardingRoute.Welcome, SettingsRoute.Home),
+                flow.repair(listOf(ChatsRoute.Home, SettingsRoute.Home), emptySet()),
+            )
+            assertEquals(
+                listOf<AppRoute>(OnboardingRoute.Welcome),
+                flow.repair(listOf(ChatsRoute.Home), emptySet()),
+            )
+            assertEquals(
+                listOf<AppRoute>(OnboardingRoute.Welcome, SettingsRoute.Home),
+                flow.repair(listOf(SettingsRoute.Home), emptySet()),
+            )
+        }
+
+    @Test
+    fun `B-619 a stack on the welcome, a saved server or a finished first run is left alone`() =
+        runTest {
+            val armed = FirstRunFlow(FirstRun(Prefs()), StackNavigator())
+            armed.start(active = null, saved = emptySet())
+            assertEquals(
+                emptyList(),
+                armed.repair(listOf(OnboardingRoute.Welcome, SettingsRoute.Home), emptySet()),
+            )
+            val repaired = armed.repair(listOf(ChatsRoute.Home, SettingsRoute.Home), emptySet())
+            assertEquals(emptyList(), armed.repair(repaired, emptySet()))
+            assertEquals(emptyList(), armed.repair(emptyList(), emptySet()))
+            assertEquals(emptyList(), armed.repair(listOf(ChatsRoute.Home), setOf(p1)))
+
+            val finished = FirstRunFlow(FirstRun(Prefs()), StackNavigator())
+            finished.start(active = p1, saved = setOf(p1))
+            assertEquals(emptyList(), finished.repair(listOf(ChatsRoute.Home), emptySet()))
+        }
 }

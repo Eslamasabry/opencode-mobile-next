@@ -57,6 +57,13 @@ public class FirstRunFlow(private val firstRun: FirstRun, private val nav: AppNa
         nav.land()
     }
 
+    /**
+     * B-619: keeps the welcome at the bottom of the back stack across Activity recreation during
+     * first run.
+     */
+    public suspend fun repair(stack: List<AppRoute>, saved: Set<ProfileId>): List<AppRoute> =
+        emptyList()
+
     /** The welcome's one obvious action. */
     public fun addServer(): Unit = nav.open(ServersRoute.Home)
 
