@@ -113,6 +113,12 @@ class PolishHomeTest {
         Locale.setDefault(savedLocale)
     }
 
+    /** The words and digits of [locale], as a phone set to it has them (the kit's words follow the default locale). */
+    private fun inLanguage(locale: String) {
+        Locale.setDefault(Locale.forLanguageTag(locale))
+        Numbers.pinned = if (locale == "ar") arabicSymbols else NumberSymbols.Latin
+    }
+
     private fun openCodeRow(id: String, title: String, project: String) =
         ConversationRowUi(
             key = id,
@@ -389,8 +395,7 @@ class PolishHomeTest {
     )
 
     private fun renderScene(scene: Scene) {
-        Locale.setDefault(Locale.forLanguageTag(scene.locale))
-        Numbers.pinned = if (scene.locale == "ar") arabicSymbols else NumberSymbols.Latin
+        inLanguage(scene.locale)
         val shots =
             listOf(true to "dark", false to "light").flatMap { (dark, tone) ->
                 listOf("100" to 1f, "130" to 1.3f).map { (scaleTag, fontScale) ->
@@ -399,7 +404,12 @@ class PolishHomeTest {
                 }
             }
         val firstFlicker = shots.mapNotNull { renderOne(it, scene.state, scene.notice) }.firstOrNull()
-        firstFlicker?.let { throw it }
+        // Said short, rule by rule: the test machine's log keeps only the first line of a failure.
+        firstFlicker?.let { flicker ->
+            throw AssertionError(
+                flicker.findings.joinToString(" | ") { "${it.rule} [${it.label}] at frame ${it.frame}" },
+            )
+        }
     }
 
     // ---- reading the page: ink on the picture, words of the tree ----
@@ -556,6 +566,7 @@ class PolishHomeTest {
     fun `B-558 a Home row shows a short time beside its title and still says the whole time`() {
         for (locale in listOf("en", "ar")) {
             val rtl = locale == "ar"
+            inLanguage(locale)
             kitUiTest(360, 800) {
                 showHome(briefTimesState(locale), locale, dark, fontScale = 1.3f)
                 val rows = onAllNodesWithTag("kit-recent-row", useUnmergedTree = true).fetchSemanticsNodes()
@@ -573,6 +584,7 @@ class PolishHomeTest {
 
     @Test
     fun `B-558 Arabic Home says Needs you with one word, in its link and on its row`() {
+        inLanguage("ar")
         kitUiTest(360, 800) {
             val swap = showHome(longTitlesState("ar"), "ar", dark)
             for (count in listOf(2, 1)) {
