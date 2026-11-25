@@ -49,6 +49,9 @@ public class SetupJourney(
     private var pendingResume: Pair<String, Long>? = null
     private var doneSent = false
 
+    /** The job had already ended (failed, interrupted or cancelled) when this process first saw it. */
+    private var endedOnArrival = false
+
     /** The saved state as [observe] is changing it; written back once at the end. */
     private var working: SetupJourneySaved? = null
 
@@ -86,6 +89,7 @@ public class SetupJourney(
             seen.clear()
             started.clear()
             doneSent = false
+            endedOnArrival = state in ENDED_EARLY
         }
         jobState = state
         val at = now()
@@ -142,11 +146,10 @@ public class SetupJourney(
         if (linux != null) {
             val elapsed = if (began != null) at - began else 0L
             when {
+                // A failure this process never watched is not an ending: a job read again after a restart sends
+                // none. A job watched from its start sends it once, with no time when the step was never seen running.
                 step.state == SetupStepState.Failed ->
-                    flow.linuxSetupStep(
-                        linux, ok = false, elapsedMs = elapsed, attempt = attempt,
-                        failKind = step.failKind ?: "unknown", freeGigabytes = freeGigabytes(),
-                    )
+                    if (!endedOnArrival) sendFailed(linux, began, at, attempt, step.failKind ?: "unknown")
                 step.state == SetupStepState.Skipped || began == null ->
                     flow.linuxSetupStep(linux, ok = false, elapsedMs = 0, attempt = attempt, notRun = "skipped")
                 else ->
@@ -156,6 +159,18 @@ public class SetupJourney(
             }
         }
         update(at) { it.copy(lastStep = if (step.state == SetupStepState.Failed) word else it.lastStep) }
+    }
+
+    /** A failed step with the time it ran for; one never seen running has no time to send. */
+    private fun sendFailed(linux: String, began: Long?, at: Long, attempt: Int, failKind: String) {
+        if (began == null) {
+            flow.linuxSetupStepUnmeasured(linux, attempt, failKind, freeGigabytes())
+        } else {
+            flow.linuxSetupStep(
+                linux, ok = false, elapsedMs = at - began, attempt = attempt, failKind = failKind,
+                freeGigabytes = freeGigabytes(),
+            )
+        }
     }
 
     private fun closeRunningSteps(state: SetupJobState, at: Long) {

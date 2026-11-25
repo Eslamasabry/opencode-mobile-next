@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupError
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
+import io.github.eslamasabry.oc.engine.runtime.setup.StartStepKind
 import io.github.eslamasabry.oc.core.model.PermissionReply
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -47,9 +48,23 @@ internal fun setupFailKindOf(error: SetupError?): String =
         SetupError.Interrupted -> "killed_by_system"
         is SetupError.StepTimedOut -> "timeout"
         is SetupError.Install, SetupError.PackageRepair -> "apt"
+        is SetupError.PortBusy -> "port_busy"
         SetupError.NodeCannotRun, SetupError.OpenCodeNoProgram, SetupError.OpenCodeWontRun,
-        SetupError.OpenCodeNoStart, SetupError.CannotStart, is SetupError.PortBusy,
+        SetupError.OpenCodeNoStart, SetupError.CannotStart,
         SetupError.ToolsUncheckable, SetupError.Unexpected -> "unknown"
+        is SetupError.StartStepFailed -> startFailKindOf(error.kind)
+    }
+
+/** A start that names its kind: fixed words of the closed list only, never text from the phone or server. */
+private fun startFailKindOf(kind: StartStepKind): String =
+    when (kind) {
+        StartStepKind.TimedOut -> "timeout"
+        StartStepKind.Ownership -> "permission"
+        StartStepKind.Exited -> "exited"
+        StartStepKind.Refused -> "refused"
+        StartStepKind.Password -> "password"
+        StartStepKind.Withdrawn -> "withdrawn"
+        else -> "unknown"
     }
 
 internal fun journeyJobState(state: SetupState): SetupJobState =

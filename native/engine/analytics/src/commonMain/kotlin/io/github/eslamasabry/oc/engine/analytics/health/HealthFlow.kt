@@ -163,7 +163,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 put("result", result)
                 if (attempt != null) put("attempt", HealthRanges.attemptOf(attempt))
                 if (failed && failKind != null) put("fail_kind", failKind)
-                put("ms_range", HealthRanges.setupMsOf(elapsedMs))
+                putAll(measuredRange(elapsedMs))
                 // Native steps have no exit code: leave the two out rather than send a word that means "unknown".
                 if (ok || exit != null) {
                     put("exit_kind", exitKindOf(exit, ok))
@@ -173,10 +173,35 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 if (freeGigabytes != null) put("free_space_range", HealthRanges.storageOf(freeGigabytes))
             },
         )
-        t.performanceTrace(
-            PerfSchema.linuxSetup(step),
-            elapsedMs,
-            mapOf("step" to step, "result" to if (result == "ok" || result == "fail") result else "fail"),
+        traceSetupStep(t, step, result, elapsedMs)
+    }
+
+    /** `ms_range` for a measured step; nothing for a step never seen running, which has no time to send. */
+    private fun measuredRange(elapsedMs: Long?): Map<String, String> =
+        if (elapsedMs == null) emptyMap() else mapOf("ms_range" to HealthRanges.setupMsOf(elapsedMs))
+
+    /** The step's performance trace, none for a step never seen running; a step that did not run counts as a fail. */
+    private fun traceSetupStep(t: Telemetry, step: String, result: String, elapsedMs: Long?) {
+        if (elapsedMs == null) return
+        val traced = if (result == "ok" || result == "fail") result else "fail"
+        t.performanceTrace(PerfSchema.linuxSetup(step), elapsedMs, mapOf("step" to step, "result" to traced))
+    }
+
+    /** A failed step never seen running: sent once with no ms_range and no performance trace. */
+    public fun linuxSetupStepUnmeasured(step: String, attempt: Int, failKind: String, freeGigabytes: Double?) {
+        val t = telemetry()
+        t.breadcrumb("linux.step:$step")
+        t.breadcrumb("linux.fail")
+        t.track(
+            ProductEvent.LinuxSetupStep,
+            buildMap {
+                put("step", step)
+                put("result", "fail")
+                put("attempt", HealthRanges.attemptOf(attempt))
+                put("fail_kind", failKind)
+                put("compat_mode", "none")
+                if (freeGigabytes != null) put("free_space_range", HealthRanges.storageOf(freeGigabytes))
+            },
         )
     }
 
