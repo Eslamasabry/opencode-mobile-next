@@ -244,7 +244,10 @@ private fun NeededRows(shown: AgentUpdateSheetUi) {
     }
 }
 
-/** Adds each new needed row next to its neighbour in [needed] and refreshes the rows still shown. */
+/**
+ * Adds each new needed row next to its neighbour in [needed] (a new first row goes before the first later row already
+ * seen, or at the end) and refreshes the rows still shown.
+ */
 private fun keepSeen(
     seen: MutableList<Pair<AgentNeededRowUi, AgentNeedRule>>,
     needed: List<AgentNeededRowUi>,
@@ -252,23 +255,15 @@ private fun keepSeen(
 ) {
     needed.forEachIndexed { index, row ->
         val at = seen.indexOfFirst { it.first.id == row.id }
-        if (at >= 0) {
-            seen[at] = row to why
-        } else {
-            val before = if (index > 0) seen.indexOfFirst { it.first.id == needed[index - 1].id } else -1
-            seen.add(if (before >= 0) before + 1 else nextSeen(seen, needed, index), row to why)
+        when {
+            at >= 0 -> seen[at] = row to why
+            index > 0 -> seen.add(seen.indexOfFirst { it.first.id == needed[index - 1].id } + 1, row to why)
+            else -> {
+                val later = needed.drop(1).mapTo(mutableSetOf()) { it.id }
+                seen.add(seen.indexOfFirst { it.first.id in later }.takeIf { it >= 0 } ?: seen.size, row to why)
+            }
         }
     }
-}
-
-/** Where a new first row goes: before the first later row already seen, or at the end. */
-private fun nextSeen(
-    seen: List<Pair<AgentNeededRowUi, AgentNeedRule>>,
-    needed: List<AgentNeededRowUi>,
-    index: Int,
-): Int {
-    val later = needed.drop(index + 1).mapTo(mutableSetOf()) { it.id }
-    return seen.indexOfFirst { it.first.id in later }.takeIf { it >= 0 } ?: seen.size
 }
 
 /** A part the updates need: its name, versions, size and why it is needed, with no choice. */
