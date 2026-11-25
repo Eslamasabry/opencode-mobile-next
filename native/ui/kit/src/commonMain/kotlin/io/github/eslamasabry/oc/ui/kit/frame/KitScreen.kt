@@ -638,7 +638,8 @@ public fun KitScreen(
                             ) {
                                 val glassLightBar =
                                     floatChrome &&
-                                        LocalKitStyle.current.style == Style.Glass &&
+                                        io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
+                                        io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
                                         !LocalKitColors.current.dark
                                 CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
                                     if (barFace != null) {

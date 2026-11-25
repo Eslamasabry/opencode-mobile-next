@@ -415,8 +415,8 @@ public fun KitTopBar(
                 Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).testTag("kit-top-bar-compact"),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (back) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
-                else Spacer(Modifier.width(titleStart))
+                if (back && onExit != null) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
+                else Box(Modifier.width(titleStart))
                 // Large text: the block outgrows the 48 dp row and its 4 dp step is all that is left above the words (audit
                 // 2: at 1.3x the title's first line sat 15 px under the bar's rim); keep the roomier step there.
                 Column(Modifier.weight(1f).padding(vertical = if (kitFontScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {
