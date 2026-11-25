@@ -11,6 +11,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
@@ -141,10 +142,11 @@ class PolishHomeTest {
             phase = ChatsPhase.List,
             settingsAvailable = true,
             allCount = 2,
+            onlyProject = "api",
             recent =
                 persistentListOf(
                     openCodeRow("login", "Fix the login bug", "api"),
-                    openCodeRow("notes", "Plan the release notes", "docs"),
+                    openCodeRow("notes", "Plan the release notes", "api"),
                 ),
             home =
                 ChatsHomeExtraState(
@@ -228,7 +230,8 @@ class PolishHomeTest {
         Numbers.pinned = arabicSymbols
         kitUiTest(360, 800) {
             showHome(arabicChipState(), dark = true, locale = "ar")
-            onNodeWithText("قيد العمل · ١").assertExists()
+            onNodeWithContentDescription("قيد العمل · ١").assertExists()
+            onNodeWithText("قيد العمل · ١", useUnmergedTree = true).assertExists()
         }
     }
 
