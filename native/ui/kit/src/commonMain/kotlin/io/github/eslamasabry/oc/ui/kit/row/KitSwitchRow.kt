@@ -204,6 +204,7 @@ public data class KitRisk(
  * Motion: thumb slides and track cross-fades QUICK; the risk step reveals; Off = instant
  * Replaces: KitSwitchRow, KitRisk, KitUntil (lib/ui/kit/kit_row_parts.dart)
  */
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitSwitchRow(
     title: String,
@@ -222,23 +223,12 @@ public fun KitSwitchRow(
     supportingMinLines: Int = 1,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val tokens = LocalKitTokens.current
     if (locked && lockedLabel != null) {
-        Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
-            KitRow(
-                title = title,
-                modifier = Modifier.semantics { role = Role.Switch; toggleableState = ToggleableState.On; disabled() }.testTag("kit-switch-locked"),
-                supporting = supporting,
-                supportingMaxLines = supportingMaxLines,
-                leading = leading,
-                titleMaxLines = 2, // F: lib/ui/kit/kit_row_parts.dart:425
-                trailing = KitRowTrailing.Locked(lockedLabel),
-            )
-            if (below != null) Box(Modifier.padding(horizontal = kitRowGutter())) { below() }
-        }
+        val labels = SwitchLabels(title, supporting, supportingMaxLines, supportingMinLines, below)
+        SwitchRowParts.Locked(modifier, labels, leading, lockedLabel)
         return
     }
-    val specs = KitMotion.specs
+    val tokens = LocalKitTokens.current
     val platform = LocalKitPlatform.current
     val hapticsOn = LocalKitAppearance.current.haptics
     val scope = riskSpec?.scope ?: risk
@@ -249,36 +239,115 @@ public fun KitSwitchRow(
     val step = SwitchRules.keepStep(asking, checked, scope != null)
     if (asking && !step) SideEffect { asking = false }
     val untilLabels = KitUntil.entries.associateWith { kitUntilLabel(it) }
-    val line = SwitchRules.supporting(supporting, on, enabled.reason, checked, scope, riskSpec?.current, until) { untilLabels.getValue(it) }
-    val choose: (KitUntil) -> Unit = { picked ->
+    val line =
+        SwitchRules.supporting(supporting, on, enabled.reason, checked, scope, riskSpec?.current, until) {
+            untilLabels.getValue(it)
+        }
+    val labels = SwitchLabels(title, line, supportingMaxLines, supportingMinLines, below)
+    val choose = SwitchRowParts.chooseAction(on, riskSpec, onCheckedChange) { asking = false }
+    val minHeight = SwitchRowParts.minHeightDp(line != null || below != null, tokens.rowHeightOne, tokens.rowHeightTwo)
+    val rowModifier =
+        Modifier.fillMaxWidth()
+            .heightIn(min = minHeight)
+            .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
+            .kitSelectTap(selected = checked, role = Role.Switch, enabled = enabled, haptic = null) {
+                SwitchRowParts.onTap(
+                    checked = checked,
+                    enabled = on,
+                    risky = scope != null,
+                    onFlip = {
+                        asking = false
+                        if (hapticsOn) platform.haptic(SwitchRules.haptic(!checked))
+                        onCheckedChange(!checked)
+                    },
+                    onAskRisk = { asking = !asking },
+                )
+            }
+            // With a trailing part the row ends space1 in; the part keeps space2 itself (kit_row.dart:507-512).
+            .padding(start = kitRowGutter(), end = Space.S1.dp)
+    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
+        SwitchRowParts.Body(rowModifier, leading, labels, SwitchKnob(checked, on, switchTag))
+        SwitchRowParts.RiskPanel(SwitchRiskState(scope, step, until, untilLabels, enabled), choose) { asking = false }
+    }
+    SwitchRowParts.RiskStatus(riskSpec, checked, enabled, switchTag ?: title, onCheckedChange)
+}
+
+private data class SwitchLabels(
+    val title: String,
+    val line: String?,
+    val maxLines: Int,
+    val minLines: Int,
+    val below: (@Composable () -> Unit)?,
+)
+
+private data class SwitchKnob(val checked: Boolean, val active: Boolean, val tag: String?)
+
+private data class SwitchRiskState(
+    val scope: String?,
+    val step: Boolean,
+    val until: List<KitUntil>,
+    val untilLabels: Map<KitUntil, String>,
+    val enabled: KitEnabled,
+)
+
+private object SwitchRowParts {
+    @Composable
+    fun Locked(modifier: Modifier, labels: SwitchLabels, leading: KitRowLeading?, lockedLabel: String) {
+        Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
+            KitRow(
+                title = labels.title,
+                modifier =
+                    Modifier.semantics {
+                            role = Role.Switch
+                            toggleableState = ToggleableState.On
+                            disabled()
+                        }
+                        .testTag("kit-switch-locked"),
+                supporting = labels.line,
+                supportingMaxLines = labels.maxLines,
+                leading = leading,
+                titleMaxLines = 2, // F: lib/ui/kit/kit_row_parts.dart:425
+                trailing = KitRowTrailing.Locked(lockedLabel),
+            )
+            labels.below?.let { Box(Modifier.padding(horizontal = kitRowGutter())) { it() } }
+        }
+    }
+
+    // 56 dp with one line, 64 with two (kit_row.dart:497-507); the 48 dp switch reaches into the words' room.
+    fun minHeightDp(hasSecond: Boolean, rowHeightOne: Int, rowHeightTwo: Int): Dp =
+        (if (hasSecond) rowHeightTwo else rowHeightOne).dp
+
+    fun chooseAction(
+        on: Boolean,
+        riskSpec: KitRisk?,
+        onCheckedChange: (Boolean) -> Unit,
+        onDone: () -> Unit,
+    ): (KitUntil) -> Unit = { picked ->
         // Turned unavailable while the step is open: nothing is confirmed (B-KIT-027 KITA2-9).
         if (on) {
             riskSpec?.onUntil?.invoke(picked)
             onCheckedChange(true)
-            asking = false
+            onDone()
         }
     }
-    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
-        Row(
-            Modifier.fillMaxWidth()
-                // 56 dp with one line, 64 with two (kit_row.dart:497-507); the 48 dp switch reaches into the words' room.
-                .heightIn(min = (if (line != null || below != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
-                .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
-                .kitSelectTap(selected = checked, role = Role.Switch, enabled = enabled, haptic = null) {
-                    when (SwitchRules.onTap(checked, on, false, scope != null)) {
-                        SwitchTap.Flip -> {
-                            asking = false
-                            if (hapticsOn) platform.haptic(SwitchRules.haptic(!checked))
-                            onCheckedChange(!checked)
-                        }
-                        SwitchTap.AskRisk -> asking = !asking
-                        SwitchTap.Refuse, SwitchTap.Ignore -> Unit
-                    }
-                }
-                // With a trailing part the row ends space1 in; the part keeps space2 itself (kit_row.dart:507-512).
-                .padding(start = kitRowGutter(), end = Space.S1.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+
+    fun onTap(
+        checked: Boolean,
+        enabled: Boolean,
+        risky: Boolean,
+        onFlip: () -> Unit,
+        onAskRisk: () -> Unit,
+    ) {
+        when (SwitchRules.onTap(checked, enabled, false, risky)) {
+            SwitchTap.Flip -> onFlip()
+            SwitchTap.AskRisk -> onAskRisk()
+            SwitchTap.Refuse, SwitchTap.Ignore -> Unit
+        }
+    }
+
+    @Composable
+    fun Body(modifier: Modifier, leading: KitRowLeading?, labels: SwitchLabels, knob: SwitchKnob) {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) {
             leading?.let {
                 Box(Modifier.padding(vertical = Space.S2.dp)) { RowLeadingTile(it, dim = false) }
                 Spacer(Modifier.width(Space.S3.dp))
@@ -287,56 +356,77 @@ public fun KitSwitchRow(
                 // Nothing is dimmed: a disabled row's reason is its supporting line (kit_row_parts.dart:270-271).
                 // F: lib/ui/kit/kit_row_parts.dart:544
                 KitText(
-                    title,
+                    labels.title,
                     Modifier.testTag("kit-row-title"),
                     role = TypeRole.RowTitle,
                     maxLines = kitRowTitleLines(kitFontScale(), 2),
                 )
-                line?.let {
+                labels.line?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
-                    val maxSupporting = kitRowSupportingLines(kitFontScale(), supportingMaxLines)
+                    val maxSupporting = kitRowSupportingLines(kitFontScale(), labels.maxLines)
                     KitText(
                         it,
                         Modifier.testTag("kit-row-supporting"),
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
                         maxLines = maxSupporting,
-                        minLines = supportingMinLines.coerceIn(1, maxSupporting),
+                        minLines = labels.minLines.coerceIn(1, maxSupporting),
                     )
                 }
-                below?.let {
+                labels.below?.let {
                     Spacer(Modifier.size(FlutterKitTokens.ROW_LINE_GAP.dp))
                     it()
                 }
             }
             Spacer(Modifier.width(Space.S2.dp))
-            Box(Modifier.padding(end = Space.S2.dp).then(switchTag?.let { Modifier.testTag(it) } ?: Modifier)) {
-                KitSwitchBox(checked, on)
-            }
-        }
-        if (scope != null) {
-            val reduced = specs.state.reduced
-            AnimatedVisibility(
-                visible = step,
-                enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
-                exit = if (reduced) ExitTransition.None else shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
-            ) {
-                RiskStep(scope, until, untilLabels, enabled, choose) { asking = false }
+            Box(Modifier.padding(end = Space.S2.dp).then(knob.tag?.let { Modifier.testTag(it) } ?: Modifier)) {
+                KitSwitchBox(knob.checked, knob.active)
             }
         }
     }
-    if (riskSpec != null) {
+
+    @Composable
+    fun RiskPanel(risk: SwitchRiskState, choose: (KitUntil) -> Unit, fold: () -> Unit) {
+        val scope = risk.scope ?: return
+        val specs = KitMotion.specs
+        val reduced = specs.state.reduced
+        AnimatedVisibility(
+            visible = risk.step,
+            enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
+            exit = if (reduced) ExitTransition.None else shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
+        ) {
+            RiskStep(scope, risk.until, risk.untilLabels, risk.enabled, choose, fold)
+        }
+    }
+
+    @Composable
+    fun RiskStatus(
+        riskSpec: KitRisk?,
+        checked: Boolean,
+        enabled: KitEnabled,
+        tagOrTitle: String,
+        onCheckedChange: (Boolean) -> Unit,
+    ) {
+        if (riskSpec == null) return
         val turnOff = stringResource(Res.string.kitRiskTurnOff)
         KitStatusContribution(
             if (checked) {
                 KitStatus(
                     kind = KitStatusKind.RiskySwitch,
                     message = riskSpec.onLabel,
-                    id = "risk:${switchTag ?: title}",
+                    id = "risk:$tagOrTitle",
                     icon = riskSpec.icon,
-                    action = KitLineAction(turnOff, onClick = { onCheckedChange(false) }, enabled = on, disabledReason = enabled.reason),
+                    action =
+                        KitLineAction(
+                            turnOff,
+                            onClick = { onCheckedChange(false) },
+                            enabled = enabled.isEnabled,
+                            disabledReason = enabled.reason,
+                        ),
                 )
-            } else null,
+            } else {
+                null
+            },
         )
     }
 }

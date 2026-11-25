@@ -29,7 +29,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** [KitSwitchRow.supportingMinLines] keeps a row's height steady across line counts without changing default callers. */
+/**
+ * [KitSwitchRow.supportingMinLines] keeps a row's height steady across line counts without changing default callers.
+ */
 @OptIn(ExperimentalTestApi::class)
 class KitSwitchRowMinLinesTest {
     @Composable
