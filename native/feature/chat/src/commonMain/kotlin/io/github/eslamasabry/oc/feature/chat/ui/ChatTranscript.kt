@@ -77,12 +77,20 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyAskStage
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyAskUi
+import io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuDismissal
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAskView
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyAsk
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyAskAfter
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import io.github.eslamasabry.oc.ui.kitchat.transcript.kitTranscriptItemMotion
@@ -100,9 +108,18 @@ import io.github.eslamasabry.oc.ui.words.res.chatSteerStopStep
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitSteerNote
 import io.github.eslamasabry.oc.feature.chat.presentation.SteerWaitRules
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskAction
-import io.github.eslamasabry.oc.ui.words.res.chatStarAskDismiss
-import io.github.eslamasabry.oc.ui.words.res.chatStarAskBody
-import io.github.eslamasabry.oc.ui.words.res.chatStarAskTitle
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskNo
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskQuestion
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskSorry
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskThanks
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskUseBoth
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskUseCode
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskUseEveryday
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskUseLooking
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskUseTitle
+import io.github.eslamasabry.oc.ui.words.res.firstReplyAskYes
+import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.kitTourSkip
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -366,9 +383,6 @@ internal fun failureCode(f: Failure): String =
 internal object ListKeys {
     const val LIVE: String = "live"
 
-    /** The one-time star ask, at rest after a finished reply. */
-    const val STAR_ASK: String = "star-ask"
-
     /** The room the edge dock's Undo bar takes under the newest content (first item, only while the bar shows). */
     const val DOCK_ROOM: String = "dock-room"
 
@@ -432,6 +446,7 @@ public fun ChatTranscript(
  * RowKind as contentType, kit parts only. The list follows when the newest key changes and the
  * person has not scrolled away (§7.3, in the kit).
  */
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun ChatTranscriptList(
     rows: ImmutableList<TranscriptRow>,
@@ -474,10 +489,8 @@ internal fun ChatTranscriptList(
     folds: TranscriptFolds = rememberTranscriptFolds(),
     /** S28 story 8: the handoff line ("Continued from …"), drawn above the oldest message; null = none. */
     topLine: (@Composable () -> Unit)? = null,
-    /** The one-time GitHub star ask: its own item at rest, after a finished reply (never while a turn runs). */
-    starAsk: Boolean = false,
-    onStarTap: () -> Unit = {},
-    onStarDismiss: () -> Unit = {},
+    /** The one-time first-reply ask riding the newest finished reply's footer; null when not shown. */
+    replyAsk: ReplyAskHost? = null,
     /** Extra room (px) under the newest content: the edge dock's Undo bar while it shows. */
     extraBottomPx: Int = 0,
     /** Earlier messages not loaded yet: "Show earlier messages" is the transcript's first row; null = all loaded. */
@@ -605,23 +618,6 @@ internal fun ChatTranscriptList(
                 Spacer(Modifier.height(with(LocalDensity.current) { extraBottomPx.toDp() }))
             }
         }
-        // The one-time star ask: at rest only, after a finished reply; never while a turn runs.
-        if (live == null && starAsk) {
-            item(key = ListKeys.STAR_ASK, contentType = "star-ask") {
-                Box(kitTranscriptItemMotion().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp)) {
-                    KitLiveAskView(
-                        KitLiveAsk(
-                            stringResource(Res.string.chatStarAskTitle),
-                            stringResource(Res.string.chatStarAskBody),
-                            stringResource(Res.string.chatStarAskAction),
-                            onStarTap,
-                            stringResource(Res.string.chatStarAskDismiss),
-                            onStarDismiss,
-                        )
-                    )
-                }
-            }
-        }
         if (liveRow && live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
               Box(kitTranscriptItemMotion()) {
@@ -706,8 +702,6 @@ internal fun ChatTranscriptList(
                             if (live.canUndoStopAfterStep) onUndoStopAfterStep
                             else if (retryWayOut) reply?.onChooseModel
                             else onStopLive,
-                        // The star ask never rides a running turn: it has its own item at rest (ListKeys.STAR_ASK).
-                        ask = null,
                         // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
                         // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
                         onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming,
@@ -811,7 +805,7 @@ internal fun ChatTranscriptList(
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }
                   }
-              CompositionLocalProvider(LocalKitFindMarks provides marks) {
+              CompositionLocalProvider(LocalKitFindMarks provides marks, LocalReplyAsk provides replyAsk) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
@@ -1754,10 +1748,15 @@ private fun ChatRow(
                             }
                             // D1 (owner 2026-11-14): every finished reply ends with its quiet line: clock time · how
                             // long · model (only when not the one in use now) · tokens · cost, each only when known.
-                            facts.reading.metadata[row.turnId]
-                                ?.let { replyFooterWords(it) }
-                                ?.takeIf { it.isNotEmpty() }
-                                ?.let { KitReplyMeta(it) }
+                            val askHost = LocalReplyAsk.current?.takeIf { it.ask.turnId == row.turnId }
+                            if (askHost != null) {
+                                ReplyFooterAsk(askHost.ask, askHost.actions)
+                            } else {
+                                facts.reading.metadata[row.turnId]
+                                    ?.let { replyFooterWords(it) }
+                                    ?.takeIf { it.isNotEmpty() }
+                                    ?.let { KitReplyMeta(it) }
+                            }
                         }
                     }
                 }
@@ -1767,6 +1766,78 @@ private fun ChatRow(
                 if (result != null && folds != null && facts.work[row.turnId] == null)
                     TurnResultLine(row.turnId, result, folds)
             }
+    }
+}
+
+@Immutable
+internal data class ReplyAskHost(
+    val ask: ReplyAskUi,
+    val actions: ChatActions,
+)
+
+private val LocalReplyAsk = compositionLocalOf<ReplyAskHost?> { null }
+
+@Composable
+private fun ReplyFooterAsk(ask: ReplyAskUi, actions: ChatActions) {
+    when (ask.stage) {
+        ReplyAskStage.Ask ->
+            KitReplyAsk(
+                question = stringResource(Res.string.firstReplyAskQuestion),
+                yes = stringResource(Res.string.firstReplyAskYes),
+                no = stringResource(Res.string.firstReplyAskNo),
+                skip = stringResource(Res.string.kitTourSkip),
+                onYes = actions::replyAskYes,
+                onNo = actions::replyAskNo,
+                onSkip = actions::replyAskSkip,
+            )
+        ReplyAskStage.Thanks, ReplyAskStage.Sorry -> ReplyFooterAskAfter(ask, actions)
+    }
+}
+
+@Composable
+private fun ReplyFooterAskAfter(ask: ReplyAskUi, actions: ChatActions) {
+    val isThanks = ask.stage == ReplyAskStage.Thanks
+    val useTitle = stringResource(Res.string.firstReplyAskUseTitle)
+    val useGroup = remember(useTitle) { KitMenuGroup("reply-ask-use", heading = useTitle) }
+    val items =
+        listOf(
+            KitMenuItem(
+                label = stringResource(Res.string.firstReplyAskUseEveryday),
+                onSelect = { actions.replyAskUse(ReplyAskUse.Everyday) },
+                group = useGroup,
+                dismissal = KitMenuDismissal.ByAction,
+            ),
+            KitMenuItem(
+                label = stringResource(Res.string.firstReplyAskUseCode),
+                onSelect = { actions.replyAskUse(ReplyAskUse.Code) },
+                group = useGroup,
+                dismissal = KitMenuDismissal.ByAction,
+            ),
+            KitMenuItem(
+                label = stringResource(Res.string.firstReplyAskUseBoth),
+                onSelect = { actions.replyAskUse(ReplyAskUse.Both) },
+                group = useGroup,
+                dismissal = KitMenuDismissal.ByAction,
+            ),
+            KitMenuItem(
+                label = stringResource(Res.string.firstReplyAskUseLooking),
+                onSelect = { actions.replyAskUse(ReplyAskUse.Looking) },
+                group = useGroup,
+                dismissal = KitMenuDismissal.ByAction,
+            ),
+        )
+    KitMenu(
+        expanded = ask.menu,
+        items = items,
+        onDismissRequest = actions::replyAskMenuClosed,
+        title = useTitle,
+    ) {
+        KitReplyAskAfter(
+            note = stringResource(if (isThanks) Res.string.firstReplyAskThanks else Res.string.firstReplyAskSorry),
+            action = stringResource(if (isThanks) Res.string.chatStarAskAction else Res.string.kitReportProblem),
+            onAction = if (isThanks) actions::replyAskStar else actions::replyAskReport,
+            star = isThanks,
+        )
     }
 }
 

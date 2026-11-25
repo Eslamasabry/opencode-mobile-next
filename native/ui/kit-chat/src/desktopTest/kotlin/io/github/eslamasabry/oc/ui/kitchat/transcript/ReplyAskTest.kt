@@ -31,13 +31,17 @@ class ReplyAskTest {
     private fun near(expected: Dp, actual: Dp, what: String) =
         assertTrue(abs(expected.value - actual.value) <= 0.51f, "$what: expected $expected, was $actual")
 
+    private class Taps(
+        val onYes: () -> Unit = {},
+        val onNo: () -> Unit = {},
+        val onSkip: () -> Unit = {},
+    )
+
     private fun ComposeUiTest.showFooter(
         rtl: Boolean = false,
         fontScale: Float? = null,
         showAsk: Boolean = true,
-        onYes: () -> Unit = {},
-        onNo: () -> Unit = {},
-        onSkip: () -> Unit = {},
+        taps: Taps = Taps(),
     ) = setContent {
         ChatTestTheme(localeTag = if (rtl) "ar" else "en", fontScale = fontScale) {
             val dir = if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
@@ -56,9 +60,9 @@ class ReplyAskTest {
                                 yes = "Yes",
                                 no = "No",
                                 skip = "Skip",
-                                onYes = onYes,
-                                onNo = onNo,
-                                onSkip = onSkip,
+                                onYes = taps.onYes,
+                                onNo = taps.onNo,
+                                onSkip = taps.onSkip,
                             )
                         } else {
                             KitReplyMeta("7:01 PM · 12s")
@@ -93,10 +97,10 @@ class ReplyAskTest {
             near(metaHeight, askHeight, "footer height matches time words (meta=$metaHeight ask=$askHeight)")
             near(metaCopyLeft, copy.left, "Copy stays in the same place")
             near(metaMoreLeft, more.left, "More stays in the same place")
-            assertTrue(
-                skip.right <= copy.left + 0.5.dp,
-                "ask fits before Copy at 360 dp (ask=${ask.right - ask.left}, skipRight=${skip.right}, copyLeft=${copy.left})",
-            )
+            val widthMsg =
+                "ask fits before Copy at 360 dp (ask=${ask.right - ask.left}, " +
+                    "skipRight=${skip.right}, copyLeft=${copy.left})"
+            assertTrue(skip.right <= copy.left + 0.5.dp, widthMsg)
             near(48.dp, ask.bottom - ask.top, "ask stays on one 48 dp line")
         }
     }
@@ -106,7 +110,7 @@ class ReplyAskTest {
         var yes = 0
         var no = 0
         var skip = 0
-        showFooter(onYes = { yes++ }, onNo = { no++ }, onSkip = { skip++ })
+        showFooter(taps = Taps(onYes = { yes++ }, onNo = { no++ }, onSkip = { skip++ }))
         for (tag in listOf(REPLY_ASK_YES_TAG, REPLY_ASK_NO_TAG, REPLY_ASK_SKIP_TAG)) {
             val b = onNodeWithTag(tag).getBoundsInRoot()
             assertTrue(b.bottom - b.top >= 47.5.dp, "$tag must be at least 48 dp tall (was ${b.bottom - b.top})")

@@ -49,9 +49,14 @@ public object StarPromptTurn {
      * The turn that just ended was a good one: its newest reply footer is neither failed nor stopped, and it belongs
      * to the newest prompt. [rows] are newest first.
      */
-    public fun succeeded(rows: List<TranscriptRow>): Boolean {
-        val prompt = rows.firstOrNull { it is PromptRow } ?: return false
-        val footer = rows.firstOrNull { it is FooterRow } as? FooterRow ?: return false
-        return footer.turnId == prompt.turnId && !footer.failed && !footer.stopped
+    public fun succeededTurnId(rows: List<TranscriptRow>): String? {
+        val prompt = rows.firstOrNull { it is PromptRow }
+        val footer = rows.firstOrNull { it is FooterRow } as? FooterRow
+        val good =
+            prompt != null && footer != null &&
+                footer.turnId == prompt.turnId && !footer.failed && !footer.stopped
+        return if (good) footer.turnId else null
     }
+
+    public fun succeeded(rows: List<TranscriptRow>): Boolean = succeededTurnId(rows) != null
 }
