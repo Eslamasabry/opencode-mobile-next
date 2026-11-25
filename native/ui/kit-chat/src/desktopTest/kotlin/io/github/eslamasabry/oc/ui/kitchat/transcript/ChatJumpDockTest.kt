@@ -118,6 +118,8 @@ class ChatJumpDockTest {
         val listLive: Boolean = false,
         /** A tall item sits under that line, so the line rests above the row's clear band: on screen. */
         val below: Boolean = false,
+        /** A Stop action sits under the live words, inside the same LIVE item. */
+        val action: Boolean = false,
     )
 
     private val rows =
@@ -197,7 +199,16 @@ class ChatJumpDockTest {
             if (scene.listLive) {
                 item(key = LIVE, contentType = "live") {
                     Box(kitTranscriptItemMotion()) {
-                        KitTurnLiveLine(DOCK_LIVE.words, Modifier.padding(horizontal = 16.dp).testTag("list-live"))
+                        if (scene.action) {
+                            KitTurnLiveLine(
+                                DOCK_LIVE.words,
+                                Modifier.padding(horizontal = 16.dp).testTag("list-live"),
+                                actionLabel = "Stop",
+                                onAction = {},
+                            )
+                        } else {
+                            KitTurnLiveLine(DOCK_LIVE.words, Modifier.padding(horizontal = 16.dp).testTag("list-live"))
+                        }
                     }
                 }
             }
@@ -482,6 +493,27 @@ class ChatJumpDockTest {
         val onScreen = Scene(live = true, listLive = true, below = true)
         for (scene in listOf(cleared, onScreen)) run(scene) { walkOneLiveLine(scene) }
     }
+
+    @Test
+    fun `B-CHAT-546 with a Stop under the live words, one readable live line in every frame`() =
+        run(Scene(live = true, listLive = true, action = true)) {
+            mainClock.autoAdvance = false
+            runOnUiThread { list.following = false }
+            val ownWords = hasText(DOCK_LIVE.words) and hasAnyAncestor(hasTestTag("list-live"))
+            repeat(30) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertTrue(rowShown(), "frame $frame: the row is not in the tree")
+                val row = bounds("jump-to-latest")
+                val carried = onAllNodesWithTag("transcript-dock-live", useUnmergedTree = true).fetchSemanticsNodes()
+                val wordsBottom = onNode(ownWords, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.bottom
+                val readableOwn = wordsBottom <= row.top - DOCK_CLEAR_FADE_DP
+                assertTrue(
+                    carried.isNotEmpty() || readableOwn,
+                    "frame $frame: neither docked live nor readable list live " +
+                        "(wordsBottom=$wordsBottom, fadeTop=${row.top - DOCK_CLEAR_FADE_DP})",
+                )
+            }
+        }
 
     /** The lead's rule (2026-11-25): with room under the live line the row shows just the jump, from frame one. */
     private fun ComposeUiTest.walkOneLiveLine(scene: Scene) {
