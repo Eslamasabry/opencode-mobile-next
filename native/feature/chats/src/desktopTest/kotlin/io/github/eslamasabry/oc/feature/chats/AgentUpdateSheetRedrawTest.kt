@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.util.Locale
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
@@ -198,6 +199,20 @@ class AgentUpdateSheetRedrawTest {
                     assertFalse(layout.hasVisualOverflow, "visual overflow on: $label")
                 }
             }
+        }
+
+    @Test
+    fun `B-UPD-012 turning Codex off at text 1_3 keeps its row height and moves nothing`() =
+        runSheet(redrawFiveOffer(), fontScale = 1.3f) {
+            val codex = onNode(isToggleable() and hasText("Codex", substring = true))
+            val before = codex.fetchSemanticsNode().size.height
+            codex.performScrollTo().performClick()
+            waitForIdle()
+            assertEquals(before, codex.fetchSemanticsNode().size.height, "Codex row height changed when turned off")
+            onNodeWithText("Update 4 agents").assertExists()
+            codex.performClick()
+            waitForIdle()
+            assertEquals(before, codex.fetchSemanticsNode().size.height, "Codex row height changed when turned on")
         }
 
     private companion object {
