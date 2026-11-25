@@ -108,10 +108,11 @@ class E20S30JumpPillTest {
             val veil = veilTop()
             val row = onNodeWithTag("jump-to-latest").getBoundsInRoot()
             // Full width and one target tall (it used to be a 32 dp pill, centred).
-            assertEquals(412.dp, row.width, "the row's width")
-            assertEquals(48.dp, row.height, "the row's height")
+            assertEquals(412.dp, row.right - row.left, "the row's width")
+            assertEquals(48.dp, row.bottom - row.top, "the row's height")
             // The list's own 16 dp padding and the chrome's 8 dp lead stand between the row and the composer's room.
-            assertTrue(abs((veil - row.bottom - 24.dp).value) <= 1f, "gap ${veil - row.bottom}, veil at $veil")
+            val gap = veil - row.bottom
+            assertTrue(abs((gap - 24.dp).value) <= 1f, "gap $gap, veil at $veil")
             // 2026-11-14: a page that records its body ends the list itself above the row (kitScreenListEdges), so no
             // band of ground is laid there.
             onNodeWithTag("transcript-jump-fade").assertDoesNotExist()

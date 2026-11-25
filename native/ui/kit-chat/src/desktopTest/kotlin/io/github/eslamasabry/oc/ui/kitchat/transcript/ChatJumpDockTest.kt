@@ -308,13 +308,15 @@ class ChatJumpDockTest {
         run(Scene()) {
             mainClock.autoAdvance = false
             // The finger moves toward the older rows (they come down from the top) and stays down.
+            var slop = Float.NaN
             onNodeWithTag("transcript-list").performTouchInput {
+                slop = viewConfiguration.touchSlop
                 down(center)
                 moveBy(Offset(0f, 2.dp.toPx()))
             }
             mainClock.advanceTimeByFrame()
             val why =
-                "following = ${list.following}, the touch slop is ${viewConfiguration.touchSlop} px, " +
+                "following = ${list.following}, the touch slop is $slop px, " +
                     "the list is at ${list.lazy.firstVisibleItemIndex}/${list.lazy.firstVisibleItemScrollOffset}"
             assertTrue(rowShown(), "the row is not in the tree one frame into the drag: $why")
         }

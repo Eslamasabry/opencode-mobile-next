@@ -449,7 +449,7 @@ class ChatWordsGlassTest {
      * of the box.
      */
     @Test
-    fun `B-CHAT-COL-03 reading history the phrase row folds away and the docked row shows; newest: chips return`() {
+    fun `B-CHAT-COL-03 reading history the phrase row folds and the docked row shows, at the newest chips return`() {
         val away = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
         println("away: chips ${away.chipRows} joined ${away.joined} row ${away.pill} box ${away.box}")
         assertEquals(0, away.chipRows, "no phrase row is laid out while reading history")
