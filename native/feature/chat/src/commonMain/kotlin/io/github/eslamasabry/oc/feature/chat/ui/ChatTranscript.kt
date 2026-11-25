@@ -549,6 +549,11 @@ internal fun ChatTranscriptList(
     var stepsShown by rememberSaveable { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    val liveTurn = if (live != null) unique.firstOrNull()?.turnId else null
+    val liveWorkId =
+        liveTurn?.let { id ->
+            facts.reading.stretches[id]?.lastOrNull()?.key?.removePrefix("work:") ?: id
+        }
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
         remember(unique, pending, liveRow, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
@@ -685,11 +690,14 @@ internal fun ChatTranscriptList(
                             modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
+                    val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
                     if (line != null) KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
                         spoken = line.spoken,
-                        step = line.step,
+                        // On the step rail, a running command's own opened box already shows its live output; showing
+                        // it a second time here resizes the live line when each command starts and ends.
+                        step = if (onRail && notice == null) null else line.step,
                         // D1: the steps are always in view above, so the live line opens nothing.
                         onTap = null,
                         tapLabel =
@@ -710,9 +718,9 @@ internal fun ChatTranscriptList(
                             else onStopLive,
                         // The star ask never rides a running turn: it has its own item at rest (ListKeys.STAR_ASK).
                         ask = null,
-                        // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
-                        // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
-                        onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming,
+                        // D1: under a running turn's steps, the line stays on their rail (including between steps) so
+                        // its height and alignment never jump while the turn still runs.
+                        onRail = onRail,
                     )
                 } else if (
                     RunTailRules.liveLineShown(
@@ -818,7 +826,7 @@ internal fun ChatTranscriptList(
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }
                   }
-              CompositionLocalProvider(LocalKitFindMarks provides marks) {
+              CompositionLocalProvider(LocalKitFindMarks provides marks, LocalLiveTurnId provides liveWorkId) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
