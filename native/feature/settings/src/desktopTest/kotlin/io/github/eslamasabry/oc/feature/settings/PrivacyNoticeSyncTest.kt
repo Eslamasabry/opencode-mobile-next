@@ -613,81 +613,6 @@ class PrivacyNoticeSyncTest {
         }
     }
 
-    /** Owner-approved English wording (2026-11-26) required verbatim in What we collect and the bundled policy. */
-    private val approvedEndingLine =
-        "plus how your first message ended (a reply, a stop, an error kind or a refused send), " +
-            "as kind words only, never its text. Each step is counted once per install."
-
-    /** Localized plain-words phrase for how the first message ended, checked in every offered language. */
-    private val firstMessageEnding = mapOf(
-        "en" to Regex("(?i)how your first message ended"),
-        "ar" to Regex("كيف انتهت رسالتك الأولى"),
-        "es" to Regex("(?i)cómo terminó tu primer mensaje"),
-        "fr" to Regex("(?i)comment s[’']est terminé votre premier message"),
-        "id" to Regex("(?i)bagaimana pesan pertama Anda berakhir"),
-        "it" to Regex("(?i)come si è concluso il tuo primo messaggio"),
-        "ja" to Regex("最初のメッセージがどう終わったか"),
-        "pt" to Regex("(?i)como sua primeira mensagem terminou"),
-        "ru" to Regex("(?i)чем закончилось ваше первое сообщение"),
-        "vi" to Regex("(?i)cách tin nhắn đầu tiên của bạn kết thúc"),
-        "zh" to Regex("你的第一条消息如何结束"),
-    )
-
-    private fun balancedEventEntry(text: String, event: String): String? {
-        val pattern = """(?<![A-Za-z0-9_])${Regex.escape(event)}(?![A-Za-z0-9_])\s*[(\uFF08]"""
-        val open = Regex(pattern).find(text) ?: return null
-        var depth = 0
-        for (i in open.range.last until text.length) {
-            when (text[i]) {
-                '(', '\uFF08' -> depth++
-                ')', '\uFF09' -> {
-                    depth--
-                    if (depth == 0) return text.substring(open.range.first, i + 1)
-                }
-            }
-        }
-        return null
-    }
-
-    private fun policyEventScope(policy: String, event: String): String {
-        val parts = mutableListOf<String>()
-        balancedEventEntry(policy, event)?.let { parts += it }
-        for (para in policy.split("\\n\\n")) {
-            if (!para.startsWith("- ") && has(para, event)) parts += para
-        }
-        return parts.joinToString("\n")
-    }
-
-    private fun collectNoticeViolation(
-        where: String,
-        tag: String,
-        text: String,
-        ending: Regex,
-    ): String? {
-        val parts = mutableListOf<String>()
-        if (tag == "en" && approvedEndingLine !in text) parts += "missing approved ending line"
-        if (!ending.containsMatchIn(text)) parts += "missing first-message ending"
-        val rawTokens = listOf("first_prompt_ended", "after_range", "fail_kind").filter { has(text, it) }
-        if (rawTokens.isNotEmpty()) parts += "raw wire names in plain copy $rawTokens"
-        return parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
-    }
-
-    private fun policyJourneyViolation(
-        where: String,
-        tag: String,
-        entry: String?,
-        fields: Set<String>,
-        ending: Regex,
-    ): String? {
-        if (entry == null) return "$where: missing journey_milestone entry"
-        val missingFields = fields.filterNot { has(entry, it) }
-        val parts = mutableListOf<String>()
-        if (missingFields.isNotEmpty()) parts += "missing fields $missingFields"
-        if (tag == "en" && approvedEndingLine !in entry) parts += "missing approved ending line"
-        if (!ending.containsMatchIn(entry)) parts += "missing first-message ending"
-        return parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
-    }
-
     private fun privacyMdFieldViolations(): List<String> {
         val md = File(repo, "PRIVACY.md").readText()
         val telemetry = section(
@@ -740,4 +665,82 @@ class PrivacyNoticeSyncTest {
         assertTrue(found.any { "journey_milestone" in it && "outcome" in it }, found.toString())
         assertTrue(found.any { "journey_milestone" in it && "fail_kind" in it }, found.toString())
     }
+}
+
+/** Owner-approved English wording (2026-11-26) required verbatim in What we collect and the bundled policy. */
+private const val APPROVED_ENDING_LINE =
+    "plus how your first message ended (a reply, a stop, an error kind or a refused send), " +
+        "as kind words only, never its text. Each step is counted once per install."
+
+/** Localized plain-words phrase for how the first message ended, checked in every offered language. */
+private val firstMessageEnding = mapOf(
+    "en" to Regex("(?i)how your first message ended"),
+    "ar" to Regex("كيف انتهت رسالتك الأولى"),
+    "es" to Regex("(?i)cómo terminó tu primer mensaje"),
+    "fr" to Regex("(?i)comment s[’']est terminé votre premier message"),
+    "id" to Regex("(?i)bagaimana pesan pertama Anda berakhir"),
+    "it" to Regex("(?i)come si è concluso il tuo primo messaggio"),
+    "ja" to Regex("最初のメッセージがどう終わったか"),
+    "pt" to Regex("(?i)como sua primeira mensagem terminou"),
+    "ru" to Regex("(?i)чем закончилось ваше первое сообщение"),
+    "vi" to Regex("(?i)cách tin nhắn đầu tiên của bạn kết thúc"),
+    "zh" to Regex("你的第一条消息如何结束"),
+)
+
+private fun hasWord(text: String, word: String): Boolean =
+    Regex("""(?<![A-Za-z0-9_])${Regex.escape(word)}(?![A-Za-z0-9_])""").containsMatchIn(text)
+
+private fun balancedEventEntry(text: String, event: String): String? {
+    val pattern = """(?<![A-Za-z0-9_])${Regex.escape(event)}(?![A-Za-z0-9_])\s*[(\uFF08]"""
+    val open = Regex(pattern).find(text) ?: return null
+    var depth = 0
+    var end = -1
+    for (i in open.range.last until text.length) {
+        val c = text[i]
+        if (c == '(' || c == '\uFF08') depth++ else if (c == ')' || c == '\uFF09') depth--
+        if (depth == 0) {
+            end = i
+            break
+        }
+    }
+    return if (end >= 0) text.substring(open.range.first, end + 1) else null
+}
+
+private fun policyEventScope(policy: String, event: String): String {
+    val parts = mutableListOf<String>()
+    balancedEventEntry(policy, event)?.let { parts += it }
+    for (para in policy.split("\\n\\n")) {
+        if (!para.startsWith("- ") && hasWord(para, event)) parts += para
+    }
+    return parts.joinToString("\n")
+}
+
+private fun collectNoticeViolation(
+    where: String,
+    tag: String,
+    text: String,
+    ending: Regex,
+): String? {
+    val parts = mutableListOf<String>()
+    if (tag == "en" && APPROVED_ENDING_LINE !in text) parts += "missing approved ending line"
+    if (!ending.containsMatchIn(text)) parts += "missing first-message ending"
+    val rawTokens = listOf("first_prompt_ended", "after_range", "fail_kind").filter { hasWord(text, it) }
+    if (rawTokens.isNotEmpty()) parts += "raw wire names in plain copy $rawTokens"
+    return parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
+}
+
+private fun policyJourneyViolation(
+    where: String,
+    tag: String,
+    entry: String?,
+    fields: Set<String>,
+    ending: Regex,
+): String? {
+    if (entry == null) return "$where: missing journey_milestone entry"
+    val missingFields = fields.filterNot { hasWord(entry, it) }
+    val parts = mutableListOf<String>()
+    if (missingFields.isNotEmpty()) parts += "missing fields $missingFields"
+    if (tag == "en" && APPROVED_ENDING_LINE !in entry) parts += "missing approved ending line"
+    if (!ending.containsMatchIn(entry)) parts += "missing first-message ending"
+    return parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
 }
