@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,6 +113,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -123,6 +125,7 @@ import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFile
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFileStatus
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffModel
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffRow
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffOptions
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
@@ -131,6 +134,7 @@ import io.github.eslamasabry.oc.ui.words.res.defaultReviewScopeNotice
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDiffBinary
+import io.github.eslamasabry.oc.ui.words.res.kitDiffFiles
 import io.github.eslamasabry.oc.ui.words.res.kitDiffFoldBetween
 import io.github.eslamasabry.oc.ui.words.res.kitDiffLines
 import io.github.eslamasabry.oc.ui.words.res.kitDiffLoadFailed
@@ -242,15 +246,18 @@ private fun TopBar(title: String, onBack: () -> Unit) {
 
 /** The page body: a scrolling column on the reading rails. */
 @Composable
-private fun Page(content: @Composable () -> Unit) {
-    Column(
-        Modifier.fillMaxSize()
-            .verticalScroll(kitPageScrollState())
-            .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
-    ) {
-        content()
+private fun Page(rail: Boolean = false, content: @Composable () -> Unit) {
+    val body: @Composable () -> Unit = {
+        Column(
+            Modifier.fillMaxSize()
+                .verticalScroll(kitPageScrollState())
+                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+        ) {
+            content()
+        }
     }
+    if (rail) CompositionLocalProvider(LocalKitOnRail provides true) { body() } else body()
 }
 
 @Composable
@@ -321,48 +328,54 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
         bottom =
             if (state.load == ReviewLoad.Ready && state.files.isNotEmpty()) {
                 {
+                    val done = KitAction(stringResource(Res.string.reviewDone), actions::keepAll)
+                    val undo =
+                        when (state.undoAll) {
+                            UndoAllUi.Offered ->
+                                KitAction(
+                                    stringResource(Res.string.reviewUndoAll),
+                                    actions::undoAll,
+                                    enabled =
+                                        if (state.busy) KitEnabled.Disabled(busyReason)
+                                        else KitEnabled.Enabled,
+                                    working = state.working,
+                                )
+                            UndoAllUi.Waiting ->
+                                KitAction(
+                                    stringResource(Res.string.reviewRevertScreenTitle),
+                                    actions::openStaged,
+                                )
+                            else -> null
+                        }
+                    val sendBack =
+                        if (state.canSendBack) {
+                            KitAction(
+                                stringResource(Res.string.reviewSendBackWithNote),
+                                actions::sendBack,
+                            )
+                        } else null
+                    val sendComments =
+                        if (state.drafts > 0) {
+                            KitAction(
+                                pluralStringResource(
+                                    Res.plurals.reviewSendComments,
+                                    state.drafts,
+                                    state.drafts,
+                                ),
+                                actions::sendComments,
+                                working = state.sendingComments,
+                            )
+                        } else null
                     KitActionBlock(
                         modifier =
                             Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        primary =
-                            KitAction(stringResource(Res.string.reviewDone), actions::keepAll),
-                        secondary =
-                            when (state.undoAll) {
-                                UndoAllUi.Offered ->
-                                    KitAction(
-                                        stringResource(Res.string.reviewUndoAll),
-                                        actions::undoAll,
-                                        enabled =
-                                            if (state.busy) KitEnabled.Disabled(busyReason)
-                                            else KitEnabled.Enabled,
-                                        working = state.working,
-                                    )
-                                UndoAllUi.Waiting ->
-                                    KitAction(
-                                        stringResource(Res.string.reviewRevertScreenTitle),
-                                        actions::openStaged,
-                                    )
-                                else -> null
-                            },
+                        primary = sendComments ?: done,
+                        secondary = if (sendComments != null) done else undo,
                         // Flutter: "Send back" is a note in the chat's box, offered beside Looks
                         // good / Undo all.
                         tertiary =
-                            buildList {
-                                if (state.drafts > 0)
-                                    add(
-                                        KitAction(
-                                            pluralStringResource(
-                                                Res.plurals.reviewSendComments,
-                                                state.drafts,
-                                                state.drafts,
-                                            ),
-                                            actions::sendComments,
-                                            working = state.sendingComments,
-                                        )
-                                    )
-                                if (state.canSendBack)
-                                    add(KitAction(stringResource(Res.string.reviewSendBackWithNote), actions::sendBack))
-                            },
+                            if (sendComments != null) listOfNotNull(undo, sendBack)
+                            else listOfNotNull(sendBack),
                     )
                 }
             } else null,
@@ -384,7 +397,7 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                     if (state.canPickScope) {
                         // An empty view keeps its picker, so another view is one tap away (Flutter keeps it in the
                         // header), and says what this view covers.
-                        Page {
+                        Page(rail = true) {
                             ScopePicker(state, actions)
                             KitText(
                                 stringResource(scopeHint(state.scope)),
@@ -442,7 +455,7 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                             body = stringResource(Res.string.reviewNoChangesBody),
                         )
                 } else {
-                    Page {
+                    Page(rail = true) {
                         val sum = lines(state.added, state.removed)
                         if (sum != null) {
                             KitText(
@@ -615,7 +628,7 @@ private fun Guide(guide: ReviewGuide, files: List<ChangeRowUi>, actions: Changes
             KitExpandRow(
                 title = stringResource(Res.string.reviewGuideAlsoChanged),
                 expanded = open,
-                supporting = also.size.toString(),
+                supporting = pluralStringResource(Res.plurals.kitDiffFiles, also.size, also.size),
                 onExpandedChange = { open = it },
             ) {
                 KitRowGroup { also.forEach { row -> ChangeRow(row, actions) } }
@@ -827,9 +840,6 @@ private fun DiffBody(diff: FileDiff, fullContext: Boolean, state: FileDiffUi, ac
             .padding(vertical = Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {
-        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-            KitText(diff.file, role = TypeRole.Body, tone = TextTone.Secondary, maxLines = 2)
-        }
         state.fileNotice?.let { notice ->
             when (notice) {
                 FileNotice.Added ->
@@ -884,7 +894,6 @@ private fun Listing(file: DiffFile, onComment: ((String) -> Unit)?) {
     }
     KitDiffView(
         file,
-        maxLines = MAX_DIFF_LINES,
         hunkLabel = { oldStart, oldEnd, newStart, newEnd ->
             // The new side, or the old side when the hunk only removes lines
             // (kit_diff_rows.dart:67-76).
@@ -893,8 +902,12 @@ private fun Listing(file: DiffFile, onComment: ((String) -> Unit)?) {
             linesWord.replace("%1\$s", from.toString()).replace("%2\$s", to.toString())
         },
         gapLabel = { hidden -> folds[hidden] ?: "… $hidden" },
+        options = KitDiffOptions(
+            maxLines = MAX_DIFF_LINES,
+            onComment = onComment,
+            showName = false,
+        ),
         modifier = Modifier.fillMaxWidth().testTag("review-diff"),
-        onComment = onComment,
     )
     if (rows.cut) {
         Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
@@ -913,21 +926,23 @@ private fun Listing(file: DiffFile, onComment: ((String) -> Unit)?) {
 /** The file's comments under its diff: each line's note with where it stands (B-156). */
 @Composable
 private fun Comments(state: FileDiffUi, actions: FileDiffActions, unplaced: Boolean) {
-    Column(
-        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("review-comments"),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-    ) {
-        if (unplaced) KitNotice(stringResource(Res.string.reviewCommentNotPlaced))
-        state.sendFailure?.let { FailedNotice(stringResource(Res.string.reviewCommentsSendFailed), it) }
-        if (state.comments.isEmpty()) {
-            KitText(stringResource(Res.string.reviewCommentHint), role = TypeRole.Body, tone = TextTone.Secondary)
-        } else {
-            val removeLabel = stringResource(Res.string.reviewCommentRemove)
-            KitRowGroup(label = stringResource(Res.string.reviewCommentsLabel)) {
-                state.comments.forEach { c ->
-                    // A new comment, and each step to Fixed, arrives with the kit's entrance
-                    // (none under reduced motion).
-                    KitEntrance(key = c.status) { CommentRow(c, removeLabel) { actions.removeComment(c.id) } }
+    CompositionLocalProvider(LocalKitOnRail provides true) {
+        Column(
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("review-comments"),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
+            if (unplaced) KitNotice(stringResource(Res.string.reviewCommentNotPlaced))
+            state.sendFailure?.let { FailedNotice(stringResource(Res.string.reviewCommentsSendFailed), it) }
+            if (state.comments.isEmpty()) {
+                KitText(stringResource(Res.string.reviewCommentHint), role = TypeRole.Body, tone = TextTone.Secondary)
+            } else {
+                val removeLabel = stringResource(Res.string.reviewCommentRemove)
+                KitRowGroup(label = stringResource(Res.string.reviewCommentsLabel)) {
+                    state.comments.forEach { c ->
+                        // A new comment, and each step to Fixed, arrives with the kit's entrance
+                        // (none under reduced motion).
+                        KitEntrance(key = c.status) { CommentRow(c, removeLabel) { actions.removeComment(c.id) } }
+                    }
                 }
             }
         }
@@ -958,7 +973,7 @@ private fun CommentRow(comment: LineComment, removeLabel: String, onRemove: () -
         title = title,
         supporting = comment.text,
         supportingMaxLines = 3,
-        state = KitRowState(word, tone),
+        state = KitRowState(word, tone, lead = false),
         trailing = if (draft) KitRowTrailing.Value(removeLabel, chevron = false) else KitRowTrailing.None,
         onClickLabel = if (draft) removeLabel else null,
         onClick = if (draft) onRemove else null,
