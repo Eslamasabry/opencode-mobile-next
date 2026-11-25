@@ -88,7 +88,10 @@ public class AgentUpdateChoiceEngine(
     override fun removalFacts(id: AgentId): AgentRemovalFacts =
         AgentRemovalFacts(state.value?.items?.firstOrNull { it.id == id }?.installedBytes, true, true)
 
-    override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> = lane.withLock {
+    override suspend fun decide(
+        choices: Map<AgentId, AgentUpdateChoice>,
+        waitForWifi: Boolean,
+    ): Outcome<AgentUpdateStarted> = lane.withLock {
         val presented = state.value?.items.orEmpty().associateBy { it.id }
         // The answer is checked against the picture the sheet shows (the open sheet re-reads it by itself every 30 s):
         // reading the phone's versions again here held the "Update 4 agents" button spinning for 6.4 s (F14).

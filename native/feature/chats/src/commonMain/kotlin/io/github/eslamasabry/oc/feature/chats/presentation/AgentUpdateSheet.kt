@@ -401,7 +401,10 @@ public object NoAgentUpdateActions : AgentUpdateActions
 public object NoAgentUpdateChoices : AgentUpdateChoices {
     override val offer: StateFlow<AgentUpdateOffer?> = MutableStateFlow(null)
 
-    override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> =
+    override suspend fun decide(
+        choices: Map<AgentId, AgentUpdateChoice>,
+        waitForWifi: Boolean,
+    ): Outcome<AgentUpdateStarted> =
         Outcome.Failed(Failure.Unavailable(FeatureId("agentUpdateChoices")))
 
     override suspend fun notNow(): Outcome<Unit> = Outcome.Ok(Unit)

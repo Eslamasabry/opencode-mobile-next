@@ -46,9 +46,17 @@ import kotlinx.coroutines.flow.StateFlow
 
 internal class RedrawOffered(offer: AgentUpdateOffer) : AgentUpdateChoices {
     override val offer: StateFlow<AgentUpdateOffer?> = MutableStateFlow(offer)
+    var lastWaitForWifi: Boolean? = null
+    var lastChoices: Map<AgentId, AgentUpdateChoice>? = null
 
-    override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> =
-        AgentUpdateStarted(emptyList(), emptyList(), emptyList()).ok()
+    override suspend fun decide(
+        choices: Map<AgentId, AgentUpdateChoice>,
+        waitForWifi: Boolean,
+    ): Outcome<AgentUpdateStarted> {
+        lastChoices = choices
+        lastWaitForWifi = waitForWifi
+        return AgentUpdateStarted(emptyList(), emptyList(), emptyList()).ok()
+    }
 
     override suspend fun notNow(): Outcome<Unit> = Unit.ok()
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
@@ -57,13 +58,14 @@ class AgentUpdateSheetRedrawTest {
     private fun runSheet(
         offer: AgentUpdateOffer,
         fontScale: Float = 1f,
+        offered: RedrawOffered = RedrawOffered(offer),
         block: suspend KitUiTest.() -> Unit,
     ) {
         val previous = Locale.getDefault()
         val scope = CoroutineScope(Job())
         try {
             Locale.setDefault(Locale.forLanguageTag("en"))
-            val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
+            val model = AgentUpdateSheetModel(offered, scope)
             val actions = actionsFor(model)
             kitUiTest(900, 2000) {
                 setContent {
@@ -99,17 +101,21 @@ class AgentUpdateSheetRedrawTest {
                     override fun chooseAgentUpdate(id: AgentId, choice: AgentUpdateChoice) {
                         model.choose(id, choice)
                     }
+
+                    override fun proceedAgentUpdates() {
+                        model.applyChoices()
+                    }
                 }
         }
 
     @Test
-    fun `B-UPD-006 the total and the mobile-data line come before the first row`() =
+    fun `B-UPD-006 the total and Wi-Fi only row come before the first agent row`() =
         runSheet(redrawFiveOffer()) {
             val downloadTop = onNodeWithText("Download", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
             val aboutTop =
                 onNodeWithText("About ", substring = true, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
-            val meteredTop =
-                onNodeWithText("You're on mobile data", substring = true, useUnmergedTree = true)
+            val wifiTop =
+                onNodeWithText("Wi-Fi only", substring = true, useUnmergedTree = true)
                     .fetchSemanticsNode()
                     .boundsInRoot
                     .top
@@ -119,8 +125,8 @@ class AgentUpdateSheetRedrawTest {
                     .boundsInRoot
                     .top
             assertTrue(
-                downloadTop < aboutTop && aboutTop < meteredTop && meteredTop < helperTop,
-                "expected Download ($downloadTop) < About ($aboutTop) < metered ($meteredTop) < helper ($helperTop)",
+                downloadTop < aboutTop && aboutTop < wifiTop && wifiTop < helperTop,
+                "expected Download ($downloadTop) < About ($aboutTop) < Wi-Fi only ($wifiTop) < helper ($helperTop)",
             )
         }
 
@@ -151,7 +157,7 @@ class AgentUpdateSheetRedrawTest {
     @Test
     fun `B-UPD-008 one switch per agent and turning Codex off updates one fewer`() =
         runSheet(redrawFiveOffer()) {
-            onAllNodes(isToggleable()).assertCountEquals(5)
+            onAllNodes(isToggleable()).assertCountEquals(6)
             onNodeWithText("Keep").assertDoesNotExist()
             onNodeWithText("Codex", substring = true).performClick()
             waitForIdle()
@@ -217,7 +223,65 @@ class AgentUpdateSheetRedrawTest {
             assertEquals(before, codex.fetchSemanticsNode().size.height, "Codex row height changed when turned on")
         }
 
+    @Test
+    fun `B-UPD-013 on mobile data Wi-Fi only defaults on and decides waitForWifi`() {
+        val offered = RedrawOffered(redrawFiveOffer())
+        runSheet(redrawFiveOffer(), offered = offered) {
+            val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
+            wifi.assertIsOn()
+            onNodeWithText("Will update on Wi-Fi", substring = true, useUnmergedTree = true).assertExists()
+            onNodeWithText("Update 5 agents").performClick()
+            waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
+            assertEquals(true, offered.lastWaitForWifi)
+        }
+    }
+
+    @Test
+    fun `B-UPD-014 turning Wi-Fi only off keeps row height and decides mobile download`() {
+        val offered = RedrawOffered(redrawFiveOffer())
+        runSheet(redrawFiveOffer(), offered = offered) {
+            val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
+            val before = wifi.fetchSemanticsNode().size.height
+            wifi.performClick()
+            waitForIdle()
+            wifi.assertIsOff()
+            assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only row height changed")
+            onNodeWithText(METERED_LINE, substring = true, useUnmergedTree = true).assertExists()
+            onNodeWithText("Update 5 agents").performClick()
+            waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
+            assertEquals(false, offered.lastWaitForWifi)
+        }
+    }
+
+    @Test
+    fun `B-UPD-015 on Wi-Fi the Wi-Fi only row is absent and decides without waiting`() {
+        val offered = RedrawOffered(redrawOneOffer())
+        runSheet(redrawOneOffer(), offered = offered) {
+            onNodeWithText("Wi-Fi only").assertDoesNotExist()
+            onNodeWithText("Will update on Wi-Fi").assertDoesNotExist()
+            onAllNodes(isToggleable()).assertCountEquals(1)
+            onNodeWithText("Update 1 agent").performClick()
+            waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
+            assertEquals(false, offered.lastWaitForWifi)
+        }
+    }
+
+    @Test
+    fun `B-UPD-016 turning Wi-Fi only off at text 1_3 keeps its row height and moves nothing`() =
+        runSheet(redrawFiveOffer(), fontScale = 1.3f) {
+            val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
+            val before = wifi.fetchSemanticsNode().size.height
+            wifi.performClick()
+            waitForIdle()
+            assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only height changed when turned off")
+            mainClock.advanceTimeBy(1_500)
+            wifi.performClick()
+            waitForIdle()
+            assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only height changed when turned on")
+        }
+
     private companion object {
         const val HELPER_TOO_NEW = "Its version can't work with the new agent helper, so it can't be kept."
+        const val METERED_LINE = "You're on mobile data. The updates download over it."
     }
 }

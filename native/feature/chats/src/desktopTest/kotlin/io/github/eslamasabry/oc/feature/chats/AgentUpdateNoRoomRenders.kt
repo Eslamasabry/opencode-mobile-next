@@ -89,7 +89,10 @@ class AgentUpdateNoRoomRenders {
     private class Offered(offer: AgentUpdateOffer) : AgentUpdateChoices {
         override val offer: StateFlow<AgentUpdateOffer?> = MutableStateFlow(offer)
 
-        override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> =
+        override suspend fun decide(
+            choices: Map<AgentId, AgentUpdateChoice>,
+            waitForWifi: Boolean,
+        ): Outcome<AgentUpdateStarted> =
             AgentUpdateStarted(emptyList(), emptyList(), emptyList()).ok()
 
         override suspend fun notNow(): Outcome<Unit> = Unit.ok()

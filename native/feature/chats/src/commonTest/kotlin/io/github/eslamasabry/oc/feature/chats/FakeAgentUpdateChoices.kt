@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class FakeAgentUpdateChoices(initial: AgentUpdateOffer? = dueOffer()) : AgentUpdateChoices {
     override val offer = MutableStateFlow(initial)
     val reviews = mutableListOf<Boolean>()
+    val waitForWifiCalls = mutableListOf<Boolean>()
     var finishReading: CompletableDeferred<Unit>? = null
 
     val current: AgentUpdateOffer get() = checkNotNull(offer.value)
@@ -32,11 +33,21 @@ internal class FakeAgentUpdateChoices(initial: AgentUpdateOffer? = dueOffer()) :
         return Outcome.Ok(Unit)
     }
 
-    override suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted> {
+    override suspend fun decide(
+        choices: Map<AgentId, AgentUpdateChoice>,
+        waitForWifi: Boolean,
+    ): Outcome<AgentUpdateStarted> {
+        waitForWifiCalls += waitForWifi
         val items = current.items.map { it.copy(choice = choices.getValue(it.id)) }
         offer.value = current.copy(items = items, answered = true, sheetDue = false)
         fun ids(choice: AgentUpdateChoice) = choices.filterValues { it == choice }.keys.toList()
-        return Outcome.Ok(AgentUpdateStarted(ids(AgentUpdateChoice.Update), ids(AgentUpdateChoice.Remove), ids(AgentUpdateChoice.Keep)))
+        return Outcome.Ok(
+            AgentUpdateStarted(
+                ids(AgentUpdateChoice.Update),
+                ids(AgentUpdateChoice.Remove),
+                ids(AgentUpdateChoice.Keep),
+            )
+        )
     }
 
     override fun removalFacts(id: AgentId): AgentRemovalFacts = error("Unexpected removal")

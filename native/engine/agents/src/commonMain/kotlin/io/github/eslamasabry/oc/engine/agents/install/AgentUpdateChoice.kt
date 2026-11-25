@@ -52,7 +52,10 @@ public interface AgentUpdateChoices {
     public val offer: StateFlow<AgentUpdateOffer?>
 
     /** Start exactly the chosen updates and removals (removals only after confirmed()). */
-    public suspend fun decide(choices: Map<AgentId, AgentUpdateChoice>): Outcome<AgentUpdateStarted>
+    public suspend fun decide(
+        choices: Map<AgentId, AgentUpdateChoice>,
+        waitForWifi: Boolean = false,
+    ): Outcome<AgentUpdateStarted>
 
     /** Defer every Optional item until the next app update; Needed per neededGoesAhead. */
     public suspend fun notNow(): Outcome<Unit>
