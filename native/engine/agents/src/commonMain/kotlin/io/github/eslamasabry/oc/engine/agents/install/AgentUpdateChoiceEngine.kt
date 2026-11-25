@@ -100,9 +100,10 @@ public class AgentUpdateChoiceEngine(
         val staleRow = selected.any { !valid(it) || presented[it.id]?.fromVersion != it.fromVersion }
         if (selected.size != choices.size || staleRow) return@withLock stale()
         if (!host.fits(snapshot, selected)) return@withLock Failure.Media(MediaProblem.DownloadNoSpace).failed()
-        // The yes on a sheet that said mobile data and showed the size is the consent for exactly these updates.
+        // The yes on a sheet that said mobile data and showed the size is the consent for exactly these updates,
+        // unless the person kept Wi-Fi only on so the updates wait for an unmetered network.
         val yes =
-            if (snapshot.network == AgentUpdateNetwork.Metered) {
+            if (snapshot.network == AgentUpdateNetwork.Metered && !waitForWifi) {
                 selected.filter { it.choice == AgentUpdateChoice.Update }.associate { it.id to it.toVersion }
             } else {
                 emptyMap()

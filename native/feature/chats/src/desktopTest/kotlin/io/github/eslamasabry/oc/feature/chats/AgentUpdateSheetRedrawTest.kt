@@ -102,6 +102,10 @@ class AgentUpdateSheetRedrawTest {
                         model.choose(id, choice)
                     }
 
+                    override fun chooseAgentUpdateWifi(waitForWifi: Boolean) {
+                        model.chooseWifiOnly(waitForWifi)
+                    }
+
                     override fun proceedAgentUpdates() {
                         model.applyChoices()
                     }

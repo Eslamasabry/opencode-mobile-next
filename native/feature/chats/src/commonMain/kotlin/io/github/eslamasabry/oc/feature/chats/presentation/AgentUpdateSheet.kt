@@ -84,6 +84,8 @@ public data class AgentUpdateSheetUi(
     /** Free space where agents install, when known: a refusal for room says it with the download's size. */
     val freeBytes: Long? = null,
     val network: AgentUpdateNetwork = AgentUpdateNetwork.Unmetered,
+    /** On mobile data: true holds updates until Wi-Fi (default on metered); false downloads on mobile data. */
+    val wifiOnly: Boolean = false,
     val updating: Int = 0,
     val removing: Int = 0,
     /** The removal confirm that is open now; nothing is decided until every removal is confirmed. */
@@ -143,6 +145,7 @@ public object AgentUpdateSheetRules {
         offer: AgentUpdateOffer?,
         picked: Map<AgentId, AgentUpdateChoice>,
         visible: Boolean,
+        waitForWifi: Boolean = true,
     ): AgentUpdateSheetUi {
         offer ?: return AgentUpdateSheetUi()
         val optional =
@@ -188,6 +191,7 @@ public object AgentUpdateSheetRules {
             short = if (free != null && download > free) AgentUpdateShortSpace(download, free) else null,
             freeBytes = free,
             network = offer.network,
+            wifiOnly = offer.network == AgentUpdateNetwork.Metered && waitForWifi,
             updating = updates.size,
             removing = removes.size,
         )
@@ -227,51 +231,25 @@ public object AgentUpdateSheetRules {
  * owns the offer, the decision and whether the sheet is due. [choices] null: no offer ever (tests, previews, desktop).
  */
 public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, private val scope: CoroutineScope) {
-    private data class Local(
-        val picked: Map<AgentId, AgentUpdateChoice> = emptyMap(),
-        /** Removals still to confirm, the open one first. */
-        val toConfirm: List<AgentRemovalAskUi> = emptyList(),
-        val working: Boolean = false,
-        val failure: Failure? = null,
-        /** The free space the engine reported when it refused for room: a fresh reading makes that refusal old. */
-        val failedAtFree: Long? = null,
-        /** The offer answered here: the sheet stays closed for it until a new offer (a Review) comes. */
-        val closedAt: AgentUpdateOffer? = null,
-        /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
-        val refused: List<AgentRefusalUi> = emptyList(),
-    )
-
-    private val local = MutableStateFlow(Local())
+    private val local = MutableStateFlow(SheetLocal())
     private val offers: StateFlow<AgentUpdateOffer?> = choices?.offer ?: MutableStateFlow(null)
 
     private val chain = AgentUpdateChainLog()
     private val bound = choices != null && choices !== NoAgentUpdateChoices
 
     public val ui: Flow<AgentUpdateHomeUi> =
-        combine(offers, local) { offer, now -> build(offer, now).also { chain.told(offer, it, bound) } }
+        combine(offers, local) { offer, now ->
+            buildHomeUi(offer, now).also { chain.told(offer, it, bound) }
+        }
 
-    public fun current(): AgentUpdateHomeUi = build(offers.value, local.value)
-
-    private fun build(offer: AgentUpdateOffer?, now: Local): AgentUpdateHomeUi {
-        // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer
-        // and the sheet opens again, even when this page outlived the answer.
-        val due = offer != null && offer.sheetDue && !sameQuestion(offer, now.closedAt)
-        val sheet =
-            AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty())
-                .copy(
-                    asking = now.toConfirm.firstOrNull(),
-                    working = now.working,
-                    failure =
-                        now.failure.takeUnless { AgentUpdateSheetRules.roomRefusalOld(it, offer, now.failedAtFree) },
-                )
-        return AgentUpdateHomeUi(
-            sheet = sheet.copy(visible = due || now.refused.isNotEmpty(), refused = now.refused.toImmutableList()),
-            pending = AgentUpdateSheetRules.pending(offer),
-        )
-    }
+    public fun current(): AgentUpdateHomeUi = buildHomeUi(offers.value, local.value)
 
     public fun choose(id: AgentId, choice: AgentUpdateChoice) {
         local.update { it.copy(picked = it.picked + (id to choice), failure = null) }
+    }
+
+    public fun chooseWifiOnly(waitForWifi: Boolean) {
+        local.update { it.copy(wifiOnly = waitForWifi, failure = null) }
     }
 
     /** The sheet's button: every removal is confirmed first, one by one; then the decision starts. */
@@ -309,10 +287,11 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         val engine = choices ?: return
         val offer = offers.value ?: return
         val decision = AgentUpdateSheetRules.decision(offer, local.value.picked)
+        val waitForWifi = offer.network == AgentUpdateNetwork.Metered && local.value.wifiOnly
         log.i { "update sheet: decided " + decision.entries.joinToString { "${it.key.raw}=${it.value}" } }
         local.update { it.copy(working = true, failure = null) }
         scope.launch {
-            val outcome = engine.decide(decision)
+            val outcome = engine.decide(decision, waitForWifi = waitForWifi)
             AgentUpdateChainLog.log.i { "update sheet: " + AgentUpdateChainLog.outcome(outcome) }
             when (outcome) {
                 is Outcome.Ok -> {
@@ -368,6 +347,9 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
 public interface AgentUpdateActions {
     /** [choice] for the agent [id] (Update, Keep or Remove). */
     public fun chooseAgentUpdate(id: AgentId, choice: AgentUpdateChoice) {}
+
+    /** On mobile data: whether chosen updates wait for Wi-Fi (true by default) or download now. */
+    public fun chooseAgentUpdateWifi(waitForWifi: Boolean) {}
 
     /** The sheet's button ("Update 2 and remove 1"): asks before each removal, then starts the chosen work. */
     public fun proceedAgentUpdates() {}
@@ -461,6 +443,39 @@ internal class AgentUpdateChainLog {
                     "refused " + outcome.failure.label()
             }
     }
+}
+
+private data class SheetLocal(
+    val picked: Map<AgentId, AgentUpdateChoice> = emptyMap(),
+    val wifiOnly: Boolean = true,
+    /** Removals still to confirm, the open one first. */
+    val toConfirm: List<AgentRemovalAskUi> = emptyList(),
+    val working: Boolean = false,
+    val failure: Failure? = null,
+    /** The free space the engine reported when it refused for room: a fresh reading makes that refusal old. */
+    val failedAtFree: Long? = null,
+    /** The offer answered here: the sheet stays closed for it until a new offer (a Review) comes. */
+    val closedAt: AgentUpdateOffer? = null,
+    /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
+    val refused: List<AgentRefusalUi> = emptyList(),
+)
+
+private fun buildHomeUi(offer: AgentUpdateOffer?, now: SheetLocal): AgentUpdateHomeUi {
+    // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer
+    // and the sheet opens again, even when this page outlived the answer.
+    val due = offer != null && offer.sheetDue && !sameQuestion(offer, now.closedAt)
+    val sheet =
+        AgentUpdateSheetRules.sheet(offer, now.picked, due || now.refused.isNotEmpty(), now.wifiOnly)
+            .copy(
+                asking = now.toConfirm.firstOrNull(),
+                working = now.working,
+                failure =
+                    now.failure.takeUnless { AgentUpdateSheetRules.roomRefusalOld(it, offer, now.failedAtFree) },
+            )
+    return AgentUpdateHomeUi(
+        sheet = sheet.copy(visible = due || now.refused.isNotEmpty(), refused = now.refused.toImmutableList()),
+        pending = AgentUpdateSheetRules.pending(offer),
+    )
 }
 
 /**

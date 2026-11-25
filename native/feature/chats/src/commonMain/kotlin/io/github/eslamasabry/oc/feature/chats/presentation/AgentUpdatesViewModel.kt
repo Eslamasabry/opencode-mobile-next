@@ -56,6 +56,8 @@ public class AgentUpdatesViewModel(
 
     override fun chooseAgentUpdate(id: AgentId, choice: AgentUpdateChoice): Unit = model.choose(id, choice)
 
+    override fun chooseAgentUpdateWifi(waitForWifi: Boolean): Unit = model.chooseWifiOnly(waitForWifi)
+
     override fun proceedAgentUpdates(): Unit = model.applyChoices()
 
     override fun confirmAgentRemoval(): Unit = model.confirmRemoval()
@@ -68,29 +70,29 @@ public class AgentUpdatesViewModel(
 
     override fun openAgentsFromUpdates() {
         // Agents is where an agent is removed: a refused removal is answered by going there.
-        leaveSheet()
+        leaveSheet(model)
         nav.open(AgentsRoute.Home)
     }
 
     override fun openLinuxPackages() {
-        leaveSheet()
+        leaveSheet(model)
         nav.open(LinuxRoute.Packages)
     }
 
     override fun closeAgentUpdateResult(): Unit = model.closeResult()
 
-    /** Leaving the sheet for another page: its result is read, or the question is Not now (Review brings it back). */
-    private fun leaveSheet() {
-        val sheet = model.current().sheet
-        when {
-            sheet.refused.isNotEmpty() -> model.closeResult()
-            sheet.visible -> model.notNow()
-        }
-    }
-
     private companion object {
         /** The state outlives a short pause in collection (a configuration change), as Home's does. */
         const val KEEP_MS = 5_000L
+    }
+}
+
+/** Leaving the sheet for another page: its result is read, or the question is Not now (Review brings it back). */
+private fun leaveSheet(model: AgentUpdateSheetModel) {
+    val sheet = model.current().sheet
+    when {
+        sheet.refused.isNotEmpty() -> model.closeResult()
+        sheet.visible -> model.notNow()
     }
 }
 

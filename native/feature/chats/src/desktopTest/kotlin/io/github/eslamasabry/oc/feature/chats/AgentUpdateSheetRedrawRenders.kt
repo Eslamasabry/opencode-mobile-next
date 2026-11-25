@@ -181,9 +181,10 @@ class AgentUpdateSheetRedrawRenders {
         }
     }
 
-    private fun sheetState(offer: AgentUpdateOffer): ChatsUi {
+    private fun sheetState(offer: AgentUpdateOffer, waitForWifi: Boolean = true): ChatsUi {
         val scope = CoroutineScope(Job())
         val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
+        if (!waitForWifi) model.chooseWifiOnly(false)
         val home = mixed().copy(agentUpdates = model.current())
         scope.cancel()
         return home
@@ -192,10 +193,12 @@ class AgentUpdateSheetRedrawRenders {
     @Test
     fun `renders of the redrawn agents update sheet at 360 dp`() {
         val five = sheetState(redrawFiveOffer())
+        val fiveWifiOff = sheetState(redrawFiveOffer(), waitForWifi = false)
         val one = sheetState(redrawOneOffer())
         shoot("us-plus-five-agents-mobile-data-text100-dark", five, dark = true, fontScale = 1f)
         shoot("us-plus-five-agents-mobile-data-text100-light", five, dark = false, fontScale = 1f)
         shoot("us-plus-five-agents-mobile-data-text130-dark", five, dark = true, fontScale = 1.3f)
+        shoot("us-plus-five-agents-mobile-data-wifi-off-text100-dark", fiveWifiOff, dark = true, fontScale = 1f)
         shoot("us-plus-one-agent-text100-dark", one, dark = true, fontScale = 1f)
     }
 }

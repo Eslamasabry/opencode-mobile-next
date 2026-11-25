@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.kitSwitchSupportingLines
@@ -59,9 +60,11 @@ import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTotalFrees
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveAction
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBody
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveTitle
+import io.github.eslamasabry.oc.ui.words.res.agentsStateUpdateWifi
 import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.m40UsageWifi
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReviewAction
 import org.jetbrains.compose.resources.stringResource
@@ -122,13 +125,13 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
         }
     }
     Totals(shown)
-    when (shown.network) {
-        AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
-        AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
-        AgentUpdateNetwork.Unmetered -> Unit
+    if (shown.network == AgentUpdateNetwork.Unknown) {
+        KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
     }
-    if (shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
+    val metered = shown.network == AgentUpdateNetwork.Metered
+    if (metered || shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
         KitRowGroup {
+            if (metered) WifiOnlyRow(shown.wifiOnly, actions)
             shown.needed.forEach { row -> NeededRow(row, shown.neededWhy) }
             shown.optional.forEach { row -> OptionalRow(row, actions) }
         }
@@ -152,6 +155,31 @@ private fun ResultBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
         stringResource(Res.string.agentUpdatesAgentsLine),
         action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
     )
+}
+
+/** On mobile data: waits for Wi-Fi by default; turning it off lets the updates download over mobile data. */
+@Composable
+private fun WifiOnlyRow(wifiOnly: Boolean, actions: AgentUpdateActions) {
+    val onText = stringResource(Res.string.agentsStateUpdateWifi)
+    val offText = stringResource(Res.string.agentUpdatesMetered)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val minLines =
+            kitSwitchSupportingLines(
+                texts = listOf(onText, offText),
+                rowWidth = maxWidth,
+                supportingMaxLines = 4,
+                hasLeading = true,
+            )
+        KitSwitchRow(
+            title = stringResource(Res.string.m40UsageWifi),
+            checked = wifiOnly,
+            leading = KitRowLeading.Glyph(KitIcons.networkCheck),
+            supporting = if (wifiOnly) onText else offText,
+            supportingMaxLines = 4,
+            supportingMinLines = minLines,
+            onCheckedChange = actions::chooseAgentUpdateWifi,
+        )
+    }
 }
 
 /** One agent: its name, versions and size (or what keeping/removing does), and one switch. */
