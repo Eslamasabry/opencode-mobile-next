@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -137,9 +138,22 @@ class PolishTranscriptKitTest {
                 }
             }
             waitForIdle()
+            val face = onNodeWithTag("kit-request-face", useUnmergedTree = true).getBoundsInRoot()
             val row = onNodeWithTag("permission-card-details-row", useUnmergedTree = true).getBoundsInRoot()
             val height = (row.bottom - row.top).value
             assertTrue(height >= 47.5f, "Details row must be at least 48 dp tall, was $height dp")
+            val bottomGap = (face.bottom - row.bottom).value
+            assertTrue(bottomGap >= 15.5f, "Details row must not be trimmed into S4 padding, gap=$bottomGap dp")
+            val detailsLayout = mutableListOf<TextLayoutResult>()
+            onNodeWithText("Details", useUnmergedTree = true)
+                .fetchSemanticsNode()
+                .config[SemanticsActions.GetTextLayoutResult]
+                .action!!
+                .invoke(detailsLayout)
+            assertTrue(
+                detailsLayout.first().layoutInput.style.textDecoration == TextDecoration.Underline,
+                "Details link must be underlined",
+            )
         }
 
     @Test
@@ -155,11 +169,11 @@ class PolishTranscriptKitTest {
 
     @Test
     fun `B-568 durations share one right edge`() =
-        kitUiTest(360, 480) {
+        kitUiTest(260, 480) {
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(1f, 1.3f)) {
-                    ChatTestTheme(dark = true, fontScale = 1.3f) {
-                        Box(Modifier.width(360.dp).background(LocalKitColors.current.ground)) {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    ChatTestTheme(dark = true) {
+                        Box(Modifier.width(260.dp).background(LocalKitColors.current.ground)) {
                             KitStepList {
                                 KitToolRow(
                                     KitToolView(
