@@ -60,7 +60,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
@@ -79,7 +78,7 @@ import kotlin.math.roundToInt
  * runs from under the line's icon to the last node. Steps fold in and out with the kit's one layout motion
  * ([KitReveal]: size and fade, STANDARD in, QUICK out; instant under reduced motion). The rail mirrors under Arabic.
  *
- * States: shut, open; live (a step running while shut); a step arriving while open fades (and at Full rises 6 dp) in.
+ * States: shut, open; live (a step running while shut); a step arriving while open fades in.
  */
 @Composable
 public fun KitStepTimeline(
@@ -415,7 +414,6 @@ internal fun RailNode(
     val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
     val fadePx = with(density) { REVEAL_FADE_DP.dp.toPx() }
     SideEffect { if (reveal != null) rail.shares[key] = { reveal.ink(at[0], fadePx) } else rail.shares.remove(key) }
-    val rise = if (KitMotion.state.travels) ARRIVAL_RISE_DP.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
     Box(
         modifier
             .fillMaxWidth()
@@ -423,7 +421,6 @@ internal fun RailNode(
             .graphicsLayer {
                 if (reveal != null) {
                     alpha = reveal.ink(at[0], fadePx)
-                    translationY = rise.toPx() * (1f - reveal.shown(at[0]))
                     // The node sits outside the row's box, in the rail's column: an offscreen layer (what a faded layer
                     // draws into by default) is cut to the box and dropped the glyph until the row stood at full ink, so
                     // rows popped their glyph in at the end (owner 2026-11-14). The fade is applied to each mark instead.
@@ -453,9 +450,6 @@ internal fun RailNode(
         }
     }
 }
-
-/** How far a row that arrives or opens rises into place at Full motion (Flutter `_StepArrival.rise`). */
-internal const val ARRIVAL_RISE_DP: Int = 6
 
 /**
  * One row of a step list that comes and goes with the list's motion (owner 2026-11-14): shown while [visible]; a row

@@ -73,9 +73,12 @@ import java.io.File
 import java.util.Base64
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -1638,12 +1641,33 @@ internal constructor(
     /** Flutter `localPhoneAgentWorkBusy`: the phone agent's own chat on this server is working (its `<owner>.agents` reading). */
     fun agentWorkBusy(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value["$owner.agents"] } == true
 
+    @Volatile private var sizeJob: Job? = null
+
+    fun sizeShown(visible: Boolean) {
+        linux.sizeWanted(visible)
+        sizeJob?.cancel()
+        if (visible) {
+            sizeJob = scope.launch {
+                while (true) {
+                    val ran = blocking { linux.measureBytesUsed() }
+                    if (ran is Outcome.Ok && ran.value) {
+                        statusRevision.incrementAndGet()
+                        refreshNow()
+                    }
+                    delay(1.minutes)
+                }
+            }
+        }
+    }
+
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {
             override val facts: StateFlow<PhoneServerFacts> =
                 this@BuiltinRuntime.facts.asStateFlow()
 
             override suspend fun refresh() = refreshNow()
+
+            override fun sizeShown(visible: Boolean) = this@BuiltinRuntime.sizeShown(visible)
 
             override suspend fun start(): Outcome<Unit> = startNow()
 

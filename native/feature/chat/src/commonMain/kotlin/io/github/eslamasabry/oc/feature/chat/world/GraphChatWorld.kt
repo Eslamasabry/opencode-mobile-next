@@ -118,7 +118,8 @@ private const val SAVED_RECENT_MODELS = 8
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
-public class GraphChatWorlds(
+// one collaborator added to an existing constructor; splitting it is its own refactor
+public class GraphChatWorlds @Suppress("LongParameterList") constructor(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
     private val recentBackings: Set<RecentModelsBacking> = emptySet(),
@@ -135,6 +136,7 @@ public class GraphChatWorlds(
     private val lastKnown: Set<ChatLastKnown> = emptySet(),
     storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
     private val glances: Set<ChatGlance> = emptySet(),
+    private val connectionOpeners: Set<ChatConnectionOpener> = emptySet(),
 ) : ChatWorlds {
     private val withdrawn =
         storages.singleOrNull()?.let {
@@ -155,6 +157,7 @@ public class GraphChatWorlds(
         check(histories.size <= 1) { "multiple prompt history stores" }
         check(lastKnown.size <= 1) { "multiple last-known transcript stores" }
         check(glances.size <= 1) { "multiple conversation glances" }
+        check(connectionOpeners.size <= 1) { "multiple chat connection openers" }
     }
 
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
@@ -180,6 +183,7 @@ public class GraphChatWorlds(
                     withdrawn,
                     shownOutcomes,
                     glance = glances.singleOrNull(),
+                    connectionOpener = connectionOpeners.singleOrNull(),
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -207,7 +211,8 @@ public class GraphChatWorlds(
  * fences the registry generation. Draft saving remains unavailable until the adopted drafts store
  * is connected; send admission requires storage.
  */
-internal class GraphChatWorld(
+// one collaborator added to an existing constructor; splitting it is its own refactor
+internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     override val ref: ConversationRef,
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
@@ -227,6 +232,7 @@ internal class GraphChatWorld(
         HashSet(),
     /** What the conversation list shows of this conversation: the page's title from its first frame. */
     private val glance: ChatGlance? = null,
+    private val connectionOpener: ChatConnectionOpener? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -547,6 +553,9 @@ internal class GraphChatWorld(
     private var notReadyJob: Job? = null
     private var notReadyWaitedMs = 0L
 
+    /** True while Try again opens the connection of a computer that is not open; a second tap opens nothing more. */
+    private var opening = false
+
     /** A failure page held back for [FAILED_SETTLE_MS], so a success right after it never crosses in and out. */
     private var failedSettleJob: Job? = null
     /**
@@ -809,6 +818,7 @@ internal class GraphChatWorld(
      */
     fun attach() {
         if (stopWatching != null) return
+        connectionOpener?.hold(ref.profileId, true)
         endWait()
         showKept()
         draftStore?.open(ref)?.let { reopened ->
@@ -1438,6 +1448,7 @@ internal class GraphChatWorld(
     }
 
     fun detach() {
+        val wasAttached = stopWatching != null
         stopWatching?.invoke()
         stopWatching = null
         endWait()
@@ -1446,6 +1457,7 @@ internal class GraphChatWorld(
         closeKept()
         unbind(flushHeld = true)
         draftSession?.close()
+        if (wasAttached) connectionOpener?.hold(ref.profileId, false)
     }
 
     /**
@@ -3193,13 +3205,43 @@ internal class GraphChatWorld(
     }
 
     override suspend fun reload(): Outcome<Unit> {
+        if (opening) return Outcome.Ok(Unit)
         // A person's Try again waits for a server that is not ready yet afresh.
         endWait()
-        bind(registry.graphFor(ref))
+        if (connectionOpener == null || registry.graphFor(ref) != null || appStartsServer) {
+            bind(registry.graphFor(ref))
+        } else {
+            reopenComputer(connectionOpener)
+        }
         return when (val l = mutableLoad.value) {
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
             else -> Outcome.Ok(Unit)
         }
+    }
+
+    /**
+     * Try again for a computer that went away: its connection is opened first and the page waits for it meanwhile
+     * (the home's own path, so the server on the home stays the one the person chose).
+     */
+    private suspend fun reopenComputer(opener: ChatConnectionOpener) {
+        opening = true
+        mutableLoad.value = ChatLoad.Loading
+        loadWaiting.value = true
+        val opened =
+            try {
+                opener.open(ref.profileId)
+            } finally {
+                opening = false
+                loadWaiting.value = false
+                if (stopWatching == null && attached == null && mutableLoad.value is ChatLoad.Loading)
+                    mutableLoad.value = ChatLoad.Failed(OFFLINE)
+            }
+        // The chat closed meanwhile: nothing of it is left to show.
+        if (stopWatching == null) return
+        val graph = registry.graphFor(ref)
+        // The registry watch may have bound the new graph already; the same graph is never bound twice.
+        if (graph == null || graph !== attached?.graph) bind(graph)
+        if (opened is Outcome.Failed && graph == null) mutableLoad.value = ChatLoad.Failed(opened.failure)
     }
 
     override suspend fun isChildSession(id: String): Outcome<Boolean> {
