@@ -678,7 +678,6 @@ internal class TranscriptModel(
             rows.add(workAt, reuse(WorkLineRow("work:$turnId", turnId, calls, failedCalls, state)))
         }
         if (finished && hasAssistant) {
-            val lastAssistant = members.lastOrNull { it.info.role == Role.Assistant }?.info
             rows +=
                 reuse(
                     FooterRow(
@@ -688,9 +687,14 @@ internal class TranscriptModel(
                         reason,
                         stopped = stopped && !failed,
                         errorKind = errorKind,
-                        createdMs = lastAssistant?.createdMs,
-                        providerId = lastAssistant?.providerId?.takeIf { it.isNotBlank() },
-                        modelId = lastAssistant?.modelId?.takeIf { it.isNotBlank() },
+                        createdMs =
+                            members.lastOrNull { it.info.role == Role.Assistant }?.info?.createdMs,
+                        providerId =
+                            members
+                                .lastOrNull { it.info.role == Role.Assistant }
+                                ?.info
+                                ?.providerId
+                                ?.takeIf { it.isNotBlank() },
                     )
                 )
         }

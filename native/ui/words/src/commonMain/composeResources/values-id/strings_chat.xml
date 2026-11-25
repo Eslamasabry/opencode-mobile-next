@@ -1250,6 +1250,4 @@
     <string name="kitTurnLiveStillThinking">Masih berpikir</string>
     <string name="chatQuietThinkingHint">Beberapa model berpikir tanpa menampilkan apa pun selama beberapa menit.</string>
     <string name="kitToolUnanswered">Berhenti sebelum Anda menjawab</string>
-    <string name="chatErrorModelNotFoundNamed">%1$s tidak tersedia lagi di %2$s.</string>
-    <string name="chatModelReplacedNotice">%1$s tidak tersedia lagi. Memakai %2$s.</string>
 </resources>

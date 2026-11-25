@@ -173,9 +173,6 @@ public data class ChatStatusUi(
      * updating) and opens by itself; the connection line says which, without a Try again.
      */
     val serverWait: io.github.eslamasabry.oc.feature.chat.world.ChatServerWait? = null,
-    /** A stale model replaced before sending: its old and replacement display names. */
-    val oldModel: String? = null,
-    val newModel: String? = null,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
@@ -228,9 +225,6 @@ public enum class ChatStatusKind {
 
     /** This conversation was delegated by another one: the way back to it (Flutter `_subagentStatus`). */
     Subagent,
-
-    /** A stale session/default model was replaced with a listed one before sending. */
-    ModelReplaced,
 }
 
 /**

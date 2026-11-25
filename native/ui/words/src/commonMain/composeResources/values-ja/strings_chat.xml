@@ -1249,6 +1249,4 @@
     <string name="composerPasteImageEmpty">クリップボードに画像がありません。</string>
     <string name="chatRequestAnswerRequired">必須の質問に先に回答してください。</string>
     <string name="kitToolUnanswered">回答前に停止しました</string>
-    <string name="chatErrorModelNotFoundNamed">%1$sは%2$sでは利用できなくなりました。</string>
-    <string name="chatModelReplacedNotice">%1$sは利用できなくなりました。%2$sを使用します。</string>
 </resources>

@@ -27,7 +27,6 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatUndone
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
-import io.github.eslamasabry.oc.feature.chat.world.ReplacedModel
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -128,8 +127,6 @@ internal data class ChatLocal(
     val attachAgain: AttachAgainUi? = null,
     /** The one-time first-reply ask riding the finished reply's footer. */
     val replyAsk: ReplyAskUi? = null,
-    /** Stale-choice replacement notice the person already dismissed. */
-    val dismissedModelReplaced: ReplacedModel? = null,
 )
 
 internal data class PendingArrival(
@@ -259,11 +256,7 @@ public class ChatPresenter(
             .onEach { live -> if (live) loadBackgroundSupport() }
             .launchIn(scope)
         // S28 story 3: the undone line follows the session as well.
-        val extra =
-            feed
-                .combine(world.undone) { f, u -> f to u }
-                .combine(world.parent) { x, _ -> x }
-                .combine(world.models.map { it.replaced }.distinctUntilChanged()) { x, _ -> x }
+        val extra = feed.combine(world.undone) { f, u -> f to u }.combine(world.parent) { x, _ -> x }
         // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
         // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
         // after the first frame is drawn), and again on every return.
@@ -467,18 +460,6 @@ public class ChatPresenter(
         return if (staged != null && !connection) staged else line
     }
 
-    private fun modelReplacedLine(l: ChatLocal): ChatStatusUi? =
-        world.models.value.replaced
-            ?.takeIf { it != l.dismissedModelReplaced }
-            ?.let { replaced ->
-                ChatStatusUi(
-                    id = MODEL_REPLACED_STATUS,
-                    kind = ChatStatusKind.ModelReplaced,
-                    oldModel = replaced.oldLabel,
-                    newModel = replaced.newLabel,
-                )
-            }
-
     private fun agentLine(line: ChatStatusUi?, l: ChatLocal): ChatStatusUi? =
         if (line == null || !world.serverIsAgentHelper ||
             (line.kind != ChatStatusKind.Offline && line.kind != ChatStatusKind.Connecting)
@@ -562,8 +543,7 @@ public class ChatPresenter(
                         )
                     }
                     ?: undoneLine(world.undone.value)
-                    ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) }
-                    ?: modelReplacedLine(l),
+                    ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
                 ),
                 l,
               ),
@@ -1233,31 +1213,19 @@ public class ChatPresenter(
         }
     }
 
-    private val resendingTurns = HashSet<String>()
-
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
-        val text =
-            if (turnId in resendingTurns) null
-            else
-                (world.transcript.value.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow)
-                    ?.text
-                    ?.takeIf { it.isNotBlank() }
+        val t = world.transcript.value
+        val words = t.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow
+        val text = words?.text?.takeIf { it.isNotBlank() } ?: return
         val choice =
-            if (text == null) null
-            else
-                world.models.value.choices.firstOrNull {
-                    it.providerId == providerId && it.modelId == modelId
-                }
-        if (text == null || choice == null || !resendingTurns.add(turnId)) return
+            world.models.value.choices.firstOrNull {
+                it.providerId == providerId && it.modelId == modelId
+            } ?: return
         launcher.launch {
-            try {
-                when (val picked = world.selectModel(choice)) {
-                    // A refused switch keeps the old model and sends nothing.
-                    is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
-                    is Outcome.Ok -> world.sendAgain(text)
-                }
-            } finally {
-                resendingTurns.remove(turnId)
+            when (val picked = world.selectModel(choice)) {
+                // A refused switch keeps the old model and sends nothing.
+                is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
+                is Outcome.Ok -> world.sendAgain(text)
             }
         }
     }
@@ -1489,9 +1457,6 @@ public class ChatPresenter(
         if (id == RECEIPT_STATUS) local.update { it.copy(receiptResult = null) }
         if (id == StatusPick.ACTION) local.update { it.copy(actionFailure = null) }
         if (id == StatusPick.LINK) local.update { it.copy(linkRefused = false) }
-        if (id == MODEL_REPLACED_STATUS) {
-            local.update { it.copy(dismissedModelReplaced = world.models.value.replaced) }
-        }
     }
 
     private fun capsOf(c: ServerCapabilities): ChatCapabilitiesUi =
@@ -2113,4 +2078,3 @@ private const val STAGED_UNDO_STATUS: String = "staged-revert"
 private const val UNDONE_STATUS: String = "undone"
 private const val SUBAGENT_STATUS: String = "subagent"
 private const val KEPT_OFFLINE_STATUS: String = "chat-kept-offline"
-private const val MODEL_REPLACED_STATUS: String = "model-replaced"

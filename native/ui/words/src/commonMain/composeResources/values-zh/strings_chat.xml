@@ -1251,6 +1251,4 @@
     <string name="chatUiContinuedAfterCommand">有一条命令仍在运行，因此已请智能体等待它结束后继续</string>
     <string name="chatSendNoPlanMode">这个智能体没有规划模式，因此没有发送任何内容。请关闭规划，以智能体自己的模式发送。</string>
     <string name="kitToolUnanswered">在你回答前已停止</string>
-    <string name="chatErrorModelNotFoundNamed">%1$s 在 %2$s 上已不可用。</string>
-    <string name="chatModelReplacedNotice">%1$s 已不可用。正在使用 %2$s。</string>
 </resources>
