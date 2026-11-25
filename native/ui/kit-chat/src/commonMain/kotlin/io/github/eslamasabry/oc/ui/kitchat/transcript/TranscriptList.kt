@@ -154,6 +154,8 @@ public data class KitTranscriptDockLive(
     public val tone: KitTurnLiveTone,
     public val spoken: String,
     public val onRail: Boolean,
+    /** The key of the list item that draws the live line this status repeats; null: none to look for. */
+    public val key: Any? = null,
 )
 
 /**
