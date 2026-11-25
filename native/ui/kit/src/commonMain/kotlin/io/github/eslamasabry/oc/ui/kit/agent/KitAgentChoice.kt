@@ -22,13 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -58,14 +58,13 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
-import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.rememberAgentMarkArt
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -78,7 +77,7 @@ public enum class KitAgentChoiceState {
     /** Can be started now, not the chosen one: matte surface, hairline. */
     Available,
 
-    /** The chosen one: a filled accent check badge in the corner and the style's chosen surface. */
+    /** The chosen one: the kit's bare accent check in the corner and the style's chosen surface. */
     Selected,
 
     /** Known but not set up: dimmed, with "Set up" in place of the line; a tap opens its setup. */
@@ -253,14 +252,20 @@ private fun AgentMonogram(name: String, box: Dp) {
 internal fun agentMonogram(name: String): String =
     name.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "?"
 
-/** A filled accent badge with the check that lands from slightly smaller when the card is chosen. */
+/** The kit's bare accent check that lands from slightly smaller when the card is chosen. */
 @Composable
 private fun Badge(selected: Boolean) {
-    val colors = LocalKitColors.current
     val specs = KitMotion.specs
-    val scale by animateFloatAsState(if (selected) 1f else FlutterKitMotion.MARK_FROM, specs.pace(KitPace.Standard), label = "kit.agent.badge.scale")
-    val alpha by animateFloatAsState(if (selected) 1f else 0f, specs.pace(KitPace.Quick), label = "kit.agent.badge.alpha")
-    val accent = colors.accent
+    val scale by animateFloatAsState(
+        if (selected) 1f else FlutterKitMotion.MARK_FROM,
+        specs.pace(KitPace.Standard),
+        label = "kit.agent.badge.scale",
+    )
+    val alpha by animateFloatAsState(
+        if (selected) 1f else 0f,
+        specs.pace(KitPace.Quick),
+        label = "kit.agent.badge.alpha",
+    )
     // Fully faded: nothing to draw (Dart's AnimatedOpacity at 0 paints nothing either).
     if (alpha == 0f) {
         Spacer(Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S1).dp))
@@ -269,10 +274,9 @@ private fun Badge(selected: Boolean) {
     Box(
         Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S1).dp)
             .scale(scale)
-            .alpha(alpha)
-            .drawBehind { drawCircle(accent) },
+            .alpha(alpha),
         contentAlignment = Alignment.Center,
     ) {
-        KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.OnAccent)
+        KitSelectedCheck(Modifier.testTag("kit-agent-badge-check"))
     }
 }

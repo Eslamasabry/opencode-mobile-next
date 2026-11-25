@@ -397,7 +397,11 @@ class NativePhoneSetup(
                     SetupFinisher { request ->
                         when (val finished = runtime.finishSetup(request)) {
                             is Outcome.Failed -> finished
-                            is Outcome.Ok -> connections.connect(finished.value)
+                            is Outcome.Ok ->
+                                when (val connected = connections.connect(finished.value)) {
+                                    is Outcome.Failed -> request.failed(StartStepKind.Connect, connected)
+                                    is Outcome.Ok -> connected
+                                }
                         }
                     },
             )
@@ -426,7 +430,13 @@ class NativePhoneSetup(
     /** A non-fatal for the developer: which component and which kind of error, never the log or any text. */
     private suspend fun reportStepFailed(progress: SetupProgress) {
         val failed = progress.components.firstOrNull { it.error != null } ?: progress.components.firstOrNull { it.state == ComponentState.Failed }
-        val kind = (failed?.error ?: progress.error)?.let { it::class.simpleName } ?: "unknown"
+        val named = failed?.error ?: progress.error
+        // A start that names its kind is still reported under the word it had before the kind was kept.
+        val kind =
+            when (named) {
+                is SetupError.StartStepFailed -> "CannotStart"
+                else -> named?.let { it::class.simpleName } ?: "unknown"
+            }
         // Issue #138: when the phone closed the app, the closed kind (system_kill_other, low_memory, ...) goes with it.
         val kill = keepAlive.interruption()
         reporting.reportFailure(

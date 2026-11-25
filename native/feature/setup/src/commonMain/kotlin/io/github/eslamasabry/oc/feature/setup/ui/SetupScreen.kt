@@ -369,6 +369,7 @@ private fun failureLine(line: SetupFailureLine): String =
                 SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
                 is SetupError.PortBusy -> stringResource(Res.string.phoneServerPortBusy, e.port.toString())
         SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
+                is SetupError.StartStepFailed -> stringResource(Res.string.phoneSetupErrorCannotStart)
                 SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
                 SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
                 SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)

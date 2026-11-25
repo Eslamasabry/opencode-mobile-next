@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.engine.runtime.server.StartProblem
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
@@ -579,6 +580,97 @@ class SetupEngineTest {
         assertEquals("live", engine.progress.value.jobId)
         assertEquals(5L, engine.progress.value.components.single().bytesDone)
         engine.dispose()
+    }
+
+    // ---- B-SETUP-009 -------------------------------------------------------------------------------------------
+
+    @Test
+    fun `B-SETUP-009 a start that timed out keeps its kind in setup json and after a restore`() = runTest {
+        val engine = engine()
+        engine.finisher = SetupFinisher { r ->
+            r.failed(
+                StartStepKind.TimedOut,
+                Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable, Redacted("waited 90 s"))),
+            )
+        }
+        engine.run(emptySet())
+        linux.advance("start", emptyMap())
+        pumpUntil { engine.progress.value.state == SetupState.Failed }
+        val expected = SetupError.StartStepFailed(StartStepKind.TimedOut)
+        assertEquals(expected, engine.progress.value.components.last().error)
+        assertEquals(expected, engine.progress.value.error)
+        assertEquals("[start_timed_out] waited 90 s", linux.steps.single()["error"])
+        assertTrue(engine.progress.value.logTail.contains("waited 90 s"))
+        assertFalse(
+            engine.progress.value.logTail.contains("[start_timed_out]"),
+            "the code is kept for setup.json, not shown",
+        )
+        engine.restore()
+        assertEquals(
+            expected,
+            engine.progress.value.error,
+            "a job read again knows its kind from setup.json alone",
+        )
+        assertEquals(expected, engine.progress.value.components.last().error)
+        engine.dispose()
+    }
+
+    // ---- B-SETUP-010 -------------------------------------------------------------------------------------------
+
+    @Test
+    fun `B-SETUP-010 every start problem names one start kind`() {
+        val table =
+            listOf(
+                StartProblem.Exited to StartStepKind.Exited,
+                StartProblem.TimedOut to StartStepKind.TimedOut,
+                StartProblem.Interrupted to StartStepKind.Withdrawn,
+                StartProblem.PasswordMissing to StartStepKind.Password,
+                StartProblem.PasswordNotSaved to StartStepKind.Password,
+                StartProblem.Refused to StartStepKind.Refused,
+                StartProblem.Busy to StartStepKind.Refused,
+                StartProblem.ComponentRecovery to StartStepKind.Ownership,
+            )
+        assertEquals(StartProblem.entries.toSet(), table.map { it.first }.toSet(), "every start problem is listed")
+        for ((problem, kind) in table) assertEquals(kind, StartStepKind.of(problem), problem.name)
+    }
+
+    @Test
+    fun `B-SETUP-010 a stored start error keeps its kind and text, and any other text stays as it was`() {
+        for (kind in StartStepKind.entries) {
+            assertEquals(kind to "waited 90 s", StartStepKind.read(StartStepKind.mark(kind, "waited 90 s")), kind.name)
+        }
+        val codes = StartStepKind.entries.map { it.code }
+        assertEquals(codes.size, codes.toSet().size, "one code per kind")
+        val plain =
+            listOf(
+                "",
+                "the server stopped",
+                OpenCodeInstallFailure.NO_START,
+                "[start_nope] x",
+                "[start_timed_out]x",
+            )
+        for (stored in plain) {
+            val read = StartStepKind.read(stored)
+            assertNull(read.first, stored)
+            assertEquals(stored, read.second, stored)
+        }
+    }
+
+    // ---- B-SETUP-011 -------------------------------------------------------------------------------------------
+
+    @Test
+    fun `B-SETUP-011 a start kind never hides a busy port`() {
+        val details = "IllegalStateException · Another OpenCode server is already using port 4100 on this phone."
+        val row =
+            SetupJobComponent(
+                SetupComponentIds.START,
+                "failed",
+                error = StartStepKind.mark(StartStepKind.Refused, details),
+            )
+        assertEquals(
+            SetupError.PortBusy(4100) to SetupError.PortBusy(4100),
+            SetupPlanning.describeFailure(row, "", "Start", step = true),
+        )
     }
 
     // ---- B-LINUX-198 -------------------------------------------------------------------------------------------

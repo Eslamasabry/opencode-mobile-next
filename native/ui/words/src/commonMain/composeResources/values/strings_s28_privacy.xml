@@ -21,7 +21,7 @@
     <string name="collectApprovals">What kind of request you were asked (run, edit, read, web or a question), your answer or that a saved choice answered it or the run was stopped, where you answered (conversation, home, a notification or a widget), and how long it waited. Never the command, file or question itself</string>
     <string name="collectStall">A long wait’s stage, duration and cause: confirmed silent thinking, a running tool, a retry, a missed or broken connection, an unconfirmed quiet connection, or unknown</string>
     <string name="collectQueue">How many queued messages were sent or failed</string>
-    <string name="collectPhoneSetup">How far setup on this phone got, how long each step took, the kind of failure, and whether you left it unfinished and came back</string>
+    <string name="collectPhoneSetup">How far setup on this phone got, how long each step took, the kind of failure (including for starting the server: exited, refused, password, withdrawn or port_busy, fixed words only, never text from the phone or server), and whether you left it unfinished and came back</string>
     <string name="collectAgents">Whether an agent started, and the kind of failure</string>
     <string name="collectBackground">Why the background service stopped</string>
     <string name="collectUpdates">Whether an update installed, and the kind of failure</string>

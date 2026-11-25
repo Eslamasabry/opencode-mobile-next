@@ -107,6 +107,13 @@ public interface KitPlatform {
     @Composable public fun SystemBars(darkContent: Boolean, ground: Color) {}
 
     /**
+     * System bars for a popup's own window (`KitPageOverlay`, `KitMenu`, `KitTip`): edge to edge,
+     * a transparent navigation bar and icons that contrast with [ground] ([darkContent] = dark
+     * icons). Desktop and other targets do nothing.
+     */
+    @Composable public fun PopupSystemBars(darkContent: Boolean, ground: Color): Unit = Unit
+
+    /**
      * The density frame text renders with: [base]'s font scale capped at [cap], on the platform's
      * own curve.
      */
@@ -229,4 +236,11 @@ public object KitSystemBars {
 
 public val LocalKitPlatform: ProvidableCompositionLocal<KitPlatform> = staticCompositionLocalOf {
     error("KitPlatform is provided once at the app root")
+}
+
+/** Applies the active theme's system-bar look to a popup window; no-op outside Android. */
+@Composable
+internal fun KitPopupSystemBars() {
+    val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
+    LocalKitPlatform.current.PopupSystemBars(darkContent = !colors.dark, ground = colors.ground)
 }

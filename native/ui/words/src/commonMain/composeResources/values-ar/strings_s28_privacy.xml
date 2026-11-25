@@ -16,7 +16,7 @@
     <string name="collectSend">هل نجح إرسال الرسالة أو انتظرت في الطابور، وكيف أنشأتها (كتابةً أو صوتاً أو بإرفاق)، وأي وكيل، ومتى وصل أول رد</string>
     <string name="collectStall">مرحلة الانتظار الطويل ومدته وسببه (cause): تفكير صامت تأكد استمراره، أو أداة تعمل، أو إعادة محاولة، أو اتصال انقطع أو فاتته نهاية الرد، أو اتصال صامت لم يُفحص بعد، أو سبب غير معروف</string>
     <string name="collectQueue">كم رسالة من الطابور أُرسلت أو فشلت</string>
-    <string name="collectPhoneSetup">إلى أين وصل الإعداد على هذا الهاتف، ومدة كل خطوة، ونوع الفشل، وهل تركته دون إكمال ثم عدت إليه</string>
+    <string name="collectPhoneSetup">إلى أين وصل الإعداد على هذا الهاتف، ومدة كل خطوة، ونوع الفشل (بما في ذلك عند بدء الخادم: exited, refused, password, withdrawn, port_busy، كلمات ثابتة فقط، وليس أي نص من الهاتف أو الخادم)، وهل تركته دون إكمال ثم عدت إليه</string>
     <string name="collectAgents">هل بدأ الوكيل، ونوع الفشل</string>
     <string name="collectBackground">سبب توقف الخدمة الخلفية</string>
     <string name="collectUpdates">هل ثُبّت التحديث، ونوع الفشل</string>

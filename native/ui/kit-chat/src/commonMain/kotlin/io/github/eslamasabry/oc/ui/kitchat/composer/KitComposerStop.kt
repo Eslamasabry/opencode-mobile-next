@@ -180,7 +180,16 @@ public fun KitComposerStop(
                     Box(Modifier.clearAndSetSemantics {}) {
                         KitChip(
                             label,
-                            icon = StopGlyph,
+                            glyph = {
+                                io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                                    StopGlyph,
+                                    size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                                    tone =
+                                        if (stuck) io.github.eslamasabry.oc.ui.design.type.TextTone.Attention
+                                        else io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary,
+                                    growsWithText = true,
+                                )
+                            },
                             tone = if (stuck) KitChipTone.Attention else KitChipTone.Neutral,
                         )
                     }

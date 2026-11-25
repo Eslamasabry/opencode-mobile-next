@@ -47,15 +47,22 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
@@ -64,6 +71,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.text.KitWholeWordsRules
 import io.github.eslamasabry.oc.ui.kit.theme.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitChipRemove
@@ -71,6 +79,12 @@ import org.jetbrains.compose.resources.stringResource
 
 public enum class KitChipTone { Neutral, Attention, Active }
 public enum class KitChipKind { Plain, Action, Removable, Count, Summary }
+
+/** True inside a card that stretches its action chip to its full inner width (`KitAgentTile`). */
+internal val LocalKitChipFullWidth = staticCompositionLocalOf { false }
+
+/** Inner slot width available to a full-width action chip ([Dp.Unspecified] elsewhere). */
+internal val LocalKitChipSlotWidth = staticCompositionLocalOf { Dp.Unspecified }
 
 /** Flutter's worded pill, with independent body/remove targets and a decorative custom glyph slot. */
 @Composable
@@ -167,11 +181,23 @@ public fun KitChip(
     val iconSize = tokens.smallIcon.dp * LocalDensity.current.fontScale.coerceAtMost(tokens.maxIconScale)
     val minHeight = tokens.chipHeight.dp + if (track && !adaptiveModel) Space.S1.dp else 0.dp
     val focusWidth = (2f / LocalDensity.current.density).dp // F: lib/ui/kit/kit_chip.dart:801
-    val target = modifier.kitMaxWidth(if (adaptiveModel) CapRole.Conversation else CapRole.Chip).heightIn(min = tokens.minTarget.dp).then(
-        if (onClick != null || onRemove != null) Modifier.widthIn(min = tokens.minTarget.dp) else Modifier,
-    ).onPreviewKeyEvent {
-        if (onRemove != null && it.type == KeyEventType.KeyDown && (it.key == Key.Delete || it.key == Key.Backspace)) { onRemove(); true } else false
-    }
+    val fullWidth = LocalKitChipFullWidth.current
+    val target =
+        modifier
+            .kitMaxWidth(if (adaptiveModel) CapRole.Conversation else CapRole.Chip)
+            .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
+            .heightIn(min = tokens.minTarget.dp)
+            .then(if (onClick != null || onRemove != null) Modifier.widthIn(min = tokens.minTarget.dp) else Modifier)
+            .onPreviewKeyEvent {
+                if (onRemove != null && it.type == KeyEventType.KeyDown &&
+                    (it.key == Key.Delete || it.key == Key.Backspace)
+                ) {
+                    onRemove()
+                    true
+                } else {
+                    false
+                }
+            }
     // C03 (audit 2026-11-09): a chip nobody can tap states a fact, and a fact is never a tinted capsule. It is a small
     // dot (only when the tone carries meaning) and a plain word, set on the row's own surface.
     if (onClick == null && onRemove == null && selected == null && glyph == null && !adaptiveModel) {
@@ -209,32 +235,65 @@ public fun KitChip(
     // Liquid glass answers the finger: the drop swells a little and its edge catches light (KitLiquidTouch.kt).
     val liquidPress = rememberKitLiquidPress(bodySource.face, on = liquid != null && onClick != null)
     val chipContent: @Composable BoxScope.(narrow: Boolean, modelPairFits: Boolean) -> Unit = { narrow, modelPairFits ->
+        val pillH = ChipLayoutRules.horizontalPadding(adaptiveModel, narrow, track, fullWidth)
+        val pillV = if (fullWidth) Space.S1.dp else 0.dp
+        val wrapsLabel = ChipLayoutRules.wraps(wraps, kind, adaptiveModel)
+        val labelMaxLines = ChipLayoutRules.maxLines(wraps, kind, adaptiveModel, density.fontScale)
+        val glyphEnd = if (narrow) 0.dp else if (adaptiveModel) Space.S2.dp else Space.S1.dp
+        val iconWidthPx =
+            if (fullWidth && wrapsLabel && !adaptiveModel) {
+                ChipLayoutRules.availableWithIconPx(
+                    LocalKitChipSlotWidth.current,
+                    pillH * 2 + iconSize + glyphEnd,
+                    density,
+                )
+            } else {
+                null
+            }
+        val showIcon =
+            icon != null &&
+                (iconWidthPx == null ||
+                    ChipLayoutRules.fitsWholeWords(measurer, text, style, labelMaxLines, iconWidthPx))
+        val hasStart = selected == true || glyph != null || showIcon
+        val labelStyle = if (fullWidth && !hasStart) style.copy(textAlign = TextAlign.Center) else style
         Row(
-            Modifier.onSizeChanged { faceSize = it }.heightIn(min = minHeight).then(liquid ?: look.modifier)
+            Modifier.onSizeChanged { faceSize = it }
+                .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
+                .heightIn(min = minHeight)
+                .then(liquid ?: look.modifier)
                 .kitLiquidPressLight(liquidPress, look.shape)
                 .drawWithContent {
                     drawContent()
                     if (bodyFocus || removeFocus) {
                         val w = focusWidth.toPx()
-                        val outline = look.shape.createOutline(Size(size.width + w, size.height + w), layoutDirection, this)
-                        translate(-w / 2, -w / 2) { drawOutline(outline, c.accent, style = Stroke(w)) } // NV: paint Flutter strokeAlignOutside around the face, converted to a centred Compose stroke
+                        val outline =
+                            look.shape.createOutline(Size(size.width + w, size.height + w), layoutDirection, this)
+                        // NV: paint Flutter strokeAlignOutside around the face, converted to a centred Compose stroke
+                        translate(-w / 2, -w / 2) { drawOutline(outline, c.accent, style = Stroke(w)) }
                     }
                 }
-                .padding(horizontal = if (adaptiveModel && narrow) Space.S1.dp else if (adaptiveModel) Space.S3.dp else if (track) Space.S4.dp else Space.S3.dp)
+                .padding(horizontal = pillH, vertical = pillV)
                 .clearAndSetSemantics { if (onClick == null && onRemove == null) contentDescription = accessible },
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = if (fullWidth) Arrangement.Center else Arrangement.Start,
         ) {
-            val hasStart = selected == true || glyph != null || icon != null
             if (hasStart) {
                 AnimatedContent(
                     targetState = selected == true,
                     transitionSpec = { fadeIn(specs.quick()) togetherWith fadeOut(specs.quick()) },
                     label = "kit-chip-glyph",
                 ) { checked ->
-                    Box(Modifier.padding(end = if (narrow) 0.dp else if (adaptiveModel) Space.S2.dp else Space.S1.dp).size(iconSize).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    Box(
+                        Modifier.padding(end = glyphEnd).size(iconSize).clearAndSetSemantics {
+                            if (!checked && glyph == null && showIcon) testTag = "kit-chip-icon"
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
                         if (checked) KitGlyph(KitIcons.check, c.accent, iconSize, Modifier.testTag("kit-chip-check"))
                         else if (glyph != null) glyph()
-                        else if (icon != null) KitGlyph(icon, if (adaptiveModel) c.text2 else words, iconSize)
+                        else if (showIcon && icon != null) {
+                            KitGlyph(icon, if (adaptiveModel) c.text2 else words, iconSize)
+                        }
                     }
                 }
             }
@@ -245,11 +304,11 @@ public fun KitChip(
                     // A model's name beside the chips gives way at its end when the box is narrow (it keeps its first
                     // characters, B-438), and a removable chip is a file or folder name, which may be longer than the
                     // chip's cap: both declare the cut, and the full name is spoken.
-                    .then(if (adaptiveModel) Modifier.kitMayTruncate("model-chip") else if (kind == KitChipKind.Removable) Modifier.kitMayTruncate("attachment-name") else Modifier),
-                style = style,
-                // An action chip's label ("New conversation", on a tile half a phone wide) wraps at its words, never "New conver…".
-                maxLines = if (wraps == true) Int.MAX_VALUE else if (wraps == null && kind == KitChipKind.Action && !adaptiveModel) 2 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
-                softWrap = adaptiveModel || wraps == true || (wraps == null && kind == KitChipKind.Action),
+                    .then(ChipLayoutRules.truncateModifier(adaptiveModel, kind)),
+                style = labelStyle,
+                // Action chips wrap on whole words to at most two lines ("New conversation" on a half-width tile).
+                maxLines = labelMaxLines,
+                softWrap = adaptiveModel || wrapsLabel,
                 overflow = TextOverflow.Ellipsis,
             )
             if (kind == KitChipKind.Removable || (opensMenu && (!narrow || modelPairFits)) || expanded != null) {
@@ -328,4 +387,65 @@ private class ChipZoneInteractions(private val nativeInk: Boolean) : MutableInte
         val accepted = face.tryEmit(interaction)
         return if (nativeInk && interaction is PressInteraction) ink.tryEmit(interaction) && accepted else accepted
     }
+}
+
+private object ChipLayoutRules {
+    const val WRAP_MAX_LINES = 2
+
+    fun horizontalPadding(adaptiveModel: Boolean, narrow: Boolean, track: Boolean, fullWidth: Boolean): Dp =
+        when {
+            adaptiveModel && narrow -> Space.S1.dp
+            fullWidth -> Space.S2.dp
+            adaptiveModel -> Space.S3.dp
+            track -> Space.S4.dp
+            else -> Space.S3.dp
+        }
+
+    fun wraps(wraps: Boolean?, kind: KitChipKind, adaptiveModel: Boolean): Boolean =
+        wraps == true || (wraps == null && kind == KitChipKind.Action && !adaptiveModel)
+
+    fun maxLines(wraps: Boolean?, kind: KitChipKind, adaptiveModel: Boolean, fontScale: Float): Int =
+        when {
+            wraps == true -> Int.MAX_VALUE
+            wraps == null && kind == KitChipKind.Action && !adaptiveModel -> WRAP_MAX_LINES
+            adaptiveModel && fontScale >= TextScalePolicy.FRAME_CAP -> WRAP_MAX_LINES
+            else -> 1
+        }
+
+    fun truncateModifier(adaptiveModel: Boolean, kind: KitChipKind): Modifier =
+        when {
+            adaptiveModel -> Modifier.kitMayTruncate("model-chip")
+            kind == KitChipKind.Removable -> Modifier.kitMayTruncate("attachment-name")
+            else -> Modifier
+        }
+
+    fun availableWithIconPx(slotWidth: Dp, reserved: Dp, density: Density): Int? {
+        if (!slotWidth.isSpecified) return null
+        val capped = CapRole.Chip.capDp?.dp?.let { minOf(slotWidth, it) } ?: slotWidth
+        return with(density) { (capped - reserved).toPx().toInt() } - 1
+    }
+
+    fun fitsWholeWords(
+        measurer: TextMeasurer,
+        text: AnnotatedString,
+        style: TextStyle,
+        maxLines: Int,
+        maxWidthPx: Int,
+    ): Boolean =
+        if (maxWidthPx <= 0) {
+            false
+        } else {
+            val layout =
+                measurer.measure(
+                    text = text,
+                    style = style,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = true,
+                    maxLines = maxLines,
+                    constraints = Constraints(maxWidth = maxWidthPx),
+                )
+            !layout.hasVisualOverflow &&
+                (0 until layout.lineCount).none { layout.isLineEllipsized(it) } &&
+                KitWholeWordsRules.whole(layout, text.text)
+        }
 }
