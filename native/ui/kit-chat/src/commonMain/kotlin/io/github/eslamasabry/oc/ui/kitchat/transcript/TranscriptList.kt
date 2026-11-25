@@ -18,6 +18,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -213,6 +214,30 @@ internal constructor(
             if (itemCount > 0) lazy.scrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
         } else {
             lazy.scrollToItem(0)
+        }
+    }
+
+    /**
+     * Restores a saved reading place ([newestFirst] index and [offset] px taken in [takenNormal] order) once
+     * Hybrid layout order has settled, translating across reversed and normal orders when they differ.
+     */
+    public suspend fun scrollToPlace(newestFirst: Int, offset: Int, takenNormal: Boolean) {
+        snapshotFlow { isNormalOrder == orderNormal }.first { it }
+        when {
+            isNormalOrder == takenNormal -> lazy.scrollToItem(lazyIndex(newestFirst), offset)
+            !takenNormal -> {
+                val target = lazyIndex(newestFirst)
+                lazy.scrollToItem(target)
+                withFrameNanos { }
+                val info = lazy.layoutInfo
+                val item = info.visibleItemsInfo.firstOrNull { it.index == target }
+                if (item != null) {
+                    val bottom = info.beforeContentPadding + item.offset + item.size
+                    val line = info.viewportSize.height - info.afterContentPadding + roomPx
+                    lazy.scrollBy((bottom - line - offset).toFloat())
+                }
+            }
+            else -> scrollToNewest()
         }
     }
 

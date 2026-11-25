@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
 import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.FlickerMode
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiOptions
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -29,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
+import java.io.File
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -73,99 +76,129 @@ class ChatHybridPlaceTest {
         repeat(frames) { mainClock.advanceTimeByFrame() }
     }
 
+    private fun findingsFile(): File {
+        val pid = ProcessHandle.current().pid()
+        val dir = File(System.getProperty("oc.flicker.dir") ?: "build/flicker")
+        return File(dir, "findings-$pid.tsv")
+    }
+
+    private fun readFindingLines(): List<String> =
+        findingsFile().takeIf { it.isFile }?.readLines().orEmpty().filter { !it.startsWith("#") && it.isNotBlank() }
+
+    private fun withFlickerReport(label: String, block: () -> Unit) {
+        val before = readFindingLines().toSet()
+        block()
+        val added = readFindingLines().filter { it !in before }
+        if (added.isEmpty()) {
+            println("FLICKER [$label] 0")
+        } else {
+            val summary =
+                added.joinToString("; ") { row ->
+                    val cols = row.split('\t')
+                    if (cols.size >= 4) "${cols[1]}:${cols[2]}(x${cols[3]})" else row
+                }
+            println("FLICKER [$label] ${added.size}: $summary")
+        }
+    }
+
     @Test
     fun `STEPS-SCROLL-010 hybrid place taken while reading comes back on the same row and offset`() =
-        kitUiTest {
-            ScrollPlaceStore.clear()
-            var shown by mutableStateOf(true)
-            lateinit var list: TranscriptListState
-            mainClock.autoAdvance = false
-            setContent {
-                Themed {
-                    val holder = rememberSaveableStateHolder()
-                    if (shown) {
-                        holder.SaveableStateProvider("chat") {
-                            list = rememberTranscriptListState()
-                            Box(Modifier.size(412.dp, 800.dp)) {
-                                ChatTranscript(
-                                    rows60,
-                                    Words,
-                                    list,
-                                    rememberRevealRegistry(),
-                                    KitMotionLevel.Off,
-                                    placeKey = "p/hybrid-same",
-                                )
+        withFlickerReport("010") {
+            kitUiTest(options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                var shown by mutableStateOf(true)
+                lateinit var list: TranscriptListState
+                mainClock.autoAdvance = false
+                setContent {
+                    Themed {
+                        val holder = rememberSaveableStateHolder()
+                        if (shown) {
+                            holder.SaveableStateProvider("chat") {
+                                list = rememberTranscriptListState()
+                                Box(Modifier.size(412.dp, 800.dp)) {
+                                    ChatTranscript(
+                                        rows60,
+                                        Words,
+                                        list,
+                                        rememberRevealRegistry(),
+                                        KitMotionLevel.Off,
+                                        placeKey = "p/hybrid-same",
+                                    )
+                                }
                             }
                         }
                     }
                 }
+                pump()
+                list.following = false
+                pump()
+                runOnIdle { list.lazy.requestScrollToItem(30, 9) }
+                pump()
+                assertTrue(list.isNormalOrder)
+                val key = list.firstKey()
+                val offset = list.lazy.firstVisibleItemScrollOffset
+                shown = false
+                pump()
+                shown = true
+                pump()
+                assertTrue(list.isNormalOrder)
+                assertEquals(key, list.firstKey())
+                assertEquals(offset, list.lazy.firstVisibleItemScrollOffset)
             }
-            pump()
-            list.following = false
-            pump()
-            runOnIdle { list.lazy.requestScrollToItem(30, 9) }
-            pump()
-            assertTrue(list.isNormalOrder)
-            val key = list.firstKey()
-            val offset = list.lazy.firstVisibleItemScrollOffset
-            shown = false
-            pump()
-            shown = true
-            pump()
-            assertTrue(list.isNormalOrder)
-            assertEquals(key, list.firstKey())
-            assertEquals(offset, list.lazy.firstVisibleItemScrollOffset)
         }
 
     @Test
     fun `STEPS-SCROLL-011 hybrid place taken following comes back across orders`() =
-        kitUiTest {
-            ScrollPlaceStore.clear()
-            var shown by mutableStateOf(true)
-            var rows by mutableStateOf(turns(20))
-            lateinit var list: TranscriptListState
-            mainClock.autoAdvance = false
-            setContent {
-                Themed {
-                    val holder = rememberSaveableStateHolder()
-                    if (shown) {
-                        holder.SaveableStateProvider("chat") {
-                            list = rememberTranscriptListState()
-                            Box(Modifier.size(412.dp, 800.dp)) {
-                                ChatTranscript(
-                                    rows,
-                                    Words,
-                                    list,
-                                    rememberRevealRegistry(),
-                                    KitMotionLevel.Off,
-                                    placeKey = "p/hybrid-follow",
-                                )
+        withFlickerReport("011") {
+            kitUiTest(options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                var shown by mutableStateOf(true)
+                var rows by mutableStateOf(turns(20))
+                lateinit var list: TranscriptListState
+                mainClock.autoAdvance = false
+                setContent {
+                    Themed {
+                        val holder = rememberSaveableStateHolder()
+                        if (shown) {
+                            holder.SaveableStateProvider("chat") {
+                                list = rememberTranscriptListState()
+                                Box(Modifier.size(412.dp, 800.dp)) {
+                                    ChatTranscript(
+                                        rows,
+                                        Words,
+                                        list,
+                                        rememberRevealRegistry(),
+                                        KitMotionLevel.Off,
+                                        placeKey = "p/hybrid-follow",
+                                    )
+                                }
                             }
                         }
                     }
                 }
+                pump()
+                assertTrue(list.following)
+                val targetText = "Answer number 20 with a few words"
+                val beforeBottom = onNodeWithText(targetText).fetchSemanticsNode().boundsInRoot.bottom
+                shown = false
+                pump()
+                rows = turns(22)
+                pump()
+                shown = true
+                pump()
+                assertTrue(list.isNormalOrder, "expected normal order after returning to older rows")
+                assertFalse(list.following, "expected following == false after newer rows arrived")
+                val afterBottom = onNodeWithText(targetText).fetchSemanticsNode().boundsInRoot.bottom
+                val delta = abs(afterBottom - beforeBottom)
+                assertTrue(
+                    delta <= TOLERANCE_PX,
+                    "expected '$targetText' bottom $beforeBottom +/-$TOLERANCE_PX, got $afterBottom (delta=$delta)",
+                )
             }
-            pump()
-            assertTrue(list.following)
-            val targetText = "Answer number 20 with a few words"
-            val beforeBottom = onNodeWithText(targetText).fetchSemanticsNode().boundsInRoot.bottom
-            shown = false
-            pump()
-            rows = turns(22)
-            pump()
-            shown = true
-            pump()
-            assertTrue(list.isNormalOrder, "expected normal order after returning to older rows")
-            assertFalse(list.following, "expected following == false after newer rows arrived")
-            val afterBottom = onNodeWithText(targetText).fetchSemanticsNode().boundsInRoot.bottom
-            val delta = abs(afterBottom - beforeBottom)
-            assertTrue(
-                delta <= TOLERANCE_PX,
-                "expected '$targetText' bottom $beforeBottom +/-$TOLERANCE_PX, got $afterBottom (delta=$delta)",
-            )
         }
 
     private companion object {
+        val REPORT_OPTIONS = KitUiOptions(mode = FlickerMode.Report)
         const val SETTLE_FRAMES = 20
         const val TOLERANCE_PX = 0.5f
     }

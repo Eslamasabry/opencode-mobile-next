@@ -28,25 +28,39 @@ import kotlinx.coroutines.flow.first
  * list is rebuilt. [older] are the keys of the next rows toward the oldest, so a row that is gone can fall back to the
  * nearest earlier one; its length is fixed at [OLDER_KEYS_KEPT].
  */
-internal class ScrollPlace(val key: String, val offset: Int, val older: List<String>) {
+internal class ScrollPlace(
+    val key: String,
+    val offset: Int,
+    val older: List<String>,
+    val normal: Boolean = false,
+) {
     companion object {
         const val OLDER_KEYS_KEPT = 8
+        private const val SAVER_LEGACY_HEADER = 3
+        private const val SAVER_NORMAL_INDEX = 3
+        private const val SAVER_HEADER = 4
 
         val Saver: Saver<ScrollPlaceHolder, Any> =
             Saver(
                 save = { holder ->
-                    holder.place?.let { listOf<Any>(holder.following, it.key, it.offset) + it.older } ?: emptyList<Any>()
+                    holder.place?.let {
+                        listOf<Any>(holder.following, it.key, it.offset, it.normal) + it.older
+                    } ?: emptyList<Any>()
                 },
                 restore = { saved ->
                     val items = saved as List<*>
                     ScrollPlaceHolder().also { holder ->
-                        if (items.size >= 3) {
+                        if (items.size >= SAVER_LEGACY_HEADER) {
                             holder.following = items[0] as Boolean
+                            val hasNormal = items.getOrNull(SAVER_NORMAL_INDEX) is Boolean
+                            val normal = items.getOrNull(SAVER_NORMAL_INDEX) as? Boolean ?: false
+                            val dropCount = if (hasNormal) SAVER_HEADER else SAVER_LEGACY_HEADER
                             holder.place =
                                 ScrollPlace(
                                     items[1] as String,
                                     items[2] as Int,
-                                    items.drop(3).map { it as String },
+                                    items.drop(dropCount).map { it as String },
+                                    normal,
                                 )
                         }
                     }
@@ -118,13 +132,15 @@ public fun openChatFromNotification(ref: ConversationRef, openChat: (Conversatio
 
 internal object ScrollPlaceRules {
     /** The place of the row at [firstVisible] (index into [keys], newest first) with [offset] px scrolled into it. */
-    fun capture(keys: List<String>, firstVisible: Int, offset: Int): ScrollPlace? {
+    fun capture(keys: List<String>, firstVisible: Int, offset: Int, normal: Boolean = false): ScrollPlace? {
         val key = keys.getOrNull(firstVisible) ?: return null
         // Only the few keys kept (issue 147: this runs on every publish, and a copy of every older key grew with
         // the history loaded).
         val from = firstVisible + 1
-        val older = if (from >= keys.size) emptyList() else keys.subList(from, minOf(keys.size, from + ScrollPlace.OLDER_KEYS_KEPT)).toList()
-        return ScrollPlace(key, offset, older)
+        val older =
+            if (from >= keys.size) emptyList()
+            else keys.subList(from, minOf(keys.size, from + ScrollPlace.OLDER_KEYS_KEPT)).toList()
+        return ScrollPlace(key, offset, older, normal)
     }
 
     /**
@@ -189,7 +205,11 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
                 // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
                 list.following = holder.following && index == 0
-                list.lazy.scrollToItem(list.lazyIndex(index), offset)
+                if (list.anchor == TranscriptAnchor.Hybrid) {
+                    list.scrollToPlace(index, offset, saved.normal)
+                } else {
+                    list.lazy.scrollToItem(list.lazyIndex(index), offset)
+                }
             }
         }
         snapshotFlow { list.placeIn(current) to list.following }
@@ -209,7 +229,7 @@ private fun TranscriptListState.placeIn(keys: List<String>): ScrollPlace? =
         val firstIndex = lazy.firstVisibleItemIndex
         val key = lazy.layoutInfo.visibleItemsInfo.firstOrNull { it.index == firstIndex }?.key as? String
         val at = if (key != null) keys.indexOf(key) else -1
-        if (at >= 0) ScrollPlaceRules.capture(keys, at, lazy.firstVisibleItemScrollOffset) else null
+        if (at >= 0) ScrollPlaceRules.capture(keys, at, lazy.firstVisibleItemScrollOffset, isNormalOrder) else null
     }
 
 /**
