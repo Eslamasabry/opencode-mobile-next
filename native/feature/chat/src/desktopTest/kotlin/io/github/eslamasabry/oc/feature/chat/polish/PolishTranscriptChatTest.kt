@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -283,24 +285,32 @@ class PolishTranscriptChatTest {
                 up()
             }
             waitForIdle()
-            val pill = onNodeWithTag("kit-header-capsule", useUnmergedTree = true).getBoundsInRoot()
+            val pill =
+                onAllNodesWithTag("kit-header-capsule", useUnmergedTree = true)
+                    .fetchSemanticsNodes()
+                    .firstOrNull()
+                    ?.boundsInRoot
+                    ?: onNodeWithTag("kit-liquid-bar", useUnmergedTree = true)
+                        .fetchSemanticsNode()
+                        .boundsInRoot
             val pixels = onRoot().captureToImage().toPixelMap()
-            val topEnd = pill.top.value.toInt().coerceIn(0, pixels.height - 1)
-            val pillBottom = pill.bottom.value.toInt().coerceIn(0, pixels.height - 1)
-            val pillLeft = (pill.left.value.toInt() - 2).coerceIn(0, pixels.width - 1)
-            var leaks = 0
-            // Check above the pill's top AND in the left side margin beside the pill.
-            for (y in 25 until topEnd) {
-                for (x in 16 until pixels.width - 16) {
-                    if (colorDiff(pixels[x, y], ground) > 0.06f) leaks++
-                }
-            }
-            for (y in topEnd until pillBottom) {
-                for (x in 2 until pillLeft) {
-                    if (colorDiff(pixels[x, y], ground) > 0.06f) leaks++
-                }
-            }
-            assertTrue(leaks == 0, "found $leaks non-ground transcript pixels above/beside header pill ($pill)")
+            val pillTop = pill.top.toInt().coerceIn(0, pixels.height - 1)
+            val pillBottom = pill.bottom.toInt().coerceIn(0, pixels.height - 1)
+            val pillLeft = (pill.left.toInt() - 2).coerceIn(0, pixels.width - 1)
+            val pillRight = (pill.right.toInt() + 2).coerceIn(0, pixels.width - 1)
+            assertTrue(pillTop > 0 && pillBottom > pillTop, "expected visible header pill bounds, got $pill")
+            val bodyXs = 16 until (pixels.width - 16)
+            val belowBottom = (pillBottom + 2).coerceAtMost(pixels.height)
+            val leaks =
+                countNonGround(pixels, ground, bodyXs, 0 until pillTop) +
+                    countNonGround(pixels, ground, 2 until pillLeft, pillTop until pillBottom) +
+                    countNonGround(pixels, ground, pillRight until (pixels.width - 2), pillTop until pillBottom) +
+                    countNonGround(pixels, ground, bodyXs, pillBottom until belowBottom)
+            assertTrue(leaks == 0, "found $leaks non-ground pixels above/at header pill bottom ($pill)")
+            val fadeEnd = (pillBottom + 22).coerceAtMost(pixels.height)
+            val sampleEnd = (pillBottom + 80).coerceAtMost(pixels.height)
+            val visibleBelow = countNonGround(pixels, ground, bodyXs, fadeEnd until sampleEnd, threshold = 0.15f)
+            assertTrue(visibleBelow > 20, "expected scrolled transcript below fade, found $visibleBelow pixels")
         }
 
     @Test
@@ -331,6 +341,22 @@ class PolishTranscriptChatTest {
                 "file row glyph x ($glyphX) must be 16 dp from column edge",
             )
         }
+
+    private fun countNonGround(
+        pixels: PixelMap,
+        ground: Color,
+        xs: IntRange,
+        ys: IntRange,
+        threshold: Float = 0.06f,
+    ): Int {
+        var count = 0
+        for (y in ys) {
+            for (x in xs) {
+                if (colorDiff(pixels[x, y], ground) > threshold) count++
+            }
+        }
+        return count
+    }
 
     private fun colorDiff(a: Color, b: Color): Float =
         maxOf(abs(a.red - b.red), abs(a.green - b.green), abs(a.blue - b.blue))

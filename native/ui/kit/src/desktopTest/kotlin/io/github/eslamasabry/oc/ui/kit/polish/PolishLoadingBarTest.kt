@@ -82,6 +82,67 @@ class PolishLoadingBarTest {
         }
 
     @Test
+    fun `B-584 still bar has no partial dash`() {
+        val (runs300, spans300) = accentRunLengths(300)
+        assertTrue(runs300.isNotEmpty(), "expected accent dashes at 300 dp")
+        assertTrue(runs300.all { abs(it - 8) <= 1 }, "300 dp dashes must be 8 dp ± 1 px, got $runs300")
+        assertTrue(spans300, "300 dp dashes must span both edges without a trailing gap: $runs300")
+        val (runs292, spans292) = accentRunLengths(292)
+        assertTrue(
+            runs292.all { abs(it - 8) <= 1 },
+            "292 dp dashes must be 8 dp ± 1 px (no partial dash), got $runs292",
+        )
+        assertTrue(spans292, "292 dp dashes must span both edges: $runs292")
+    }
+
+    private fun colorDiff(a: Color, b: Color): Float =
+        maxOf(abs(a.red - b.red), abs(a.green - b.green), abs(a.blue - b.blue))
+
+    private fun isAccent(c: Color, accent: Color, track: Color): Boolean =
+        colorDiff(c, accent) < colorDiff(c, track)
+
+    private fun accentRunLengths(widthDp: Int): Pair<List<Int>, Boolean> {
+        var runs = emptyList<Int>()
+        var spans = false
+        runDesktopComposeUiTest(widthDp, 20) {
+            var accent = Color.Unspecified
+            var track = Color.Unspecified
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        FakeKitPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        accent = LocalKitColors.current.accent
+                        track = LocalKitColors.current.surface3
+                        Box(Modifier.width(widthDp.dp).background(LocalKitColors.current.ground)) {
+                            KitLoadingBar(loading = true, label = "Loading")
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val pixels = onRoot().captureToImage().toPixelMap()
+            val found = mutableListOf<Int>()
+            var current = 0
+            for (x in 0 until pixels.width) {
+                if (isAccent(pixels[x, 1], accent, track)) {
+                    current++
+                } else if (current > 0) {
+                    found += current
+                    current = 0
+                }
+            }
+            if (current > 0) found += current
+            runs = found
+            spans = isAccent(pixels[0, 1], accent, track) && isAccent(pixels[pixels.width - 1, 1], accent, track)
+        }
+        return runs to spans
+    }
+
+    @Test
     fun `B-561 usable title width is equal in Solid and Glass`() {
         fun measureTitleWidth(style: Style): Float {
             var width = 0f
