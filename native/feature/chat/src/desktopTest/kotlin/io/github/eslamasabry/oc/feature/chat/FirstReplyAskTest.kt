@@ -166,7 +166,11 @@ class FirstReplyAskTest {
                 }
             setContent { Screen(ask, actions) }
             waitForIdle()
+            mainClock.advanceTimeBy(100)
+            waitForIdle()
             onNodeWithTag(branch.tapTag).performClick()
+            waitForIdle()
+            mainClock.advanceTimeBy(100)
             waitForIdle()
             onNodeWithText("What do you use it for?").assertExists()
             if (branch.checkAllUses) {
@@ -175,6 +179,8 @@ class FirstReplyAskTest {
                 }
             }
             onNodeWithText(branch.pickText).performClick()
+            waitForIdle()
+            mainClock.advanceTimeBy(100)
             waitForIdle()
             onNodeWithTag(REPLY_ASK_AFTER_TAG).assertExists()
             onNodeWithText(branch.expectedNote).assertExists()

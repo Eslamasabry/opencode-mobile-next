@@ -1779,67 +1779,72 @@ private val LocalReplyAsk = compositionLocalOf<ReplyAskHost?> { null }
 
 @Composable
 private fun ReplyFooterAsk(ask: ReplyAskUi, actions: ChatActions) {
-    when (ask.stage) {
-        ReplyAskStage.Ask ->
-            KitReplyAsk(
-                question = stringResource(Res.string.firstReplyAskQuestion),
-                yes = stringResource(Res.string.firstReplyAskYes),
-                no = stringResource(Res.string.firstReplyAskNo),
-                skip = stringResource(Res.string.kitTourSkip),
-                onYes = actions::replyAskYes,
-                onNo = actions::replyAskNo,
-                onSkip = actions::replyAskSkip,
-            )
-        ReplyAskStage.Thanks, ReplyAskStage.Sorry -> ReplyFooterAskAfter(ask, actions)
-    }
-}
-
-@Composable
-private fun ReplyFooterAskAfter(ask: ReplyAskUi, actions: ChatActions) {
     val isThanks = ask.stage == ReplyAskStage.Thanks
     val useTitle = stringResource(Res.string.firstReplyAskUseTitle)
     val useGroup = remember(useTitle) { KitMenuGroup("reply-ask-use", heading = useTitle) }
-    val items =
-        listOf(
-            KitMenuItem(
-                label = stringResource(Res.string.firstReplyAskUseEveryday),
-                onSelect = { actions.replyAskUse(ReplyAskUse.Everyday) },
-                group = useGroup,
-                dismissal = KitMenuDismissal.ByAction,
-            ),
-            KitMenuItem(
-                label = stringResource(Res.string.firstReplyAskUseCode),
-                onSelect = { actions.replyAskUse(ReplyAskUse.Code) },
-                group = useGroup,
-                dismissal = KitMenuDismissal.ByAction,
-            ),
-            KitMenuItem(
-                label = stringResource(Res.string.firstReplyAskUseBoth),
-                onSelect = { actions.replyAskUse(ReplyAskUse.Both) },
-                group = useGroup,
-                dismissal = KitMenuDismissal.ByAction,
-            ),
-            KitMenuItem(
-                label = stringResource(Res.string.firstReplyAskUseLooking),
-                onSelect = { actions.replyAskUse(ReplyAskUse.Looking) },
-                group = useGroup,
-                dismissal = KitMenuDismissal.ByAction,
-            ),
-        )
+    val items = replyAskUseItems(useGroup, actions)
     KitMenu(
-        expanded = ask.menu,
+        expanded = ask.menu && ask.stage != ReplyAskStage.Ask,
         items = items,
         onDismissRequest = actions::replyAskMenuClosed,
         title = useTitle,
     ) {
-        KitReplyAskAfter(
-            note = stringResource(if (isThanks) Res.string.firstReplyAskThanks else Res.string.firstReplyAskSorry),
-            action = stringResource(if (isThanks) Res.string.chatStarAskAction else Res.string.kitReportProblem),
-            onAction = if (isThanks) actions::replyAskStar else actions::replyAskReport,
-            star = isThanks,
-        )
+        when (ask.stage) {
+            ReplyAskStage.Ask ->
+                KitReplyAsk(
+                    question = stringResource(Res.string.firstReplyAskQuestion),
+                    yes = stringResource(Res.string.firstReplyAskYes),
+                    no = stringResource(Res.string.firstReplyAskNo),
+                    skip = stringResource(Res.string.kitTourSkip),
+                    onYes = actions::replyAskYes,
+                    onNo = actions::replyAskNo,
+                    onSkip = actions::replyAskSkip,
+                )
+            ReplyAskStage.Thanks, ReplyAskStage.Sorry ->
+                KitReplyAskAfter(
+                    note =
+                        stringResource(
+                            if (isThanks) Res.string.firstReplyAskThanks else Res.string.firstReplyAskSorry,
+                        ),
+                    action =
+                        stringResource(
+                            if (isThanks) Res.string.chatStarAskAction else Res.string.kitReportProblem,
+                        ),
+                    onAction = if (isThanks) actions::replyAskStar else actions::replyAskReport,
+                    star = isThanks,
+                )
+        }
     }
 }
+
+@Composable
+private fun replyAskUseItems(useGroup: KitMenuGroup, actions: ChatActions): List<KitMenuItem> =
+    listOf(
+        KitMenuItem(
+            label = stringResource(Res.string.firstReplyAskUseEveryday),
+            onSelect = { actions.replyAskUse(ReplyAskUse.Everyday) },
+            group = useGroup,
+            dismissal = KitMenuDismissal.ByAction,
+        ),
+        KitMenuItem(
+            label = stringResource(Res.string.firstReplyAskUseCode),
+            onSelect = { actions.replyAskUse(ReplyAskUse.Code) },
+            group = useGroup,
+            dismissal = KitMenuDismissal.ByAction,
+        ),
+        KitMenuItem(
+            label = stringResource(Res.string.firstReplyAskUseBoth),
+            onSelect = { actions.replyAskUse(ReplyAskUse.Both) },
+            group = useGroup,
+            dismissal = KitMenuDismissal.ByAction,
+        ),
+        KitMenuItem(
+            label = stringResource(Res.string.firstReplyAskUseLooking),
+            onSelect = { actions.replyAskUse(ReplyAskUse.Looking) },
+            group = useGroup,
+            dismissal = KitMenuDismissal.ByAction,
+        ),
+    )
 
 /**
  * The extra gap above [row] that makes its turn read as Flutter's `KitTurn` column (kit_turn.dart:484-516): 16 dp
