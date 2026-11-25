@@ -106,19 +106,25 @@ class ChatReopenConnectionTest {
     private class Opener(
         private val registry: ConnectionRegistry,
         private val server: ServerProfile,
+        val after: CompletableDeferred<Unit> = CompletableDeferred(Unit),
     ) : ChatConnectionOpener {
         val opens = ArrayList<ProfileId>()
         val holds = ArrayList<Pair<ProfileId, Boolean>>()
         val gate = CompletableDeferred<Unit>()
         val chance = MutableStateFlow(true)
         var failure: Failure? = null
+        var finished = 0
 
         override suspend fun open(profile: ProfileId): Outcome<Unit> {
             opens += profile
             gate.await()
             failure?.let { return Outcome.Failed(it) }
             return when (val opened = registry.open(server)) {
-                is Outcome.Ok -> Outcome.Ok(Unit)
+                is Outcome.Ok -> {
+                    after.await()
+                    finished++
+                    Outcome.Ok(Unit)
+                }
                 is Outcome.Failed -> opened
             }
         }
@@ -412,5 +418,25 @@ class ChatReopenConnectionTest {
         runCurrent()
         helper.detach()
         assertEquals(emptyList<ProfileId>(), opener.opens)
+    }
+
+    @Test
+    fun `B-CHAT-436 a quiet reconnect is never cut off by its own chat`() = runTest {
+        for (detachFirst in listOf(false, true)) {
+            val gateway = FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
+            val registry = registry(gateway)
+            val opener = Opener(registry, profile, after = CompletableDeferred()).apply { gate.complete(Unit) }
+            val world = GraphChatWorld(ref, registry, connectionOpener = opener)
+            world.attach()
+            runCurrent()
+            advanceTimeBy(2_001)
+            runCurrent()
+            assertEquals(ChatLoad.Live, world.load.value)
+            if (detachFirst) world.detach()
+            opener.after.complete(Unit)
+            runCurrent()
+            assertEquals(1, opener.finished)
+            if (!detachFirst) world.detach()
+        }
     }
 }
