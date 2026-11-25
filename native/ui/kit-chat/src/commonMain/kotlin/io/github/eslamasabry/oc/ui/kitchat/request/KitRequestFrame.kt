@@ -102,13 +102,11 @@ public fun KitRequestFrame(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.toShape()
     val question = look == KitRequestLook.Question
-    val inPlace = look == KitRequestLook.InPlace
     // Brutal and Paper dress the card as a card on the page (audit 2026-11-14): Brutal's ink edge and hard shadow,
     // Paper's ink box with square corners; the attention stays in its fill (standard) or its start edge (question). The
     // controls inside are nested in its outline (LocalKitNested): edged, never a second shadow.
     val dressed =
-        if (inPlace) null
-        else kitDressedLook(
+        kitDressedLook(
             KitSurfaceInput(
                 role = SurfaceRole.Content,
                 shape = KitShapeId.Card,
@@ -120,7 +118,7 @@ public fun KitRequestFrame(
     // holds reading content, so it is a frosted card through the resolver with the attention kept on it (the start edge
     // and half line of the question look, the wash and line of the standard one), as the form card is.
     val glass =
-        if (inPlace || LocalKitStyle.current.style != Style.Glass) null
+        if (LocalKitStyle.current.style != Style.Glass) null
         else kitStyledFace(
             KitSurfaceInput(
                 SurfaceRole.Content,
@@ -130,7 +128,7 @@ public fun KitRequestFrame(
             )
         )
     val face =
-        if (inPlace || LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
+        if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
         else if (dressed != null) Modifier.kitSurface(dressed).then(if (question) Modifier.questionEdge().questionPadding() else Modifier.padding(Space.S4.dp))
         else if (glass != null && question)
             Modifier.kitSurface(glass)
@@ -152,8 +150,9 @@ public fun KitRequestFrame(
     // under it does. The question look and Signal keep their place as before.
     val ringWidth = FlutterKitTokens.NEEDS_YOU_RING_WIDTH.dp
     val ring =
-        if (!inPlace && (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal)) Modifier.padding(horizontal = ringWidth)
-        else Modifier
+        if (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
+            Modifier.padding(horizontal = ringWidth)
+        } else Modifier
     KitSignalSlip(
         modifier.widthIn(max = 700.dp).fillMaxWidth().kitMaxHeightAtLayout(maxCardHeight()),
         endsWithTap = true,

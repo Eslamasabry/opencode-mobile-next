@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,9 +20,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextDecoration
@@ -63,6 +66,7 @@ public fun KitRequestTargets(
     modifier: Modifier = Modifier,
     copyLabel: String? = null,
     copiedLabel: String? = null,
+    footer: (@Composable () -> Unit)? = null,
 ) {
     if (targets.isEmpty()) return
     var expanded by remember(targets) { mutableStateOf(false) }
@@ -74,6 +78,7 @@ public fun KitRequestTargets(
     Column(
         modifier
             .fillMaxWidth()
+            .testTag("kit-request-targets")
             .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.ground).border(1.dp, colors.hairline, shape))
             .padding(Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -88,22 +93,27 @@ public fun KitRequestTargets(
         (if (expanded) targets else targets.take(TARGET_LIMIT)).forEachIndexed { index, target ->
             if (index == 0 && copy != null) {
                 // One line sits level with the copy mark (it sat high, over an empty lower half); several lines keep
-                // the mark at the first line's corner.
+                // the mark at the first line's corner. Forced LTR so the copy mark pins to the right edge in RTL too.
                 val oneLine = '\n' !in target.text
-                Row(verticalAlignment = if (oneLine) Alignment.CenterVertically else Alignment.Top) {
-                    KitMonoLtr(
-                        target.text,
-                        Modifier.weight(1f).padding(top = if (oneLine) 0.dp else Space.S2.dp),
-                        TextTone.Primary,
-                    )
-                    KitIconButton(
-                        icon = if (copy.label != copyLabel) KitIcons.check else KitIcons.copy,
-                        label = copy.label,
-                        onClick = copy.onClick ?: {},
-                        // The copied name is announced once, saying when a password or key was masked.
-                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                        tone = TextTone.Secondary,
-                    )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = if (oneLine) Alignment.CenterVertically else Alignment.Top,
+                    ) {
+                        KitMonoLtr(
+                            target.text,
+                            Modifier.weight(1f).padding(top = if (oneLine) 0.dp else Space.S2.dp),
+                            TextTone.Primary,
+                        )
+                        KitIconButton(
+                            icon = if (copy.label != copyLabel) KitIcons.check else KitIcons.copy,
+                            label = copy.label,
+                            onClick = copy.onClick ?: {},
+                            // The copied name is announced once, saying when a password or key was masked.
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                            tone = TextTone.Secondary,
+                        )
+                    }
                 }
             } else KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
             target.change?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
@@ -120,6 +130,10 @@ public fun KitRequestTargets(
                 { expanded = !expanded },
                 role = KitButtonRole.Tertiary,
             )
+        }
+        if (footer != null) {
+            KitDivider()
+            footer()
         }
     }
 }

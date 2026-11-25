@@ -28,7 +28,7 @@ public enum class KitViewerKind { Text, Code, Markdown, Image, Pdf, Svg, Delimit
  * wraps, and only on a compact window.
  */
 public fun kitViewerDefaultWrap(window: WindowClass, kind: KitViewerKind?): Boolean =
-    kind != KitViewerKind.Code && window == WindowClass.Compact // F: lib/ui/kit/kit_viewer_content.dart:10-14 lib/ui/kit/kit_code_block.dart:334-337
+    window == WindowClass.Compact // B-580: wrap by default on compact phone windows for every viewer kind
 
 /**
  * One page of a PDF, already rendered by the caller's renderer (Dart `KitPdfPage`; the name `KitPdfPage` is the page

@@ -245,7 +245,7 @@ public fun KitViewerFrame(
             bottom =
                 if (shownPrimary != null || footer != null) {
                     {
-                        Column {
+                        Column(Modifier.padding(top = Space.S2.dp)) {
                             footer?.invoke()
                             if (shownPrimary != null) {
                                 // The screen's bottom block already sits on the page margin: no second gutter here.

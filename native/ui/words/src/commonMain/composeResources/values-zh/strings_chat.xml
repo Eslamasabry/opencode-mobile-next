@@ -1253,4 +1253,5 @@
     <string name="kitToolUnanswered">在你回答前已停止</string>
     <string name="chatErrorModelNotFoundNamed">%1$s 在 %2$s 上已不可用。</string>
     <string name="chatModelReplacedNotice">%1$s 已不可用。正在使用 %2$s。</string>
+    <string name="chatStepViewAllChanges">查看所有更改</string>
 </resources>

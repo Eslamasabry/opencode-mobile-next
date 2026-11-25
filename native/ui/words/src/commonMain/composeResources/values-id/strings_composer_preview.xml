@@ -20,4 +20,5 @@
     <string name="composerPreviewAttachmentStorage">File tidak bisa disimpan di perangkat ini.</string>
     <string name="composerPreviewAttachmentDismiss">Tutup</string>
     <string name="composerPreviewAttachmentRetry">Coba lagi</string>
+    <string name="composerModelDefaultShort">Model bawaan</string>
 </resources>

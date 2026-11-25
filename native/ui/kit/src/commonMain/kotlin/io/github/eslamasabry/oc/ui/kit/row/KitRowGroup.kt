@@ -62,6 +62,7 @@ public fun KitRowGroup(
     destructive: (@Composable () -> Unit)? = null,
     section: Boolean = false,
     afterGroup: Boolean = false,
+    surface: Boolean = false,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -70,16 +71,22 @@ public fun KitRowGroup(
     val rowGutter = kitRowGutterDp(LocalKitOnRail.current && LocalKitStyle.current.spec.tokens.flatLists, tokens.gutter)
     val inset = (rowGutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
     val colors = LocalKitColors.current
-    // Solid and Signal run lists flat on the page; Soft and Brutal set a group on a panel with 18 dp corners.
-    val panel = !LocalKitStyle.current.spec.tokens.flatLists
+    // Solid and Signal run lists flat on the page unless [surface] asks for the kit panel surface (B-580).
+    val panel = surface || !LocalKitStyle.current.spec.tokens.flatLists
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
     // A sheet's body already sits on the sheet's rail: the panel lines up with the sheet's title instead of stepping in
     // a second gutter (the owner's project sheet, 2026-11-06).
     val onRail = LocalKitOnRail.current
     // Glass keeps its pane inset inside the panel (owner 2026-11-09): the rows sit clear of its rim and sheen.
     val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
+    val panelMargin = if (onRail) 0.dp else if (surface) Space.S2.dp else tokens.gutter.dp
     val panelModifier =
-        if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()).padding(paneInset) else Modifier
+        if (panel) {
+            Modifier.padding(horizontal = panelMargin)
+                .then(look.modifier)
+                .clip(KitShapeId.Panel.shape())
+                .padding(paneInset)
+        } else Modifier
     // A group with no rows and nothing destructive draws nothing at all: no panel, hairline box, label or note
     // (a list's empty state stands alone). The rows report their count while they are measured.
     val rowSeams = remember { Seams() }

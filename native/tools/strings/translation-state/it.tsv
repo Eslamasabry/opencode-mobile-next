@@ -1825,6 +1825,7 @@ chatSteerStopStep	9ea771f9af
 chatStepDeclinedNote	44b5774893
 chatStepMalformedCall	549463ac9e
 chatStepPlanStopped	c8de526518
+chatStepViewAllChanges	25691e27b5
 chatStopAfterStep	505bfb0c44
 chatStopAfterStepPending	bcc7138ca0
 chatStopAfterStepPrompt	ee845ea221
@@ -2563,6 +2564,7 @@ composerLimitThursday	2c868a420b
 composerLimitTuesday	4d0c4148b9
 composerLimitViewUsage	e926c10919
 composerLimitWednesday	5f35c8deba
+composerModelDefaultShort	b94ae5c208
 composerPasteImage	02bd183b8e
 composerPasteImageEmpty	03b180eafc
 composerPasteImageFromClipboard	a42248c66e

@@ -86,7 +86,9 @@ class LoadingPicturesTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
                     KitTheme(appearance, if (style == Style.Glass) LensPlatform() else DesktopKitPlatform(), "en", stillFrame = true) {
-                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) { scene.Screen(state) }
+                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                            scene.Screen(state, canGoBack = true)
+                        }
                     }
                 }
             }

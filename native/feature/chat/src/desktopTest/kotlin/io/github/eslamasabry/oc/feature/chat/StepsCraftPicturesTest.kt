@@ -130,8 +130,21 @@ class StepsCraftPicturesTest {
             if (alive) CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
                 KitTheme(appearance, platform, "en", stillFrame = false) {
                     CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
-                        if (running) scene.Screen(StepsCraftScene.runningState(), facts = StepsCraftScene.runningFacts(arrived()), projectName = "demo_app")
-                        else scene.Screen(StepsCraftScene.doneState(), facts = StepsCraftScene.doneFacts(), projectName = "demo_app")
+                        if (running) {
+                            scene.Screen(
+                                StepsCraftScene.runningState(),
+                                facts = StepsCraftScene.runningFacts(arrived()),
+                                canGoBack = true,
+                                projectName = "demo_app",
+                            )
+                        } else {
+                            scene.Screen(
+                                StepsCraftScene.doneState(),
+                                facts = StepsCraftScene.doneFacts(),
+                                canGoBack = true,
+                                projectName = "demo_app",
+                            )
+                        }
                     }
                 }
             }

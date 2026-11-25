@@ -248,11 +248,11 @@ class PolishTranscriptChatTest {
             val scene = ChatScene()
             val rows =
                 buildList {
+                    val dense = (1..4).joinToString("\n") { "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" }
                     for (i in 18 downTo 1) {
                         val turn = "t$i"
                         add(footer(turn))
-                        val line = "Reply paragraph $i with enough bright text to span the whole width of the screen."
-                        add(block(turn, "a$i", "p$i", 0, line))
+                        add(block(turn, "a$i", "p$i", 0, dense))
                         add(prompt(turn, "Prompt message $i asking about checkout"))
                     }
                 }.toImmutableList()
@@ -318,16 +318,17 @@ class PolishTranscriptChatTest {
                 }
             }
             waitForIdle()
-            val rowInner = onNodeWithTag("kit-row", useUnmergedTree = true).getBoundsInRoot()
+            val title = onNodeWithTag("kit-row-title", useUnmergedTree = true).getBoundsInRoot()
+            val glyphX = title.left - 40.dp // ICON_TILE_SIZE (28 dp) + Space.S3 (12 dp)
             val allFiles = onNodeWithTag("chat-turn-all-files", useUnmergedTree = true).getBoundsInRoot()
-            val diff = abs((rowInner.left - allFiles.left).value)
+            val diff = abs((glyphX - allFiles.left).value)
             assertTrue(
                 diff <= 1f,
-                "file row glyph x (${rowInner.left}) must equal All files x (${allFiles.left}) within 1 dp",
+                "file row glyph x ($glyphX) must equal All files x (${allFiles.left}) within 1 dp",
             )
             assertTrue(
-                abs(rowInner.left.value - 16f) <= 1f,
-                "file row glyph x (${rowInner.left}) must be 16 dp from column edge",
+                abs(glyphX.value - 16f) <= 1f,
+                "file row glyph x ($glyphX) must be 16 dp from column edge",
             )
         }
 

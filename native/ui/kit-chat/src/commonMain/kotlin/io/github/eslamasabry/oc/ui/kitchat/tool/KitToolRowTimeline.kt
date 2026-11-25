@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -190,20 +191,46 @@ internal fun TimelineStep(
                             Modifier.testTag(if (running) "kit-step-counter" else "kit-tool-duration"),
                             role = TypeRole.Caption,
                             tone = if (running) TextTone.Secondary else TextTone.Tertiary,
+                            textAlign = TextAlign.End,
                             maxLines = if (running) 1 else wordLines,
                             tabular = running,
                         )
                     }
                 }
-            // LOOK-5: a failed step's word is plain text1, never a danger colour.
+            // B-568: failed step reuses the quiet Secondary tone of the turn's "Didn't finish" note.
             KitToolStatus.Failed -> {
-                { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Primary, maxLines = STATUS_LINES) }
+                {
+                    KitText(
+                        view.statusLabel,
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        textAlign = TextAlign.End,
+                        maxLines = STATUS_LINES,
+                    )
+                }
             }
-            // F: lib/ui/kit/chat/kit_tool_row.dart:1240 waitingForYou shows its word in secondary
+            KitToolStatus.WaitingForYou -> {
+                {
+                    KitText(
+                        view.statusLabel,
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Attention,
+                        textAlign = TextAlign.End,
+                        maxLines = STATUS_LINES,
+                    )
+                }
+            }
             KitToolStatus.Pending,
-            KitToolStatus.WaitingForYou,
             KitToolStatus.Stopped -> {
-                { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = STATUS_LINES) }
+                {
+                    KitText(
+                        view.statusLabel,
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        textAlign = TextAlign.End,
+                        maxLines = STATUS_LINES,
+                    )
+                }
             }
         }
     // Only a group's line has a chevron; a step that opens another page keeps its forward arrow (it leaves this list).
@@ -221,7 +248,10 @@ internal fun TimelineStep(
                     // A status in words ("Waiting for you") wraps at its words and has the wider share: it is never cut
                     // to "Waiting for y…" (issue 147, 360 dp). A time keeps the narrow one.
                     val inWords = status != KitToolStatus.Running && status != KitToolStatus.Done
-                    Box(Modifier.share(if (inWords) STATUS_SHARE else WORDS_SHARE).testTag("kit-tool-end")) { words() }
+                    Box(
+                        Modifier.share(if (inWords) STATUS_SHARE else WORDS_SHARE).testTag("kit-tool-end"),
+                        contentAlignment = Alignment.CenterEnd,
+                    ) { words() }
                 }
                 if (group) {
                     Spacer(Modifier.width(Space.S1.dp))
