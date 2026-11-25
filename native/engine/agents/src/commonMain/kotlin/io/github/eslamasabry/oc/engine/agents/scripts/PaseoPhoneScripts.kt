@@ -118,20 +118,20 @@ oc_paseo_prune() {
   if oc_no_old_node; then
     oc_prune_versions /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
       '^[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}${D}' /home/oc/.local/bin/paseo
-    oc_prune_stale /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
-      '[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}' /home/oc/.local/bin/paseo
   fi
   oc_prune_one ${INSTALL_DIRECTORY}.oc-good
 }
 oc_node_prune() {
   oc_prune_versions /home/oc/.local 'node-$NODE_VERSION' '^node-v[0-9]+\.[0-9]+\.[0-9]+${D}' \
     /home/oc/.local/bin/node oc_node_stock
-  oc_prune_stale /home/oc/.local 'node-$NODE_VERSION' 'node-v[0-9]+\.[0-9]+\.[0-9]+' /home/oc/.local/bin/node
-  oc_prune_node_parts /home/oc/.cache/oc-setup 'node-$NODE_VERSION-'
   oc_prune_one /home/oc/.local/node-$NODE_VERSION.old
   oc_prune_one /home/oc/.local/node.old
 }
 """
+
+    private val NODE_PRUNE_LEFTOVERS: String =
+        """oc_prune_stale /home/oc/.local 'node-$NODE_VERSION' 'node-v[0-9]+\.[0-9]+\.[0-9]+' /home/oc/.local/bin/node
+oc_prune_node_parts /home/oc/.cache/oc-setup 'node-$NODE_VERSION-'"""
 
     /**
      * The Node.js the agent host runs on, downloaded per ABI against its pin. Each version lives in its OWN folder
@@ -211,6 +211,7 @@ for node_tool in node npm npx; do
 done
 # The new Node answered through the node name: only now do older Node folders go.
 oc_node_prune
+$NODE_PRUNE_LEFTOVERS
 rm -f "${D}node_part"
 oc_version '$NODE_VERSION'
 """
@@ -224,6 +225,7 @@ oc_node_heal
 [ "${D}(/home/oc/.local/node/bin/node --version)" = '$NODE_VERSION' ]
 # Old Node folders that an earlier install had to keep (something still ran on them) go here, once nothing does.
 oc_node_prune
+$NODE_PRUNE_LEFTOVERS
 printf '%s\n' '$NODE_VERSION'
 """
 
@@ -364,6 +366,7 @@ oc_version '$VERSION'
     public val check: String = """set -eu
 ${SetupPrelude.COMPONENT_UPDATE_PRELUDE}
 ${ScriptPrune.FUNCTION}
+${ScriptPrune.LEFTOVERS}
 $NODE_GUARDS
 host_dir=$INSTALL_DIRECTORY
 oc_update_recover "${D}host_dir"
@@ -397,6 +400,10 @@ grep -q -- '--home' "${D}probe_dir/launch-check.log"
   /home/oc/.local/bin/paseo --version 2>/dev/null)" = '$VERSION' ]
 # Older helper trees that an earlier install had to keep (the old helper still ran) go here, once it does not.
 oc_paseo_prune
+if oc_no_old_node; then
+  oc_prune_stale /home/oc/.local/share/oc-paseo '${INSTALL_DIRECTORY.substringAfterLast('/')}' \
+    '[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}' /home/oc/.local/bin/paseo
+fi
 printf '%s\n' '$VERSION'
 """
 }

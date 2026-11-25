@@ -61,7 +61,11 @@ oc_prune_one() {
   if oc_in_use "${D}1"; then return 0; fi
   rm -rf -- "${D}1"
 }
-# oc_prune_stale ROOT KEEP RE LINK: an old version's .new, .old.<pid> and .oc-good folders go.
+"""
+
+    /** Extra cleanup helpers for stale staging folders, old downloads, probe folders and old Node archives. */
+    val LEFTOVERS: String =
+        """# oc_prune_stale ROOT KEEP RE LINK: an old version's .new, .old.<pid> and .oc-good folders go.
 oc_prune_stale() {
   oc_ps_root=${D}1 oc_ps_keep=${D}2 oc_ps_re=${D}3 oc_ps_link=${D}4
   [ -d "${D}oc_ps_root" ] && [ ! -L "${D}oc_ps_root" ] || return 0
@@ -88,11 +92,7 @@ oc_prune_stale() {
     rm -rf -- "${D}oc_ps_path"
   done || true
 }
-"""
-
-    /** Extra cleanup helpers for old downloads, stale version-check folders and old Node archives. */
-    val LEFTOVERS: String =
-        """# oc_prune_downloads DIR KEEP: downloads of versions no longer kept go.
+# oc_prune_downloads DIR KEEP: downloads of versions no longer kept go.
 oc_prune_downloads() {
   oc_pd_dir=${D}1 oc_pd_keep=${D}2
   [ -d "${D}oc_pd_dir" ] && [ ! -L "${D}oc_pd_dir" ] || return 0

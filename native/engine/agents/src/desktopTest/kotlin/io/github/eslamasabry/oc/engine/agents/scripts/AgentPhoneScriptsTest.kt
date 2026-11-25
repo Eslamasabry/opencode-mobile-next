@@ -659,7 +659,15 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
             pendingDir, pendingFile, inUse.path, keptOld, notes,
             outside, linked, keptDownload, partialDownload, freshProbe,
         )
-        val holder = ProcessBuilder("sleep", "60").directory(inUse).start()
+        // Stand-in for a live process whose cwd is inUse (replacing `sleep 60`, which expired on slow
+        // runners before the third install finished): stay in inUse until the third-install marker
+        // appears, bounded at 180 s so a crashed test never leaves a background process behind.
+        val doneMarker = "${temp.path}/third-install-done"
+        val holder = ProcessBuilder(
+            "sh",
+            "-c",
+            "i=0; while [ ! -e ${q(doneMarker)} ] && [ \"\$i\" -lt 180 ]; do sleep 1; i=\$((i + 1)); done",
+        ).directory(inUse).start()
         try {
             val again = guest.run(AgentPhoneScripts.install(agent))
             assertEquals(0, again.exitCode, again.stderr)
@@ -669,8 +677,10 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
             val listing = File(base).list()!!.sorted()
             val third = guest.run(AgentPhoneScripts.install(agent))
             assertEquals(0, third.exitCode, third.stderr)
+            assertTrue(holder.isAlive, "in-use holder exited before third install finished")
             assertEquals(listing, File(base).list()!!.sorted())
         } finally {
+            write(doneMarker, "done")
             holder.destroyForcibly()
         }
     }

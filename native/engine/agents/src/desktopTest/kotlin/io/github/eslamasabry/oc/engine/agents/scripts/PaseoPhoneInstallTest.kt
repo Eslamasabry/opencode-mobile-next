@@ -408,7 +408,12 @@ sync() {
     }
 
     @Test
-    fun `B-LINUX-311 a Paseo install removes leftovers of versions it no longer uses`() {
+    fun `B-LINUX-311 the Paseo read sweeps old leftovers while install size stays unchanged`() {
+        val installScript = PaseoPhoneScripts.install(lock, JvmPaseoLockCodec)
+        assertEquals(1783, ScriptPrune.FUNCTION.toByteArray().size)
+        for (moved in listOf("oc_prune_stale", "oc_prune_downloads", "oc_prune_probes", "oc_prune_node_parts")) {
+            assertFalse(moved in installScript, moved)
+        }
         val first = runInstall()
         assertEquals(0, first.exitCode, first.stderr)
         val root = File(directory).parent
@@ -425,10 +430,14 @@ sync() {
             "$root/0.2.0-bbbbbbbbbbbb.oc-pending".also { write(it, "existing\n") },
             "$root/notes.new".also { mkdirs(it) },
         )
-        val again = runInstall()
-        assertEquals(0, again.exitCode, again.stderr)
+        val checked = runCheck()
+        assertEquals(0, checked.exitCode, checked.stderr)
         for (path in go) assertFalse(exists(path), path)
         for (path in stay) assertTrue(exists(path), path)
+        val listing = File(root).list()!!.sorted()
+        val secondCheck = runCheck()
+        assertEquals(0, secondCheck.exitCode, secondCheck.stderr)
+        assertEquals(listing, File(root).list()!!.sorted())
     }
 
     @Test
