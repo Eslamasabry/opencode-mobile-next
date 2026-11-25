@@ -80,54 +80,7 @@ class KitAgentTilePolishTest {
     @Test
     fun `B-560 two tiles stay side by side at 360 dp and 1_3 with full-width actions and equal height`() =
         runDesktopComposeUiTest(328 * 3, 600 * 3) {
-            setContent {
-                CompositionLocalProvider(LocalDensity provides Density(3f, 1.3f)) {
-                    KitTheme(
-                        platform = DesktopKitPlatform(),
-                        appearance = KitAppearance(motion = MotionLevel.Off),
-                        stillFrame = true,
-                    ) {
-                        Box(Modifier.width(328.dp)) {
-                            KitAgentTiles(
-                                listOf(
-                                    {
-                                        KitAgentTile(
-                                            name = "Claude Code",
-                                            state = "Ready",
-                                            markId = "claude",
-                                            onClick = {},
-                                            action =
-                                                KitAgentTileAction(
-                                                    label = "Nouvelle conversation",
-                                                    spoken = "Nouvelle conversation avec Claude Code",
-                                                    icon = KitIcons.chat,
-                                                    onClick = {},
-                                                ),
-                                            ready = true,
-                                        )
-                                    },
-                                    {
-                                        KitAgentTile(
-                                            name = "Codex",
-                                            state = "Sign in needed",
-                                            markId = "codex",
-                                            onClick = {},
-                                            action =
-                                                KitAgentTileAction(
-                                                    label = "Sign in",
-                                                    spoken = "Sign in to Codex",
-                                                    icon = KitIcons.login,
-                                                    prominent = true,
-                                                    onClick = {},
-                                                ),
-                                        )
-                                    },
-                                )
-                            )
-                        }
-                    }
-                }
-            }
+            setContent { twoTilePair(scale = 1.3f) }
             waitForIdle()
             val tiles = onAllNodesWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNodes()
             assertEquals(2, tiles.size)
@@ -149,6 +102,56 @@ class KitAgentTilePolishTest {
                 "expected Sign in action to fill card inner width (>= $minInnerPx px), got ${signIn.width} px",
             )
         }
+
+    @androidx.compose.runtime.Composable
+    private fun twoTilePair(scale: Float) {
+        CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                stillFrame = true,
+            ) {
+                Box(Modifier.width(328.dp)) {
+                    KitAgentTiles(
+                        listOf(
+                            {
+                                KitAgentTile(
+                                    name = "Claude Code",
+                                    state = "Ready",
+                                    markId = "claude",
+                                    onClick = {},
+                                    action =
+                                        KitAgentTileAction(
+                                            label = "Nouvelle conversation",
+                                            spoken = "Nouvelle conversation avec Claude Code",
+                                            icon = KitIcons.chat,
+                                            onClick = {},
+                                        ),
+                                    ready = true,
+                                )
+                            },
+                            {
+                                KitAgentTile(
+                                    name = "Codex",
+                                    state = "Sign in needed",
+                                    markId = "codex",
+                                    onClick = {},
+                                    action =
+                                        KitAgentTileAction(
+                                            label = "Sign in",
+                                            spoken = "Sign in to Codex",
+                                            icon = KitIcons.login,
+                                            prominent = true,
+                                            onClick = {},
+                                        ),
+                                )
+                            },
+                        )
+                    )
+                }
+            }
+        }
+    }
 
     @Test
     fun `B-546 half-width tile action wraps on whole words to at most two lines at 360 dp and 1_3`() {

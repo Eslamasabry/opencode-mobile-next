@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 
 /** Dart `KitAgentGridSpan`: true for the card that spans the whole row and lays out sideways. */
@@ -81,29 +80,26 @@ public fun KitAgentGrid(children: List<@Composable () -> Unit>, modifier: Modifi
 internal const val AGENT_TILE_MIN_WIDTH: Int = 200
 
 /**
- * How many tiles side by side in [widthDp]: one above 1.3x text (or at 1.3x on a narrow phone where two tiles would be
- * narrower than [AGENT_TILE_MIN_WIDTH]), else as many [AGENT_TILE_MIN_WIDTH] tiles as fit with the kit's gap, never
- * fewer than two (a phone) nor more than four (a wide window, still inside the Reading cap).
+ * How many tiles side by side in [widthDp]: one above 1.3x text, else as many [AGENT_TILE_MIN_WIDTH] tiles as fit
+ * with the kit's gap, never fewer than two (a phone keeps two columns at 360 dp also at 1.3x text) nor more than four
+ * (a wide window, still inside the Reading cap).
  */
 internal fun agentTileColumns(widthDp: Float, textScale: Float): Int {
     if (agentGridOneColumn(textScale)) return 1
     val gap = Space.S3.toFloat()
-    if (TextScalePolicy.isLargeText(textScale) && (widthDp - gap) / 2f < AGENT_TILE_MIN_WIDTH) return 1
     val fit = ((widthDp + gap) / (AGENT_TILE_MIN_WIDTH + gap)).toInt()
     return fit.coerceIn(2, 4)
 }
 
-/**
- * Where each tile goes for [columns]: full rows of [columns], and the rest in a last row. In two columns an odd last
- * tile is alone and spans the row (as [KitAgentGrid]); with three or four the last row keeps the column width.
- */
+/** Where each tile goes for [columns]: full rows of [columns], and any short last row keeping the column width. */
 internal fun agentTileRows(count: Int, columns: Int): List<List<Int>> = (0 until count).chunked(columns.coerceAtLeast(1))
 
 /**
- * Agent tiles ([KitAgentTile]) in a bento grid: two columns on a phone, three or four when the window is wide (each at
- * least [AGENT_TILE_MIN_WIDTH] dp, inside the Reading cap), every row as tall as its tallest tile with the kit's gap
- * between them. In two columns an odd last tile spans the row and lies sideways, as in [KitAgentGrid]; at large text it
- * is one column of full-width tiles. Unlike [KitAgentGrid] the tiles are separate buttons, not one choice.
+ * Agent tiles ([KitAgentTile]) in a bento grid: two columns on a phone (also at 360 dp and 1.3x text), three or four
+ * when the window is wide (each at least [AGENT_TILE_MIN_WIDTH] dp, inside the Reading cap), every row as tall as its
+ * tallest tile with the kit's gap between them. A short last row (including a lone last tile in two columns) keeps the
+ * column width at the start edge so the grid's rhythm holds; above 1.3x text it is one column of full-width tiles.
+ * Unlike [KitAgentGrid] the tiles are separate buttons, not one choice.
  *
  * States: none — a layout of its children.
  */
@@ -116,9 +112,7 @@ public fun KitAgentTiles(children: List<@Composable () -> Unit>, modifier: Modif
         val rows = agentTileRows(children.size, columns)
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             for (row in rows) {
-                if (row.size == 1 && columns == 2) {
-                    CompositionLocalProvider(LocalKitAgentGridSpan provides true) { children[row[0]]() }
-                } else if (columns == 1) {
+                if (columns == 1) {
                     children[row[0]]()
                 } else {
                     Row(

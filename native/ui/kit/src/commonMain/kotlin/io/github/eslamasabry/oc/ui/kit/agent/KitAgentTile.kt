@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -34,6 +35,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
+import io.github.eslamasabry.oc.ui.kit.chip.LocalKitChipFullWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -138,15 +140,16 @@ public fun KitAgentTile(
     }
     val chip: @Composable () -> Unit = {
         if (action != null) {
-            KitChip(
-                action.label,
-                kind = KitChipKind.Action,
-                tone = if (action.prominent) KitChipTone.Active else KitChipTone.Neutral,
-                icon = action.icon,
-                onClick = action.onClick,
-                spoken = action.spoken,
-                wraps = true,
-            )
+            CompositionLocalProvider(LocalKitChipFullWidth provides true) {
+                KitChip(
+                    action.label,
+                    kind = KitChipKind.Action,
+                    tone = if (action.prominent) KitChipTone.Active else KitChipTone.Neutral,
+                    icon = action.icon,
+                    onClick = action.onClick,
+                    spoken = action.spoken,
+                )
+            }
         }
     }
     KitTappable(
