@@ -221,16 +221,23 @@ class HomeChipsCueRenders {
         val cues = onAllNodes(hasText("+", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue(cues.isEmpty(), "$tag end: +N cue must not reappear when scrolled to end")
         val line = onNodeWithTag("kit-filter-chips").fetchSemanticsNode().boundsInRoot
-        val last = onAllNodes(hasText("Running 1"), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
-        assertTrue(last != null, "$tag end: Running 1 missing")
+        val last =
+            onAllNodes(hasText("Running", substring = true), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+        assertTrue(last != null, "$tag end: Running chip missing")
         val lb = last.boundsInRoot
         assertTrue(
             lb.left >= line.left - EDGE_SLACK && lb.right <= line.right + EDGE_SLACK,
-            "$tag end: Running 1 $lb not whole inside $line",
+            "$tag end: Running chip $lb not whole inside $line",
         )
         assertTrue(
             line.right - lb.right <= END_TAIL_MAX_PX,
-            "$tag end: Running 1 $lb should sit near right edge of $line",
+            "$tag end: Running chip $lb should sit near right edge of $line",
+        )
+        val scroller = findScroller(onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes())
+        val range = scroller.config[SemanticsProperties.HorizontalScrollAxisRange]
+        assertTrue(
+            range.value() >= range.maxValue() - EDGE_SLACK,
+            "$tag end: row did not reach end (${range.value()}/${range.maxValue()})",
         )
         val shot = onRoot().captureToImage()
         assertEdgeCleared(shot.toPixelMap(), line, atStart = true, label = "$tag end start")
