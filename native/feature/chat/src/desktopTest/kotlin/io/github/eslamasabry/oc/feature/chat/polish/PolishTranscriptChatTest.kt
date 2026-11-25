@@ -3,28 +3,18 @@
 package io.github.eslamasabry.oc.feature.chat.polish
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PixelMap
-import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -41,10 +31,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ChangedFile
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolOutputView
 import io.github.eslamasabry.oc.feature.chat.E20Scene
-import io.github.eslamasabry.oc.feature.chat.block
-import io.github.eslamasabry.oc.feature.chat.footer
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
-import io.github.eslamasabry.oc.feature.chat.prompt
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
@@ -63,9 +50,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -246,56 +231,6 @@ class PolishTranscriptChatTest {
         }
 
     @Test
-    fun `B-571 no transcript text above the header`() =
-        kitUiTest(360, 720) {
-            val scene = ChatScene()
-            val rows =
-                buildList {
-                    val dense = (1..4).joinToString("\n") { "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" }
-                    for (i in 18 downTo 1) {
-                        val turn = "t$i"
-                        add(footer(turn))
-                        add(block(turn, "a$i", "p$i", 0, dense))
-                        add(prompt(turn, "Prompt message $i asking about checkout"))
-                    }
-                }.toImmutableList()
-            val state = scene.live().copy(rows = rows)
-            var ground = Color.Black
-            setContent {
-                CompositionLocalProvider(
-                    LocalDensity provides Density(1f),
-                    LocalKitScreenInsets provides WindowInsets(top = 24.dp),
-                ) {
-                    KitTheme(
-                        KitAppearance(style = Style.Solid, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
-                        DesktopKitPlatform(),
-                        "en",
-                        stillFrame = true,
-                    ) {
-                        ground = LocalKitColors.current.ground
-                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
-                            scene.Screen(state, canGoBack = true)
-                        }
-                    }
-                }
-            }
-            waitForIdle()
-            onNodeWithTag("transcript-list", useUnmergedTree = true).performTouchInput {
-                down(Offset(width * 0.5f, height * 0.4f))
-                repeat(12) { moveBy(Offset(0f, 30f), delayMillis = 16) }
-                up()
-            }
-            waitForIdle()
-            val pill =
-                onAllNodesWithTag("kit-header-capsule", useUnmergedTree = true)
-                    .fetchSemanticsNodes()
-                    .firstOrNull()
-                    ?.boundsInRoot
-                    ?: onNodeWithTag("kit-liquid-bar", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-            assertClearedAbovePillBottom(pill, onRoot().captureToImage().toPixelMap(), ground)
-        }
-
-    @Test
     fun `B-580 file row glyph aligns with All files`() =
         kitUiTest(360, 480) {
             setContent {
@@ -323,43 +258,4 @@ class PolishTranscriptChatTest {
                 "file row glyph x ($glyphX) must be 16 dp from column edge",
             )
         }
-
-    private fun assertClearedAbovePillBottom(pill: Rect, pixels: PixelMap, ground: Color) {
-        val pillTop = pill.top.toInt().coerceIn(0, pixels.height - 1)
-        val pillBottom = pill.bottom.toInt().coerceIn(0, pixels.height - 1)
-        val pillLeft = (pill.left.toInt() - 2).coerceIn(0, pixels.width - 1)
-        val pillRight = (pill.right.toInt() + 2).coerceIn(0, pixels.width - 1)
-        assertTrue(pillTop > 0 && pillBottom > pillTop, "expected visible header pill bounds, got $pill")
-        val bodyXs = 16 until (pixels.width - 16)
-        val belowBottom = (pillBottom + 2).coerceAtMost(pixels.height)
-        val leaks =
-            countNonGround(pixels, ground, bodyXs, 0 until pillTop) +
-                countNonGround(pixels, ground, 2 until pillLeft, pillTop until pillBottom) +
-                countNonGround(pixels, ground, pillRight until (pixels.width - 2), pillTop until pillBottom) +
-                countNonGround(pixels, ground, bodyXs, pillBottom until belowBottom)
-        assertTrue(leaks == 0, "found $leaks non-ground pixels above/at header pill bottom ($pill)")
-        val fadeEnd = (pillBottom + 22).coerceAtMost(pixels.height)
-        val sampleEnd = (pillBottom + 80).coerceAtMost(pixels.height)
-        val visibleBelow = countNonGround(pixels, ground, bodyXs, fadeEnd until sampleEnd, threshold = 0.15f)
-        assertTrue(visibleBelow > 20, "expected scrolled transcript below fade, found $visibleBelow pixels")
-    }
-
-    private fun countNonGround(
-        pixels: PixelMap,
-        ground: Color,
-        xs: IntRange,
-        ys: IntRange,
-        threshold: Float = 0.06f,
-    ): Int {
-        var count = 0
-        for (y in ys) {
-            for (x in xs) {
-                if (colorDiff(pixels[x, y], ground) > threshold) count++
-            }
-        }
-        return count
-    }
-
-    private fun colorDiff(a: Color, b: Color): Float =
-        maxOf(abs(a.red - b.red), abs(a.green - b.green), abs(a.blue - b.blue))
 }

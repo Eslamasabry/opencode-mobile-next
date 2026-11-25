@@ -75,7 +75,7 @@ class PolishRenders {
     @Test
     fun `render 551 inplace card`() {
         val diff = KitDiffPreview.fromText("val a = 1\nval b = 2\nval c = 3")
-        render("551-$PHASE-inplace-card-360-1.0-dark.png") {
+        render("551-$PHASE-inplace-card-360-1.0-dark.png", height = 780) {
             KitPermissionCard(
                 title = "Edit src/app.kt?",
                 summary = "The agent waits until you answer.",

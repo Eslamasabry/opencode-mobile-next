@@ -11,13 +11,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -34,10 +31,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ChangedFile
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolOutputView
 import io.github.eslamasabry.oc.feature.chat.E20Scene
-import io.github.eslamasabry.oc.feature.chat.block
-import io.github.eslamasabry.oc.feature.chat.footer
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
-import io.github.eslamasabry.oc.feature.chat.prompt
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
@@ -70,7 +64,6 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.io.File
@@ -208,45 +201,6 @@ class PolishRenders {
             }
             waitForIdle()
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("567", "write-step", "1.3", "light"))
-        }
-
-    @Test
-    fun `render 571 scrolled header`() =
-        kitUiTest(360, 720) {
-            val scene = ChatScene()
-            val rows =
-                buildList {
-                    for (i in 18 downTo 1) {
-                        add(footer("t$i"))
-                        add(block("t$i", "a$i", "p$i", 0, "Reply paragraph $i with enough bright text to span."))
-                        add(prompt("t$i", "Prompt message $i asking about checkout"))
-                    }
-                }.toImmutableList()
-            setContent {
-                CompositionLocalProvider(
-                    LocalDensity provides Density(1f),
-                    LocalKitScreenInsets provides WindowInsets(top = 24.dp),
-                ) {
-                    KitTheme(
-                        KitAppearance(style = Style.Solid, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
-                        DesktopKitPlatform(),
-                        "en",
-                        stillFrame = true,
-                    ) {
-                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
-                            scene.Screen(scene.live().copy(rows = rows), canGoBack = true)
-                        }
-                    }
-                }
-            }
-            waitForIdle()
-            onNodeWithTag("transcript-list", useUnmergedTree = true).performTouchInput {
-                down(Offset(width * 0.5f, height * 0.4f))
-                repeat(12) { moveBy(Offset(0f, 30f), delayMillis = 16) }
-                up()
-            }
-            waitForIdle()
-            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("571", "scrolled-header", "1.0", "dark"))
         }
 
     @Test

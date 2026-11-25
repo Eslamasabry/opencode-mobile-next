@@ -569,14 +569,24 @@ public fun KitScreen(
                                 if (!edgesFade) Modifier
                                 else
                                     Modifier.kitScrollEdges(
-                                        // B-571: clear everything above the header pill's bottom edge and fade 0->1
-                                        // over the 16 dp below it for every style and both scroll directions.
+                                        // Owner 2026-11-14 ("Wtfff"): floating things own their ground. Nothing of the
+                                        // body is drawn under the status bar, the bar or its status line; it dissolves
+                                        // in below them over TOP_DISSOLVE_DP. Floating chrome (owner 2026-11-18, "text
+                                        // can flow around the capsule", "hard cuts are bad"): nothing is cleared around
+                                        // the capsule or the box. The body passes behind both and each covers it with
+                                        // its own fill (Glass shows it through). Only the status area is cleared,
+                                        // ending in a short soft fade under it, so text never meets the clock.
                                         clearAbove =
                                             if (topPart == null) null
+                                            else if (floatChrome) ({ statusPx.toFloat() })
                                             else ({ (statusPx + topPx).toFloat() }),
-                                        topReach = if (floatChrome) COMPOSER_FADE_DP.dp else TOP_DISSOLVE_DP.dp,
+                                        topReach = if (floatChrome) FLOW_FADE_DP.dp else TOP_DISSOLVE_DP.dp,
+                                        // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
+                                        // behind the chrome, so the body's dissolve alone ends the content before the
+                                        // bar; Glass's the same. It grows with what lies under the chrome (none at
+                                        // rest: a page at rest looks as it did; at once under reduced motion).
                                         topReachPx =
-                                            if (floatChrome) ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } })
+                                            if (floatChrome) ({ with(density) { FLOW_FADE_DP.dp.toPx() } })
                                             else topDissolve,
                                         // And nothing in or under the bottom block (its chips row, the message box): the
                                         // body fades out over the 16 dp above it. A list that ends itself (above the jump
