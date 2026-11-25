@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionDet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -116,5 +117,35 @@ class DemoWorldTest {
         assertNull(world.request.value)
         assertEquals(DemoStage.Ready, world.stage.value)
         assertTrue(world.said().isEmpty())
+    }
+
+    @Test
+    fun `B-428 a question of your own gets no scripted reply and no request`() = runTest {
+        val world = world(StandardTestDispatcher(testScheduler))
+        assertIs<Outcome.Ok<Unit>>(world.send("Which Excel formula adds up column B?"))
+        assertNull(world.request.value)
+        assertEquals(DemoStage.Ready, world.stage.value)
+        val said = world.said()
+        assertEquals(2, said.size)
+        assertEquals("you: Which Excel formula adds up column B?", said.first())
+        assertNotEquals("agent: I'll change it.", said.last())
+    }
+
+    @Test
+    fun `B-428 after a question of your own the sample still plays`() = runTest {
+        val world = world(StandardTestDispatcher(testScheduler))
+        world.send("Which Excel formula adds up column B?")
+        assertIs<Outcome.Ok<Unit>>(world.send("Make it friendlier."))
+        assertNotNull(world.request.value)
+        assertEquals(DemoStage.Review, world.stage.value)
+        assertEquals("agent: I'll change it.", world.said().last())
+    }
+
+    @Test
+    fun `B-428 the sample plays when retyped with other spacing or case`() = runTest {
+        val world = world(StandardTestDispatcher(testScheduler))
+        assertIs<Outcome.Ok<Unit>>(world.send("  make it FRIENDLIER.  "))
+        assertNotNull(world.request.value)
+        assertEquals(DemoStage.Review, world.stage.value)
     }
 }
