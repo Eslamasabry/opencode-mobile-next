@@ -317,7 +317,7 @@ class AgentUpdateSheetRedrawTest {
                 assertTrue(now <= was + ONE_DP_PX, "the sheet's height rose again while it shrank: ${fold.heights}")
             }
             fold.noRowForOneFrame("the fold")
-            fold.buttonStaysPut()
+            fold.buttonGlidesSmoothly(rising = true)
             onNodeWithText("Keep these versions").assertExists()
             onNodeWithText("Download").assertDoesNotExist()
             onNodeWithText("Wi-Fi only").assertDoesNotExist()
@@ -338,7 +338,7 @@ class AgentUpdateSheetRedrawTest {
                 assertTrue(now + ONE_DP_PX >= was, "the sheet's height fell again while it grew: ${unfold.heights}")
             }
             unfold.noRowForOneFrame("the unfold")
-            unfold.buttonStaysPut()
+            unfold.buttonGlidesSmoothly(rising = false)
             onNodeWithText("Update 1 agent").assertExists()
             onNodeWithText("Wi-Fi only").assertExists()
             onNodeWithText("Agent helper", substring = true).assertExists()
@@ -457,7 +457,7 @@ class AgentUpdateSheetRedrawTest {
         val before = sheetWords()
         val heights = mutableListOf(sheetHeight())
         val frames = mutableListOf<Set<String>>()
-        val buttonTops = mutableListOf<Float>()
+        val buttonTops = mutableListOf(mainButtonTop(before))
         mainClock.autoAdvance = false
         last.performClick()
         repeat(FOLD_FRAMES) {
@@ -465,17 +465,24 @@ class AgentUpdateSheetRedrawTest {
             heights += sheetHeight()
             val now = sheetWords()
             frames += now
-            buttonTops +=
-                MAIN_BUTTON_WORDS.filter { it in now }
-                    .firstNotNullOfOrNull { label ->
-                        onAllNodesWithText(label).fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
-                    }
-                    ?: Float.NaN
+            buttonTops += mainButtonTop(now)
         }
         mainClock.autoAdvance = true
         waitForIdle()
         return Walk(before, heights, frames, buttonTops)
     }
+
+    private fun KitUiTest.mainButtonTop(words: Set<String>): Float =
+        mainButtonWords()
+            .filter { it in words }
+            .firstNotNullOfOrNull { label ->
+                onAllNodesWithText(label).fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
+            }
+            ?: Float.NaN
+
+    /** The primary button's words before and after the last switch changes (read under the sheet's own language). */
+    private fun mainButtonWords(): List<String> =
+        listOf("Update 1 agent", "Update all · ${PhoneSizes.text(660_000_000L)}")
 
     private fun KitUiTest.sheetHeight(): Int =
         onNodeWithTag("kit-sheet", useUnmergedTree = true).fetchSemanticsNode().size.height
@@ -505,12 +512,20 @@ class AgentUpdateSheetRedrawTest {
             }
         }
 
-        fun buttonStaysPut() {
+        fun buttonGlidesSmoothly(rising: Boolean) {
             val tops = buttonTops.filter { !it.isNaN() }
             assertTrue(tops.size > 1, "the main button was not found on the frames: $buttonTops")
-            val low = tops.minOrNull() ?: 0f
-            val high = tops.maxOrNull() ?: 0f
-            assertTrue(high - low <= ONE_DP_PX, "the main button moved while its words changed: $tops")
+            assertTrue(tops.distinct().size > 2, "the main button jumped in one frame: $tops")
+            if (rising) {
+                assertTrue(tops.last() < tops.first(), "the main button did not rise for the third action: $tops")
+            } else {
+                assertTrue(tops.last() > tops.first(), "the main button did not settle back down: $tops")
+            }
+            tops.zipWithNext().forEach { (was, now) ->
+                val step = if (rising) was - now else now - was
+                assertTrue(step >= -ONE_DP_PX, "the main button reversed direction while gliding: $tops")
+                assertTrue(step <= MAX_BUTTON_STEP_PX, "the main button jumped ${step}px in one frame: $tops")
+            }
         }
 
         private fun runs(shown: BooleanArray): List<Triple<Boolean, Int, Int>> {
@@ -531,7 +546,7 @@ class AgentUpdateSheetRedrawTest {
         const val METERED_LINE = "You're on mobile data. The updates download over it."
         const val FOLD_FRAMES = 40
         const val ONE_DP_PX = 3
+        const val MAX_BUTTON_STEP_PX = 60f
         val ALL_AGENTS = listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
-        val MAIN_BUTTON_WORDS = listOf("Update 1 agent", "Keep these versions")
     }
 }
