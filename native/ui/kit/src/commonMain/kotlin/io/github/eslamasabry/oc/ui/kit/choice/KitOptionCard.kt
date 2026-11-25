@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.offset
 import kotlin.math.roundToInt
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -52,9 +51,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.PackId
-import io.github.eslamasabry.oc.ui.design.color.RoleDerivation
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
@@ -69,7 +66,6 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.*
 import androidx.compose.runtime.SideEffect
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
@@ -185,34 +181,12 @@ private fun CheckBadge(selected: Boolean, modifier: Modifier = Modifier) {
 }
 
 /**
- * A picture card's check: on the picture's top-start corner (the tiny conversation leaves it free), on a disc of the
- * card's own fill so it reads on any look. The name under the picture keeps the card's whole width.
+ * A picture card's check: on the picture's top-start corner (the tiny conversation leaves it free), using the kit's
+ * bare accent check with no disc behind it. The name under the picture keeps the card's whole width.
  */
 @Composable
 private fun PictureCheck(selected: Boolean, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
-    val shown by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.enter(), label = "picture-check")
-    val scale by animateFloatAsState(
-        if (selected) 1f else MotionTokens.MARK_FROM,
-        KitMotion.specs.enter(),
-        label = "picture-check-scale",
-    )
-    Box(
-        modifier
-            .padding(Space.S1.dp)
-            .size(Space.S5.dp)
-            .graphicsLayer {
-                alpha = shown
-                scaleX = scale
-                scaleY = scale
-            }
-            .background(colors.surface1.copy(alpha = 1f), CircleShape)
-            .testTag("kit-option-picture-check")
-            .clearAndSetSemantics {},
-        contentAlignment = Alignment.Center,
-    ) {
-        if (shown > 0f) KitSelectedCheck(Modifier.testTag("kit-option-card-check"))
-    }
+    CheckBadge(selected, modifier.padding(Space.S1.dp).testTag("kit-option-picture-check"))
 }
 
 /**
@@ -582,10 +556,22 @@ public fun KitAccentRow(
     if (grid) {
         val cells = buildList<@Composable () -> Unit> {
             add {
-                AccentCircle(KitAccentSwatch("", themeAccent, matchLabel), matchOn, onTap = { if (!matchOn) onChanged(null) }, caption = matchLabel, ring = colors.accent)
+                AccentCircle(
+                    KitAccentSwatch("", themeAccent, matchLabel),
+                    matchOn,
+                    onTap = { if (!matchOn) onChanged(null) },
+                    caption = matchLabel,
+                )
             }
             swatches.forEach { s ->
-                add { AccentCircle(s, s.id == selected, onTap = { if (s.id != selected) onChanged(s.id) }, caption = s.label, ring = colors.accent) }
+                add {
+                    AccentCircle(
+                        s,
+                        s.id == selected,
+                        onTap = { if (s.id != selected) onChanged(s.id) },
+                        caption = s.label,
+                    )
+                }
             }
         }
         // F: lib/ui/kit/kit_option_card.dart:983 (4); three from 2x text, so a colour's name stays whole.
@@ -648,39 +634,48 @@ public fun KitAccentRow(
     }
 }
 
-/** Dart `_AccentCircle`: one round swatch in its 48 dp target; chosen, a ring stands off it and a check sits on it. */
+/**
+ * Dart `_AccentCircle`: one round swatch in its 48 dp target; chosen, its colour becomes a ring around the bare
+ * [KitSelectedCheck] so the one kit selection mark reads on every swatch (including Match).
+ */
 @Composable
-private fun AccentCircle(swatch: KitAccentSwatch, selected: Boolean, onTap: () -> Unit, caption: String? = null, ring: Color? = null) {
+private fun AccentCircle(
+    swatch: KitAccentSwatch,
+    selected: Boolean,
+    onTap: () -> Unit,
+    caption: String? = null,
+) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val focus = kitFocusRingWidth()
     val circle = (tokens.minTarget - Space.S3).dp
-    val inner = if (selected) circle - (Space.S1 * 1.5f).dp - focus * 2 else circle // F: lib/ui/kit/kit_option_card.dart:1211,1212
-    val gap = if (selected) (Space.S1 * .75f).dp else 0.dp // F: lib/ui/kit/kit_option_card.dart:1197
-    val edgeWidth = if (selected) focus else kitHairline()
-    val edge = if (selected) ring ?: swatch.color else colors.hairline
     val shown by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.quick(), label = "accent-check")
-    val scale by animateFloatAsState(if (selected) 1f else MotionTokens.MARK_FROM, KitMotion.specs.quick(), label = "accent-check-scale")
-    val mark = Color(RoleDerivation.onColor(Argb(swatch.color.toArgb())).v)
+    val scale by animateFloatAsState(
+        if (selected) 1f else MotionTokens.MARK_FROM,
+        KitMotion.specs.quick(),
+        label = "accent-check-scale",
+    )
     // The named form keeps its caption whole: a circle press shape would clip the words under the swatch.
     val press = if (caption == null) KitShapeId.Circle else KitShapeId.Button
     KitTappable(onClick = onTap, modifier = Modifier.optionSemantics(swatch.label, selected), shape = press) {
         Column(Modifier.clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(tokens.minTarget.dp), contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier.exactEdge(edgeWidth, edge, CircleShape).padding(edgeWidth + gap),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(Modifier.size(inner).clip(CircleShape).background(swatch.color), contentAlignment = Alignment.Center) {
-                        KitGlyph(
-                            KitIcons.check,
-                            mark,
-                            tokens.smallIcon.dp,
+                val swatchBox =
+                    if (selected) {
+                        Modifier.size(circle).exactEdge(Space.S1.dp, swatch.color, CircleShape)
+                    } else {
+                        Modifier.size(circle)
+                            .clip(CircleShape)
+                            .background(swatch.color)
+                            .exactEdge(kitHairline(), colors.hairline, CircleShape)
+                    }
+                Box(swatchBox, contentAlignment = Alignment.Center) {
+                    if (shown > 0f) {
+                        KitSelectedCheck(
                             Modifier.graphicsLayer {
                                 alpha = shown
                                 scaleX = scale
                                 scaleY = scale
-                            },
+                            }.testTag("kit-accent-swatch-check"),
                         )
                     }
                 }
