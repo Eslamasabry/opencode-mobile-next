@@ -27,13 +27,14 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import com.caverock.androidsvg.SVG
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.DynamicSource
@@ -249,12 +250,15 @@ public class AndroidKitPlatform(
     /**
      * Plan 06 §5.6 (Dart `KitSystemBars`): transparent status bar and the navigation bar in the
      * ground, icons opposite the theme (the app's own dark choice is not a configuration change, so
-     * the kit sets it), and no grey contrast scrim on 3-button navigation.
+     * the kit sets it), and no grey contrast scrim on 3-button navigation. Set again whenever the
+     * window's configuration changes: `enableEdgeToEdge()` puts the phone's own look back then.
      */
     @Composable
     override fun SystemBars(darkContent: Boolean, ground: androidx.compose.ui.graphics.Color) {
         val hostWindow = window ?: return
-        SideEffect { applySystemBars(hostWindow, darkContent, ground.toArgb()) }
+        LaunchedEffect(hostWindow, darkContent, ground, LocalConfiguration.current) {
+            applySystemBars(hostWindow, darkContent, ground.toArgb())
+        }
     }
 
     override fun dateTime(atMs: Long, localeTag: String): String {
