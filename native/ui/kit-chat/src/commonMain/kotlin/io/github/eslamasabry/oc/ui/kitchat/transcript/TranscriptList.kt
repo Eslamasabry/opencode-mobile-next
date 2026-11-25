@@ -9,8 +9,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -42,13 +43,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.scrollBy
+import androidx.compose.ui.semantics.scrollToIndex
+import androidx.compose.ui.semantics.semantics
 import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenListEdges
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
@@ -296,13 +302,12 @@ public fun KitTranscriptList(
         if (isHybrid) remember(insetPadding, pin, density) { SumPadding(insetPadding, EndRoom(pin, density)) }
         else insetPadding
     val personScroll = remember(state, pin) { PersonScroll(state, pin) }
+    val a11yScope = rememberCoroutineScope()
+    val a11yDispatcher = remember { NestedScrollDispatcher() }
     if (isHybrid) {
         LaunchedEffect(state) {
             snapshotFlow { state.lazy.isScrollInProgress }.collect { scrolling ->
-                if (!scrolling && personScroll.personScrolled) {
-                    personScroll.personScrolled = false
-                    if (!state.following && state.atNewest) state.following = true
-                }
+                if (!scrolling && !personScroll.actionActive) personScroll.end()
             }
         }
     } else {
@@ -348,7 +353,25 @@ public fun KitTranscriptList(
             // the page's (the pill lies in the page's recording: reading that would draw the pill into itself).
             modifier =
                 Modifier.fillMaxSize()
-                    .then(if (isHybrid) Modifier.nestedScroll(personScroll) else Modifier)
+                    .then(
+                        if (isHybrid) {
+                            Modifier.semantics {
+                                scrollBy { _, y ->
+                                    a11yScope.launch { personScroll.a11yScrollBy(a11yDispatcher, motion, y) }
+                                    true
+                                }
+                                scrollToIndex { index ->
+                                    if (index < 0) return@scrollToIndex false
+                                    a11yScope.launch { personScroll.a11yScrollToIndex(index) }
+                                    true
+                                }
+                            }
+                                .nestedScroll(personScroll)
+                                .nestedScroll(NoopNestedScroll, a11yDispatcher)
+                        } else {
+                            Modifier
+                        }
+                    )
                     .keepsBottom(
                         pin = pin,
                         topPaddingPx = { with(density) { insetPadding.calculateTopPadding().roundToPx() } },
@@ -531,11 +554,14 @@ private class EndRoom(private val pin: BottomPin, private val density: Density) 
     override fun calculateBottomPadding(): Dp = with(density) { pin.roomPx.toDp() }
 }
 
+private object NoopNestedScroll : NestedScrollConnection
+
 private class PersonScroll(
     private val state: TranscriptListState,
     private val pin: BottomPin,
 ) : NestedScrollConnection {
     var personScrolled: Boolean = false
+    var actionActive: Boolean = false
 
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
         if (source == NestedScrollSource.UserInput || source == NestedScrollSource.SideEffect) {
@@ -551,6 +577,53 @@ private class PersonScroll(
                 if (excess > 0f) Offset(0f, -excess) else Offset.Zero
             }
             else -> Offset.Zero
+        }
+    }
+
+    fun end() {
+        if (!personScrolled) return
+        personScrolled = false
+        state.following = state.atNewest
+    }
+
+    suspend fun a11yScrollBy(dispatcher: NestedScrollDispatcher, motion: KitMotionLevel, y: Float) {
+        actionActive = true
+        try {
+            state.lazy.scroll {
+                fun step(delta: Float) {
+                    if (delta == 0f) return
+                    val pre = dispatcher.dispatchPreScroll(Offset(0f, -delta), NestedScrollSource.UserInput)
+                    val v = delta + pre.y
+                    val normal = Snapshot.withoutReadObservation { state.laidOutNormal }
+                    scrollBy(if (normal) v else -v)
+                }
+                if (motion == KitMotionLevel.Off) {
+                    step(y)
+                } else {
+                    var prev = 0f
+                    animate(0f, y) { value, _ ->
+                        val stepDelta = value - prev
+                        prev = value
+                        step(stepDelta)
+                    }
+                }
+            }
+            withFrameNanos { }
+        } finally {
+            actionActive = false
+            end()
+        }
+    }
+
+    suspend fun a11yScrollToIndex(index: Int) {
+        actionActive = true
+        personScrolled = true
+        try {
+            state.lazy.scrollToItem(index)
+            withFrameNanos { }
+        } finally {
+            actionActive = false
+            end()
         }
     }
 }
