@@ -19,11 +19,8 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFailure
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolIdWords
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
@@ -580,18 +577,10 @@ private fun StepProse(text: String, reply: ReplyActions?, key: String) {
     }
 }
 
-/** The preview under an opened edit step never grows past 12 lines: a cut one offers View all changes instead. */
+/** The preview under an opened edit step never grows past 12 lines: a cut one offers Changes instead. */
 @Composable
 private fun StepDiff(file: DiffFile, reply: ReplyActions?) {
-    val folder = file.path.substringBeforeLast('/', "")
-    if (folder.isNotEmpty()) {
-        KitText(
-            rememberKitMask()(folder),
-            role = TypeRole.Secondary,
-            tone = TextTone.Secondary,
-            maxLines = 1,
-        )
-    }
+    MaskedLine(file.path)
     val lines = stringResource(Res.string.tools44Lines)
     val hidden = stringResource(Res.string.tools44HiddenLines)
     KitDiffView(
@@ -602,7 +591,7 @@ private fun StepDiff(file: DiffFile, reply: ReplyActions?) {
     )
     val onOpenChanges = reply?.onOpenChanges
     if (file.totalLines > 12 && onOpenChanges != null)
-        KitButton(stringResource(Res.string.chatStepViewAllChanges), onOpenChanges, role = KitButtonRole.Tertiary)
+        KitButton(stringResource(Res.string.chatUiChanges), onOpenChanges, role = KitButtonRole.Tertiary)
 }
 
 private fun JsonObject.word(key: String): String? =

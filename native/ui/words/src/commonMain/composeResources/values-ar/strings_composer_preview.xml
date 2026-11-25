@@ -18,5 +18,4 @@
     <string name="composerPreviewAttachmentStorage">تعذّر حفظ الملف على هذا الجهاز.</string>
     <string name="composerPreviewAttachmentDismiss">تجاهل</string>
     <string name="composerPreviewAttachmentRetry">حاول مجددًا</string>
-    <string name="composerModelDefaultShort">النموذج الافتراضي</string>
 </resources>

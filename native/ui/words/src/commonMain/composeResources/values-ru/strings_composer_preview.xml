@@ -20,5 +20,4 @@
     <string name="composerPreviewAttachmentStorage">Не удалось сохранить файл на этом устройстве.</string>
     <string name="composerPreviewAttachmentDismiss">Закрыть</string>
     <string name="composerPreviewAttachmentRetry">Повторить</string>
-    <string name="composerModelDefaultShort">Модель по умолчанию</string>
 </resources>

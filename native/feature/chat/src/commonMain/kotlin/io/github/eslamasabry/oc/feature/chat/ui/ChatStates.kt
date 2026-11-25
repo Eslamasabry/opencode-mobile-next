@@ -88,17 +88,18 @@ internal fun Modifier.chatPane(): Modifier = kitMaxWidth(ChatPane.maxWidth(Local
  */
 @Composable
 internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
-    // B-561: top-aligned column starting right under the header (skeleton first, then the slow words).
-    Column(
+    // The frame's overlaid chrome lies over the body (the chat keeps one layout while it loads): the turns rest above the
+    // message box as the transcript's newest line does (the list's own 8 dp over the frame's room), the words in the
+    // middle of what is left.
+    Box(
         modifier.fillMaxSize().padding(kitScreenChromePadding()).padding(bottom = Space.S2.dp).chatPane(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        contentAlignment = Alignment.BottomCenter,
     ) {
         KitSkeletonTranscript(Modifier.fillMaxWidth().testTag("chat-loading"))
-        Spacer(Modifier.height(Space.S4.dp))
         KitSlowWords(
             label,
             ChatPane.LOADING_WORDS_AFTER_MS,
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            Modifier.align(Alignment.Center).padding(horizontal = LocalKitTokens.current.gutter.dp),
             textModifier = Modifier.testTag("chat-loading-words"),
         )
     }

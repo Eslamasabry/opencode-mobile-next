@@ -20,5 +20,4 @@
     <string name="composerPreviewAttachmentStorage">无法将文件保存到这台设备。</string>
     <string name="composerPreviewAttachmentDismiss">关闭</string>
     <string name="composerPreviewAttachmentRetry">重试</string>
-    <string name="composerModelDefaultShort">默认模型</string>
 </resources>

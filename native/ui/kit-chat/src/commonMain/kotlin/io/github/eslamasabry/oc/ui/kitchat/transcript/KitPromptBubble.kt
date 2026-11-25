@@ -34,12 +34,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -250,66 +246,34 @@ public const val PROMPT_PHOTO_TAG: String = "kit-prompt-photo"
 private fun PromptWords(text: String) {
     val colors = LocalKitColors.current
     val holder = remember { LayoutHolder() }
-    val measurer = rememberTextMeasurer()
     // Find: the matches of the open search in the person's own words, the current one stronger.
     val find = LocalKitFindMarks.current
     val shown = remember(text, find, colors.accent) { AnnotatedString(text).withFindMarks(find, colors.accent) }
-    // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
-    // Arabic interface is left to right, its full stop at the end).
-    val style =
-        LocalKitTypography.current.style(TypeRole.Body).copy(
-            color = colors.text1,
-            textDirection = TextDirection.Content,
-        )
     BasicText(
         text = shown,
-        style = style,
+        style =
+            // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
+            // Arabic interface is left to right, its full stop at the end).
+            LocalKitTypography.current.style(TypeRole.Body).copy(
+                color = colors.text1,
+                textDirection = TextDirection.Content,
+            ),
         onTextLayout = { holder.layout = it },
-        modifier = Modifier.balancedHug(shown, style, measurer, holder),
+        modifier = Modifier.hugLongestLine(holder),
     )
 }
 
-/**
- * Balances wrapped prompt lines by binary-searching the narrowest width that keeps the same line count, then hugs
- * the longest line while keeping each line where the paragraph's own direction puts it (B-584).
- */
-private fun Modifier.balancedHug(
-    text: AnnotatedString,
-    style: TextStyle,
-    measurer: TextMeasurer,
-    holder: LayoutHolder,
-): Modifier = layout { measurable, constraints ->
-    val maxW = constraints.maxWidth
-    val targetMax =
-        if (maxW == Constraints.Infinity || maxW <= constraints.minWidth) maxW
-        else {
-            val initial = measurer.measure(text, style, constraints = Constraints(maxWidth = maxW))
-            if (initial.lineCount < 2) maxW
-            else {
-                var lo = constraints.minWidth.coerceAtLeast(1)
-                var hi = maxW
-                while (lo < hi) {
-                    val mid = lo + (hi - lo) / 2
-                    val candidate = measurer.measure(text, style, constraints = Constraints(maxWidth = mid))
-                    if (candidate.lineCount <= initial.lineCount) hi = mid else lo = mid + 1
-                }
-                hi
-            }
-        }
-    val bounded =
-        constraints.copy(
-            minWidth = constraints.minWidth.coerceAtMost(targetMax),
-            maxWidth = targetMax,
-        )
-    val placeable = measurable.measure(bounded)
-    val measured = holder.layout
+/** Narrows a wrapped text to its longest line, keeping each line where the paragraph's own direction puts it. */
+private fun Modifier.hugLongestLine(holder: LayoutHolder): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val text = holder.layout
     val width =
-        if (measured == null || measured.lineCount < 2) placeable.width
+        if (text == null || text.lineCount < 2) placeable.width
         else
-            ceil((0 until measured.lineCount).maxOf { measured.getLineRight(it) - measured.getLineLeft(it) })
+            ceil((0 until text.lineCount).maxOf { text.getLineRight(it) - text.getLineLeft(it) })
                 .toInt()
                 .coerceIn(constraints.minWidth, placeable.width)
-    val rtl = measured != null && measured.getParagraphDirection(0) == ResolvedTextDirection.Rtl
+    val rtl = text != null && text.getParagraphDirection(0) == ResolvedTextDirection.Rtl
     layout(width, placeable.height) { placeable.place(if (rtl) width - placeable.width else 0, 0) }
 }
 

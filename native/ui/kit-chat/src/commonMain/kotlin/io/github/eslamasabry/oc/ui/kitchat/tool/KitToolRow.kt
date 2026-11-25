@@ -316,13 +316,7 @@ private fun StepStatus(view: KitToolView, status: KitToolStatus, lines: Int, gap
             KitToolStatus.WaitingForYou ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     Box(Modifier.size(8.dp).background(colors.attention, CircleShape).testTag("kit-tool-waiting-you"))
-                    KitText(
-                        view.statusLabel,
-                        role = TypeRole.Secondary,
-                        tone = TextTone.Attention,
-                        kind = KitTextKind.Frame,
-                        maxLines = lines,
-                    )
+                    KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = lines)
                 }
             else -> {
                 val mark =
@@ -332,12 +326,12 @@ private fun StepStatus(view: KitToolView, status: KitToolStatus, lines: Int, gap
                         else -> KitIcons.radioEmpty
                     }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitIcon(mark, size = KitIconSize.Tiny, tone = TextTone.Secondary)
+                    KitIcon(mark, size = KitIconSize.Tiny, tone = if (status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)
                     KitText(
                         view.statusLabel,
                         role = TypeRole.Secondary,
-                        // B-568: failed step shares the same quiet Secondary tone as the turn's "Didn't finish" note.
-                        tone = TextTone.Secondary,
+                        // LOOK-5: a failed step's word is plain text1, never a danger colour; the rest are quiet.
+                        tone = if (status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary,
                         kind = KitTextKind.Frame,
                         maxLines = lines,
                     )

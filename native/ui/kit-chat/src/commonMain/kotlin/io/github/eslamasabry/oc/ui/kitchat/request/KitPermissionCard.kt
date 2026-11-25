@@ -180,26 +180,31 @@ public fun KitPermissionCard(
                     onDenyJustDeny = onDeny,
                     question = question,
                 )
-                // B-564: Details in accent ink and underlined (the DetailsLink look), no trim, full 48x48 dp target.
+                // The standard ask card's quiet line (kit_request_card.dart:1143-1235): "Details" at the far end, small and
+                // plain, space2 under the answers, space3 of air above and below as its own target.
                 if (!question && onDetails != null) {
-                    val detailsWord = stringResource(Res.string.kitDetails)
+                    // Signal draws no face, so there is no padding of the card's own to reach into.
+                    val padded = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
+                    // The touch target is the kit's minimum height by itself (KitTappable); no extra air above or below it,
+                    // so the card does not end in an empty band under the answers. Its lower part reaches into the card's
+                    // own bottom padding instead of adding to it (RC1 device pass: about 100 px of empty card under
+                    // "Details", the target's lower half plus the whole padding).
                     Box(
-                        Modifier.fillMaxWidth().testTag("permission-card-details-row"),
+                        Modifier.layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            val trim = if (padded) minOf(Space.S4.dp.roundToPx(), placeable.height / 2) else 0
+                            layout(placeable.width, placeable.height - trim) { placeable.place(0, 0) }
+                        }
+                            .fillMaxWidth()
+                            .testTag("permission-card-details-row"),
                         contentAlignment = Alignment.CenterEnd,
                     ) {
-                        KitTappable(
-                            onDetails,
-                            Modifier.testTag("permission-card-details"),
-                            onClickLabel = detailsWord,
-                        ) {
-                            BasicText(
-                                detailsWord,
-                                Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
-                                style =
-                                    LocalKitTypography.current.style(TypeRole.Secondary).copy(
-                                        color = colors.accent,
-                                        textDecoration = TextDecoration.Underline,
-                                    ),
+                        KitTappable(onDetails, Modifier.testTag("permission-card-details"), onClickLabel = stringResource(Res.string.kitDetails)) {
+                            KitText(
+                                stringResource(Res.string.kitDetails),
+                                Modifier.padding(horizontal = Space.S1.dp),
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
                             )
                         }
                     }
@@ -250,14 +255,8 @@ public fun KitPermissionCard(
         if (!toolLabel.isNullOrEmpty()) {
             KitText(toolLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
         }
-        val inlineChange = change != null && (!change.preview.isEmpty || change.missing != null)
         if (targets.isNotEmpty()) {
-            KitRequestTargets(
-                targets,
-                copyLabel = copyLabel,
-                copiedLabel = copiedLabel,
-                footer = if (inlineChange) ({ ChangePreview(change, framed = false) }) else null,
-            )
+            KitRequestTargets(targets, copyLabel = copyLabel, copiedLabel = copiedLabel)
         } else if (!subject.isNullOrEmpty()) {
             Box(
                 Modifier.fillMaxWidth()
@@ -268,14 +267,14 @@ public fun KitPermissionCard(
                 KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Primary)
             }
         }
-        if (change != null && targets.isEmpty()) ChangePreview(change)
+        if (change != null) ChangePreview(change)
         }
     }
 }
 
 /** The change under its target: a few lines in the preview card, "Show all" when more follow, or the missing words. */
 @Composable
-private fun ChangePreview(change: KitRequestChange, framed: Boolean = true) {
+private fun ChangePreview(change: KitRequestChange) {
     if (change.preview.isEmpty) {
         change.missing?.let {
             KitText(it, Modifier.testTag("permission-card-change-missing"), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
@@ -283,7 +282,7 @@ private fun ChangePreview(change: KitRequestChange, framed: Boolean = true) {
         return
     }
     Column(Modifier.fillMaxWidth().testTag("permission-card-change")) {
-        KitDiffPreviewCard(change.preview, change.label, change.onOpen, framed = framed)
+        KitDiffPreviewCard(change.preview, change.label, change.onOpen)
         change.showAllLabel?.let {
             KitButton(it, change.onOpen, Modifier.testTag("permission-card-change-all"), role = KitButtonRole.Tertiary)
         }

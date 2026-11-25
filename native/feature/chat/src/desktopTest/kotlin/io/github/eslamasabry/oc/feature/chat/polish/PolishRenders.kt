@@ -3,8 +3,12 @@
 package io.github.eslamasabry.oc.feature.chat.polish
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -51,8 +55,13 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
@@ -70,7 +79,7 @@ import kotlin.test.Test
 
 class PolishRenders {
     companion object {
-        const val PHASE = "after"
+        const val PHASE = "before"
     }
 
     private val noReqActions =
@@ -256,5 +265,45 @@ class PolishRenders {
             }
             waitForIdle()
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("580", "changed-files", "1.0", "dark"))
+        }
+
+    @Test
+    fun `render 561 plain topbar`() =
+        kitUiTest(360, 640) {
+            setContent {
+                CompositionLocalProvider(
+                    LocalDensity provides Density(1f),
+                    LocalKitScreenInsets provides WindowInsets(top = 24.dp),
+                ) {
+                    KitTheme(
+                        KitAppearance(style = Style.Glass, mode = AppearanceMode.Light, motion = MotionLevel.Off),
+                        DesktopKitPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        KitScreen(
+                            page = true,
+                            topBar = {
+                                KitTopBar(
+                                    title = "Conversations",
+                                    subtitle = "This phone",
+                                    exit = KitTopBarExit.None,
+                                )
+                            },
+                        ) {
+                            Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState(initial = 180))) {
+                                for (i in 1..20) {
+                                    KitText(
+                                        "Item $i — scrollable body content under the plain top bar",
+                                        Modifier.padding(vertical = 12.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("561", "plain-topbar", "1.0", "light"))
         }
 }
