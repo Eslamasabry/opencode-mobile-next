@@ -318,6 +318,8 @@ class ModelGoneWayOnTest {
             ),
             listOf(m2),
         ) {
+            onNodeWithText("Didn't finish").assertExists()
+            onAllNodesWithText("The agent has stopped. Send a message to ask it to carry on.").assertCountEquals(0)
             onNodeWithText(expectedNamed).assertExists()
             onAllNodesWithText("The server doesn't have this model.").assertCountEquals(0)
             assertWrapsWithoutCut(expectedNamed)
@@ -333,6 +335,7 @@ class ModelGoneWayOnTest {
             ),
             emptyList(),
         ) {
+            onNodeWithText("The agent has stopped. Send a message to ask it to carry on.").assertExists()
             onNodeWithText("The server doesn't have this model.").assertExists()
         }
     }
