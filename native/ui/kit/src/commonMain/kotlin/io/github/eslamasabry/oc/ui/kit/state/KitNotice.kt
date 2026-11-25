@@ -243,6 +243,7 @@ private fun NoticeFrame(
  * States: neutral, working, ok, warning, error, cost, offer Text: reading Cap: Reading Motion: fades and rises in
  * (KitEntrance), again when the tone changes; Off = instant Hidden: none Replaces: KitNotice (lib/ui/kit/kit_notice.dart)
  */
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitNotice(
     message: String,
@@ -276,6 +277,7 @@ public fun KitNotice(
     )
 }
 
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 private fun NoticeBody(
     message: String,

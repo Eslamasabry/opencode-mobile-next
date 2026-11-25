@@ -160,6 +160,8 @@ public object KitRecentRowRules {
  * Hidden: long-press (the row's menu; the same acts are on the conversation's own page)
  * Replaces: none
  */
+@Suppress("LongParameterList", "LongMethod")
+// composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitRecentRow(
     title: String,

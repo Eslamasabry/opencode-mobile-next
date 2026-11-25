@@ -81,6 +81,8 @@ public object ActionBlockRules {
  * Replaces: KitActionBlock (lib/ui/kit/kit_buttons.dart)
  */
 @OptIn(ExperimentalLayoutApi::class)
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
+// composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitActionBlock(
     modifier: Modifier = Modifier,

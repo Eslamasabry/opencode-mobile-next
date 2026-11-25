@@ -172,9 +172,12 @@ import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskNow
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskWait
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutes
-import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutesShort
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeDaysShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeHoursShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeMinutesShort
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.statePin
@@ -1332,10 +1335,10 @@ internal fun agoText(age: RelativeAge): String =
 @Composable
 private fun agoTextShort(age: RelativeAge): String =
     when (age) {
-        RelativeAge.JustNow -> kitRelativeAgeFromMinutesShort(0L)
-        is RelativeAge.Minutes -> kitRelativeAgeFromMinutesShort(age.count.toLong())
-        is RelativeAge.Hours -> kitRelativeAgeFromMinutesShort(age.count * 60L)
-        is RelativeAge.Days -> kitRelativeAgeFromMinutesShort(age.count * 1440L)
+        RelativeAge.JustNow -> stringResource(Res.string.kitRelJustNow)
+        is RelativeAge.Minutes -> kitRelativeMinutesShort(age.count.toLong())
+        is RelativeAge.Hours -> kitRelativeHoursShort(age.count.toLong())
+        is RelativeAge.Days -> kitRelativeDaysShort(age.count.toLong())
     }
 
 /** P2 proof page for ChatRoute: the box a row grows into (plan 08 §5.4). */

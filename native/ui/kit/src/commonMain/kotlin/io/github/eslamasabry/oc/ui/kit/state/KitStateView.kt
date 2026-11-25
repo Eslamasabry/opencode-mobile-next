@@ -163,6 +163,8 @@ private const val CALM_LIFT: Float = .1f // F: lib/ui/kit/kit_state_view.dart:43
  * Motion: none of its own beyond the progress bar; Off = still
  * Replaces: KitStateView, .error, .missing, .calm (lib/ui/kit/kit_state_view.dart)
  */
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
+// composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitStateView(
     kind: KitStateKind,
