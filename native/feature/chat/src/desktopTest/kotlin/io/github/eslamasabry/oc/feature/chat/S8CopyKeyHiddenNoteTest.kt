@@ -4,8 +4,10 @@ import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
@@ -20,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,7 +35,9 @@ internal fun CopyNoteScene(inside: @Composable () -> Unit = {}) {
         bottom = { inside() },
         edges = KitScreenEdges.Bleed,
     ) {
-        Box(Modifier.fillMaxSize()) { KitText("Hello there") }
+        Box(Modifier.fillMaxSize()) {
+            KitText("Hello there", Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))
+        }
     }
 }
 

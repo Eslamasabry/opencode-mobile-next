@@ -92,6 +92,8 @@ public data class KitRowState(
      * screen reader instead ("Tidy the README, agent getting ready"). Other rows ignore it.
      */
     val waiting: Boolean = false,
+    /** False drops the lead mark slot so the row's title starts on the row's gutter. */
+    val lead: Boolean = true,
 )
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */

@@ -327,9 +327,9 @@ private fun RowBody(
                 }
             }
             leading != null -> Box(lead) { RowLeadingTile(leading, dim = !enabled || unavailable, selected = selected) }
-            state != null -> Box(lead) { RowStateMark(state.tone) }
+            state != null && state.lead -> Box(lead) { RowStateMark(state.tone) }
         }
-        if (leading != null || state != null) Spacer(Modifier.width(Space.S3.dp))
+        if (leading != null || (state != null && state.lead)) Spacer(Modifier.width(Space.S3.dp))
         val middle: @Composable (Modifier, Boolean) -> Unit = { middleModifier, valueBelow ->
             // The text never runs into what trails it: space2 before the trailing part (kit_row.dart:640).
             Row(middleModifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {

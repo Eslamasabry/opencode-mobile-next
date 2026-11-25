@@ -139,6 +139,7 @@ public fun KitDiffView(
     error: String? = null,
     onRetry: (() -> Unit)? = null,
     onOpenAll: (() -> Unit)? = null,
+    showName: Boolean = true,
 ) {
     val full = maxLines > 12
     if (loading) return DiffLoading(modifier)
@@ -365,6 +366,7 @@ public fun KitDiffView(
                     onPrevious = if (change > 0) ({ change-- }) else null,
                     onNext = if (change < file.changeCount - 1) ({ change++ }) else null,
                     sourceSwitch = if (markdown && !file.binary) ({ SourceSwitch(source) { source = !source } }) else null,
+                    showName = showName,
                 )
             } else if (markdown) {
                 SourceSwitch(source) { source = !source }
@@ -493,6 +495,7 @@ private fun DiffHeader(
     onPrevious: (() -> Unit)?,
     onNext: (() -> Unit)?,
     sourceSwitch: (@Composable () -> Unit)?,
+    showName: Boolean = true,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -544,7 +547,7 @@ private fun DiffHeader(
                     horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
-                    BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (showName) BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     if (supporting.isNotEmpty()) KitText(supporting, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
                     Counts(file.added, file.removed)
                 }
@@ -564,7 +567,7 @@ private fun DiffHeader(
                                 Spacer(Modifier.width(Space.S1.dp))
                                 KitIcon(KitIcons.chevronRight, size = KitIconSize.Small, tone = TextTone.Secondary)
                             }
-                        } else {
+                        } else if (showName) {
                             BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                         if (supporting.isNotEmpty()) KitText(supporting, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2)

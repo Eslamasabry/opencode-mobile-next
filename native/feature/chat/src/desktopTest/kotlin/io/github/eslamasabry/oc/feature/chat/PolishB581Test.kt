@@ -12,7 +12,7 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 private const val GUTTER_DP = 16f
 private const val EDGE_TOLERANCE = 1f
 
