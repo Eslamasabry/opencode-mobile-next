@@ -138,8 +138,70 @@ public fun kitRowGutter(): Dp = kitRowGutterDp(LocalKitOnRail.current, LocalKitT
 private class Seams {
     var ys: IntArray = IntArray(0)
 
+    /** Live fade opacity (0..1) of each direct child, read only in the draw phase. */
+    var alphas: List<() -> Float> = emptyList()
+
     /** How many children the last measure placed; 0 means the column drew nothing. */
     var count: Int = -1
+}
+
+private val FULL_ROW_ALPHA: () -> Float = { 1f }
+private const val SEAM_ALPHA_EPS: Float = 0.001f
+
+/** Live fade opacity of a direct [HairlineColumn] child (0..1), reported by `KitReveal`. */
+internal class KitRowAlpha(val alpha: () -> Float)
+
+internal val LocalKitInHairlineColumn: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.staticCompositionLocalOf { false }
+
+/** Reports a child's fade [alpha] to its enclosing [HairlineColumn] without altering other parents' data. */
+@Composable
+internal fun Modifier.kitRowAlpha(alpha: () -> Float): Modifier =
+    if (!LocalKitInHairlineColumn.current) this else this.then(KitRowAlphaElement(alpha))
+
+private data class KitRowAlphaElement(val alpha: () -> Float) :
+    androidx.compose.ui.node.ModifierNodeElement<KitRowAlphaNode>() {
+    override fun create(): KitRowAlphaNode = KitRowAlphaNode(alpha)
+
+    override fun update(node: KitRowAlphaNode) {
+        node.alpha = alpha
+    }
+
+    override fun androidx.compose.ui.platform.InspectorInfo.inspectableProperties() {
+        name = "kitRowAlpha"
+    }
+}
+
+private class KitRowAlphaNode(var alpha: () -> Float) :
+    Modifier.Node(),
+    androidx.compose.ui.node.ParentDataModifierNode {
+    private val holder = KitRowAlpha { alpha() }
+
+    override fun androidx.compose.ui.unit.Density.modifyParentData(parentData: Any?): Any =
+        parentData ?: holder
+}
+
+private class SeamDrawStyle(
+    val x0: Float,
+    val x1: Float,
+    val spans: List<androidx.compose.ui.geometry.Rect>,
+    val hairline: Color,
+    val prominent: KitProminentRule?,
+)
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSeam(y: Int, alpha: Float, style: SeamDrawStyle) {
+    if (alpha <= SEAM_ALPHA_EPS || style.x1 <= style.x0) return
+    if (style.spans.any { ChosenFaceRules.seamTouches(y, it.top, it.bottom) }) return
+    val p = style.prominent
+    if (p == null) {
+        val c = if (alpha >= 1f) style.hairline else style.hairline.copy(alpha = style.hairline.alpha * alpha)
+        drawLine(c, Offset(style.x0, y + 0.5f), Offset(style.x1, y + 0.5f), 1f)
+    } else {
+        // B-173: the line starts on the seam's pixel row and is at least 1 dp thick, in the theme's tertiary ink.
+        val t = p.thicknessDp.dp.toPx()
+        val c = if (alpha >= 1f) p.color else p.color.copy(alpha = p.color.alpha * alpha)
+        drawRect(c, Offset(style.x0, y.toFloat()), androidx.compose.ui.geometry.Size(style.x1 - style.x0, t))
+    }
 }
 
 /** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset on both reading edges. */
@@ -165,50 +227,58 @@ private fun HairlineColumn(
     // The chosen rows of this list (ChosenFaceRules): no seam touches a chosen row's face.
     val chosen = remember { ChosenRows() }
     val own = remember { ChosenRowBox() }
-    androidx.compose.runtime.CompositionLocalProvider(LocalKitChosenRows provides chosen) {
-    Layout(
-        content = content,
-        modifier =
-            Modifier.fillMaxWidth().onPlaced { own.coordinates = it }.drawWithContent {
-                drawContent()
-                val start = inset.toPx()
-                val end = endInset.toPx()
-                val rtl = layoutDirection == LayoutDirection.Rtl
-                val (x0, x1) = if (rtl) end to size.width - start else start to size.width - end
-                val ys = if (ruleAbove) intArrayOf(0) + seams.ys else seams.ys
-                val list = own.coordinates?.takeIf { it.isAttached }
-                val spans = if (list == null) emptyList() else chosen.rows.mapNotNull { row ->
-                    row.coordinates?.takeIf { it.isAttached }?.let { list.localBoundingBoxOf(it, clipBounds = false) }
-                }
-                ys.forEach { y ->
-                    if (x1 <= x0) return@forEach
-                    if (spans.any { ChosenFaceRules.seamTouches(y, it.top, it.bottom) }) return@forEach
-                    if (prominent == null) drawLine(hairline, Offset(x0, y + 0.5f), Offset(x1, y + 0.5f), 1f)
-                    else {
-                        // B-173: the line starts on the seam's pixel row and is at least 1 dp thick, in the theme's tertiary ink at 30 %.
-                        val t = prominent.thicknessDp.dp.toPx()
-                        drawRect(prominent.color, Offset(x0, y.toFloat()), androidx.compose.ui.geometry.Size(x1 - x0, t))
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalKitChosenRows provides chosen,
+        LocalKitInHairlineColumn provides true,
+    ) {
+        Layout(
+            content = content,
+            modifier =
+                Modifier.fillMaxWidth().onPlaced { own.coordinates = it }.drawWithContent {
+                    drawContent()
+                    val start = inset.toPx()
+                    val end = endInset.toPx()
+                    val rtl = layoutDirection == LayoutDirection.Rtl
+                    val (x0, x1) = if (rtl) end to size.width - start else start to size.width - end
+                    val list = own.coordinates?.takeIf { it.isAttached }
+                    val spans =
+                        if (list == null) emptyList()
+                        else
+                            chosen.rows.mapNotNull { row ->
+                                row.coordinates?.takeIf { it.isAttached }?.let {
+                                    list.localBoundingBoxOf(it, clipBounds = false)
+                                }
+                            }
+                    val style = SeamDrawStyle(x0, x1, spans, hairline, prominent)
+                    val alphas = seams.alphas
+                    val firstAlpha = alphas.firstOrNull()?.invoke()?.coerceIn(0f, 1f) ?: 1f
+                    if (ruleAbove && alphas.isNotEmpty()) drawSeam(0, firstAlpha, style)
+                    var maxAbove = firstAlpha
+                    seams.ys.forEachIndexed { i, y ->
+                        val below = alphas.getOrNull(i + 1)?.invoke()?.coerceIn(0f, 1f) ?: 1f
+                        drawSeam(y, minOf(maxAbove, below), style)
+                        if (below > maxAbove) maxAbove = below
                     }
+                },
+        ) { measurables, constraints ->
+            val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+            val height = placeables.sumOf { it.height }
+            val ys = IntArray(maxOf(0, placeables.size - 1))
+            var y = 0
+            placeables.forEachIndexed { i, p ->
+                y += p.height
+                if (i < ys.size) ys[i] = y
+            }
+            seams.ys = ys
+            seams.alphas = measurables.map { (it.parentData as? KitRowAlpha)?.alpha ?: FULL_ROW_ALPHA }
+            seams.count = placeables.size
+            layout(constraints.maxWidth, height) {
+                var top = 0
+                placeables.forEach {
+                    it.placeRelative(0, top)
+                    top += it.height
                 }
-            },
-    ) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
-        val height = placeables.sumOf { it.height }
-        val ys = IntArray(maxOf(0, placeables.size - 1))
-        var y = 0
-        placeables.forEachIndexed { i, p ->
-            y += p.height
-            if (i < ys.size) ys[i] = y
-        }
-        seams.ys = ys
-        seams.count = placeables.size
-        layout(constraints.maxWidth, height) {
-            var top = 0
-            placeables.forEach {
-                it.placeRelative(0, top)
-                top += it.height
             }
         }
-    }
     }
 }
