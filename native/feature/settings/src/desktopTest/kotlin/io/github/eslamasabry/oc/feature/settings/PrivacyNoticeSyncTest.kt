@@ -606,4 +606,78 @@ class PrivacyNoticeSyncTest {
         }
     }
 
+    /** Localized plain-words phrase for how the first message ended, checked in every offered language. */
+    private val firstMessageEnding = mapOf(
+        "en" to Regex("(?i)how your first message ended"),
+        "ar" to Regex("كيف انتهت رسالتك الأولى"),
+        "es" to Regex("(?i)cómo terminó tu primer mensaje"),
+        "fr" to Regex("(?i)comment s[’']est terminé votre premier message"),
+        "id" to Regex("(?i)bagaimana pesan pertama Anda berakhir"),
+        "it" to Regex("(?i)come si è concluso il tuo primo messaggio"),
+        "ja" to Regex("最初のメッセージがどう終わったか"),
+        "pt" to Regex("(?i)como sua primeira mensagem terminou"),
+        "ru" to Regex("(?i)чем закончилось ваше первое сообщение"),
+        "vi" to Regex("(?i)cách tin nhắn đầu tiên của bạn kết thúc"),
+        "zh" to Regex("你的第一条消息如何结束"),
+    )
+
+    private fun journeyMilestoneEntry(policy: String): String? =
+        Regex("""journey_milestone\s*[(\uFF08]([^)\uFF09]*)[)\uFF09]""").find(policy)?.value
+
+    private fun journeyNoticeViolation(
+        where: String,
+        text: String?,
+        fields: Set<String>,
+        ending: Regex,
+    ): String? =
+        if (text == null) {
+            "$where: missing journey_milestone entry"
+        } else {
+            val missingFields = fields.filterNot { has(text, it) }
+            val parts = mutableListOf<String>()
+            if (missingFields.isNotEmpty()) parts += "missing fields $missingFields"
+            if (!has(text, "first_prompt_ended")) parts += "missing first_prompt_ended"
+            if (!ending.containsMatchIn(text)) parts += "missing first-message ending"
+            parts.takeIf { it.isNotEmpty() }?.let { "$where: ${it.joinToString(", ")}" }
+        }
+
+    private fun privacyMdFieldViolations(): List<String> {
+        val md = File(repo, "PRIVACY.md").readText()
+        val telemetry = section(
+            md,
+            "## Optional crash reports, usage and app health",
+            "## Data stored on your device",
+        )
+        val rows = tableRows(section(telemetry, "### Usage and app health", "### Performance"))
+        return productSchema.mapNotNull { (event, fields) ->
+            val row = rows[event]
+            if (row == null) {
+                "PRIVACY.md has no row for `$event`"
+            } else {
+                val missing = fields.keys.filterNot { "`$it`" in row }
+                missing.takeIf { it.isNotEmpty() }?.let { "PRIVACY.md `$event` row missing $it" }
+            }
+        }
+    }
+
+    @Test
+    fun `B-SEC-228 each event's fields are named on that event's own notice line`() {
+        val failures = privacyMdFieldViolations().toMutableList()
+        val offered = AppLanguage.entries.mapNotNull { it.tag }
+        assertEquals(firstMessageEnding.keys, offered.toSet(), "every offered language has an ending check")
+        val journeyFields = productSchema.getValue("journey_milestone").keys
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in offered) {
+            val dir = File(resources, if (tag == "en") "values" else "values-$tag")
+            val ending = firstMessageEnding.getValue(tag)
+            val collect = xmlString(File(dir, "strings_s28_privacy.xml"), "collectJourney")
+            val policy = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            journeyNoticeViolation("${dir.name} collectJourney", collect, journeyFields, ending)
+                ?.let { failures += it }
+            val policyEntry = journeyMilestoneEntry(policy)
+            journeyNoticeViolation("${dir.name} nativeBundledPrivacy", policyEntry, journeyFields, ending)
+                ?.let { failures += it }
+        }
+        assertEquals(emptyList(), failures, "event notice line mismatches:\n" + failures.joinToString("\n"))
+    }
 }
