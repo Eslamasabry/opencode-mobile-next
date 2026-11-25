@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.ScrollAxisRange
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -375,6 +376,27 @@ private fun assertNoDrift(drift: Drift, context: String, probe: ProbeLog) {
         drift.maxPx <= WALK_TOLERANCE_PX,
         "$context: max=${"%.1f".format(drift.maxPx)} frame=${drift.frame} node=${drift.node}${probe.tail()}",
     )
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.transcriptScrollAxis(): ScrollAxisRange {
+    val node = onNodeWithTag("transcript-list", useUnmergedTree = true).fetchSemanticsNode()
+    return node.config[SemanticsProperties.VerticalScrollAxisRange]
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.a11yScroll(amountPx: Float, towardNewer: Boolean, label: String, probe: ProbeLog) {
+    val range = transcriptScrollAxis()
+    val visual = if (towardNewer) amountPx else -amountPx
+    val y = if (range.reverseScrolling) -visual else visual
+    val canScroll = if (y > 0f) range.value() < range.maxValue() else range.value() > 0f
+    assertTrue(
+        canScroll,
+        "$label a11y action unavailable (towardNewer=$towardNewer rev=${range.reverseScrolling} " +
+            "val=${range.value()} max=${range.maxValue()})${probe.tail()}",
+    )
+    onNodeWithTag("transcript-list", useUnmergedTree = true)
+        .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, y) }
 }
 
 @OptIn(ExperimentalTestApi::class)
@@ -899,14 +921,13 @@ internal object ScrollAnchorWalks {
     }
 
     fun walk007ScreenReaderScrollBy(anchor: TranscriptAnchor) {
-        walkScreenReader(anchor, "007") {
-            onNodeWithTag("transcript-list", useUnmergedTree = true)
-                .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, -A11Y_UP_PX) }
+        walkScreenReader(anchor, "007") { probe ->
+            a11yScroll(A11Y_UP_PX, towardNewer = false, label = "007", probe = probe)
         }
     }
 
     fun walk008ScreenReaderScrollToIndex(anchor: TranscriptAnchor) {
-        walkScreenReader(anchor, "008") {
+        walkScreenReader(anchor, "008") { _ ->
             onNodeWithTag("transcript-list", useUnmergedTree = true).performScrollToIndex(A11Y_INDEX)
         }
     }
@@ -914,7 +935,7 @@ internal object ScrollAnchorWalks {
     private fun walkScreenReader(
         anchor: TranscriptAnchor,
         label: String,
-        firstMove: ComposeUiTest.() -> Unit,
+        firstMove: ComposeUiTest.(ProbeLog) -> Unit,
     ) {
         withFlickerReport(label) {
             kitUiTest(PHONE_W, PHONE_H, options = REPORT_OPTIONS) {
@@ -934,16 +955,32 @@ internal object ScrollAnchorWalks {
                 }
                 mainClock.advanceTimeBy(SETTLE_MS)
                 val baseBottom = boundsOfTag("chat-work-line").bottom
-                firstMove()
+                assertTrue(
+                    transcriptScrollAxis().reverseScrolling,
+                    "$label expected reverseScrolling=true while following${probe.tail()}",
+                )
+                val beforeTop = probe.latest()?.substringAfter("top=", "")
+                firstMove(probe)
                 repeat(GLIDE_FRAMES) { mainClock.advanceTimeByFrame() }
                 assertTrue(
                     jumpControlShown(),
                     "$label control hidden after first move: " +
                         "max=0.0 frame=$GLIDE_FRAMES node=jump-to-latest${probe.tail()}",
                 )
-                onNodeWithTag("transcript-list", useUnmergedTree = true)
-                    .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, A11Y_DOWN_PX) }
+                assertTrue(
+                    probe.latest()?.substringAfter("top=", "") != beforeTop,
+                    "$label first visible row did not move after scroll up${probe.tail()}",
+                )
+                assertTrue(
+                    !transcriptScrollAxis().reverseScrolling,
+                    "$label expected reverseScrolling=false while reading${probe.tail()}",
+                )
+                a11yScroll(A11Y_DOWN_PX, towardNewer = true, label = label, probe = probe)
                 verifyScreenReaderReturn(label, baseBottom, probe)
+                assertTrue(
+                    transcriptScrollAxis().reverseScrolling,
+                    "$label expected reverseScrolling=true after return to following${probe.tail()}",
+                )
             }
         }
     }
