@@ -335,57 +335,100 @@ class ModelGoneWayOnTest {
         }
     }
 
-    @Test
-    fun `B-523-013 replacement note wraps at 360dp text 1_3`() {
-        val oldName = "Alpha Beta Gamma Delta Epsilon Zeta 40ch"
-        val newName = "Sigma Tau Upsilon Phi Chi Psi Omega 40ch"
-        assertEquals(40, oldName.length)
-        assertEquals(40, newName.length)
-        val expectedNote = "$oldName is gone. Using $newName."
-
-        kitUiTest(360, 800) {
-            val replacement =
-                ComposerModel("prov", "m2", newName, supportsAttachments = false, providerName = "Prov", enabled = true)
-            val world =
-                object : FakeChatWorld() {
-                    override val models: StateFlow<ComposerModels> =
-                        MutableStateFlow(
-                            ComposerModels(
-                                choices = listOf(replacement),
-                                selected = replacement,
-                                replaced = ReplacedModel(oldName, newName),
-                            )
-                        )
-                }
-            world.title.value = "Project chat"
-            world.transcript.value =
+    private fun replacementWorld(
+        replacement: ComposerModel,
+        oldName: String,
+        newName: String,
+    ): FakeChatWorld =
+        object : FakeChatWorld() {
+            override val models: StateFlow<ComposerModels> =
+                MutableStateFlow(
+                    ComposerModels(
+                        choices = listOf(replacement),
+                        selected = replacement,
+                        replaced = ReplacedModel(oldName, newName),
+                    )
+                )
+        }.apply {
+            title.value = "Project chat"
+            transcript.value =
                 stateOf(
                     prompt("u1", "Check the checkout race"),
                     block("u1", "a1", "p1", 0, "The race happens in the retry path."),
                     footer("u1"),
                 )
-            val scene = ChatScene(world = world)
-            val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
-            val states = presenter.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
-            setContent {
-                val state by states.collectAsState()
-                Root("en", 1.3f, MotionLevel.Off) {
-                    ChatScreen(
-                        state,
-                        presenter,
-                        scene.host,
-                        header = ChatHeaderSlot(ChatHeaderUi(title = state.title), scene.headerActions),
-                        facts = TurnFactsUi.Empty,
-                        modelChoices = listOf(replacement),
-                        canGoBack = false,
-                    )
-                }
-            }
-            waitForIdle()
-            onNodeWithText(expectedNote).assertExists()
-            assertWrapsWithoutCut(expectedNote)
-            onNodeWithTag("kit-status-dismiss").assertExists()
         }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.statusNoteHeight(): Float =
+        onAllNodesWithTag("kit-screen-status", useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .firstOrNull()
+            ?.boundsInRoot
+            ?.height ?: 0f
+
+    private fun walkNoteDismiss(
+        oldName: String,
+        newName: String,
+        expectedNote: String,
+        motion: MotionLevel,
+    ) = kitUiTest(360, 800) {
+        val replacement =
+            ComposerModel("prov", "m2", newName, supportsAttachments = false, providerName = "Prov", enabled = true)
+        val world = replacementWorld(replacement, oldName, newName)
+        val scene = ChatScene(world = world)
+        val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val states = presenter.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+        setContent {
+            val state by states.collectAsState()
+            Root("en", 1.3f, motion) {
+                ChatScreen(
+                    state,
+                    presenter,
+                    scene.host,
+                    header = ChatHeaderSlot(ChatHeaderUi(title = state.title), scene.headerActions),
+                    facts = TurnFactsUi.Empty,
+                    modelChoices = listOf(replacement),
+                    canGoBack = false,
+                )
+            }
+        }
+        waitForIdle()
+        onNodeWithText(expectedNote).assertExists()
+        assertWrapsWithoutCut(expectedNote)
+        val headerBase = onNodeWithText("Project chat", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val initialHeight = statusNoteHeight()
+        assertTrue(initialHeight > 0f, "Expected positive note height, got $initialHeight")
+        mainClock.autoAdvance = false
+        onNodeWithTag("kit-status-dismiss").performClick()
+        var prevHeight = initialHeight
+        var sawIntermediate = false
+        for (frame in 1..40) {
+            mainClock.advanceTimeByFrame()
+            val headerNow = onNodeWithText("Project chat", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertStable(headerBase, headerNow, frame, "header")
+            val height = statusNoteHeight()
+            assertTrue(height <= prevHeight + 0.5f, "Note height grew on frame $frame: $height > $prevHeight")
+            if (height > 1f && height < initialHeight - 1f) sawIntermediate = true
+            prevHeight = height
+        }
+        assertTrue(prevHeight <= 0.5f, "Note height did not reach zero: $prevHeight")
+        if (motion == MotionLevel.Full) {
+            assertTrue(sawIntermediate, "Expected monotonic fold frames between $initialHeight and 0")
+        }
+        mainClock.autoAdvance = true
+        waitForIdle()
+        onAllNodesWithText(expectedNote).assertCountEquals(0)
+    }
+
+    @Test
+    fun `B-523-013 replacement note wraps and folds cleanly on dismiss without jumping`() {
+        val oldName = "Alpha Beta Gamma Delta Epsilon Zeta 40ch"
+        val newName = "Sigma Tau Upsilon Phi Chi Psi Omega 40ch"
+        assertEquals(40, oldName.length)
+        assertEquals(40, newName.length)
+        val expectedNote = "$oldName is gone. Using $newName."
+        walkNoteDismiss(oldName, newName, expectedNote, MotionLevel.Full)
+        walkNoteDismiss(oldName, newName, expectedNote, MotionLevel.Off)
     }
 }
