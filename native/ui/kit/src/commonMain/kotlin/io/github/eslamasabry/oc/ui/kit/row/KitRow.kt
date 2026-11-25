@@ -468,13 +468,8 @@ private fun RowBody(
                     trailing == KitRowTrailing.Chevron ->
                         if (chevronEnds) Box(Modifier.padding(end = chevronEndPad(tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)))) { RowChevron() }
                         else RowChevron()
-                    trailing == KitRowTrailing.Check -> io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
-                        io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
-                        Modifier.testTag("kit-row-check"),
-                        size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
-                        // Glass marks the chosen row in the accent: its frost, its rim and its check.
-                        tone = TextTone.Accent, // C04: one check colour across the kit
-                    )
+                    // Glass marks the chosen row in the accent: its frost, its rim and its check (C04).
+                    trailing == KitRowTrailing.Check -> KitSelectedCheck(Modifier.testTag("kit-row-check"))
                     else -> Unit
                 }
             }
