@@ -1,13 +1,16 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
-import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateNetwork
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentNeededRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentRemovalAskUi
@@ -16,21 +19,20 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateHomeUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.row.KitContentRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
@@ -42,15 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsAction
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsLine
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesChoiceLabel
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepHelperTooNew
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepNotSupported
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesLinuxAction
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesLinuxLine
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesMetered
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededAlways
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededLabel
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededWhy
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNetworkUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNotRemoved
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReady
@@ -65,16 +59,14 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
-import io.github.eslamasabry.oc.ui.words.res.localAgentRowOptional
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReviewAction
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * "Updates for your agents" (owner 2026-11-19): after an app update that moves the agents' pins, one sheet asks what
- * to do with each agent: Update, Keep the version it has, or Remove it. The parts the updates need (the agent helper,
- * Node.js) are listed with their sizes and no choice, only while at least one agent is set to Update. The button names
- * what it does; every removal is confirmed first with the Agents page's own words. Kit parts only: no motion of its
- * own (the kit's sheet and segmented control follow Motion off and Saver), and every part keeps the kit's width caps.
+ * "Updates for your agents" (redrawn 2026-11-25): after an app update that moves the agents' pins, one sheet shows the
+ * download total and any network notice first, then one unlabelled list with the needed parts first (the agent helper,
+ * Node.js) and one switch per agent. The button names what it does; every removal is confirmed first with the Agents
+ * page's own words. Kit parts only: no motion of its own, and every part keeps the kit's width caps.
  */
 @Composable
 internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateActions) {
@@ -115,7 +107,7 @@ internal fun AgentUpdateSheet(sheet: AgentUpdateSheetUi, actions: AgentUpdateAct
     RemovalConfirm(sheet.asking.takeIf { sheet.visible }, actions)
 }
 
-/** The question: the Optional agents with their choices, the Needed parts, the totals and the lines under them. */
+/** The question: any failure notice, the total, any network line, one unlabelled list, and the Agents note. */
 @Composable
 private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
     // A refusal is said first, at the top, and scrolled into view: under the list it was out of sight, so the button
@@ -125,34 +117,24 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
             KitErrorNotice(message = failureWords(failure, shown), failure = failure, modifier = ways)
         }
     }
-    if (shown.optional.isNotEmpty())
-        KitRowGroup(label = stringResource(Res.string.localAgentRowOptional)) {
-            shown.optional.forEach { row -> OptionalRow(row, actions) }
-        }
-    if (shown.needed.isNotEmpty())
-        KitRowGroup(
-            label = stringResource(Res.string.agentUpdatesNeededLabel),
-            note =
-                stringResource(
-                    if (shown.neededWhy == AgentNeedRule.Always) Res.string.agentUpdatesNeededAlways
-                    else Res.string.agentUpdatesNeededWhy
-                ),
-        ) {
-            shown.needed.forEach { row -> NeededRow(row) }
-        }
     Totals(shown)
     when (shown.network) {
         AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
         AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
         AgentUpdateNetwork.Unmetered -> Unit
     }
+    if (shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
+        val hasTotal = shown.updating > 0 || shown.removing > 0 || shown.needed.isNotEmpty()
+        val hasNetwork = shown.network != AgentUpdateNetwork.Unmetered
+        if (hasTotal || hasNetwork) Spacer(Modifier.height(Space.S3.dp))
+        KitRowGroup {
+            shown.needed.forEach { row -> NeededRow(row, shown.neededWhy) }
+            shown.optional.forEach { row -> OptionalRow(row, actions) }
+        }
+    }
     KitGroupNote(
         stringResource(Res.string.agentUpdatesAgentsLine),
         action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
-    )
-    KitGroupNote(
-        stringResource(Res.string.agentUpdatesLinuxLine),
-        action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), actions::openLinuxPackages),
     )
 }
 
@@ -171,62 +153,62 @@ private fun ResultBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
     )
 }
 
-/** One agent: its name, from → to, the choice (the kit stacks it into rows when a word does not fit), what it does. */
+/** One agent: its name, versions and size (or what keeping/removing does), and one switch. */
 @Composable
 private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
-    KitContentRow(title = KitBidi.auto(row.name), supporting = versions(row.from, row.to)) {
-        Column {
-            if (row.choices.size >= 2) {
-                val segments = row.choices.map { KitSegment(it, choiceWord(it)) }
-                KitSegmented(
-                    segments = segments,
-                    selected = row.choice,
-                    semanticsLabel = stringResource(Res.string.agentUpdatesChoiceLabel, row.name),
-                    onChange = { actions.chooseAgentUpdate(row.id, it) },
-                )
-            }
-            KitText(consequence(row), role = TypeRole.Secondary, tone = TextTone.Secondary)
-            row.keepBlock?.let {
-                KitText(
-                    stringResource(
-                        when (it) {
-                            AgentKeepBlock.HelperTooNew -> Res.string.agentUpdatesKeepHelperTooNew
-                            AgentKeepBlock.NotSupportedAnyMore -> Res.string.agentUpdatesKeepNotSupported
-                        }
-                    ),
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Secondary,
-                )
-            }
-        }
+    val facts = versionAndSize(row.from, row.to, row.downloadBytes)
+    val block = row.keepBlock
+    if (block != null) {
+        KitSwitchRow(
+            title = KitBidi.auto(row.name),
+            checked = true,
+            enabled = KitEnabled.Disabled(keepBlockReason(block)),
+            supportingMaxLines = 4,
+            below = { KitText(facts, role = TypeRole.Secondary, tone = TextTone.Secondary) },
+            onCheckedChange = { actions.chooseAgentUpdate(row.id, AgentUpdateChoice.Update) },
+        )
+        return
     }
+    val updating = row.choice == AgentUpdateChoice.Update
+    KitSwitchRow(
+        title = KitBidi.auto(row.name),
+        checked = updating,
+        supporting = if (updating) facts else consequence(row),
+        supportingMaxLines = 3,
+        onCheckedChange = {
+            actions.chooseAgentUpdate(row.id, if (it) AgentUpdateChoice.Update else AgentUpdateChoice.Keep)
+        },
+    )
 }
 
-/** A part the updates need: its name, from → to and its download, no choice. */
+/** A part the updates need: its name, versions, size and why it is needed, with no choice. */
 @Composable
-private fun NeededRow(row: AgentNeededRowUi) {
+private fun NeededRow(row: AgentNeededRowUi, why: AgentNeedRule) {
     KitRow(
         title = KitBidi.auto(row.name),
-        supporting = "${versions(row.from, row.to)}\n${downloads(row.downloadBytes)}",
-        supportingMaxLines = 3,
+        supporting = "${versionAndSize(row.from, row.to, row.downloadBytes)}\n${neededLine(why)}",
+        supportingMaxLines = 4,
     )
 }
 
 /** The totals: what downloads (the Update choices and the shown Needed parts) and what Remove frees. */
 @Composable
 private fun Totals(sheet: AgentUpdateSheetUi) {
-    if (sheet.updating == 0 && sheet.removing == 0 && sheet.needed.isEmpty()) return
-    KitRowGroup {
-        if (sheet.updating > 0 || sheet.needed.isNotEmpty())
-            KitRow(
-                stringResource(Res.string.agentUpdatesTotalDownload),
-                trailing = KitRowTrailing.Value(amount(sheet.downloadBytes, sheet.downloadKnown), chevron = false),
-            )
-        if (sheet.removing > 0)
+    if (sheet.updating > 0 || sheet.needed.isNotEmpty()) {
+        KitText(
+            stringResource(Res.string.agentUpdatesTotalDownload),
+            role = TypeRole.Label,
+            tone = TextTone.Secondary,
+        )
+        KitText(amount(sheet.downloadBytes, sheet.downloadKnown), role = TypeRole.LargeTitle)
+    }
+    if (sheet.removing > 0) {
+        KitRowGroup {
             KitRow(
                 stringResource(Res.string.agentUpdatesTotalFrees),
                 trailing = KitRowTrailing.Value(amount(sheet.freesBytes, sheet.freesKnown), chevron = false),
             )
+        }
     }
 }
 

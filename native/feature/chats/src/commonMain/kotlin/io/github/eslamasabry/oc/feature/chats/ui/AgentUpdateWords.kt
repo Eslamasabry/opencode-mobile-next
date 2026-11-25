@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
+import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
+import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
@@ -24,13 +26,14 @@ import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonBoth
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonKeep
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonRemove
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonUpdate
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesChoiceKeep
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesChoiceRemove
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesChoiceUpdate
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesDownloads
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesDownloadsUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFrees
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFreesUnknown
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepHelperTooNew
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepNotSupported
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededAlways
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededLabel
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesStays
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesStaysUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesVersionNew
@@ -49,14 +52,29 @@ internal fun agentUpdatesButton(sheet: AgentUpdateSheetUi): String =
         else -> stringResource(Res.string.agentUpdatesButtonKeep)
     }
 
+/** "Version 0.16.1 → 0.17.2 · 330 MB", or "… · Download size not known" when the size is null. */
 @Composable
-internal fun choiceWord(choice: AgentUpdateChoice): String =
+internal fun versionAndSize(from: String?, to: String, downloadBytes: Long?): String {
+    val size = downloadBytes?.let(PhoneSizes::text) ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
+    return "${versions(from, to)} · $size"
+}
+
+/** Why Keep is not offered for an agent, in one sentence. */
+@Composable
+internal fun keepBlockReason(block: AgentKeepBlock): String =
     stringResource(
-        when (choice) {
-            AgentUpdateChoice.Update -> Res.string.agentUpdatesChoiceUpdate
-            AgentUpdateChoice.Keep -> Res.string.agentUpdatesChoiceKeep
-            AgentUpdateChoice.Remove -> Res.string.agentUpdatesChoiceRemove
+        when (block) {
+            AgentKeepBlock.HelperTooNew -> Res.string.agentUpdatesKeepHelperTooNew
+            AgentKeepBlock.NotSupportedAnyMore -> Res.string.agentUpdatesKeepNotSupported
         }
+    )
+
+/** Why a Needed part comes with these updates. */
+@Composable
+internal fun neededLine(why: AgentNeedRule): String =
+    stringResource(
+        if (why == AgentNeedRule.WithAnyUpdate) Res.string.agentUpdatesNeededLabel
+        else Res.string.agentUpdatesNeededAlways
     )
 
 /** What the chosen answer does: the download, the version it stays on, or the room it frees. */
