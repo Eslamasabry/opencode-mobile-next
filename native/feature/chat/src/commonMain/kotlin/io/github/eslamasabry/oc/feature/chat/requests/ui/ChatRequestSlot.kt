@@ -554,15 +554,13 @@ private fun PermissionDetailsSheet(
             // Review 2026-11-13 #3: what Always covers is said only where Always is offered, in words, with the raw
             // pattern under it; the facts are read, not copied (the one copy is the command's or the change's own).
             val offersAlways = card?.canAlwaysAllow == true && !card.invitation
+            val hasTool = details.facts.any { it is PermissionFact.Tool }
             val values =
                 details.facts
-                    .filter { fact -> fact !is PermissionFact.AlsoCovers || offersAlways }
-                    .mapNotNull { fact ->
-                        // Audit 1: the tool is said in plain words ("File edit"), never as its id ("edit").
-                        if (fact is PermissionFact.Tool)
-                            ask?.let { KitTechnicalValue(stringResource(Res.string.chatRequestDetailTool), redactor.details(askToolKind(it))).copy(copyable = false) }
-                        else permissionFactValue(fact, redactor).copy(copyable = false)
+                    .filter { fact ->
+                        fact !is PermissionFact.Tool && (fact !is PermissionFact.AlsoCovers || offersAlways)
                     }
+                    .map { fact -> permissionFactValue(fact, redactor).copy(copyable = false) }
             val scope = request?.takeIf { offersAlways }?.let(AlwaysScopes::of)?.let { scopeWords(it, mask) }
             // The scope is for the person, so it reads in plain words above the technical fold.
             if (scope != null)
@@ -571,12 +569,19 @@ private fun PermissionDetailsSheet(
                     Modifier.testTag("chat-permission-always-scope"),
                     role = TypeRole.Secondary,
                 )
-            KitDetailsFold(
-                label = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.approvalCopyAsk),
-                values = values,
-                initiallyExpanded = true,
-            )
+            if (hasTool && ask != null)
+                KitText(
+                    askToolLine(ask),
+                    Modifier.testTag("chat-permission-tool"),
+                    role = TypeRole.Secondary,
+                )
+            if (values.isNotEmpty())
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.approvalCopyAsk),
+                    values = values,
+                    initiallyExpanded = true,
+                )
             KitField(
                 note,
                 label = stringResource(Res.string.chatUiTellTheAgentWhyOrWhatTo),

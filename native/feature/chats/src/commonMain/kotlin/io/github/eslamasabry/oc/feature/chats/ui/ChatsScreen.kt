@@ -1194,7 +1194,7 @@ private fun PermissionAnswers(
         KitButton(
             stringResource(Res.string.kitRequestAllowOnce),
             { actions.answerPermission(row, true) },
-            role = KitButtonRole.Secondary,
+            role = KitButtonRole.Primary,
             enabled = enabled,
             working = answering,
             expand = false,
@@ -1202,7 +1202,7 @@ private fun PermissionAnswers(
         KitButton(
             stringResource(Res.string.approvalDeny),
             { actions.answerPermission(row, false) },
-            role = KitButtonRole.Tertiary,
+            role = KitButtonRole.Secondary,
             enabled = enabled,
             expand = false,
         )

@@ -46,7 +46,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 private const val W_PX = 1080
 private const val H_PX = 2400

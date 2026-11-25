@@ -45,7 +45,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 private const val W_PX = 1080
 private const val H_PX = 2400

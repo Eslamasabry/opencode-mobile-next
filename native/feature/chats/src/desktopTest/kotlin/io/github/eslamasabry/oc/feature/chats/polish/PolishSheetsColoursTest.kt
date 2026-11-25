@@ -57,7 +57,7 @@ import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 private const val W_PX = 1080
 private const val H_PX = 2400
