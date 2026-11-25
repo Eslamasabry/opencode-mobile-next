@@ -1483,20 +1483,26 @@ private fun ChatRow(
                         val stillWorking =
                             facts.live is LiveNoticeUi.Retry ||
                                 facts.work[row.turnId]?.state == WorkLineState.Running
+                        val kind = ReplyFailureKind.of(reason)
+                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
+                        val limits = LocalLimitSwitchReply.current
+                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
+                        val setUpReply = LocalAgentSetUpReply.current
+                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". When it is the
                         // cause, that sentence REPLACES "send a message to carry on" (sending cannot work until the
                         // person signs in), and its one button is the only way on.
-                        val limitForSignIn = reply?.let { LocalLimitSwitchReply.current?.limitSwitch?.get(row.turnId) }
-                        val setUpForSignIn = LocalAgentSetUpReply.current?.needs?.get(row.turnId)
                         val signInAgainEarly =
-                            if (
-                                setUpForSignIn == null &&
-                                    limitForSignIn == null &&
-                                    AgentErrorText.signInExpired(reason)
-                            )
+                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
-                        if (signInAgainEarly == null)
+                        val goneKey = goneModelKey(row)
+                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
+                        // B-523: a known gone model names the model and offers Use/Choose; omit "send a message to
+                        // carry on" so the card does not contradict the primary button.
+                        val modelGoneKnown = modelGone != null && setUp == null && limit == null
+                        if (signInAgainEarly == null && (stillWorking || !modelGoneKnown))
                             KitQuietLine(
                                 stringResource(
                                     if (stillWorking) Res.string.liveFailedStillWorking
@@ -1506,7 +1512,6 @@ private fun ChatRow(
                                     liveRegion = LiveRegionMode.Polite
                                 },
                             )
-                        val kind = ReplyFailureKind.of(reason)
                         // The server's typed error class reads first (rest-1); the reason text only
                         // drives the generic words when there is no typed class.
                         val typed =
@@ -1514,12 +1519,6 @@ private fun ChatRow(
                                 ?.takeUnless { it == MessageErrorKind.Unknown }
                                 ?.let(listWords.messageError)
                                 ?.takeIf { it.isNotBlank() }
-                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
-                        val limits = LocalLimitSwitchReply.current
-                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
-                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
-                        val setUpReply = LocalAgentSetUpReply.current
-                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". B-458: once the agent
                         // is signed in again (or for an older turn), the same sentence in the past and no Sign in.
                         val signInTurns = LocalSignInTurnReply.current
@@ -1531,8 +1530,6 @@ private fun ChatRow(
                             if (signInAgainEarly != null && signInPast)
                                 row.providerId?.let { reply?.signInPastWords?.invoke(it) } ?: signInAgainEarly
                             else signInAgainEarly
-                        val goneKey = goneModelKey(row)
-                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
                         if (setUp != null)
                             KitQuietLine(listWords.setUpNeeded(setUp.name), modifier = Modifier.testTag("chat-reply-set-up"))
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))

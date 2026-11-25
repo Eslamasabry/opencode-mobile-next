@@ -103,14 +103,15 @@ public fun kitStatusShown(
 ): KitStatus? = KitStatus.highest(conditions.filter { it.kind !in omit } + status + contributions)
 
 /**
- * The slot's line: folds in and out on the same fold motion (STANDARD on Enter), anchored at its top edge so closing
- * clips smoothly without shifting elements inside; instant under reduced motion. Leaving content is picture-only
- * (same rule as [io.github.eslamasabry.oc.ui.kit.motion.KitReveal]). Nothing to show → nothing drawn.
+ * The slot's line: folds in (STANDARD on Enter, default anchor) when a condition appears and folds out on the same
+ * motion anchored at its top edge so closing clips smoothly without shifting elements inside; instant under reduced
+ * motion. Leaving content is picture-only (same rule as [io.github.eslamasabry.oc.ui.kit.motion.KitReveal]). Nothing
+ * to show → nothing drawn.
  *
  * States: condition, empty
  * Text: reading
  * Cap: Reading
- * Motion: fold in and out STANDARD/Enter (top-anchored); Off = instant
+ * Motion: fold in STANDARD/Enter (default anchor), out STANDARD/Enter (top-anchored); Off = instant
  * Hidden: none
  * Replaces: KitReveal around KitStatusLine (lib/ui/kit/kit_status_slot.dart)
  */
@@ -124,7 +125,7 @@ public fun KitStatusLineFold(shown: KitStatus?, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         visible = shown != null,
         modifier = modifier,
-        enter = expandVertically(specs.enter(), expandFrom = Alignment.Top) + fadeIn(specs.enter()),
+        enter = expandVertically(specs.enter()) + fadeIn(specs.enter()),
         exit = shrinkVertically(specs.enter(), shrinkTowards = Alignment.Top) + fadeOut(specs.enter()),
     ) {
         // Keeps the last condition drawn while it folds away; picture-only once leaving.
