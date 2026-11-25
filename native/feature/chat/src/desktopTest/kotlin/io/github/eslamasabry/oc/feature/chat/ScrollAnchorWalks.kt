@@ -250,6 +250,133 @@ private object ScrollWalkScene {
     }
 }
 
+private const val WALK_TOLERANCE_PX = 0.5f
+
+private data class TrackedNode(val id: Int, val label: String, val top: Float)
+
+private data class Drift(val maxPx: Float, val frame: Int, val node: String)
+
+private fun findingsFile(): File {
+    val pid = ProcessHandle.current().pid()
+    val dir = File(System.getProperty("oc.flicker.dir") ?: "build/flicker")
+    return File(dir, "findings-$pid.tsv")
+}
+
+private fun readFindingLines(): List<String> =
+    findingsFile().takeIf { it.isFile }?.readLines().orEmpty().filter { !it.startsWith("#") && it.isNotBlank() }
+
+private fun withFlickerReport(label: String, block: () -> Unit) {
+    val before = readFindingLines().toSet()
+    block()
+    val added = readFindingLines().filter { it !in before }
+    if (added.isEmpty()) {
+        println("FLICKER [$label] 0")
+    } else {
+        val summary =
+            added.joinToString("; ") { row ->
+                val cols = row.split('\t')
+                if (cols.size >= 4) "${cols[1]}:${cols[2]}(x${cols[3]})" else row
+            }
+        println("FLICKER [$label] ${added.size}: $summary")
+    }
+}
+
+private fun nodeLabel(node: SemanticsNode): String? {
+    val tag = if (SemanticsProperties.TestTag in node.config) node.config[SemanticsProperties.TestTag] else null
+    if (!tag.isNullOrBlank()) return tag
+    val text =
+        if (SemanticsProperties.Text in node.config) {
+            node.config[SemanticsProperties.Text].joinToString(" ") { it.text }.trim()
+        } else {
+            null
+        }
+    return text?.takeIf { it.isNotBlank() }?.take(48)
+}
+
+private fun collectDescendants(root: SemanticsNode, out: MutableList<SemanticsNode>) {
+    for (child in root.children) {
+        out += child
+        collectDescendants(child, out)
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.headerBottom(): Float =
+    onAllNodesWithTag("kit-screen-header", useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .firstOrNull()
+        ?.boundsInRoot
+        ?.bottom ?: 0f
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.composerTop(): Float =
+    onAllNodesWithTag("chat-composer-pane", useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .firstOrNull()
+        ?.boundsInRoot
+        ?.top ?: Float.MAX_VALUE
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.newestRowBottom(): Float? {
+    val live = onAllNodesWithTag("chat-live-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+    if (live != null) return live.boundsInRoot.bottom
+    val work = onAllNodesWithTag("chat-work-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+    return work?.boundsInRoot?.bottom
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.visibleNodes(): Map<Int, TrackedNode> {
+    val listNode = onNodeWithTag("transcript-list", useUnmergedTree = true).fetchSemanticsNode()
+    val topBound = headerBottom()
+    val bottomBound = composerTop()
+    val all = ArrayList<SemanticsNode>()
+    collectDescendants(listNode, all)
+    val out = LinkedHashMap<Int, TrackedNode>()
+    for (n in all) {
+        val label = nodeLabel(n) ?: continue
+        val b = n.boundsInRoot
+        if (b.height > 0f && b.top >= topBound && b.bottom <= bottomBound) {
+            out[n.id] = TrackedNode(n.id, label, b.top)
+        }
+    }
+    return out
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.currentTops(): Map<Int, Float> {
+    val listNode = onNodeWithTag("transcript-list", useUnmergedTree = true).fetchSemanticsNode()
+    val all = ArrayList<SemanticsNode>()
+    collectDescendants(listNode, all)
+    val out = HashMap<Int, Float>(all.size * 2)
+    for (n in all) out[n.id] = n.boundsInRoot.top
+    return out
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.checkFrame(baseline: Map<Int, TrackedNode>, frame: Int, worst: Drift): Drift {
+    val now = currentTops()
+    var best = worst
+    for ((id, tracked) in baseline) {
+        val y = now[id] ?: continue
+        val delta = abs(y - tracked.top)
+        if (delta > best.maxPx) best = Drift(delta, frame, tracked.label)
+    }
+    return best
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.jumpControlShown(): Boolean =
+    onAllNodesWithTag("jump-to-latest", useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .any { it.boundsInRoot.height > 0f && it.boundsInRoot.width > 0f }
+
+private fun assertNoDrift(drift: Drift, context: String, probe: ProbeLog) {
+    assertTrue(
+        drift.maxPx <= WALK_TOLERANCE_PX,
+        "$context: max=${"%.1f".format(drift.maxPx)} frame=${drift.frame} node=${drift.node}${probe.tail()}",
+    )
+}
+
 @OptIn(ExperimentalTestApi::class)
 internal object ScrollAnchorWalks {
     private const val WIDE_MIN_EXTRA_PX = 200f
@@ -259,7 +386,7 @@ internal object ScrollAnchorWalks {
     private const val GLIDE_FRAMES = 60
     private const val GLIDE_DRAG_DP = 200f
     private const val SETTLE_MS = 900L
-    private const val TOLERANCE_PX = 0.5f
+    private const val TOLERANCE_PX = WALK_TOLERANCE_PX
     private const val PHONE_W = 360
     private const val PHONE_H = 800
     private const val WIDE_W = 840
@@ -292,129 +419,11 @@ internal object ScrollAnchorWalks {
         }
     }
 
-    private fun findingsFile(): File {
-        val pid = ProcessHandle.current().pid()
-        val dir = File(System.getProperty("oc.flicker.dir") ?: "build/flicker")
-        return File(dir, "findings-$pid.tsv")
-    }
-
-    private fun readFindingLines(): List<String> =
-        findingsFile().takeIf { it.isFile }?.readLines().orEmpty().filter { !it.startsWith("#") && it.isNotBlank() }
-
-    private fun withFlickerReport(label: String, block: () -> Unit) {
-        val before = readFindingLines().toSet()
-        block()
-        val added = readFindingLines().filter { it !in before }
-        if (added.isEmpty()) {
-            println("FLICKER [$label] 0")
-        } else {
-            val summary =
-                added.joinToString("; ") { row ->
-                    val cols = row.split('\t')
-                    if (cols.size >= 4) "${cols[1]}:${cols[2]}(x${cols[3]})" else row
-                }
-            println("FLICKER [$label] ${added.size}: $summary")
-        }
-    }
-
     private val composer: ComposerHost = ScrollWalkScene.composer
 
     private fun sceneFacts(steps: Int, ended: Boolean): TurnFactsUi = ScrollWalkScene.facts(steps, ended)
 
     private fun sceneState(steps: Int, ended: Boolean): ChatUi = ScrollWalkScene.state(steps, ended)
-
-    private data class TrackedNode(val id: Int, val label: String, val top: Float)
-
-    private data class Drift(val maxPx: Float, val frame: Int, val node: String)
-
-    private fun nodeLabel(node: SemanticsNode): String? {
-        val tag = if (SemanticsProperties.TestTag in node.config) node.config[SemanticsProperties.TestTag] else null
-        if (!tag.isNullOrBlank()) return tag
-        val text =
-            if (SemanticsProperties.Text in node.config) {
-                node.config[SemanticsProperties.Text].joinToString(" ") { it.text }.trim()
-            } else {
-                null
-            }
-        return text?.takeIf { it.isNotBlank() }?.take(48)
-    }
-
-    private fun collectDescendants(root: SemanticsNode, out: MutableList<SemanticsNode>) {
-        for (child in root.children) {
-            out += child
-            collectDescendants(child, out)
-        }
-    }
-
-    private fun ComposeUiTest.headerBottom(): Float =
-        onAllNodesWithTag("kit-screen-header", useUnmergedTree = true)
-            .fetchSemanticsNodes()
-            .firstOrNull()
-            ?.boundsInRoot
-            ?.bottom ?: 0f
-
-    private fun ComposeUiTest.composerTop(): Float =
-        onAllNodesWithTag("chat-composer-pane", useUnmergedTree = true)
-            .fetchSemanticsNodes()
-            .firstOrNull()
-            ?.boundsInRoot
-            ?.top ?: Float.MAX_VALUE
-
-    private fun ComposeUiTest.newestRowBottom(): Float? {
-        val live = onAllNodesWithTag("chat-live-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
-        if (live != null) return live.boundsInRoot.bottom
-        val work = onAllNodesWithTag("chat-work-line", useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
-        return work?.boundsInRoot?.bottom
-    }
-
-    private fun ComposeUiTest.visibleNodes(): Map<Int, TrackedNode> {
-        val listNode = onNodeWithTag("transcript-list", useUnmergedTree = true).fetchSemanticsNode()
-        val topBound = headerBottom()
-        val bottomBound = composerTop()
-        val all = ArrayList<SemanticsNode>()
-        collectDescendants(listNode, all)
-        val out = LinkedHashMap<Int, TrackedNode>()
-        for (n in all) {
-            val label = nodeLabel(n) ?: continue
-            val b = n.boundsInRoot
-            if (b.height > 0f && b.top >= topBound && b.bottom <= bottomBound) {
-                out[n.id] = TrackedNode(n.id, label, b.top)
-            }
-        }
-        return out
-    }
-
-    private fun ComposeUiTest.currentTops(): Map<Int, Float> {
-        val listNode = onNodeWithTag("transcript-list", useUnmergedTree = true).fetchSemanticsNode()
-        val all = ArrayList<SemanticsNode>()
-        collectDescendants(listNode, all)
-        val out = HashMap<Int, Float>(all.size * 2)
-        for (n in all) out[n.id] = n.boundsInRoot.top
-        return out
-    }
-
-    private fun ComposeUiTest.checkFrame(baseline: Map<Int, TrackedNode>, frame: Int, worst: Drift): Drift {
-        val now = currentTops()
-        var best = worst
-        for ((id, tracked) in baseline) {
-            val y = now[id] ?: continue
-            val delta = abs(y - tracked.top)
-            if (delta > best.maxPx) best = Drift(delta, frame, tracked.label)
-        }
-        return best
-    }
-
-    private fun ComposeUiTest.jumpControlShown(): Boolean =
-        onAllNodesWithTag("jump-to-latest", useUnmergedTree = true)
-            .fetchSemanticsNodes()
-            .any { it.boundsInRoot.height > 0f && it.boundsInRoot.width > 0f }
-
-    private fun assertNoDrift(drift: Drift, context: String, probe: ProbeLog) {
-        assertTrue(
-            drift.maxPx <= TOLERANCE_PX,
-            "$context: max=${"%.1f".format(drift.maxPx)} frame=${drift.frame} node=${drift.node}${probe.tail()}",
-        )
-    }
 
     private fun assertPageSpan(anchor: TranscriptAnchor, width: Int, required: Float) {
         kitUiTest(width, 4000, options = REPORT_OPTIONS) {
