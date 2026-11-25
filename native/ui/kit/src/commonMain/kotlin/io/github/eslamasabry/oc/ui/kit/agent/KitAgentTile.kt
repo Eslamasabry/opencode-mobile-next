@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,8 +76,7 @@ internal fun agentTileLabel(name: String, state: String): String = if (state.isE
  * "Installing…"). While something runs, [progress] draws its bar under the line. At most one small [action] sits at the
  * tile's foot as a compact chip, only when it matters; tapping anywhere else on the tile opens the agent ([onClick]),
  * where every other act lives. The surface comes from the style resolver (as [KitAgentChoice]): Solid's matte face and
- * hairline, every other style its own card, on the corners knob's card radius. Spanning a whole row it lies sideways,
- * the mark beside the words and the chip at the end.
+ * hairline, every other style its own card, on the corners knob's card radius.
  *
  * States: calm, needs you, dimmed ([KitAgentTileTone]); with or without progress; with or without its act.
  */
@@ -169,35 +167,18 @@ public fun KitAgentTile(
                 .then(edge)
                 .padding(inset)
         ) {
-            if (wide) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.fillMaxWidth().fillMaxHeight()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     mark()
-                    Spacer(Modifier.width(Space.S4.dp))
-                    Box(Modifier.weight(1f)) { words() }
-                    // Lying sideways the check sits after the words, never over the mark.
-                    if (ready) {
-                        Spacer(Modifier.width(Space.S2.dp))
-                        ReadyCheck()
-                    }
-                    if (action != null) {
-                        Spacer(Modifier.width(Space.S2.dp))
-                        chip()
-                    }
+                    Spacer(Modifier.weight(1f))
+                    if (ready) ReadyCheck()
                 }
-            } else {
-                Column(Modifier.fillMaxWidth().fillMaxHeight()) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                        mark()
-                        Spacer(Modifier.weight(1f))
-                        if (ready) ReadyCheck()
-                    }
-                    Spacer(Modifier.height(Space.S4.dp))
-                    words()
-                    if (action != null) {
-                        // The chips of a row of tiles sit on one line at the tiles' foot.
-                        Spacer(Modifier.weight(1f).heightIn(min = Space.S3.dp))
-                        chip()
-                    }
+                Spacer(Modifier.height(Space.S4.dp))
+                words()
+                if (action != null) {
+                    // The chips of a row of tiles sit on one line at the tiles' foot.
+                    Spacer(Modifier.weight(1f).heightIn(min = Space.S3.dp))
+                    chip()
                 }
             }
         }

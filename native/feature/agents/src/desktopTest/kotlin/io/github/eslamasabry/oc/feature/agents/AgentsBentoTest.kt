@@ -161,7 +161,7 @@ class AgentsBentoTest {
             onNode(hasContentDescription("Antigravity. Phone check needed")).assertExists()
             onNodeWithText("Connect phone agents").assertDoesNotExist()
             // One status line replaces "Check this phone", and no Refresh row is left.
-            onNode(hasContentDescription("This phone is ready · arm64 · Android 15")).assertExists()
+            onNode(hasContentDescription("This phone is ready")).assertExists()
             onNode(hasText("Refresh") or hasContentDescription("Refresh")).assertExists()
             onNodeWithText("Check this phone").assertDoesNotExist()
             onNodeWithText("Refresh", substring = true).assertDoesNotExist()
@@ -188,7 +188,7 @@ class AgentsBentoTest {
             var page by mutableStateOf(AgentsUi(phone = updated))
             setContent { Screen(page, Recorder()) }
             onNode(
-                hasContentDescription("This phone is ready · arm64 · Android 15 · updated Claude Code, Codex, Kilo")
+                hasContentDescription("This phone is ready · updated Claude Code, Codex, Kilo")
             ).assertExists()
             // One agent updated: one name, exactly as before.
             page =
@@ -201,7 +201,7 @@ class AgentsBentoTest {
                 )
             waitForIdle()
             onNode(
-                hasContentDescription("This phone is ready · arm64 · Android 15 · updated Claude Code")
+                hasContentDescription("This phone is ready · updated Claude Code")
             ).assertExists()
         }
 
