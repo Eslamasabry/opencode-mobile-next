@@ -1,12 +1,12 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -19,8 +19,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.kitLeaving
 
 /**
  * The one status line per window (plan 06 §7.3 `KitStatusSlot`; Dart `KitStatusLineSlot` + `KitStatusScope` +
@@ -101,30 +103,36 @@ public fun kitStatusShown(
 ): KitStatus? = KitStatus.highest(conditions.filter { it.kind !in omit } + status + contributions)
 
 /**
- * The slot's line: folds in (STANDARD on Enter) when a condition appears and out (QUICK) when it goes; instant under
- * reduced motion. Nothing to show → nothing drawn.
+ * The slot's line: folds in and out on the same fold motion (STANDARD on Enter), anchored at its top edge so closing
+ * clips smoothly without shifting elements inside; instant under reduced motion. Leaving content is picture-only
+ * (same rule as [io.github.eslamasabry.oc.ui.kit.motion.KitReveal]). Nothing to show → nothing drawn.
  *
  * States: condition, empty
  * Text: reading
  * Cap: Reading
- * Motion: fold in STANDARD/Enter, out QUICK; Off = instant
+ * Motion: fold in and out STANDARD/Enter (top-anchored); Off = instant
  * Hidden: none
  * Replaces: KitReveal around KitStatusLine (lib/ui/kit/kit_status_slot.dart)
  */
 @Composable
 public fun KitStatusLineFold(shown: KitStatus?, modifier: Modifier = Modifier) {
     val specs = KitMotion.specs
-    val reduced = specs.state.reduced
+    if (specs.state.reduced) {
+        if (shown != null) Box(modifier) { KitStatusLine(shown) }
+        return
+    }
     AnimatedVisibility(
         visible = shown != null,
         modifier = modifier,
-        enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
-        exit = if (reduced) ExitTransition.None else shrinkVertically(specs.quick()) + fadeOut(specs.quick()),
+        enter = expandVertically(specs.enter(), expandFrom = Alignment.Top) + fadeIn(specs.enter()),
+        exit = shrinkVertically(specs.enter(), shrinkTowards = Alignment.Top) + fadeOut(specs.enter()),
     ) {
-        // Keeps the last condition drawn while it folds away.
+        // Keeps the last condition drawn while it folds away; picture-only once leaving.
         val last = remember { mutableStateOf(shown) }
         if (shown != null) last.value = shown
-        last.value?.let { KitStatusLine(it) }
+        Box(Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)) {
+            last.value?.let { KitStatusLine(it) }
+        }
     }
 }
 

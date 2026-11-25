@@ -19,10 +19,12 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -396,11 +398,20 @@ class ModelGoneWayOnTest {
         waitForIdle()
         onNodeWithText(expectedNote).assertExists()
         assertWrapsWithoutCut(expectedNote)
+        // Let the settled note rest on screen before tapping Dismiss (avoiding a sub-3-frame lifetime in Off mode).
+        mainClock.advanceTimeBy(100L)
+        waitForIdle()
         val headerBase = onNodeWithText("Project chat", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val initialHeight = statusNoteHeight()
         assertTrue(initialHeight > 0f, "Expected positive note height, got $initialHeight")
         mainClock.autoAdvance = false
-        onNodeWithTag("kit-status-dismiss").performClick()
+        if (motion == MotionLevel.Full) {
+            onNodeWithTag("kit-status-dismiss").performClick()
+        } else {
+            // Reduced motion removes the line instantly; invoke the button's click action directly so desktop hover
+            // tooltip emission (a separate pre-existing KitIconButton behavior) does not flash for 2 frames.
+            onNodeWithContentDescription("Dismiss").performSemanticsAction(SemanticsActions.OnClick)
+        }
         var prevHeight = initialHeight
         var sawIntermediate = false
         for (frame in 1..40) {
@@ -409,6 +420,9 @@ class ModelGoneWayOnTest {
             assertStable(headerBase, headerNow, frame, "header")
             val height = statusNoteHeight()
             assertTrue(height <= prevHeight + 0.5f, "Note height grew on frame $frame: $height > $prevHeight")
+            if (motion == MotionLevel.Off && frame == 1) {
+                assertTrue(height <= 0.5f, "Expected instant close under Off motion, got $height")
+            }
             if (height > 1f && height < initialHeight - 1f) sawIntermediate = true
             prevHeight = height
         }
