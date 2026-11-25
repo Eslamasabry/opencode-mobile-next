@@ -19,12 +19,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -40,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitMore
 import org.jetbrains.compose.resources.stringResource
@@ -76,7 +81,7 @@ public object ActionBlockRules {
  * States: default, disabled reasons, working
  * Text: frame
  * Cap: Reading
- * Motion: none of its own
+ * Motion: a stack's tertiary line (its gap and its actions) folds via [KitReveal] (class Fold); Off = instant
  * Replaces: KitActionBlock (lib/ui/kit/kit_buttons.dart)
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -145,40 +150,99 @@ public fun KitActionBlock(
             }
             else -> {
                 val oneOnEachLine = tertiary.any { it.destructive } || shown.any { it.enabled.reason != null }
-                val hasTertiaryLine = shown.isNotEmpty() || overflow.isNotEmpty()
-                // Flutter stretches the column; each button holds its control cap centred (KitMaxWidth.control).
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    primary?.let { Stacked(it, KitButtonRole.Primary) }
-                    if (primary != null && secondary != null) Spacer(Modifier.height(gap))
-                    secondary?.let { Stacked(it, KitButtonRole.Secondary) }
-                    if (hasTertiaryLine && (primary != null || secondary != null)) Spacer(Modifier.height(gap))
-                    if (hasTertiaryLine) {
-                        CompositionLocalProvider(LocalKitStackedAction provides true) {
-                            if (oneOnEachLine) {
-                                Column {
-                                    shown.forEachIndexed { i, action ->
-                                        KitInset { KitButton(action, role = KitButtonRole.Tertiary, expand = false) }
-                                        action.enabled.reason?.let {
-                                            Spacer(Modifier.height(Space.S1.dp))
-                                            ActionReason(it, Modifier.fillMaxWidth())
-                                        }
-                                        if (i != shown.lastIndex || overflow.isNotEmpty()) Spacer(Modifier.height(gap))
-                                    }
-                                    if (overflow.isNotEmpty()) KitInset { MoreActions(overflow) }
-                                }
-                            } else {
-                                KitInset {
-                                    FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
-                                        itemVerticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        shown.forEach { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
-                                        if (overflow.isNotEmpty()) MoreActions(overflow)
-                                    }
-                                }
-                            }
-                        }
+                StackedActionColumn(primary, secondary, shown, overflow, oneOnEachLine, gap)
+            }
+        }
+    }
+}
+
+/**
+ * Compact stacked layout. The tertiary line (its gap and its actions) folds in and out with [KitReveal], so a block
+ * that gains or loses its tertiary actions glides instead of changing height in one frame. The primary and the
+ * secondary are placed as they always were: a filled button's shadow lies outside its bounds, which a fold would cut.
+ */
+@Composable
+private fun StackedActionColumn(
+    primary: KitAction?,
+    secondary: KitAction?,
+    shown: List<KitAction>,
+    overflow: List<KitAction>,
+    oneOnEachLine: Boolean,
+    gap: Dp,
+) {
+    val hasTertiaryLine = shown.isNotEmpty() || overflow.isNotEmpty()
+    val room = remember { mutableIntStateOf(0) }
+    // Flutter stretches the column; each button holds its control cap centred (KitMaxWidth.control).
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        primary?.let { Stacked(it, KitButtonRole.Primary) }
+        if (primary != null && secondary != null) Spacer(Modifier.height(gap))
+        secondary?.let { Stacked(it, KitButtonRole.Secondary) }
+        KitReveal(visible = hasTertiaryLine && (primary != null || secondary != null)) {
+            Spacer(Modifier.height(gap))
+        }
+        KitReveal(visible = hasTertiaryLine, modifier = Modifier.fillMaxWidth().startReach(Space.S2.dp)) {
+            Box(
+                Modifier.fillMaxWidth().padding(start = Space.S2.dp)
+                    .onSizeChanged { if (hasTertiaryLine && room.intValue != it.height) room.intValue = it.height }
+                    .keptHeight { if (hasTertiaryLine) 0 else room.intValue }
+            ) {
+                // A line on its way out keeps its room but shows no words: an action that moves to another slot
+                // (as "Not now" does when a block loses it) must not read twice while the line folds.
+                if (hasTertiaryLine) TertiaryActions(shown, overflow, oneOnEachLine, gap)
+            }
+        }
+    }
+}
+
+/**
+ * Measures the part [reach] wider than offered, on its start side, and reports the offered width: a stacked block's
+ * text actions reach that far back into the block's padding ([KitInset]), and the fold's clip must not cut it off.
+ */
+private fun Modifier.startReach(reach: Dp): Modifier =
+    layout { measurable, constraints ->
+        val px = reach.roundToPx()
+        val widened =
+            if (constraints.hasBoundedWidth) {
+                constraints.copy(minWidth = constraints.minWidth + px, maxWidth = constraints.maxWidth + px)
+            } else {
+                constraints
+            }
+        val placeable = measurable.measure(widened)
+        layout(placeable.width - px, placeable.height) { placeable.placeRelative(-px, 0) }
+    }
+
+/** Never shorter than [height] pixels: an empty line keeps the room the fold still has to take away. */
+private fun Modifier.keptHeight(height: () -> Int): Modifier =
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, maxOf(placeable.height, height())) { placeable.place(0, 0) }
+    }
+
+/** The tertiary actions of a stacked block: side by side at the column's start, or each on its own line. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TertiaryActions(shown: List<KitAction>, overflow: List<KitAction>, oneOnEachLine: Boolean, gap: Dp) {
+    CompositionLocalProvider(LocalKitStackedAction provides true) {
+        if (oneOnEachLine) {
+            Column {
+                shown.forEachIndexed { i, action ->
+                    KitInset { KitButton(action, role = KitButtonRole.Tertiary, expand = false) }
+                    action.enabled.reason?.let {
+                        Spacer(Modifier.height(Space.S1.dp))
+                        ActionReason(it, Modifier.fillMaxWidth())
                     }
+                    if (i != shown.lastIndex || overflow.isNotEmpty()) Spacer(Modifier.height(gap))
+                }
+                if (overflow.isNotEmpty()) KitInset { MoreActions(overflow) }
+            }
+        } else {
+            KitInset {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    shown.forEach { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
+                    if (overflow.isNotEmpty()) MoreActions(overflow)
                 }
             }
         }
