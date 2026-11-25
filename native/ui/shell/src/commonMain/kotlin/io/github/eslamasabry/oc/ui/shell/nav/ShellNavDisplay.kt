@@ -24,9 +24,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -133,8 +143,19 @@ public fun ShellNavDisplay(
                         }
                     val grows =
                         transform && (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
-                    Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value, grows)) {
-                        CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
+                    Box(
+                        Modifier.predictiveCorners(
+                            contentScope,
+                            gate,
+                            signals,
+                            previewCornerPx,
+                            levelState.value,
+                            grows,
+                        ),
+                    ) {
+                        Box(leavingTakesNoTaps(contentScope, gate)) {
+                            CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
+                        }
                     }
                 },
             )
@@ -267,4 +288,35 @@ private fun Modifier.predictiveCorners(
     } else {
         clip = false
     }
+}
+
+/**
+ * B-379: a page that is leaving (closed by a tap or button-back, or covered by a push — not under a back gesture)
+ * takes no taps while its exit runs, so taps reach the settled page underneath. Clipping the inner layer to [NoArea]
+ * makes Compose skip the page's children during hit-testing while recording and replaying its drawing one level up
+ * keeps it visually unchanged.
+ */
+@Composable
+private fun leavingTakesNoTaps(scope: AnimatedVisibilityScope, gate: RowTransformGate): Modifier {
+    val picture = rememberGraphicsLayer()
+    val leaving =
+        scope.transition.targetState == EnterExitState.PostExit &&
+            gate.state != GateState.Gesture &&
+            gate.state != GateState.GestureSettling
+    return Modifier.drawWithContent {
+            drawContent()
+            if (leaving) drawLayer(picture)
+        }
+        .graphicsLayer {
+            clip = leaving
+            shape = if (leaving) NoArea else RectangleShape
+        }
+        .drawWithContent {
+            if (leaving) picture.record { this@drawWithContent.drawContent() } else drawContent()
+        }
+}
+
+private object NoArea : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        Outline.Rectangle(Rect.Zero)
 }
