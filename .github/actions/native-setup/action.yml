@@ -40,7 +40,12 @@ runs:
       if: runner.environment != 'self-hosted'
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
-        cache-read-only: false
+        # B-CI-340/341: only the line and master write the cache; a work branch, a tag or a pull ref only reads it.
+        # GitHub evicts at 10 GB, and each job on a work branch saved its own entry, so the line's warm cache kept
+        # being pushed out. The line's names are the same four as in native/tool/ci/base_check.sh; keep them in step.
+        cache-read-only: >-
+          ${{ github.ref != 'refs/heads/master' && github.ref != 'refs/heads/native/glass-next'
+          && github.ref != 'refs/heads/native/next' && !startsWith(github.ref, 'refs/heads/native/screens-merge') }}
     # services.gradle.org answers 504 now and then. The distribution zip is cached per wrapper version, and a miss is fetched
     # here with retries and backoff, so the Gradle steps never fail on the download itself.
     - name: Cache the Gradle wrapper distribution

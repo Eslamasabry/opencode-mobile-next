@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.presentation.StepEntry
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFamily
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFold
@@ -189,10 +190,11 @@ internal fun rememberTranscriptFolds(): TranscriptFolds =
  * row that names what it hides that matters ("1 declined · 1 failed"). That fold is the transcript's "work:<turn>" fold,
  * so Find opens it for a match inside.
  */
+@Suppress("LongParameterList")
 @Composable
 internal fun TurnWorkLine(
     work: TurnWork,
-    nowMs: Long,
+    clock: FactsClock,
     folds: TranscriptFolds,
     onOpenSession: ((String) -> Unit)? = null,
     onOpenFile: ((ToolArtifact) -> Unit)? = null,
@@ -207,7 +209,7 @@ internal fun TurnWorkLine(
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
     // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
     // for the person keeps its newest rows in view.
-    val summed = StepListRules.sums(work.state)
+    val summed = StepListRules.sums(work.state, turnRuns = LocalLiveTurnId.current == work.turnId)
     val shownRows = remember(rows, summed) { flattenSingleRun(rows, summed) }
     val cut = remember(shownRows) { StepListRules.cut(shownRows) }
     // A turn with a delegated step whose sub-agent waits on the person opens on entry (the person's own fold wins once
@@ -217,6 +219,7 @@ internal fun TurnWorkLine(
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
+    val host = StepRowHost(work, clock, folds, onOpenSession, onOpenFile, reply, stopping)
     val entry: @Composable (StepEntry) -> Unit = { row ->
         when (row) {
             // One call for a step and for a run of steps: a step that a second one joins keeps its row (same key, same
@@ -225,7 +228,7 @@ internal fun TurnWorkLine(
             is StepEntry.Run -> {
                 val run = row as? StepEntry.Run
                 val steps = run?.steps ?: listOf((row as StepEntry.Step).step)
-                StepRow(steps, run?.family, work, nowMs, folds, onOpenSession, onOpenFile, reply, stopping)
+                StepRow(steps, run?.family, host)
                 val lone = (row as? StepEntry.Step)?.step
                 val ask = lone?.callId?.let { inPlace?.byCall?.get(it) }
                 if (inPlace != null && ask != null) inPlace.draw(ask)
@@ -401,6 +404,9 @@ private fun SubAgentGroup(
 /** Sessions with an open request of their own, so a delegated step's sub-agent that waits on the person shows it. */
 internal val LocalChildNeedsYou = androidx.compose.runtime.compositionLocalOf<Set<String>> { emptySet() }
 
+/** Turn id of the currently running turn, so its step list stays unfolded between steps. */
+internal val LocalLiveTurnId = androidx.compose.runtime.compositionLocalOf<String?> { null }
+
 /** This delegated step's sub-agent has an open request: the step reads "Waiting for you" and opens its conversation. */
 private fun TurnStep.waitsOnChild(open: Set<String>): Boolean = facts.childSessionId?.let { it in open } == true
 
@@ -568,34 +574,37 @@ internal fun nowWords(step: TurnStep, counts: WorkCounts): String {
 private fun liveStepCount(res: PluralStringResource, count: Int): String =
     pluralStringResource(res, count.coerceAtLeast(1), count.coerceAtLeast(1))
 
+@Suppress("LongParameterList")
+private class StepRowHost(
+    val work: TurnWork,
+    val clock: FactsClock,
+    val folds: TranscriptFolds,
+    val onOpenSession: ((String) -> Unit)?,
+    val onOpenFile: ((ToolArtifact) -> Unit)?,
+    val reply: ReplyActions?,
+    val stopping: Boolean,
+)
+
 /**
- * One row of a turn's steps: a step, or a run of steps of one family ([family] non-null, two or more [steps]: "Ran 6
- * commands", the running one's words or what they did as its quiet second label, the fold chevron) that opens in place
- * to each of its steps on the same rail. Both are the same row (one [KitToolRow] call), so a step that a second one joins
- * keeps its node and never flashes.
+ * One row of a turn's steps: a step, or a run of steps of one family ([family] non-null, two or more [steps]) that
+ * opens in place to each of its steps on the same rail. Both share one [KitToolRow] call so nothing flashes.
  */
 @Composable
 private fun StepRow(
     steps: List<TurnStep>,
     family: StepFamily?,
-    work: TurnWork,
-    nowMs: Long,
-    folds: TranscriptFolds,
-    onOpenSession: ((String) -> Unit)?,
-    onOpenFile: ((ToolArtifact) -> Unit)?,
-    reply: ReplyActions?,
-    stopping: Boolean,
+    host: StepRowHost,
 ) {
     val lead = steps.first()
     val childNeeds = LocalChildNeedsYou.current
     val run = family != null && steps.size > 1
     if (run && family != null) {
         val runKey = "run:${lead.partId}"
-        val runOpen = folds.open[runKey] == true
+        val runOpen = host.folds.open[runKey] == true
         KitToolRow(
-            view = runView(steps, family, nowMs),
+            view = runView(steps, family, host.work, host.clock),
             opened = runOpen,
-            onToggle = { folds.open[runKey] = !runOpen },
+            onToggle = { host.folds.open[runKey] = !runOpen },
             modifier = Modifier.testTag("chat-step-run-${lead.partId}"),
             group = true,
         )
@@ -603,30 +612,25 @@ private fun StepRow(
             key(s.partId) {
                 // The run's own steps stand one step in, the rail bending in from the run's node to them.
                 KitStepItem(visible = runOpen, order = i, nested = true) {
-                    StepRow(listOf(s), null, work, nowMs, folds, onOpenSession, onOpenFile, reply, stopping)
+                    StepRow(listOf(s), null, host)
                 }
             }
         }
         return
     }
+    val waiting = !host.stopping && (stepWaitsForYou(lead.state, host.work.state) || lead.waitsOnChild(childNeeds))
     OneStep(
         lead,
-        nowMs,
-        folds,
-        onOpenSession,
-        onOpenFile,
-        reply,
-        waitingForYou = !stopping && (stepWaitsForYou(lead.state, work.state) || lead.waitsOnChild(childNeeds)),
-        stopSaidBelow = lead === work.steps.lastOrNull(),
+        host.clock,
+        host,
+        waitingForYou = waiting,
+        stopSaidBelow = lead === host.work.steps.lastOrNull(),
     )
 }
 
-/** A run's row: "Ran 6 commands", what they did (or the running one's words), how long; failures named. */
 @Composable
-private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): KitToolView {
+private fun runDetailWords(steps: List<TurnStep>, family: StepFamily, live: TurnStep?): String? {
     val mask = rememberKitMask()
-    val live = steps.lastOrNull { it.state == StepState.Running || it.state == StepState.Pending }
-    val ended = steps.count { it.state != StepState.Running && it.state != StepState.Pending }
     val sep = stringResource(Res.string.kitWorkSeparator)
     val failed = steps.count { it.state == StepState.Failed }
     val declined = steps.count { it.state == StepState.Declined }
@@ -634,40 +638,60 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): Kit
     if (failed > 0) parts += pluralStringResource(Res.plurals.kitWorkFoldFailed, failed, failed)
     if (declined > 0) parts += pluralStringResource(Res.plurals.kitWorkFoldDeclined, declined, declined)
     // A live run leads with what runs now ("Searching files · 6 commands"), never past and present in one row.
-    if (live != null) parts += runCount(family, steps.size)
-    else
+    if (live != null) {
+        parts += runCount(family, steps.size)
+    } else {
         for (s in steps) {
             val said =
                 if (family == StepFamily.Commands) stepRowTitle(s.facts, stepTense(s.state))
                 else s.facts.subject?.takeIf { it.isNotBlank() }?.let(mask) ?: stepTitle(s.facts)
             if (said !in parts) parts += said
         }
+    }
+    return parts.joinToString(sep).ifEmpty { null }
+}
+
+private fun StepFamily.toKitKind(): KitToolKind =
+    when (this) {
+        StepFamily.Commands -> KitToolKind.Shell
+        StepFamily.Reads -> KitToolKind.Read
+        StepFamily.Searches -> KitToolKind.Search
+        StepFamily.Lists -> KitToolKind.List
+    }
+
+/** A run's row: "Ran 6 commands", what they did (or the running one's words), how long; failures named. */
+@Composable
+private fun runView(steps: List<TurnStep>, family: StepFamily, work: TurnWork, clock: FactsClock): KitToolView {
+    val live = steps.lastOrNull { it.state == StepState.Running || it.state == StepState.Pending }
+    val ended = steps.count { it.state != StepState.Running && it.state != StepState.Pending }
     val total = steps.mapNotNull { it.durationMs }.takeIf { it.size == steps.size }?.sum()
     val shownMs =
-        if (live != null) shownStepDurationMs(live.state, live.durationMs, live.startedAtMs, nowMs)
-        else shownStepDurationMs(StepState.Done, total, null, nowMs)
-    val status = if (live != null) KitToolStatus.Running else KitToolStatus.Done
+        if (live != null) {
+            val nowMs = if (live.state == StepState.Running) clock.read() else 0L
+            shownStepDurationMs(live.state, live.durationMs, live.startedAtMs, nowMs)
+        } else {
+            shownStepDurationMs(StepState.Done, total, null, 0L)
+        }
+    val title =
+        if (live != null) stepRowTitle(live.facts, stepTense(live.state))
+        else runTitle(family, if (ended > 0) ended else steps.size)
+    val icon =
+        if (live != null) stepGlyph(live.facts)
+        else steps.map { stepGlyph(it.facts) }.distinct().singleOrNull()
+    val running = live?.state == StepState.Running
     return KitToolView(
         id = "run:${steps.first().partId}",
-        kind =
-            when (family) {
-                StepFamily.Commands -> KitToolKind.Shell
-                StepFamily.Reads -> KitToolKind.Read
-                StepFamily.Searches -> KitToolKind.Search
-                StepFamily.Lists -> KitToolKind.List
-            },
-        title = if (live != null) stepRowTitle(live.facts, stepTense(live.state)) else runTitle(family, if (ended > 0) ended else steps.size),
+        kind = family.toKitKind(),
+        title = title,
         subject = null,
-        detail = parts.joinToString(sep).ifEmpty { null },
-        status = status,
+        detail = runDetailWords(steps, family, live),
+        status = if (live != null) KitToolStatus.Running else KitToolStatus.Done,
         durationLabel = shownMs?.let { durationWords(it) },
         added = null,
         removed = null,
         statusLabel = stepStatus(if (live != null) StepState.Running else StepState.Done, null),
-        // What runs now, or what all of them did when they did one thing ("Ran 3 commands" of tests: the flask).
-        icon =
-            if (live != null) stepGlyph(live.facts)
-            else steps.map { stepGlyph(it.facts) }.distinct().singleOrNull(),
+        icon = icon,
+        still = running && work.state != WorkLineState.Running,
     )
 }
 
@@ -693,11 +717,8 @@ private fun endedReason(step: TurnStep): String? {
 @Composable
 private fun OneStep(
     step: TurnStep,
-    nowMs: Long,
-    folds: TranscriptFolds,
-    onOpenSession: ((String) -> Unit)?,
-    onOpenFile: ((ToolArtifact) -> Unit)?,
-    reply: ReplyActions? = null,
+    clock: FactsClock,
+    host: StepRowHost,
     waitingForYou: Boolean = false,
     /**
      * Owner 2026-11-13 ("Stopped" once): the step the person's Stop ended is the turn's last; the reply's footer says the
@@ -705,144 +726,190 @@ private fun OneStep(
      */
     stopSaidBelow: Boolean = false,
 ) {
+    SideEffect {
+        if (TranscriptProbe.on) {
+            TranscriptProbe.steps[step.partId] = (TranscriptProbe.steps[step.partId] ?: 0) + 1
+        }
+    }
     val key = "step:${step.partId}"
-    val f = step.facts
-    val out = step.output
-    // RC1: a step the person declined with a note says the note on its own row ("Your note: “use rc2.txt”"), under
-    // "You declined this"; it showed only after a tap that was easy to land on the row above.
-    val noteMask = rememberKitMask()
-    val declinedWith =
-        if (step.state == StepState.Declined && stoppedByPlan(out.metadata)) stringResource(Res.string.chatStepPlanStopped)
-        else declinedStepNote(step.state, out.errorText)?.let { stringResource(Res.string.chatStepDeclinedNote, noteMask(it)) }
-    val view =
-        KitToolView(
-            id = step.partId,
-            kind = f.kind.toKit(),
-            // Owner 2026-11-14: a shell step says what it did ("Ran tests"); its command is in the opened step.
-            title = stepRowTitle(f, stepTense(step.state, waiting = waitingForYou)),
-            // Owner 2026-11-14: the glyph follows what the step did (tests, a search, git), not only its tool.
-            icon = stepGlyph(f),
-            // E20-S14: a waiting Write (Read, Edit) names its file as soon as the call's input has the path.
-            subject =
-                if (f.kind == ToolKind.Shell && f.shell != null) null
-                else stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput) ?: stepSubjectWords(f),
-            // A step the run ended on before the person answered says why it did not run, under its one name.
-            detail = declinedWith ?: endedReason(step) ?: stepDetailWords(f),
-            // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
-            status =
-                if (waitingForYou) KitToolStatus.WaitingForYou
-                else if (stopSaidBelow && step.state == StepState.Stopped) KitToolStatus.Done
-                else step.state.toKit(),
-            // E20-S14: under a tenth of a second there is no time to show ("0.0s" said nothing).
-            durationLabel =
-                if (waitingForYou) null
-                else
-                    shownStepDurationMs(step.state, step.durationMs, step.startedAtMs, nowMs)?.let {
-                        durationWords(it)
-                    },
-            added = f.added,
-            removed = f.removed,
-            statusLabel =
-                if (waitingForYou) stringResource(Res.string.kitWorkWaitingForYou)
-                else if (step.state == StepState.Declined && stoppedByPlan(out.metadata)) stringResource(Res.string.kitToolPlanStopped)
-                else stepStatus(step.state, f.exitCode),
-        )
-    // A running command shows what it has put out so far, its last lines, growing in place; a finished one its answer.
-    val text = stepOutputShown(step, folds.full[key] == true)
-    val shell = f.kind == ToolKind.Shell
-    val child = f.childSessionId?.takeIf { onOpenSession != null }
-    // B-CHAT-114: an explicit file the step produced (an attachment, a `filePath` output) is a
-    // visible action.
-    val files = if (onOpenFile == null) emptyList() else out.artifacts.filter(::canOpenArtifact)
-    val connector = f.details.filterIsInstance<ToolDetail.ConnectorSearch>().firstOrNull()
-    // A declined call has nothing more to open: its row already says what the person decided and wrote.
-    val hasBody =
-        stepOpens(step.state) && (connector != null ||
-            text != null ||
-            out.pruned ||
-            (out.input.isNotEmpty() && inputHasBody(f.kind, step.state)) ||
-            (shell && !f.subject.isNullOrBlank()) ||
-            child != null ||
-            files.isNotEmpty())
-    val full = folds.full[key] == true
-    // Issue 147 (F-033): a command that is running and has put something out opens by itself, so its growing tail is in
-    // view without a tap. It stays open when the command ends (its output stays readable); the person's own fold wins.
-    // A delegated step whose sub-agent waits on the person opens by itself too: its "Open its conversation" is in view.
-    if (opensItself(step, waitingForYou, text != null) || (waitingForYou && child != null))
-        LaunchedEffect(key) { if (folds.open[key] == null) folds.open[key] = true }
+    val nowMs = if (!waitingForYou && step.state == StepState.Running) clock.read() else 0L
+    val still = step.state == StepState.Running && host.work.state != WorkLineState.Running
+    val view = stepToolView(step, nowMs, waitingForYou, stopSaidBelow, still)
+    val text = stepOutputShown(step, host.folds.full[key] == true)
+    val child = step.facts.childSessionId?.takeIf { host.onOpenSession != null }
+    val files = if (host.onOpenFile == null) emptyList() else step.output.artifacts.filter(::canOpenArtifact)
+    val connector = step.facts.details.filterIsInstance<ToolDetail.ConnectorSearch>().firstOrNull()
+    val hasBody = stepHasBody(step, text, connector, child, files)
+    val autoOpen = opensItself(step, waitingForYou, text != null) || (waitingForYou && child != null)
+    if (autoOpen) {
+        LaunchedEffect(key) { if (host.folds.open[key] == null) host.folds.open[key] = true }
+    }
+    val isOpen = host.folds.open[key] ?: autoOpen
     KitToolRow(
         view = view,
-        opened = folds.open[key] == true,
-        onToggle = { folds.open[key] = !(folds.open[key] ?: false) },
+        opened = isOpen,
+        onToggle = { host.folds.open[key] = !isOpen },
         modifier = Modifier.testTag("chat-step-${step.partId}"),
         body =
             if (!hasBody) null
             else {
-                {
-                    if (connector != null)
-                        KitQuietLine(
-                            stringResource(
-                                when (connector.outcome) {
-                                    ConnectorSearchOutcome.Empty ->
-                                        Res.string.chatUiConnectorSearchEmpty
-                                    ConnectorSearchOutcome.NotLoaded ->
-                                        Res.string.chatUiConnectorSearchNotLoaded
-                                    ConnectorSearchOutcome.Off ->
-                                        Res.string.chatUiConnectorSearchOff
-                                    ConnectorSearchOutcome.Unavailable ->
-                                        Res.string.chatUiConnectorSearchUnavailable
-                                }
-                            )
-                        )
-                    if (child != null && onOpenSession != null)
-                        KitButton(
-                            stringResource(Res.string.kitToolOpenConversation),
-                            { onOpenSession(child) },
-                            role = KitButtonRole.Tertiary,
-                            modifier = Modifier.testTag("chat-step-open-session"),
-                        )
-                    for ((i, file) in files.withIndex()) KitButton(
-                        file.displayName ?: stringResource(Res.string.chatUiGeneratedFile),
-                        { onOpenFile?.invoke(file) },
-                        role = KitButtonRole.Tertiary,
-                        modifier = Modifier.testTag("chat-step-file-$i"),
-                    )
-                    if (shell) {
-                        // Counted only where it is shown (an open shell step), once per output.
-                        val lines = remember(text) { text?.lines()?.size ?: 0 }
-                        KitCommandBox(
-                            command = f.subject ?: "",
-                            output = text,
-                            maxLines =
-                                if (full) Int.MAX_VALUE
-                                else
-                                    io.github.eslamasabry.oc.ui.kitchat.tool
-                                        .KIT_COMMAND_OUTPUT_LINES,
-                            moreLabel = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines),
-                            onMore = { folds.full[key] = true },
-                            exitLabel = null,
-                            // Ended and printed nothing: say so (never a blank box that reads as lost output).
-                            emptyLabel =
-                                when (step.state) {
-                                    StepState.Done -> stringResource(Res.string.kitCommandNoOutput)
-                                    StepState.Failed -> stringResource(Res.string.kitCommandFailedNoOutput)
-                                    StepState.Stopped -> stringResource(Res.string.kitCommandStoppedEarly)
-                                    else -> null
-                                },
-                        )
-                    }
-                    val rerun = reply?.onRerunCommand
-                    val again = if (rerun == null) null else rerunCommand(f.kind, step.state, out.input, f.subject)
-                    if (shell && rerun != null && again != null)
-                        KitButton(
-                            stringResource(Res.string.toolCardRunCommandAgain),
-                            { rerun(again) },
-                            role = KitButtonRole.Tertiary,
-                            icon = KitIcons.retry,
-                            modifier = Modifier.testTag("chat-step-rerun"),
-                        )
-                    else ToolStepBody(step, reply)
-                }
+                { OneStepBody(step, key, text, host) }
+            },
+    )
+}
+
+private fun stepHasBody(
+    step: TurnStep,
+    text: String?,
+    connector: ToolDetail.ConnectorSearch?,
+    child: String?,
+    files: List<ToolArtifact>,
+): Boolean {
+    if (!stepOpens(step.state)) return false
+    val out = step.output
+    val f = step.facts
+    val hasInput = out.input.isNotEmpty() && inputHasBody(f.kind, step.state)
+    val hasShell = f.kind == ToolKind.Shell && !f.subject.isNullOrBlank()
+    return connector != null ||
+        text != null ||
+        out.pruned ||
+        hasInput ||
+        hasShell ||
+        child != null ||
+        files.isNotEmpty()
+}
+
+@Composable
+private fun stepDeclinedDetail(step: TurnStep): String? {
+    val out = step.output
+    val noteMask = rememberKitMask()
+    if (step.state == StepState.Declined && stoppedByPlan(out.metadata)) {
+        return stringResource(Res.string.chatStepPlanStopped)
+    }
+    return declinedStepNote(step.state, out.errorText)?.let {
+        stringResource(Res.string.chatStepDeclinedNote, noteMask(it))
+    }
+}
+
+@Composable
+private fun stepStatusLabel(step: TurnStep, waitingForYou: Boolean): String =
+    when {
+        waitingForYou -> stringResource(Res.string.kitWorkWaitingForYou)
+        step.state == StepState.Declined && stoppedByPlan(step.output.metadata) ->
+            stringResource(Res.string.kitToolPlanStopped)
+        else -> stepStatus(step.state, step.facts.exitCode)
+    }
+
+@Composable
+private fun stepToolView(
+    step: TurnStep,
+    nowMs: Long,
+    waitingForYou: Boolean,
+    stopSaidBelow: Boolean,
+    still: Boolean,
+): KitToolView {
+    val f = step.facts
+    val out = step.output
+    val subject =
+        if (f.kind == ToolKind.Shell && f.shell != null) null
+        else stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput) ?: stepSubjectWords(f)
+    val status =
+        when {
+            waitingForYou -> KitToolStatus.WaitingForYou
+            stopSaidBelow && step.state == StepState.Stopped -> KitToolStatus.Done
+            else -> step.state.toKit()
+        }
+    val durationLabel =
+        if (waitingForYou) null
+        else shownStepDurationMs(step.state, step.durationMs, step.startedAtMs, nowMs)?.let { durationWords(it) }
+    return KitToolView(
+        id = step.partId,
+        kind = f.kind.toKit(),
+        title = stepRowTitle(f, stepTense(step.state, waiting = waitingForYou)),
+        icon = stepGlyph(f),
+        subject = subject,
+        detail = stepDeclinedDetail(step) ?: endedReason(step) ?: stepDetailWords(f),
+        status = status,
+        durationLabel = durationLabel,
+        added = f.added,
+        removed = f.removed,
+        statusLabel = stepStatusLabel(step, waitingForYou),
+        still = still,
+    )
+}
+
+@Composable
+private fun OneStepBody(step: TurnStep, key: String, text: String?, host: StepRowHost) {
+    val f = step.facts
+    val out = step.output
+    val connector = f.details.filterIsInstance<ToolDetail.ConnectorSearch>().firstOrNull()
+    if (connector != null) ConnectorSearchNote(connector)
+    val child = f.childSessionId?.takeIf { host.onOpenSession != null }
+    if (child != null && host.onOpenSession != null) {
+        KitButton(
+            stringResource(Res.string.kitToolOpenConversation),
+            { host.onOpenSession.invoke(child) },
+            role = KitButtonRole.Tertiary,
+            modifier = Modifier.testTag("chat-step-open-session"),
+        )
+    }
+    val files = if (host.onOpenFile == null) emptyList() else out.artifacts.filter(::canOpenArtifact)
+    for ((i, file) in files.withIndex()) {
+        KitButton(
+            file.displayName ?: stringResource(Res.string.chatUiGeneratedFile),
+            { host.onOpenFile?.invoke(file) },
+            role = KitButtonRole.Tertiary,
+            modifier = Modifier.testTag("chat-step-file-$i"),
+        )
+    }
+    val shell = f.kind == ToolKind.Shell
+    if (shell) ShellStepCommandBox(step, key, text, host.folds)
+    val rerun = host.reply?.onRerunCommand
+    val again = if (rerun == null) null else rerunCommand(f.kind, step.state, out.input, f.subject)
+    if (shell && rerun != null && again != null) {
+        KitButton(
+            stringResource(Res.string.toolCardRunCommandAgain),
+            { rerun(again) },
+            role = KitButtonRole.Tertiary,
+            icon = KitIcons.retry,
+            modifier = Modifier.testTag("chat-step-rerun"),
+        )
+    } else {
+        ToolStepBody(step, host.reply)
+    }
+}
+
+@Composable
+private fun ConnectorSearchNote(connector: ToolDetail.ConnectorSearch) {
+    KitQuietLine(
+        stringResource(
+            when (connector.outcome) {
+                ConnectorSearchOutcome.Empty -> Res.string.chatUiConnectorSearchEmpty
+                ConnectorSearchOutcome.NotLoaded -> Res.string.chatUiConnectorSearchNotLoaded
+                ConnectorSearchOutcome.Off -> Res.string.chatUiConnectorSearchOff
+                ConnectorSearchOutcome.Unavailable -> Res.string.chatUiConnectorSearchUnavailable
+            }
+        )
+    )
+}
+
+@Composable
+private fun ShellStepCommandBox(step: TurnStep, key: String, text: String?, folds: TranscriptFolds) {
+    val full = folds.full[key] == true
+    val lines = remember(text) { text?.lines()?.size ?: 0 }
+    KitCommandBox(
+        command = step.facts.subject ?: "",
+        output = text,
+        maxLines = if (full) Int.MAX_VALUE else KIT_COMMAND_OUTPUT_LINES,
+        moreLabel = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines),
+        onMore = { folds.full[key] = true },
+        exitLabel = null,
+        emptyLabel =
+            when (step.state) {
+                StepState.Done -> stringResource(Res.string.kitCommandNoOutput)
+                StepState.Failed -> stringResource(Res.string.kitCommandFailedNoOutput)
+                StepState.Stopped -> stringResource(Res.string.kitCommandStoppedEarly)
+                else -> null
             },
     )
 }

@@ -45,3 +45,15 @@ public fun gitSections(hasChanges: Boolean, hasHistory: Boolean, needsIdentity: 
  */
 public fun gitSyncOpensRemotes(hasRemote: Boolean, detached: Boolean, operationInProgress: Boolean): Boolean =
     !hasRemote && !detached && !operationInProgress
+
+/**
+ * Get latest can also link a branch that tracks nothing yet (B-GIT-157): its row is open when the snapshot lists a
+ * branch of the same name on the remote a first push would go to, and its line is then the Send row's "First time,
+ * links this branch". Only the same name counts; a branch the remote lacks still says to send it first.
+ */
+public fun gitPullLinksBranch(
+    hasUpstream: Boolean,
+    head: String?,
+    pushRemote: String?,
+    remoteBranches: List<String>,
+): Boolean = !hasUpstream && head != null && pushRemote != null && "$pushRemote/$head" in remoteBranches

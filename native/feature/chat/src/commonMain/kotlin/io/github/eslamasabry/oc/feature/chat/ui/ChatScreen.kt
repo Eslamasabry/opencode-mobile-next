@@ -1369,7 +1369,7 @@ public fun ChatScreen(
                         workModel,
                         onDismiss = closeWork,
                         tasks = facts.background,
-                        nowMs = facts.nowMs,
+                        clock = facts.clock,
                         subagents = state.capabilities.subagents && !demoMode,
                         onShowSubagents = {
                             closeWork()
@@ -1414,7 +1414,7 @@ public fun ChatScreen(
                     actions = actions,
                     onDismiss = { connectionDetails = false },
                 )
-                ChatTimelineSheet(state.timeline, actions, facts.nowMs)
+                ChatTimelineSheet(state.timeline, actions, facts.clock)
                 // B-169 §3: Switch model on a failed reply.
                 io.github.eslamasabry.oc.feature.chat.composer.SwitchModelSheet(
                     state.switching,

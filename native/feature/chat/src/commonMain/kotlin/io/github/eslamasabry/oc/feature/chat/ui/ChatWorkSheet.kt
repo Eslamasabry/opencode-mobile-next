@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.model.ManagedShell
 import io.github.eslamasabry.oc.core.model.ManagedShellStatus
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTask
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.backgroundTaskName
+import io.github.eslamasabry.oc.feature.chat.presentation.FactsClock
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
 import io.github.eslamasabry.oc.feature.chat.work.RunningWork
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi
@@ -113,6 +114,7 @@ internal fun runningWorkAction(offered: Boolean, running: Int, onOpen: () -> Uni
  * command's output with Stop command and Change timeout, and the "Run shell command" dialog. The
  * server's text appears only in the masked log; every other sentence is the app's own.
  */
+@Suppress("LongParameterList")
 @Composable
 internal fun ChatWorkSheet(
     state: ChatWorkUi,
@@ -121,7 +123,7 @@ internal fun ChatWorkSheet(
     onDismiss: () -> Unit,
     /** Work the agent's stream says goes on in the background (Claude Code's background commands), oldest first. */
     tasks: List<BackgroundTask> = emptyList(),
-    nowMs: Long = 0,
+    clock: FactsClock = FactsClock.Still,
     /** The server keeps sub-agent conversations: the sheet links to them. */
     subagents: Boolean = false,
     onShowSubagents: (() -> Unit)? = null,
@@ -129,6 +131,7 @@ internal fun ChatWorkSheet(
     onShowTask: (BackgroundTask) -> Unit = {},
 ) {
     val output = state.output
+    val workTasks = WorkListTasks(tasks, clock, onShowTask)
     KitSheet(
         visible = visible,
         onDismissRequest = { if (output != null) model.closeOutput() else onDismiss() },
@@ -152,7 +155,7 @@ internal fun ChatWorkSheet(
                             model::dismissActionFailure,
                         ),
                 )
-            if (output == null) WorkList(state, model, tasks, nowMs, subagents, onShowSubagents, onShowTask)
+            if (output == null) WorkList(state, model, workTasks, subagents, onShowSubagents)
             else ShellOutput(output, state, model)
         }
     }
@@ -171,6 +174,77 @@ internal fun ChatWorkSheet(
     )
 }
 
+private class WorkListTasks(
+    val tasks: List<BackgroundTask>,
+    val clock: FactsClock,
+    val onShowTask: (BackgroundTask) -> Unit,
+) {
+    @Composable
+    fun TaskRows() {
+        val nowMs = clock.read()
+        KitRowGroup {
+            tasks.forEach { task ->
+                KitRow(
+                    title = task.name,
+                    supporting = stringResource(Res.string.kitBackgroundWorkGoToStep),
+                    meta = elapsedWords(task.sinceMs, nowMs),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    modifier = Modifier.testTag("chat-work-task-${task.callId}"),
+                    onClick = { onShowTask(task) },
+                )
+            }
+        }
+        // The stream reports this work but the server has no way to stop one piece of it on its own.
+        KitNotice(
+            message = stringResource(Res.string.runningWorkTasksNoStop),
+            tone = StatusTone.Neutral,
+            modifier = Modifier.testTag("chat-work-tasks-no-stop"),
+        )
+    }
+
+    @Composable
+    fun ShellRows(state: ChatWorkUi, model: ChatWorkModel) {
+        when {
+            !state.supported ->
+                if (tasks.isEmpty()) EmptyWorkState()
+            state.failed && state.shells.isEmpty() ->
+                KitNotice(
+                    message = stringResource(Res.string.runningWorkCommandsFailed),
+                    tone = StatusTone.Failure,
+                    actions = listOf(KitLineAction(stringResource(Res.string.workRetry), model::refresh)),
+                )
+            state.loading && state.shells.isEmpty() ->
+                KitNotice(message = stringResource(Res.string.workRunning), tone = StatusTone.Progress)
+            state.shells.isEmpty() ->
+                if (tasks.isEmpty()) EmptyWorkState()
+            else ->
+                KitRowGroup {
+                    state.shells.forEach { shell ->
+                        // A plain name on the row; the command itself is the opened row's title.
+                        KitRow(
+                            title = backgroundTaskName(shell.command),
+                            supporting = stringResource(Res.string.runningWorkCommandState, stateWords(shell)),
+                            leading = KitRowLeading.Glyph(KitIcons.terminal),
+                            modifier = Modifier.testTag("chat-work-row-${shell.id}"),
+                            onClick = { model.openOutput(shell.id) },
+                        )
+                    }
+                }
+        }
+    }
+
+    @Composable
+    private fun EmptyWorkState() {
+        KitStateView(
+            kind = KitStateKind.Empty,
+            title = stringResource(Res.string.runningWorkEmptyTitle),
+            body = stringResource(Res.string.runningWorkEmptyBody),
+            icon = KitIcons.terminal,
+            modifier = Modifier.testTag("chat-work-empty"),
+        )
+    }
+}
+
 /**
  * The list: what runs (the stream's background work, then the server's commands), the way to the sub-agents, then
  * what the server can do with a running reply. Each place stays and says so where this server cannot do it.
@@ -179,19 +253,17 @@ internal fun ChatWorkSheet(
 private fun WorkList(
     state: ChatWorkUi,
     model: ChatWorkModel,
-    tasks: List<BackgroundTask>,
-    nowMs: Long,
+    workTasks: WorkListTasks,
     subagents: Boolean,
     onShowSubagents: (() -> Unit)?,
-    onShowTask: (BackgroundTask) -> Unit,
 ) {
-    if (!RunningWork.reported(state.supported, subagents, tasks))
+    if (!RunningWork.reported(state.supported, subagents, workTasks.tasks))
         KitNotice(
             message = stringResource(Res.string.runningWorkNotReported),
             tone = StatusTone.Neutral,
             modifier = Modifier.testTag("chat-work-not-reported"),
         )
-    else WorkListRows(state, model, tasks, nowMs, onShowTask)
+    else WorkListRows(state, model, workTasks)
     if (subagents && onShowSubagents != null)
         KitRowGroup {
             KitRow(
@@ -253,74 +325,13 @@ private fun BackgroundNotice(state: ChatWorkUi, model: ChatWorkModel) {
 private fun WorkListRows(
     state: ChatWorkUi,
     model: ChatWorkModel,
-    tasks: List<BackgroundTask>,
-    nowMs: Long,
-    onShowTask: (BackgroundTask) -> Unit,
+    workTasks: WorkListTasks,
 ) {
-    if (tasks.isNotEmpty()) {
-        KitRowGroup {
-            tasks.forEach { task ->
-                KitRow(
-                    title = task.name,
-                    supporting = stringResource(Res.string.kitBackgroundWorkGoToStep),
-                    meta = elapsedWords(task.sinceMs, nowMs),
-                    leading = KitRowLeading.Glyph(KitIcons.terminal),
-                    modifier = Modifier.testTag("chat-work-task-${task.callId}"),
-                    onClick = { onShowTask(task) },
-                )
-            }
-        }
-        // The stream reports this work but the server has no way to stop one piece of it on its own.
-        KitNotice(
-            message = stringResource(Res.string.runningWorkTasksNoStop),
-            tone = StatusTone.Neutral,
-            modifier = Modifier.testTag("chat-work-tasks-no-stop"),
-        )
+    if (workTasks.tasks.isNotEmpty()) {
+        workTasks.TaskRows()
         if (state.shells.isEmpty()) return
     }
-    when {
-        !state.supported && tasks.isEmpty() ->
-            KitStateView(
-                kind = KitStateKind.Empty,
-                title = stringResource(Res.string.runningWorkEmptyTitle),
-                body = stringResource(Res.string.runningWorkEmptyBody),
-                icon = KitIcons.terminal,
-                modifier = Modifier.testTag("chat-work-empty"),
-            )
-        !state.supported -> Unit
-        state.failed && state.shells.isEmpty() ->
-            KitNotice(
-                message = stringResource(Res.string.runningWorkCommandsFailed),
-                tone = StatusTone.Failure,
-                actions =
-                    listOf(KitLineAction(stringResource(Res.string.workRetry), model::refresh)),
-            )
-        state.loading && state.shells.isEmpty() ->
-            KitNotice(message = stringResource(Res.string.workRunning), tone = StatusTone.Progress)
-        state.shells.isEmpty() && tasks.isNotEmpty() -> Unit
-        state.shells.isEmpty() ->
-            KitStateView(
-                kind = KitStateKind.Empty,
-                title = stringResource(Res.string.runningWorkEmptyTitle),
-                body = stringResource(Res.string.runningWorkEmptyBody),
-                icon = KitIcons.terminal,
-                modifier = Modifier.testTag("chat-work-empty"),
-            )
-        else ->
-            KitRowGroup {
-                state.shells.forEach { shell ->
-                    // A plain name on the row; the command itself is the opened row's title.
-                    KitRow(
-                        title = backgroundTaskName(shell.command),
-                        supporting =
-                            stringResource(Res.string.runningWorkCommandState, stateWords(shell)),
-                        leading = KitRowLeading.Glyph(KitIcons.terminal),
-                        modifier = Modifier.testTag("chat-work-row-${shell.id}"),
-                        onClick = { model.openOutput(shell.id) },
-                    )
-                }
-            }
-    }
+    workTasks.ShellRows(state, model)
 }
 
 /** "12 min", "1 h 5 min", "under a minute": how long work started at [sinceMs] has run. */
