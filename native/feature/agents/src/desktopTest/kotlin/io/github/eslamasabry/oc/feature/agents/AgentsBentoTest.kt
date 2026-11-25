@@ -28,6 +28,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
@@ -51,13 +52,16 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.logo.KitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.text.KitWholeWordsRules
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -421,6 +425,9 @@ class AgentsBentoTest {
 
     @Test
     fun `COMPACT-302 agent tile action wraps whole label in at most two lines without ellipsis at 360 dp`() {
+        // Ruling (the lead, 2026-11-26: two columns kept at 360 dp and text 1.3 by the owner's wish):
+        // when a half-width tile's action label cannot fit beside its icon on <= 2 whole-word lines at full
+        // TypeRole.Secondary size, the chip drops its decorative icon rather than shrinking or splitting a word.
         val state =
             EVERY_STATE.copy(
                 phone =
@@ -447,6 +454,7 @@ class AgentsBentoTest {
             for ((locale, scale, expectedSpoken) in cases) {
                 Locale.setDefault(Locale.forLanguageTag(locale))
                 runDesktopComposeUiTest(360 * 3, 780 * 3) {
+                    var expectedSize = TextUnit.Unspecified
                     setContent {
                         CompositionLocalProvider(
                             LocalDensity provides Density(3f, scale),
@@ -459,6 +467,7 @@ class AgentsBentoTest {
                                 localeTag = locale,
                                 stillFrame = true,
                             ) {
+                                expectedSize = LocalKitTypography.current.style(TypeRole.Secondary).fontSize
                                 Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                                     AgentsScreen(state, Recorder())
                                 }
@@ -475,9 +484,11 @@ class AgentsBentoTest {
                         chips[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                         val layout = layouts.single()
                         val text = layout.layoutInput.text.text
+                        assertEquals(expectedSize, layout.layoutInput.style.fontSize, "[$locale/$scale] font shrank on: $text")
                         assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $text")
                         assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: $text")
                         assertTrue(layout.lineCount <= 2, "[$locale/$scale] expected <= 2 lines for '$text', got ${layout.lineCount}")
+                        assertTrue(KitWholeWordsRules.whole(layout, text), "[$locale/$scale] broke mid-word: $text")
                     }
                 }
             }

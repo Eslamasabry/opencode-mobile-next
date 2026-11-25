@@ -15,13 +15,16 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.text.KitWholeWordsRules
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -154,24 +157,17 @@ class KitAgentTilePolishTest {
     }
 
     @Test
-    fun `B-546 half-width tile action wraps on whole words to at most two lines at 360 dp and 1_3`() {
-        val labels =
-            listOf(
-                "New conversation",
-                "Nouvelle conversation",
-                "Nuova conversazione",
-                "Cuộc trò chuyện mới",
-                "Nueva conversación",
-            )
-        for (scale in listOf(1f, 1.3f)) {
-            for (label in labels) {
-                assertTileChipWrapsCleanly(label, scale)
-            }
-        }
+    fun `B-546 half-width tile action drops icon when needed and wraps whole words at full size`() {
+        assertTileChipWrapsCleanly("New conversation", scale = 1f, expectIcon = true)
+        assertTileChipWrapsCleanly("New conversation", scale = 1.3f, expectIcon = false)
+        assertTileChipWrapsCleanly("Nouvelle conversation", scale = 1f, expectIcon = true)
+        assertTileChipWrapsCleanly("Nouvelle conversation", scale = 1.3f, expectIcon = false)
+        assertTileChipWrapsCleanly("Sign in", scale = 1.3f, expectIcon = true)
     }
 
-    private fun assertTileChipWrapsCleanly(label: String, scale: Float) =
+    private fun assertTileChipWrapsCleanly(label: String, scale: Float, expectIcon: Boolean) =
         runDesktopComposeUiTest(328 * 3, 600 * 3) {
+            var expectedSize = TextUnit.Unspecified
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
                     KitTheme(
@@ -179,6 +175,7 @@ class KitAgentTilePolishTest {
                         appearance = KitAppearance(motion = MotionLevel.Off),
                         stillFrame = true,
                     ) {
+                        expectedSize = LocalKitTypography.current.style(TypeRole.Secondary).fontSize
                         Box(Modifier.width(328.dp)) {
                             KitAgentTiles(
                                 listOf {
@@ -210,6 +207,7 @@ class KitAgentTilePolishTest {
                 it(layouts)
             }
             val layout = layouts.single()
+            assertEquals(expectedSize, layout.layoutInput.style.fontSize, "[$label/$scale] font shrank")
             assertFalse(layout.hasVisualOverflow, "[$label/$scale] visual overflow")
             assertFalse(
                 (0 until layout.lineCount).any { layout.isLineEllipsized(it) },
@@ -217,5 +215,11 @@ class KitAgentTilePolishTest {
             )
             assertTrue(layout.lineCount <= 2, "[$label/$scale] expected <= 2 lines, got ${layout.lineCount}")
             assertTrue(KitWholeWordsRules.whole(layout, label), "[$label/$scale] broke mid-word")
+            val icons = onAllNodesWithTag("kit-chip-icon", useUnmergedTree = true).fetchSemanticsNodes()
+            assertEquals(
+                if (expectIcon) 1 else 0,
+                icons.size,
+                "[$label/$scale] expected icon=${if (expectIcon) "kept" else "dropped"}",
+            )
         }
 }

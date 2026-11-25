@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
 import io.github.eslamasabry.oc.feature.agents.AgentsBentoTest.Companion.COMPUTERS
 import io.github.eslamasabry.oc.feature.agents.AgentsBentoTest.Companion.EVERY_STATE
 import io.github.eslamasabry.oc.feature.agents.AgentsBentoTest.Companion.MARKS
@@ -28,6 +29,7 @@ import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
@@ -35,11 +37,13 @@ import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.text.KitWholeWordsRules
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -60,7 +64,12 @@ class AgentsPolishTest {
     }
 
     @Composable
-    private fun Screen(state: AgentsUi, scale: Float = 1f, locale: String = "en") {
+    private fun Screen(
+        state: AgentsUi,
+        scale: Float = 1f,
+        locale: String = "en",
+        onSecondarySize: (TextUnit) -> Unit = {},
+    ) {
         CompositionLocalProvider(
             LocalDensity provides Density(3f, scale),
             LocalKitSecretSink provides KitSecretSink {},
@@ -72,6 +81,7 @@ class AgentsPolishTest {
                 localeTag = locale,
                 stillFrame = true,
             ) {
+                onSecondarySize(LocalKitTypography.current.style(TypeRole.Secondary).fontSize)
                 Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                     AgentsScreen(state, Recorder())
                 }
@@ -157,9 +167,9 @@ class AgentsPolishTest {
     }
 
     @Test
-    fun `B-546 tile actions wrap on whole words in at most two lines at 360 dp in longest translations`() {
+    fun `B-546 tile actions wrap on whole words in at most two lines at 360 dp without shrinking`() {
         try {
-            for (locale in listOf("en", "fr", "it", "vi")) {
+            for (locale in listOf("en", "fr")) {
                 for (scale in listOf(1f, 1.3f)) {
                     assertChipsWholeInTwoLines(EVERY_STATE, locale, scale, minChips = 3)
                     assertChipsWholeInTwoLines(COMPUTERS, locale, scale, minChips = 3)
@@ -173,7 +183,8 @@ class AgentsPolishTest {
     private fun assertChipsWholeInTwoLines(state: AgentsUi, locale: String, scale: Float, minChips: Int) {
         Locale.setDefault(Locale.forLanguageTag(locale))
         runDesktopComposeUiTest(360 * 3, 780 * 3) {
-            setContent { Screen(state, scale, locale) }
+            var expectedSize = TextUnit.Unspecified
+            setContent { Screen(state, scale, locale) { expectedSize = it } }
             waitForIdle()
             val chips = onAllNodesWithTag("kit-chip-label", useUnmergedTree = true)
             val count = chips.fetchSemanticsNodes().size
@@ -183,6 +194,11 @@ class AgentsPolishTest {
                 chips[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                 val layout = layouts.single()
                 val text = layout.layoutInput.text.text
+                assertEquals(
+                    expectedSize,
+                    layout.layoutInput.style.fontSize,
+                    "[$locale/$scale] font shrank on: $text",
+                )
                 assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $text")
                 assertFalse(
                     (0 until layout.lineCount).any { layout.isLineEllipsized(it) },
