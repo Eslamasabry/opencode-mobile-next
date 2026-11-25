@@ -1561,4 +1561,6 @@
     <string name="kitTurnLiveStillThinking">ما زال يفكر</string>
     <string name="chatQuietThinkingHint">بعض النماذج تفكر بهدوء لعدة دقائق.</string>
     <string name="kitToolUnanswered">توقّف قبل أن تجيب</string>
+    <string name="chatErrorModelNotFoundNamed">لم يعد %1$s متاحًا على %2$s.</string>
+    <string name="chatModelReplacedNotice">لم يعد %1$s متاحًا. يُستخدم %2$s.</string>
 </resources>
