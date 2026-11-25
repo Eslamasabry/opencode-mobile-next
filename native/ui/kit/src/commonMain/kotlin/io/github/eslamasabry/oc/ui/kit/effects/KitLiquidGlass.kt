@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.effects
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.padding
@@ -30,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSourceLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -896,7 +896,7 @@ internal fun BoxScope.KitLiquidBarPane(
             .padding(horizontal = LIQUID_BAR_INSET_X.dp, vertical = LIQUID_BAR_INSET_Y.dp)
             .kitLiquidJoinRest(join, LiquidBarShape)
             .then(face)
-            .then(if (border) Modifier.border(1.dp, hairline, LiquidBarShape) else Modifier)
+            .then(if (border) Modifier.kitHairlineBorder(1.dp, hairline, LiquidBarShape) else Modifier)
             .testTag("kit-liquid-bar")
     )
 }

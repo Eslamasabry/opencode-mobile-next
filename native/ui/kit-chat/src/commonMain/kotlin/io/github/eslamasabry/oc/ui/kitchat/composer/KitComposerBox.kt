@@ -227,11 +227,9 @@ public fun KitComposerBox(
                 .then(liquid ?: look.modifier)
                 .kitLiquidTouchLight(touch, look.shape, join = joinBody)
                 .then(
-                    when {
-                        solid -> Modifier.border(hairline, colors.hairline, look.shape)
-                        glassLight -> Modifier.border(1.dp, colors.hairline, look.shape)
-                        else -> Modifier
-                    }
+                    if (solid || glassLight) {
+                        Modifier.border(if (glassLight) 1.dp else hairline, colors.hairline, look.shape)
+                    } else Modifier
                 )
                 .clip(look.shape)
                 // Glass keeps its pane inset inside the box (owner 2026-11-09): room for the rim, sheen and lens.

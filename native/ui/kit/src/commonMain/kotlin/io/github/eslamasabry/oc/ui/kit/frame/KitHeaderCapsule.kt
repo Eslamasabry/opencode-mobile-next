@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -96,7 +95,7 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
                         colors.hairline,
                         look.shape,
                     )
-                    glassLight -> Modifier.border(1.dp, colors.hairline, look.shape)
+                    glassLight -> Modifier.kitHairlineBorder(1.dp, colors.hairline, look.shape)
                     else -> Modifier
                 }
             )
@@ -139,7 +138,7 @@ internal fun Modifier.kitFloatingPartSurface(): Modifier {
                     colors.hairline,
                     look.shape,
                 )
-                glassLight -> Modifier.border(1.dp, colors.hairline, look.shape)
+                glassLight -> Modifier.kitHairlineBorder(1.dp, colors.hairline, look.shape)
                 else -> Modifier
             }
         )
