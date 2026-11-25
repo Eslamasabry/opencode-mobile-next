@@ -195,6 +195,9 @@ public object TabRules {
         fun at(v: Int): Float = if (rtl) (max - v).toFloat() else v.toFloat()
         fun back(x: Float): Int = (if (rtl) max - x else x).roundToInt().coerceIn(0, max)
         val tol = 0.5f
+        val allInsideView =
+            lefts.indices.all { i -> lefts[i] >= -tol && lefts[i] + widths[i] <= view + tol }
+        if (allInsideView) return null
         fun whole(x: Float): Boolean {
             val l = x
             val r = x + view
@@ -543,7 +546,7 @@ internal fun TabStrip(
                                 if (needsYouWords != null) stateDescription = needsYouWords
                             }
                             .tabSplit(model, i, onPill = false, position, elastic, inset, squash, corner, snap = !solid)
-                            .padding(horizontal = if (tight) Space.S1.dp else Space.S3.dp),
+                            .padding(horizontal = if (tight) Space.S2.dp else Space.S3.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         // A count stays in the first ink beside its quieter word, as it always has.
@@ -556,7 +559,7 @@ internal fun TabStrip(
                         Modifier
                             .clearAndSetSemantics {}
                             .tabSplit(model, i, onPill = true, position, elastic, inset, squash, corner, snap = !solid)
-                            .padding(horizontal = if (tight) Space.S1.dp else Space.S3.dp),
+                            .padding(horizontal = if (tight) Space.S2.dp else Space.S3.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         TabFace(tab, onPill, onPill, rtl)

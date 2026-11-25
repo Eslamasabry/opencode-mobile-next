@@ -259,7 +259,10 @@ private fun NoticeBody(
     trailingParts: List<@Composable () -> Unit>,
     liveRegion: Boolean,
 ) {
-    val mark = noticeMark(if (title == null) TypeRole.Body else TypeRole.RowTitle)
+    val calmNeutral = title == null && tone == StatusTone.Neutral
+    val messageRole = if (title == null && !calmNeutral) TypeRole.Body else TypeRole.Secondary
+    val messageTone = if (title == null && !calmNeutral) TextTone.Primary else TextTone.Secondary
+    val mark = noticeMark(if (title == null) messageRole else TypeRole.RowTitle)
     NoticeFrame(modifier, tag, liveRegion, key = tone to glyph) {
         Row(verticalAlignment = Alignment.Top) {
             NoticeMarkBox(mark, glyph, noticeTint(tone))
@@ -272,8 +275,8 @@ private fun NoticeBody(
                 KitText(
                     message,
                     Modifier.testTag("kit-notice-message"),
-                    role = if (title == null) TypeRole.Body else TypeRole.Secondary,
-                    tone = if (title == null) TextTone.Primary else TextTone.Secondary,
+                    role = messageRole,
+                    tone = messageTone,
                 )
                 notes.forEach {
                     Spacer(Modifier.height(Space.S1.dp))

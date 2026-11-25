@@ -175,7 +175,8 @@ class LimitsScreenTest {
     fun `B-L10N-010 the limits read in Arabic`() = runDesktopComposeUiTest(412, 2600) {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         setContent { Screen(LimitsFixtures.state(), Actions(), "ar") }
-        onNodeWithText("متبقٍّ 60%").assertExists()
+        val sixty = io.github.eslamasabry.oc.core.common.text.Numbers.format(60)
+        onNodeWithText("متبقٍّ $sixty%").assertExists()
     }
 }
 

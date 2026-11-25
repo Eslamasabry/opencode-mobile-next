@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.engine.voice.language.VoiceLanguage
 import io.github.eslamasabry.oc.engine.voice.state.PackId
+import io.github.eslamasabry.oc.engine.voice.state.SpeechEngineKind
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiAccurate
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiAccurateDetail
@@ -27,6 +28,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiNoAudio
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiNoResponse
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiPermissionBlocked
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiPermissionRequired
+import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiPrivacyDownload
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiTransportClosed
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiUnsafeRedirect
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiUnsupportedAbi
@@ -39,6 +41,7 @@ import io.github.eslamasabry.oc.ui.words.res.readAloudUnsupported
 import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupOffline
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeDetect
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeNoRecognizer
+import io.github.eslamasabry.oc.ui.words.res.voiceNativePhoneEngine
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeSizeMb
 import io.github.eslamasabry.oc.ui.words.res.vpttLanguageFollowApp
 import io.github.eslamasabry.oc.ui.words.res.naturalVoiceFailed
@@ -120,3 +123,11 @@ internal fun languageName(language: VoiceLanguage): String =
 
 /** "0:07" (m:ss), digits as the locale writes them through the kit's pattern. */
 internal fun elapsedParts(seconds: Int): Pair<String, String> = (seconds / 60).toString() to (seconds % 60).toString().padStart(2, '0')
+
+/** The privacy notice line matches the active speech engine. */
+@Composable
+internal fun engineNoticeWords(engine: SpeechEngineKind): String =
+    stringResource(
+        if (engine == SpeechEngineKind.PhoneRecognizer) Res.string.voiceNativePhoneEngine
+        else Res.string.e7VoiceUiPrivacyDownload,
+    )

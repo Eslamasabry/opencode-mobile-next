@@ -43,7 +43,7 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlinx.collections.immutable.persistentListOf
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 /**
  * Polish sweep, Settings: #39 the blocked Notifications page (B-582) and #22 the Colours tab's empty Theme step
@@ -116,7 +116,12 @@ class PolishSettingsShots {
     private val whatWeCollect =
         SettingsUi(
             stack = persistentListOf(SettingsPage.Hub, SettingsPage.Privacy, SettingsPage.WhatWeCollect),
-            privacy = PrivacyUi(WhatWeCollectSource.build(ConsentState(), RemoteSink), crashReports = false, usage = false),
+            privacy =
+                PrivacyUi(
+                    WhatWeCollectSource.build(ConsentState(), RemoteSink),
+                    crashReports = false,
+                    usage = false,
+                ),
         )
 
     private val updates =

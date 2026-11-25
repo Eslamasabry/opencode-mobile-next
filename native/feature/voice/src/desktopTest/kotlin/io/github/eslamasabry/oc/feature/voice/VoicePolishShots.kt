@@ -31,7 +31,7 @@ import kotlin.test.Test
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 /**
  * Polish sweep #14 (B-557): the Voice typing page while the phone's own recogniser types, a model installed, at

@@ -205,11 +205,17 @@ public fun <T> KitSegmented(
                     }
                 }
             val room = maxWidth.value - 2f * kitHairline().value // F: lib/ui/kit/kit_segmented.dart:452-453
-            val stacked = fontScale >= SegmentedRules.STACK_AT_SCALE || widths.any { it > room / segments.size }
-            if (stacked) {
-                StackedSegments(segments, selected, enabled, onChange)
-            } else {
-                RowSegments(segments, selected, enabled, tall, onChange)
+            val normalFits = fontScale < SegmentedRules.STACK_AT_SCALE && widths.all { it <= room / segments.size }
+            val compactWeights =
+                if (normalFits || tall || fontScale >= SegmentedRules.STACK_AT_SCALE) null
+                else compactSegmentWeights(segments, selected, tokens, room, ::width)
+            when {
+                normalFits -> RowSegments(segments, selected, enabled, SegmentRowSpec(tall), onChange)
+                compactWeights != null -> {
+                    val spec = SegmentRowSpec(tall = false, compact = true, weights = compactWeights)
+                    RowSegments(segments, selected, enabled, spec, onChange)
+                }
+                else -> StackedSegments(segments, selected, enabled, onChange)
             }
         }
         // In the stack a disabled segment's reason is on its row; only the whole control's reason stays under it.
@@ -223,19 +229,53 @@ public fun <T> KitSegmented(
     }
 }
 
+private class SegmentRowSpec(val tall: Boolean, val compact: Boolean = false, val weights: List<Float>? = null)
+
+private class SegmentCellStyle(
+    val weight: Float,
+    val tall: Boolean,
+    val compact: Boolean,
+    val tallHeight: Dp,
+    val step: Color,
+    val thumbRadius: Dp,
+)
+
+private fun <T> compactSegmentWeights(
+    segments: List<KitSegment<T>>,
+    selected: T,
+    tokens: KitTokens,
+    room: Float,
+    measure: (String, TypeRole) -> Float,
+): List<Float>? {
+    val smallIcon = tokens.smallIcon.toFloat()
+    val minW = tokens.minTarget.toFloat()
+    val cw =
+        segments.map { s ->
+            val check = if (s.value == selected) smallIcon + Space.S1 else 0f
+            val iconW = if (s.icon != null) smallIcon + Space.S1 else 0f
+            val countW = s.count?.let { Space.S1 + measure(Numbers.format(it), TypeRole.Caption) } ?: 0f
+            maxOf(minW, 2f * Space.S1 + check + iconW + measure(s.label, TypeRole.Label) + countW)
+        }
+    if (cw.sum() > room) return null
+    return if (cw.all { it <= room / segments.size }) emptyList() else cw
+}
+
 @Composable
-private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, tall: Boolean, onChange: (T) -> Unit) {
+private fun <T> RowSegments(
+    segments: List<KitSegment<T>>,
+    selected: T,
+    enabled: KitEnabled,
+    spec: SegmentRowSpec,
+    onChange: (T) -> Unit,
+) {
     val haptics = rememberKitHaptics()
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val specs = KitMotion.specs
     val solid = LocalKitStyle.current.style == Style.Solid
     val hairline = kitHairline()
-    val inset = SegmentedGeometry.INSET.dp // owner 2026-11-09: the thumb sits inset in the track
     val density = LocalDensity.current
     val captionLine = with(density) { LocalKitTypography.current.style(TypeRole.Caption).fontSize.toDp() } * 1.3f * density.fontScale // F: lib/ui/kit/kit_segmented.dart:781
     val tallHeight = maxOf(tokens.minTarget.dp, (tokens.smallIcon * 1.2f).dp + Space.S1.dp + captionLine + (Space.S2 * 2).dp) // F: lib/ui/kit/kit_segmented.dart:783-786
-    val selectedIndex = segments.indexOfFirst { it.value == selected }
     val step = if (colors.dark) colors.surface3 else colors.surface2
     val (trackRadius, thumbRadius) = segmentedRadii()
     val track =
@@ -251,83 +291,112 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             .selectableGroup(),
     ) {
         segments.forEachIndexed { i, s ->
-            val chosen = s.value == selected
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
-            val on = segEnabled.isEnabled
-            val fill by animateColorAsState(if (chosen) step else Color.Transparent, specs.quick(), label = "segment")
-            val words = when {
-                !on -> TextTone.Tertiary
-                chosen -> TextTone.Primary
-                else -> TextTone.Secondary
+            val weight = spec.weights?.getOrNull(i) ?: 1f
+            val style = SegmentCellStyle(weight, spec.tall, spec.compact, tallHeight, step, thumbRadius)
+            SegmentCell(s, s.value == selected, segEnabled, style) {
+                SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
+                    haptics(KitHaptic.Select)
+                    onChange(it)
+                }
             }
-            val thumb =
-                kitSurfaceLook(
-                    KitSurfaceInput(
-                        role = SurfaceRole.Control,
-                        shape = KitShapeId.Tile,
-                        exactRadius = thumbRadius,
-                        level = SurfaceLevel.Surface3,
-                        ownFill = fill,
-                        color = if (chosen) step else null,
-                        selected = chosen,
-                        disabled = !on,
-                    ),
-                )
-            // A style that fills its chosen thumb with ink (Paper, Signal) gives the words to read on it: the chosen
-            // word then takes those, never the page's text1 on an ink fill (owner 2026-11-10: "Round" was black on
-            // black in Paper).
-            val inkColors = if (chosen && on) thumb.words?.let { colors.copy(text1 = it) } ?: colors else colors
-            val ink = inkColors.tone(words)
-            // The chosen glyph and check take the accent, the control's one accent mark.
-            val glyph = if (chosen && on) colors.accent else ink
-            Box(
-                Modifier.weight(1f)
-                    .let { if (tall) it.height(tallHeight) else it.heightIn(min = tokens.minTarget.dp) }
-                    // The 48 dp target is the whole segment (the track is minTarget plus its hairlines); the chosen
-                    // block is drawn inset by half a space1 inside it (F: lib/ui/kit/kit_segmented.dart:629, :678-686).
-                    // A target inside the inset made every track 4 dp taller than Flutter's.
-                    .kitSelectTap(chosen, Role.RadioButton, segEnabled, haptic = null, KitShapeId.Tile) {
-                        SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
-                            haptics(KitHaptic.Select)
-                            onChange(it)
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                // The chosen thumb: its own layer, inset from the track's edge on every side (never the label's box).
-                if (chosen) {
-                    Box(Modifier.matchParentSize().padding(inset)) {
-                        Box(Modifier.fillMaxSize().testTag("kit-segmented-thumb").then(thumb.modifier))
-                    }
+        }
+    }
+}
+
+@Composable
+private fun <T> RowScope.SegmentCell(
+    segment: KitSegment<T>,
+    chosen: Boolean,
+    enabled: KitEnabled,
+    style: SegmentCellStyle,
+    onTap: () -> Unit,
+) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val on = enabled.isEnabled
+    val inset = SegmentedGeometry.INSET.dp // owner 2026-11-09: the thumb sits inset in the track
+    val targetFill = if (chosen) style.step else Color.Transparent
+    val fill by animateColorAsState(targetFill, KitMotion.specs.quick(), label = "segment")
+    val words = when {
+        !on -> TextTone.Tertiary
+        chosen -> TextTone.Primary
+        else -> TextTone.Secondary
+    }
+    val thumb =
+        kitSurfaceLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Control,
+                shape = KitShapeId.Tile,
+                exactRadius = style.thumbRadius,
+                level = SurfaceLevel.Surface3,
+                ownFill = fill,
+                color = if (chosen) style.step else null,
+                selected = chosen,
+                disabled = !on,
+            ),
+        )
+    // A style that fills its chosen thumb with ink (Paper, Signal) gives the words to read on it: the chosen
+    // word then takes those, never the page's text1 on an ink fill (owner 2026-11-10: "Round" was black on
+    // black in Paper).
+    val inkColors = if (chosen && on) thumb.words?.let { colors.copy(text1 = it) } ?: colors else colors
+    Box(
+        Modifier.weight(style.weight)
+            .let { if (style.tall) it.height(style.tallHeight) else it.heightIn(min = tokens.minTarget.dp) }
+            // The 48 dp target is the whole segment (the track is minTarget plus its hairlines); the chosen
+            // block is drawn inset by half a space1 inside it (F: lib/ui/kit/kit_segmented.dart:629, :678-686).
+            .kitSelectTap(chosen, Role.RadioButton, enabled, haptic = null, KitShapeId.Tile, onTap),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (chosen) {
+            Box(Modifier.matchParentSize().padding(inset)) {
+                Box(Modifier.fillMaxSize().testTag("kit-segmented-thumb").then(thumb.modifier))
+            }
+        }
+        val hPad = if (style.compact) Space.S1.dp else Space.S2.dp
+        Box(Modifier.padding(horizontal = hPad, vertical = inset), contentAlignment = Alignment.Center) {
+            CompositionLocalProvider(LocalKitColors provides inkColors) {
+                SegmentLabel(segment, chosen, on, words, style)
+            }
+        }
+    }
+}
+
+@Composable
+private fun <T> SegmentLabel(
+    segment: KitSegment<T>,
+    chosen: Boolean,
+    on: Boolean,
+    words: TextTone,
+    style: SegmentCellStyle,
+) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val glyph = if (chosen && on) colors.accent else colors.tone(words)
+    val count = segment.count?.let { Numbers.format(it) }
+    if (style.tall) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val iconSize = (tokens.smallIcon * 1.2f).dp // F: lib/ui/kit/kit_segmented.dart:851
+            segment.icon?.let { KitGlyph(it, glyph, iconSize) }
+            Spacer(Modifier.height(Space.S1.dp))
+            KitText(segment.label, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
+        }
+    } else {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            if (!style.compact || chosen) {
+                Box(Modifier.padding(end = Space.S1.dp).alpha(if (chosen) 1f else 0f)) {
+                    val checkTint = if (!on) colors.text3 else colors.accent
+                    KitGlyph(KitIcons.check, checkTint, tokens.smallIcon.dp)
                 }
-                // The words keep their space2 from the segment's edge, as before the thumb moved to its own layer.
-                Box(Modifier.padding(horizontal = Space.S2.dp, vertical = inset), contentAlignment = Alignment.Center) {
-                CompositionLocalProvider(LocalKitColors provides inkColors) {
-                    val count = s.count?.let { Numbers.format(it) }
-                    if (tall) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            s.icon?.let { KitGlyph(it, glyph, (tokens.smallIcon * 1.2f).dp) } // F: lib/ui/kit/kit_segmented.dart:851
-                            Spacer(Modifier.height(Space.S1.dp))
-                            KitText(s.label, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
-                        }
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                            Box(Modifier.padding(end = Space.S1.dp).alpha(if (chosen) 1f else 0f)) {
-                                KitGlyph(KitIcons.check, if (!on) colors.text3 else colors.accent, tokens.smallIcon.dp)
-                            }
-                            s.icon?.let {
-                                KitGlyph(it, glyph, tokens.smallIcon.dp)
-                                Spacer(Modifier.width(Space.S1.dp))
-                            }
-                            KitText(s.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1)
-                            if (count != null) {
-                                Spacer(Modifier.width(Space.S1.dp))
-                                KitText(count, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
-                            }
-                        }
-                    }
-                }
-                }
+            }
+            segment.icon?.let {
+                KitGlyph(it, glyph, tokens.smallIcon.dp)
+                Spacer(Modifier.width(Space.S1.dp))
+            }
+            KitText(segment.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1)
+            if (count != null) {
+                Spacer(Modifier.width(Space.S1.dp))
+                KitText(count, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
             }
         }
     }

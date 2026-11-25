@@ -654,10 +654,17 @@ private fun AccentCircle(swatch: KitAccentSwatch, selected: Boolean, onTap: () -
     val shown by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.quick(), label = "accent-check")
     val scale by animateFloatAsState(if (selected) 1f else MotionTokens.MARK_FROM, KitMotion.specs.quick(), label = "accent-check-scale")
     val mark = Color(RoleDerivation.onColor(Argb(swatch.color.toArgb())).v)
-    // The named form keeps its caption whole: a circle press shape would clip the words under the swatch.
+    // The named form keeps its caption whole: a rounded bottom corner clip cuts the ends of Arabic colour names.
     val press = if (caption == null) KitShapeId.Circle else KitShapeId.Button
-    KitTappable(onClick = onTap, modifier = Modifier.optionSemantics(swatch.label, selected), shape = press) {
-        Column(Modifier.clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
+    val pressClip = caption?.let { flatBottomShape(press.shape()) }
+    KitTappable(
+        onClick = onTap,
+        modifier = Modifier.optionSemantics(swatch.label, selected),
+        shape = press,
+        pressClip = pressClip,
+    ) {
+        val columnPad = caption?.let { Modifier.padding(horizontal = Space.S1.dp, bottom = Space.S1.dp) } ?: Modifier
+        Column(columnPad.clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(tokens.minTarget.dp), contentAlignment = Alignment.Center) {
                 Box(
                     Modifier.exactEdge(edgeWidth, edge, CircleShape).padding(edgeWidth + gap),
@@ -668,18 +675,14 @@ private fun AccentCircle(swatch: KitAccentSwatch, selected: Boolean, onTap: () -
                             KitIcons.check,
                             mark,
                             tokens.smallIcon.dp,
-                            Modifier.graphicsLayer {
-                                alpha = shown
-                                scaleX = scale
-                                scaleY = scale
-                            },
+                            Modifier.graphicsLayer { alpha = shown; scaleX = scale; scaleY = scale },
                         )
                     }
                 }
             }
-            if (caption != null) {
+            caption?.let {
                 KitText(
-                    caption,
+                    it,
                     role = TypeRole.Caption,
                     tone = if (selected) TextTone.Primary else TextTone.Secondary,
                     textAlign = TextAlign.Center,
@@ -690,6 +693,9 @@ private fun AccentCircle(swatch: KitAccentSwatch, selected: Boolean, onTap: () -
         }
     }
 }
+
+private fun flatBottomShape(shape: Shape): Shape =
+    (shape as? RoundedCornerShape)?.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize) ?: shape
 
 
 

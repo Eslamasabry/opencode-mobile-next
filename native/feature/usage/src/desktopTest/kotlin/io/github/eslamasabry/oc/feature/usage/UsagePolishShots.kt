@@ -44,7 +44,7 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlinx.collections.immutable.persistentListOf
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 /**
  * Polish sweep, Usage: #16 the Cost page with its spend card (B-559) and #29 the Limits page (B-572) at 360 dp, light

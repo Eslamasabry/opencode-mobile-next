@@ -37,7 +37,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 
 /**
  * Polish sweep kit shots (#6, #14, #16, #22) at 360 dp, light and dark, text 1.0 and 1.3, in `build/polish-render/`.

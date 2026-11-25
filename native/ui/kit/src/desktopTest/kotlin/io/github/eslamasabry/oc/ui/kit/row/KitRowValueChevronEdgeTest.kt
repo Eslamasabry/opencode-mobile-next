@@ -19,6 +19,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -158,9 +159,9 @@ class KitRowValueChevronEdgeTest {
             val strip = onNodeWithTag("kit-tab-strip").getBoundsInRoot()
             val last = onAllNodesWithText("Text & motion", useUnmergedTree = true)[0].getBoundsInRoot()
             assertTrue(last.right.value <= strip.right.value - 12f, "last tab $last too close to edge $strip")
-            val pill = onNodeWithTag("kit-tab-pill", useUnmergedTree = true).getBoundsInRoot()
+            val tab = onNodeWithContentDescription("Colours").getBoundsInRoot()
             val first = onAllNodesWithText("Colours", useUnmergedTree = true)[0].getBoundsInRoot()
-            val pad = (first.left - pill.left).value
+            val pad = (first.left - tab.left).value
             assertTrue(pad >= 7.5f, "1.0x pill padding cramped: $pad dp")
         }
         runDesktopComposeUiTest(412, 200) {
@@ -174,9 +175,9 @@ class KitRowValueChevronEdgeTest {
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
-            val pill = onNodeWithTag("kit-tab-pill", useUnmergedTree = true).getBoundsInRoot()
+            val tab = onNodeWithContentDescription("Colours").getBoundsInRoot()
             val first = onAllNodesWithText("Colours", useUnmergedTree = true)[0].getBoundsInRoot()
-            val pad = (first.left - pill.left).value
+            val pad = (first.left - tab.left).value
             assertTrue(pad >= 7.5f, "1.3x pill padding cramped: $pad dp")
         }
     }
@@ -187,7 +188,15 @@ class KitRowValueChevronEdgeTest {
         val swatch = listOf(KitAccentSwatch("violet", Color(0xFFB39DFF), label))
         val inkInRow =
             swatchLabelInk {
-                KitAccentRow("لون التمييز", "مطابقة", Color(0xFF3DDC97), swatch, selected = null, onChanged = {}, grid = true)
+                KitAccentRow(
+                    "لون التمييز",
+                    "مطابقة",
+                    Color(0xFF3DDC97),
+                    swatch,
+                    selected = null,
+                    onChanged = {},
+                    grid = true,
+                )
             }
         val freeInk =
             swatchLabelInk {
@@ -205,7 +214,11 @@ class KitRowValueChevronEdgeTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                     KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
-                        KitNotice("Voice typing asks Android to recognise speech.", icon = KitIcons.locked, liveRegion = false)
+                        KitNotice(
+                            "Voice typing asks Android to recognise speech.",
+                            icon = KitIcons.locked,
+                            liveRegion = false,
+                        )
                     }
                 }
             }

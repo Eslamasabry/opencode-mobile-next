@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgets
 import io.github.eslamasabry.oc.engine.usage.UsageCalendar
@@ -38,8 +40,6 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.content.usage.KitTrendLine
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -248,10 +248,6 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
             )
         }
         item(key = "status") { Status(state, actions) }
-        // The Cost segment (B-160): 24h · 7d · 30d · 90d. Flutter's Today, Year and All time stay in the Period
-        // picker below; while one of them is chosen no segment is selected, so the segment steps aside.
-        if (state.phase != UsagePhase.Unsupported && state.range in UsageRange.segment)
-            item(key = "segment") { RangeSegment(state, actions) }
         state.report?.let { report ->
             item(key = "total") { Total(report, state.range, state.timezone, state) }
         }
@@ -445,11 +441,11 @@ private fun BudgetEditor(state: UsageUi, actions: UsageActions) {
 private fun Total(report: UsageReport, range: UsageRange, timezone: String?, state: UsageUi) {
     val gutter = LocalKitTokens.current.gutter
     Column(Modifier.padding(horizontal = gutter.dp, vertical = Space.S4.dp)) {
-        KitSurfacePanel {
+        KitSurfacePanel(Modifier.fillMaxWidth().testTag("usage-total-panel")) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                 val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
-                val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
-                val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it) }
+                val first = zone?.let { Numbers.digits(UsageCalendar.dayLabel(report.fromMs, it)) }
+                val last = zone?.let { Numbers.digits(UsageCalendar.dayLabel(report.toMs - 1, it)) }
                 val days =
                     if (first != null && last != null)
                         stringResource(Res.string.usagePeriod, first, last)
@@ -458,23 +454,25 @@ private fun Total(report: UsageReport, range: UsageRange, timezone: String?, sta
                 // range
                 // asked for.
                 val label =
-                    when {
-                        !report.coversRequest && days != null ->
-                            stringResource(Res.string.usageSpentPeriod, days)
-                        !report.coversRequest -> stringResource(Res.string.p12UsageCost)
-                        else ->
-                            when (range) {
-                                UsageRange.Today -> stringResource(Res.string.usageSpentToday)
-                                UsageRange.Last24Hours ->
-                                    stringResource(Res.string.s9CostSpent24Hours)
-                                UsageRange.SevenDays -> stringResource(Res.string.s9CostSpent7Days)
-                                UsageRange.ThirtyDays ->
-                                    stringResource(Res.string.usageSpentThirtyDays)
-                                UsageRange.NinetyDays -> stringResource(Res.string.s9CostSpent90Days)
-                                UsageRange.Year -> stringResource(Res.string.usageSpentYear)
-                                UsageRange.AllTime -> stringResource(Res.string.usageSpentAllTime)
-                            }
-                    }
+                    Numbers.digits(
+                        when {
+                            !report.coversRequest && days != null ->
+                                stringResource(Res.string.usageSpentPeriod, days)
+                            !report.coversRequest -> stringResource(Res.string.p12UsageCost)
+                            else ->
+                                when (range) {
+                                    UsageRange.Today -> stringResource(Res.string.usageSpentToday)
+                                    UsageRange.Last24Hours ->
+                                        stringResource(Res.string.s9CostSpent24Hours)
+                                    UsageRange.SevenDays -> stringResource(Res.string.s9CostSpent7Days)
+                                    UsageRange.ThirtyDays ->
+                                        stringResource(Res.string.usageSpentThirtyDays)
+                                    UsageRange.NinetyDays -> stringResource(Res.string.s9CostSpent90Days)
+                                    UsageRange.Year -> stringResource(Res.string.usageSpentYear)
+                                    UsageRange.AllTime -> stringResource(Res.string.usageSpentAllTime)
+                                }
+                        }
+                    )
                 KitText(label, role = TypeRole.Label, tone = TextTone.Secondary)
                 KitText(
                     cost(report.cost),
@@ -511,13 +509,13 @@ private fun Filters(state: UsageUi, actions: UsageActions) {
     var picker by remember { mutableStateOf<String?>(null) }
     val rangeChoices =
         listOf(
-            KitChoice(UsageRange.Today, stringResource(Res.string.usageToday)),
-            KitChoice(UsageRange.Last24Hours, stringResource(Res.string.s9CostLast24Hours)),
-            KitChoice(UsageRange.SevenDays, stringResource(Res.string.s9CostLast7Days)),
-            KitChoice(UsageRange.ThirtyDays, stringResource(Res.string.usageThirtyDays)),
-            KitChoice(UsageRange.NinetyDays, stringResource(Res.string.s9CostLast90Days)),
-            KitChoice(UsageRange.Year, stringResource(Res.string.usageYear)),
-            KitChoice(UsageRange.AllTime, stringResource(Res.string.usageAllTime)),
+            KitChoice(UsageRange.Today, Numbers.digits(stringResource(Res.string.usageToday))),
+            KitChoice(UsageRange.Last24Hours, Numbers.digits(stringResource(Res.string.s9CostLast24Hours))),
+            KitChoice(UsageRange.SevenDays, Numbers.digits(stringResource(Res.string.s9CostLast7Days))),
+            KitChoice(UsageRange.ThirtyDays, Numbers.digits(stringResource(Res.string.usageThirtyDays))),
+            KitChoice(UsageRange.NinetyDays, Numbers.digits(stringResource(Res.string.s9CostLast90Days))),
+            KitChoice(UsageRange.Year, Numbers.digits(stringResource(Res.string.usageYear))),
+            KitChoice(UsageRange.AllTime, Numbers.digits(stringResource(Res.string.usageAllTime))),
         )
     val scopeChoices =
         listOf(
@@ -683,7 +681,7 @@ private fun LazyListScope.breakdowns(
                     .take(5)
                     .forEach { day -> // F: lib/ui/screens/usage_screen.dart:730
                         KitRow(
-                            day.date,
+                            Numbers.digits(day.date),
                             trailing =
                                 KitRowTrailing.Value(
                                     pluralStringResource(
@@ -930,30 +928,9 @@ private fun ValueRow(title: String, value: String) {
 
 @Composable
 private fun cost(value: Double): String =
-    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost)
+    if (UsageFigures.isTiny(value)) Numbers.digits(stringResource(Res.string.usageTinyCost))
     else
         UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)
-
-/** 24h · 7d · 30d · 90d (B-160); the kit's segmented control, two to four parts. */
-@Composable
-private fun RangeSegment(state: UsageUi, actions: UsageActions) {
-    val words =
-        mapOf(
-            UsageRange.Last24Hours to stringResource(Res.string.s9Cost24h),
-            UsageRange.SevenDays to stringResource(Res.string.s9Cost7d),
-            UsageRange.ThirtyDays to stringResource(Res.string.s9Cost30d),
-            UsageRange.NinetyDays to stringResource(Res.string.s9Cost90d),
-        )
-    KitSegmented(
-        segments = UsageRange.segment.map { KitSegment(it, words.getValue(it)) },
-        selected = state.range,
-        semanticsLabel = stringResource(Res.string.s9CostRange),
-        modifier =
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp)
-                .testTag("usage-segment"),
-        onChange = actions::chooseRange,
-    )
-}
 
 /**
  * One small chart (B-160): agent steps per calendar day, the only series the server reports by day. For Today and
@@ -974,7 +951,7 @@ private fun Chart(report: UsageReport, state: UsageUi) {
         val days = if (state.range.charted) UsageFigures.dailySteps(report, zone) else emptyList()
         if (days.size < 2) {
             KitText(
-                stringResource(Res.string.s9CostChartHourly),
+                Numbers.digits(stringResource(Res.string.s9CostChartHourly)),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )

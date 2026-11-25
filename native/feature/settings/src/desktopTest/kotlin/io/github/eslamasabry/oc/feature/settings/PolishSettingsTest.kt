@@ -104,20 +104,26 @@ class PolishSettingsTest {
     }
 
     @Test
-    fun `B-SET-582 test notification explains why it stays active while blocked`() = runDesktopComposeUiTest(360, 2600) {
-        val actions = Actions()
-        setContent { SettingsThemed(width = 360f) { SettingsScreen(notifications(), actions) } }
-        onNodeWithText("Send a test notification").performScrollTo().performClick()
-        assertEquals(listOf("test"), actions.calls)
-        onNodeWithText("while notifications are off", substring = true).performScrollTo().assertExists()
-    }
+    fun `B-SET-582 test notification explains why it stays active while blocked`() =
+        runDesktopComposeUiTest(360, 2600) {
+            val actions = Actions()
+            setContent { SettingsThemed(width = 360f) { SettingsScreen(notifications(), actions) } }
+            onNodeWithText("Send a test notification").performScrollTo().performClick()
+            assertEquals(listOf("test"), actions.calls)
+            onNodeWithText("while notifications are off", substring = true).performScrollTo().assertExists()
+        }
 
     @Test
     fun `B-SET-566 What we collect uses calm body text with short lead-ins`() = runDesktopComposeUiTest(360, 2600) {
         val ui =
             SettingsUi(
                 stack = persistentListOf(SettingsPage.Privacy, SettingsPage.WhatWeCollect),
-                privacy = PrivacyUi(WhatWeCollectSource.build(ConsentState(), RemoteSink), crashReports = false, usage = false),
+                privacy =
+                    PrivacyUi(
+                        WhatWeCollectSource.build(ConsentState(), RemoteSink),
+                        crashReports = false,
+                        usage = false,
+                    ),
             )
         setContent { SettingsThemed(width = 360f) { SettingsScreen(ui, RecordingActions()) } }
         val node =
@@ -127,7 +133,7 @@ class PolishSettingsTest {
         val layouts = mutableListOf<TextLayoutResult>()
         node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(layouts)
         val weight = layouts.first().layoutInput.style.fontWeight ?: FontWeight.Normal
-        assertTrue(weight.weight <= FontWeight.Normal.weight, "disclosure prose should use calm body weight, got $weight")
+        assertTrue(weight.weight <= FontWeight.Normal.weight, "expected body weight, got $weight")
         onNodeWithText("Dropped connections", useUnmergedTree = true).performScrollTo().assertExists()
     }
 
