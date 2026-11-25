@@ -51,4 +51,5 @@
     <string name="agentUpdatesNotRemoved">%1$s n’a pas été retiré.</string>
     <string name="agentUpdatesNoSpace">Ce téléphone n’a pas assez de place pour ces mises à jour. Gardez ou retirez un agent, ou libérez de l’espace.</string>
     <string name="agentUpdatesReviewAction">Voir les mises à jour</string>
+    <string name="agentUpdatesButtonUpdateAll">Tout mettre à jour · %1$s</string>
 </resources>

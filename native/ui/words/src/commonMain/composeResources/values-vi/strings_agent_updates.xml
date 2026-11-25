@@ -45,4 +45,5 @@
     <string name="agentUpdatesNotRemoved">Chưa gỡ được %1$s.</string>
     <string name="agentUpdatesNoSpace">Điện thoại này không đủ dung lượng cho các cập nhật này. Hãy giữ hoặc gỡ một tác nhân, hoặc giải phóng dung lượng.</string>
     <string name="agentUpdatesReviewAction">Xem các cập nhật</string>
+    <string name="agentUpdatesButtonUpdateAll">Cập nhật tất cả · %1$s</string>
 </resources>

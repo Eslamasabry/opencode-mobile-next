@@ -531,6 +531,7 @@ agentUpdatesButtonBoth	bf0438a296
 agentUpdatesButtonKeep	c236be7825
 agentUpdatesButtonRemove	0666d17013
 agentUpdatesButtonUpdate	d416d0a802
+agentUpdatesButtonUpdateAll	0dd670ca49
 agentUpdatesChoiceKeep	55777a31bc
 agentUpdatesChoiceLabel	652e94b5fe
 agentUpdatesChoiceRemove	05cf1c0ea5
