@@ -6,10 +6,13 @@ import io.github.eslamasabry.oc.feature.chats.presentation.DiagnosisCause
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
-/** The card's headline and its explanation followed by the "What to check" list. */
-internal class DiagnosisWords(val title: String, val body: String)
+/**
+ * The card's headline, its explanation, and its "What to check" list in the same order: most likely check first, the
+ * retry note last. The card draws the list itself (B-555).
+ */
+internal class DiagnosisWords(val title: String, val body: String, val checks: List<String>)
 
-/** Flutter `ConnectionFailure.diagnose` copy, in the same order: most likely check first, the retry note last. */
+/** Flutter `ConnectionFailure.diagnose` copy. */
 @Composable
 internal fun diagnosisWords(diagnosis: ConnectionDiagnosis): DiagnosisWords {
     val tailnetCheck =
@@ -138,13 +141,5 @@ internal fun diagnosisWords(diagnosis: ConnectionDiagnosis): DiagnosisWords {
                 )
         }
     }
-    val list = checks.filterNotNull()
-    val body =
-        if (list.isEmpty()) explanation
-        else
-            explanation +
-                "\n\n" +
-                stringResource(Res.string.e7SetupWhatToCheck) +
-                list.joinToString(separator = "") { "\n• $it" }
-    return DiagnosisWords(title, body)
+    return DiagnosisWords(title, explanation, checks.filterNotNull())
 }

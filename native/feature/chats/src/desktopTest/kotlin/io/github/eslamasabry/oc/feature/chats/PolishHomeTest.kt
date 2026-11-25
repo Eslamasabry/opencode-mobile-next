@@ -394,7 +394,8 @@ class PolishHomeTest {
         val style: Style = Style.Solid,
     )
 
-    private fun renderScene(scene: Scene) {
+    /** Writes the scene's pictures and says, short, what the flicker rules found on them; null when nothing. */
+    private fun renderScene(scene: Scene): String? {
         inLanguage(scene.locale)
         val shots =
             listOf(true to "dark", false to "light").flatMap { (dark, tone) ->
@@ -405,10 +406,8 @@ class PolishHomeTest {
             }
         val firstFlicker = shots.mapNotNull { renderOne(it, scene.state, scene.notice) }.firstOrNull()
         // Said short, rule by rule: the test machine's log keeps only the first line of a failure.
-        firstFlicker?.let { flicker ->
-            throw AssertionError(
-                flicker.findings.joinToString(" | ") { "${it.rule} [${it.label}] at frame ${it.frame}" },
-            )
+        return firstFlicker?.let { flicker ->
+            "${scene.finding}-${scene.locale}: " + flicker.findings.joinToString(" | ") { "${it.rule} [${it.label}]" }
         }
     }
 
@@ -668,28 +667,32 @@ class PolishHomeTest {
 
     @Test
     fun `polish renders`() {
-        renderScene(Scene(42, "ar", arabicChipState()))
-        renderScene(Scene(11, "ar", appClosedArabicState(), appClosedArabicNotice()))
         // The lead's rounds (before and after): 10 the mark, 15 times and Needs you, 27 the Glass +,
         // 12 This phone's card, 121 a computer's card with its checks, 30 the offline notice.
-        renderScene(Scene(10, "en", openCodeRowsState(), phase = ROUND))
-        renderScene(Scene(15, "en", longTitlesState("en"), phase = ROUND))
-        renderScene(Scene(15, "ar", longTitlesState("ar"), phase = ROUND))
-        renderScene(Scene(27, "en", openCodeRowsState(), phase = ROUND, style = Style.Glass))
-        renderScene(Scene(27, "ar", openCodeRowsState(), phase = ROUND, style = Style.Glass))
-        renderScene(Scene(12, "en", failedOnThisPhone(), phase = ROUND))
-        renderScene(Scene(12, "ar", failedOnThisPhone(), phase = ROUND))
-        renderScene(Scene(121, "en", failedComputer(), phase = ROUND))
-        renderScene(Scene(121, "ar", failedComputer(), phase = ROUND))
-        renderScene(Scene(30, "en", laptopNotAnsweringState(), phase = ROUND))
+        val flickers =
+            listOf(
+                Scene(42, "ar", arabicChipState()),
+                Scene(11, "ar", appClosedArabicState(), appClosedArabicNotice()),
+                Scene(10, "en", openCodeRowsState(), phase = ROUND),
+                Scene(15, "en", longTitlesState("en"), phase = ROUND),
+                Scene(15, "ar", longTitlesState("ar"), phase = ROUND),
+                Scene(27, "en", openCodeRowsState(), phase = ROUND, style = Style.Glass),
+                Scene(27, "ar", openCodeRowsState(), phase = ROUND, style = Style.Glass),
+                Scene(12, "en", failedOnThisPhone(), phase = ROUND),
+                Scene(12, "ar", failedOnThisPhone(), phase = ROUND),
+                Scene(121, "en", failedComputer(), phase = ROUND),
+                Scene(121, "ar", failedComputer(), phase = ROUND),
+                Scene(30, "en", laptopNotAnsweringState(), phase = ROUND),
+            ).mapNotNull { renderScene(it) }
+        if (flickers.isNotEmpty()) throw AssertionError(flickers.joinToString(" ; "))
     }
 }
 
 /** The first round's pictures are named "after": they were taken after that round's fix. */
 private const val PHASE = "after"
 
-/** The lead's rounds: their pictures before the fix (the "after" ones follow it). */
-private const val ROUND = "before"
+/** The lead's rounds: their pictures after the fix (the "before" ones were written by the red commit). */
+private const val ROUND = "after"
 
 /** A row's agent mark, in dp (KitRecentRowRules.MARK_DP). */
 private const val MARK_DP = 28f

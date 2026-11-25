@@ -173,6 +173,8 @@ import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskNow
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskWait
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutes
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutesShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeShort
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.statePin
@@ -490,10 +492,14 @@ public fun ChatsScreen(
             if (shownNotice == HomeNoticeKind.ServerUnreachable) unreachable.take(1).forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        // B-573: a connection that did not answer is a warning, not information; its Try again sits
+                        // on the content edge (the mark's edge), as the rows do, not indented under the words.
                         KitNotice(
                             message =
                                 if (source.agents) stringResource(Res.string.chatsHomeAgentsUnreachable)
                                 else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(serverNameShown(source.name))),
+                            tone = StatusTone.Attention,
+                            actionsAtEdge = true,
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
@@ -1066,9 +1072,10 @@ private fun ConversationRow(
         }
     var menuOpen by remember(row.key) { mutableStateOf(false) }
     val agent = KitFeedAgent(row.agentMark, row.agentName ?: words.otherAgent)
-    val time =
-        row.updatedAtMs?.takeIf { flags.nowMs > 0 }?.let { kitRelativeAge(it, flags.nowMs) }
-            ?: row.ago?.let { agoText(it) }
+    // B-558: the time beside the title is its short form ("5m"); the row still says the whole time ("5 min ago").
+    val updated = row.updatedAtMs?.takeIf { flags.nowMs > 0 }
+    val time = updated?.let { kitRelativeAgeShort(it, flags.nowMs) } ?: row.ago?.let { agoTextShort(it) }
+    val timeSpoken = updated?.let { kitRelativeAge(it, flags.nowMs) } ?: row.ago?.let { agoText(it) }
     val preview =
         row.permission?.let {
             // A short command reads as one piece: "ls -la" never breaks at its space.
@@ -1151,6 +1158,7 @@ private fun ConversationRow(
                 speakAgent = flags.showAgents,
                 // F-022: a person is asked to allow what they can read: the command takes up to three lines.
                 previewLines = if (permission != null) 3 else 1,
+                timeSpoken = timeSpoken,
             )
         }
         // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action
@@ -1318,6 +1326,16 @@ internal fun agoText(age: RelativeAge): String =
         is RelativeAge.Minutes -> kitRelativeAgeFromMinutes(age.count.toLong())
         is RelativeAge.Hours -> kitRelativeAgeFromMinutes(age.count * 60L)
         is RelativeAge.Days -> kitRelativeAgeFromMinutes(age.count * 1440L)
+    }
+
+/** [agoText] in the short form beside a title (B-558). */
+@Composable
+private fun agoTextShort(age: RelativeAge): String =
+    when (age) {
+        RelativeAge.JustNow -> kitRelativeAgeFromMinutesShort(0L)
+        is RelativeAge.Minutes -> kitRelativeAgeFromMinutesShort(age.count.toLong())
+        is RelativeAge.Hours -> kitRelativeAgeFromMinutesShort(age.count * 60L)
+        is RelativeAge.Days -> kitRelativeAgeFromMinutesShort(age.count * 1440L)
     }
 
 /** P2 proof page for ChatRoute: the box a row grows into (plan 08 §5.4). */

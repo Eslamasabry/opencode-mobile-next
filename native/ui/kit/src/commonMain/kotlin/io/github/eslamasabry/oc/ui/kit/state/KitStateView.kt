@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBottomInset
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitBulletLine
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -151,6 +152,11 @@ private const val CALM_LIFT: Float = .1f // F: lib/ui/kit/kit_state_view.dart:43
  * With [since] the view escalates once at 8 s: the body becomes "Still waiting after 8 s" and the [onSlow] ways out
  * unfold (at most two); the title stays. Working → Finished plays `Done` once (not under motion Off).
  *
+ * With [checks] the state's "What to check" list is the kit's own: each check on its own line, start-aligned in one
+ * column under [checksTitle], read in full to screen readers (the home's opening failure card, B-555). A state that
+ * joins its checks into its [body] keeps the centred text. [tertiaryCentred] sets the quiet actions, where the block
+ * stacks, on the primary's middle instead of the column's start edge.
+ *
  * States: loading, working, empty, error, missing, slow, finished, calm
  * Text: reading
  * Cap: State (440)
@@ -180,6 +186,12 @@ public fun KitStateView(
     size: KitStateSize = KitStateSize.Page,
     details: Redacted? = failure?.details,
     cost: List<String> = emptyList(),
+    /** The state's checks, each on its own start-aligned line under [checksTitle]; empty: the [body] says them. */
+    checks: List<String> = emptyList(),
+    /** The heading over [checks] ("What to check"); null draws the checks alone. */
+    checksTitle: String? = null,
+    /** Where the actions stack, the tertiary actions sit on the primary's middle, not at the column's start edge. */
+    tertiaryCentred: Boolean = false,
 ) {
     kitAssert(onSlow.size <= 2) { "KitStateView.onSlow: at most two ways out" }
     kitAssert(kind != KitStateKind.Missing || StateViewRules.missingIsValid(prerequisite, primary != null)) {
@@ -296,9 +308,13 @@ public fun KitStateView(
                 Spacer(Modifier.height(gap.dp))
                 KitCostNotice(cost)
             }
+            if (checks.isNotEmpty()) {
+                Spacer(Modifier.height((if (page) Space.S4 else Space.S2).dp))
+                Checks(checks, checksTitle, if (page) TypeRole.Body else TypeRole.Secondary)
+            }
             if (p != null || s != null || t.isNotEmpty()) {
                 Spacer(Modifier.height((if (page) Space.S6 else Space.S3).dp))
-                KitActionBlock(primary = p, secondary = s, tertiary = t)
+                KitActionBlock(primary = p, secondary = s, tertiary = t, tertiaryCentred = tertiaryCentred)
             }
             if (slow && onSlow.isNotEmpty()) {
                 Spacer(Modifier.height((if (page) Space.S3 else Space.S2).dp))
@@ -329,6 +345,20 @@ public fun KitStateView(
             Box(Modifier.padding(horizontal = kitPageGutter(), vertical = FlutterKitTokens.STATE_VERTICAL_PADDING.dp)) {
                 column()
             }
+        }
+    }
+}
+
+/** A state's checks: each on its own start-aligned line under its optional [title], a step between them. */
+@Composable
+private fun Checks(checks: List<String>, title: String?, role: TypeRole) {
+    Column(Modifier.fillMaxWidth()) {
+        title?.let {
+            KitText(it, Modifier.padding(bottom = Space.S2.dp), role = role, tone = TextTone.Secondary)
+        }
+        checks.forEachIndexed { i, check ->
+            if (i > 0) Spacer(Modifier.height(Space.S1.dp))
+            KitBulletLine(check)
         }
     }
 }
