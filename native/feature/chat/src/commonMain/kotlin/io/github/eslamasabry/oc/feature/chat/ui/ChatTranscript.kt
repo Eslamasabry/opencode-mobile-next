@@ -600,16 +600,15 @@ internal fun ChatTranscriptList(
         list.lazy.scrollToItem(at)
         androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { list.following = false }
     }
-    // B-CHAT-547 (owner decision O2 = D, 2026-11-24): the running turn's live line is worked out once, here. The LIVE
-    // item reads it, and the docked "Jump to latest" row repeats it while the person reads older rows.
+    // B-CHAT-547 (owner decision O2 = D, 2026-11-24): the running turn's dock status is built without reading the
+    // clock (B-CHAT-340: clock ticks recompose only the row that draws a time, never the list).
     val runTurn = unique.firstOrNull()?.turnId
     val runWork = runTurn?.let { facts.work[it] }
     val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
     val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
     val liveStyled = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
     val liveUi = if (liveRow) live else null
-    val nowMs = facts.clock.read()
-    val line =
+    val dockLine =
         if (liveUi != null && listWords != null && liveStyled)
             liveLineWords(
                 live = liveUi,
@@ -617,18 +616,15 @@ internal fun ChatTranscriptList(
                 notice = facts.live,
                 work = runWork,
                 writing = streaming,
-                // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
-                elapsedMs =
-                    (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                        ?.let { nowMs - it },
+                elapsedMs = null,
             )
         else null
     val dockLive =
-        if (line != null && liveUi != null && listWords != null) {
+        if (dockLine != null && liveUi != null && listWords != null) {
             KitTranscriptDockLive(
                 words = dockStatusWords(liveUi, listWords, facts.live, runWork, streaming),
-                tone = line.tone,
-                spoken = line.spoken,
+                tone = dockLine.tone,
+                spoken = dockLine.spoken,
                 onRail = onRail,
                 key = ListKeys.LIVE,
             )
@@ -688,7 +684,20 @@ internal fun ChatTranscriptList(
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }
+                val nowMs = facts.clock.read()
                 if (liveStyled) {
+                    val startedMs =
+                        facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs }
+                    val line =
+                        liveLineWords(
+                            live = live,
+                            listWords = listWords,
+                            notice = notice,
+                            work = runWork,
+                            writing = streaming,
+                            // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
+                            elapsedMs = startedMs?.let { nowMs - it },
+                        )
                     // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
                     // A retry that keeps failing offers another model besides waiting or Stop.
                     val retryWayOut =

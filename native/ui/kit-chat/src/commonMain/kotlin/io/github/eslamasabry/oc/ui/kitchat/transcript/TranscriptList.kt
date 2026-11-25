@@ -4,14 +4,21 @@ import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import androidx.compose.foundation.lazy.LazyItemScope
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
+import io.github.eslamasabry.oc.ui.kit.live.LiveRender
+import io.github.eslamasabry.oc.ui.kit.live.liveRenderFor
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import kotlinx.coroutines.CoroutineScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.interaction.DragInteraction
@@ -131,6 +138,23 @@ internal constructor(
         if (!leave) lazy.requestScrollToItem(0)
     }
 
+    /** Follows the newest row and brings it into view on [scope], which outlives the docked row. */
+    internal fun jumpToLatest(scope: CoroutineScope, motion: KitMotionLevel) {
+        following = true
+        scope.launch {
+            val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
+            when {
+                motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
+                lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
+                else -> {
+                    // jump close, glide the last stretch (never animate across thousands)
+                    lazy.scrollToItem(2)
+                    lazy.animateScrollToItem(0)
+                }
+            }
+        }
+    }
+
     internal companion object {
         const val AWAY_DP = 480
         const val FOLLOW_SLACK_DP = 48
@@ -237,6 +261,9 @@ public fun KitTranscriptList(
     // row, its clear band), never while composing, so the list is not composed again on each of those frames.
     val insetPadding = remember(contentPadding, chrome) { SumPadding(contentPadding, chrome) }
     val pin = remember(state) { BottomPin(state) }
+    // Owned by the list, not the docked row: tapping the row turns following on and unmounts it on the next frame,
+    // so a scope inside the row would cancel the glide after scrollToItem(2).
+    val scope = rememberCoroutineScope()
     Box(modifier) {
         LazyColumn(
             state = state.lazy,
@@ -258,15 +285,11 @@ public fun KitTranscriptList(
                     .testTag("transcript-list"),
             content = content,
         )
-        // Owner decision O2 = D (2026-11-24): the docked "Jump to latest" row is in the tree exactly while the person
-        // does not follow the newest end (not merely hidden), so it appears and leaves in the same frame as
-        // [TranscriptListState.following] changes, with no fade, slide or scale (a cross-fade would show two live
-        // lines).
-        if (!state.following) {
-            // Read at layout, as the list's own content padding is, never while composing.
-            KitJumpDock(state, jumpLabel, motion, dockLive) {
-                chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()
-            }
+        // Owner decision O2 = D (2026-11-24): KitJumpDock reads [TranscriptListState.following] in its own scope and
+        // returns immediately while following, so the row is in the tree exactly while !following and toggling it
+        // never recomposes the list.
+        KitJumpDock(state, jumpLabel, { state.jumpToLatest(scope, motion) }, dockLive) {
+            chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()
         }
     }
 }
@@ -354,28 +377,12 @@ private class DockStatus(
 private fun BoxScope.KitJumpDock(
     state: TranscriptListState,
     label: String,
-    motion: KitMotionLevel,
+    onJump: () -> Unit,
     dockLive: KitTranscriptDockLive?,
     lift: () -> Dp,
 ) {
-    val scope = rememberCoroutineScope()
+    if (state.following) return
     val minTarget = LocalKitTokens.current.minTarget.dp
-    val jump: () -> Unit = {
-        state.following = true
-        scope.launch {
-            val lazy = state.lazy
-            val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
-            when {
-                motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
-                lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
-                else -> {
-                    // jump close, glide the last stretch (never animate across thousands)
-                    lazy.scrollToItem(2)
-                    lazy.animateScrollToItem(0)
-                }
-            }
-        }
-    }
     // The status in its parts, made anew only when the words or their rail are new.
     val lead = if (dockLive?.onRail == true) railMeasures().column else FlutterKitTokens.LIVE_DOT.dp + Space.S2.dp
     val status = remember(dockLive, lead) {
@@ -401,7 +408,7 @@ private fun BoxScope.KitJumpDock(
     }
     Box(Modifier.align(Alignment.BottomCenter).liftAtLayout(lift).fillMaxWidth()) {
         KitTappable(
-            onClick = jump,
+            onClick = onJump,
             modifier =
                 Modifier.fillMaxWidth()
                     .height(minTarget)
@@ -485,10 +492,10 @@ internal const val DOCK_CLEAR_FADE_DP = 16
 
 /**
  * The clear band under the docked "Jump to latest" row (owner decision O2 = D): while the person does not follow the
- * newest end, the list's content is cleared from one target above the place the newest line rests on down to the list's
- * bottom edge, and fades out over [DOCK_CLEAR_FADE_DP] above that, so no line of text lies under the row. The list is
- * drawn in its own offscreen layer for it, only while the band shows. What it reads, it reads while drawing: no layout
- * changes, so nothing moves.
+ * newest end, the list's content fades out over [DOCK_CLEAR_FADE_DP] above the row and is cleared from its top down to
+ * the list's bottom, so no line of text lies under the row. Over an opaque flat ground (the default look, matching
+ * `kitScrollEdges`), the band paints that ground directly (`SrcOver`) with no offscreen layer; over a live background,
+ * it clears the list's own pixels (`DstOut`) in an offscreen layer only while shown. Draw phase only: nothing moves.
  */
 @Composable
 private fun Modifier.clearBandForDock(
@@ -497,35 +504,72 @@ private fun Modifier.clearBandForDock(
     chrome: PaddingValues,
 ): Modifier {
     val target = LocalKitTokens.current.minTarget.dp
-    return graphicsLayer {
-        // Offscreen only while the band shows: the clearing works on the list's own pixels, alone.
-        compositingStrategy = if (state.following) CompositingStrategy.Auto else CompositingStrategy.Offscreen
-    }.drawWithContent {
-        drawContent()
-        if (state.following) return@drawWithContent
-        // The two paddings the docked row stands on, in whole pixels.
-        val rest = (chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()).roundToPx()
-        val bandTop = (size.height.roundToInt() - rest - target.roundToPx()).coerceAtLeast(0)
-        val from = (bandTop - DOCK_CLEAR_FADE_DP.dp.roundToPx()).coerceAtLeast(0)
-        if (bandTop > from) {
-            drawRect(
-                Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    1f to Color.Black,
-                    startY = from.toFloat(),
-                    endY = bandTop.toFloat(),
-                ),
-                topLeft = Offset(0f, from.toFloat()),
-                size = Size(size.width, (bandTop - from).toFloat()),
-                blendMode = BlendMode.DstOut,
-            )
+    val appearance = LocalKitAppearance.current
+    val style = LocalKitStyle.current
+    val ground = LocalKitColors.current.ground
+    val liveOn =
+        appearance.liveBackground && !appearance.saver &&
+            style.spec.tokens.live.cap(appearance.liveStrength) > 0f
+    val flat =
+        liveRenderFor(appearance.liveStyle, liveOn, shadersSupported = false) == LiveRender.Flat &&
+            ground.alpha >= 1f
+    val ink = if (flat) ground else Color.Black
+    val mode = if (flat) BlendMode.SrcOver else BlendMode.DstOut
+    val draw =
+        Modifier.drawWithCache {
+            val brush = DockFadeBrush()
+            onDrawWithContent {
+                if (flat) clipRect { this@onDrawWithContent.drawContent() } else drawContent()
+                if (state.following) return@onDrawWithContent
+                // The two paddings the docked row stands on, in whole pixels.
+                val rest = (chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()).roundToPx()
+                val bandTop = (size.height.roundToInt() - rest - target.roundToPx()).coerceAtLeast(0)
+                val from = (bandTop - DOCK_CLEAR_FADE_DP.dp.roundToPx()).coerceAtLeast(0)
+                if (bandTop > from) {
+                    drawRect(
+                        brush.of(from.toFloat(), bandTop.toFloat(), ink),
+                        topLeft = Offset(0f, from.toFloat()),
+                        size = Size(size.width, (bandTop - from).toFloat()),
+                        blendMode = mode,
+                    )
+                }
+                if (size.height > bandTop) {
+                    drawRect(
+                        ink,
+                        topLeft = Offset(0f, bandTop.toFloat()),
+                        size = Size(size.width, (size.height - bandTop).toFloat()),
+                        blendMode = mode,
+                    )
+                }
+            }
         }
-        drawRect(
-            Color.Black,
-            topLeft = Offset(0f, bandTop.toFloat()),
-            size = Size(size.width, (size.height - bandTop).toFloat()),
-            blendMode = BlendMode.DstOut,
-        )
+    return if (flat) this.then(draw)
+    else graphicsLayer {
+        // Offscreen only while the band shows over a live background: the clearing works on the list's own pixels.
+        compositingStrategy = if (state.following) CompositingStrategy.Auto else CompositingStrategy.Offscreen
+    }.then(draw)
+}
+
+/** The dock fade's vertical gradient, kept across frames until its span or colour changes. */
+private class DockFadeBrush {
+    private var start = Float.NaN
+    private var end = Float.NaN
+    private var ink = Color.Unspecified
+    private var brush: Brush? = null
+
+    fun of(startY: Float, endY: Float, color: Color): Brush {
+        val kept = brush
+        val sameSpan = start == startY && end == endY
+        if (kept != null && sameSpan && ink == color) return kept
+        start = startY
+        end = endY
+        ink = color
+        return Brush.verticalGradient(
+            0f to color.copy(alpha = 0f),
+            1f to color,
+            startY = startY,
+            endY = endY,
+        ).also { brush = it }
     }
 }
 
