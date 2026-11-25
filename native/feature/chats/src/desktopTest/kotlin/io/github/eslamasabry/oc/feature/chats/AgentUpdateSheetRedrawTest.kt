@@ -29,6 +29,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
@@ -340,6 +341,47 @@ class AgentUpdateSheetRedrawTest {
             onNodeWithText("Update 1 agent").assertExists()
             onNodeWithText("Wi-Fi only").assertExists()
             onNodeWithText("Agent helper", substring = true).assertExists()
+        }
+
+    @Test
+    fun `B-UPD-020 the total keeps its amount while it folds away`() =
+        runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
+            ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
+            val fold = walkSwitch("Qwen Code")
+            val kept = fold.before.filter { it.contains("About ") }
+            assertEquals(1, kept.size, "expected one total before the tap: ${fold.before}")
+            fold.frames.forEachIndexed { frame, words ->
+                words.filter { it.contains("About ") }.forEach { amount ->
+                    assertEquals(kept.single(), amount, "the total's amount changed while it folded (frame $frame)")
+                }
+            }
+        }
+
+    @Test
+    fun `B-UPD-021 a needed part that leaves while another stays folds away`() =
+        runSheet(alwaysNeededOffer(), motion = MotionLevel.Full) {
+            ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
+            val fold = walkSwitch("Qwen Code")
+            val helperFrames = fold.frames.count { words -> words.any { it.contains("Agent helper") } }
+            assertTrue(helperFrames >= 2, "the agent helper left in $helperFrames frame(s) after the tap")
+            onNodeWithText("Node.js", substring = true).assertExists()
+        }
+
+    /** [noLockedFiveOffer] with a second needed part that is always needed, right after the agent helper. */
+    private fun alwaysNeededOffer(): AgentUpdateOffer =
+        noLockedFiveOffer().let { offer ->
+            val helper = offer.items.first()
+            val node =
+                helper.copy(
+                    id = AgentId("node"),
+                    name = "Node.js",
+                    fromVersion = "22.11.0",
+                    toVersion = "22.12.0",
+                    downloadBytes = 40_000_000L,
+                    installedBytes = 40_000_000L,
+                    neededWhen = AgentNeedRule.Always,
+                )
+            offer.copy(items = listOf(helper, node) + offer.items.drop(1))
         }
 
     private fun KitUiTest.switchOff(name: String) {
