@@ -150,8 +150,14 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptDockLive
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatUiRetryingSoon
 import io.github.eslamasabry.oc.ui.words.res.revertReview
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWaitingForYou
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWriting
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatLiveHideSteps
 import io.github.eslamasabry.oc.ui.words.res.chatLiveShowSteps
@@ -618,7 +624,15 @@ internal fun ChatTranscriptList(
             )
         else null
     val dockLive =
-        line?.let { KitTranscriptDockLive(words = it.words, tone = it.tone, spoken = it.spoken, onRail = onRail) }
+        if (line != null && liveUi != null && listWords != null) {
+            KitTranscriptDockLive(
+                words = dockStatusWords(liveUi, listWords, facts.live, runWork, streaming),
+                tone = line.tone,
+                spoken = line.spoken,
+                onRail = onRail,
+                key = ListKeys.LIVE,
+            )
+        } else null
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -2051,3 +2065,39 @@ private fun AnchoredStretches(
 private fun RowTime(createdMs: Long, clock: FactsClock) {
     KitMessageTimestamp(createdMs, clock.read())
 }
+
+/**
+ * The one short status word the docked "Jump to latest" row carries for a running turn (the lead's rule of
+ * 2026-11-25): the live line's own short word for the state, with no elapsed time, countdown or tool name, so it
+ * stays one whole line beside the label or gives way to the dot alone.
+ */
+@Composable
+private fun dockStatusWords(
+    live: LiveTurnUi,
+    listWords: ChatListWords,
+    notice: LiveNoticeUi?,
+    work: TurnWork?,
+    writing: Boolean,
+): String {
+    val slow =
+        notice is LiveNoticeUi.Stall &&
+            notice.notice == io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice.ModelSlow
+    return when {
+        live.stopping -> listWords.stopping
+        live.stoppingAfterStep -> listWords.stoppingAfterStep
+        notice is LiveNoticeUi.Retry -> stringResource(Res.string.chatUiRetryingSoon, "")
+        notice is LiveNoticeUi.ToolWait || notice is LiveNoticeUi.StuckCommand ->
+            stringResource(Res.string.kitTurnLiveWaitingForYou)
+        notice != null && !slow -> liveNoticeWords(notice)
+        else -> stringResource(Res.string.kitTurnLiveNow, dockWorkingWord(slow, work, writing))
+    }
+}
+
+@Composable
+private fun dockWorkingWord(slow: Boolean, work: TurnWork?, writing: Boolean): String =
+    when {
+        slow -> stringResource(Res.string.kitTurnLiveStillThinking)
+        work?.now != null || work?.steps?.isNotEmpty() == true -> stringResource(Res.string.kitTurnLiveWorking)
+        writing -> stringResource(Res.string.kitTurnLiveWriting)
+        else -> stringResource(Res.string.kitTurnLiveThinking)
+    }

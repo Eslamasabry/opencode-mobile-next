@@ -11,14 +11,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +40,9 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.layout.SubcomposeMeasureScope
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenListEdges
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -53,9 +50,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -67,6 +66,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.tool.railMeasures
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import kotlin.math.roundToInt
@@ -145,16 +145,21 @@ public fun rememberTranscriptListState(): TranscriptListState {
 }
 
 /**
- * The running turn's live line as the docked "Jump to latest" row repeats it at its start (owner decision O2 = D,
- * 2026-11-24): the same words, tone, spoken words and rail as the list's own live line, so the row's line lies where
- * the list's lies at rest.
+ * The running turn's status as the docked "Jump to latest" row carries it at its start (owner decision O2 = D,
+ * 2026-11-24; the lead's rules of 2026-11-25). [words] is the one short status word the list's own live line has for
+ * the turn's state, with its tone, its spoken words and its rail: the row draws it whole on one line beside the label
+ * or, when it does not fit, the dot alone, and it draws no status while the list's own line is on screen ([key]).
  */
 public data class KitTranscriptDockLive(
     public val words: String,
     public val tone: KitTurnLiveTone,
     public val spoken: String,
     public val onRail: Boolean,
-    /** The key of the list item that draws the live line this status repeats; null: none to look for. */
+    /**
+     * The key of the list item that draws the live line this status repeats. While any part of that item rises above
+     * the row's clear band (a taller item sits under it, or it is taller than the band) the list's own line is on
+     * screen and the row shows the label alone: one live line at a time. Null: no item to look for.
+     */
     public val key: Any? = null,
 )
 
@@ -177,8 +182,8 @@ public fun KitTranscriptList(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(vertical = Space.S4.dp),
     /**
-     * The running turn's live line, repeated at the docked "Jump to latest" row's start while the person reads
-     * older rows ([KitTranscriptDockLive]); null: the row shows its words alone.
+     * The running turn's status, carried at the docked "Jump to latest" row's start while the person reads older rows
+     * and the list's own live line is not on screen ([KitTranscriptDockLive]); null: the row shows its label alone.
      */
     dockLive: KitTranscriptDockLive? = null,
     /**
@@ -315,11 +320,31 @@ private fun Modifier.keepsBottom(pin: BottomPin, bottomInsetDp: () -> Float): Mo
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     })
 
+/** Test handle of the docked row's status while it carries its word. */
+internal const val DOCK_LIVE_TAG: String = "transcript-dock-live"
+
+/** Test handle of the docked row's status when its word gave way and the dot alone stays. */
+internal const val DOCK_DOT_TAG: String = "transcript-dock-dot"
+
+/** The docked row's parts, each measured in turn while the row is laid out. */
+private enum class DockSlot { WORD, DOT, LEAD, LABEL, ARROW }
+
+/**
+ * The row's status in its parts: the word as text (to measure it), the live line that carries it, and the dot alone.
+ */
+private class DockStatus(
+    val wordText: @Composable () -> Unit,
+    val line: @Composable () -> Unit,
+    val dot: @Composable () -> Unit,
+    /** What the live line puts before its words, its lead, its dot and their gap. */
+    val lead: Dp,
+)
+
 /**
  * The docked "Jump to latest" row (owner decision O2 = D, 2026-11-24; O4 = the first pixel): the whole content width
  * and one target tall, with no fill, border, plate or glass, its bottom where the newest line rests, so it stands in
- * the live line's place. At its start the running turn's live words ([dockLive]), at its end the label and a down
- * arrow. One tappable runs the jump. Plain tap: no haptic. The list clears what lies under it ([clearBandForDock]).
+ * the live line's place. At its start the running turn's status ([dockLive]), at its end the label and a down arrow.
+ * One tappable runs the jump. Plain tap: no haptic. The list clears what lies under it ([clearBandForDock]).
  *
  * @param lift how far the row's bottom stands above the list's bottom (the chrome's room and the list's own padding),
  * read at layout
@@ -350,6 +375,29 @@ private fun BoxScope.KitJumpDock(
             }
         }
     }
+    // The status in its parts, made anew only when the words or their rail are new.
+    val lead = if (dockLive?.onRail == true) railMeasures().column else FlutterKitTokens.LIVE_DOT.dp + Space.S2.dp
+    val status = remember(dockLive, lead) {
+        dockLive?.let { live ->
+            val slot: (String, String) -> (@Composable () -> Unit) = { text, tag ->
+                {
+                    KitTurnLiveLine(
+                        text,
+                        Modifier.testTag(tag),
+                        tone = live.tone,
+                        spoken = live.spoken,
+                        onRail = live.onRail,
+                    )
+                }
+            }
+            DockStatus(
+                wordText = { KitText(live.words, role = TypeRole.Secondary, tabular = true) },
+                line = slot(live.words, DOCK_LIVE_TAG),
+                dot = slot("", DOCK_DOT_TAG),
+                lead = lead,
+            )
+        }
+    }
     Box(Modifier.align(Alignment.BottomCenter).liftAtLayout(lift).fillMaxWidth()) {
         KitTappable(
             onClick = jump,
@@ -361,34 +409,68 @@ private fun BoxScope.KitJumpDock(
             onClickLabel = label,
             shape = KitShapeId.Button,
         ) {
-            // On the row's bottom line: where the list's own live line rests.
-            Row(
-                Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = Space.S4.dp),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                DockContent(label, dockLive)
-            }
+            DockInside(label, dockLive, status, state, lift)
         }
     }
 }
 
-/** The row's inside: the live words first (or the room they would take), then the label and the arrow. */
+/**
+ * The row's inside, laid out where it is measured: the label and the arrow at the end and the status at the start, each
+ * at its natural width (the label is never narrowed), all on the row's bottom line. Decided there, with this frame's
+ * measurements and the list's own layout of the same frame, so the row is right from its first frame.
+ */
 @Composable
-private fun RowScope.DockContent(label: String, live: KitTranscriptDockLive?) {
-    if (live != null) {
-        KitTurnLiveLine(
-            live.words,
-            Modifier.weight(1f).testTag("transcript-dock-live"),
-            tone = live.tone,
-            spoken = live.spoken,
-            onRail = live.onRail,
-        )
-    } else {
-        Spacer(Modifier.weight(1f))
+private fun DockInside(
+    label: String,
+    live: KitTranscriptDockLive?,
+    status: DockStatus?,
+    state: TranscriptListState,
+    lift: () -> Dp,
+) {
+    val labelSlot: @Composable () -> Unit = remember(label) {
+        { KitText(label, role = TypeRole.Secondary, tone = TextTone.Primary) }
     }
-    KitText(label, role = TypeRole.Secondary, tone = TextTone.Primary)
-    Spacer(Modifier.width(Space.S2.dp))
-    KitIcon(KitIcons.down, size = KitIconSize.Small, tone = TextTone.Primary)
+    val arrow: @Composable () -> Unit = { KitIcon(KitIcons.down, size = KitIconSize.Small, tone = TextTone.Primary) }
+    SubcomposeLayout(Modifier.fillMaxSize()) { constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val inset = Space.S4.dp.roundToPx()
+        val gap = Space.S2.dp.roundToPx()
+        val text = subcompose(DockSlot.LABEL, labelSlot).single().measure(Constraints())
+        val icon = subcompose(DockSlot.ARROW, arrow).single().measure(Constraints())
+        val free = width - 2 * inset - text.width - gap - icon.width
+        // Only a row with a status to carry reads the list's layout: an idle row costs nothing while the list scrolls.
+        // A reverse list's offsets start at beforeContentPadding above the list's bottom edge; the clear band ends at
+        // lift + height above that edge, so the list's own line is on screen whenever any part of it rises above that.
+        val own =
+            if (status == null || live?.key == null) false
+            else {
+                val info = state.lazy.layoutInfo
+                val item = info.visibleItemsInfo.firstOrNull { it.key == live.key }
+                val fromBottom = if (item == null) 0 else info.beforeContentPadding + item.offset
+                item != null && fromBottom + item.size > lift().roundToPx() + height &&
+                    fromBottom < info.viewportSize.height
+            }
+        val carried = if (status != null && !own) dockStatus(status, free, gap) else null
+        layout(width, height) {
+            carried?.placeRelative(inset, height - carried.height)
+            icon.placeRelative(width - inset - icon.width, height - icon.height)
+            text.placeRelative(width - inset - icon.width - gap - text.width, height - text.height)
+        }
+    }
+}
+
+/**
+ * The status the row carries at its start: the word, whole on one line at its natural width, when it lies beside the
+ * label with [gap] to spare ([free]: the px left of the label and the arrow); else the dot alone. The word is measured
+ * as text alone, and the line itself is composed only to be shown: a word that gave way leaves nothing running unseen.
+ */
+private fun SubcomposeMeasureScope.dockStatus(status: DockStatus, free: Int, gap: Int): Placeable {
+    val word = subcompose(DockSlot.LEAD, status.wordText).single().measure(Constraints()).width
+    val whole = status.lead.roundToPx() + word
+    val shown = if (whole + gap <= free) DockSlot.WORD else DockSlot.DOT
+    val content = if (shown == DockSlot.WORD) status.line else status.dot
+    return subcompose(shown, content).single().measure(Constraints())
 }
 
 /** The soft edge above the docked row's clear band: the list's content fades out over this, then is gone. */
