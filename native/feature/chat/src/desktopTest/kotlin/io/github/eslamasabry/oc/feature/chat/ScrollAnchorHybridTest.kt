@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import io.github.eslamasabry.oc.ui.gate.flicker.FlickerFailure
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
 import kotlin.test.Test
 
@@ -57,5 +58,15 @@ class ScrollAnchorHybridTest {
     @Test
     fun `STEPS-SCROLL-019 hybrid follows the newest line after opening and closing a group`() {
         ScrollAnchorWalks.walk019FollowsAfterGroupToggle(TranscriptAnchor.Hybrid)
+    }
+
+    @Test
+    fun `STEPS-SCROLL-021 today chat edges render has no first-frame flicker`() {
+        try {
+            ChatEdgesBuildRenders().`chat edges build render default dark`()
+            ChatEdgesBuildRenders().`chat edges build render default light`()
+        } catch (e: FlickerFailure) {
+            throw AssertionError(e.findings.joinToString(" | ") { "${it.rule} ${it.detail}" }, e)
+        }
     }
 }
