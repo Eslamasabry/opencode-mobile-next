@@ -14,4 +14,5 @@
     <string name="stateDemoModel">Mô hình mẫu</string>
     <string name="stateDemoReset">Đặt lại bản demo</string>
     <string name="stateDemoLeave">Thoát bản demo</string>
+    <string name="stateDemoOwn">Bản demo này không thể trả lời câu hỏi của riêng bạn. Bản demo chỉ chạy một ví dụ mẫu: hãy gửi “%1$s” để xem. Để hỏi câu hỏi của riêng bạn, hãy thoát bản demo và thiết lập để dùng thật.</string>
 </resources>

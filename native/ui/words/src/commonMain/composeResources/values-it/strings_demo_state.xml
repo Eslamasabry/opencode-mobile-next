@@ -14,4 +14,5 @@
     <string name="stateDemoModel">Modello di esempio</string>
     <string name="stateDemoReset">Ripristina la demo</string>
     <string name="stateDemoLeave">Esci dalla demo</string>
+    <string name="stateDemoOwn">Questa demo non può rispondere alle tue domande. Mostra un solo esempio: invia “%1$s” per vederlo. Per fare le tue domande, esci dalla demo e configura l’app per l’uso reale.</string>
 </resources>

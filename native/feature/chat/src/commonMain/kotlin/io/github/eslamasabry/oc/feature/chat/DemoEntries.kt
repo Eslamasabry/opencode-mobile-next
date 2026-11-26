@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.words.res.stateDemoDenied
 import io.github.eslamasabry.oc.ui.words.res.stateDemoLeave
 import io.github.eslamasabry.oc.ui.words.res.stateDemoModel
 import io.github.eslamasabry.oc.ui.words.res.stateDemoMore
+import io.github.eslamasabry.oc.ui.words.res.stateDemoOwn
 import io.github.eslamasabry.oc.ui.words.res.stateDemoPrompt
 import io.github.eslamasabry.oc.ui.words.res.stateDemoReply
 import io.github.eslamasabry.oc.ui.words.res.stateDemoReset
@@ -48,10 +49,11 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
             val state by vm.state.collectAsStateWithLifecycle()
             val before = stringResource(Res.string.stateDemoBefore)
             val after = stringResource(Res.string.stateDemoAfter)
+            val prompt = stringResource(Res.string.stateDemoPrompt)
             val words =
                 DemoWords(
                     stringResource(Res.string.stateDemoTitle),
-                    stringResource(Res.string.stateDemoPrompt),
+                    prompt,
                     stringResource(Res.string.stateDemoReply, before, after),
                     stringResource(Res.string.stateDemoAllowed, after),
                     stringResource(Res.string.stateDemoDenied),
@@ -59,6 +61,7 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
                     after = after,
                     more = stringResource(Res.string.stateDemoMore),
                     model = stringResource(Res.string.stateDemoModel),
+                    own = stringResource(Res.string.stateDemoOwn, prompt),
                 )
             LaunchedEffect(words) { vm.configure(words) }
             val composer = remember(vm) { DemoComposerHost(vm) }
