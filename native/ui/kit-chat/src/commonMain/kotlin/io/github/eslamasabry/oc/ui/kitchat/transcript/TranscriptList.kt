@@ -195,18 +195,18 @@ internal constructor(
     }
 
     private suspend fun drainFollowScroll(motion: () -> KitMotionLevel) {
-        while (following) {
+        while (following && (lazy.canScrollBackward || followDirty)) {
             if (!lazy.canScrollBackward) {
-                if (!followDirty) break
                 followDirty = false
                 withFrameNanos { }
-                if (!following || !lazy.canScrollBackward) continue
             }
-            followDirty = false
-            if (motion() == KitMotionLevel.Off) {
-                lazy.scrollToItem(0)
-            } else {
-                lazy.animateScrollToItem(0)
+            if (following && lazy.canScrollBackward) {
+                followDirty = false
+                if (motion() == KitMotionLevel.Off) {
+                    lazy.scrollToItem(0)
+                } else {
+                    lazy.animateScrollToItem(0)
+                }
             }
         }
     }
