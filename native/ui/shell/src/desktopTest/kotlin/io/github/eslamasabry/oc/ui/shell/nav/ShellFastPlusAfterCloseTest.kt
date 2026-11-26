@@ -79,7 +79,7 @@ class ShellFastPlusAfterCloseTest {
         }
     }
 
-    private fun after(delayMs: Long) =
+    private fun after(delayMs: Long, expectReopen: Boolean = true) =
         runDesktopComposeUiTest(360, 780) {
             rowTaps.clear()
             leavingTaps.clear()
@@ -138,15 +138,21 @@ class ShellFastPlusAfterCloseTest {
                 leavingTaps,
                 "the leaving New page took the tap meant for +, $delayMs ms after Close",
             )
-            assertEquals(2, h.navigator.snapshot().size, "back stack did not reopen New, $delayMs ms after Close")
-            assertTrue(
-                h.navigator.snapshot().last() is ChatsRoute.New,
-                "top route is not New, $delayMs ms after Close",
-            )
+            if (expectReopen) {
+                assertEquals(2, h.navigator.snapshot().size, "back stack did not reopen New, $delayMs ms after Close")
+                assertTrue(
+                    h.navigator.snapshot().last() is ChatsRoute.New,
+                    "top route is not New, $delayMs ms after Close",
+                )
+            }
         }
 
     @Test
-    fun `B-379 a tap on plus 16 ms after closing New conversation opens it again`() = after(16)
+    fun `B-379 a tap on plus 16 ms after closing New conversation is not taken by the leaving page`() =
+        after(16, expectReopen = false)
+
+    @Test
+    fun `B-379 a tap on plus 34 ms after closing New conversation opens it again`() = after(34)
 
     @Test
     fun `B-379 a tap on plus 50 ms after closing New conversation opens it again`() = after(50)
