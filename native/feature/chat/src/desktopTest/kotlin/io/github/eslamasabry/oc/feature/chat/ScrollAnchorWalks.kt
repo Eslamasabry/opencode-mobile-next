@@ -513,6 +513,125 @@ private const val A11Y_START_STEPS = 10
 private const val A11Y_NEXT_STEPS = 11
 private const val A11Y_STEP_FRAMES = 60
 private const val A11Y_SCROLL_UP_PX = 480f
+private const val GROUP_TAP_LEFT_INSET_PX = 24f
+private const val GROUP_TAP_FRAMES = 40
+private const val GROUP_SETTLE_MS = 900L
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.findNewestGroupTag(): String {
+    val summary = onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).fetchSemanticsNodes()
+    if (summary.isNotEmpty()) return "chat-work-summary"
+    val fold = onAllNodesWithTag(STEP_FOLD_ROW_TAG, useUnmergedTree = true).fetchSemanticsNodes()
+    if (fold.isNotEmpty()) return STEP_FOLD_ROW_TAG
+    throw AssertionError("neither chat-work-summary nor $STEP_FOLD_ROW_TAG is on screen")
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.tapNewestGroupOutsideControl(
+    label: String,
+    tag: String,
+    tapNum: Int,
+    frame: Int,
+    probe: ProbeLog,
+) {
+    val rowBounds = onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+    val tapX = rowBounds.left + GROUP_TAP_LEFT_INSET_PX
+    val tapY = (rowBounds.top + rowBounds.bottom) / 2f
+    val jumps = onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes()
+    for (j in jumps) {
+        val jb = j.boundsInRoot
+        val inside = tapX in jb.left..jb.right && tapY in jb.top..jb.bottom
+        assertTrue(
+            !inside,
+            "$label tap #$tapNum ($tapX,$tapY) inside jump-to-latest $jb (row $rowBounds): " +
+                "max=0.0 frame=$frame node=tap-overlap${probe.tail()}",
+        )
+    }
+    onRoot().performTouchInput {
+        down(Offset(tapX, tapY))
+        up()
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.assertTapNewestGroupKeepsFollowing(
+    label: String,
+    tag: String,
+    baseline: Map<Int, TrackedNode>,
+    probe: ProbeLog,
+) {
+    var worst = Drift(0f, 0, "none")
+    var frame = 0
+    var shownControlFrame = -1
+    var lostFollowFrame = -1
+    fun advanceCheck() {
+        repeat(GROUP_TAP_FRAMES) {
+            frame++
+            mainClock.advanceTimeByFrame()
+            worst = checkFrame(baseline, frame, worst)
+            if (jumpControlShown() && shownControlFrame < 0) shownControlFrame = frame
+            if (probe.latest()?.contains("following=true") != true && lostFollowFrame < 0) lostFollowFrame = frame
+        }
+    }
+    tapNewestGroupOutsideControl(label, tag, tapNum = 1, frame = frame, probe = probe)
+    advanceCheck()
+    assertTrue(
+        shownControlFrame < 0,
+        "$label jump-to-latest mounted while opening newest group: " +
+            "max=0.0 frame=$shownControlFrame node=jump-to-latest${probe.tail()}",
+    )
+    assertTrue(
+        lostFollowFrame < 0,
+        "$label following turned false while opening newest group: " +
+            "max=0.0 frame=$lostFollowFrame node=following${probe.tail()}",
+    )
+    tapNewestGroupOutsideControl(label, tag, tapNum = 2, frame = frame, probe = probe)
+    advanceCheck()
+    assertTrue(
+        shownControlFrame < 0,
+        "$label jump-to-latest mounted while closing newest group: " +
+            "max=0.0 frame=$shownControlFrame node=jump-to-latest${probe.tail()}",
+    )
+    assertTrue(
+        lostFollowFrame < 0,
+        "$label following turned false while closing newest group: " +
+            "max=0.0 frame=$lostFollowFrame node=following${probe.tail()}",
+    )
+    assertNoDrift(worst, "$label tap group", probe)
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun runOpenNewestGroupKeepsFollowing(anchor: TranscriptAnchor) {
+    withFlickerReport("018") {
+        kitUiTest(A11Y_PHONE_W, A11Y_PHONE_H, options = KitUiOptions(mode = FlickerMode.Report)) {
+            ScrollPlaceStore.clear()
+            val probe = ProbeLog()
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            mainClock.autoAdvance = false
+            setContent {
+                ScrollWalkRoot(anchor, probe = probe.sink) {
+                    ChatScreen(
+                        ScrollWalkScene.state(A11Y_START_STEPS, ended = true),
+                        actions,
+                        ScrollWalkScene.composer,
+                        facts = ScrollWalkScene.facts(A11Y_START_STEPS, ended = true),
+                    )
+                }
+            }
+            mainClock.advanceTimeBy(GROUP_SETTLE_MS)
+            assertTrue(
+                probe.latest()?.contains("following=true") == true,
+                "018 expected following=true before tap${probe.tail()}",
+            )
+            assertTrue(!jumpControlShown(), "018 expected jump-to-latest hidden before tap${probe.tail()}")
+            val tag = findNewestGroupTag()
+            val baseline = visibleNodes()
+            assertTrue(baseline.isNotEmpty(), "018 visible set must not be empty before tap${probe.tail()}")
+            assertTapNewestGroupKeepsFollowing("018", tag, baseline, probe)
+            probe.printFlips("018")
+        }
+    }
+}
 
 @OptIn(ExperimentalTestApi::class)
 internal object ScrollAnchorWalks {
@@ -527,7 +646,7 @@ internal object ScrollAnchorWalks {
     private const val PHONE_W = 360
     private const val PHONE_H = 800
     private const val WIDE_W = 840
-    private const val TAP_LEFT_INSET_PX = 24f
+    private const val SMALL_LEAVE_DRAG_DP = 40f
     private const val A11Y_UP_PX = 480f
     private const val A11Y_DOWN_PX = 2400f
     private const val A11Y_INDEX = 6
@@ -642,34 +761,6 @@ internal object ScrollAnchorWalks {
                 "006 blank past newest during drag: max=${"%.1f".format(blankPast)} " +
                     "frame=$worstFrame node=chat-work-line${probe.tail()}",
             )
-        }
-    }
-
-    private fun ComposeUiTest.findGroupTag(): String {
-        val summary = onAllNodesWithTag("chat-work-summary", useUnmergedTree = true).fetchSemanticsNodes()
-        if (summary.isNotEmpty()) return "chat-work-summary"
-        val fold = onAllNodesWithTag(STEP_FOLD_ROW_TAG, useUnmergedTree = true).fetchSemanticsNodes()
-        if (fold.isNotEmpty()) return STEP_FOLD_ROW_TAG
-        throw AssertionError("neither chat-work-summary nor $STEP_FOLD_ROW_TAG is on screen")
-    }
-
-    private fun ComposeUiTest.tapGroupOutsideControl(tag: String, tapNum: Int, frame: Int, probe: ProbeLog) {
-        val rowBounds = onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        val tapX = rowBounds.left + TAP_LEFT_INSET_PX
-        val tapY = (rowBounds.top + rowBounds.bottom) / 2f
-        val jumps = onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes()
-        for (j in jumps) {
-            val jb = j.boundsInRoot
-            val inside = tapX in jb.left..jb.right && tapY in jb.top..jb.bottom
-            assertTrue(
-                !inside,
-                "004 tap #$tapNum ($tapX,$tapY) inside jump-to-latest $jb (row $rowBounds): " +
-                    "max=0.0 frame=$frame node=tap-overlap${probe.tail()}",
-            )
-        }
-        onRoot().performTouchInput {
-            down(Offset(tapX, tapY))
-            up()
         }
     }
 
@@ -874,32 +965,11 @@ internal object ScrollAnchorWalks {
                     }
                 }
                 mainClock.advanceTimeBy(SETTLE_MS)
-                val tag = findGroupTag()
+                val tag = findNewestGroupTag()
                 val baseBottom = boundsOfTag("chat-work-line").bottom
                 val baseline = visibleNodes()
                 assertTrue(baseline.isNotEmpty(), "visible set must not be empty before tap${probe.tail()}")
-                var worst = Drift(0f, 0, "none")
-                var frame = 0
-                var missingControlFrame = -1
-                tapGroupOutsideControl(tag, tapNum = 1, frame = frame, probe = probe)
-                repeat(END_FRAMES) {
-                    frame++
-                    mainClock.advanceTimeByFrame()
-                    worst = checkFrame(baseline, frame, worst)
-                    if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
-                }
-                tapGroupOutsideControl(tag, tapNum = 2, frame = frame, probe = probe)
-                repeat(END_FRAMES) {
-                    frame++
-                    mainClock.advanceTimeByFrame()
-                    worst = checkFrame(baseline, frame, worst)
-                    if (!jumpControlShown() && missingControlFrame < 0) missingControlFrame = frame
-                }
-                assertNoDrift(worst, "004 tap group (${width}x$height)", probe)
-                assertTrue(
-                    missingControlFrame < 0,
-                    "004 jump-to-latest hidden: max=0.0 frame=$missingControlFrame node=jump-to-latest${probe.tail()}",
-                )
+                assertTapNewestGroupKeepsFollowing("004 (${width}x$height)", tag, baseline, probe)
                 verifyJumpControlGlide(label, baseBottom, probe)
                 probe.printFlips(label)
             }
@@ -991,9 +1061,8 @@ internal object ScrollAnchorWalks {
                     }
                 }
                 mainClock.advanceTimeBy(SETTLE_MS)
-                val tag = findGroupTag()
                 val baseBottom = boundsOfTag("chat-work-line").bottom
-                tapGroupOutsideControl(tag, tapNum = 1, frame = 0, probe = probe)
+                dragUp(SMALL_LEAVE_DRAG_DP)
                 var missingFrame = -1
                 repeat(GLIDE_FRAMES) { i ->
                     mainClock.advanceTimeByFrame()
@@ -1131,5 +1200,9 @@ internal object ScrollAnchorWalks {
                 a11yScroll(A11Y_SCROLL_UP_PX, towardNewer = false, label = "017-after", probe = probe)
             }
         }
+    }
+
+    fun walk018OpenNewestGroupKeepsFollowing(anchor: TranscriptAnchor) {
+        runOpenNewestGroupKeepsFollowing(anchor)
     }
 }

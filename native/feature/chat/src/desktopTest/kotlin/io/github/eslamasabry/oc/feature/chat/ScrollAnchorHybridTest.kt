@@ -48,4 +48,9 @@ class ScrollAnchorHybridTest {
     fun `STEPS-SCROLL-017 today screen reader scroll up holds still when a step arrives`() {
         ScrollAnchorWalks.walk017TodayScreenReaderHoldsStill()
     }
+
+    @Test
+    fun `STEPS-SCROLL-018 hybrid opening newest step group keeps following and hides jump dock`() {
+        ScrollAnchorWalks.walk018OpenNewestGroupKeepsFollowing(TranscriptAnchor.Hybrid)
+    }
 }
