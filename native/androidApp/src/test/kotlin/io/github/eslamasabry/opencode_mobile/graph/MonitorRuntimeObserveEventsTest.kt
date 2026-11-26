@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Channel
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -20,7 +21,6 @@ import io.github.eslamasabry.oc.core.net.okhttp.OkHttpEngineFactory
 import io.github.eslamasabry.oc.core.net.okhttp.hardenedBaseClient
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.testing.TestClock
-import io.github.eslamasabry.oc.core.testing.TestDispatchers
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -63,7 +63,15 @@ class MonitorRuntimeObserveEventsTest {
     fun `B-617 ReadOnlyMonitorGateway passes observeEvents false and opens no event stream`() =
         runBlocking {
             val app = RuntimeEnvironment.getApplication()
-            val dispatchers = TestDispatchers(Dispatchers.Default)
+            val dispatchers =
+                object : AppDispatchers {
+                    override val main = Dispatchers.Default
+                    override val default = Dispatchers.Default
+                    override val io = Dispatchers.IO
+
+                    override fun serial(name: String) =
+                        Dispatchers.Default.limitedParallelism(1, name)
+                }
             val redactor = Redactor()
             val clock = TestClock()
             val job = SupervisorJob()
