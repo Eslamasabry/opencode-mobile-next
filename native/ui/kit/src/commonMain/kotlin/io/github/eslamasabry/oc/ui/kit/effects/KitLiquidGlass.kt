@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSourceLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -884,12 +885,18 @@ internal object LiquidRim {
  * most [LIQUID_BAR_RADIUS]. The bar's content keeps its own place: only its ground becomes glass.
  */
 @Composable
-internal fun BoxScope.KitLiquidBarPane(face: Modifier, join: KitLiquidJoinBody? = null) {
+internal fun BoxScope.KitLiquidBarPane(
+    face: Modifier,
+    join: KitLiquidJoinBody? = null,
+    border: Boolean = false,
+) {
+    val hairline = LocalKitColors.current.hairline
     Box(
         Modifier.matchParentSize()
             .padding(horizontal = LIQUID_BAR_INSET_X.dp, vertical = LIQUID_BAR_INSET_Y.dp)
             .kitLiquidJoinRest(join, LiquidBarShape)
             .then(face)
+            .then(if (border) Modifier.kitHairlineBorder(1.dp, hairline, LiquidBarShape) else Modifier)
             .testTag("kit-liquid-bar")
     )
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -88,18 +89,19 @@ internal fun Modifier.chatPane(): Modifier = kitMaxWidth(ChatPane.maxWidth(Local
  */
 @Composable
 internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
-    // The frame's overlaid chrome lies over the body (the chat keeps one layout while it loads): the turns rest above the
-    // message box as the transcript's newest line does (the list's own 8 dp over the frame's room), the words in the
-    // middle of what is left.
-    Box(
+    // B-561: top-aligned column starting right under the header (skeleton first, then the slow words).
+    Column(
         modifier.fillMaxSize().padding(kitScreenChromePadding()).padding(bottom = Space.S2.dp).chatPane(),
-        contentAlignment = Alignment.BottomCenter,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        KitSkeletonTranscript(Modifier.fillMaxWidth().testTag("chat-loading"))
+        KitSkeletonTranscript(
+            Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true).testTag("chat-loading"),
+        )
+        Spacer(Modifier.height(Space.S4.dp))
         KitSlowWords(
             label,
             ChatPane.LOADING_WORDS_AFTER_MS,
-            Modifier.align(Alignment.Center).padding(horizontal = LocalKitTokens.current.gutter.dp),
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
             textModifier = Modifier.testTag("chat-loading-words"),
         )
     }

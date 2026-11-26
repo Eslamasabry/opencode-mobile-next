@@ -74,7 +74,7 @@ import kotlin.test.Test
 
 class PolishRenders {
     companion object {
-        const val PHASE = "before"
+        const val PHASE = "after"
     }
 
     private val noReqActions =

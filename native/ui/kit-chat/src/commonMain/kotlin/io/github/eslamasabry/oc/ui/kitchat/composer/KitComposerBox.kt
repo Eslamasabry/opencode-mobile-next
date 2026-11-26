@@ -176,6 +176,7 @@ public fun KitComposerBox(
                 )
             )
         val solid = style.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+        val glassLight = style.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && !colors.dark
         val shadow =
             if (!solid) Modifier
             else
@@ -226,7 +227,9 @@ public fun KitComposerBox(
                 .then(liquid ?: look.modifier)
                 .kitLiquidTouchLight(touch, look.shape, join = joinBody)
                 .then(
-                    if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier
+                    if (solid || glassLight) {
+                        Modifier.border(if (glassLight) 1.dp else hairline, colors.hairline, look.shape)
+                    } else Modifier
                 )
                 .clip(look.shape)
                 // Glass keeps its pane inset inside the box (owner 2026-11-09): room for the rim, sheen and lens.

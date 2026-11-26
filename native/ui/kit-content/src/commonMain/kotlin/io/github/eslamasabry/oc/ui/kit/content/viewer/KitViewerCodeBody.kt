@@ -105,7 +105,12 @@ public fun KitViewerCodeBody(
                 Modifier.fillMaxSize().testTag(KIT_VIEWER_LINES_TAG)
                     .then(if (wrap) Modifier else Modifier.horizontalScroll(rememberScrollState())),
                 state = listState.also { KitReportPageScroll(it) },
-                contentPadding = PaddingValues(horizontal = gutter, vertical = gutter / 2),
+                contentPadding = PaddingValues(
+                    start = gutter,
+                    end = gutter,
+                    top = gutter / 2,
+                    bottom = maxOf(gutter / 2, Space.S3.dp),
+                ),
             ) {
                 if (partial != null) {
                     item(key = "partial", contentType = "notice") {
@@ -186,7 +191,11 @@ internal fun ViewerCodeBody(
     val extent = with(density) { mono.lineHeight.toDp() }
     val list = rememberLazyListState(initialFirstVisibleItemIndex = initialLine?.minus(1)?.coerceIn(0, maxOf(0, lines.size - 1)) ?: 0)
     val block: @Composable (Modifier) -> Unit = { m ->
-        LazyColumn(m.fillMaxWidth().kitMaxWidth(CapRole.List).fillMaxWidth().testTag(KIT_VIEWER_LINES_TAG), state = list.also { KitReportPageScroll(it) }) {
+        LazyColumn(
+            m.fillMaxWidth().kitMaxWidth(CapRole.List).fillMaxWidth().testTag(KIT_VIEWER_LINES_TAG),
+            state = list.also { KitReportPageScroll(it) },
+            contentPadding = PaddingValues(bottom = Space.S3.dp),
+        ) {
             itemsIndexed(lines, key = { i, _ -> i }) { i, line ->
                 val annotated = buildAnnotatedString {
                     append(line)

@@ -37,7 +37,7 @@ public enum class KitStepLightState { Idle, Working, Background }
 public object KitStepLightLap {
     public const val LAP_MS: Int = 2000
     public const val CALM_LAP_MS: Int = 4000
-    public const val FILL_STROKE: Float = 1.8f
+    public const val FILL_STROKE: Float = 1.5f
     public const val HEAD_STROKE: Float = 2.6f
     private const val LIGHT_LEN = 14f
     private const val HEAD_LEN = 8f
