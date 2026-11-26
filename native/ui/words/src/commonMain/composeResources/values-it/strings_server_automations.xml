@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverAutomationsSection">Automazioni</string>
+    <string name="serverAutomationsLoadFailed">Impossibile caricare le automazioni da %1$s.</string>
+    <string name="serverAutomationsActionFailed">Impossibile aggiornare le automazioni su %1$s. Riprova.</string>
+    <string name="serverAutomationsNext">Prossima: %1$s</string>
+    <string name="serverAutomationsOnEvent">Si avvia su evento</string>
+    <string name="serverAutomationsStatusPaused">In pausa</string>
+    <string name="serverAutomationsStatusDone">Terminata</string>
+    <string name="serverAutomationsStatusActive">Attiva</string>
+    <string name="serverAutomationsLastFired">Eseguita %1$s</string>
+    <string name="serverAutomationsLastLate">Eseguita in ritardo %1$s</string>
+    <string name="serverAutomationsLastSkipped">Saltata %1$s</string>
+    <string name="serverAutomationsLastDisabled">Messa in pausa dal server %1$s</string>
+    <string name="serverAutomationsLastFailed">Ultima esecuzione non riuscita %1$s</string>
+    <string name="serverAutomationsLastExpired">Scaduta %1$s</string>
+    <string name="serverAutomationsLastUnknown">Eseguita %1$s</string>
+    <string name="serverAutomationsNeverRan">Non ancora eseguita</string>
+    <string name="serverAutomationsPause">Metti in pausa %1$s su %2$s</string>
+    <string name="serverAutomationsResume">Riprendi %1$s su %2$s</string>
+    <string name="serverAutomationsDeleteFrom">Elimina %1$s da %2$s</string>
+    <string name="serverAutomationsDeleteTitle">Eliminare %1$s da %2$s?</string>
+    <string name="serverAutomationsDeleteBody">Questa azione rimuove l’automazione da %1$s. I messaggi già inviati restano nelle conversazioni.</string>
+    <string name="serverAutomationsStopAll">Metti in pausa tutte le automazioni su %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Mettere in pausa tutte le automazioni su %1$s?</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="one">Questo mette in pausa %1$s automazione attiva su %2$s. Potrai riprenderla più tardi.</item>
+        <item quantity="many">Questo mette in pausa %1$s automazioni attive su %2$s. Potrai riprenderle più tardi.</item>
+        <item quantity="other">Questo mette in pausa %1$s automazioni attive su %2$s. Potrai riprenderle più tardi.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="one">%1$s automazione messa in pausa su %2$s.</item>
+        <item quantity="many">%1$s automazioni messe in pausa su %2$s.</item>
+        <item quantity="other">%1$s automazioni messe in pausa su %2$s.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="one">%1$s di %2$s automazioni attive messa in pausa su %3$s. Riprova per le altre.</item>
+        <item quantity="many">%1$s di %2$s automazioni attive messe in pausa su %3$s. Riprova per le altre.</item>
+        <item quantity="other">%1$s di %2$s automazioni attive messe in pausa su %3$s. Riprova per le altre.</item>
+    </plurals>
+    <string name="serverAutomationsDetailSchedule">Pianificazione</string>
+    <string name="serverAutomationsDetailAction">Azione</string>
+    <string name="serverAutomationsDetailLastRun">Ultima esecuzione</string>
+    <string name="serverAutomationsDetailRuns">Esecuzioni</string>
+    <string name="serverAutomationsDetailOutput">Ultimo output</string>
+    <string name="serverAutomationsTriggerEvery">Ogni %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Una volta, %1$s</string>
+    <string name="serverAutomationsTriggerEvent">Quando %1$s invia %2$s</string>
+    <string name="serverAutomationsTriggerEventAny">Quando %1$s si attiva</string>
+    <string name="serverAutomationsActionPrompt">Richiesta</string>
+    <string name="serverAutomationsActionPromptAgent">Richiesta (%1$s)</string>
+    <string name="serverAutomationsActionShell">Comando shell</string>
+    <string name="serverAutomationsActionCode">Script Code Mode</string>
+    <string name="serverAutomationsToday">Oggi</string>
+    <string name="serverAutomationsTomorrow">Domani</string>
+    <string name="serverAutomationsYesterday">Ieri</string>
+    <string name="chatAutomationOrigin">Dall’automazione · %1$s</string>
+    <string name="chatAutomationOriginRun">Dall’automazione · %1$s · esecuzione %2$s</string>
+    <string name="serverAutomationsStatusUnknown">Stato sconosciuto</string>
+    <string name="serverAutomationsDetailExpression">Espressione di pianificazione</string>
+    <plurals name="serverAutomationsEverySeconds">
+        <item quantity="one">Ogni secondo</item>
+        <item quantity="many">Ogni %1$s secondi</item>
+        <item quantity="other">Ogni %1$s secondi</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryMinutes">
+        <item quantity="one">Ogni minuto</item>
+        <item quantity="many">Ogni %1$s minuti</item>
+        <item quantity="other">Ogni %1$s minuti</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryHours">
+        <item quantity="one">Ogni ora</item>
+        <item quantity="many">Ogni %1$s ore</item>
+        <item quantity="other">Ogni %1$s ore</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryDays">
+        <item quantity="one">Ogni giorno</item>
+        <item quantity="many">Ogni %1$s giorni</item>
+        <item quantity="other">Ogni %1$s giorni</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryWeeks">
+        <item quantity="one">Ogni settimana</item>
+        <item quantity="many">Ogni %1$s settimane</item>
+        <item quantity="other">Ogni %1$s settimane</item>
+    </plurals>
+    <plurals name="serverAutomationsInSeconds">
+        <item quantity="one">tra 1 secondo</item>
+        <item quantity="many">tra %1$s secondi</item>
+        <item quantity="other">tra %1$s secondi</item>
+    </plurals>
+    <plurals name="serverAutomationsInMinutes">
+        <item quantity="one">tra 1 minuto</item>
+        <item quantity="many">tra %1$s minuti</item>
+        <item quantity="other">tra %1$s minuti</item>
+    </plurals>
+    <plurals name="serverAutomationsInHours">
+        <item quantity="one">tra 1 ora</item>
+        <item quantity="many">tra %1$s ore</item>
+        <item quantity="other">tra %1$s ore</item>
+    </plurals>
+    <plurals name="serverAutomationsInDays">
+        <item quantity="one">tra 1 giorno</item>
+        <item quantity="many">tra %1$s giorni</item>
+        <item quantity="other">tra %1$s giorni</item>
+    </plurals>
+    <string name="serverAutomationsCronHourlyAt">Ogni ora al minuto :%1$s</string>
+    <string name="serverAutomationsCronDaily">Ogni giorno alle %1$s</string>
+    <string name="serverAutomationsCronWeekdays">Giorni feriali alle %1$s</string>
+    <string name="serverAutomationsCronWeekends">Fine settimana alle %1$s</string>
+    <string name="serverAutomationsCronWeekly">Ogni %1$s alle %2$s</string>
+    <string name="serverAutomationsCronMonthly">Il giorno %1$s di ogni mese alle %2$s</string>
+    <string name="serverAutomationsCronCustom">Pianificazione personalizzata</string>
+    <string name="serverAutomationsWithZone">%1$s (%2$s)</string>
+    <string name="serverAutomationsSummaryPair">%1$s · %2$s</string>
+    <string name="serverAutomationsDayTime">%1$s %2$s</string>
+</resources>

@@ -150,6 +150,21 @@ internal enum class Oc2Dialect {
                     (version.substringBefore('.').toIntOrNull() ?: 0) >= 2 -> Stable
                 else -> null
             }
+
+        /** B-605: experimental server automations landed in OpenCode 2.4.0 (stable line only). */
+        fun supportsAutomations(version: String?): Boolean {
+            if (ofVersion(version) != Stable || version == null) return false
+            val parts = version.substringBefore('-').substringBefore('+').split('.')
+            val major = parts.getOrNull(0)?.toIntOrNull()
+            val minor = parts.getOrNull(1)?.toIntOrNull()
+            return major != null &&
+                minor != null &&
+                (major > AUTOMATIONS_MAJOR ||
+                    (major == AUTOMATIONS_MAJOR && minor >= AUTOMATIONS_MINOR))
+        }
+
+        private const val AUTOMATIONS_MAJOR = 2
+        private const val AUTOMATIONS_MINOR = 4
     }
 }
 

@@ -172,6 +172,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentErrorFreeDailyLimit
 import io.github.eslamasabry.oc.ui.words.res.agentErrorFreeDailyLimitHint
 import io.github.eslamasabry.oc.ui.words.res.agentErrorModelCountryRefused
 import io.github.eslamasabry.oc.ui.words.res.agentErrorModelCountryRefusedHint
+import io.github.eslamasabry.oc.ui.words.res.chatAutomationOrigin
+import io.github.eslamasabry.oc.ui.words.res.chatAutomationOriginRun
 import io.github.eslamasabry.oc.ui.words.res.chatUiRetryingSoon
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
@@ -2171,10 +2173,18 @@ private fun SentPromptBubble(row: PromptRow) {
         rememberKitSentFiles(
             remember(row.files) { row.files.map { KitSentFile(it.name, it.mime, it.url) } }
         )
+    val origin =
+        row.automationName?.takeIf { it.isNotBlank() }?.let { name ->
+            val run = row.automationRun?.takeIf { it > 0 }
+            if (run != null)
+                stringResource(Res.string.chatAutomationOriginRun, name, Numbers.digits(run.toString()))
+            else stringResource(Res.string.chatAutomationOrigin, name)
+        }
     KitPromptBubble(
         CardAnswerDisplay.text(row.text),
         photos = sent.photos,
         attachments = sent.attachments,
+        origin = origin,
     )
 }
 

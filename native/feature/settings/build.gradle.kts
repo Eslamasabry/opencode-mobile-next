@@ -23,7 +23,7 @@ kotlin {
         implementation(project(":ui:kit-content"))
         // P12-SETTINGS: personal choices over the device Preferences facade (PreferencesChoices).
         implementation(project(":engine:settings"))
-        implementation(project(":ui:kit-chat"))
+        implementation(project(":engine:schedules"))
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(project(":ui:gate")) // the golden-diff gate (order 44)

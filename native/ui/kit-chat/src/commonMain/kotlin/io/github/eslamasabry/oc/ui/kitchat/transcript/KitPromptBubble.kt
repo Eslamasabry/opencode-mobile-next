@@ -126,6 +126,7 @@ internal fun kitPromptBubbleFill(colors: KitColors): Color =
  * [photos] (C-010) show under the words as 96 dp square tiles (tile corners, cropped to fill), 8 dp below the words
  * and 8 dp apart; a tile whose picture is still loading is a quiet square that fades into the picture.
  */
+@Suppress("LongParameterList")
 @Composable
 public fun KitPromptBubble(
     text: String,
@@ -133,6 +134,7 @@ public fun KitPromptBubble(
     photos: List<KitPromptPhoto> = emptyList(),
     attachments: List<KitPromptAttachment> = emptyList(),
     time: String? = null,
+    origin: String? = null,
 ) {
     val colors = LocalKitColors.current
     val shape = kitBubbleShape()
@@ -160,6 +162,10 @@ public fun KitPromptBubble(
                     .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(kitPromptBubbleFill(colors), shape).border(kitHairline(), colors.hairline, shape))
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
             ) {
+                PromptOriginHeader(
+                    origin = origin,
+                    hasBody = text.isNotEmpty() || photos.isNotEmpty() || attachments.isNotEmpty(),
+                )
                 if (text.isNotEmpty()) PromptWords(text)
                 if (photos.isNotEmpty()) {
                     if (text.isNotEmpty()) Spacer(Modifier.height(Space.S2.dp))
@@ -187,6 +193,20 @@ public fun KitPromptBubble(
             }
         }
     }
+}
+
+@Composable
+private fun PromptOriginHeader(origin: String?, hasBody: Boolean) {
+    if (origin.isNullOrBlank()) return
+    Row(
+        Modifier.testTag(PROMPT_ORIGIN_TAG),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
+        KitIcon(KitIcons.clock, size = KitIconSize.Small, tone = TextTone.Tertiary)
+        KitText(origin, role = TypeRole.Caption, tone = TextTone.Tertiary, maxLines = 2)
+    }
+    if (hasBody) Spacer(Modifier.height(Space.S1.dp))
 }
 
 /** What a read-only attachment chip in a sent prompt is (Dart `KitAttachmentKind`). */
@@ -237,6 +257,7 @@ private fun PromptAttachmentChip(item: KitPromptAttachment) {
 
 public const val PROMPT_BUBBLE_TAG: String = "kit-prompt-bubble"
 public const val PROMPT_PHOTO_TAG: String = "kit-prompt-photo"
+public const val PROMPT_ORIGIN_TAG: String = "kit-prompt-origin"
 
 /**
  * The prompt's words, hugging their longest line (Flutter `_hugWidth`): a wrapped paragraph would otherwise take the

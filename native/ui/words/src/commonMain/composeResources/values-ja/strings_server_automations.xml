@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverAutomationsSection">オートメーション</string>
+    <string name="serverAutomationsLoadFailed">%1$sからオートメーションを読み込めませんでした。</string>
+    <string name="serverAutomationsActionFailed">%1$sのオートメーションを更新できませんでした。もう一度お試しください。</string>
+    <string name="serverAutomationsNext">次回:%1$s</string>
+    <string name="serverAutomationsOnEvent">イベントで実行</string>
+    <string name="serverAutomationsStatusPaused">一時停止中</string>
+    <string name="serverAutomationsStatusDone">完了</string>
+    <string name="serverAutomationsStatusActive">有効</string>
+    <string name="serverAutomationsLastFired">%1$sに実行</string>
+    <string name="serverAutomationsLastLate">%1$sに遅延実行</string>
+    <string name="serverAutomationsLastSkipped">%1$sにスキップ</string>
+    <string name="serverAutomationsLastDisabled">%1$sにサーバーが一時停止</string>
+    <string name="serverAutomationsLastFailed">%1$sの前回実行に失敗</string>
+    <string name="serverAutomationsLastExpired">%1$sに期限切れ</string>
+    <string name="serverAutomationsLastUnknown">%1$sに実行</string>
+    <string name="serverAutomationsNeverRan">未実行</string>
+    <string name="serverAutomationsPause">%2$sの%1$sを一時停止</string>
+    <string name="serverAutomationsResume">%2$sの%1$sを再開</string>
+    <string name="serverAutomationsDeleteFrom">%2$sから%1$sを削除</string>
+    <string name="serverAutomationsDeleteTitle">%2$sから%1$sを削除しますか？</string>
+    <string name="serverAutomationsDeleteBody">このオートメーションを%1$sから削除します。送信済みのメッセージは会話に残ります。</string>
+    <string name="serverAutomationsStopAll">%1$sのオートメーションをすべて一時停止</string>
+    <string name="serverAutomationsStopAllTitle">%1$sのオートメーションをすべて一時停止しますか？</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="other">%2$sで有効な%1$s件のオートメーションを一時停止します。あとで再開できます。</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="other">%2$sで%1$s件のオートメーションを一時停止しました。</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="other">%3$sで有効な%2$s件のうち%1$s件を一時停止しました。残りはもう一度お試しください。</item>
+    </plurals>
+    <string name="serverAutomationsDetailSchedule">スケジュール</string>
+    <string name="serverAutomationsDetailAction">アクション</string>
+    <string name="serverAutomationsDetailLastRun">前回の実行</string>
+    <string name="serverAutomationsDetailRuns">実行回数</string>
+    <string name="serverAutomationsDetailOutput">前回の出力</string>
+    <string name="serverAutomationsTriggerEvery">%1$sごと</string>
+    <string name="serverAutomationsTriggerOnce">1回のみ、%1$s</string>
+    <string name="serverAutomationsTriggerEvent">%1$sが%2$sを送信したとき</string>
+    <string name="serverAutomationsTriggerEventAny">%1$sが発火したとき</string>
+    <string name="serverAutomationsActionPrompt">プロンプト</string>
+    <string name="serverAutomationsActionPromptAgent">プロンプト（%1$s）</string>
+    <string name="serverAutomationsActionShell">シェルコマンド</string>
+    <string name="serverAutomationsActionCode">Code Modeスクリプト</string>
+    <string name="serverAutomationsToday">今日</string>
+    <string name="serverAutomationsTomorrow">明日</string>
+    <string name="serverAutomationsYesterday">昨日</string>
+    <string name="chatAutomationOrigin">オートメーションより・%1$s</string>
+    <string name="chatAutomationOriginRun">オートメーションより・%1$s・実行%2$s</string>
+    <string name="serverAutomationsStatusUnknown">状態不明</string>
+    <string name="serverAutomationsDetailExpression">スケジュール式</string>
+    <plurals name="serverAutomationsEverySeconds">
+        <item quantity="other">%1$s秒ごと</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryMinutes">
+        <item quantity="other">%1$s分ごと</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryHours">
+        <item quantity="other">%1$s時間ごと</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryDays">
+        <item quantity="other">%1$s日ごと</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryWeeks">
+        <item quantity="other">%1$s週間ごと</item>
+    </plurals>
+    <plurals name="serverAutomationsInSeconds">
+        <item quantity="other">%1$s秒後</item>
+    </plurals>
+    <plurals name="serverAutomationsInMinutes">
+        <item quantity="other">%1$s分後</item>
+    </plurals>
+    <plurals name="serverAutomationsInHours">
+        <item quantity="other">%1$s時間後</item>
+    </plurals>
+    <plurals name="serverAutomationsInDays">
+        <item quantity="other">%1$s日後</item>
+    </plurals>
+    <string name="serverAutomationsCronHourlyAt">毎時:%1$s</string>
+    <string name="serverAutomationsCronDaily">毎日%1$s</string>
+    <string name="serverAutomationsCronWeekdays">平日%1$s</string>
+    <string name="serverAutomationsCronWeekends">週末%1$s</string>
+    <string name="serverAutomationsCronWeekly">毎週%1$sの%2$s</string>
+    <string name="serverAutomationsCronMonthly">毎月%1$s日の%2$s</string>
+    <string name="serverAutomationsCronCustom">カスタムスケジュール</string>
+    <string name="serverAutomationsWithZone">%1$s（%2$s）</string>
+    <string name="serverAutomationsSummaryPair">%1$s・%2$s</string>
+    <string name="serverAutomationsDayTime">%1$s %2$s</string>
+</resources>
