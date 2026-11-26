@@ -25,13 +25,13 @@
     <string name="serverAutomationsStopAll">%1$sのオートメーションをすべて一時停止</string>
     <string name="serverAutomationsStopAllTitle">%1$sのオートメーションをすべて一時停止しますか？</string>
     <plurals name="serverAutomationsStopAllBody">
-        <item quantity="other">%2$sで有効な%1$d件のオートメーションを一時停止します。あとで再開できます。</item>
+        <item quantity="other">%2$sで有効な%1$s件のオートメーションを一時停止します。あとで再開できます。</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="other">%2$sで%1$d件のオートメーションを一時停止しました。</item>
+        <item quantity="other">%2$sで%1$s件のオートメーションを一時停止しました。</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="other">%3$sで有効な%2$d件のうち%1$d件を一時停止しました。残りはもう一度お試しください。</item>
+        <item quantity="other">%3$sで有効な%2$s件のうち%1$s件を一時停止しました。残りはもう一度お試しください。</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">スケジュール</string>
     <string name="serverAutomationsDetailAction">アクション</string>
@@ -54,31 +54,31 @@
     <string name="serverAutomationsStatusUnknown">状態不明</string>
     <string name="serverAutomationsDetailExpression">スケジュール式</string>
     <plurals name="serverAutomationsEverySeconds">
-        <item quantity="other">%1$d秒ごと</item>
+        <item quantity="other">%1$s秒ごと</item>
     </plurals>
     <plurals name="serverAutomationsEveryMinutes">
-        <item quantity="other">%1$d分ごと</item>
+        <item quantity="other">%1$s分ごと</item>
     </plurals>
     <plurals name="serverAutomationsEveryHours">
-        <item quantity="other">%1$d時間ごと</item>
+        <item quantity="other">%1$s時間ごと</item>
     </plurals>
     <plurals name="serverAutomationsEveryDays">
-        <item quantity="other">%1$d日ごと</item>
+        <item quantity="other">%1$s日ごと</item>
     </plurals>
     <plurals name="serverAutomationsEveryWeeks">
-        <item quantity="other">%1$d週間ごと</item>
+        <item quantity="other">%1$s週間ごと</item>
     </plurals>
     <plurals name="serverAutomationsInSeconds">
-        <item quantity="other">%1$d秒後</item>
+        <item quantity="other">%1$s秒後</item>
     </plurals>
     <plurals name="serverAutomationsInMinutes">
-        <item quantity="other">%1$d分後</item>
+        <item quantity="other">%1$s分後</item>
     </plurals>
     <plurals name="serverAutomationsInHours">
-        <item quantity="other">%1$d時間後</item>
+        <item quantity="other">%1$s時間後</item>
     </plurals>
     <plurals name="serverAutomationsInDays">
-        <item quantity="other">%1$d日後</item>
+        <item quantity="other">%1$s日後</item>
     </plurals>
     <string name="serverAutomationsCronHourlyAt">毎時:%1$s</string>
     <string name="serverAutomationsCronDaily">毎日%1$s</string>

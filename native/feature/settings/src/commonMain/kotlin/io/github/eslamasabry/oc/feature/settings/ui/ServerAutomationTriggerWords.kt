@@ -41,12 +41,12 @@ import org.jetbrains.compose.resources.stringResource
 internal fun automationTriggerDescription(
     trigger: AutomationTrigger,
     nowMs: Long,
-    fallbackZoneId: String? = null,
+    phoneZoneId: String? = null,
 ): String? =
     when (trigger) {
         is AutomationTrigger.Every -> formatEveryTrigger(trigger.duration)
         is AutomationTrigger.Cron -> formatCronTrigger(trigger)
-        is AutomationTrigger.At -> formatAtTrigger(trigger, nowMs, fallbackZoneId)
+        is AutomationTrigger.At -> formatAtTrigger(trigger, nowMs, phoneZoneId)
         is AutomationTrigger.Event -> formatEventTrigger(trigger)
         AutomationTrigger.Unknown -> null
     }
@@ -72,7 +72,7 @@ private fun formatEveryDuration(parsed: ParsedDuration): String {
             AutomationDurationUnit.Days -> Res.plurals.serverAutomationsEveryDays
             AutomationDurationUnit.Weeks -> Res.plurals.serverAutomationsEveryWeeks
         }
-    return pluralStringResource(res, parsed.amount, parsed.amount)
+    return pluralStringResource(res, parsed.amount, Numbers.format(parsed.amount))
 }
 
 @Composable
@@ -86,14 +86,15 @@ private fun formatCronTrigger(trigger: AutomationTrigger.Cron): String? {
 private fun formatParsedCron(parsed: ParsedCron): String =
     when (parsed) {
         ParsedCron.EveryMinute ->
-            pluralStringResource(Res.plurals.serverAutomationsEveryMinutes, 1, 1)
+            pluralStringResource(Res.plurals.serverAutomationsEveryMinutes, 1, Numbers.format(1))
         is ParsedCron.EveryNMinutes ->
             pluralStringResource(
                 Res.plurals.serverAutomationsEveryMinutes,
                 parsed.minutes,
-                parsed.minutes,
+                Numbers.format(parsed.minutes),
             )
-        ParsedCron.EveryHour -> pluralStringResource(Res.plurals.serverAutomationsEveryHours, 1, 1)
+        ParsedCron.EveryHour ->
+            pluralStringResource(Res.plurals.serverAutomationsEveryHours, 1, Numbers.format(1))
         is ParsedCron.HourlyAt ->
             stringResource(
                 Res.string.serverAutomationsCronHourlyAt,
@@ -103,7 +104,7 @@ private fun formatParsedCron(parsed: ParsedCron): String =
             pluralStringResource(
                 Res.plurals.serverAutomationsEveryHours,
                 parsed.hours,
-                parsed.hours,
+                Numbers.format(parsed.hours),
             )
         is ParsedCron.Daily ->
             stringResource(
@@ -141,21 +142,17 @@ private fun formatParsedCron(parsed: ParsedCron): String =
 private fun formatAtTrigger(
     trigger: AutomationTrigger.At,
     nowMs: Long,
-    fallbackZoneId: String?,
+    phoneZoneId: String?,
 ): String? {
-    val zone = trigger.timeZone ?: fallbackZoneId
     val atMs = trigger.atMs
     val raw = trigger.raw?.trim()?.takeIf { it.isNotEmpty() }
     val relative = raw?.let(AutomationScheduleParser::parseRelativeAt)
     val wall = raw?.let(AutomationScheduleParser::parseWallClock)
     return when {
         atMs != null ->
-            withOptionalZone(
-                stringResource(
-                    Res.string.serverAutomationsTriggerOnce,
-                    formatAutomationMoment(atMs, nowMs, zone),
-                ),
-                trigger.timeZone,
+            stringResource(
+                Res.string.serverAutomationsTriggerOnce,
+                formatAutomationMoment(atMs, nowMs, phoneZoneId),
             )
         relative != null ->
             stringResource(Res.string.serverAutomationsTriggerOnce, formatInDuration(relative))
@@ -193,7 +190,7 @@ private fun formatInDuration(parsed: ParsedDuration): String {
     val count =
         if (parsed.unit == AutomationDurationUnit.Weeks) parsed.amount * DAYS_PER_WEEK
         else parsed.amount
-    return pluralStringResource(res, count, count)
+    return pluralStringResource(res, count, Numbers.format(count))
 }
 
 @Composable

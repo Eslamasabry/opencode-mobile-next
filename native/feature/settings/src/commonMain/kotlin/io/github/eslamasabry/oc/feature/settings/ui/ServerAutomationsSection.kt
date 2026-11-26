@@ -167,7 +167,7 @@ internal fun ServerAutomationsOverlays(state: ServerSettingsUi, actions: ServerS
                         pluralStringResource(
                             Res.plurals.serverAutomationsStopAllBody,
                             state.activeAutomationsCount,
-                            state.activeAutomationsCount,
+                            Numbers.format(state.activeAutomationsCount),
                             serverName,
                         ),
                 )
@@ -185,15 +185,15 @@ private fun AutomationNoticeBanner(notice: AutomationsNotice, serverName: String
                 pluralStringResource(
                     Res.plurals.serverAutomationsStoppedAll,
                     notice.stopped,
-                    notice.stopped,
+                    Numbers.format(notice.stopped),
                     serverName,
                 )
             is AutomationsNotice.StoppedPartial ->
                 pluralStringResource(
                     Res.plurals.serverAutomationsStoppedPartial,
                     notice.stopped,
-                    notice.stopped,
-                    notice.total,
+                    Numbers.format(notice.stopped),
+                    Numbers.format(notice.total),
                     serverName,
                 )
             AutomationsNotice.ActionFailed ->
@@ -293,17 +293,16 @@ private fun automationPrimaryAction(
 private fun AutomationDetailFacts(
     item: ServerAutomation,
     nowMs: Long,
-    fallbackZoneId: String?,
+    phoneZoneId: String?,
 ) {
-    val zoneId = item.timeZone ?: fallbackZoneId
-    val triggerText = automationTriggerDescription(item.trigger, nowMs, zoneId)
+    val triggerText = automationTriggerDescription(item.trigger, nowMs, phoneZoneId)
     val nextText =
         item.nextDueAtMs
             ?.takeIf { item.status == AutomationStatus.Active }
             ?.let {
                 stringResource(
                     Res.string.serverAutomationsNext,
-                    formatAutomationMoment(it, nowMs, zoneId),
+                    formatAutomationMoment(it, nowMs, phoneZoneId),
                 )
             }
     val scheduleText =
@@ -328,7 +327,7 @@ private fun AutomationDetailFacts(
         )
         KitRow(
             title = stringResource(Res.string.serverAutomationsDetailLastRun),
-            supporting = automationLastRunDescription(item, nowMs, zoneId),
+            supporting = automationLastRunDescription(item, nowMs, phoneZoneId),
             supportingMaxLines = 2,
         )
         if (item.runCount > 0) {

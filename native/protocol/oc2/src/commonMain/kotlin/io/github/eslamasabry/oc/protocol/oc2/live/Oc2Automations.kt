@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonObject
 
 /**
  * OpenCode 2.4+ experimental server automations (`/api/experimental/automation`, B-605).
- * Decodes tolerantly and redacts server-supplied output and pause reasons before returning.
+ * Decodes tolerantly and redacts server-supplied output and event arguments before returning.
  */
 internal class Oc2Automations(
     private val gateway: Oc2Gateway,

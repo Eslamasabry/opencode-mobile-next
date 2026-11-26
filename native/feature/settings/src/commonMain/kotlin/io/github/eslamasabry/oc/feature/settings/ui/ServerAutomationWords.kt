@@ -46,9 +46,8 @@ import org.jetbrains.compose.resources.stringResource
 internal fun automationRowSummary(
     item: ServerAutomation,
     nowMs: Long,
-    fallbackZoneId: String? = null,
+    phoneZoneId: String? = null,
 ): String {
-    val zoneId = item.timeZone ?: fallbackZoneId
     val nextDue = item.nextDueAtMs
     val nextPart =
         when {
@@ -61,13 +60,13 @@ internal fun automationRowSummary(
             nextDue != null ->
                 stringResource(
                     Res.string.serverAutomationsNext,
-                    formatAutomationMoment(nextDue, nowMs, zoneId),
+                    formatAutomationMoment(nextDue, nowMs, phoneZoneId),
                 )
             item.trigger is AutomationTrigger.Event ->
                 stringResource(Res.string.serverAutomationsOnEvent)
             else -> stringResource(Res.string.serverAutomationsStatusActive)
         }
-    val lastPart = automationLastRunDescription(item, nowMs, zoneId)
+    val lastPart = automationLastRunDescription(item, nowMs, phoneZoneId)
     return stringResource(Res.string.serverAutomationsSummaryPair, nextPart, lastPart)
 }
 

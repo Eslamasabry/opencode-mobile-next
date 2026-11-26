@@ -11,6 +11,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.core.common.text.NumberSymbols
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.AutomationAction
 import io.github.eslamasabry.oc.core.model.AutomationOutcome
@@ -43,7 +45,10 @@ class B605ServerAutomationsUiAndRendersTest {
     private val savedLocale: Locale = Locale.getDefault()
 
     @AfterTest
-    fun restoreLocale() = Locale.setDefault(savedLocale)
+    fun restoreLocale() {
+        Locale.setDefault(savedLocale)
+        Numbers.pinned = null
+    }
 
     private val actions =
         Proxy.newProxyInstance(
@@ -299,18 +304,24 @@ class B605ServerAutomationsUiAndRendersTest {
     }
 
     @Test
-    fun `B-AUTO-016 relative at, unknown status, and Arabic localized duration`() {
+    fun `B-AUTO-016 real ISO at in phone zone and unknown status`() {
         Locale.setDefault(Locale.ENGLISH)
-        // m3 relative `at` + m5 Unknown status never labeled Active
+        // R4 + R1: real v2.4.1 stored ISO Z `at` payload formats in phone zone (Berlin 10:00, not NY 04:00)
+        val at0900Z = 1_795_683_600_000L
         val edgeCases =
             persistentListOf(
                 ServerAutomation(
-                    id = "aut_rel",
+                    id = "aut_iso_at",
                     name = "Deploy check",
                     status = AutomationStatus.Unknown,
-                    trigger = AutomationTrigger.At(atMs = null, raw = "in 10 minutes"),
+                    trigger =
+                        AutomationTrigger.At(
+                            atMs = at0900Z,
+                            raw = "2026-11-26T09:00:00.000Z",
+                            timeZone = "America/New_York",
+                        ),
                     action = AutomationAction.Prompt("Check deploy"),
-                    timeZone = zoneId,
+                    timeZone = "America/New_York",
                 )
             )
         runDesktopComposeUiTest(360, 800) {
@@ -318,7 +329,7 @@ class B605ServerAutomationsUiAndRendersTest {
                 SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
                     KitSheetHost(Modifier.fillMaxSize()) {
                         ServerSettingsScreen(
-                            laptopUi(automations = edgeCases).copy(selectedAutomationId = "aut_rel"),
+                            laptopUi(automations = edgeCases).copy(selectedAutomationId = "aut_iso_at"),
                             actions,
                         )
                     }
@@ -327,9 +338,13 @@ class B605ServerAutomationsUiAndRendersTest {
             waitForIdle()
             onNodeWithText("Status unknown").assertIsDisplayed()
             onNodeWithText("Active").assertDoesNotExist()
-            onNodeWithText("Once, in 10 minutes").assertIsDisplayed()
+            onNodeWithText("Once, Today 10:00").assertIsDisplayed()
+            onNodeWithText("04:00", substring = true).assertDoesNotExist()
         }
-        // B3: Arabic UI localizes duration units instead of echoing raw English "Every 5 minutes"
+    }
+
+    @Test
+    fun `B-AUTO-016 Arabic UI localizes duration units and Arabic-Indic digits`() {
         val fiveMin =
             persistentListOf(
                 ServerAutomation(
@@ -342,20 +357,80 @@ class B605ServerAutomationsUiAndRendersTest {
                 )
             )
         Locale.setDefault(Locale.forLanguageTag("ar"))
+        Numbers.pinned = NumberSymbols(zeroDigit = '٠', grouping = '٬', decimal = '٫', minus = '-')
+        try {
+            runDesktopComposeUiTest(360, 800) {
+                setContent {
+                    SettingsThemed(dark = false, locale = "ar", fontScale = 1.0f, width = 360f) {
+                        KitSheetHost(Modifier.fillMaxSize()) {
+                            ServerSettingsScreen(
+                                laptopUi(automations = fiveMin).copy(selectedAutomationId = "aut_5m"),
+                                actions,
+                            )
+                        }
+                    }
+                }
+                waitForIdle()
+                onNodeWithText("Every 5 minutes").assertDoesNotExist()
+                onNodeWithText("كل 5 دقائق").assertDoesNotExist()
+                onNodeWithText("كل ٥ دقائق").assertIsDisplayed()
+            }
+        } finally {
+            Numbers.pinned = null
+        }
+    }
+
+    @Test
+    fun `B-AUTO-025 absolute instants render in phone timezone when server timezone differs`() {
+        Locale.setDefault(Locale.ENGLISH)
+        val nextAt0900Z = 1_795_683_600_000L // 2026-11-26T09:00:00Z -> 10:00 Berlin, 04:00 NY
+        val lastAt0600Z = 1_795_672_800_000L // 2026-11-26T06:00:00Z -> 07:00 Berlin, 01:00 NY
+        val crossZone =
+            persistentListOf(
+                ServerAutomation(
+                    id = "aut_tz",
+                    name = "New York nightly",
+                    status = AutomationStatus.Active,
+                    trigger = AutomationTrigger.Cron("0 3 * * *", timeZone = "America/New_York"),
+                    action = AutomationAction.Shell("git gc"),
+                    timeZone = "America/New_York",
+                    nextDueAtMs = nextAt0900Z,
+                    runCount = 3,
+                    lastRunAtMs = lastAt0600Z,
+                    lastOutcome = AutomationOutcome.Fired,
+                )
+            )
         runDesktopComposeUiTest(360, 800) {
             setContent {
-                SettingsThemed(dark = false, locale = "ar", fontScale = 1.0f, width = 360f) {
+                SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(laptopUi(automations = crossZone), actions)
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithText("New York nightly").performScrollTo().assertIsDisplayed()
+            onNodeWithText("Next: Today 10:00 · Ran Today 07:00").assertIsDisplayed()
+            onNodeWithText("04:00", substring = true).assertDoesNotExist()
+            onNodeWithText("01:00", substring = true).assertDoesNotExist()
+        }
+        runDesktopComposeUiTest(360, 800) {
+            setContent {
+                SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
                     KitSheetHost(Modifier.fillMaxSize()) {
                         ServerSettingsScreen(
-                            laptopUi(automations = fiveMin).copy(selectedAutomationId = "aut_5m"),
+                            laptopUi(automations = crossZone).copy(selectedAutomationId = "aut_tz"),
                             actions,
                         )
                     }
                 }
             }
             waitForIdle()
-            onNodeWithText("Every 5 minutes").assertDoesNotExist()
-            onNodeWithText("كل 5 دقائق").assertIsDisplayed()
+            onNodeWithText("Every day at 03:00 (America/New_York) · Next: Today 10:00")
+                .assertIsDisplayed()
+            onNodeWithText("Ran Today 07:00").assertIsDisplayed()
+            onNodeWithText("04:00", substring = true).assertDoesNotExist()
+            onNodeWithText("01:00", substring = true).assertDoesNotExist()
         }
     }
 

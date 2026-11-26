@@ -25,19 +25,19 @@
     <string name="serverAutomationsStopAll">Mettre en pause toutes les automatisations sur %1$s</string>
     <string name="serverAutomationsStopAllTitle">Mettre en pause toutes les automatisations sur %1$s ?</string>
     <plurals name="serverAutomationsStopAllBody">
-        <item quantity="one">Cela met en pause %1$d automatisation active sur %2$s. Vous pourrez la reprendre plus tard.</item>
-        <item quantity="many">Cela met en pause %1$d automatisations actives sur %2$s. Vous pourrez les reprendre plus tard.</item>
-        <item quantity="other">Cela met en pause %1$d automatisations actives sur %2$s. Vous pourrez les reprendre plus tard.</item>
+        <item quantity="one">Cela met en pause %1$s automatisation active sur %2$s. Vous pourrez la reprendre plus tard.</item>
+        <item quantity="many">Cela met en pause %1$s automatisations actives sur %2$s. Vous pourrez les reprendre plus tard.</item>
+        <item quantity="other">Cela met en pause %1$s automatisations actives sur %2$s. Vous pourrez les reprendre plus tard.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="one">%1$d automatisation mise en pause sur %2$s.</item>
-        <item quantity="many">%1$d automatisations mises en pause sur %2$s.</item>
-        <item quantity="other">%1$d automatisations mises en pause sur %2$s.</item>
+        <item quantity="one">%1$s automatisation mise en pause sur %2$s.</item>
+        <item quantity="many">%1$s automatisations mises en pause sur %2$s.</item>
+        <item quantity="other">%1$s automatisations mises en pause sur %2$s.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="one">%1$d automatisation active sur %2$d mise en pause sur %3$s. Réessayez pour les autres.</item>
-        <item quantity="many">%1$d automatisations actives sur %2$d mises en pause sur %3$s. Réessayez pour les autres.</item>
-        <item quantity="other">%1$d automatisations actives sur %2$d mises en pause sur %3$s. Réessayez pour les autres.</item>
+        <item quantity="one">%1$s automatisation active sur %2$s mise en pause sur %3$s. Réessayez pour les autres.</item>
+        <item quantity="many">%1$s automatisations actives sur %2$s mises en pause sur %3$s. Réessayez pour les autres.</item>
+        <item quantity="other">%1$s automatisations actives sur %2$s mises en pause sur %3$s. Réessayez pour les autres.</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">Planification</string>
     <string name="serverAutomationsDetailAction">Tâche</string>
@@ -61,48 +61,48 @@
     <string name="serverAutomationsDetailExpression">Expression de planification</string>
     <plurals name="serverAutomationsEverySeconds">
         <item quantity="one">Chaque seconde</item>
-        <item quantity="many">Toutes les %1$d secondes</item>
-        <item quantity="other">Toutes les %1$d secondes</item>
+        <item quantity="many">Toutes les %1$s secondes</item>
+        <item quantity="other">Toutes les %1$s secondes</item>
     </plurals>
     <plurals name="serverAutomationsEveryMinutes">
         <item quantity="one">Chaque minute</item>
-        <item quantity="many">Toutes les %1$d minutes</item>
-        <item quantity="other">Toutes les %1$d minutes</item>
+        <item quantity="many">Toutes les %1$s minutes</item>
+        <item quantity="other">Toutes les %1$s minutes</item>
     </plurals>
     <plurals name="serverAutomationsEveryHours">
         <item quantity="one">Chaque heure</item>
-        <item quantity="many">Toutes les %1$d heures</item>
-        <item quantity="other">Toutes les %1$d heures</item>
+        <item quantity="many">Toutes les %1$s heures</item>
+        <item quantity="other">Toutes les %1$s heures</item>
     </plurals>
     <plurals name="serverAutomationsEveryDays">
         <item quantity="one">Chaque jour</item>
-        <item quantity="many">Tous les %1$d jours</item>
-        <item quantity="other">Tous les %1$d jours</item>
+        <item quantity="many">Tous les %1$s jours</item>
+        <item quantity="other">Tous les %1$s jours</item>
     </plurals>
     <plurals name="serverAutomationsEveryWeeks">
         <item quantity="one">Chaque semaine</item>
-        <item quantity="many">Toutes les %1$d semaines</item>
-        <item quantity="other">Toutes les %1$d semaines</item>
+        <item quantity="many">Toutes les %1$s semaines</item>
+        <item quantity="other">Toutes les %1$s semaines</item>
     </plurals>
     <plurals name="serverAutomationsInSeconds">
         <item quantity="one">dans 1 seconde</item>
-        <item quantity="many">dans %1$d secondes</item>
-        <item quantity="other">dans %1$d secondes</item>
+        <item quantity="many">dans %1$s secondes</item>
+        <item quantity="other">dans %1$s secondes</item>
     </plurals>
     <plurals name="serverAutomationsInMinutes">
         <item quantity="one">dans 1 minute</item>
-        <item quantity="many">dans %1$d minutes</item>
-        <item quantity="other">dans %1$d minutes</item>
+        <item quantity="many">dans %1$s minutes</item>
+        <item quantity="other">dans %1$s minutes</item>
     </plurals>
     <plurals name="serverAutomationsInHours">
         <item quantity="one">dans 1 heure</item>
-        <item quantity="many">dans %1$d heures</item>
-        <item quantity="other">dans %1$d heures</item>
+        <item quantity="many">dans %1$s heures</item>
+        <item quantity="other">dans %1$s heures</item>
     </plurals>
     <plurals name="serverAutomationsInDays">
         <item quantity="one">dans 1 jour</item>
-        <item quantity="many">dans %1$d jours</item>
-        <item quantity="other">dans %1$d jours</item>
+        <item quantity="many">dans %1$s jours</item>
+        <item quantity="other">dans %1$s jours</item>
     </plurals>
     <string name="serverAutomationsCronHourlyAt">Chaque heure à :%1$s</string>
     <string name="serverAutomationsCronDaily">Chaque jour à %1$s</string>

@@ -25,13 +25,13 @@
     <string name="serverAutomationsStopAll">暂停 %1$s 上的所有自动化</string>
     <string name="serverAutomationsStopAllTitle">暂停 %1$s 上的所有自动化？</string>
     <plurals name="serverAutomationsStopAllBody">
-        <item quantity="other">这将暂停 %2$s 上 %1$d 个正在运行的自动化任务。你可以稍后恢复。</item>
+        <item quantity="other">这将暂停 %2$s 上 %1$s 个正在运行的自动化任务。你可以稍后恢复。</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="other">已暂停 %2$s 上的 %1$d 个自动化任务。</item>
+        <item quantity="other">已暂停 %2$s 上的 %1$s 个自动化任务。</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="other">已暂停 %3$s 上 %2$d 个活动自动化中的 %1$d 个，请重试其余任务。</item>
+        <item quantity="other">已暂停 %3$s 上 %2$s 个活动自动化中的 %1$s 个，请重试其余任务。</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">计划</string>
     <string name="serverAutomationsDetailAction">操作</string>
@@ -54,31 +54,31 @@
     <string name="serverAutomationsStatusUnknown">状态未知</string>
     <string name="serverAutomationsDetailExpression">计划表达式</string>
     <plurals name="serverAutomationsEverySeconds">
-        <item quantity="other">每 %1$d 秒</item>
+        <item quantity="other">每 %1$s 秒</item>
     </plurals>
     <plurals name="serverAutomationsEveryMinutes">
-        <item quantity="other">每 %1$d 分钟</item>
+        <item quantity="other">每 %1$s 分钟</item>
     </plurals>
     <plurals name="serverAutomationsEveryHours">
-        <item quantity="other">每 %1$d 小时</item>
+        <item quantity="other">每 %1$s 小时</item>
     </plurals>
     <plurals name="serverAutomationsEveryDays">
-        <item quantity="other">每 %1$d 天</item>
+        <item quantity="other">每 %1$s 天</item>
     </plurals>
     <plurals name="serverAutomationsEveryWeeks">
-        <item quantity="other">每 %1$d 周</item>
+        <item quantity="other">每 %1$s 周</item>
     </plurals>
     <plurals name="serverAutomationsInSeconds">
-        <item quantity="other">%1$d 秒后</item>
+        <item quantity="other">%1$s 秒后</item>
     </plurals>
     <plurals name="serverAutomationsInMinutes">
-        <item quantity="other">%1$d 分钟后</item>
+        <item quantity="other">%1$s 分钟后</item>
     </plurals>
     <plurals name="serverAutomationsInHours">
-        <item quantity="other">%1$d 小时后</item>
+        <item quantity="other">%1$s 小时后</item>
     </plurals>
     <plurals name="serverAutomationsInDays">
-        <item quantity="other">%1$d 天后</item>
+        <item quantity="other">%1$s 天后</item>
     </plurals>
     <string name="serverAutomationsCronHourlyAt">每小时 :%1$s</string>
     <string name="serverAutomationsCronDaily">每天 %1$s</string>

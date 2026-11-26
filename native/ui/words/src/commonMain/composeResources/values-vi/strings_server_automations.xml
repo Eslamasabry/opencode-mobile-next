@@ -25,13 +25,13 @@
     <string name="serverAutomationsStopAll">Tạm dừng mọi tự động hóa trên %1$s</string>
     <string name="serverAutomationsStopAllTitle">Tạm dừng mọi tự động hóa trên %1$s?</string>
     <plurals name="serverAutomationsStopAllBody">
-        <item quantity="other">Thao tác này sẽ tạm dừng %1$d tác vụ tự động hóa đang hoạt động trên %2$s. Bạn có thể tiếp tục lại sau.</item>
+        <item quantity="other">Thao tác này sẽ tạm dừng %1$s tác vụ tự động hóa đang hoạt động trên %2$s. Bạn có thể tiếp tục lại sau.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="other">Đã tạm dừng %1$d tác vụ tự động hóa trên %2$s.</item>
+        <item quantity="other">Đã tạm dừng %1$s tác vụ tự động hóa trên %2$s.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="other">Đã tạm dừng %1$d trong số %2$d tác vụ đang hoạt động trên %3$s. Hãy thử lại với phần còn lại.</item>
+        <item quantity="other">Đã tạm dừng %1$s trong số %2$s tác vụ đang hoạt động trên %3$s. Hãy thử lại với phần còn lại.</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">Lịch chạy</string>
     <string name="serverAutomationsDetailAction">Hành động</string>
@@ -54,31 +54,31 @@
     <string name="serverAutomationsStatusUnknown">Trạng thái không xác định</string>
     <string name="serverAutomationsDetailExpression">Biểu thức lịch chạy</string>
     <plurals name="serverAutomationsEverySeconds">
-        <item quantity="other">Mỗi %1$d giây</item>
+        <item quantity="other">Mỗi %1$s giây</item>
     </plurals>
     <plurals name="serverAutomationsEveryMinutes">
-        <item quantity="other">Mỗi %1$d phút</item>
+        <item quantity="other">Mỗi %1$s phút</item>
     </plurals>
     <plurals name="serverAutomationsEveryHours">
-        <item quantity="other">Mỗi %1$d giờ</item>
+        <item quantity="other">Mỗi %1$s giờ</item>
     </plurals>
     <plurals name="serverAutomationsEveryDays">
-        <item quantity="other">Mỗi %1$d ngày</item>
+        <item quantity="other">Mỗi %1$s ngày</item>
     </plurals>
     <plurals name="serverAutomationsEveryWeeks">
-        <item quantity="other">Mỗi %1$d tuần</item>
+        <item quantity="other">Mỗi %1$s tuần</item>
     </plurals>
     <plurals name="serverAutomationsInSeconds">
-        <item quantity="other">sau %1$d giây</item>
+        <item quantity="other">sau %1$s giây</item>
     </plurals>
     <plurals name="serverAutomationsInMinutes">
-        <item quantity="other">sau %1$d phút</item>
+        <item quantity="other">sau %1$s phút</item>
     </plurals>
     <plurals name="serverAutomationsInHours">
-        <item quantity="other">sau %1$d giờ</item>
+        <item quantity="other">sau %1$s giờ</item>
     </plurals>
     <plurals name="serverAutomationsInDays">
-        <item quantity="other">sau %1$d ngày</item>
+        <item quantity="other">sau %1$s ngày</item>
     </plurals>
     <string name="serverAutomationsCronHourlyAt">Mỗi giờ lúc :%1$s</string>
     <string name="serverAutomationsCronDaily">Mỗi ngày lúc %1$s</string>

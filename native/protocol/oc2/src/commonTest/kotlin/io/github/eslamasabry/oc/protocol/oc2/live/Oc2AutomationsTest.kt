@@ -110,9 +110,10 @@ class Oc2AutomationsTest {
             },
             {
               "id": "aut_4",
-              "name": "Soon reminder",
+              "name": "Deploy reminder",
               "status": "active",
-              "trigger": {"type": "at", "at": "in 10 minutes", "tz": "Europe/Berlin"},
+              "tz": "America/New_York",
+              "trigger": {"type": "at", "at": "2026-11-26T09:00:00.000Z", "tz": "America/New_York"},
               "action": {"type": "prompt", "prompt": "Check deploy"}
             },
             {
@@ -180,10 +181,10 @@ class Oc2AutomationsTest {
             )
 
             val fourth = items[3]
-            val relAt = assertIs<AutomationTrigger.At>(fourth.trigger)
-            assertNull(relAt.atMs)
-            assertEquals("in 10 minutes", relAt.raw)
-            assertEquals("Europe/Berlin", relAt.timeZone)
+            val isoAt = assertIs<AutomationTrigger.At>(fourth.trigger)
+            assertEquals(1_795_683_600_000L, isoAt.atMs)
+            assertEquals("2026-11-26T09:00:00.000Z", isoAt.raw)
+            assertEquals("America/New_York", isoAt.timeZone)
 
             val fifth = items[4]
             val wallAt = assertIs<AutomationTrigger.At>(fifth.trigger)
