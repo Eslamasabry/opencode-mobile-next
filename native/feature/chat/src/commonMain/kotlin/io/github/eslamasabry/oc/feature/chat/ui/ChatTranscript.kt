@@ -521,7 +521,7 @@ internal fun ChatTranscriptList(
     FindOpensFolds(find, rows, facts, folds)
     val anchored = list.anchor == io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor.Hybrid
     SideEffect {
-        folds.onPerson = if (anchored) ({ list.following = false }) else null
+        folds.onPerson = if (anchored) ({ list.holdForFold() }) else null
     }
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
     // raw fence; only

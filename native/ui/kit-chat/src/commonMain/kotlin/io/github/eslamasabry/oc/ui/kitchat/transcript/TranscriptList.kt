@@ -145,6 +145,9 @@ internal constructor(
     /** True while a Hybrid jump-to-newest glide is flipping back to reversed and animating. */
     internal var jumping by mutableStateOf(false)
 
+    /** True while Hybrid holds normal order so a toggled fold expands downward while following stays on. */
+    internal var foldHeld by mutableStateOf(false)
+
     /** Standing bottom room (px) applied while laid out in normal order (plain field). */
     internal var roomPx: Int = 0
 
@@ -152,9 +155,13 @@ internal constructor(
     public val isNormalOrder: Boolean
         get() = laidOutNormal
 
-    /** Target layout order for Hybrid: normal while reading and not mid-drag-out-of-reversed. */
+    /** Target layout order for Hybrid: normal while reading or holding a fold, and not mid-drag-out-of-reversed. */
     public val orderNormal: Boolean
-        get() = anchor == TranscriptAnchor.Hybrid && !following && (!lazy.isScrollInProgress || laidOutNormal)
+        get() {
+            val wantNormal = !following || foldHeld
+            val canFlip = !lazy.isScrollInProgress || laidOutNormal
+            return anchor == TranscriptAnchor.Hybrid && wantNormal && canFlip
+        }
 
     /**
      * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the
@@ -164,8 +171,14 @@ internal constructor(
     public var following: Boolean
         get() = followingState.value
         set(value) {
+            if (foldHeld) foldHeld = false
             followingState.value = value
         }
+
+    /** Keeps normal order while following so a toggled fold expands downward without mounting the jump dock. */
+    public fun holdForFold() {
+        if (anchor == TranscriptAnchor.Hybrid && following) foldHeld = true
+    }
 
     /** Translates a newest-first item index to the underlying [LazyListState] index. */
     public fun lazyIndex(newestFirst: Int): Int =
@@ -221,15 +234,19 @@ internal constructor(
 
     /** Requests a same-frame scroll to the newest row (bottom edge). */
     public fun requestScrollToNewest() {
-        if (laidOutNormal) {
-            if (itemCount > 0) lazy.requestScrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
-        } else {
-            lazy.requestScrollToItem(0)
+        when {
+            foldHeld -> foldHeld = false
+            laidOutNormal -> if (itemCount > 0) lazy.requestScrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
+            else -> lazy.requestScrollToItem(0)
         }
     }
 
     /** Scrolls to the newest row (bottom edge). */
     public suspend fun scrollToNewest() {
+        if (foldHeld) {
+            foldHeld = false
+            snapshotFlow { laidOutNormal }.first { !it }
+        }
         if (laidOutNormal) {
             if (itemCount > 0) lazy.scrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
         } else {
