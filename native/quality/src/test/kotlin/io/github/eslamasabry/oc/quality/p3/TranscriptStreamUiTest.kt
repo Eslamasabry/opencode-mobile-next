@@ -117,7 +117,9 @@ class TranscriptStreamUiTest {
             val laneNs = ArrayList<Long>(8000)
             val liveKind = ArrayList<String>(8000) // what the live tail was in each frame: code, prose or none
             var next = 0
-            var notAtEdge = 0
+            var lostFollow = 0
+            var glideStreak = 0
+            var maxGlideStreak = 0
             var frame = 0L
             val end = events.last().ms + 2_000 // let the reveal and fades finish
             while (frame * frameMs <= end) {
@@ -132,12 +134,25 @@ class TranscriptStreamUiTest {
                 frameNs += System.nanoTime() - f0
                 val tail = state.rows.firstOrNull() as? BlockRow
                 liveKind += if (tail?.live != true) "none" else if (tail.open) "code" else "prose"
-                if (list.lazy.firstVisibleItemIndex != 0) notAtEdge++
+                if (!list.following) lostFollow++
+                if (list.lazy.firstVisibleItemIndex != 0) {
+                    glideStreak++
+                    if (glideStreak > maxGlideStreak) maxGlideStreak = glideStreak
+                } else {
+                    glideStreak = 0
+                }
                 frame++
             }
 
-            // Followed the live edge the whole time; nothing left revealing; the reply is all there, in order.
-            assertEquals(0, notAtEdge, "frames where the newest row was not at the bottom")
+            // Followed the live edge the whole time (smooth follow-scroll glides promptly back to index 0
+            // after each new chunk); nothing left revealing; the reply is all there, in order.
+            assertEquals(0, lostFollow, "frames where following was lost during the stream")
+            assertTrue(
+                maxGlideStreak <= 45,
+                "smooth follow-scroll caught up promptly after each chunk (max streak $maxGlideStreak frames)",
+            )
+            assertEquals(0, list.lazy.firstVisibleItemIndex, "settled on the newest row")
+            assertEquals(0, list.lazy.firstVisibleItemScrollOffset, "settled at offset 0")
             assertTrue(list.following)
             assertEquals(0, reveal.activeCount)
             val blocks = state.rows.filterIsInstance<BlockRow>()
