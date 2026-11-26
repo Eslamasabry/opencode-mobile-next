@@ -62,7 +62,6 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
             )
         )
     val solid = style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
-    val glassLight = style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && !colors.dark
     val shadow =
         if (!solid) Modifier
         else
@@ -88,17 +87,7 @@ public fun KitHeaderCapsule(modifier: Modifier = Modifier, content: @Composable 
             .fillMaxWidth()
             .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
             .then(shadow)
-            .then(
-                when {
-                    solid -> Modifier.kitHairlineBorder(
-                        io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(),
-                        colors.hairline,
-                        look.shape,
-                    )
-                    glassLight -> Modifier.kitHairlineBorder(1.dp, colors.hairline, look.shape)
-                    else -> Modifier
-                }
-            )
+            .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
             .then(look.modifier)
             .testTag("kit-header-capsule")
     ) {
@@ -128,20 +117,9 @@ internal fun Modifier.kitFloatingPartSurface(): Modifier {
             )
         )
     val solid = style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
-    val glassLight = style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && !colors.dark
     return this
         .padding(horizontal = HEADER_CAPSULE_SIDE_DP.dp, vertical = HEADER_CAPSULE_MARGIN_DP.dp)
-        .then(
-            when {
-                solid -> Modifier.kitHairlineBorder(
-                    io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(),
-                    colors.hairline,
-                    look.shape,
-                )
-                glassLight -> Modifier.kitHairlineBorder(1.dp, colors.hairline, look.shape)
-                else -> Modifier
-            }
-        )
+        .then(if (solid) Modifier.kitHairlineBorder(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, look.shape) else Modifier)
         .then(look.modifier)
 }
 

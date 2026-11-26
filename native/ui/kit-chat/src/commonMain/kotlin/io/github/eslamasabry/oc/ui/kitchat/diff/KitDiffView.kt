@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -33,13 +32,11 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -54,7 +51,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -347,30 +343,7 @@ public fun KitDiffView(
                         itemsIndexed(display) { i, item -> rowContent(g, i, item) }
                     }
                 } else {
-                    val visible =
-                        if (maxLines == null || !wraps) display
-                        else {
-                            val maxPx = with(density) { (width - gutter - Space.S2.dp).toPx().toInt().coerceAtLeast(1) }
-                            var used = 0
-                            buildList {
-                                for (item in display) {
-                                    val count =
-                                        when (val src = (item as? DiffDisplay.Source)?.row) {
-                                            is DiffRow.Line ->
-                                                measurer.measure(
-                                                    redactor.redact(src.line.text),
-                                                    mono,
-                                                    constraints = Constraints(maxWidth = maxPx),
-                                                ).lineCount.coerceAtLeast(1)
-                                            else -> 1
-                                        }
-                                    if (isNotEmpty() && used + count > maxLines) break
-                                    add(item)
-                                    used += count
-                                }
-                            }
-                        }
-                    Column(frame.then(sideways)) { visible.forEachIndexed { i, item -> rowContent(g, i, item) } }
+                    Column(frame.then(sideways)) { display.forEachIndexed { i, item -> rowContent(g, i, item) } }
                 }
             }
         }
@@ -404,7 +377,7 @@ public fun KitDiffView(
                     tone = TextTone.Secondary,
                 )
             } else {
-                val frame = if (full) Modifier.background(codeFill) else Modifier.clip(KitShapeId.Code.toShape())
+                val frame = if (full) Modifier.background(codeFill) else Modifier
                 // The listing runs edge to edge like a terminal (KitTerminalView): code in its own frame, not page words
                 // on the gutter (kit_diff_chrome.dart `_codeFrame`).
                 Box((if (bounded) Modifier.weight(1f) else Modifier).fillMaxWidth().then(frame).then(if (full) Modifier.kitEdge(KitEdge.Chrome) else Modifier)) {

@@ -408,15 +408,14 @@ public fun KitTopBar(
                         }
                     }
                 }
-        if (backBesideTitle) {
-            // E20-S13: one block. Back (or gutter start), then the title with its line tight under it (2 dp step),
-            // then the actions; Back and the actions centre on the block.
+        if (back && backBesideTitle) {
+            // E20-S13: one block. Back, then the title with its line tight under it (the kit's 2 dp step), then the
+            // actions; Back and the actions centre on the block.
             Row(
                 Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).testTag("kit-top-bar-compact"),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (back && onExit != null) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
-                else Box(Modifier.width(titleStart))
+                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
                 // Large text: the block outgrows the 48 dp row and its 4 dp step is all that is left above the words (audit
                 // 2: at 1.3x the title's first line sat 15 px under the bar's rim); keep the roomier step there.
                 Column(Modifier.weight(1f).padding(vertical = if (kitFontScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {
@@ -907,18 +906,15 @@ private fun Modifier.endUnderText(line: androidx.compose.ui.unit.TextUnit, top: 
     layout { measurable, constraints ->
         val p = measurable.measure(constraints)
         val pad = top.roundToPx()
+        val words = wordsHeight(p, line)
         val inner = (p.height - pad).coerceAtLeast(0)
-        val words =
-            wordsHeight(p, line)
-                ?: if (line.isSp) line.roundToPx().takeIf { it in 1 until inner } else null
         val bottom = if (words == null) p.height else pad + (inner + words.coerceAtMost(inner)) / 2
         layout(p.width, bottom.coerceIn(0, p.height)) { p.place(0, 0) }
     }
 
 /**
  * E20-S10: rises so the content's vertically centred words start [gap] under what is above it, and reports [bottom]
- * less height below (a target overlapping the empty edge under the bar). Falls back to [line] when a child subcompose
- * layout (such as BoxWithConstraints in KitTopBarScope) does not forward baselines.
+ * less height below (a target overlapping the empty edge under the bar). Unchanged without baselines.
  */
 private fun Modifier.riseToText(
     line: androidx.compose.ui.unit.TextUnit,
@@ -927,9 +923,7 @@ private fun Modifier.riseToText(
 ): Modifier =
     layout { measurable, constraints ->
         val p = measurable.measure(constraints)
-        val words =
-            wordsHeight(p, line)
-                ?: if (line.isSp) line.roundToPx().takeIf { it in 1 until p.height } else null
+        val words = wordsHeight(p, line)
         val slack = if (words == null) 0 else ((p.height - words) / 2).coerceAtLeast(0)
         val rise = (slack - gap.roundToPx()).coerceAtLeast(-gap.roundToPx())
         val height = (p.height - rise - bottom.roundToPx()).coerceAtLeast(0)

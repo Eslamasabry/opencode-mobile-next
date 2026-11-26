@@ -646,36 +646,14 @@ public fun KitScreen(
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, topFrost) else Modifier)
                             ) {
-                                val glassLightBar =
-                                    floatChrome &&
-                                        io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
-                                        io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
-                                        !LocalKitColors.current.dark
                                 CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
-                                    if (barFace != null) {
-                                        KitLiquidBarPane(
-                                            barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody),
-                                            barBody,
-                                            border = glassLightBar,
-                                        )
-                                    } else if (frostedFace != null) {
-                                        KitLiquidBarPane(frostedFace, border = glassLightBar)
-                                    }
-                                    if (floatChrome && barFace == null && frostedFace == null) {
-                                        KitHeaderCapsule { barAndLine() }
-                                    } else if (floatChrome) {
-                                        // Match KitHeaderCapsule side inset so title width equals Solid (B-561).
-                                        CompositionLocalProvider(LocalKitHeaderCapsule provides true) {
-                                            Box(
-                                                Modifier.fillMaxWidth().padding(
-                                                    horizontal = HEADER_CAPSULE_SIDE_DP.dp,
-                                                    vertical = HEADER_CAPSULE_MARGIN_DP.dp,
-                                                )
-                                            ) {
-                                                barAndLine()
-                                            }
-                                        }
-                                    } else it()
+                                    if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody), barBody)
+                                    else if (frostedFace != null) KitLiquidBarPane(frostedFace)
+                                    if (floatChrome && barFace == null && frostedFace == null) KitHeaderCapsule { barAndLine() }
+                                    // Glass and Frosted: the style's own pane is the capsule (it already floats); the title's
+                                    // line, and the status line under it, inside that pane.
+                                    else if (floatChrome) CompositionLocalProvider(LocalKitHeaderCapsule provides true) { barAndLine() }
+                                    else it()
                                 }
                             }
                         }

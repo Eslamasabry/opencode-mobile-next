@@ -57,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -72,7 +74,7 @@ import kotlin.test.Test
 
 class PolishRenders {
     companion object {
-        const val PHASE = "after"
+        const val PHASE = "before"
     }
 
     private val noReqActions =
@@ -116,7 +118,10 @@ class PolishRenders {
                         "en",
                         stillFrame = true,
                     ) {
-                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                        CompositionLocalProvider(
+                            LocalKitRedactor provides Redactor(),
+                            LocalKitWindow provides KitWindowInfo(360f, 780f),
+                        ) {
                             scene.Screen(state, canGoBack = true)
                         }
                     }
@@ -129,7 +134,7 @@ class PolishRenders {
 
     @Test
     fun `render 564 web ask`() =
-        kitUiTest(360, 560) {
+        kitUiTest(360, 780) {
             fun perm(id: String, p: String, pat: String): RequestCardUi.Permission {
                 val r =
                     PermissionRequest(
@@ -148,7 +153,7 @@ class PolishRenders {
                     null,
                     CardState.Waiting,
                     PermissionAsk.of(r, "shopfront", "/home/me/shopfront"),
-                    true,
+                    false,
                     PendingRequest.Permission(r),
                 )
             }
@@ -157,7 +162,13 @@ class PolishRenders {
                     perm("p1", "bash", "npm test"),
                     perm("p2", "webfetch", "https://example.com/docs"),
                 )
-            setContent { E20Scene(dark = true) { ChatRequestSlot(RequestSlotUi(cards), noReqActions, nowMs = null) } }
+            setContent {
+                E20Scene(dark = true) {
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                        ChatRequestSlot(RequestSlotUi(cards), noReqActions, nowMs = null)
+                    }
+                }
+            }
             waitForIdle()
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("564", "web-ask", "1.0", "dark"))
         }
@@ -180,23 +191,25 @@ class PolishRenders {
             val reply = ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {}, onOpenChanges = {})
             setContent {
                 E20Scene(scale = 1.3f, dark = false) {
-                    KitToolRow(
-                        KitToolView(
-                            step.partId,
-                            KitToolKind.Write,
-                            "Write",
-                            step.facts.subject,
-                            null,
-                            KitToolStatus.Done,
-                            null,
-                            24,
-                            null,
-                            "Done",
-                        ),
-                        opened = true,
-                        onToggle = {},
-                        body = { ToolStepBody(step, reply) },
-                    )
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                        KitToolRow(
+                            KitToolView(
+                                step.partId,
+                                KitToolKind.Write,
+                                "Write",
+                                step.facts.subject,
+                                null,
+                                KitToolStatus.Done,
+                                null,
+                                24,
+                                null,
+                                "Done",
+                            ),
+                            opened = true,
+                            onToggle = {},
+                            body = { ToolStepBody(step, reply) },
+                        )
+                    }
                 }
             }
             waitForIdle()
@@ -208,12 +221,14 @@ class PolishRenders {
         kitUiTest(360, 320) {
             setContent {
                 E20Scene(dark = true) {
-                    Box(Modifier.width(360.dp)) {
-                        TurnChangedFiles(
-                            files = listOf(ChangedFile("src/app.kt", 3, 1), ChangedFile("src/main.kt", 1, 0)),
-                            onOpenFile = {},
-                            onAllFiles = {},
-                        )
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                        Box(Modifier.width(360.dp)) {
+                            TurnChangedFiles(
+                                files = listOf(ChangedFile("src/app.kt", 3, 1), ChangedFile("src/main.kt", 1, 0)),
+                                onOpenFile = {},
+                                onAllFiles = {},
+                            )
+                        }
                     }
                 }
             }
@@ -235,22 +250,24 @@ class PolishRenders {
                         "en",
                         stillFrame = true,
                     ) {
-                        KitScreen(
-                            page = true,
-                            topBar = {
-                                KitTopBar(
-                                    title = "Conversations",
-                                    subtitle = "This phone",
-                                    exit = KitTopBarExit.None,
-                                )
-                            },
-                        ) {
-                            Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState(initial = 180))) {
-                                for (i in 1..20) {
-                                    KitText(
-                                        "Item $i — scrollable body content under the plain top bar",
-                                        Modifier.padding(vertical = 12.dp),
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                            KitScreen(
+                                page = true,
+                                topBar = {
+                                    KitTopBar(
+                                        title = "Conversations",
+                                        subtitle = "This phone",
+                                        exit = KitTopBarExit.None,
                                     )
+                                },
+                            ) {
+                                Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState(initial = 180))) {
+                                    for (i in 1..20) {
+                                        KitText(
+                                            "Item $i — scrollable body content under the plain top bar",
+                                            Modifier.padding(vertical = 12.dp),
+                                        )
+                                    }
                                 }
                             }
                         }

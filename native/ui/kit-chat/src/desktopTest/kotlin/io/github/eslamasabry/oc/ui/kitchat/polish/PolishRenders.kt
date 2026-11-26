@@ -19,7 +19,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
@@ -39,7 +41,7 @@ import kotlin.test.Test
 
 class PolishRenders {
     companion object {
-        const val PHASE = "after"
+        const val PHASE = "before"
     }
 
     private fun render(
@@ -55,7 +57,10 @@ class PolishRenders {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
                     ChatTestTheme(dark = true, localeTag = locale, fontScale = 1f) {
                         val dirLayout = if (locale == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
-                        CompositionLocalProvider(LocalLayoutDirection provides dirLayout) {
+                        CompositionLocalProvider(
+                            LocalLayoutDirection provides dirLayout,
+                            LocalKitWindow provides KitWindowInfo(360f, 780f),
+                        ) {
                             Box(
                                 Modifier.width(360.dp)
                                     .background(LocalKitColors.current.ground)
@@ -74,13 +79,13 @@ class PolishRenders {
 
     @Test
     fun `render 551 inplace card`() {
-        val diff = KitDiffPreview.fromText("val a = 1\nval b = 2\nval c = 3")
+        val diff = KitDiffPreview.fromText("val a = 1\nval b = 2")
         render("551-$PHASE-inplace-card-360-1.0-dark.png", height = 780) {
             KitPermissionCard(
                 title = "Edit src/app.kt?",
                 summary = "The agent waits until you answer.",
                 subject = null,
-                targets = listOf(KitRequestTarget("src/app.kt", "+3 −0")),
+                targets = listOf(KitRequestTarget("src/app.kt", "+2 −0")),
                 allowOnceLabel = "Allow once",
                 alwaysLabel = null,
                 denyLabel = "Deny",
