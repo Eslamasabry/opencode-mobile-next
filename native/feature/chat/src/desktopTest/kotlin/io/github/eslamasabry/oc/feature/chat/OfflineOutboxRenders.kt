@@ -74,8 +74,6 @@ class OfflineOutboxRenders {
             unconfirmed = "Not confirmed",
             tryAgain = "Try again",
             sendFailure = { "Not connected to the server right now." },
-            waitingForConnection = "Waiting for connection — sends when back online",
-            cancelWaiting = "Cancel",
         )
 
     private val beforeBubble =

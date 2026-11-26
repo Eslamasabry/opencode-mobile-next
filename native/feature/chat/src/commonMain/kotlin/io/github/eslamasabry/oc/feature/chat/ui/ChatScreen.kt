@@ -143,8 +143,6 @@ import io.github.eslamasabry.oc.ui.words.res.messageViewSendAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignedInPast
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
-import io.github.eslamasabry.oc.ui.words.res.chatWaitingForConnection
-import io.github.eslamasabry.oc.ui.words.res.chatWaitingForConnectionCancel
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
 import io.github.eslamasabry.oc.ui.words.res.revertResolveBeforeSending
@@ -460,8 +458,6 @@ public fun ChatScreen(
     val setUpAction = stringResource(Res.string.agentsSetUpAction, "\u0000")
     val signInAgainLine = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
     val signInAgainAction = stringResource(Res.string.agentsSignInAgain)
-    val waitingForConnection = stringResource(Res.string.chatWaitingForConnection)
-    val cancelWaiting = stringResource(Res.string.chatWaitingForConnectionCancel)
     val listWords =
         remember(
             messageActions,
@@ -481,8 +477,6 @@ public fun ChatScreen(
             setUpAction,
             signInAgainLine,
             signInAgainAction,
-            waitingForConnection,
-            cancelWaiting,
         ) {
             ChatListWords(
                 messageActions = messageActions,
@@ -502,8 +496,6 @@ public fun ChatScreen(
                 setUpAction = { name -> setUpAction.replace("\u0000", name) },
                 signInAgain = { name -> signInAgainLine.replace("\u0000", name) },
                 signInAgainAction = signInAgainAction,
-                waitingForConnection = waitingForConnection,
-                cancelWaiting = cancelWaiting,
             )
         }
     val list = rememberTranscriptListState()

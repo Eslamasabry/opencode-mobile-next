@@ -182,6 +182,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatHomeSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptCheckAgain
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptChecking
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptLastChecked
+import io.github.eslamasabry.oc.ui.words.res.chatWaitingForConnection
+import io.github.eslamasabry.oc.ui.words.res.chatWaitingForConnectionCancel
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.liveFailedStillWorking
 import io.github.eslamasabry.oc.ui.words.res.liveFailedStopped
@@ -255,9 +257,6 @@ internal class ChatListWords(
     /** An agent whose own sign-in ran out: "{agent} needs you to sign in again" and its action, "Sign in again". */
     val signInAgain: (String) -> String = { "" },
     val signInAgainAction: String = "",
-    /** B-500: offline outbox waiting notice and Cancel button label. */
-    val waitingForConnection: String = "",
-    val cancelWaiting: String = "",
 )
 
 /**
@@ -823,17 +822,21 @@ internal fun ChatTranscriptList(
                     else null
                 CompositionLocalProvider(LocalPendingLiveStatus provides status) {
                 PendingBubble(
-                    p,
-                    listWords,
-                    onRetry = { onRetrySend(p.localId) },
-                    onCancel = onCancelWaiting?.let { cancel -> { cancel(p.localId) } },
+                    p = p,
+                    words = listWords,
                     check = receiptChecks[p.localId],
-                    onCheck =
-                        if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
-                        else null,
-                    onReview = onReviewPending,
-                    onSetUp = onSetUpAgent,
-                    onSignIn = onSignInAgent,
+                    actions =
+                        PendingBubbleCallbacks(
+                            onRetry = { onRetrySend(p.localId) },
+                            onCancel = onCancelWaiting?.let { cancel -> { cancel(p.localId) } },
+                            onCheck =
+                                if (p.canCheckReceipt) {
+                                    onCheckReceipt?.let { check -> { check(p.localId) } }
+                                } else null,
+                            onReview = onReviewPending,
+                            onSetUp = onSetUpAgent,
+                            onSignIn = onSignInAgent,
+                        ),
                 )
                 }
               }
@@ -1154,13 +1157,8 @@ private fun PendingStatusLine(sending: String) {
 private fun PendingBubble(
     p: PendingSend,
     words: ChatListWords,
-    onRetry: () -> Unit,
-    onCancel: (() -> Unit)? = null,
     check: ReceiptCheckUi? = null,
-    onCheck: (() -> Unit)? = null,
-    onReview: (() -> Unit)? = null,
-    onSetUp: ((String) -> Unit)? = null,
-    onSignIn: ((String) -> Unit)? = null,
+    actions: PendingBubbleCallbacks,
 ) {
     Column {
         // The same thumbnails the echoed message will show (cached by address), so the swap does not flicker.
@@ -1176,25 +1174,20 @@ private fun PendingBubble(
         )
         val inTransit =
             p.state == PendingState.Sending || p.state == PendingState.WaitingForConnection
-        val setUp = p.setUp?.takeIf { onSetUp != null && !inTransit }
+        val setUp = p.setUp?.takeIf { actions.onSetUp != null && !inTransit }
         val signInNeed = p.signIn?.takeIf { !inTransit && words.signInAgainAction.isNotEmpty() }
         // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
         if (setUp != null) {
             KitSendFailed(
                 lines = listOf(words.setUpNeeded(setUp.name)),
                 actionLabel = words.setUpAction(setUp.name),
-                onAction = { onSetUp?.invoke(setUp.agentId) },
+                onAction = { actions.onSetUp?.invoke(setUp.agentId) },
                 actionTag = "chat-send-set-up",
             )
         } else if (signInNeed != null) {
-            PendingSignInFailed(signInNeed, p.failure, words, onSignIn, onRetry)
+            PendingSignInFailed(signInNeed, p.failure, words, actions.onSignIn, actions.onRetry)
         } else {
-            PendingBubbleStatus(
-                p = p,
-                words = words,
-                check = check,
-                actions = PendingBubbleCallbacks(onRetry, onCancel, onCheck, onReview),
-            )
+            PendingBubbleStatus(p = p, words = words, check = check, actions = actions)
         }
     }
 }
@@ -1202,9 +1195,11 @@ private fun PendingBubble(
 @Immutable
 private class PendingBubbleCallbacks(
     val onRetry: () -> Unit,
-    val onCancel: (() -> Unit)?,
-    val onCheck: (() -> Unit)?,
-    val onReview: (() -> Unit)?,
+    val onCancel: (() -> Unit)? = null,
+    val onCheck: (() -> Unit)? = null,
+    val onReview: (() -> Unit)? = null,
+    val onSetUp: ((String) -> Unit)? = null,
+    val onSignIn: ((String) -> Unit)? = null,
 )
 
 @Composable
@@ -1248,7 +1243,7 @@ private fun PendingBubbleStatus(
         PendingState.Sending -> PendingStatusLine(words.sending)
         // B-500: held while offline; shows plain waiting status with a Cancel action.
         PendingState.WaitingForConnection ->
-            WaitingForConnectionLine(p.localId, words, actions.onCancel)
+            WaitingForConnectionLine(p.localId, actions.onCancel)
         // Review opens the waiting-sends page, which lists only sends with a record: without one it would
         // open empty (Paseo fault 2), so the bubble offers Send again itself.
         PendingState.Unconfirmed ->
@@ -1298,18 +1293,19 @@ private class FailedSendAction(val label: String, val onAction: () -> Unit, val 
 @Composable
 private fun WaitingForConnectionLine(
     localId: Long,
-    words: ChatListWords,
     onCancel: (() -> Unit)?,
 ) {
+    val waiting = stringResource(Res.string.chatWaitingForConnection)
+    val cancelLabel = stringResource(Res.string.chatWaitingForConnectionCancel)
     Column(Modifier.padding(horizontal = Space.S4.dp).testTag("chat-waiting-$localId")) {
         KitNotice(
-            message = words.waitingForConnection,
+            message = waiting,
             tone = StatusTone.Neutral,
             actions =
                 listOfNotNull(
-                    onCancel?.takeIf { words.cancelWaiting.isNotEmpty() }?.let {
+                    onCancel?.let {
                         KitLineAction(
-                            words.cancelWaiting,
+                            cancelLabel,
                             it,
                             testTag = "chat-waiting-cancel-$localId",
                         )
