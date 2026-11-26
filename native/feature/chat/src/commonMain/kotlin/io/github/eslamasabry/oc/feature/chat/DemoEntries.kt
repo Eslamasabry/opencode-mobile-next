@@ -107,16 +107,14 @@ internal fun demoOwnReplyOf(
     stage: DemoStage,
     prompt: String,
     vm: DemoViewModel,
-): DemoOwnReply? =
-    ownReplyKey?.let { key ->
-        DemoOwnReply(
-            rowKey = key,
-            samplePrompt = if (stage == DemoStage.Ready) prompt else "",
-            onRunSample = vm::runSample,
-            onSetUpPhone = vm::setUpPhone,
-            onConnectComputer = vm::connectComputer,
-        )
-    }
+): DemoOwnReply =
+    DemoOwnReply(
+        rowKey = ownReplyKey,
+        samplePrompt = if (stage == DemoStage.Ready) prompt else "",
+        onRunSample = vm::runSample,
+        onSetUpPhone = vm::setUpPhone,
+        onConnectComputer = vm::connectComputer,
+    )
 
 /** The demo keeps the conversation's own message box in every stage; Send waits while the sample request does. */
 private class DemoComposerHost(private val vm: DemoViewModel) : ComposerHost {

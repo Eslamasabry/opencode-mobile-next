@@ -97,20 +97,6 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
                 DemoScreenUi(state.value, stage.value, ownReplyKey.value, requests.value),
             )
 
-    private fun requestSlotOf(asked: PermissionRequest?): RequestSlotUi =
-        RequestSlotUi(
-            asked?.let {
-                RequestCardUi.Permission(
-                    id = it.id,
-                    waitingSinceMs = null,
-                    state = CardState.Waiting,
-                    ask = PermissionAsk.of(it),
-                    canAlwaysAllow = false,
-                    captured = PendingRequest.Permission(it),
-                )
-            }
-        )
-
     /** Allow and Deny answer the sample; the demo has no questions, no saved rules and nothing to undo. */
     public val requestActions: ChatRequestActions =
         object : ChatRequestActions {
@@ -187,3 +173,17 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
         world.close()
     }
 }
+
+private fun requestSlotOf(asked: PermissionRequest?): RequestSlotUi =
+    RequestSlotUi(
+        asked?.let {
+            RequestCardUi.Permission(
+                id = it.id,
+                waitingSinceMs = null,
+                state = CardState.Waiting,
+                ask = PermissionAsk.of(it),
+                canAlwaysAllow = false,
+                captured = PendingRequest.Permission(it),
+            )
+        }
+    )

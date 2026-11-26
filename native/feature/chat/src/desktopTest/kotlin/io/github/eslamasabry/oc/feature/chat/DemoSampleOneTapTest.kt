@@ -32,7 +32,6 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoStage
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoViewModel
-import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -184,7 +183,7 @@ class DemoSampleOneTapTest {
             remember(environment) {
                 entryProvider<NavKey> { with(DemoEntries(environment)) { install() } }
             }
-        E20Scene(motion = MotionLevel.Calm) {
+        E20Scene {
             CompositionLocalProvider(
                 LocalViewModelStoreOwner provides owner,
                 LocalLifecycleOwner provides lifecycle,

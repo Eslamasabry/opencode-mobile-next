@@ -26,7 +26,7 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Immutable
 public class DemoOwnReply(
-    public val rowKey: String,
+    public val rowKey: String?,
     public val samplePrompt: String,
     public val onRunSample: () -> Unit,
     public val onSetUpPhone: () -> Unit,

@@ -1391,8 +1391,13 @@ private fun ChatRow(
                     }
                 } else content()
             }
-            val demoReply = LocalDemoOwnReply.current?.takeIf { it.rowKey == row.key }
-            if (demoReply != null) Column { body(); DemoOwnReplyActions(demoReply) } else body()
+            val demoOwn = LocalDemoOwnReply.current
+            if (demoOwn != null) {
+                Column {
+                    body()
+                    if (demoOwn.rowKey == row.key) DemoOwnReplyActions(demoOwn)
+                }
+            } else body()
         }
         is PromptRow ->
             Column {
