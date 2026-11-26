@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.gate.flicker
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsConfiguration
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -98,28 +99,35 @@ public class FrameRecorder(private val limits: FlickerLimits = FlickerLimits()) 
         public fun read(roots: List<SemanticsNode>): Picture {
             val nodes = ArrayList<FrameNode>()
             val scrolls = HashMap<Int, Float>()
-            roots.forEach { walk(it, emptyList(), nodes, scrolls) }
+            roots.forEach { walk(it, emptyList(), null, nodes, scrolls) }
             return Picture(nodes, scrolls)
         }
 
         private fun walk(
             node: SemanticsNode,
             scrollers: List<Int>,
+            control: Int?,
             nodes: MutableList<FrameNode>,
             scrolls: MutableMap<Int, Float>,
         ) {
             if (!node.layoutInfo.isPlaced) return
             val config = node.config
+            val inControl = if (SemanticsActions.OnClick in config) node.id else control
             val range =
                 config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)
                     ?: config.getOrNull(SemanticsProperties.HorizontalScrollAxisRange)
-            nodeOf(node, config, scrollers)?.let { nodes += it }
+            nodeOf(node, config, scrollers, inControl)?.let { nodes += it }
             val inside = if (range != null) listOf(node.id) + scrollers else scrollers
             if (range != null) scrolls[node.id] = range.value()
-            node.children.forEach { walk(it, inside, nodes, scrolls) }
+            node.children.forEach { walk(it, inside, inControl, nodes, scrolls) }
         }
 
-        private fun nodeOf(node: SemanticsNode, config: SemanticsConfiguration, scrollers: List<Int>): FrameNode? {
+        private fun nodeOf(
+            node: SemanticsNode,
+            config: SemanticsConfiguration,
+            scrollers: List<Int>,
+            control: Int?,
+        ): FrameNode? {
             val text =
                 (config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text } ?: NO_TEXT)
                     .ifBlank { config.getOrNull(SemanticsProperties.EditableText)?.text ?: NO_TEXT }
@@ -132,7 +140,7 @@ public class FrameRecorder(private val limits: FlickerLimits = FlickerLimits()) 
                 null
             } else {
                 val box = DpBox(r.left / d, r.top / d, r.right / d, r.bottom / d)
-                FrameNode(node.id, label, tag, text.isNotBlank(), box, scrollers)
+                FrameNode(node.id, label, tag, text.isNotBlank(), box, scrollers, control)
             }
         }
     }

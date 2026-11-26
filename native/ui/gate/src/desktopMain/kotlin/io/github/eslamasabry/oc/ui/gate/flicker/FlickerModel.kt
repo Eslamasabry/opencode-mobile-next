@@ -130,7 +130,8 @@ public data class DpBox(val left: Float, val top: Float, val right: Float, val b
 
 /**
  * What one frame showed of one semantics node: its [label] (its words, else its description, else `#tag`), whether the
- * words are text, its [box] and the scroll containers around it (innermost first).
+ * words are text, its [box], the scroll containers around it (innermost first), and [control], the semantics id of the
+ * nearest node at or above it that answers a click (null: none).
  */
 public data class FrameNode(
     val id: Int,
@@ -139,6 +140,7 @@ public data class FrameNode(
     val isText: Boolean,
     val box: DpBox,
     val scrollers: List<Int>,
+    val control: Int? = null,
 )
 
 /** The nodes of one picture, in tree order, and the scroll position of every scroll container in it. */

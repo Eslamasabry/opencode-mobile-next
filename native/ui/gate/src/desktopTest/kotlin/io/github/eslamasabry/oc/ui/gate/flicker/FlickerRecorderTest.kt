@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.ui.gate.flicker
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -132,6 +133,15 @@ class FlickerRecorderTest {
         assertFailsWith<IllegalArgumentException> { Allow.jump("Row", " ") }
     }
 
+    @Test
+    fun `B-FLICKER-018 a button's words swapped in place are no A-B-A, the same swap on a bare line still is`() {
+        val words = { f: Int -> if (f in 5 until 10) "Keep every agent as it is" else "Update 1 agent" }
+        val button = found { OnButton(words) }
+        assertTrue(button.isEmpty(), "a button's label swap was reported: $button")
+        val bare = found { Words(words) }
+        assertTrue(bare.of(FlickerRule.ABA, "Update").isNotEmpty(), "the bare line's return was missed: $bare")
+    }
+
     private fun steps(
         options: KitUiOptions,
         n: androidx.compose.runtime.MutableIntState,
@@ -197,6 +207,16 @@ private fun Words(words: (Int) -> String) {
     Column(Modifier.fillMaxSize()) {
         BasicText("Steady")
         BasicText(words(frame))
+    }
+}
+
+/** [Words] inside a control that answers a click: a button's label. */
+@Composable
+private fun OnButton(words: (Int) -> String) {
+    val frame = frameCount()
+    Column(Modifier.fillMaxSize()) {
+        BasicText("Steady")
+        Box(Modifier.clickable(onClick = {})) { BasicText(words(frame)) }
     }
 }
 
