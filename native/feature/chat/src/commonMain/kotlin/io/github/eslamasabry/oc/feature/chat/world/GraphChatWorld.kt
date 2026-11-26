@@ -2945,9 +2945,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         outboxIds.remove(entryId)
     }
 
-    private fun applyPutBack(localId: Long, reason: Failure) {
+    private fun applyPutBack(localId: Long, reason: Failure, retired: MutableList<Long>) {
         if (localId in manualFlushEntries) {
             revertFailedManualFlush(localId, reason)
+            retired += localId
         } else {
             setPending(localId) { it.copy(state = PendingState.Failed, failure = reason) }
         }
@@ -3348,7 +3349,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                         if (voiceProof?.localId == localId)
                             voiceProof = voiceProof?.copy(uncertain = true)
                         shownOutcomes += ref to outcome.id
-                        applyPutBack(localId, outcome.reason)
+                        applyPutBack(localId, outcome.reason, queuedLocalIds)
                     }
                 else -> Unit
             }
