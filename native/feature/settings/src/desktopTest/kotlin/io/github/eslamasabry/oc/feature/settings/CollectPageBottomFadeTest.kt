@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
@@ -42,6 +43,38 @@ import org.jetbrains.compose.resources.stringResource
 class CollectPageBottomFadeTest {
     private val rendersDir = File("build/renders").also { it.mkdirs() }
 
+    private fun ComposeUiTest.scrollPageToEnd(page: SettingsPage, fontScale: Float) {
+        val scroller = onNode(hasScrollAction() and !hasTestTag("kit-screen-status"))
+        val before = scroller.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
+        assertTrue(before.maxValue() > 0f, "$page must be scrollable at ${PHONE_W}dp scale=$fontScale")
+        scroller.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, before.maxValue() + EXTRA_SCROLL) }
+        waitForIdle()
+        mainClock.advanceTimeBy(SETTLE_MS)
+        waitForIdle()
+        val after = scroller.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
+        assertTrue(
+            after.value() >= after.maxValue() - 1f,
+            "$page did not reach end of scroll: ${after.value()} / ${after.maxValue()}",
+        )
+    }
+
+    private fun ComposeUiTest.assertLastLineAboveFade(lastText: String, density: Float, tag: String) {
+        val viewportBottom = onNodeWithTag("kit-screen").getBoundsInRoot().bottom.value
+        val fadeTop = viewportBottom - BOTTOM_FADE_DP
+        val lastNode = onNodeWithText(lastText, useUnmergedTree = true).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        lastNode.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
+        val layout = layouts.single()
+        assertFalse(layout.hasVisualOverflow, "$tag last text has visual overflow")
+        assertTrue((0 until layout.lineCount).none(layout::isLineEllipsized), "$tag last text is ellipsized")
+        val lastLineBottom = (lastNode.positionInRoot.y + layout.getLineBottom(layout.lineCount - 1)) / density
+        assertTrue(
+            lastLineBottom <= fadeTop - MIN_CLEARANCE_DP,
+            "$tag last line bottom ${lastLineBottom}dp does not clear bottom fade top ${fadeTop}dp " +
+                "(viewport bottom ${viewportBottom}dp, need >= ${MIN_CLEARANCE_DP}dp clearance)",
+        )
+    }
+
     private fun assertLastLineClearsBottomFade(
         page: SettingsPage,
         lastTextRes: StringResource,
@@ -73,38 +106,13 @@ class CollectPageBottomFadeTest {
                     }
                 }
                 waitForIdle()
-                val scroller = onNode(hasScrollAction() and !hasTestTag("kit-screen-status"))
-                val before = scroller.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
-                assertTrue(before.maxValue() > 0f, "$page must be scrollable at ${PHONE_W}dp scale=$fontScale")
-                scroller.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, before.maxValue() + EXTRA_SCROLL) }
-                waitForIdle()
-                mainClock.advanceTimeBy(SETTLE_MS)
-                waitForIdle()
-                val after = scroller.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
-                assertTrue(
-                    after.value() >= after.maxValue() - 1f,
-                    "$page did not reach end of scroll: ${after.value()} / ${after.maxValue()}",
-                )
+                scrollPageToEnd(page, fontScale)
                 if (renderName != null) {
                     val img = onRoot().captureToImage().toAwtImage()
                     ImageIO.write(img, "png", File(rendersDir, "$renderName.png"))
                 }
-                val viewportBottom = onNodeWithTag("kit-screen").getBoundsInRoot().bottom.value
-                val fadeTop = viewportBottom - BOTTOM_FADE_DP
-                val lastNode = onNodeWithText(lastText, useUnmergedTree = true).fetchSemanticsNode()
-                val layouts = mutableListOf<TextLayoutResult>()
-                lastNode.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
-                val layout = layouts.single()
                 val mode = if (dark) "dark" else "light"
-                val tag = "$page ($mode, ${fontScale}x)"
-                assertFalse(layout.hasVisualOverflow, "$tag last text has visual overflow")
-                assertTrue((0 until layout.lineCount).none(layout::isLineEllipsized), "$tag last text is ellipsized")
-                val lastLineBottom = (lastNode.positionInRoot.y + layout.getLineBottom(layout.lineCount - 1)) / density
-                assertTrue(
-                    lastLineBottom <= fadeTop - MIN_CLEARANCE_DP,
-                    "$tag last line bottom ${lastLineBottom}dp does not clear bottom fade top ${fadeTop}dp " +
-                        "(viewport bottom ${viewportBottom}dp, need >= ${MIN_CLEARANCE_DP}dp clearance)",
-                )
+                assertLastLineAboveFade(lastText, density, "$page ($mode, ${fontScale}x)")
             }
         } finally {
             Locale.setDefault(previous)
