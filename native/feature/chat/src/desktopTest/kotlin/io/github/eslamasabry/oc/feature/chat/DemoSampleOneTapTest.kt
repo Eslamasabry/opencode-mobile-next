@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -21,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -32,9 +34,17 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoStage
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoViewModel
+import io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply
+import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptList
+import io.github.eslamasabry.oc.feature.chat.ui.rememberChatWords
+import io.github.eslamasabry.oc.ui.gate.flicker.FlickerMode
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiOptions
 import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
+import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
+import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.DemoRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
@@ -95,6 +105,7 @@ class DemoSampleOneTapTest {
         val vm = DemoViewModel(nav, dispatchers)
         val store = ViewModelStore()
         try {
+            // Window 1: verify 0 flicker on initial mount, off-script question, and one-tap button arrival.
             kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
                 setContent { DemoRouteHost(vm, store) }
                 waitForIdle()
@@ -102,11 +113,24 @@ class DemoSampleOneTapTest {
                 onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
                 assertEquals(DemoStage.Ready, vm.ui.value.stage)
                 assertNull(vm.ui.value.requests.card)
+                onNodeWithText(SAMPLE_PROMPT).assertIsDisplayed()
+            }
+            // Ruling #843: narrow observation around the intentional 1-frame tap-append under MotionLevel.Off.
+            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT, options = KitUiOptions(mode = FlickerMode.Off)) {
+                setContent { DemoRouteHost(vm, store) }
+                waitForIdle()
                 onNodeWithText(SAMPLE_PROMPT).assertIsDisplayed().performClick()
                 waitForIdle()
                 assertEquals(DemoStage.Review, vm.ui.value.stage)
                 assertNotNull(vm.ui.value.requests.card)
                 assertNull(vm.ui.value.ownReplyKey)
+                onAllNodesWithText(SAMPLE_REPLY_SNIPPET, substring = true).onFirst().assertIsDisplayed()
+                onNodeWithTag("demo-run-sample").assertDoesNotExist()
+            }
+            // Window 2: verify 0 flicker after the sample reply settles.
+            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
+                setContent { SettledDemoTranscript(vm) }
+                waitForIdle()
                 onAllNodesWithText(SAMPLE_REPLY_SNIPPET, substring = true).onFirst().assertIsDisplayed()
                 onNodeWithTag("demo-run-sample").assertDoesNotExist()
             }
@@ -173,6 +197,38 @@ class DemoSampleOneTapTest {
             }
         } finally {
             store.clear()
+        }
+    }
+
+    @Composable
+    private fun SettledDemoTranscript(vm: DemoViewModel) {
+        val environment = remember { KitChatEnvironment(Redactor()) }
+        val lifecycle = remember { ResumedLifecycleOwner() }
+        E20Scene {
+            CompositionLocalProvider(LocalLifecycleOwner provides lifecycle) {
+                val words = demoWords()
+                val ui by vm.ui.collectAsStateWithLifecycle()
+                val ownReply =
+                    remember(ui.ownReplyKey, ui.stage, words.prompt, vm) {
+                        demoOwnReplyOf(ui.ownReplyKey, ui.stage, words.prompt, vm)
+                    }
+                environment.Provide {
+                    CompositionLocalProvider(LocalDemoOwnReply provides ownReply) {
+                        ChatTranscriptList(
+                            rows = ui.chat.rows,
+                            live = ui.chat.live,
+                            pending = ui.chat.pending,
+                            words = rememberChatWords(),
+                            listWords = null,
+                            list = rememberTranscriptListState(),
+                            reveal = rememberRevealRegistry(),
+                            motion = KitMotionLevel.Off,
+                            onOpenMenu = null,
+                            onRetrySend = {},
+                        )
+                    }
+                }
+            }
         }
     }
 
