@@ -116,7 +116,7 @@ class SetupRunner private constructor(private val context: Context) {
         val live = job
         if (live != null && (worker?.isAlive == true || live.errorCode == SetupPersistenceException.CODE)) {
             live.logTail = tail.value()
-            return json(live, params).toString()
+            return setupJobJson(live, params).toString()
         }
         return if (file.isFile) file.readText() else null
     }
@@ -331,7 +331,7 @@ class SetupRunner private constructor(private val context: Context) {
                 if (state.state == "done") state.current = null
                 // Which part ended it, by component id and state only: no job text, path or argument.
                 if (state.state == "failed") {
-                    Log.w(BuiltinLinux.TAG, "setup job failed at ${state.current}: ${componentStates(state)}")
+                    Log.w(BuiltinLinux.TAG, "setup job failed at ${state.current}: ${setupComponentStates(state)}")
                 }
             }
         }
@@ -365,9 +365,6 @@ class SetupRunner private constructor(private val context: Context) {
             log = null
         }
     }
-
-    private fun componentStates(job: SetupJobState): String =
-        job.components.joinToString(" ") { "${it.id}=${it.state}" }
 
     private fun runNative(spec: Spec, component: SetupComponentStatus): String? {
         if (spec.id != "linux") return "Unknown native component ${spec.id}"
@@ -664,15 +661,11 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     private fun event(component: SetupComponentStatus, event: SetupProtocol.Event) {
-        val changed =
-            synchronized(lock) {
-                val updated = component.applyIfChanged(event)
-                if (updated) {
-                    job?.updatedAt = System.currentTimeMillis()
-                    dirty = true
-                }
-                updated
+        val changed = synchronized(lock) {
+            component.applyIfChanged(event).also { updated ->
+                if (updated) { job?.updatedAt = System.currentTimeMillis(); dirty = true }
             }
+        }
         if (changed && event is SetupProtocol.Event.Stage) writeNow()
     }
 
@@ -763,12 +756,9 @@ class SetupRunner private constructor(private val context: Context) {
         return words.progress.replace("{percent}", (overall * 100).roundToInt().coerceIn(0, 100).toString())
     }
 
-    private fun json(state: SetupJobState, params: JSONObject?): JSONObject =
-        state.toJson().apply { put("params", params ?: JSONObject()) }
-
     private fun writeFile(state: SetupJobState, params: JSONObject?) {
         check(Thread.holdsLock(lock))
-        SetupPersistence.replace(file, json(state, params).toString())
+        SetupPersistence.replace(file, setupJobJson(state, params).toString())
     }
 
     private fun read(): SetupJobState? = try {
@@ -850,3 +840,9 @@ private class SetupScriptRun(
     var last: String? = null
     var sawSegfault = false
 }
+
+private fun setupComponentStates(job: SetupJobState): String =
+    job.components.joinToString(" ") { "${it.id}=${it.state}" }
+
+private fun setupJobJson(state: SetupJobState, params: JSONObject?): JSONObject =
+    state.toJson().apply { put("params", params ?: JSONObject()) }
