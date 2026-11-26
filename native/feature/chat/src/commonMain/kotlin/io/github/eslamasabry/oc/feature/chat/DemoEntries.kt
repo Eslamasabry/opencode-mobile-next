@@ -49,37 +49,14 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
     override fun EntryProviderScope<NavKey>.install() {
         entry<DemoRoute> {
             val vm = metroViewModel<DemoViewModel>()
-            val before = stringResource(Res.string.stateDemoBefore)
-            val after = stringResource(Res.string.stateDemoAfter)
-            val prompt = stringResource(Res.string.stateDemoPrompt)
-            val words =
-                DemoWords(
-                    stringResource(Res.string.stateDemoTitle),
-                    prompt,
-                    stringResource(Res.string.stateDemoReply, before, after),
-                    stringResource(Res.string.stateDemoAllowed, after),
-                    stringResource(Res.string.stateDemoDenied),
-                    before = before,
-                    after = after,
-                    more = stringResource(Res.string.stateDemoMore),
-                    model = stringResource(Res.string.stateDemoModel),
-                    own = stringResource(Res.string.stateDemoOwn, prompt),
-                )
+            val words = demoWords()
             remember(vm, words) { vm.configure(words) }
             val state by vm.state.collectAsStateWithLifecycle()
             val stage by vm.stage.collectAsStateWithLifecycle()
             val ownReplyKey by vm.ownReplyKey.collectAsStateWithLifecycle()
             val demoOwnReply =
-                remember(ownReplyKey, stage, prompt, vm) {
-                    ownReplyKey?.let { key ->
-                        DemoOwnReply(
-                            rowKey = key,
-                            samplePrompt = if (stage == DemoStage.Ready) prompt else "",
-                            onRunSample = vm::runSample,
-                            onSetUpPhone = vm::setUpPhone,
-                            onConnectComputer = vm::connectComputer,
-                        )
-                    }
+                remember(ownReplyKey, stage, words.prompt, vm) {
+                    demoOwnReplyOf(ownReplyKey, stage, words.prompt, vm)
                 }
             val composer = remember(vm) { DemoComposerHost(vm) }
             // The sample agent's ask is the app's own request card over the message box, as in a real conversation
@@ -108,6 +85,41 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
         }
     }
 }
+
+@Composable
+internal fun demoWords(): DemoWords {
+    val before = stringResource(Res.string.stateDemoBefore)
+    val after = stringResource(Res.string.stateDemoAfter)
+    val prompt = stringResource(Res.string.stateDemoPrompt)
+    return DemoWords(
+        stringResource(Res.string.stateDemoTitle),
+        prompt,
+        stringResource(Res.string.stateDemoReply, before, after),
+        stringResource(Res.string.stateDemoAllowed, after),
+        stringResource(Res.string.stateDemoDenied),
+        before = before,
+        after = after,
+        more = stringResource(Res.string.stateDemoMore),
+        model = stringResource(Res.string.stateDemoModel),
+        own = stringResource(Res.string.stateDemoOwn, prompt),
+    )
+}
+
+internal fun demoOwnReplyOf(
+    ownReplyKey: String?,
+    stage: DemoStage,
+    prompt: String,
+    vm: DemoViewModel,
+): DemoOwnReply? =
+    ownReplyKey?.let { key ->
+        DemoOwnReply(
+            rowKey = key,
+            samplePrompt = if (stage == DemoStage.Ready) prompt else "",
+            onRunSample = vm::runSample,
+            onSetUpPhone = vm::setUpPhone,
+            onConnectComputer = vm::connectComputer,
+        )
+    }
 
 /** The demo keeps the conversation's own message box in every stage; Send waits while the sample request does. */
 private class DemoComposerHost(private val vm: DemoViewModel) : ComposerHost {

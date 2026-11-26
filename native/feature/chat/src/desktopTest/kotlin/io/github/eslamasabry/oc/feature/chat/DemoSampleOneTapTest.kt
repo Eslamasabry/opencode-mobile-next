@@ -1,39 +1,42 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
-import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
-import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
-import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
-import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
+import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
+import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
+import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
+import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoStage
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoViewModel
+import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoWords
+import io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReply
+import io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply
+import io.github.eslamasabry.oc.feature.chat.ui.ChatListWords
+import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptList
+import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
+import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
+import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.routes.AppRoute
-import io.github.eslamasabry.oc.ui.routes.DemoRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
-import kotlin.reflect.KClass
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -41,6 +44,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -65,6 +70,45 @@ class DemoSampleOneTapTest {
             override fun serial(name: String) = Dispatchers.Unconfined
         }
 
+    private val words =
+        DemoWords(
+            title = "Offline demo",
+            prompt = SAMPLE_PROMPT,
+            reply = "I’ll change the greeting in welcome.txt from “Hello” to “Welcome aboard!”.",
+            allowed = "Done. welcome.txt now says “Welcome aboard!”.",
+            denied = "Okay, I left welcome.txt as it is.",
+            before = "Hello",
+            after = "Welcome aboard!",
+            more = "That’s the end of the demo. Connect a server to work on your own projects.",
+            model = "Sample model",
+            own =
+                "This demo can’t answer your own questions. It plays one sample: " +
+                    "send “$SAMPLE_PROMPT” to see it. To ask your own, leave the demo and set it up for real.",
+        )
+
+    private object TranscriptWords : ChatTranscriptWords {
+        override val jumpToLatest: String = "Jump to latest"
+
+        override fun workLine(calls: Int, failed: Int, state: WorkState): String = "$calls steps"
+
+        override fun notice(kind: NoticeKind): String = "Notice"
+
+        override fun footer(failed: Boolean): String = "More"
+
+        override fun thought(firstLine: String): String = firstLine
+    }
+
+    private val listWords =
+        ChatListWords(
+            messageActions = "Message actions",
+            working = "Working",
+            stopping = "Stopping",
+            sending = "Sending",
+            notSent = "Not sent",
+            unconfirmed = "Not confirmed",
+            tryAgain = "Try again",
+        )
+
     @BeforeTest
     fun setUpMain() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -75,140 +119,129 @@ class DemoSampleOneTapTest {
         Dispatchers.resetMain()
     }
 
-    @Test
-    fun `B-623 tapping the suggested sample question runs it in one tap without retyping`() {
+    private fun preparedDemo(): Pair<RecordingNavigator, DemoViewModel> {
         val nav = RecordingNavigator()
         val vm = DemoViewModel(nav, dispatchers)
-        val store = ViewModelStore()
-        try {
-            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
-                setContent { DemoRouteHost(vm, store) }
-                waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
-                onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
-                assertEquals(DemoStage.Ready, vm.stage.value)
-                assertNull(vm.requests.value.card)
-                onNodeWithText(SAMPLE_PROMPT).assertIsDisplayed().performClick()
-                waitForIdle()
-                assertEquals(DemoStage.Review, vm.stage.value)
-                assertNotNull(vm.requests.value.card)
-                onAllNodesWithText(SAMPLE_REPLY_SNIPPET, substring = true).onFirst().assertIsDisplayed()
-            }
-        } finally {
-            store.clear()
+        vm.configure(words)
+        assertTrue(runBlocking { vm.send(OWN_QUESTION) })
+        return nav to vm
+    }
+
+    @Test
+    fun `B-623 tapping the suggested sample question runs it in one tap without retyping`() {
+        val (_, vm) = preparedDemo()
+        val initialRows = vm.state.value.rows
+        val ownReply = demoOwnReplyOf(vm.ownReplyKey.value, vm.stage.value, words.prompt, vm)
+        kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
+            setContent { DemoTranscriptScene(initialRows, ownReply) }
+            waitForIdle()
+            onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
+            assertEquals(DemoStage.Ready, vm.stage.value)
+            assertNull(vm.requests.value.card)
+            onNodeWithText(SAMPLE_PROMPT).assertIsDisplayed().performClick()
+            waitForIdle()
+            assertEquals(DemoStage.Review, vm.stage.value)
+            assertNotNull(vm.requests.value.card)
+            assertNull(vm.ownReplyKey.value)
+            val rows = vm.state.value.rows
+            assertTrue(rows.any { it is PromptRow && it.text == SAMPLE_PROMPT })
+            assertTrue(rows.any { it is BlockRow && SAMPLE_REPLY_SNIPPET in it.text })
+        }
+        val afterRows = vm.state.value.rows
+        val afterReply = demoOwnReplyOf(vm.ownReplyKey.value, vm.stage.value, words.prompt, vm)
+        kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
+            setContent { DemoTranscriptScene(afterRows, afterReply) }
+            waitForIdle()
+            onAllNodesWithText(SAMPLE_REPLY_SNIPPET, substring = true).onFirst().assertIsDisplayed()
+            onNodeWithTag("demo-run-sample").assertDoesNotExist()
         }
     }
 
     @Test
     fun `B-623 primary exit names Set up OpenCode on this phone and routes directly to phone setup`() {
-        val nav = RecordingNavigator()
-        val vm = DemoViewModel(nav, dispatchers)
-        val store = ViewModelStore()
-        try {
-            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
-                setContent { DemoRouteHost(vm, store) }
-                waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
-                onNodeWithText(SET_UP_PHONE).assertIsDisplayed().performClick()
-                waitForIdle()
-                assertEquals(listOf("back", "open"), nav.calls)
-                assertEquals(listOf<AppRoute>(PhoneSetupRoute.Setup), nav.opened)
-            }
-        } finally {
-            store.clear()
+        val (nav, vm) = preparedDemo()
+        val rows = vm.state.value.rows
+        val ownReply = demoOwnReplyOf(vm.ownReplyKey.value, vm.stage.value, words.prompt, vm)
+        kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
+            setContent { DemoTranscriptScene(rows, ownReply) }
+            waitForIdle()
+            onNodeWithText(SET_UP_PHONE).assertIsDisplayed().performClick()
+            waitForIdle()
+            assertEquals(listOf("back", "open"), nav.calls)
+            assertEquals(listOf<AppRoute>(PhoneSetupRoute.Setup), nav.opened)
         }
     }
 
     @Test
     fun `B-623 Connect a computer sits beside phone setup and routes to computer connection`() {
-        val nav = RecordingNavigator()
-        val vm = DemoViewModel(nav, dispatchers)
-        val store = ViewModelStore()
-        try {
-            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
-                setContent { DemoRouteHost(vm, store) }
-                waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
-                onNodeWithText(SET_UP_PHONE).assertIsDisplayed()
-                onNodeWithText(CONNECT_COMPUTER).assertIsDisplayed().performClick()
-                waitForIdle()
-                assertEquals(listOf("back", "open"), nav.calls)
-                assertEquals(listOf<AppRoute>(ServersRoute.Edit()), nav.opened)
-            }
-        } finally {
-            store.clear()
+        val (nav, vm) = preparedDemo()
+        val rows = vm.state.value.rows
+        val ownReply = demoOwnReplyOf(vm.ownReplyKey.value, vm.stage.value, words.prompt, vm)
+        kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
+            setContent { DemoTranscriptScene(rows, ownReply) }
+            waitForIdle()
+            onNodeWithText(SET_UP_PHONE).assertIsDisplayed()
+            onNodeWithText(CONNECT_COMPUTER).assertIsDisplayed().performClick()
+            waitForIdle()
+            assertEquals(listOf("back", "open"), nav.calls)
+            assertEquals(listOf<AppRoute>(ServersRoute.Edit()), nav.opened)
         }
     }
 
     @Test
-    fun `B-623 B-428 honest reply stays intact when asking an off-script question`() {
-        val nav = RecordingNavigator()
-        val vm = DemoViewModel(nav, dispatchers)
-        val store = ViewModelStore()
-        try {
+    fun `B-623 B-428 honest reply stays intact and nothing clips at 360 dp at text 1_0 and 1_3`() {
+        val (_, vm) = preparedDemo()
+        val rows = vm.state.value.rows
+        val ownReply = demoOwnReplyOf(vm.ownReplyKey.value, vm.stage.value, words.prompt, vm)
+        for (scale in listOf(SCALE_DEFAULT, SCALE_LARGE)) {
             kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
-                setContent { DemoRouteHost(vm, store) }
-                waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
+                setContent { DemoTranscriptScene(rows, ownReply, scale = scale) }
                 waitForIdle()
                 onAllNodesWithText(OWN_QUESTION, substring = true).onFirst().assertIsDisplayed()
                 onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
+                assertTrue(boundsOfText(SAMPLE_PROMPT).right <= PHONE_WIDTH.toFloat())
+                assertTrue(boundsOfText(SET_UP_PHONE).right <= PHONE_WIDTH.toFloat())
+                assertTrue(boundsOfText(CONNECT_COMPUTER).right <= PHONE_WIDTH.toFloat())
                 assertEquals(DemoStage.Ready, vm.stage.value)
                 assertNull(vm.requests.value.card)
             }
-        } finally {
-            store.clear()
         }
     }
 
     @Composable
-    private fun DemoRouteHost(vm: DemoViewModel, store: ViewModelStore) {
+    private fun DemoTranscriptScene(
+        rows: ImmutableList<TranscriptRow>,
+        ownReply: DemoOwnReply?,
+        scale: Float = SCALE_DEFAULT,
+    ) {
         val environment = remember { KitChatEnvironment(Redactor()) }
-        val owner = remember(store) { FixedViewModelStoreOwner(store) }
-        val lifecycle = remember { ResumedLifecycleOwner() }
-        val factory = remember(vm) { SingleDemoVmFactory(vm) }
-        val provider =
-            remember(environment) {
-                entryProvider<NavKey> { with(DemoEntries(environment)) { install() } }
-            }
-        E20Scene {
-            CompositionLocalProvider(
-                LocalViewModelStoreOwner provides owner,
-                LocalLifecycleOwner provides lifecycle,
-                LocalMetroViewModelFactory provides factory,
-            ) {
-                provider(DemoRoute).Content()
+        E20Scene(scale = scale) {
+            environment.Provide {
+                CompositionLocalProvider(LocalDemoOwnReply provides ownReply) {
+                    Box(Modifier.size(PHONE_WIDTH.dp, PHONE_HEIGHT.dp)) {
+                        ChatTranscriptList(
+                            rows = rows,
+                            live = null,
+                            pending = persistentListOf(),
+                            words = TranscriptWords,
+                            listWords = listWords,
+                            list = rememberTranscriptListState(),
+                            reveal = rememberRevealRegistry(),
+                            motion = KitMotionLevel.Off,
+                            onOpenMenu = null,
+                            onRetrySend = {},
+                        )
+                    }
+                }
             }
         }
-    }
-
-    private class FixedViewModelStoreOwner(override val viewModelStore: ViewModelStore) :
-        ViewModelStoreOwner
-
-    private class ResumedLifecycleOwner : LifecycleOwner {
-        private val registry =
-            LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
-
-        override val lifecycle: Lifecycle
-            get() = registry
-    }
-
-    private class SingleDemoVmFactory(private val vm: DemoViewModel) : MetroViewModelFactory() {
-        override val viewModelProviders: Map<KClass<out ViewModel>, () -> ViewModel> =
-            mapOf(DemoViewModel::class to { vm })
-        override val assistedFactoryProviders:
-            Map<KClass<out ViewModel>, () -> ViewModelAssistedFactory> = emptyMap()
-        override val manualAssistedFactoryProviders:
-            Map<KClass<out ManualViewModelAssistedFactory>, () -> ManualViewModelAssistedFactory> =
-            emptyMap()
     }
 
     private companion object {
         const val PHONE_WIDTH = 360
         const val PHONE_HEIGHT = 780
+        const val SCALE_DEFAULT = 1.0f
+        const val SCALE_LARGE = 1.3f
         const val OWN_QUESTION = "Which Excel formula adds up column B?"
         const val OWN_HONEST_LINE = "This demo can’t answer your own questions."
         const val SAMPLE_PROMPT = "Make the welcome message friendlier."
