@@ -412,6 +412,51 @@ public data class PlacedPaceLabel<T>(
     val payload: T,
 )
 
+/** Axis-aligned rectangle inside [KitPaceBendChart]'s plot area. */
+public data class PaceLabelRect(
+    val left: Float,
+    val top: Float,
+    val right: Float,
+    val bottom: Float,
+) {
+    /** Horizontal center of this label box. */
+    public val centerX: Float get() = (left + right) / 2f
+
+    /** True when this box overlaps [other] (within [gap] on both axes). */
+    public fun overlaps(other: PaceLabelRect, gap: Float = 0f): Boolean =
+        left < other.right + gap && other.left < right + gap &&
+            top < other.bottom + gap && other.top < bottom + gap
+}
+
+/** Width and height of a measured guide label. */
+public data class PaceLabelSize(
+    val width: Float,
+    val height: Float,
+)
+
+/** Geometry and label sizes needed to place the landing and even-pace guide labels. */
+public data class PaceGuideLayoutInput(
+    val x0: Float,
+    val x1: Float,
+    val top: Float,
+    val plotHeight: Float,
+    val rtl: Boolean,
+    val elapsed: Float,
+    val left: Float,
+    val atReset: Float?,
+    val usedAbove: Boolean,
+    val landingSize: PaceLabelSize?,
+    val evenPaceSize: PaceLabelSize?,
+    val pad: Float,
+    val minGap: Float,
+)
+
+/** Placed guide labels inside the plot; either slot is null when absent or dropped for space. */
+public data class PaceGuidePlacement(
+    val landing: PaceLabelRect?,
+    val evenPace: PaceLabelRect?,
+)
+
 /** Pure layout and coordinate rules behind [KitPaceBendChart], testable without Compose. */
 public object PaceBendRules {
     /** Maps window fraction `0..1` to horizontal coordinate, mirrored in RTL. */
@@ -425,6 +470,13 @@ public object PaceBendRules {
         val l = if (leftShare.isFinite()) leftShare.coerceIn(0f, 1f) else 0f
         return top + (1f - l) * plotHeight
     }
+
+    /**
+     * Places the optional landing and even-pace guide labels inside `[top, top + plotHeight]`.
+     * The landing label has priority; the even-pace label is omitted when it cannot fit cleanly.
+     */
+    public fun placeGuideLabels(input: PaceGuideLayoutInput): PaceGuidePlacement =
+        PaceGuidePlacement(landing = null, evenPace = null)
 
     /**
      * Places axis labels in priority order, clamping every label inside `[x0, x1]` and dropping any

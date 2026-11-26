@@ -1,11 +1,18 @@
 package io.github.eslamasabry.oc.feature.usage
 
+import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageSubscription
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindow
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitMath
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitPaceMath
 import io.github.eslamasabry.oc.feature.usage.presentation.PaceForecast
 import io.github.eslamasabry.oc.feature.usage.presentation.PaceMoment
 import io.github.eslamasabry.oc.feature.usage.presentation.PaceRateUnit
 import io.github.eslamasabry.oc.feature.usage.presentation.ResetIn
+import io.github.eslamasabry.oc.feature.usage.presentation.limitsUi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -125,5 +132,56 @@ class LimitPaceForecastTest {
             )
         val exhausted = assertIs<PaceForecast.Out>(out)
         assertEquals(PaceMoment.Relative(days = 0, hours = 2, minutes = 0), exhausted.resetsMoment)
+    }
+
+    @Test
+    fun `B-508 switch hint skips an account whose other window is out or runs out`() {
+        val phone = UsageConnection(UsageConnection.PHONE_ID, "", UsageConnectionKind.PhoneAgents)
+        val fetchedAt = Instant.fromEpochMilliseconds(now - minute)
+        val codex =
+            UsageSubscription(
+                key = "codex",
+                providerId = "codex",
+                displayName = "Codex",
+                state = SubscriptionState.NearLimit,
+                windows = listOf(UsageWindow("weekly", 50.0, 604_800, Instant.fromEpochMilliseconds(now + 5 * day))),
+                fetchedAt = fetchedAt,
+                readFrom = phone,
+            )
+        val claudeWeekly = UsageWindow("seven_day", 20.0, 604_800, Instant.fromEpochMilliseconds(now + 4 * day))
+
+        val claudeWithOut =
+            UsageSubscription(
+                key = "claude",
+                providerId = "claude",
+                displayName = "Claude",
+                state = SubscriptionState.Ok,
+                windows =
+                    listOf(
+                        UsageWindow("five_hour", 100.0, 18_000, Instant.fromEpochMilliseconds(now + 2 * hour)),
+                        claudeWeekly,
+                    ),
+                fetchedAt = fetchedAt,
+                readFrom = phone,
+            )
+        val outUi = limitsUi(UsageSnapshot(listOf(codex, claudeWithOut), loaded = true), false, now, "UTC")
+        val claudeOutWindows = outUi.accounts.first { it.key == "claude" }.groups.flatMap { it.windows }
+        assertTrue(claudeOutWindows.any { it.forecast is PaceForecast.Lasts })
+        assertTrue(claudeOutWindows.any { it.forecast is PaceForecast.Out })
+        assertNull(LimitPaceMath.bestSwitchHint(outUi.accounts, exceptKey = "codex"))
+
+        val claudeWithRunsOut =
+            claudeWithOut.copy(
+                windows =
+                    listOf(
+                        UsageWindow("five_hour", 85.0, 18_000, Instant.fromEpochMilliseconds(now + 3 * hour)),
+                        claudeWeekly,
+                    ),
+            )
+        val runsOutUi = limitsUi(UsageSnapshot(listOf(codex, claudeWithRunsOut), loaded = true), false, now, "UTC")
+        val claudeRunsOutWindows = runsOutUi.accounts.first { it.key == "claude" }.groups.flatMap { it.windows }
+        assertTrue(claudeRunsOutWindows.any { it.forecast is PaceForecast.Lasts })
+        assertTrue(claudeRunsOutWindows.any { it.forecast is PaceForecast.RunsOut })
+        assertNull(LimitPaceMath.bestSwitchHint(runsOutUi.accounts, exceptKey = "codex"))
     }
 }
