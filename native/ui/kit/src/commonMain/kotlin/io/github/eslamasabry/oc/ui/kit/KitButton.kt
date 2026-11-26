@@ -1,7 +1,14 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -15,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,11 +33,13 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.color.Argb
@@ -55,7 +65,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
-import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -510,13 +520,38 @@ private fun KitTextColored(text: String, color: Color, maxLines: Int, underline:
         )
     val swapLabels = LocalKitButtonSwapLabels.current
     if (swapLabels.isEmpty()) {
-        KitSwap(text, pace = KitPace.Quick) { shown -> ButtonLine(shown, style, maxLines) }
+        ButtonSwapSlot.Swap(text, style, maxLines)
         return
     }
     ButtonSwapSlot.Reserved(text, style, maxLines, swapLabels)
 }
 
 private object ButtonSwapSlot {
+    @Composable
+    fun Swap(text: String, style: androidx.compose.ui.text.TextStyle, maxLines: Int) {
+        if (KitMotion.state.reduced) {
+            Box(contentAlignment = Alignment.Center) { key(text) { ButtonLine(text, style, maxLines) } }
+            return
+        }
+        val specs = KitMotion.specs
+        AnimatedContent(
+            targetState = text,
+            contentAlignment = Alignment.Center,
+            transitionSpec = {
+                (fadeIn(specs.pace(KitPace.Quick)) togetherWith fadeOut(specs.pace(KitPace.Quick)))
+                    .using(SizeTransform(clip = false) { _, _ -> snap<IntSize>() })
+            },
+            label = "kit.button.label",
+        ) { shown ->
+            val leaving = transition.targetState == EnterExitState.PostExit
+            // Button labels are non-interactive text inside a tappable KitButton: hide leaving semantics without
+            // consuming PointerEventPass.Initial (which would swallow taps on the button during a crossfade).
+            Box(if (leaving) Modifier.clearAndSetSemantics {} else Modifier) {
+                ButtonLine(shown, style, maxLines)
+            }
+        }
+    }
+
     @Composable
     fun Reserved(
         text: String,
@@ -547,7 +582,7 @@ private object ButtonSwapSlot {
                 }
             val reservedDp = with(density) { reservedPx.toDp() }
             Box(Modifier.heightIn(min = reservedDp), contentAlignment = Alignment.Center) {
-                KitSwap(text, pace = KitPace.Quick) { shown -> ButtonLine(shown, style, maxLines) }
+                Swap(text, style, maxLines)
             }
         }
     }
