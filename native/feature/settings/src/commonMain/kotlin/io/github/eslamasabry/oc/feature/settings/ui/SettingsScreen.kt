@@ -404,7 +404,9 @@ internal fun SettingsFrame(
         KitPinnedFootBody(
             scroll = pageScroll,
             foot = footer,
-            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+            // Bottom padding clears KitScreen's 24 dp bottom fade (plus 8 dp above a pinned foot) with room below
+            // the last line of text (B-624).
+            contentPadding = PaddingValues(top = Space.S2.dp, bottom = (Space.S6 + Space.S6).dp),
             verticalArrangement =
                 Arrangement.spacedBy(
                     if (state.page == SettingsPage.Hub || state.page == SettingsPage.Appearance)
