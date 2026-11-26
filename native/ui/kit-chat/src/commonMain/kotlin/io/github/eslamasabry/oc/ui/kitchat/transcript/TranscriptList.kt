@@ -364,15 +364,7 @@ public fun KitTranscriptList(
 ) {
     val isHybrid = state.anchor == TranscriptAnchor.Hybrid
     val normal = state.orderNormal
-    val recorded =
-        if (isHybrid) {
-            RecordingLazyListScope().apply(content).also {
-                state.itemCount = it.itemCount
-                state.recordedScope = it
-            }
-        } else {
-            null
-        }
+    val recorded = TranscriptPlumbing.record(isHybrid, state, content)
     val lastKey = remember { arrayOfNulls<String>(1) }
     SideEffect {
         if (isHybrid) state.composedNormal = normal
@@ -399,28 +391,7 @@ public fun KitTranscriptList(
     // so a scope inside the row would cancel the glide after scrollToItem(2). Also hosts screen-reader scrolls.
     val scope = rememberCoroutineScope()
     val a11yDispatcher = remember { NestedScrollDispatcher() }
-    if (isHybrid) {
-        LaunchedEffect(state) {
-            snapshotFlow { state.lazy.isScrollInProgress }.collect { scrolling ->
-                if (!scrolling && !personScroll.actionActive) personScroll.end()
-            }
-        }
-    } else {
-        LaunchedEffect(state) {
-            state.lazy.interactionSource.interactions.collect {
-                if (it is DragInteraction.Start) state.following = false
-            }
-        }
-        // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6:
-        // "Jump to latest" right after a send with the newest message in view): read on the edge alone, a drag that
-        // ended there never resumed following (the edge was reached mid-drag and did not change after it), so the next
-        // send landed below the rows in view and the list stood "away".
-        LaunchedEffect(state) {
-            snapshotFlow { !state.lazy.isScrollInProgress && state.atLiveEdge }.collect {
-                if (it) state.following = true
-            }
-        }
-    }
+    TranscriptPlumbing.FollowEffects(state, personScroll)
     val reachOldest = androidx.compose.runtime.rememberUpdatedState(onReachOldest)
     LaunchedEffect(state) {
         snapshotFlow { TranscriptAnchorOps.reachedOldest(state) }.collect { if (it) reachOldest.value?.invoke() }
@@ -445,24 +416,7 @@ public fun KitTranscriptList(
             // 2026-11-14). While the row shows, the list also clears the band the row stands on.
             modifier =
                 Modifier.fillMaxSize()
-                    .semantics {
-                        scrollBy { _, y ->
-                            scope.launch { personScroll.a11yScrollBy(a11yDispatcher, motion, y) }
-                            true
-                        }
-                        scrollToIndex { index ->
-                            if (index < 0) return@scrollToIndex false
-                            scope.launch { personScroll.a11yScrollToIndex(index) }
-                            true
-                        }
-                    }
-                    .then(
-                        if (isHybrid) {
-                            Modifier.nestedScroll(personScroll).nestedScroll(NoopNestedScroll, a11yDispatcher)
-                        } else {
-                            Modifier
-                        }
-                    )
+                    .then(TranscriptPlumbing.scrollActions(personScroll, a11yDispatcher, scope, motion, isHybrid))
                     .keepsBottom(
                         pin = pin,
                         topPaddingPx = { with(density) { insetPadding.calculateTopPadding().roundToPx() } },
@@ -472,19 +426,112 @@ public fun KitTranscriptList(
                     .clearBandForDock(state, contentPadding, chrome)
                     .kitScreenListEdges()
                     .testTag("transcript-list"),
-            content = {
-                when {
-                    recorded == null -> content()
-                    normal -> recorded.replayReversed(this)
-                    else -> recorded.replayForward(this)
-                }
-            },
+            content = { TranscriptPlumbing.replay(recorded, normal, this, content) },
         )
         // Owner decision O2 = D (2026-11-24): KitJumpDock reads [TranscriptListState.following] in its own scope and
         // returns immediately while following, so the row is in the tree exactly while !following and toggling it
         // never recomposes the list.
         KitJumpDock(state, jumpLabel, { state.jumpToLatest(scope, motion) }, dockLive) {
             chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()
+        }
+    }
+}
+
+private object TranscriptPlumbing {
+    /**
+     * What [content] adds this pass, for Hybrid only: recorded as intervals (never walked per row in composition),
+     * so order flips can look a row up and [TranscriptListState.itemCount] stays plain. Today records nothing: null.
+     */
+    fun record(
+        isHybrid: Boolean,
+        state: TranscriptListState,
+        content: LazyListScope.() -> Unit,
+    ): RecordingLazyListScope? =
+        if (!isHybrid) {
+            null
+        } else {
+            RecordingLazyListScope().apply(content).also {
+                state.itemCount = it.itemCount
+                state.recordedScope = it
+            }
+        }
+
+    /**
+     * How following follows the person. Today: a drag leaves following, and the newest row brings it back once the
+     * scroll has stopped. Hybrid: the person path ends every scroll itself (a drag, a fling or a screen-reader
+     * scroll).
+     */
+    @Composable
+    fun FollowEffects(state: TranscriptListState, personScroll: PersonScroll) {
+        if (state.anchor == TranscriptAnchor.Hybrid) {
+            LaunchedEffect(state) {
+                snapshotFlow { state.lazy.isScrollInProgress }.collect { scrolling ->
+                    if (!scrolling && !personScroll.actionActive) personScroll.end()
+                }
+            }
+        } else {
+            LaunchedEffect(state) {
+                state.lazy.interactionSource.interactions.collect {
+                    if (it is DragInteraction.Start) state.following = false
+                }
+            }
+            // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14,
+            // k6: "Jump to latest" right after a send with the newest message in view): read on the edge alone, a
+            // drag that ended there never resumed following (the edge was reached mid-drag and did not change after
+            // it), so the next send landed below the rows in view and the list stood "away".
+            LaunchedEffect(state) {
+                snapshotFlow { !state.lazy.isScrollInProgress && state.atLiveEdge }.collect {
+                    if (it) state.following = true
+                }
+            }
+        }
+    }
+
+    /**
+     * The list's own scroll plumbing, one chain: its screen-reader actions (both modes) and, under Hybrid, the
+     * person path in front of the list with the dispatcher those actions feed, so a screen-reader scroll is clamped
+     * like a drag.
+     */
+    fun scrollActions(
+        personScroll: PersonScroll,
+        a11yDispatcher: NestedScrollDispatcher,
+        scope: CoroutineScope,
+        motion: KitMotionLevel,
+        isHybrid: Boolean,
+    ): Modifier =
+        Modifier.semantics {
+            scrollBy { _, y ->
+                scope.launch { personScroll.a11yScrollBy(a11yDispatcher, motion, y) }
+                true
+            }
+            scrollToIndex { index ->
+                if (index < 0) return@scrollToIndex false
+                scope.launch { personScroll.a11yScrollToIndex(index) }
+                true
+            }
+        }
+            .then(
+                if (isHybrid) {
+                    Modifier.nestedScroll(personScroll).nestedScroll(NoopNestedScroll, a11yDispatcher)
+                } else {
+                    Modifier
+                }
+            )
+
+    /**
+     * What the list composes on [list] this pass: Hybrid replays the recorded intervals in the order laid out
+     * ([normal]: newest last); Today composes [content] itself.
+     */
+    fun replay(
+        recorded: RecordingLazyListScope?,
+        normal: Boolean,
+        list: LazyListScope,
+        content: LazyListScope.() -> Unit,
+    ) {
+        when {
+            recorded == null -> content(list)
+            normal -> recorded.replayReversed(list)
+            else -> recorded.replayForward(list)
         }
     }
 }
