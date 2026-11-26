@@ -3,8 +3,6 @@ package io.github.eslamasabry.oc.feature.review
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
@@ -63,6 +61,8 @@ import io.github.eslamasabry.oc.feature.review.presentation.ChangesPresenter
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewLoad
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewNavigation
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectSetup
+import io.github.eslamasabry.oc.feature.review.presentation.StagedActions
+import io.github.eslamasabry.oc.feature.review.presentation.StagedUi
 import io.github.eslamasabry.oc.feature.review.presentation.StagedViewModel
 import io.github.eslamasabry.oc.feature.review.presentation.UndoFromHereActions
 import io.github.eslamasabry.oc.feature.review.presentation.UndoFromHerePresenter
@@ -83,6 +83,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -122,13 +123,21 @@ class UndoDirectTruthTest {
     fun setUp() {
         previousLocale = Locale.getDefault()
         Locale.setDefault(Locale.ENGLISH)
-        Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
     @AfterTest
     fun tearDown() {
-        Dispatchers.resetMain()
         Locale.setDefault(previousLocale)
+    }
+
+    private fun runWithMainTest(block: suspend TestScope.() -> Unit) {
+        val dispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        try {
+            runTest(dispatcher) { block() }
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Composable
@@ -318,36 +327,37 @@ class UndoDirectTruthTest {
     }
 
     @Test
-    fun `B-473 Changes Undo all on non-Git project does not promise file rollback or pass applyFiles true`() =
+    fun `B-473 Changes Undo all on non-Git project does not promise file rollback or pass applyFiles true`() {
+        val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"), reply("a2", 3, "src/b.kt"))
+        val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = true)
+        }
+        val fake = StagedFake(base, history)
+        val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(fake, FakeOperationsGateway()))
+        val nav = Nav()
+        var confirmUi: io.github.eslamasabry.oc.feature.review.presentation.ChangesUi? = null
+        runTest(UnconfinedTestDispatcher()) {
+            val review = ConversationReview(ref.sessionId, gateways, backgroundScope)
+            val p =
+                ChangesPresenter(
+                    review,
+                    null,
+                    nav,
+                    backgroundScope,
+                    setup = ReviewProjectSetup { VersionControlSetupState.Absent },
+                )
+            p.undoAll()
+            confirmUi = p.state.value
+            p.confirmUndoAll()
+            assertEquals(listOf("stage u1 false"), fake.calls, "non-Git Undo all must pass applyFiles = false")
+        }
         runComposeUiTest {
-            val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"), reply("a2", 3, "src/b.kt"))
-            val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
-                capabilities.value = capabilities.value.copy(sessionRevert = true)
-            }
-            val fake = StagedFake(base, history)
-            val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(fake, FakeOperationsGateway()))
-            val nav = Nav()
-            var confirmUi: io.github.eslamasabry.oc.feature.review.presentation.ChangesUi? = null
-            runTest(UnconfinedTestDispatcher()) {
-                val review = ConversationReview(ref.sessionId, gateways, backgroundScope)
-                val p =
-                    ChangesPresenter(
-                        review,
-                        null,
-                        nav,
-                        backgroundScope,
-                        setup = ReviewProjectSetup { VersionControlSetupState.Absent },
-                    )
-                p.undoAll()
-                confirmUi = p.state.value
-                p.confirmUndoAll()
-                assertEquals(listOf("stage u1 false"), fake.calls, "non-Git Undo all must pass applyFiles = false")
-            }
             setContent { Themed { ChangesScreen(confirmUi!!, idleChanges) } }
             onNodeWithText("Undo 2 changed files?").assertDoesNotExist()
             onNodeWithText("puts your files back", substring = true, ignoreCase = true).assertDoesNotExist()
             onNodeWithText("files stay as they are", substring = true, ignoreCase = true).assertIsDisplayed()
         }
+    }
 
     @Test
     fun `B-473 Undo from here states truth about both files and messages for Git with and without file rollback`() =
@@ -390,144 +400,194 @@ class UndoDirectTruthTest {
         }
 
     @Test
-    fun `B-473 Undo from here on non-Git one-step server never promises file rollback`() =
+    fun `B-473 Undo from here on non-Git one-step server never promises file rollback`() {
+        val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"))
+        val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = true, sessionDiff = true)
+        }
+        val plain =
+            object : ServerGateway by base {
+                override suspend fun messagePage(
+                    id: SessionId,
+                    cursor: String?,
+                    limit: Int,
+                ): Outcome<ServerPage<MessageWithParts>> = ServerPage(history.toImmutableList(), null).ok()
+            }
+        val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(plain, FakeOperationsGateway()))
+        var ui: UndoFromHereUi? = null
+        runTest(UnconfinedTestDispatcher()) {
+            val p =
+                UndoFromHerePresenter(
+                    ConversationReview(ref.sessionId, gateways, backgroundScope),
+                    "u1",
+                    Nav(),
+                    backgroundScope,
+                    setup = ReviewProjectSetup { VersionControlSetupState.Absent },
+                )
+            ui = p.state.value
+            assertTrue(ui!!.noFileCopies, "one-step non-Git undo must set noFileCopies")
+        }
         runComposeUiTest {
-            val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"))
-            val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
-                capabilities.value = capabilities.value.copy(sessionRevert = true, sessionDiff = true)
-            }
-            val plain =
-                object : ServerGateway by base {
-                    override suspend fun messagePage(
-                        id: SessionId,
-                        cursor: String?,
-                        limit: Int,
-                    ): Outcome<ServerPage<MessageWithParts>> = ServerPage(history.toImmutableList(), null).ok()
-                }
-            val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(plain, FakeOperationsGateway()))
-            var ui: UndoFromHereUi? = null
-            runTest(UnconfinedTestDispatcher()) {
-                val p =
-                    UndoFromHerePresenter(
-                        ConversationReview(ref.sessionId, gateways, backgroundScope),
-                        "u1",
-                        Nav(),
-                        backgroundScope,
-                        setup = ReviewProjectSetup { VersionControlSetupState.Absent },
-                    )
-                ui = p.state.value
-                assertTrue(ui!!.noFileCopies, "one-step non-Git undo must set noFileCopies")
-            }
             setContent { Themed { UndoFromHereScreen(ui!!, idleUndo) } }
             onNodeWithText("files go back", substring = true, ignoreCase = true).assertDoesNotExist()
             onNodeWithText("stay as they are", substring = true, ignoreCase = true).assertIsDisplayed()
         }
+    }
 
     @Test
-    fun `B-473 Undo from here on no-rollback agent never promises file rollback`() =
+    fun `B-473 Undo from here on no-rollback agent never promises file rollback`() {
+        val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"))
+        val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = true, sessionDiff = false)
+        }
+        val plain =
+            object : ServerGateway by base {
+                override suspend fun messagePage(
+                    id: SessionId,
+                    cursor: String?,
+                    limit: Int,
+                ): Outcome<ServerPage<MessageWithParts>> = ServerPage(history.toImmutableList(), null).ok()
+            }
+        val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(plain, FakeOperationsGateway()))
+        var ui: UndoFromHereUi? = null
+        runTest(UnconfinedTestDispatcher()) {
+            val p =
+                UndoFromHerePresenter(
+                    ConversationReview(ref.sessionId, gateways, backgroundScope),
+                    "u1",
+                    Nav(),
+                    backgroundScope,
+                )
+            ui = p.state.value
+        }
         runComposeUiTest {
-            val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"))
-            val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
-                capabilities.value = capabilities.value.copy(sessionRevert = true, sessionDiff = false)
-            }
-            val plain =
-                object : ServerGateway by base {
-                    override suspend fun messagePage(
-                        id: SessionId,
-                        cursor: String?,
-                        limit: Int,
-                    ): Outcome<ServerPage<MessageWithParts>> = ServerPage(history.toImmutableList(), null).ok()
-                }
-            val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(plain, FakeOperationsGateway()))
-            var ui: UndoFromHereUi? = null
-            runTest(UnconfinedTestDispatcher()) {
-                val p =
-                    UndoFromHerePresenter(
-                        ConversationReview(ref.sessionId, gateways, backgroundScope),
-                        "u1",
-                        Nav(),
-                        backgroundScope,
-                    )
-                ui = p.state.value
-            }
             setContent { Themed { UndoFromHereScreen(ui!!, idleUndo) } }
             onNodeWithText("files go back", substring = true, ignoreCase = true).assertDoesNotExist()
             onNodeWithText("can't put files back", substring = true, ignoreCase = true).assertIsDisplayed()
         }
+    }
 
     @Test
-    fun `B-475 non-Git undo offers one-tap Start a Git repository for this project on active folder`() =
+    fun `B-475 non-Git undo offers one-tap Start a Git repository for this project on active folder`() {
+        val history = listOf(prompt("u1", 1), reply("a1", 2))
+        val base = FakeServerGateway(listOf(Session(ref.sessionId, directory = "/work/proj"))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = true, gitInit = true)
+            setLocation(ServerLocation("/work/proj", null))
+        }
+        val fake = StagedFake(base, history, sessionDir = "/work/proj")
+        val ops = RecordingOps(VersionControlSetupState.Absent)
+        var beforeClick: UndoFromHereUi? = null
+        runWithMainTest {
+            val hub = openHub(fake, ops)
+            val vm = UndoFromHereViewModel(ReviewRoute.UndoFromHere(ref, "u1"), hub, TestAppNavigator())
+            runCurrent()
+            beforeClick = vm.state.value
+            assertTrue(beforeClick!!.noFileCopies)
+            assertTrue(beforeClick!!.canInitGit)
+            vm.initializeGit()
+            runCurrent()
+            assertEquals(1, ops.gitInitCalls)
+            assertFalse(vm.state.value.noFileCopies)
+            assertFalse(vm.state.value.canInitGit)
+        }
+        var tapped = 0
+        val actions =
+            object : UndoFromHereActions {
+                override fun back() = Unit
+
+                override fun putFilesBack(apply: Boolean) = Unit
+
+                override fun confirm() = Unit
+
+                override fun initializeGit() {
+                    tapped++
+                }
+            }
         runComposeUiTest {
-            val history = listOf(prompt("u1", 1), reply("a1", 2))
-            val base = FakeServerGateway(listOf(Session(ref.sessionId, directory = "/work/proj"))).apply {
-                capabilities.value = capabilities.value.copy(sessionRevert = true, gitInit = true)
-                setLocation(ServerLocation("/work/proj", null))
-            }
-            val fake = StagedFake(base, history, sessionDir = "/work/proj")
-            val ops = RecordingOps(VersionControlSetupState.Absent)
-            var vm: UndoFromHereViewModel? = null
-            runTest(UnconfinedTestDispatcher()) {
-                val hub = openHub(fake, ops)
-                vm = UndoFromHereViewModel(ReviewRoute.UndoFromHere(ref, "u1"), hub, TestAppNavigator())
-                runCurrent()
-            }
-            setContent {
-                val state by vm!!.state.collectAsState()
-                Themed { UndoFromHereScreen(state, vm!!) }
-            }
+            setContent { Themed { UndoFromHereScreen(beforeClick!!, actions) } }
             onNodeWithText("Start a Git repository for this project").assertIsDisplayed().performClick()
             waitForIdle()
-            assertEquals(1, ops.gitInitCalls)
+            assertEquals(1, tapped)
         }
+    }
 
     @Test
-    fun `B-475 non-Git undo hides Git init when conversation is in another folder`() =
+    fun `B-475 non-Git undo hides Git init when conversation is in another folder`() {
+        val history = listOf(prompt("u1", 1), reply("a1", 2))
+        val base = FakeServerGateway(listOf(Session(ref.sessionId, directory = "/work/other"))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = true, gitInit = true)
+            setLocation(ServerLocation("/work/proj", null))
+        }
+        val fake = StagedFake(base, history, sessionDir = "/work/other")
+        val ops = RecordingOps(VersionControlSetupState.Absent)
+        var ui: UndoFromHereUi? = null
+        runWithMainTest {
+            val hub = openHub(fake, ops)
+            val vm = UndoFromHereViewModel(ReviewRoute.UndoFromHere(ref, "u1"), hub, TestAppNavigator())
+            runCurrent()
+            ui = vm.state.value
+            assertFalse(ui!!.canInitGit)
+        }
         runComposeUiTest {
-            val history = listOf(prompt("u1", 1), reply("a1", 2))
-            val base = FakeServerGateway(listOf(Session(ref.sessionId, directory = "/work/other"))).apply {
-                capabilities.value = capabilities.value.copy(sessionRevert = true, gitInit = true)
-                setLocation(ServerLocation("/work/proj", null))
-            }
-            val fake = StagedFake(base, history, sessionDir = "/work/other")
-            val ops = RecordingOps(VersionControlSetupState.Absent)
-            var vm: UndoFromHereViewModel? = null
-            runTest(UnconfinedTestDispatcher()) {
-                val hub = openHub(fake, ops)
-                vm = UndoFromHereViewModel(ReviewRoute.UndoFromHere(ref, "u1"), hub, TestAppNavigator())
-                runCurrent()
-            }
-            setContent {
-                val state by vm!!.state.collectAsState()
-                Themed { UndoFromHereScreen(state, vm!!) }
-            }
+            setContent { Themed { UndoFromHereScreen(ui!!, idleUndo) } }
             onNodeWithText("Start a Git repository for this project").assertDoesNotExist()
         }
+    }
 
     @Test
-    fun `B-475 non-Git staged review offers one-tap Start a Git repository for this project`() =
-        runComposeUiTest {
-            val history = listOf(prompt("u1", 1), reply("a1", 2))
-            val base = FakeServerGateway(listOf(Session(ref.sessionId, directory = "/work/proj"))).apply {
-                capabilities.value = capabilities.value.copy(sessionRevert = true, gitInit = true)
-                setLocation(ServerLocation("/work/proj", null))
+    fun `B-475 non-Git staged review offers one-tap Start a Git repository for this project`() {
+        val history = listOf(prompt("u1", 1), reply("a1", 2))
+        val base = FakeServerGateway(listOf(Session(ref.sessionId, directory = "/work/proj"))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = true, gitInit = true)
+            setLocation(ServerLocation("/work/proj", null))
+        }
+        val fake =
+            StagedFake(base, history, sessionDir = "/work/proj").apply {
+                staged = SessionRevert(MessageId("u1"), null, null, persistentListOf())
             }
-            val fake =
-                StagedFake(base, history, sessionDir = "/work/proj").apply {
-                    staged = SessionRevert(MessageId("u1"), null, null, persistentListOf())
+        val ops = RecordingOps(VersionControlSetupState.Absent)
+        var beforeClick: StagedUi? = null
+        runWithMainTest {
+            val hub = openHub(fake, ops)
+            val vm = StagedViewModel(ReviewRoute.Staged(ref), hub, TestAppNavigator())
+            runCurrent()
+            beforeClick = vm.state.value
+            assertTrue(beforeClick!!.noFileCopies)
+            assertTrue(beforeClick!!.canInitGit)
+            vm.initializeGit()
+            runCurrent()
+            assertEquals(1, ops.gitInitCalls)
+            assertFalse(vm.state.value.noFileCopies)
+            assertFalse(vm.state.value.canInitGit)
+        }
+        var tapped = 0
+        val actions =
+            object : StagedActions {
+                override fun back() = Unit
+
+                override fun retry() = Unit
+
+                override fun openFile(path: String) = Unit
+
+                override fun reviewLatest() = Unit
+
+                override fun askKeep() = Unit
+
+                override fun askPutBack() = Unit
+
+                override fun confirm() = Unit
+
+                override fun dismissConfirm() = Unit
+
+                override fun initializeGit() {
+                    tapped++
                 }
-            val ops = RecordingOps(VersionControlSetupState.Absent)
-            var vm: StagedViewModel? = null
-            runTest(UnconfinedTestDispatcher()) {
-                val hub = openHub(fake, ops)
-                vm = StagedViewModel(ReviewRoute.Staged(ref), hub, TestAppNavigator())
-                runCurrent()
             }
-            setContent {
-                val state by vm!!.state.collectAsState()
-                Themed { StagedScreen(state, vm!!) }
-            }
+        runComposeUiTest {
+            setContent { Themed { StagedScreen(beforeClick!!, actions) } }
             onNodeWithText("Start a Git repository for this project").assertIsDisplayed().performClick()
             waitForIdle()
-            assertEquals(1, ops.gitInitCalls)
+            assertEquals(1, tapped)
         }
+    }
 }

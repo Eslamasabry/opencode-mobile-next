@@ -9,6 +9,12 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec
+import io.github.eslamasabry.oc.core.data.kv.InMemoryPrefsBackend
+import io.github.eslamasabry.oc.core.data.kv.JavaListDecoder
+import io.github.eslamasabry.oc.core.data.kv.PrefsKeyValueStore
+import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
+import io.github.eslamasabry.oc.core.data.migration.StateMigrationGate
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
@@ -38,10 +44,18 @@ import io.github.eslamasabry.oc.core.testing.FakeOperationsGateway
 import io.github.eslamasabry.oc.core.testing.FakeServerGateway
 import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.core.testing.TestDispatchers
+import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
+import io.github.eslamasabry.oc.engine.composer.drafts.Drafts
+import io.github.eslamasabry.oc.engine.composer.store.ComposerProfiles
+import io.github.eslamasabry.oc.engine.composer.store.MemoryComposerPrefs
+import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
+import io.github.eslamasabry.oc.engine.composer.vault.MemoryPayloadStore
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ConnectionSession
 import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
+import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
+import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptAccessors
 import io.github.eslamasabry.oc.engine.transcript.TranscriptEngine
@@ -160,37 +174,64 @@ class UndoDirectChatTest {
         override suspend fun commitSessionRevert(session: SessionId): Outcome<Unit> = Unit.ok().also { staged = null }
     }
 
-    private fun TestScope.registry(gateway: ServerGateway, ops: ServerOperationsGateway): ConnectionRegistry {
-        val dispatchers = TestDispatchers(UnconfinedTestDispatcher(testScheduler))
+    private fun TestScope.worldFixture(
+        gateway: ServerGateway,
+        ops: ServerOperationsGateway,
+    ): Pair<ConnectionRegistry, GraphChatWorld> {
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val dispatchers = TestDispatchers(dispatcher)
         val app = AppCoroutineScope(backgroundScope.coroutineContext)
         val clock = TestClock()
-        return ConnectionRegistry(
-            setOf(
-                object : GatewayFactory {
-                    override val backend = BackendKind.OpenCode2
+        val kv =
+            PrefsKeyValueStore(
+                InMemoryPrefsBackend(),
+                FlutterPrefsCodec(JavaListDecoder.Unsupported),
+                StateMigrationGate.alwaysOpen(),
+                dispatcher,
+            )
+        val storage = DeliveryStorage(kv, DefaultWriterLanes(), ProfileDirectory { true })
+        val profiles =
+            object : ComposerProfiles {
+                override fun exists(profileId: String): Boolean = profileId == ref.profileId.raw
 
-                    override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> =
-                        Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+                override fun count(): Int = 1
+            }
+        val drafts =
+            ConversationDrafts(
+                Drafts(MemoryComposerPrefs(), AttachmentVault(MemoryPayloadStore()), profiles, clock),
+                app,
+                dispatchers,
+            )
+        val registry =
+            ConnectionRegistry(
+                setOf(
+                    object : GatewayFactory {
+                        override val backend = BackendKind.OpenCode2
 
-                    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> =
-                        Outcome.Ok(GatewayPair(gateway, ops))
-                }
-            ),
-            { p, pair, scope ->
-                object : ConnectionGraph, ChatGraphAccessors, TranscriptAccessors {
-                    override val profile = p
-                    override val scope = scope
-                    override val session = ConnectionSession(p, pair.live, scope)
-                    override val chatDelivery = ConnectionDelivery(pair.live, p, scope, clock, emptySet(), dispatchers)
-                    override val chatRequests = ConnectionRequests(pair.live, scope, dispatchers, clock)
-                    override val chatGateway = pair.live
-                    override val chatOperations = pair.operations
-                    override val transcriptEngine = TranscriptEngine(pair.live, dispatchers, clock, scope)
-                }
-            },
-            app,
-            dispatchers,
-        )
+                        override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> =
+                            Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+
+                        override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> =
+                            Outcome.Ok(GatewayPair(gateway, ops))
+                    }
+                ),
+                { p, pair, scope ->
+                    object : ConnectionGraph, ChatGraphAccessors, TranscriptAccessors {
+                        override val profile = p
+                        override val scope = scope
+                        override val session = ConnectionSession(p, pair.live, scope)
+                        override val chatDelivery =
+                            ConnectionDelivery(pair.live, p, scope, clock, setOf(storage), dispatchers)
+                        override val chatRequests = ConnectionRequests(pair.live, scope, dispatchers, clock)
+                        override val chatGateway = pair.live
+                        override val chatOperations = pair.operations
+                        override val transcriptEngine = TranscriptEngine(pair.live, dispatchers, clock, scope)
+                    }
+                },
+                app,
+                dispatchers,
+            )
+        return registry to GraphChatWorld(ref, registry, drafts)
     }
 
     @Test
@@ -207,8 +248,7 @@ class UndoDirectChatTest {
                     replyMsg("a2", 4, "two"),
                 )
             val gateway = Oc2UndoGateway(base, history)
-            val reg = registry(gateway, FakeOperationsGateway())
-            val world = GraphChatWorld(ref, reg)
+            val (reg, world) = worldFixture(gateway, FakeOperationsGateway())
             val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
             world.attach()
             base.events.connect()
@@ -268,8 +308,7 @@ class UndoDirectChatTest {
                         return Unit.ok()
                     }
                 }
-            val reg = registry(gateway, ops)
-            val world = GraphChatWorld(ref, reg)
+            val (reg, world) = worldFixture(gateway, ops)
             val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
             val worlds =
                 object : ChatWorlds {
