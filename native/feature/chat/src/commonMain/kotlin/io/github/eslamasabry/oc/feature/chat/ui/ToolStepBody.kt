@@ -599,10 +599,8 @@ private fun StepDiff(file: DiffFile, reply: ReplyActions?) {
         maxLines = 12,
         hunkLabel = { _, _, start, end -> "$lines $start–$end" },
         gapLabel = { "$hidden: $it" },
+        onOpenAll = reply?.onOpenChanges,
     )
-    val onOpenChanges = reply?.onOpenChanges
-    if (file.totalLines > 12 && onOpenChanges != null)
-        KitButton(stringResource(Res.string.chatStepViewAllChanges), onOpenChanges, role = KitButtonRole.Tertiary)
 }
 
 private fun JsonObject.word(key: String): String? =

@@ -126,7 +126,7 @@ class ComposerModelsFilesTest {
             // QA wave 4 B13: once the server confirmed the session uses its default (before that the chip claims nothing).
             setContent { Theme { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) } }
             onNodeWithContentDescription("Model").assertExists()
-            onNodeWithText("Server default", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Default model", useUnmergedTree = true).assertIsDisplayed()
         }
 
     @Test
@@ -136,7 +136,7 @@ class ComposerModelsFilesTest {
                 mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big), selected = big)))
             setContent { Theme { BasicComposer(state.value, Actions(), chrome) } }
             onNodeWithText("Big", substring = true, useUnmergedTree = true).assertIsDisplayed()
-            onNodeWithText("Server default", useUnmergedTree = true).assertDoesNotExist()
+            onNodeWithText("Default model", useUnmergedTree = true).assertDoesNotExist()
         }
 
     @Test
@@ -281,7 +281,7 @@ class ComposerModelsFilesTest {
                     ) { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) }
                 }
                 onNodeWithContentDescription("النموذج").assertExists()
-                onNodeWithText("الافتراضي من الخادم", useUnmergedTree = true).assertIsDisplayed()
+                onNodeWithText("النموذج الافتراضي", useUnmergedTree = true).assertIsDisplayed()
             } finally {
                 Locale.setDefault(before)
             }

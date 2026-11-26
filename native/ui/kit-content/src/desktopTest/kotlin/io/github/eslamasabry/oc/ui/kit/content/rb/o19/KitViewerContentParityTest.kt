@@ -30,10 +30,13 @@ class KitViewerContentParityTest {
 
     @Test
     fun defaultWrapFollowsKitCodeBlock() {
-        // `KitCodeBlock.defaultWrap(context, kind == code ? code : output)`: code scrolls sideways on every window;
-        // output wraps on a compact window and scrolls from medium up (kit_code_block.dart:334-337).
+        // B-580: every kind (including code) wraps by default on Compact; Medium and Expanded scroll sideways.
         for (window in WindowClass.entries) {
-            assertFalse(kitViewerDefaultWrap(window, KitViewerKind.Code), "code must never wrap ($window)")
+            assertEquals(
+                window == WindowClass.Compact,
+                kitViewerDefaultWrap(window, KitViewerKind.Code),
+                "code on $window",
+            )
             for (kind in KitViewerKind.entries.filter { it != KitViewerKind.Code }) {
                 assertEquals(window == WindowClass.Compact, kitViewerDefaultWrap(window, kind), "$kind on $window")
             }

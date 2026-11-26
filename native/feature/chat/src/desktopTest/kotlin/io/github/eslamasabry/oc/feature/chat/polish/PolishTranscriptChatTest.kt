@@ -325,7 +325,7 @@ class PolishTranscriptChatTest {
             }
             waitForIdle()
             val title = onNodeWithTag("kit-row-title", useUnmergedTree = true).getBoundsInRoot()
-            val glyphX = title.left - 40.dp // ICON_TILE_SIZE (28 dp) + Space.S3 (12 dp)
+            val glyphX = title.left - 38.dp // 28 dp tile - 2 dp centred glyph inset + Space.S3 (12 dp)
             val allFiles = onNodeWithTag("chat-turn-all-files", useUnmergedTree = true).getBoundsInRoot()
             val diff = abs((glyphX - allFiles.left).value)
             assertTrue(

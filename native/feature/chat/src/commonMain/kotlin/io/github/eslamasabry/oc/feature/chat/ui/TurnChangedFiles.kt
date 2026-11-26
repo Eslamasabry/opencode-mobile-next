@@ -62,8 +62,11 @@ internal fun TurnChangedFiles(
         else stringResource(Res.string.chatTurnAllFiles)
     // The reply column (plan 09 R13): 700 dp cap. KitRowGroup draws the kit panel surface inset 8 dp, and each row
     // aligns its glyph at 16 dp from the column edge, matching the "All files" glyph below (B-580).
-    val rowSide = (Space.S4.dp - Space.S2.dp - kitPaneInset()).coerceAtLeast(0.dp)
-    val rowPad = PaddingValues(start = rowSide, end = rowSide, top = Space.S2.dp, bottom = Space.S2.dp)
+    val tokens = LocalKitTokens.current
+    val glyphInset = ((tokens.iconTile - KitIconSize.Large.dp) / 2).dp
+    val rowEnd = (Space.S4.dp - Space.S2.dp - kitPaneInset()).coerceAtLeast(0.dp)
+    val rowStart = (rowEnd - glyphInset).coerceAtLeast(0.dp)
+    val rowPad = PaddingValues(start = rowStart, end = rowEnd, top = Space.S2.dp, bottom = Space.S2.dp)
     Column(
         modifier.fillMaxWidth().widthIn(max = REPLY_COLUMN_DP.dp).testTag("chat-turn-files")
     ) {

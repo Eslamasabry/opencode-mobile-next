@@ -57,8 +57,8 @@ class PermissionCardSweepBTest {
         }
         val words = onNodeWithText("Details", useUnmergedTree = true).getBoundsInRoot()
         val card = onNodeWithTag("card").getBoundsInRoot()
-        // Before: half the 48 dp target under the words, then the card's 16 dp padding and its 4 dp ring (about 34 dp).
-        assertTrue(card.bottom - words.bottom <= 24.dp, "space under Details: ${card.bottom - words.bottom}")
+        // B-564: untrimmed 48 dp Details touch target plus the card's S4 bottom padding.
+        assertTrue(card.bottom - words.bottom <= 40.dp, "space under Details: ${card.bottom - words.bottom}")
         val target = onNodeWithTag("permission-card-details").getBoundsInRoot()
         assertTrue(target.bottom - target.top >= 47.5.dp, "Details keeps its whole touch target")
         onNodeWithTag("permission-card-details").performClick()

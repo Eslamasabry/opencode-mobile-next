@@ -133,6 +133,24 @@ class PolishRenders {
         }
 
     @Test
+    fun `render 561 short loading chat`() =
+        kitUiTest(360, 480) {
+            val scene = ChatScene()
+            val state = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())
+            mainClock.autoAdvance = false
+            setContent {
+                E20Scene(scale = 1.3f, dark = true) {
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 480f)) {
+                        scene.Screen(state, canGoBack = true)
+                    }
+                }
+            }
+            mainClock.advanceTimeBy(ChatPane.LOADING_WORDS_AFTER_MS + 500)
+            waitForIdle()
+            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("561", "loading-short", "1.3", "dark"))
+        }
+
+    @Test
     fun `render 564 web ask`() =
         kitUiTest(360, 780) {
             fun perm(id: String, p: String, pat: String): RequestCardUi.Permission {

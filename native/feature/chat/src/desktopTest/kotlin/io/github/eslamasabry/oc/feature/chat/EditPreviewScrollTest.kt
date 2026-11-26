@@ -178,18 +178,24 @@ class EditPreviewScrollTest {
                     "$where: the preview cuts at 12 lines",
                 )
                 assertTrue(
-                    onAllNodesWithText("Changes", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
-                    "$where: a preview cut at 12 lines offers Changes",
+                    onAllNodesWithText("View all changes", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
+                    "$where: a preview cut at 12 lines offers View all changes",
                 )
-                val changes = boundsOfText("Changes")
-                val twelfth = boundsOfText("val line12 =", substring = true)
+                val changes = boundsOfText("View all changes")
+                val shownLines =
+                    onAllNodesWithText("val line", substring = true, useUnmergedTree = true).fetchSemanticsNodes()
+                assertTrue(shownLines.isNotEmpty(), "$where: expected preview code lines")
+                val lastLineBottom = shownLines.maxOf { it.boundsInRoot.bottom }
                 val body = boundsOfTag("kit-tool-body")
-                assertTrue(changes.top >= twelfth.bottom - 0.5f, "$where: Changes $changes sits under line 12 $twelfth")
+                assertTrue(
+                    changes.top >= lastLineBottom - 0.5f,
+                    "$where: View all changes $changes sits under last shown line ($lastLineBottom)",
+                )
                 assertTrue(
                     changes.right <= body.right + 0.5f,
-                    "$where: Changes $changes keeps inside the card's text edge $body",
+                    "$where: View all changes $changes keeps inside the card's text edge $body",
                 )
-                tapButton("Changes")
+                tapButton("View all changes")
                 assertTrue(opened == i + 1, "$where: a tap opens the conversation's Changes view once (at $opened)")
             }
         }

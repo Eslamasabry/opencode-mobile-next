@@ -316,7 +316,8 @@ public fun KitDiffView(
                 }
         }
     }
-    val lines: @Composable (Modifier, Dp, Boolean) -> Unit = { frame, width, bounded ->
+    val lines: @Composable (Modifier, Dp, Boolean, List<DiffDisplay>, Int) -> Unit =
+        { frame, width, bounded, previewItems, omitted ->
         val gutter = (if (splitOn) numberWidth else numberWidth * 2) + glyphWidth
         val textWidth: Dp?
         val contentWidth: Dp
@@ -347,34 +348,9 @@ public fun KitDiffView(
                         itemsIndexed(display) { i, item -> rowContent(g, i, item) }
                     }
                 } else {
-                    val visible =
-                        if (!wraps) display
-                        else {
-                            val maxPx = with(density) { (width - gutter - Space.S2.dp).toPx().toInt().coerceAtLeast(1) }
-                            var used = 0
-                            buildList {
-                                for (item in display) {
-                                    val count =
-                                        when (val src = (item as? DiffDisplay.Source)?.row) {
-                                            is DiffRow.Line ->
-                                                measurer.measure(
-                                                    redactor.redact(src.line.text),
-                                                    mono,
-                                                    constraints = Constraints(maxWidth = maxPx),
-                                                ).lineCount.coerceAtLeast(1)
-                                            else -> 1
-                                        }
-                                    if (isNotEmpty() && used + count > maxLines) break
-                                    add(item)
-                                    used += count
-                                }
-                            }
-                        }
-                    val dropped =
-                        display.drop(visible.size).count { (it as? DiffDisplay.Source)?.row is DiffRow.Line }
                     Column(frame.then(sideways)) {
-                        visible.forEachIndexed { i, item -> rowContent(g, i, item) }
-                        if (dropped > 0) GapBar(gapLabel(dropped), null, g.indent, flat = true, onTap = null)
+                        previewItems.forEachIndexed { i, item -> rowContent(g, i, item) }
+                        if (omitted > 0) GapBar(gapLabel(omitted), null, g.indent, flat = true, onTap = null)
                     }
                 }
             }
@@ -384,6 +360,12 @@ public fun KitDiffView(
     BoxWithConstraints(modifier) {
         val bounded = constraints.hasBoundedHeight && full
         val width = maxWidth
+        val gutter = (if (splitOn) numberWidth else numberWidth * 2) + glyphWidth
+        val wraps = lineWrap || splitOn
+        val previewItems =
+            if (full) display
+            else previewVisible(display, width, gutter, wraps, maxLines, density, measurer, mono, redactor::redact)
+        val omitted = if (full) 0 else previewOmitted(file.totalLines, previewItems)
         Column(Modifier.fillMaxWidth()) {
             if (full) {
                 DiffHeader(
@@ -413,7 +395,14 @@ public fun KitDiffView(
                 // The listing runs edge to edge like a terminal (KitTerminalView): code in its own frame, not page words
                 // on the gutter (kit_diff_chrome.dart `_codeFrame`).
                 Box((if (bounded) Modifier.weight(1f) else Modifier).fillMaxWidth().then(frame).then(if (full) Modifier.kitEdge(KitEdge.Chrome) else Modifier)) {
-                    lines(if (bounded) Modifier.fillMaxSize() else Modifier, width, bounded)
+                    lines(if (bounded) Modifier.fillMaxSize() else Modifier, width, bounded, previewItems, omitted)
+                }
+                if (!full && omitted > 0 && onOpenAll != null) {
+                    KitButton(
+                        stringResource(Res.string.chatStepViewAllChanges),
+                        onOpenAll,
+                        role = KitButtonRole.Tertiary,
+                    )
                 }
                 if (full && displayRows.cut) {
                     // F: lib/ui/kit/diff/kit_diff_chrome.dart:645-678 — "Showing 400 of 3,200 lines" and Open all.
@@ -447,6 +436,44 @@ public fun KitDiffView(
 
 /** "3,200": the count with its thousands marked, as Flutter's `NumberFormat` words it in English. */
 private fun grouped(n: Int): String = n.toString().reversed().chunked(3).joinToString(",").reversed()
+
+/** Caps inline wrapped previews to whole visual lines within [maxLines] (B-567). */
+private fun previewVisible(
+    display: List<DiffDisplay>,
+    width: Dp,
+    gutter: Dp,
+    wraps: Boolean,
+    maxLines: Int,
+    density: androidx.compose.ui.unit.Density,
+    measurer: androidx.compose.ui.text.TextMeasurer,
+    mono: TextStyle,
+    redact: (String) -> String,
+): List<DiffDisplay> {
+    if (!wraps) return display
+    val maxPx = with(density) { (width - gutter - Space.S2.dp).toPx().toInt().coerceAtLeast(1) }
+    var used = 0
+    return buildList {
+        for (item in display) {
+            val src = (item as? DiffDisplay.Source)?.row
+            val count =
+                if (src is DiffRow.Line) {
+                    measurer.measure(redact(src.line.text), mono, constraints = Constraints(maxWidth = maxPx))
+                        .lineCount
+                        .coerceAtLeast(1)
+                } else 1
+            if (isNotEmpty() && used + count > maxLines) break
+            add(item)
+            used += count
+        }
+    }
+}
+
+/** Counts every file line omitted by both the model cap and visual-line wrapping (B-567). */
+private fun previewOmitted(totalLines: Int, visible: List<DiffDisplay>): Int {
+    val shown = visible.count { (it as? DiffDisplay.Source)?.row is DiffRow.Line }
+    val folded = visible.sumOf { ((it as? DiffDisplay.Source)?.row as? DiffRow.Gap)?.hidden ?: 0 }
+    return (totalLines - shown - folded).coerceAtLeast(0)
+}
 
 /** The Markdown file's Formatted / Source switch. */
 @Composable

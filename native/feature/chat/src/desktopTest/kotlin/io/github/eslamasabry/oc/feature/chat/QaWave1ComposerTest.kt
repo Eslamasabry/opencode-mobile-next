@@ -182,10 +182,10 @@ class QaWave1ComposerTest {
     fun `B13 QA wave4 before the session is read the chip never claims Server default`() = kitUiTest {
         var models by androidx.compose.runtime.mutableStateOf(ComposerModels())
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(models = models), Actions(), chrome(busy = false)) } } }
-        onAllNodesWithText("Server default", useUnmergedTree = true).assertCountEquals(0)
+        onAllNodesWithText("Default model", useUnmergedTree = true).assertCountEquals(0)
         models = ComposerModels(usesDefault = true)
         waitForIdle()
-        onNodeWithText("Server default", useUnmergedTree = true).assertExists()
+        onNodeWithText("Default model", useUnmergedTree = true).assertExists()
     }
 
     @Test
