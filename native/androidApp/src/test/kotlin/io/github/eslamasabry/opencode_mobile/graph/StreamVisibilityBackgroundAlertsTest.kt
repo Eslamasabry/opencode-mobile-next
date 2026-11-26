@@ -47,6 +47,7 @@ import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -147,22 +148,23 @@ class StreamVisibilityBackgroundAlertsTest {
             val statuses = CopyOnWriteArrayList<StreamStatus>()
             val gotFirst = CompletableDeferred<Unit>()
             val gotFinished = CompletableDeferred<Unit>()
-            val collector =
-                launch(Dispatchers.Default) {
-                    buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
-                        when (signal) {
-                            is StreamSignal.Status -> statuses += signal.status
-                            is StreamSignal.Frame -> {
-                                frames += signal.frame.data
-                                if (signal.frame.data == "started") gotFirst.complete(Unit)
-                                if (signal.frame.data == "reply-finished") gotFinished.complete(Unit)
-                            }
-                        }
-                    }
-                }
+            var collector: Job? = null
             try {
                 val activity = Robolectric.buildActivity(Activity::class.java).create().start()
                 awaitVisibility(fixture.streamVisibility, Visibility.Foreground)
+                collector =
+                    launch(Dispatchers.Default) {
+                        buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
+                            when (signal) {
+                                is StreamSignal.Status -> statuses += signal.status
+                                is StreamSignal.Frame -> {
+                                    frames += signal.frame.data
+                                    if (signal.frame.data == "started") gotFirst.complete(Unit)
+                                    if (signal.frame.data == "reply-finished") gotFinished.complete(Unit)
+                                }
+                            }
+                        }
+                    }
                 server.sendEvent("started")
                 withTimeout(5_000) { gotFirst.await() }
 
@@ -184,7 +186,7 @@ class StreamVisibilityBackgroundAlertsTest {
                 )
                 assertTrue("reply-finished" in frames, "reply-finished event missed: $frames")
             } finally {
-                collector.cancel()
+                collector?.cancel()
                 net.close()
                 server.close()
                 fixture.job.cancel()
@@ -199,18 +201,19 @@ class StreamVisibilityBackgroundAlertsTest {
             val net = createClient(server.port)
             val gotFirst = CompletableDeferred<Unit>()
             val gotAlert = CompletableDeferred<Unit>()
-            val collector =
-                launch(Dispatchers.Default) {
-                    buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
-                        if (signal is StreamSignal.Frame) {
-                            if (signal.frame.data == "started") gotFirst.complete(Unit)
-                            if (signal.frame.data == "live-alert") gotAlert.complete(Unit)
-                        }
-                    }
-                }
+            var collector: Job? = null
             try {
                 val activity = Robolectric.buildActivity(Activity::class.java).create().start()
                 awaitVisibility(fixture.streamVisibility, Visibility.Foreground)
+                collector =
+                    launch(Dispatchers.Default) {
+                        buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
+                            if (signal is StreamSignal.Frame) {
+                                if (signal.frame.data == "started") gotFirst.complete(Unit)
+                                if (signal.frame.data == "live-alert") gotAlert.complete(Unit)
+                            }
+                        }
+                    }
                 server.sendEvent("started")
                 withTimeout(5_000) { gotFirst.await() }
 
@@ -227,7 +230,7 @@ class StreamVisibilityBackgroundAlertsTest {
                 server.sendEvent("live-alert")
                 withTimeout(3_000) { gotAlert.await() }
             } finally {
-                collector.cancel()
+                collector?.cancel()
                 net.close()
                 server.close()
                 fixture.job.cancel()
@@ -242,20 +245,21 @@ class StreamVisibilityBackgroundAlertsTest {
             val net = createClient(server.port)
             val gotFirst = CompletableDeferred<Unit>()
             val suspended = CompletableDeferred<Unit>()
-            val collector =
-                launch(Dispatchers.Default) {
-                    buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
-                        when (signal) {
-                            is StreamSignal.Frame ->
-                                if (signal.frame.data == "started") gotFirst.complete(Unit)
-                            is StreamSignal.Status ->
-                                if (signal.status == StreamStatus.Suspended) suspended.complete(Unit)
-                        }
-                    }
-                }
+            var collector: Job? = null
             try {
                 val activity = Robolectric.buildActivity(Activity::class.java).create().start()
                 awaitVisibility(fixture.streamVisibility, Visibility.Foreground)
+                collector =
+                    launch(Dispatchers.Default) {
+                        buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
+                            when (signal) {
+                                is StreamSignal.Frame ->
+                                    if (signal.frame.data == "started") gotFirst.complete(Unit)
+                                is StreamSignal.Status ->
+                                    if (signal.status == StreamStatus.Suspended) suspended.complete(Unit)
+                            }
+                        }
+                    }
                 server.sendEvent("started")
                 withTimeout(5_000) { gotFirst.await() }
 
@@ -273,7 +277,7 @@ class StreamVisibilityBackgroundAlertsTest {
                 )
                 assertEquals(0, liveCallsCount(net), "LiveCalls retained SSE call after HiddenIdle")
             } finally {
-                collector.cancel()
+                collector?.cancel()
                 net.close()
                 server.close()
                 fixture.job.cancel()
