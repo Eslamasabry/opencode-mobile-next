@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
@@ -21,11 +23,9 @@ import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
-import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoViewModel
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoWords
-import io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReply
 import io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply
 import io.github.eslamasabry.oc.feature.chat.ui.ChatListWords
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptList
@@ -50,7 +50,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -148,12 +147,8 @@ class DemoOwnReplyPicturesTest {
         val vm = DemoViewModel(RecordingNavigator(), dispatchers)
         vm.configure(words)
         assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-        val rows = vm.state.value.rows
-        val ownReply =
-            if (shot.before) null
-            else demoOwnReplyOf(vm.ownReplyKey.value, vm.stage.value, words.prompt, vm)
         kitUiTest(WIDTH_PX, HEIGHT_PX) {
-            setContent { PictureScene(rows, ownReply, shot.dark, shot.scale) }
+            setContent { PictureScene(vm, shot.before, shot.dark, shot.scale) }
             waitForIdle()
             onAllNodesWithText(OWN_QUESTION, substring = true).onFirst().assertIsDisplayed()
             onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
@@ -174,11 +169,15 @@ class DemoOwnReplyPicturesTest {
 
     @Composable
     private fun PictureScene(
-        rows: ImmutableList<TranscriptRow>,
-        ownReply: DemoOwnReply?,
+        vm: DemoViewModel,
+        before: Boolean,
         dark: Boolean,
         scale: Float,
     ) {
+        val state by vm.state.collectAsState()
+        val stage by vm.stage.collectAsState()
+        val ownReplyKey by vm.ownReplyKey.collectAsState()
+        val ownReply = if (before) null else demoOwnReplyOf(ownReplyKey, stage, words.prompt, vm)
         val environment = remember { KitChatEnvironment(Redactor()) }
         val mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light
         CompositionLocalProvider(LocalDensity provides Density(DENSITY, scale)) {
@@ -195,7 +194,7 @@ class DemoOwnReplyPicturesTest {
                     environment.Provide {
                         Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                             ChatTranscriptList(
-                                rows = rows,
+                                rows = state.rows,
                                 live = null,
                                 pending = persistentListOf(),
                                 words = TranscriptWords,

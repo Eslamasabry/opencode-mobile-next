@@ -122,6 +122,8 @@ import io.github.eslamasabry.oc.ui.words.res.firstReplyAskYes
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTourSkip
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReplyActions
+import io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -1363,27 +1365,23 @@ private fun ChatRow(
 ) {
     when (row) {
         is BlockRow -> {
-            val demoReply =
-                io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply.current?.takeIf {
-                    it.rowKey == row.key
-                }
-            val block: @Composable () -> Unit = {
-                val content: @Composable () -> Unit = {
-                    if (reply != null) KitMdNest(row.depth) { RichBlock(row, reveal, motion, reply, copyCode) }
-                    else
-                        KitReplyBlock(
-                            text = row.text,
-                            kind = row.kind.toKit(),
-                            live = row.live,
-                            streamed = row.origin == Origin.Streamed,
-                            revealKey = row.key,
-                            revealGroup = row.key.substringBeforeLast(':'),
-                            registry = reveal,
-                            motion = motion,
-                            continued = row.continued,
-                            continues = row.continues,
-                        )
-                }
+            val content: @Composable () -> Unit = {
+                if (reply != null) KitMdNest(row.depth) { RichBlock(row, reveal, motion, reply, copyCode) }
+                else
+                    KitReplyBlock(
+                        text = row.text,
+                        kind = row.kind.toKit(),
+                        live = row.live,
+                        streamed = row.origin == Origin.Streamed,
+                        revealKey = row.key,
+                        revealGroup = row.key.substringBeforeLast(':'),
+                        registry = reveal,
+                        motion = motion,
+                        continued = row.continued,
+                        continues = row.continues,
+                    )
+            }
+            val body: @Composable () -> Unit = {
                 if (onOpenMenu != null && listWords != null) {
                     KitMessageActions(
                         label = listWords.messageActions,
@@ -1393,12 +1391,8 @@ private fun ChatRow(
                     }
                 } else content()
             }
-            if (demoReply != null) {
-                Column {
-                    block()
-                    io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReplyActions(demoReply)
-                }
-            } else block()
+            val demoReply = LocalDemoOwnReply.current?.takeIf { it.rowKey == row.key }
+            if (demoReply != null) Column { body(); DemoOwnReplyActions(demoReply) } else body()
         }
         is PromptRow ->
             Column {
