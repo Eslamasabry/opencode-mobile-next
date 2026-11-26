@@ -263,8 +263,8 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** Kept for source compatibility; light liquid glass uses [LIGHT_RIM_ALPHA] white speculars (B-612). */
         public const val LIGHT_EDGE_ALPHA: Float = .10f
 
-        /** The rim light's shipped width, dp: razor-fine Apple specular contour (B-609, B-610). */
-        public const val RIM_WIDTH_DP: Float = .75f
+        /** The rim light's shipped width, dp: crisp hairline Apple specular contour (B-609, B-610). */
+        public const val RIM_WIDTH_DP: Float = 1f
 
         /** The rim light's shipped direction: along the top-start / bottom-end diagonal. */
         public const val LIGHT_DEG: Float = 45f
@@ -272,12 +272,12 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** The inner shadow's size when someone turns it on (the backdrop library's default). */
         public const val INNER_SHADOW_DP: Float = 24f
 
-        /** Shipped dome refraction bend profile (-0.6 soft thick-glass dome, B-609). */
-        public const val SHIPPED_BEND_SHAPE: Float = -.6f
+        /** Shipped dome refraction bend profile (-0.35 smooth Apple dome without vertical barcode streaks, B-609). */
+        public const val SHIPPED_BEND_SHAPE: Float = -.35f
 
         /** Shipped corner specular catchlight strength in dark and light themes (B-609, B-612). */
         public const val SHIPPED_SPECULAR_DARK: Float = .22f
-        public const val SHIPPED_SPECULAR_LIGHT: Float = .48f
+        public const val SHIPPED_SPECULAR_LIGHT: Float = .56f
 
         /** Shipped top sheen alpha in dark and light themes (B-609: matches LiquidEdge, preserves WCAG). */
         public const val SHIPPED_SHEEN_DARK: Float = .06f
@@ -286,8 +286,8 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** Specular reach along the rim for small pills and round buttons, dp (on 5 dp knob step). */
         public const val SMALL_SPECULAR_REACH_DP: Float = 45f
 
-        /** Partial inner words clear on floating chrome so passing content enters and bends in the rim (B-608). */
-        public const val WORDS_CLEAR_FLOATING: Float = .20f
+        /** Partial inner words clear on floating chrome: full rim refraction + calm legible center (B-608). */
+        public const val WORDS_CLEAR_FLOATING: Float = .45f
 
         /** [kind]'s numbers as the app ships them today, in a [dark] or light theme, under the default look. */
         public fun shipped(kind: GlassPaneKind, dark: Boolean): GlassKnobs {

@@ -81,7 +81,7 @@ public data class GlassLook(
                 specularDark = .80f,
                 specularLight = .96f,
                 glintShare = .75f,
-                liquidRimDark = .56f,
+                liquidRimDark = .60f,
                 liquidRimLight = .90f,
                 liquidSpecularDark = .95f,
                 liquidSpecularLight = 1f,

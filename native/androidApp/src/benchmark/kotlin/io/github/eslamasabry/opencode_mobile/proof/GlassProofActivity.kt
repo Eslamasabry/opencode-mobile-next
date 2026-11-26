@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +38,6 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.action.KitFab
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
@@ -95,7 +93,6 @@ private suspend fun LazyListState.glide(total: Float, ms: Long) {
 }
 
 private const val AUTOSTART_DELAY_MS: Long = 1_200L
-private const val CHIP_GAP_DP: Int = 8
 
 class GlassProofActivity : ComponentActivity() {
     private var started by mutableStateOf(false)
@@ -264,11 +261,7 @@ class GlassProofActivity : ComponentActivity() {
         // join-pill / join-composer-menu: the message box is one slab of glass joined to its drop.
         val joinedBottom = scene == "join-pill" || scene == "join-composer-menu"
         if (joinedBottom) KitReportBottomSlab(true)
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(CHIP_GAP_DP.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(CHIP_GAP_DP.dp)) {
-                KitChip("Ask first", icon = KitIcons.add)
-                KitChip("build · Model")
-            }
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
             val shape = RoundedCornerShape(28.dp)
             val body = if (joinedBottom) rememberKitLiquidJoinBody("bottom") else null
             val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)

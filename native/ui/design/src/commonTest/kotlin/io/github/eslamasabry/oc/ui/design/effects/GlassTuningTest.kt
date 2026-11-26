@@ -63,7 +63,7 @@ class GlassTuningTest {
         }
         // Apple Liquid Glass scale-dependent weight (B-609): clear 2 dp bar, deeper 6 dp modal.
         assertEquals(2f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
-        assertEquals(26f, GlassTuning.shipped(GlassPaneKind.Bar, true).lensStrengthDp)
+        assertEquals(18f, GlassTuning.shipped(GlassPaneKind.Bar, true).lensStrengthDp)
         assertEquals(LiquidEdge.MODAL_BLUR_DP, GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp)
         assertEquals(38f, GlassTuning.shipped(GlassPaneKind.Dialog, false).lensStrengthDp)
         assertTrue(GlassTuning.Shipped.isShipped)

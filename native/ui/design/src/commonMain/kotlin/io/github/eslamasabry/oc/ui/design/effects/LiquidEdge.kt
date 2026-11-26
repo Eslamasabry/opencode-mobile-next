@@ -288,14 +288,16 @@ public object LiquidEdge {
     private const val BAR_BLUR_DP: Float = 2f
     private const val COMPOSER_BLUR_DP: Float = 1.5f
     private const val PILL_BLUR_DP: Float = .5f
-    private const val BAR_REFRACTION_DP: Float = 26f
+    private const val BAR_REFRACTION_DP: Float = 18f
     private const val SHEET_REFRACTION_DP: Float = 38f
     private const val MENU_REFRACTION_DP: Float = 36f
     private const val PILL_REFRACTION_DP: Float = 14f
     private const val ACTION_REFRACTION_DP: Float = 24f
-    private const val BAR_RIM_MAX_DP: Float = 26f
+    private const val BAR_RIM_MAX_DP: Float = 14f
+    private const val MODAL_RIM_MAX_DP: Float = 26f
     private const val PILL_RIM_MAX_DP: Float = 16f
     private const val ACTION_RIM_MAX_DP: Float = 36f
+    private const val BAR_RIM_SHARE: Float = .28f
     private const val WIDE_RIM_SHARE: Float = .42f
     private const val ACTION_RIM_SHARE: Float = .5f
     private const val BAR_SHADOW: Float = .16f
@@ -335,27 +337,27 @@ public object LiquidEdge {
             LiquidRole.Bar ->
                 r(
                     BAR_BLUR_DP, BAR_REFRACTION_DP, BAR_SHADOW, BAR_TINT_DARK, BAR_TINT_LIGHT,
-                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = WORDS_HOLD,
+                    rimMax = BAR_RIM_MAX_DP, share = BAR_RIM_SHARE, hold = WORDS_HOLD,
                 )
             LiquidRole.Dock ->
                 r(
                     BAR_BLUR_DP, BAR_REFRACTION_DP, BAR_SHADOW, BAR_TINT_DARK, BAR_TINT_LIGHT,
-                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE,
+                    rimMax = BAR_RIM_MAX_DP, share = BAR_RIM_SHARE,
                 )
             LiquidRole.Composer ->
                 r(
                     COMPOSER_BLUR_DP, BAR_REFRACTION_DP, COMPOSER_SHADOW, COMPOSER_TINT_DARK, COMPOSER_TINT_LIGHT,
-                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = WORDS_HOLD,
+                    rimMax = BAR_RIM_MAX_DP, share = BAR_RIM_SHARE, hold = WORDS_HOLD,
                 )
             LiquidRole.Sheet ->
                 r(
                     MODAL_BLUR_DP, SHEET_REFRACTION_DP, SHEET_SHADOW, SHEET_TINT_DARK, SHEET_TINT_LIGHT,
-                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = SHEET_HOLD,
+                    rimMax = MODAL_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = SHEET_HOLD,
                 )
             LiquidRole.Menu ->
                 r(
                     MODAL_BLUR_DP, MENU_REFRACTION_DP, MENU_SHADOW, MENU_TINT_DARK, MENU_TINT_LIGHT,
-                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = MODAL_HOLD,
+                    rimMax = MODAL_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = MODAL_HOLD,
                 )
             LiquidRole.Pill, LiquidRole.Status ->
                 r(

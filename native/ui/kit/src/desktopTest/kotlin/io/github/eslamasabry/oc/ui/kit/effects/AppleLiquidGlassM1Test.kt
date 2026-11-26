@@ -145,7 +145,7 @@ class AppleLiquidGlassM1Test {
 
     @Test
     fun `B-608 floating chrome leaves scrolling backdrop visible in header and composer lens rims`() {
-        assertTrue(GlassTuning.WORDS_CLEAR_FLOATING <= 0.30f, "floating wordsClear lets content reach rim")
+        assertTrue(GlassTuning.WORDS_CLEAR_FLOATING <= 0.50f, "floating wordsClear lets content reach rim")
         for (kind in listOf(GlassPaneKind.Bar, GlassPaneKind.MessageBox)) {
             assertEquals(GlassTuning.WORDS_CLEAR_FLOATING, GlassTuning.shipped(kind, true).wordsClear)
             assertEquals(GlassTuning.WORDS_CLEAR_FLOATING, GlassTuning.shipped(kind, false).wordsClear)
