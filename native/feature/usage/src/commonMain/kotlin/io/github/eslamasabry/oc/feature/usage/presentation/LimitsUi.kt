@@ -118,6 +118,8 @@ public data class LimitWindowUi(
     val resetIn: ResetIn?,
     /** The reset on the device's clock, for Details; null without a reset time or a readable time zone. */
     val resetsAt: UsageStamp? = null,
+    /** Local-only pace bend forecast from the current snapshot; null without reset time or length. */
+    val forecast: PaceForecast? = null,
 )
 
 /** The limits that share one window length (the five-hour window, the week, …). */
@@ -151,6 +153,8 @@ public data class LimitAccountUi(
     val account: LimitAccountRef? = null,
     /** The phone agent's own state when this account has no numbers and the reader found no account; else null. */
     val agent: UsageAgentTruth? = null,
+    /** Another subscription account with spare room to suggest when this one is running ahead of pace. */
+    val switchHint: PaceSwitchHint? = null,
 ) {
     /** The account answered but reports no windows at all: the view says so and shows no numbers. */
     public val reportsNothing: Boolean
@@ -251,10 +255,15 @@ public fun limitsUi(
     agents: Map<String, UsageAgentTruth> = emptyMap(),
 ): LimitsUi {
     val zone = timezone?.takeIf { it.isNotBlank() && UsageCalendar.isReadable(it) }
-    val accounts =
+    val rawAccounts =
         snapshot.subscriptions
             .sortedBy { s -> s.leastLeftPercent ?: 101.0 }
             .map { s -> account(s, nowMs, zone, agents) }
+    val accounts =
+        rawAccounts.map { acc ->
+            val hint = LimitPaceMath.bestSwitchHint(rawAccounts, exceptKey = acc.key)
+            if (hint != null) acc.copy(switchHint = hint) else acc
+        }
     val keys =
         snapshot.apiKeyAccounts.map {
             LimitKeyUi(it.displayName, it.connection.name, it.connection.isPhone())
@@ -326,7 +335,8 @@ private fun phoneAgentTruth(s: UsageSubscription, agents: Map<String, UsageAgent
 private fun window(w: UsageWindow, nowMs: Long, zone: String?): LimitWindowUi {
     val left = (w.leftPercent / 100.0).coerceIn(0.0, 1.0)
     val resets = w.resetsAt?.toEpochMilliseconds()
-    val even = LimitMath.evenLeft(nowMs, resets, LimitMath.lengthMs(w))
+    val length = LimitMath.lengthMs(w)
+    val even = LimitMath.evenLeft(nowMs, resets, length)
     return LimitWindowUi(
         id = w.id,
         kind = w.kind,
@@ -338,5 +348,6 @@ private fun window(w: UsageWindow, nowMs: Long, zone: String?): LimitWindowUi {
         resetsAtMs = resets,
         resetIn = resets?.let { LimitMath.resetIn(nowMs, it) },
         resetsAt = resets?.let { at -> zone?.let { UsageCalendar.stamp(at, it) } },
+        forecast = LimitPaceMath.forecast(left, nowMs, resets, length, zone),
     )
 }

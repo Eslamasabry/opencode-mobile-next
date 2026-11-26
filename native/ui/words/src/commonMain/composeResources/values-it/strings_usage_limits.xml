@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Input non in cache: %1$s</string>
     <string name="s9CostCacheWrites">Scritti in cache: %1$s</string>
     <string name="s9CostOutput">Output: %1$s, ragionamento incluso: %2$s</string>
+    <string name="s9LimitsAboutBend">La linea tratteggiata indica un ritmo uniforme sull'intera finestra. Il punto mostra dove sei ora e la linea punteggiata dove porta questo ritmo.</string>
+    <string name="s9LimitsPaceLasts">A questo ritmo dura fino al ripristino.</string>
+    <string name="s9LimitsPaceTooLittle">Uso ancora troppo scarso per stimare.</string>
+    <string name="s9LimitsPaceRunsOut">A questo ritmo si esaurisce verso %1$s, %2$s prima del ripristino.</string>
+    <string name="s9LimitsPaceRunsOutIn">A questo ritmo si esaurisce tra circa %1$s, %2$s prima del ripristino.</string>
+    <string name="s9LimitsPaceTodayAt">oggi alle %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">domani alle %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s alle %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Esaurito fino a %1$s.</string>
+    <string name="s9LimitsPaceOutReset">Esaurito fino al ripristino.</string>
+    <string name="s9LimitsPaceCompareDay">Dal ripristino %1$s al giorno · per durare, circa %2$s al giorno</string>
+    <string name="s9LimitsPaceCompareHour">Dal ripristino %1$s all'ora · per durare, circa %2$s all'ora</string>
+    <string name="s9LimitsPaceHintSwitch">Rallenta qui o passa a %1$s (%2$s rimasto).</string>
+    <string name="s9LimitsPaceHintSlow">Rallenta per arrivare al ripristino o passa a un altro agente con margine.</string>
+    <string name="s9LimitsPaceOutSwitch">Passa a %1$s (%2$s rimasto) fino al ripristino.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Previsione dalla media dal ripristino; non ci sono ancora abbastanza letture salvate.</string>
+    <string name="s9LimitsPaceResetLabel">Ripristino</string>
+    <string name="s9LimitsPaceEvenLabel">Ritmo uniforme</string>
+    <string name="s9LimitsPaceNoneLeft">Esaurito</string>
+    <string name="s9LimitsPaceLeftAtReset">%1$s al ripristino</string>
+    <string name="s9LimitsPaceNowLabel">Ora</string>
+    <string name="s9LimitsPaceStartLabel">Inizio</string>
 </resources>

@@ -62,4 +62,26 @@
     <string name="s9CostUncached">未缓存的输入：%1$s</string>
     <string name="s9CostCacheWrites">写入缓存：%1$s</string>
     <string name="s9CostOutput">输出：%1$s，其中推理：%2$s</string>
+    <string name="s9LimitsAboutBend">虚线表示整个周期内的匀速消耗。圆点表示当前位置，点线表示按当前速度的预测走向。</string>
+    <string name="s9LimitsPaceLasts">按当前速度可用到重置。</string>
+    <string name="s9LimitsPaceTooLittle">使用量还太少，暂无法判断。</string>
+    <string name="s9LimitsPaceRunsOut">按当前速度大约会在%1$s用完，比重置早%2$s。</string>
+    <string name="s9LimitsPaceRunsOutIn">按当前速度大约在%1$s后用完，比重置早%2$s。</string>
+    <string name="s9LimitsPaceTodayAt">今天%1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">明天%1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s%2$s</string>
+    <string name="s9LimitsPaceOutUntil">已用完，直至%1$s。</string>
+    <string name="s9LimitsPaceOutReset">在重置前已无剩余额度。</string>
+    <string name="s9LimitsPaceCompareDay">自重置起每天%1$s · 若要够用，每天约%2$s</string>
+    <string name="s9LimitsPaceCompareHour">自重置起每小时%1$s · 若要够用，每小时约%2$s</string>
+    <string name="s9LimitsPaceHintSwitch">请放慢此处用量，或切换到%1$s（剩余%2$s）。</string>
+    <string name="s9LimitsPaceHintSlow">请放慢用量以维持到重置，或切换到仍有余量的其他智能体。</string>
+    <string name="s9LimitsPaceOutSwitch">重置前请切换到%1$s（剩余%2$s）。</string>
+    <string name="s9LimitsPaceDetailsNoHistory">根据自重置以来的平均速度预测；已保存的读数还不足。</string>
+    <string name="s9LimitsPaceResetLabel">重置</string>
+    <string name="s9LimitsPaceEvenLabel">匀速</string>
+    <string name="s9LimitsPaceNoneLeft">已用完</string>
+    <string name="s9LimitsPaceLeftAtReset">重置时预计剩%1$s</string>
+    <string name="s9LimitsPaceNowLabel">现在</string>
+    <string name="s9LimitsPaceStartLabel">开始</string>
 </resources>

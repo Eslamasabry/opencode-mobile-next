@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Đầu vào không qua bộ nhớ đệm: %1$s</string>
     <string name="s9CostCacheWrites">Đã ghi vào bộ nhớ đệm: %1$s</string>
     <string name="s9CostOutput">Đầu ra: %1$s, trong đó suy luận: %2$s</string>
+    <string name="s9LimitsAboutBend">Đường nét đứt thể hiện nhịp dùng đều trong cả khung thời gian. Dấu chấm là vị trí hiện tại và đường chấm cho biết nhịp này dẫn tới đâu.</string>
+    <string name="s9LimitsPaceLasts">Với nhịp này, hạn mức sẽ đủ tới lúc đặt lại.</string>
+    <string name="s9LimitsPaceTooLittle">Chưa dùng đủ nhiều để dự đoán.</string>
+    <string name="s9LimitsPaceRunsOut">Với nhịp này, hạn mức sẽ hết khoảng %1$s, trước lúc đặt lại %2$s.</string>
+    <string name="s9LimitsPaceRunsOutIn">Với nhịp này, hạn mức sẽ hết sau khoảng %1$s, trước lúc đặt lại %2$s.</string>
+    <string name="s9LimitsPaceTodayAt">hôm nay lúc %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">ngày mai lúc %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s lúc %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Đã dùng hết tới %1$s.</string>
+    <string name="s9LimitsPaceOutReset">Đã dùng hết tới lúc đặt lại.</string>
+    <string name="s9LimitsPaceCompareDay">Từ lúc đặt lại %1$s mỗi ngày · để đủ, khoảng %2$s mỗi ngày</string>
+    <string name="s9LimitsPaceCompareHour">Từ lúc đặt lại %1$s mỗi giờ · để đủ, khoảng %2$s mỗi giờ</string>
+    <string name="s9LimitsPaceHintSwitch">Giảm tốc độ ở đây hoặc chuyển sang %1$s (còn %2$s).</string>
+    <string name="s9LimitsPaceHintSlow">Giảm tốc độ để đủ tới lúc đặt lại, hoặc chuyển sang tác nhân khác còn dư.</string>
+    <string name="s9LimitsPaceOutSwitch">Chuyển sang %1$s (còn %2$s) tới khi đặt lại.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Dự báo từ mức trung bình kể từ lần đặt lại; chưa lưu đủ số lần đọc.</string>
+    <string name="s9LimitsPaceResetLabel">Đặt lại</string>
+    <string name="s9LimitsPaceEvenLabel">Nhịp đều</string>
+    <string name="s9LimitsPaceNoneLeft">Hết hạn mức</string>
+    <string name="s9LimitsPaceLeftAtReset">Còn %1$s khi đặt lại</string>
+    <string name="s9LimitsPaceNowLabel">Hiện tại</string>
+    <string name="s9LimitsPaceStartLabel">Bắt đầu</string>
 </resources>

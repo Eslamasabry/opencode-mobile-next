@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Entrada sin caché: %1$s</string>
     <string name="s9CostCacheWrites">Escrito en la caché: %1$s</string>
     <string name="s9CostOutput">Salida: %1$s, razonamiento incluido: %2$s</string>
+    <string name="s9LimitsAboutBend">La línea discontinua muestra un ritmo uniforme en toda la ventana. El punto indica dónde vas ahora y la línea punteada muestra adónde lleva este ritmo.</string>
+    <string name="s9LimitsPaceLasts">A este ritmo alcanza hasta el reinicio.</string>
+    <string name="s9LimitsPaceTooLittle">Aún hay muy poco uso para saberlo.</string>
+    <string name="s9LimitsPaceRunsOut">A este ritmo se acaba cerca de %1$s, %2$s antes del reinicio.</string>
+    <string name="s9LimitsPaceRunsOutIn">A este ritmo se acaba en cerca de %1$s, %2$s antes del reinicio.</string>
+    <string name="s9LimitsPaceTodayAt">hoy a las %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">mañana a las %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s a las %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Agotado hasta %1$s.</string>
+    <string name="s9LimitsPaceOutReset">No queda nada hasta el reinicio.</string>
+    <string name="s9LimitsPaceCompareDay">Desde el reinicio %1$s al día · para llegar, cerca de %2$s al día</string>
+    <string name="s9LimitsPaceCompareHour">Desde el reinicio %1$s por hora · para llegar, cerca de %2$s por hora</string>
+    <string name="s9LimitsPaceHintSwitch">Baja el ritmo aquí o cambia a %1$s (%2$s disponible).</string>
+    <string name="s9LimitsPaceHintSlow">Baja el ritmo para llegar al reinicio o cambia a otro agente con margen.</string>
+    <string name="s9LimitsPaceOutSwitch">Cambia a %1$s (%2$s disponible) hasta que se reinicie.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Pronóstico basado en el promedio desde el reinicio; aún no hay suficientes lecturas guardadas.</string>
+    <string name="s9LimitsPaceResetLabel">Reinicio</string>
+    <string name="s9LimitsPaceEvenLabel">Ritmo uniforme</string>
+    <string name="s9LimitsPaceNoneLeft">Sin saldo</string>
+    <string name="s9LimitsPaceLeftAtReset">%1$s al reinicio</string>
+    <string name="s9LimitsPaceNowLabel">Ahora</string>
+    <string name="s9LimitsPaceStartLabel">Inicio</string>
 </resources>

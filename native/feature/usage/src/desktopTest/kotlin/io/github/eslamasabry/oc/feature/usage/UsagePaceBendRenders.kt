@@ -37,7 +37,7 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlin.time.Instant
 
-private const val RENDER_PHASE = "before"
+private const val RENDER_PHASE = "after"
 
 /**
  * 360 dp proof renders for Usage › Limits pace bend chart (B-508): light and dark, text 1.0 and 1.3.

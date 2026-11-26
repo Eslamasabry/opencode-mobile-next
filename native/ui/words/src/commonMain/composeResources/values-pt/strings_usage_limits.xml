@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Entrada fora do cache: %1$s</string>
     <string name="s9CostCacheWrites">Gravado no cache: %1$s</string>
     <string name="s9CostOutput">Saída: %1$s, com raciocínio incluído: %2$s</string>
+    <string name="s9LimitsAboutBend">A linha tracejada mostra um ritmo uniforme na janela. O ponto marca onde você está agora e a linha pontilhada mostra aonde esse ritmo leva.</string>
+    <string name="s9LimitsPaceLasts">Nesse ritmo, dura até a renovação.</string>
+    <string name="s9LimitsPaceTooLittle">Uso insuficiente ainda para estimar.</string>
+    <string name="s9LimitsPaceRunsOut">Nesse ritmo, acaba por volta de %1$s, %2$s antes da renovação.</string>
+    <string name="s9LimitsPaceRunsOutIn">Nesse ritmo, acaba em cerca de %1$s, %2$s antes da renovação.</string>
+    <string name="s9LimitsPaceTodayAt">hoje às %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">amanhã às %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s às %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Esgotado até %1$s.</string>
+    <string name="s9LimitsPaceOutReset">Sem saldo até a renovação.</string>
+    <string name="s9LimitsPaceCompareDay">Desde a renovação %1$s por dia · para durar, cerca de %2$s por dia</string>
+    <string name="s9LimitsPaceCompareHour">Desde a renovação %1$s por hora · para durar, cerca de %2$s por hora</string>
+    <string name="s9LimitsPaceHintSwitch">Reduza o ritmo aqui ou troque para %1$s (%2$s restante).</string>
+    <string name="s9LimitsPaceHintSlow">Reduza o ritmo para durar até a renovação ou troque para outro agente com folga.</string>
+    <string name="s9LimitsPaceOutSwitch">Troque para %1$s (%2$s restante) até renovar.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Previsão pela média desde a renovação; ainda não há leituras salvas suficientes.</string>
+    <string name="s9LimitsPaceResetLabel">Renovação</string>
+    <string name="s9LimitsPaceEvenLabel">Ritmo uniforme</string>
+    <string name="s9LimitsPaceNoneLeft">Esgotado</string>
+    <string name="s9LimitsPaceLeftAtReset">%1$s na renovação</string>
+    <string name="s9LimitsPaceNowLabel">Agora</string>
+    <string name="s9LimitsPaceStartLabel">Início</string>
 </resources>

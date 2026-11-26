@@ -62,4 +62,26 @@
     <string name="s9CostUncached">キャッシュされていない入力：%1$s</string>
     <string name="s9CostCacheWrites">キャッシュへの書き込み：%1$s</string>
     <string name="s9CostOutput">出力：%1$s、推論を含む：%2$s</string>
+    <string name="s9LimitsAboutBend">破線は期間全体の均等ペースを示します。点が現在の位置、点線がこのペースで進んだときの予測です。</string>
+    <string name="s9LimitsPaceLasts">このペースならリセットまで持ちます。</string>
+    <string name="s9LimitsPaceTooLittle">使用量がまだ少なく予測できません。</string>
+    <string name="s9LimitsPaceRunsOut">このペースだと%1$s頃に使い切ります（リセットの%2$s前）。</string>
+    <string name="s9LimitsPaceRunsOutIn">このペースだと約%1$s後に使い切ります（リセットの%2$s前）。</string>
+    <string name="s9LimitsPaceTodayAt">今日%1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">明日%1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s%2$s</string>
+    <string name="s9LimitsPaceOutUntil">%1$sまで上限に達しています。</string>
+    <string name="s9LimitsPaceOutReset">リセットまで残量はありません。</string>
+    <string name="s9LimitsPaceCompareDay">リセット以降1日%1$s · 維持には1日約%2$s</string>
+    <string name="s9LimitsPaceCompareHour">リセット以降1時間%1$s · 維持には1時間約%2$s</string>
+    <string name="s9LimitsPaceHintSwitch">ここでは使用を抑えるか、%1$s（残り%2$s）に切り替えてください。</string>
+    <string name="s9LimitsPaceHintSlow">リセットまで持つようペースを落とすか、余裕のある別のエージェントに切り替えてください。</string>
+    <string name="s9LimitsPaceOutSwitch">リセットまで%1$s（残り%2$s）に切り替えてください。</string>
+    <string name="s9LimitsPaceDetailsNoHistory">リセット以降の平均から予測しています。保存済みの記録がまだ不足しています。</string>
+    <string name="s9LimitsPaceResetLabel">リセット</string>
+    <string name="s9LimitsPaceEvenLabel">均等ペース</string>
+    <string name="s9LimitsPaceNoneLeft">残量なし</string>
+    <string name="s9LimitsPaceLeftAtReset">リセット時に%1$s残り</string>
+    <string name="s9LimitsPaceNowLabel">現在</string>
+    <string name="s9LimitsPaceStartLabel">開始</string>
 </resources>

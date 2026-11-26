@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Entrée hors cache\u00A0: %1$s</string>
     <string name="s9CostCacheWrites">Écrit dans le cache\u00A0: %1$s</string>
     <string name="s9CostOutput">Sortie\u00A0: %1$s, dont raisonnement\u00A0: %2$s</string>
+    <string name="s9LimitsAboutBend">La ligne tiretée représente un rythme régulier sur toute la période. Le point indique où vous en êtes et les pointillés montrent où mène ce rythme.</string>
+    <string name="s9LimitsPaceLasts">À ce rythme, cela tiendra jusqu'à la réinitialisation.</string>
+    <string name="s9LimitsPaceTooLittle">Pas encore assez d'utilisation pour estimer.</string>
+    <string name="s9LimitsPaceRunsOut">À ce rythme, il sera épuisé vers %1$s, %2$s avant la réinitialisation.</string>
+    <string name="s9LimitsPaceRunsOutIn">À ce rythme, il sera épuisé dans environ %1$s, %2$s avant la réinitialisation.</string>
+    <string name="s9LimitsPaceTodayAt">aujourd'hui à %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">demain à %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s à %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Épuisé jusqu'à %1$s.</string>
+    <string name="s9LimitsPaceOutReset">Plus rien jusqu'à la réinitialisation.</string>
+    <string name="s9LimitsPaceCompareDay">Depuis la réinitialisation %1$s par jour · pour tenir, environ %2$s par jour</string>
+    <string name="s9LimitsPaceCompareHour">Depuis la réinitialisation %1$s par heure · pour tenir, environ %2$s par heure</string>
+    <string name="s9LimitsPaceHintSwitch">Ralentissez ici ou passez à %1$s (%2$s restant).</string>
+    <string name="s9LimitsPaceHintSlow">Ralentissez pour tenir jusqu'à la réinitialisation, ou passez à un autre agent ayant de la marge.</string>
+    <string name="s9LimitsPaceOutSwitch">Passez à %1$s (%2$s restant) jusqu'à la réinitialisation.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Prévision basée sur la moyenne depuis la réinitialisation; pas encore assez de relevés enregistrés.</string>
+    <string name="s9LimitsPaceResetLabel">Réinit.</string>
+    <string name="s9LimitsPaceEvenLabel">Rythme régulier</string>
+    <string name="s9LimitsPaceNoneLeft">Épuisé</string>
+    <string name="s9LimitsPaceLeftAtReset">%1$s à la réinit.</string>
+    <string name="s9LimitsPaceNowLabel">Maint.</string>
+    <string name="s9LimitsPaceStartLabel">Début</string>
 </resources>

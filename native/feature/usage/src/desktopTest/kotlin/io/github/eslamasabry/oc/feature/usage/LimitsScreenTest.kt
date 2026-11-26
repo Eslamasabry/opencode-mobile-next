@@ -86,14 +86,14 @@ class LimitsScreenTest {
             onNodeWithText("Max plan").assertExists()
             onNodeWithText("60% left").assertExists()
             onNodeWithText("resets in 1h 38m").assertExists()
-            onNodeWithText("Within an even pace").assertExists()
+            onNodeWithText("At this rate it lasts until the reset.").assertExists()
             // Two weekly limits: compact cells with their own label, percent and countdown.
             onNodeWithText("Opus").assertExists()
             onNodeWithText("30% left").assertExists()
             onNodeWithText("70% left").assertExists()
             assertEquals(2, onAllNodesWithText("resets in 3d").fetchSemanticsNodes().size)
             // Codex is spending both its windows faster than an even pace.
-            assertEquals(2, onAllNodesWithText("Using it faster than an even pace").fetchSemanticsNodes().size)
+            assertEquals(2, onAllNodesWithText("At this rate it runs out", substring = true).fetchSemanticsNodes().size)
         }
 
     @Test

@@ -31,13 +31,28 @@ import io.github.eslamasabry.oc.feature.usage.presentation.LimitWindowUi
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitsActions
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitsPhase
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitsUi
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceAxisTick
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceForecast
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceMoment
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceRateComparison
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceRateUnit
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceSwitchHint
+import io.github.eslamasabry.oc.feature.usage.presentation.PaceTickKind
 import io.github.eslamasabry.oc.feature.usage.presentation.ResetIn
+import io.github.eslamasabry.oc.feature.usage.presentation.UsageAgentTruth
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.content.usage.KitLimitBar
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitPaceAxisMark
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitPaceBendChart
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitPaceBendData
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitPaceBendLabels
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitPaceBendState
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitPaceSentence
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -48,12 +63,31 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
 import io.github.eslamasabry.oc.ui.kit.text.kitDurationParts
 import io.github.eslamasabry.oc.ui.kit.text.kitDurationWords
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
+import io.github.eslamasabry.oc.ui.words.res.agentsStateLimitReset
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNotConfirmed
+import io.github.eslamasabry.oc.ui.words.res.composerLimitFriday
+import io.github.eslamasabry.oc.ui.words.res.composerLimitMonday
+import io.github.eslamasabry.oc.ui.words.res.composerLimitSaturday
+import io.github.eslamasabry.oc.ui.words.res.composerLimitSunday
+import io.github.eslamasabry.oc.ui.words.res.composerLimitThursday
+import io.github.eslamasabry.oc.ui.words.res.composerLimitTuesday
+import io.github.eslamasabry.oc.ui.words.res.composerLimitWednesday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansFriday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansMonday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansSaturday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansSunday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansThursday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansTuesday
+import io.github.eslamasabry.oc.ui.words.res.m40PlansWednesday
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsAboutBend
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsAboutPace
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsAhead
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsBroken
@@ -71,16 +105,31 @@ import io.github.eslamasabry.oc.ui.words.res.s9LimitsMonth
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNoLimits
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNoReset
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNotSignedIn
-import io.github.eslamasabry.oc.ui.words.res.agentsCheckSignInAgain
-import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
-import io.github.eslamasabry.oc.ui.words.res.agentsStateLimitReset
-import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNotConfirmed
-import io.github.eslamasabry.oc.feature.usage.presentation.UsageAgentTruth
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsOfflineAgo
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsOfflineNone
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsOther
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceCompareDay
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceCompareHour
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceDayAt
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceDetailsNoHistory
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceEvenLabel
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceHintSlow
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceHintSwitch
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceLasts
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceLeftAtReset
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceNoneLeft
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceNowLabel
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceOutReset
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceOutSwitch
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceOutUntil
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceResetLabel
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceRunsOut
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceRunsOutIn
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceSpoken
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceStartLabel
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceTodayAt
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceTomorrowAt
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsPaceTooLittle
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsPlan
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsReadAgo
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsReadAt
@@ -93,6 +142,7 @@ import io.github.eslamasabry.oc.ui.words.res.s9LimitsWeek
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsWithinPace
 import io.github.eslamasabry.oc.ui.words.res.usageDetailAccount
 import io.github.eslamasabry.oc.ui.words.res.usageNo
+import io.github.eslamasabry.oc.ui.words.res.usageToday
 import io.github.eslamasabry.oc.ui.words.res.usageYes
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -139,10 +189,17 @@ public fun LimitsContent(state: LimitsUi, actions: LimitsActions, modifier: Modi
                                 }
                             }
                         }
-                    if (state.accounts.any { a -> a.groups.any { g -> g.windows.any { it.evenLeft != null } } })
+                    val hasBend =
+                        state.accounts.any { a ->
+                            a.groups.any { g -> !g.compact && g.windows.any { it.forecast != null } }
+                        }
+                    val hasEven =
+                        state.accounts.any { a -> a.groups.any { g -> g.windows.any { it.evenLeft != null } } }
+                    if (hasBend || hasEven)
                         item(key = "about-pace") {
+                            val aboutRes = if (hasBend) Res.string.s9LimitsAboutBend else Res.string.s9LimitsAboutPace
                             KitText(
-                                stringResource(Res.string.s9LimitsAboutPace),
+                                stringResource(aboutRes),
                                 Modifier.padding(horizontal = gutter.dp, vertical = LocalKitTokens.current.sectionGap.dp),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
@@ -172,7 +229,7 @@ private fun Account(account: LimitAccountUi, nowMs: Long, actions: LimitsActions
             }
             if (account.reportsNothing) AgentOrStateWords(account, actions)
             for (group in account.groups) {
-                if (group.compact) CompactGroup(group) else Headline(group.windows.first())
+                if (group.compact) CompactGroup(group) else Headline(group.windows.first(), account.switchHint)
             }
             Age(account, nowMs)
             Details(account)
@@ -180,13 +237,14 @@ private fun Account(account: LimitAccountUi, nowMs: Long, actions: LimitsActions
     }
 }
 
-/** One window alone in its length: the big "N% left" and its countdown on one line, the bar, then the pace. */
+/** One window alone in its length: "N% left", countdown, forecast sentence, bend chart, rate comparison and hint. */
 @Composable
-private fun Headline(window: LimitWindowUi) {
+private fun Headline(window: LimitWindowUi, switchHint: PaceSwitchHint?) {
     val name = windowName(window.kind, window.label)
     val left = leftWords(window.leftPercent)
     val reset = resetWords(window.resetIn)
-    val pace = paceWords(window)
+    val forecast = window.forecast
+    val leftRole = if (forecast?.frame?.shortWindow == true) TypeRole.Headline else TypeRole.Title
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitText(name, role = TypeRole.Label, tone = TextTone.Secondary)
         FlowRow(
@@ -195,16 +253,59 @@ private fun Headline(window: LimitWindowUi) {
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
             itemVerticalAlignment = Alignment.Bottom,
         ) {
-            KitText(left, Modifier.padding(end = Space.S3.dp).testTag("limit-left"), role = TypeRole.Title, tabular = true)
+            KitText(left, Modifier.padding(end = Space.S3.dp).testTag("limit-left"), role = leftRole, tabular = true)
             KitText(reset, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true)
         }
-        KitLimitBar(
-            left = window.left.toFloat(),
-            evenLeft = window.evenLeft?.toFloat(),
-            semantics = listOfNotNull(name, left, reset, pace?.spoken).joinToString(", "),
-        )
-        pace?.let { KitText(it.shown, role = TypeRole.Secondary, tone = it.tone) }
+        if (forecast == null) {
+            KitLimitBar(
+                left = window.left.toFloat(),
+                evenLeft = null,
+                semantics = listOfNotNull(name, left, reset).joinToString(", "),
+            )
+        } else {
+            HeadlineForecast(name, left, reset, forecast, switchHint)
+        }
     }
+}
+
+@Composable
+private fun HeadlineForecast(
+    name: String,
+    left: String,
+    reset: String,
+    forecast: PaceForecast,
+    switchHint: PaceSwitchHint?,
+) {
+    val sentence = forecastSentence(forecast)
+    val attention = forecast is PaceForecast.RunsOut || forecast is PaceForecast.Out
+    val comparison = (forecast as? PaceForecast.RunsOut)?.let { comparisonWords(it.comparison) }
+    val hint = nextStepHint(forecast, switchHint)
+    val evenSpoken =
+        if (forecast is PaceForecast.Lasts || forecast is PaceForecast.RunsOut) {
+            stringResource(Res.string.s9LimitsPaceSpoken, pctWords((forecast.frame.evenLeft * PERCENT_INT).toInt()))
+        } else {
+            null
+        }
+    KitPaceSentence(text = sentence, attention = attention, short = forecast.frame.shortWindow)
+    KitPaceBendChart(
+        data =
+            KitPaceBendData(
+                elapsed = forecast.frame.elapsed.toFloat(),
+                left = forecast.frame.left.toFloat(),
+                state = bendState(forecast),
+                axisMarks = forecast.frame.axis.map { axisMark(it) },
+                labels =
+                    KitPaceBendLabels(
+                        reset = stringResource(Res.string.s9LimitsPaceResetLabel),
+                        evenPace = stringResource(Res.string.s9LimitsPaceEvenLabel),
+                    ),
+                short = forecast.frame.shortWindow,
+            ),
+        semantics = listOfNotNull(name, left, reset, evenSpoken, comparison, sentence).joinToString(". "),
+        modifier = Modifier.testTag("pace-bend-chart"),
+    )
+    comparison?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true) }
+    hint?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Primary) }
 }
 
 /**
@@ -276,12 +377,14 @@ private fun Age(account: LimitAccountUi, nowMs: Long) {
 
 @Composable
 private fun Details(account: LimitAccountUi) {
+    val hasForecast = account.groups.any { g -> !g.compact && g.windows.any { it.forecast != null } }
     val notes = buildList {
         for (group in account.groups) for (w in group.windows) {
             val at = w.resetsAt ?: continue
             add(stringResource(Res.string.s9LimitsResetsAt, windowName(w.kind, w.label), stamp(at)))
         }
         account.fetchedAt?.let { add(stringResource(Res.string.s9LimitsReadAt, stamp(it))) }
+        if (hasForecast) add(stringResource(Res.string.s9LimitsPaceDetailsNoHistory))
     }
     // Flutter PR #136: the signed-in account, copyable when readable; "Yes" / "No" otherwise.
     val redactor = LocalKitRedactor.current
@@ -360,6 +463,129 @@ private fun paceWords(window: LimitWindowUi): PaceWords? {
         LimitPace.WithinPace ->
             stringResource(Res.string.s9LimitsWithinPace).let { PaceWords(TextTone.Secondary, it, "$it. $mark") }
         LimitPace.Unknown -> null
+    }
+}
+
+private const val PERCENT_INT = 100
+
+private val fullWeekdays =
+    listOf(
+        Res.string.composerLimitMonday,
+        Res.string.composerLimitTuesday,
+        Res.string.composerLimitWednesday,
+        Res.string.composerLimitThursday,
+        Res.string.composerLimitFriday,
+        Res.string.composerLimitSaturday,
+        Res.string.composerLimitSunday,
+    )
+
+private val shortWeekdays =
+    listOf(
+        Res.string.m40PlansMonday,
+        Res.string.m40PlansTuesday,
+        Res.string.m40PlansWednesday,
+        Res.string.m40PlansThursday,
+        Res.string.m40PlansFriday,
+        Res.string.m40PlansSaturday,
+        Res.string.m40PlansSunday,
+    )
+
+private fun pctWords(percent: Int): String = "${Numbers.format(percent)}%"
+
+@Composable
+private fun forecastSentence(forecast: PaceForecast): String =
+    when (forecast) {
+        is PaceForecast.TooLittle -> stringResource(Res.string.s9LimitsPaceTooLittle)
+        is PaceForecast.Lasts -> stringResource(Res.string.s9LimitsPaceLasts)
+        is PaceForecast.RunsOut -> {
+            val g = forecast.gapBeforeReset
+            val gap = parts(g.days, g.hours, g.minutes)
+            val whenText = momentWords(forecast.runsOutMoment)
+            val res =
+                if (forecast.runsOutMoment is PaceMoment.Relative) {
+                    Res.string.s9LimitsPaceRunsOutIn
+                } else {
+                    Res.string.s9LimitsPaceRunsOut
+                }
+            stringResource(res, whenText, gap)
+        }
+        is PaceForecast.Out ->
+            if (forecast.resetsMoment is PaceMoment.Relative) {
+                stringResource(Res.string.s9LimitsPaceOutReset)
+            } else {
+                stringResource(Res.string.s9LimitsPaceOutUntil, momentWords(forecast.resetsMoment))
+            }
+    }
+
+@Composable
+private fun momentWords(moment: PaceMoment): String =
+    when (moment) {
+        is PaceMoment.Today -> stringResource(Res.string.s9LimitsPaceTodayAt, Numbers.digits(moment.clock))
+        is PaceMoment.Tomorrow -> stringResource(Res.string.s9LimitsPaceTomorrowAt, Numbers.digits(moment.clock))
+        is PaceMoment.Weekday -> {
+            val day = stringResource(fullWeekdays.getOrElse(moment.isoDay - 1) { Res.string.composerLimitMonday })
+            stringResource(Res.string.s9LimitsPaceDayAt, day, Numbers.digits(moment.clock))
+        }
+        is PaceMoment.Relative -> parts(moment.days, moment.hours, moment.minutes)
+    }
+
+@Composable
+private fun comparisonWords(comparison: PaceRateComparison): String {
+    val res =
+        when (comparison.unit) {
+            PaceRateUnit.PerDay -> Res.string.s9LimitsPaceCompareDay
+            PaceRateUnit.PerHour -> Res.string.s9LimitsPaceCompareHour
+        }
+    return stringResource(res, pctWords(comparison.sinceResetPercent), pctWords(comparison.neededToLastPercent))
+}
+
+@Composable
+private fun nextStepHint(forecast: PaceForecast, switchHint: PaceSwitchHint?): String? =
+    when (forecast) {
+        is PaceForecast.RunsOut ->
+            switchHint?.let {
+                stringResource(Res.string.s9LimitsPaceHintSwitch, it.accountName, pctWords(it.leftPercent))
+            } ?: stringResource(Res.string.s9LimitsPaceHintSlow)
+        is PaceForecast.Out ->
+            switchHint?.let {
+                stringResource(Res.string.s9LimitsPaceOutSwitch, it.accountName, pctWords(it.leftPercent))
+            }
+        is PaceForecast.TooLittle,
+        is PaceForecast.Lasts -> null
+    }
+
+@Composable
+private fun bendState(forecast: PaceForecast): KitPaceBendState =
+    when (forecast) {
+        is PaceForecast.TooLittle -> KitPaceBendState.TooLittle
+        is PaceForecast.Lasts ->
+            KitPaceBendState.Lasts(
+                atReset = forecast.atReset.toFloat(),
+                landingLabel = stringResource(Res.string.s9LimitsPaceLeftAtReset, pctWords(forecast.atResetPercent)),
+            )
+        is PaceForecast.RunsOut ->
+            KitPaceBendState.RunsOut(
+                runsOutElapsed = forecast.runsOutElapsed.toFloat(),
+                noneLeftLabel = stringResource(Res.string.s9LimitsPaceNoneLeft),
+            )
+        is PaceForecast.Out -> KitPaceBendState.Out(stringResource(Res.string.s9LimitsPaceNoneLeft))
+    }
+
+@Composable
+private fun axisMark(tick: PaceAxisTick): KitPaceAxisMark {
+    val f = tick.fraction.toFloat()
+    return when (val kind = tick.kind) {
+        PaceTickKind.Divider -> KitPaceAxisMark(f, isDivider = true)
+        PaceTickKind.Today -> KitPaceAxisMark(f, label = stringResource(Res.string.usageToday), emphasized = true)
+        is PaceTickKind.Weekday -> {
+            val day = stringResource(shortWeekdays.getOrElse(kind.isoDay - 1) { Res.string.m40PlansMonday })
+            KitPaceAxisMark(f, label = day)
+        }
+        is PaceTickKind.Clock -> KitPaceAxisMark(f, label = Numbers.digits(kind.text))
+        PaceTickKind.Now ->
+            KitPaceAxisMark(f, label = stringResource(Res.string.s9LimitsPaceNowLabel), emphasized = true)
+        PaceTickKind.Start -> KitPaceAxisMark(f, label = stringResource(Res.string.s9LimitsPaceStartLabel))
+        PaceTickKind.Reset -> KitPaceAxisMark(f, label = stringResource(Res.string.s9LimitsPaceResetLabel))
     }
 }
 

@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Input tanpa cache: %1$s</string>
     <string name="s9CostCacheWrites">Ditulis ke cache: %1$s</string>
     <string name="s9CostOutput">Output: %1$s, termasuk penalaran: %2$s</string>
+    <string name="s9LimitsAboutBend">Garis putus-putus menunjukkan laju merata sepanjang periode. Titik adalah posisi saat ini, dan garis bertitik menunjukkan arah laju sekarang.</string>
+    <string name="s9LimitsPaceLasts">Dengan laju ini, kuota cukup sampai reset.</string>
+    <string name="s9LimitsPaceTooLittle">Pemakaian belum cukup untuk memperkirakan.</string>
+    <string name="s9LimitsPaceRunsOut">Dengan laju ini, kuota habis sekitar %1$s, %2$s sebelum reset.</string>
+    <string name="s9LimitsPaceRunsOutIn">Dengan laju ini, kuota habis dalam sekitar %1$s, %2$s sebelum reset.</string>
+    <string name="s9LimitsPaceTodayAt">hari ini pukul %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">besok pukul %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s pukul %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Habis sampai %1$s.</string>
+    <string name="s9LimitsPaceOutReset">Habis sampai reset.</string>
+    <string name="s9LimitsPaceCompareDay">Sejak reset %1$s per hari · agar cukup, sekitar %2$s per hari</string>
+    <string name="s9LimitsPaceCompareHour">Sejak reset %1$s per jam · agar cukup, sekitar %2$s per jam</string>
+    <string name="s9LimitsPaceHintSwitch">Kurangi pemakaian di sini, atau pindah ke %1$s (tersisa %2$s).</string>
+    <string name="s9LimitsPaceHintSlow">Kurangi pemakaian agar cukup sampai reset, atau pindah ke agen lain yang masih longgar.</string>
+    <string name="s9LimitsPaceOutSwitch">Pindah ke %1$s (tersisa %2$s) sampai reset.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Perkiraan dari rata-rata sejak reset; belum cukup pembacaan yang tersimpan.</string>
+    <string name="s9LimitsPaceResetLabel">Atur ulang</string>
+    <string name="s9LimitsPaceEvenLabel">Laju merata</string>
+    <string name="s9LimitsPaceNoneLeft">Habis</string>
+    <string name="s9LimitsPaceLeftAtReset">Tersisa %1$s saat reset</string>
+    <string name="s9LimitsPaceNowLabel">Kini</string>
+    <string name="s9LimitsPaceStartLabel">Mulai</string>
 </resources>

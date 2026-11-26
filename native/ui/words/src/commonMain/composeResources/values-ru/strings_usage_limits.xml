@@ -62,4 +62,26 @@
     <string name="s9CostUncached">Ввод без кэша: %1$s</string>
     <string name="s9CostCacheWrites">Записано в кэш: %1$s</string>
     <string name="s9CostOutput">Вывод: %1$s, из них рассуждения: %2$s</string>
+    <string name="s9LimitsAboutBend">Штриховая линия показывает ровный темп на весь период. Точка отмечает текущий момент, а пунктир показывает, куда ведёт текущий темп.</string>
+    <string name="s9LimitsPaceLasts">При таком темпе лимита хватит до сброса.</string>
+    <string name="s9LimitsPaceTooLittle">Пока слишком мало данных для прогноза.</string>
+    <string name="s9LimitsPaceRunsOut">При таком темпе лимит закончится около %1$s, за %2$s до сброса.</string>
+    <string name="s9LimitsPaceRunsOutIn">При таком темпе лимит закончится примерно через %1$s, за %2$s до сброса.</string>
+    <string name="s9LimitsPaceTodayAt">сегодня в %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">завтра в %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s в %2$s</string>
+    <string name="s9LimitsPaceOutUntil">Исчерпано до %1$s.</string>
+    <string name="s9LimitsPaceOutReset">Лимит исчерпан до сброса.</string>
+    <string name="s9LimitsPaceCompareDay">Со сброса %1$s в день · чтобы хватило, около %2$s в день</string>
+    <string name="s9LimitsPaceCompareHour">Со сброса %1$s в час · чтобы хватило, около %2$s в час</string>
+    <string name="s9LimitsPaceHintSwitch">Сбавьте темп здесь или переключитесь на %1$s (осталось %2$s).</string>
+    <string name="s9LimitsPaceHintSlow">Сбавьте темп, чтобы хватило до сброса, или переключитесь на другого агента с запасом.</string>
+    <string name="s9LimitsPaceOutSwitch">Переключитесь на %1$s (осталось %2$s) до сброса.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">Прогноз по среднему расходу со сброса; сохранённых замеров пока недостаточно.</string>
+    <string name="s9LimitsPaceResetLabel">Сброс</string>
+    <string name="s9LimitsPaceEvenLabel">Ровный темп</string>
+    <string name="s9LimitsPaceNoneLeft">Исчерпано</string>
+    <string name="s9LimitsPaceLeftAtReset">К сбросу останется %1$s</string>
+    <string name="s9LimitsPaceNowLabel">Сейчас</string>
+    <string name="s9LimitsPaceStartLabel">Начало</string>
 </resources>

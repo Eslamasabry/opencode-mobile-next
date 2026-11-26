@@ -62,4 +62,26 @@
     <string name="s9CostUncached">مدخلات غير مخزّنة: %1$s</string>
     <string name="s9CostCacheWrites">كُتب في الذاكرة المؤقتة: %1$s</string>
     <string name="s9CostOutput">المخرجات: %1$s، منها تفكير: %2$s</string>
+    <string name="s9LimitsAboutBend">الخط المتقطع يمثّل وتيرة متساوية طوال النافذة. النقطة هي موضعك الآن، والخط المنقّط يبيّن إلى أين يصل هذا المعدّل.</string>
+    <string name="s9LimitsPaceLasts">بهذا المعدّل يكفي حتى إعادة التعيين.</string>
+    <string name="s9LimitsPaceTooLittle">لا يوجد استهلاك كافٍ بعد للحكم.</string>
+    <string name="s9LimitsPaceRunsOut">بهذا المعدّل ينفد نحو %1$s، قبل %2$s من إعادة التعيين.</string>
+    <string name="s9LimitsPaceRunsOutIn">بهذا المعدّل ينفد خلال نحو %1$s، قبل %2$s من إعادة التعيين.</string>
+    <string name="s9LimitsPaceTodayAt">اليوم الساعة %1$s</string>
+    <string name="s9LimitsPaceTomorrowAt">غدًا الساعة %1$s</string>
+    <string name="s9LimitsPaceDayAt">%1$s الساعة %2$s</string>
+    <string name="s9LimitsPaceOutUntil">نفد حتى %1$s.</string>
+    <string name="s9LimitsPaceOutReset">لم يتبقَّ شيء حتى إعادة التعيين.</string>
+    <string name="s9LimitsPaceCompareDay">منذ إعادة التعيين %1$s يوميًا · ليكفي، نحو %2$s يوميًا</string>
+    <string name="s9LimitsPaceCompareHour">منذ إعادة التعيين %1$s بالساعة · ليكفي، نحو %2$s بالساعة</string>
+    <string name="s9LimitsPaceHintSwitch">خفّف الاستخدام هنا، أو بدّل إلى %1$s (متبقٍّ %2$s).</string>
+    <string name="s9LimitsPaceHintSlow">خفّف الاستخدام ليكفي حتى إعادة التعيين، أو بدّل إلى وكيل آخر لديه مساحة.</string>
+    <string name="s9LimitsPaceOutSwitch">بدّل إلى %1$s (متبقٍّ %2$s) حتى يُعاد التعيين.</string>
+    <string name="s9LimitsPaceDetailsNoHistory">التوقّع مبني على المتوسّط منذ إعادة التعيين؛ لا توجد قراءات مخزّنة كافية بعد.</string>
+    <string name="s9LimitsPaceResetLabel">إعادة التعيين</string>
+    <string name="s9LimitsPaceEvenLabel">وتيرة متساوية</string>
+    <string name="s9LimitsPaceNoneLeft">لا شيء متبقٍّ</string>
+    <string name="s9LimitsPaceLeftAtReset">يتبقّى %1$s عند إعادة التعيين</string>
+    <string name="s9LimitsPaceNowLabel">الآن</string>
+    <string name="s9LimitsPaceStartLabel">البداية</string>
 </resources>
