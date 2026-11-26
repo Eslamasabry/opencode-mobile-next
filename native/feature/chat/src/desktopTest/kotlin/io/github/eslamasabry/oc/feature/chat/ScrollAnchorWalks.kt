@@ -797,8 +797,23 @@ private fun runNewestGroupRenders(anchor: TranscriptAnchor) {
         val midOpen = captureFrame()
         repeat(GROUP_TAP_FRAMES - GROUP_MID_FRAMES) { mainClock.advanceTimeByFrame() }
         val afterOpen = captureFrame()
-        writeStrip("option-a-newest-group-before-after-open-360.png", listOf(beforeOpen, midOpen, afterOpen))
-        tapNewestGroupOutsideControl("018-render", tag, tapNum = 2, frame = GROUP_TAP_FRAMES, probe = probe)
+        repeat(A11Y_STEP_FRAMES) { mainClock.advanceTimeByFrame() }
+        val settledGap = composerTop() - boundsOfTag("chat-work-line").bottom
+        val settledFollowing =
+            probe.latest()?.substringAfter("following=", "")?.substringBefore(' ')?.ifEmpty { "unknown" } ?: "unknown"
+        println("018-render settled gap=${"%.1f".format(settledGap)} following=$settledFollowing")
+        val settledOpen = captureFrame()
+        writeStrip(
+            "option-a-newest-group-before-after-open-360.png",
+            listOf(beforeOpen, midOpen, afterOpen, settledOpen),
+        )
+        tapNewestGroupOutsideControl(
+            "018-render",
+            tag,
+            tapNum = 2,
+            frame = GROUP_TAP_FRAMES + A11Y_STEP_FRAMES,
+            probe = probe,
+        )
         repeat(GROUP_TAP_FRAMES) { mainClock.advanceTimeByFrame() }
         val afterClose = captureFrame()
         failed = true
