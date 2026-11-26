@@ -51,7 +51,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } })
     public val actions: ChatActions = presenter
     public val state =
-        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(5_000))
+        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS))
     public val stage = world.stage
     public val ownReplyKey = world.ownReplyKey
     public val composer =
@@ -74,7 +74,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS),
                 BasicComposerUi(available = false, sending = false, steers = false),
             )
 
@@ -82,7 +82,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
     public val requests =
         world.request
             .map(::requestSlotOf)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RequestSlotUi())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS), RequestSlotUi())
 
     /** One atomic screen snapshot so button dismiss, reply insert, and request card land in the same frame. */
     public val ui =
@@ -93,7 +93,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
             .filterNotNull()
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS),
                 DemoScreenUi(state.value, stage.value, ownReplyKey.value, requests.value),
             )
 
@@ -173,6 +173,8 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
         world.close()
     }
 }
+
+private const val KEEP_SUBSCRIBED_MS = 5_000L
 
 private fun requestSlotOf(asked: PermissionRequest?): RequestSlotUi =
     RequestSlotUi(
