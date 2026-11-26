@@ -141,10 +141,10 @@ internal object KitLayerCycles {
 }
 
 /**
- * Records [block] into [layer] at [size] through this scope, tracked by [KitLayerCycles]. As the framework's
+ * Records [block] into [layer] at [size] through this scope, tracked by `KitLayerCycles`. As the framework's
  * `DrawScope.record` shorthand does, [block] runs on this scope with its canvas swapped for the recording's, so
  * `drawContent()` still works inside it; unlike the shorthand, the recording's density is a plain copy of this scope's
- * ([kitDensityOf]), never the scope itself.
+ * (`kitDensityOf`), never the scope itself.
  *
  * Device 2026-11-14 (Glass, Back from a conversation just after its "…" menu closed): a StackOverflowError on the main
  * thread, `CanvasDrawScope.getDensity` and `LayoutNodeDrawScope.getDensity` calling each other. The shorthand hands the
@@ -153,7 +153,11 @@ internal object KitLayerCycles {
  * (the joined menu's side of the glass, `kitModalView` measuring the menu's edges) chased itself for ever. The layer also
  * kept the scope as its density, so re-making its display list later did the same.
  */
-internal fun DrawScope.kitRecord(layer: GraphicsLayer, size: IntSize = this.size.toIntSize(), block: DrawScope.() -> Unit) {
+public fun DrawScope.kitRecord(
+    layer: GraphicsLayer,
+    size: IntSize = this.size.toIntSize(),
+    block: DrawScope.() -> Unit,
+) {
     val outer = this
     val snapshot = kitDensityOf(this)
     val direction = layoutDirection
@@ -182,10 +186,10 @@ internal fun GraphicsLayer.kitRecord(density: Density, layoutDirection: LayoutDi
 /** A plain copy of [density]'s values: what every kit recording takes as its density, never a draw scope. */
 internal fun kitDensityOf(density: Density): Density = Density(density.density, density.fontScale)
 /**
- * Draws [layer] here, unless that would close a cycle of recordings ([KitLayerCycles]): then debug, test and preview
+ * Draws [layer] here, unless that would close a cycle of recordings (`KitLayerCycles`): then debug, test and preview
  * builds throw and a release build leaves it out. Inside a kit recording it is noted as drawn by that recording.
  */
-internal fun DrawScope.kitDrawLayer(layer: GraphicsLayer) {
+public fun DrawScope.kitDrawLayer(layer: GraphicsLayer) {
     val t = kitLayerThread()
     if (t.stack.isNotEmpty()) {
         val cycle = KitLayerCycles.cycleThrough(layer)

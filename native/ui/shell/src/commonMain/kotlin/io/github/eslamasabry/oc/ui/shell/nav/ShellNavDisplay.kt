@@ -28,9 +28,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -40,6 +49,8 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
@@ -72,6 +83,7 @@ public fun ShellNavDisplay(
     // heat all apply to navigation too. Calm (and power saver, heat) cross-fades pages; only Off is instant (M-013).
     val effectiveLevel = shellLevel(level, KitMotion.state.level)
     val levelState = rememberUpdatedState(effectiveLevel)
+    val topKey = rememberUpdatedState(backStack.lastOrNull())
     val signals = remember { GestureSignals() }
     // How many entries the scene on screen composes once no transition runs: two panes compose the list and its page.
     val panes = LocalShellPanes.current
@@ -152,8 +164,27 @@ public fun ShellNavDisplay(
                     val grows =
                         transform && !inPane &&
                             (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
-                    Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value, grows)) {
-                        CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
+                    Box(
+                        Modifier.predictiveCorners(
+                            contentScope,
+                            gate,
+                            signals,
+                            previewCornerPx,
+                            levelState.value,
+                            grows,
+                        ),
+                    ) {
+                        Box(
+                            leavingTakesNoTaps(
+                                contentScope,
+                                gate,
+                                entry.metadata[ShellPanes.ROUTE_KEY],
+                                topKey,
+                                inPane,
+                            ),
+                        ) {
+                            CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
+                        }
                     }
                 },
             )
@@ -307,4 +338,45 @@ private fun Modifier.predictiveCorners(
     } else {
         clip = false
     }
+}
+
+/**
+ * B-379: a page that is leaving (closed by a tap or button-back, or covered by a push — not under a back gesture)
+ * takes no taps while its exit runs, so taps reach the settled page underneath. Checking both the transition target
+ * and (outside a two-pane scene) whether this entry is already off the top of the back stack closes the first-frame
+ * (16 ms) gap before the seekable transition updates. Clipping the inner layer to [NoArea] makes Compose skip the
+ * page's children during hit-testing while recording and replaying its drawing one level up keeps it visually
+ * unchanged.
+ */
+@Composable
+private fun leavingTakesNoTaps(
+    scope: AnimatedVisibilityScope,
+    gate: RowTransformGate,
+    entryKey: Any?,
+    topKey: androidx.compose.runtime.State<NavKey?>,
+    inPane: Boolean,
+): Modifier {
+    val picture = rememberGraphicsLayer()
+    val isLeaving = {
+        val gesture = gate.state == GateState.Gesture || gate.state == GateState.GestureSettling
+        val offTop = !inPane && entryKey != null && topKey.value != null && entryKey != topKey.value
+        !gesture && (scope.transition.targetState == EnterExitState.PostExit || offTop)
+    }
+    return Modifier.drawWithContent {
+            drawContent()
+            if (isLeaving()) kitDrawLayer(picture)
+        }
+        .graphicsLayer {
+            val leaving = isLeaving()
+            clip = leaving
+            shape = if (leaving) NoArea else RectangleShape
+        }
+        .drawWithContent {
+            if (isLeaving()) kitRecord(picture) { this@drawWithContent.drawContent() } else drawContent()
+        }
+}
+
+private object NoArea : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        Outline.Rectangle(Rect.Zero)
 }
