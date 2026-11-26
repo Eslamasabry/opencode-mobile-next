@@ -7,8 +7,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
@@ -47,7 +47,8 @@ class SendFailedButtonsTest {
     fun `B-399-2b failed StaleScope bubble opens Details with reason and Try again invokes retrySend`() =
         kitUiTest(412, 915, allow = allowDetailsFold) {
             val scene = ChatScene()
-            val failure = Failure.Refused(RefusalReason.StaleScope, Redacted("model read back differently: model"))
+            val details = Redactor().details("model read back differently: model")
+            val failure = Failure.Refused(RefusalReason.StaleScope, details)
             setContent { E20Scene { scene.Screen(failedUi(scene, failure)) } }
             waitForIdle()
 

@@ -297,7 +297,7 @@ class AntigravityFollowUpRetryTest {
                     clientPromptMessageID = true,
                 )
             kv.warm()
-            registry.open(profile, null)
+            registry.open(profile)
             test.runCurrent()
             world
             test.runCurrent()
@@ -396,7 +396,7 @@ class AntigravityFollowUpRetryTest {
         runCurrent()
 
         // Move the gateway location mid-send (simulating switching away while waking transport).
-        f.base.changeLocation(ServerLocation(directory = "/other/folder"))
+        f.base.setLocation(ServerLocation(directory = "/other/folder"))
         hold.complete(Unit)
         runCurrent()
         advanceTimeBy(60)
