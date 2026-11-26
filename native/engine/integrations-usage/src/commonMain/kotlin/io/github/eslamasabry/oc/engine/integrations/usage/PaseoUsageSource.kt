@@ -36,11 +36,7 @@ public class PaseoUsageSource(
                     method = SignInMethod.Plan,
                     windows = reading.windows.map { window ->
                         UsageWindow(
-                            id = when (window.durationSeconds) {
-                                18_000L -> "5h"
-                                604_800L -> "weekly"
-                                else -> window.label.ifEmpty { "window" }
-                            },
+                            id = providerWindowId(window),
                             usedPercent = 100.0 - window.remainingPercent,
                             durationSeconds = window.durationSeconds,
                             resetsAt = window.resetsAt,

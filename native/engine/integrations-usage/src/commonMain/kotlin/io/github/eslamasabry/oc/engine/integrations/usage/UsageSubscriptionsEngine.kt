@@ -136,12 +136,20 @@ public class UsageSubscriptionsEngine(
     public var widgetSettings: UsageWidgetSettings = UsageWidgetSettings.load(store)
         private set
 
+    public val historyStore: UsageHistory = UsageHistory(store, lane, clock)
+
+    public val history: StateFlow<Map<WindowKey, List<UsageSample>>>
+        get() = historyStore.samples
+
     private val _snapshot = MutableStateFlow(UsageSnapshot())
     public val snapshot: StateFlow<UsageSnapshot> = _snapshot.asStateFlow()
 
     init {
         loadAlerts()
-        for (c in connections()) loadCache(c.id)
+        for (c in connections()) {
+            loadCache(c.id)
+            historyStore.loadConnection(c.id)
+        }
         rebuild(loaded = false)
     }
 
@@ -171,7 +179,10 @@ public class UsageSubscriptionsEngine(
     private suspend fun read(force: Boolean) {
         val start = epoch
         val list = connections()
-        for (c in list) loadCache(c.id)
+        for (c in list) {
+            loadCache(c.id)
+            historyStore.loadConnection(c.id)
+        }
         val context =
             UsageReadContext(
                 connections = list,
@@ -202,6 +213,7 @@ public class UsageSubscriptionsEngine(
         val now = clock()
         val known = list.mapTo(HashSet()) { it.id }.apply { removeAll(removedProfiles) }
         val touched = HashSet<String>()
+        val recorded = ArrayList<UsageReading>()
 
         val unreached = results.flatMapTo(HashSet()) { it.unreached }
         offline.clear()
@@ -234,12 +246,14 @@ public class UsageSubscriptionsEngine(
                     touched += reading.connectionId
                     continue
                 }
-                slot[reading.providerId] =
+                val updated =
                     reading.copy(
                         problem = null,
                         checkedAt = now,
                         accountRef = reading.accountRef ?: old?.accountRef,
                     )
+                slot[reading.providerId] = updated
+                recorded += updated
                 touched += reading.connectionId
             }
             for (failure in result.failures) {
@@ -292,6 +306,7 @@ public class UsageSubscriptionsEngine(
         refreshedAt = now
         loaded = true
         for (id in touched) saveCache(id)
+        if (recorded.isNotEmpty()) historyStore.recordReadings(recorded)
         migrateOnce()
         rebuild(loaded = true)
         syncAlerts()
@@ -557,6 +572,7 @@ public class UsageSubscriptionsEngine(
         epoch++
         cache[profileId]?.remove(providerId)
         saveCache(profileId)
+        historyStore.removeProvider(profileId, providerId)
         rebuild(loaded)
         publishWidget()
     }
@@ -575,6 +591,7 @@ public class UsageSubscriptionsEngine(
         authoritative -= profileId
         offline -= profileId
         if (store.commit(lane) { remove(lastKey(profileId)) } !is Outcome.Ok) return false
+        if (!historyStore.removeProfile(profileId)) return false
         rebuild(loaded)
         val alive = _snapshot.value.subscriptions.mapTo(HashSet()) { it.key }
         if (subscriptionAlerts?.prune(alive) == false) return false

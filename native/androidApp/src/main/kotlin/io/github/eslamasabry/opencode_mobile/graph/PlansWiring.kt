@@ -124,6 +124,8 @@ class AndroidPlansSource(
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val state = MutableStateFlow(UsageSnapshot())
     override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
+    private val historyState = MutableStateFlow<Map<WindowKey, List<UsageSample>>>(emptyMap())
+    override val history: StateFlow<Map<WindowKey, List<UsageSample>>> = historyState.asStateFlow()
     override val agentTruths: StateFlow<Map<String, PlanAgentTruth>> =
         phoneUsage.agentRows
             .map { UsageAgentTruths.planOf(it.agents) }
@@ -559,8 +561,14 @@ class AndroidPlansSource(
             )
             .also { created ->
                 created.setForeground(quotaPolicy.foreground.value)
+                widget.attachHistory(created.historyStore)
+                daemonUsage.attachHistory(created.historyStore)
+                explicitMonitor?.attachHistory(created.historyStore)
+                paseoSource.attachHistory(created.historyStore)
+                collectorUsage.attachHistory(created.historyStore)
                 engine = created
                 scope.launch { created.snapshot.collect { state.value = it } }
+                scope.launch { created.history.collect { historyState.value = it } }
             }
     }
 

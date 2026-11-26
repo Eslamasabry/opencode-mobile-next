@@ -96,6 +96,11 @@ public class UsageWidgetFeed(
     private val refreshNative: suspend () -> Unit = {},
     private val clock: () -> Instant,
 ) {
+    private var history: UsageHistory? = null
+
+    public fun attachHistory(history: UsageHistory?) {
+        this.history = history
+    }
     public companion object {
         public const val KEY_PREFIX: String = "oc.widgetUsage"
         public const val SUBSCRIPTIONS_KEY: String = "oc.widgetUsageSubs"
@@ -230,6 +235,7 @@ public class UsageWidgetFeed(
         thisPhone: Boolean = false,
     ) {
         if (!isAndroid || profileId.isEmpty()) return
+        history?.recordProviderReadings(profileId, readings)
         mutate(profileId, profileName, local = thisPhone) { rows ->
             rows.clear()
             for (reading in readings) {
@@ -325,6 +331,7 @@ public class UsageWidgetFeed(
         snapshot: UsageSnapshot,
         settings: UsageWidgetSettings,
     ): Boolean {
+        history?.recordSnapshot(snapshot)
         if (!isAndroid) return true
         val entries =
             snapshot.subscriptions

@@ -55,10 +55,15 @@ public class PaseoUsageMonitor(
     private val readAt = HashMap<String, Instant>()
     private val last = HashMap<String, List<ProviderUsageReading>>()
     private val refreshing = Mutex()
+    private var history: UsageHistory? = null
     private var foreground = true
     private var backgroundAllowed = false
     private var disposed = false
     private var epoch = 0
+
+    public fun attachHistory(history: UsageHistory?) {
+        this.history = history
+    }
 
     public val runningAllowed: Boolean get() = !disposed && (foreground || backgroundAllowed)
 
@@ -165,6 +170,7 @@ public class PaseoUsageMonitor(
         status[id] = PaseoUsageStatus.Current
         readAt[id] = clock()
         last[id] = readings
+        history?.recordProviderReadings(id, readings)
         widget?.recordReadings(id, profile?.name ?: "", readings, thisPhone = isPhone)
         if (!current()) widget?.clearForProfile(id)
     }

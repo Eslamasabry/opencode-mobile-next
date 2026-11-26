@@ -97,6 +97,7 @@ class CollectorUsageSource(
     }
 
     private val lock = Mutex()
+    private var history: UsageHistory? = null
     private val snapshots = mutableMapOf<String, Pair<ProviderQuotaSnapshot, Instant>>()
     private val credentialSalt = ByteArray(32).also(random::nextBytes)
     private val credentialIdentities = mutableMapOf<ProfileId, String>()
@@ -171,6 +172,10 @@ class CollectorUsageSource(
                     else UsageConnectionKind.OpenCodeServer,
                 )
             }
+
+    internal fun attachHistory(history: UsageHistory?) {
+        this.history = history
+    }
 
     override suspend fun read(context: UsageReadContext): Outcome<UsageSourceResult> =
         lock.withLock {
@@ -316,6 +321,7 @@ class CollectorUsageSource(
                     }
                 }
             }
+            if (readings.isNotEmpty()) history?.recordReadings(readings)
             Outcome.Ok(
                 UsageSourceResult(readings = readings, failures = failures, unreached = unreached)
             )

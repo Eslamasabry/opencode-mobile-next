@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
 import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageHistory
 import io.github.eslamasabry.oc.engine.settings.pins.SessionPinStore
 import io.github.eslamasabry.oc.engine.settings.reader.ReaderPreferencesStore
 
@@ -23,6 +24,7 @@ internal fun registerStateKeys(scope: ProfileScope) {
     scope.apply {
         register(ReaderPreferencesStore.SHAPE)
         register(SessionPinStore.SHAPE)
+        register(UsageHistory.SHAPE)
         register(
             KeyShape(
                 io.github.eslamasabry.oc.engine.connection.adopted.AdoptedChatKeys.WITHDRAWN_PROMPTS_PREFIX,

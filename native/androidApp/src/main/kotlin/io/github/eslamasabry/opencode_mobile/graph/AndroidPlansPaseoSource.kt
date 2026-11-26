@@ -85,6 +85,10 @@ internal class AndroidPlansPaseoSource(
 
     private fun <T> stale(): Outcome<T> = Failure.Refused(RefusalReason.StaleScope).failed()
 
+    fun attachHistory(history: UsageHistory?) {
+        monitor.attachHistory(history)
+    }
+
     private fun currentGateway(id: ProfileId): PaseoGateway? {
         val saved = stores.profiles.profile(id) ?: return null
         if (id in blocked || !stores.isRemotePaseo(saved)) return null

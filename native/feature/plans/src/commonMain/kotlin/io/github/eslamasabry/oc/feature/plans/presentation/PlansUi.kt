@@ -10,9 +10,11 @@ import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageSample
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageSubscription
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
+import io.github.eslamasabry.oc.engine.integrations.usage.WindowKey
 import kotlin.math.roundToInt
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -31,6 +33,10 @@ public interface PlansSource {
     ): Boolean = false
 
     public val snapshot: StateFlow<UsageSnapshot>
+
+    /** Per-window reading history for pace charts and previous-window details. */
+    public val history: StateFlow<Map<WindowKey, List<UsageSample>>>
+        get() = noHistory
 
     /**
      * Reads every source once; returns when done. [force] (the visible Refresh) bypasses reader
@@ -122,6 +128,7 @@ public data class CollectorUi(
 
 private val noComputerReaders: StateFlow<List<ComputerReaderUi>> = MutableStateFlow(emptyList())
 private val noAgentTruths: StateFlow<Map<String, PlanAgentTruth>> = MutableStateFlow(emptyMap())
+private val noHistory: StateFlow<Map<WindowKey, List<UsageSample>>> = MutableStateFlow(emptyMap())
 
 public data class ComputerReaderUi(
     val id: String,
