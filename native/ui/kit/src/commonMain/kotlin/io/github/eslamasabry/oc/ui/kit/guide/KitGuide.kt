@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
@@ -19,6 +20,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.*
+import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenScroll
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.theme.*
@@ -231,6 +233,13 @@ public fun KitGuideNextBar(
 ) {
     val tokens = LocalKitTokens.current
     val large = LocalDensity.current.fontScale >= 1.3f // F: lib/ui/kit/kit_guide.dart:843
+    // The guide bar already has its own top hairline, so the page frame does not fade content out above it.
+    LocalKitScreenScroll.current?.let { frame ->
+        DisposableEffect(frame) {
+            frame.suppressBottomFade = true
+            onDispose { frame.suppressBottomFade = false }
+        }
+    }
     Column(Modifier.fillMaxWidth()) {
         KitDivider()
         val inset =

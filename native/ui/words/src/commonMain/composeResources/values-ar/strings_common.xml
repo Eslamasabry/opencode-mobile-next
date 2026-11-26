@@ -756,4 +756,5 @@
     <string name="connectAgentNeedsSignIn">وكيلك يحتاج منك تسجيل الدخول. افتح «الوكلاء» واضغط «تسجيل الدخول»، وستُفتح المحادثة بعد ذلك.</string>
     <string name="kitChipsMore">إظهار المزيد من عوامل التصفية</string>
     <string name="kitChipsFirst">إظهار عوامل التصفية الأولى</string>
+    <string name="appUpdateUpdateTo">التحديث إلى %1$s</string>
 </resources>

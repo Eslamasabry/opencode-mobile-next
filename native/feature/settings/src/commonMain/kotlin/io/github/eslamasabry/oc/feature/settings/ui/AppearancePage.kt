@@ -214,7 +214,7 @@ private fun ColumnScope.AppearanceControls(
         }
     }
 
-    if (question == null || question == AppearanceQuestion.Theme) {
+    if ((question == null || question == AppearanceQuestion.Theme) && ui.packs.isNotEmpty()) {
         AppearanceControlHeading(
             stringResource(Res.string.appearanceAskTheme),
             question,
