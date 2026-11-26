@@ -3,10 +3,13 @@ package io.github.eslamasabry.oc.feature.chat
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.E20Goldens.picture
@@ -23,8 +26,20 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.abs
@@ -287,10 +302,86 @@ class E20S20ComposerTrayTest {
             assertNoPhraseTrayOverlap(phrases, "$where mid")
             settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertIsDisplayed()
-            val out = File("build/renders/b483-plus-tray-360-${case.modeTag}-${case.scaleTag}.png")
+            val out = File("build/renders/b483-plus-tray-360-after-${case.modeTag}-${case.scaleTag}.png")
             out.parentFile.mkdirs()
             ImageIO.write(picture(), "png", out)
             assertNoPhraseTrayOverlap(phrases, where)
+        }
+    }
+
+    @Composable
+    private fun BeforeFixComposer(phrases: List<String>) {
+        val field = remember { TextFieldState() }
+        val trayActions =
+            listOf(
+                KitComposerTrayAction("Photos", KitIcons.images, { Unit }, testTag = "composer-tool-gallery"),
+                KitComposerTrayAction("Camera", KitIcons.camera, { Unit }, testTag = "composer-tool-camera"),
+                KitComposerTrayAction("File", KitIcons.attach, { Unit }, testTag = "composer-tool-attach"),
+                KitComposerTrayAction("More", KitIcons.more, { Unit }, testTag = "composer-tray-more"),
+            )
+        KitComposerBox(
+            running = false,
+            stacked = true,
+            hasLeading = true,
+            chips = { KitComposerChip(label = "", onClick = { Unit }, icon = KitIcons.model, shrinks = true) },
+            above = {
+                // Pre-fix layout: phrase chips and tray placed directly in KitComposerBox's Box without Column.
+                KitPhraseChips(
+                    phrases = phrases,
+                    label = "Quick phrases",
+                    insertLabel = { "Insert $it" },
+                    menuLabel = { "$it options" },
+                    hideLabel = "Hide",
+                    onChoose = { Unit },
+                    onHide = { Unit },
+                    modifier = Modifier.testTag("chat-phrase-chips"),
+                )
+                KitComposerTray(open = true, actions = trayActions)
+            },
+            field = {
+                KitComposerFieldRow {
+                    KitField(
+                        state = field,
+                        label = "",
+                        kind = KitFieldKind.Multiline,
+                        multilineLines = 1..5,
+                        composer = true,
+                        labelShown = false,
+                        framed = false,
+                    )
+                }
+            },
+            leading = { KitComposerAdd(label = "Close", onClick = { Unit }, open = true) },
+            trailing = {
+                KitComposerSend(label = "Send", onClick = { Unit }, enabled = KitEnabled.Disabled("Message"))
+            },
+        )
+    }
+
+    @Test
+    fun `B-483 before-fix unstacked above slot reproduces overlap at 360 dp`() {
+        val phrases = listOf("Hi", "Continue", "Run the tests")
+        for (case in compactCases) {
+            val where = "360dp ${case.modeTag} ${case.scaleTag}"
+            kitUiTest(360, 480) {
+                setContent {
+                    E20Scene(scale = case.scale, dark = case.dark) {
+                        Box(
+                            Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.BottomCenter,
+                        ) {
+                            BeforeFixComposer(phrases)
+                        }
+                    }
+                }
+                waitForIdle()
+                val chipRect = boundsOfTag("chat-phrase-chips")
+                val photosRect = boundsOfTag("composer-tool-gallery")
+                assertTrue(chipRect.overlapsRect(photosRect), "$where: before-fix scene must show overlap")
+                val out = File("build/renders/b483-plus-tray-360-before-${case.modeTag}-${case.scaleTag}.png")
+                out.parentFile.mkdirs()
+                ImageIO.write(picture(), "png", out)
+            }
         }
     }
 
