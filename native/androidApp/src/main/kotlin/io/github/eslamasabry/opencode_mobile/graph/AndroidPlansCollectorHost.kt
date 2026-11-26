@@ -21,9 +21,8 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.quota.*
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.OsFileDescriptors
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.net.Proxy
 import java.security.SecureRandom
 import java.util.concurrent.ConcurrentHashMap
@@ -268,7 +267,7 @@ private class PrivateQuotaRootfs(private val root: File, private val dispatchers
             val file = target(path, false)
             if (!file.exists()) return@withContext null
             val fd = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
-            FileInputStream(fd).use { input ->
+            OsFileDescriptors.useInputStream(fd) { input ->
                 check(OsConstants.S_ISREG(Os.fstat(fd).st_mode))
                 val bytes = java.io.ByteArrayOutputStream()
                 val chunk = ByteArray(8192)
@@ -294,7 +293,7 @@ private class PrivateQuotaRootfs(private val root: File, private val dispatchers
                 384,
             )
             try {
-                FileOutputStream(fd).use { output ->
+                OsFileDescriptors.useOutputStream(fd) { output ->
                     val stat = Os.fstat(fd)
                     check(OsConstants.S_ISREG(stat.st_mode) && stat.st_nlink == 1L)
                     Os.fchmod(fd, 384)

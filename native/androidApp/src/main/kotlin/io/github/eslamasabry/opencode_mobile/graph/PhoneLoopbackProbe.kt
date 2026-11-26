@@ -50,8 +50,28 @@ internal object PhoneLoopbackProbe {
 
     private fun answerOf(conn: java.net.HttpURLConnection, body: Boolean): Pair<Int?, String?> {
         val status = conn.responseCode
-        val text = if (body && status == HTTP_OK) conn.inputStream.use { readAtMost(it, MAX_BODY) } else null
+        val stream = if (status >= HTTP_BAD_REQUEST) conn.errorStream else conn.inputStream
+        val text =
+            stream?.use { input ->
+                if (body && status == HTTP_OK) {
+                    readAtMost(input, MAX_BODY)
+                } else {
+                    drainAtMost(input, MAX_BODY)
+                    null
+                }
+            }
         return status to text
+    }
+
+    /** Drains at most [max] bytes into a fixed buffer so probes close cleanly without unbounded allocation. */
+    private fun drainAtMost(input: java.io.InputStream, max: Int) {
+        val scratch = ByteArray(DRAIN_CHUNK)
+        var remaining = max
+        while (remaining > 0) {
+            val read = input.read(scratch, 0, minOf(scratch.size, remaining))
+            if (read < 0) break
+            remaining -= read
+        }
     }
 
     /**
@@ -78,7 +98,9 @@ internal object PhoneLoopbackProbe {
     private const val CONNECT_MS = 2_000
     private const val READ_MS = 4_000
     private const val MAX_BODY = 8192
+    private const val DRAIN_CHUNK = 1024
     private const val HTTP_OK = 200
+    private const val HTTP_BAD_REQUEST = 400
     private const val HTTP_NOT_FOUND = 404
     private val VERSION_SHAPE = Regex("^[0-9]+\\.[0-9]+\\.[0-9]+([-+.][0-9A-Za-z.-]+)?$")
 }

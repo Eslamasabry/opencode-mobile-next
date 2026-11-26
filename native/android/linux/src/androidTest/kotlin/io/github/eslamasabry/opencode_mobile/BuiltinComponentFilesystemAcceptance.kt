@@ -14,8 +14,6 @@ import android.system.StructStat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.security.SecureRandom
 
@@ -177,7 +175,7 @@ internal class BuiltinComponentFilesystemAcceptance(private val instrumentation:
         requireSafe(stat(file) == null, "bb9_filesystem_fixture_changed")
         val descriptor = Os.open(file.absolutePath,
             OsConstants.O_WRONLY or OsConstants.O_CREAT or OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, 384)
-        FileOutputStream(descriptor).use { stream ->
+        OsFileDescriptors.useOutputStream(descriptor) { stream ->
             stream.write(bytes); stream.fd.sync()
             record.put("identity", stamp(Os.fstat(descriptor)))
         }
@@ -405,7 +403,7 @@ internal class BuiltinComponentFilesystemAcceptance(private val instrumentation:
         requireSafe(bytes.size in 1..65536, "bb9_filesystem_metadata_invalid")
         val descriptor = Os.open(temporary().absolutePath,
             OsConstants.O_WRONLY or OsConstants.O_CREAT or OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, 384)
-        FileOutputStream(descriptor).use { stream -> stream.write(bytes); stream.fd.sync() }
+        OsFileDescriptors.useOutputStream(descriptor) { stream -> stream.write(bytes); stream.fd.sync() }
         requireQuiescence(linux)
         Os.rename(temporary().absolutePath, metadata.absolutePath); sync(context.filesDir)
         metadataIdentity = stat(metadata); metadataDigest = digest(bytes)
@@ -444,7 +442,7 @@ internal class BuiltinComponentFilesystemAcceptance(private val instrumentation:
         requireSafe(before != null && OsConstants.S_ISREG(before.st_mode) && before.st_size in 1..maximum.toLong(),
             "bb9_filesystem_fixture_changed")
         val descriptor = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
-        val bytes = FileInputStream(descriptor).use { stream ->
+        val bytes = OsFileDescriptors.useInputStream(descriptor) { stream ->
             requireSafe(same(before!!, Os.fstat(descriptor)), "bb9_filesystem_fixture_changed")
             val buffer = ByteArray(maximum + 1)
             var count = 0

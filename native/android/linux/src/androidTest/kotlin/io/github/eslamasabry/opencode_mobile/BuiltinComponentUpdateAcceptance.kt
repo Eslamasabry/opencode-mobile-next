@@ -13,7 +13,6 @@ import android.system.OsConstants
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
@@ -310,7 +309,10 @@ internal class BuiltinComponentUpdateAcceptance(
         requireSafe(UpdateAcceptanceFiles.stat(temporary) == null, "bb9_evidence_temporary_exists")
         val descriptor = Os.open(temporary.absolutePath,
             OsConstants.O_WRONLY or OsConstants.O_CREAT or OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, 384)
-        FileOutputStream(descriptor).use { stream -> stream.write(state.toString().toByteArray()); stream.fd.sync() }
+        OsFileDescriptors.useOutputStream(descriptor) { stream ->
+            stream.write(state.toString().toByteArray())
+            stream.fd.sync()
+        }
         val app = JSONObject(UpdateAcceptanceFiles.readNoFollow(temporary, 131072)).optJSONObject("app")
         val current = UpdateAcceptanceFiles.identity(Process.myPid())
         requireSafe(app != null && app.getInt("pid") == current.pid && app.getLong("startTicks") == current.startTicks,
@@ -384,8 +386,10 @@ internal class BuiltinComponentUpdateAcceptance(
             JSONObject(linux.prootEnvironment() + ("OC_RUNTIME_OWNER" to nonce)))
         val descriptor = Os.open(externalExport.absolutePath,
             OsConstants.O_WRONLY or OsConstants.O_CREAT or OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, 384)
-        FileOutputStream(descriptor).use { stream -> stream.write(export.toString().toByteArray());
-            stream.fd.sync() }
+        OsFileDescriptors.useOutputStream(descriptor) { stream ->
+            stream.write(export.toString().toByteArray())
+            stream.fd.sync()
+        }
         UpdateAcceptanceFiles.sync(externalExport.parentFile!!)
         emit { putBoolean("bb9ExternalPrepared", true) }
     }
@@ -788,7 +792,7 @@ private object UpdateAcceptanceFiles {
         requireSafe(before != null && OsConstants.S_ISREG(before.st_mode), "bb9_executable_unsafe")
         val descriptor = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
         val digest = MessageDigest.getInstance("SHA-256")
-        java.io.FileInputStream(descriptor).use { stream ->
+        OsFileDescriptors.useInputStream(descriptor) { stream ->
             val opened = Os.fstat(descriptor)
             requireSafe(opened.st_dev == before!!.st_dev && opened.st_ino == before.st_ino &&
                 OsConstants.S_ISREG(opened.st_mode), "bb9_executable_changed")
@@ -809,7 +813,7 @@ private object UpdateAcceptanceFiles {
         requireSafe(before != null && OsConstants.S_ISREG(before.st_mode) && before.st_uid == Process.myUid() &&
             before.st_size in 1..maximum.toLong(), "bb9_evidence_invalid")
         val descriptor = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
-        return java.io.FileInputStream(descriptor).use { stream ->
+        return OsFileDescriptors.useInputStream(descriptor) { stream ->
             val opened = Os.fstat(descriptor)
             requireSafe(unchanged(before!!, opened), "bb9_evidence_invalid")
             val bytes = ByteArray(maximum + 1)

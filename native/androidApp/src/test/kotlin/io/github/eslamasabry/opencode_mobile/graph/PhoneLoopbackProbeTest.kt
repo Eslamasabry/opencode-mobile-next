@@ -13,7 +13,11 @@ import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerStarter
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
 import io.github.eslamasabry.oc.engine.runtime.server.StartTarget
+import java.io.ByteArrayInputStream
 import java.io.Closeable
+import java.io.FileNotFoundException
+import java.io.InputStream
+import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -22,6 +26,7 @@ import java.net.ServerSocket
 import java.net.SocketAddress
 import java.net.SocketException
 import java.net.URI
+import java.net.URL
 import java.util.Base64
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
@@ -173,6 +178,111 @@ class PhoneLoopbackProbeTest {
             client.connectionPool.evictAll()
             client.dispatcher.executorService.shutdown()
         }
+    }
+
+    @Test
+    fun `B-LINUX-617 answerOf drains and closes inputStream when body is false`() {
+        val payload = """{"healthy":true,"version":"3.0.2"}""".toByteArray()
+        val bodyStream = RecordingInputStream(payload)
+        val conn = RecordingHttpURLConnection(code = 200, body = bodyStream)
+        val result = invokeAnswerOf(conn, body = false)
+        assertEquals(200 to null, result)
+        assertEquals(payload.size, bodyStream.bytesRead, "body=false must drain inputStream")
+        assertTrue(bodyStream.closed, "body=false must close inputStream before disconnect")
+    }
+
+    @Test
+    fun `B-LINUX-617 answerOf drains and closes errorStream on HTTP 400 and above`() {
+        val errorPayload = """{"error":"not found"}""".toByteArray()
+        for (wantBody in listOf(false, true)) {
+            val errStream = RecordingInputStream(errorPayload)
+            val conn = RecordingHttpURLConnection(code = 404, error = errStream)
+            val result = invokeAnswerOf(conn, body = wantBody)
+            assertEquals(404 to null, result)
+            assertEquals(errorPayload.size, errStream.bytesRead, "HTTP >= 400 must drain errorStream")
+            assertTrue(errStream.closed, "HTTP >= 400 must close errorStream before disconnect")
+        }
+    }
+
+    @Test
+    fun `B-LINUX-617 answerOf bounds drained bytes on oversized response when body is false`() {
+        val oversized = ByteArray(65_536) { 'x'.code.toByte() }
+        val bodyStream = RecordingInputStream(oversized)
+        val conn = RecordingHttpURLConnection(code = 200, body = bodyStream)
+        val result = invokeAnswerOf(conn, body = false)
+        assertEquals(200 to null, result)
+        assertTrue(bodyStream.closed, "oversized response must still close inputStream")
+        assertTrue(
+            bodyStream.bytesRead in 1..8192,
+            "drain must be bounded to avoid unbounded reads, got ${bodyStream.bytesRead}",
+        )
+    }
+
+    @Test
+    fun `B-LINUX-617 answerOf reads body and closes inputStream when body is true`() {
+        val payload = """{"version":"3.0.2"}"""
+        val bodyStream = RecordingInputStream(payload.toByteArray())
+        val conn = RecordingHttpURLConnection(code = 200, body = bodyStream)
+        val result = invokeAnswerOf(conn, body = true)
+        assertEquals(200 to payload, result)
+        assertTrue(bodyStream.closed, "body=true must close inputStream")
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun invokeAnswerOf(conn: HttpURLConnection, body: Boolean): Pair<Int?, String?> {
+        val method =
+            PhoneLoopbackProbe::class.java.getDeclaredMethod(
+                "answerOf",
+                HttpURLConnection::class.java,
+                Boolean::class.javaPrimitiveType,
+            )
+        method.isAccessible = true
+        return method.invoke(PhoneLoopbackProbe, conn, body) as Pair<Int?, String?>
+    }
+
+    private class RecordingInputStream(bytes: ByteArray) : InputStream() {
+        private val delegate = ByteArrayInputStream(bytes)
+        var bytesRead: Int = 0
+            private set
+        var closed: Boolean = false
+            private set
+
+        override fun read(): Int {
+            val value = delegate.read()
+            if (value >= 0) bytesRead++
+            return value
+        }
+
+        override fun read(b: ByteArray, off: Int, len: Int): Int {
+            val count = delegate.read(b, off, len)
+            if (count > 0) bytesRead += count
+            return count
+        }
+
+        override fun close() {
+            closed = true
+            delegate.close()
+        }
+    }
+
+    private class RecordingHttpURLConnection(
+        private val code: Int,
+        private val body: InputStream? = null,
+        private val error: InputStream? = null,
+    ) : HttpURLConnection(URL("http://127.0.0.1:4098/api/health")) {
+        override fun getResponseCode(): Int = code
+
+        override fun getInputStream(): InputStream =
+            if (code >= 400) throw FileNotFoundException("HTTP $code")
+            else body ?: ByteArrayInputStream(ByteArray(0))
+
+        override fun getErrorStream(): InputStream? = if (code >= 400) error else null
+
+        override fun connect() = Unit
+
+        override fun disconnect() = Unit
+
+        override fun usingProxy(): Boolean = false
     }
 
     private data class Reply(val status: Int, val headers: String = "")

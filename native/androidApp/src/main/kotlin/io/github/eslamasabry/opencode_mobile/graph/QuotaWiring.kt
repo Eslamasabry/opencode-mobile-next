@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
 import io.github.eslamasabry.opencode_mobile.DirectLoopbackHttp
+import io.github.eslamasabry.opencode_mobile.OsFileDescriptors
 import android.system.Os
 import android.system.OsConstants
 import dev.zacsweers.metro.AppScope
@@ -173,7 +174,7 @@ class AndroidQuotaCollector(
                                                 OsConstants.O_NOFOLLOW,
                                             384,
                                         )
-                                    java.io.FileOutputStream(fd).use {
+                                    OsFileDescriptors.useOutputStream(fd) {
                                         it.write(bytes)
                                         it.fd.sync()
                                     }

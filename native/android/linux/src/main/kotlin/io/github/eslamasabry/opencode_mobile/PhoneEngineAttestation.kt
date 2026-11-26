@@ -9,7 +9,6 @@ import android.system.Os
 import android.system.OsConstants
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.MessageDigest
@@ -86,9 +85,9 @@ internal class PhoneEngineAttestation(private val context: Context) {
         fun digest(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes)
             .joinToString("") { "%02x".format(it.toInt() and 255) }
         fun hash(file: File): String {
-            val fd = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
             val hash = MessageDigest.getInstance("SHA-256")
-            java.io.FileInputStream(fd).use { input ->
+            val fd = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
+            OsFileDescriptors.useInputStream(fd) { input ->
                 val buffer = ByteArray(65536)
                 while (true) { val n = input.read(buffer); if (n < 0) break; hash.update(buffer, 0, n) }
             }
@@ -101,7 +100,7 @@ internal class PhoneEngineAttestation(private val context: Context) {
             }
             val fd = Os.open(temporary.absolutePath, OsConstants.O_WRONLY or OsConstants.O_CREAT or
                 OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, 384)
-            FileOutputStream(fd).use { it.write(bytes); it.flush(); it.fd.sync() }
+            OsFileDescriptors.useOutputStream(fd) { it.write(bytes); it.flush(); it.fd.sync() }
             Os.rename(temporary.absolutePath, file.absolutePath)
             val directory = Os.open(file.parentFile!!.absolutePath, OsConstants.O_RDONLY or
                 OsConstants.O_NOFOLLOW or oCloexec, 0)

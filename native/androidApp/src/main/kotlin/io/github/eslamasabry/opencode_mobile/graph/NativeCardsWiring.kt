@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.engine.integrations.catalog.AgentConnectorSearch
 import io.github.eslamasabry.oc.engine.integrations.catalog.ConnectorSearchServers
 import io.github.eslamasabry.oc.feature.chat.cards.GraphCardsQualifier
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.OsFileDescriptors
 import java.io.File
 import java.net.URI
 import java.nio.file.Files
@@ -264,7 +265,7 @@ class NativeCardsRootFs(private val app: Application, private val dispatchers: A
                                 OsConstants.O_NOFOLLOW,
                             0x180,
                         )
-                    java.io.FileOutputStream(fd).use {
+                    OsFileDescriptors.useOutputStream(fd) {
                         it.write(bytes)
                         it.fd.sync()
                     }
@@ -290,26 +291,24 @@ class NativeCardsRootFs(private val app: Application, private val dispatchers: A
                         return@anchored false
                     val value =
                         try {
+                            val fd =
+                                Os.open(
+                                    target.path,
+                                    OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW,
+                                    0,
+                                )
                             val bytes =
-                                java.io
-                                    .FileInputStream(
-                                        Os.open(
-                                            target.path,
-                                            OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW,
-                                            0,
-                                        )
-                                    )
-                                    .use { input ->
-                                        val buffer = ByteArray(1025)
-                                        var count = 0
-                                        while (count < buffer.size) {
-                                            val read =
-                                                input.read(buffer, count, buffer.size - count)
-                                            if (read < 0) break
-                                            count += read
-                                        }
-                                        buffer.copyOf(count)
+                                OsFileDescriptors.useInputStream(fd) { input ->
+                                    val buffer = ByteArray(1025)
+                                    var count = 0
+                                    while (count < buffer.size) {
+                                        val read =
+                                            input.read(buffer, count, buffer.size - count)
+                                        if (read < 0) break
+                                        count += read
                                     }
+                                    buffer.copyOf(count)
+                                }
                             if (bytes.size > 1024) return@anchored false
                             Json.parseToJsonElement(
                                 bytes.decodeToString(throwOnInvalidSequence = true)

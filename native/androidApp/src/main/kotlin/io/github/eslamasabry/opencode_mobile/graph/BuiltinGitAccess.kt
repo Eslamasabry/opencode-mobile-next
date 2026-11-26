@@ -10,8 +10,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.git.GitCredentialDrop
 import io.github.eslamasabry.oc.engine.git.GitSecretFile
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.OsFileDescriptors
 import java.io.File
-import java.io.FileOutputStream
 import java.nio.file.Files
 import java.security.SecureRandom
 import kotlinx.coroutines.withContext
@@ -61,7 +61,7 @@ internal class BuiltinGitCredentialDrop(
                             OsConstants.O_NOFOLLOW,
                         384,
                     )
-                FileOutputStream(fd).use { output ->
+                OsFileDescriptors.useOutputStream(fd) { output ->
                     Os.fchmod(fd, 384)
                     val stat = Os.fstat(fd)
                     check(
@@ -140,7 +140,7 @@ internal class BuiltinGitCredentialDrop(
                                 OsConstants.O_NONBLOCK,
                             0,
                         )
-                    FileOutputStream(fd).use { output ->
+                    OsFileDescriptors.useOutputStream(fd) { output ->
                         val opened = Os.fstat(fd)
                         check(
                             OsConstants.S_ISREG(opened.st_mode) &&
