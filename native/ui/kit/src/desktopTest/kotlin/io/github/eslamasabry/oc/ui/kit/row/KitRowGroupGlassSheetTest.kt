@@ -38,7 +38,12 @@ class KitRowGroupGlassSheetTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                     KitTheme(
-                        appearance = KitAppearance(style = Style.Glass, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        appearance =
+                            KitAppearance(
+                                style = Style.Glass,
+                                mode = AppearanceMode.Dark,
+                                motion = MotionLevel.Off,
+                            ),
                         platform = FakeKitPlatform(),
                         localeTag = "en",
                         stillFrame = true,
@@ -75,7 +80,12 @@ class KitRowGroupGlassSheetTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                     KitTheme(
-                        appearance = KitAppearance(style = Style.Glass, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        appearance =
+                            KitAppearance(
+                                style = Style.Glass,
+                                mode = AppearanceMode.Dark,
+                                motion = MotionLevel.Off,
+                            ),
                         platform = FakeKitPlatform(),
                         localeTag = "en",
                         stillFrame = true,
@@ -100,7 +110,12 @@ class KitRowGroupGlassSheetTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                     KitTheme(
-                        appearance = KitAppearance(style = Style.Soft, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        appearance =
+                            KitAppearance(
+                                style = Style.Soft,
+                                mode = AppearanceMode.Dark,
+                                motion = MotionLevel.Off,
+                            ),
                         platform = FakeKitPlatform(),
                         localeTag = "en",
                         stillFrame = true,

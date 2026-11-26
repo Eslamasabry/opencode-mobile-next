@@ -94,8 +94,7 @@ class AgentUpdateGlassSheetRenders {
     private fun item(
         id: String,
         name: String,
-        from: String,
-        to: String,
+        versions: Pair<String, String>,
         mb: Long,
         group: AgentUpdateGroup = AgentUpdateGroup.Optional,
         removable: Boolean = false,
@@ -103,8 +102,8 @@ class AgentUpdateGlassSheetRenders {
         AgentUpdateItem(
             id = AgentId(id),
             name = name,
-            fromVersion = from,
-            toVersion = to,
+            fromVersion = versions.first,
+            toVersion = versions.second,
             downloadBytes = mb * MB,
             installedBytes = mb * MB,
             group = group,
@@ -120,10 +119,10 @@ class AgentUpdateGlassSheetRenders {
             appUpdateKey = "10162",
             items =
                 listOf(
-                    item("agent-paseo", "Agent helper", "0.16.1", "0.17.3", 330, AgentUpdateGroup.Needed),
-                    item("claude", "Claude Code", "2.1.327", "2.1.330", 372),
-                    item("codex", "Codex", "0.171.0", "0.172.0", 201, removable = true),
-                    item("antigravity", "Antigravity", "1.5.15", "1.5.17", 93, removable = true),
+                    item("agent-paseo", "Agent helper", "0.16.1" to "0.17.3", 330, AgentUpdateGroup.Needed),
+                    item("claude", "Claude Code", "2.1.327" to "2.1.330", 372),
+                    item("codex", "Codex", "0.171.0" to "0.172.0", 201, removable = true),
+                    item("antigravity", "Antigravity", "1.5.15" to "1.5.17", 93, removable = true),
                 ),
             network = AgentUpdateNetwork.Unmetered,
             freeBytes = FREE_MB * MB,
