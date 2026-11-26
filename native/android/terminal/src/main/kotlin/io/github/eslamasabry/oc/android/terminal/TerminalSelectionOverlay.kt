@@ -8,10 +8,12 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import com.termux.view.TerminalRenderer
 import com.termux.view.TerminalView
 import com.termux.view.textselection.TextSelectionCursorController
 import io.github.eslamasabry.oc.core.common.terminal.TerminalPalette
 import java.lang.reflect.Field
+import kotlin.math.ceil
 
 /** Translucent selection alpha (~0.28f), matching KitTerminalViewDefaults.SELECTION_ALPHA. */
 internal const val SELECTION_HIGHLIGHT_ALPHA: Int = 71
@@ -27,14 +29,20 @@ private const val INDEX_X2: Int = 3
 /** Normalized inclusive cell range of an active terminal selection. */
 internal data class SelectionRange(val startY: Int, val startX: Int, val endY: Int, val endX: Int)
 
+/** Font cell metrics used to align selection highlights and the floating action bar. */
+internal data class SelectionCellMetrics(
+    val fontWidth: Float,
+    val lineSpacing: Int,
+    val rowTopOffset: Int = 0,
+)
+
 /** Visible terminal viewport and cell metrics needed to render selection and position the action bar. */
 internal data class SelectionViewport(
     val topRow: Int,
     val columns: Int,
-    val fontWidth: Float,
-    val lineSpacing: Int,
     val viewWidth: Int,
     val viewHeight: Int,
+    val cell: SelectionCellMetrics,
 )
 
 /**
@@ -56,7 +64,7 @@ internal fun terminalSelectionHighlight(palette: TerminalPalette?): Int {
 
 /** Converts Termux's `[y1, y2, x1, x2]` selector array into an ordered [SelectionRange], or null. */
 internal fun normalizeSelectionRange(selectors: IntArray): SelectionRange? {
-    if (selectors.size < SELECTOR_COUNT || (0 until SELECTOR_COUNT).any { selectors[it] == NO_SELECTION }) {
+    if (selectors.size < SELECTOR_COUNT || selectors[INDEX_X1] < 0 || selectors[INDEX_X2] < 0) {
         return null
     }
     val y1 = selectors[INDEX_Y1]
@@ -76,13 +84,17 @@ internal fun selectionActionContentRect(
     viewport: SelectionViewport,
     clearancePx: Int,
 ): Rect {
-    val selectedTop = ((range.startY - viewport.topRow) * viewport.lineSpacing).coerceIn(0, viewport.viewHeight)
+    val cell = viewport.cell
+    val selectedTop =
+        ((range.startY - viewport.topRow) * cell.lineSpacing + cell.rowTopOffset)
+            .coerceIn(0, viewport.viewHeight)
     val selectedBottom =
-        ((range.endY - viewport.topRow + 1) * viewport.lineSpacing).coerceIn(selectedTop, viewport.viewHeight)
+        ((range.endY - viewport.topRow + 1) * cell.lineSpacing + cell.rowTopOffset)
+            .coerceIn(selectedTop, viewport.viewHeight)
     val singleLine = range.startY == range.endY
-    val left = if (singleLine) (range.startX * viewport.fontWidth).toInt().coerceIn(0, viewport.viewWidth) else 0
+    val left = if (singleLine) (range.startX * cell.fontWidth).toInt().coerceIn(0, viewport.viewWidth) else 0
     val rightColumns = if (singleLine) range.endX + 1 else viewport.columns
-    val right = (rightColumns * viewport.fontWidth).toInt().coerceIn(left, viewport.viewWidth)
+    val right = (rightColumns * cell.fontWidth).toInt().coerceIn(left, viewport.viewWidth)
     val top = (selectedTop - clearancePx).coerceAtLeast(0)
     val bottom = (selectedBottom + clearancePx).coerceAtMost(viewport.viewHeight)
     return Rect(left, top, right, bottom)
@@ -117,15 +129,7 @@ internal class TerminalSelectionOverlay {
             controller.getSelectors(selectionBounds)
             val range = normalizeSelectionRange(selectionBounds)
             if (range != null) {
-                val viewport =
-                    SelectionViewport(
-                        topRow = terminal.topRow,
-                        columns = emulator.mColumns,
-                        fontWidth = renderer.fontWidth,
-                        lineSpacing = renderer.fontLineSpacing,
-                        viewWidth = terminal.width,
-                        viewHeight = terminal.height,
-                    )
+                val viewport = viewportFor(terminal, emulator.mColumns, renderer)
                 canvas.save()
                 canvas.translate(terminal.left.toFloat() - terminal.scrollX, terminal.top.toFloat() - terminal.scrollY)
                 renderer.render(
@@ -139,7 +143,6 @@ internal class TerminalSelectionOverlay {
                 )
                 drawHighlightRects(canvas, range, viewport, emulator.mRows)
                 canvas.restore()
-                controller.render()
                 handled = true
             }
         }
@@ -165,8 +168,15 @@ internal class TerminalSelectionOverlay {
             }
 
             override fun onGetContentRect(mode: ActionMode, view: View, outRect: Rect) {
+                val delegateRect = Rect()
+                delegate.onGetContentRect(mode, view, delegateRect)
                 val rect = computeActionContentRect(terminal)
-                if (rect != null) outRect.set(rect) else delegate.onGetContentRect(mode, view, outRect)
+                if (rect != null) {
+                    rect.bottom = maxOf(rect.bottom, delegateRect.bottom)
+                    outRect.set(rect)
+                } else {
+                    outRect.set(delegateRect)
+                }
             }
         }
 
@@ -176,19 +186,20 @@ internal class TerminalSelectionOverlay {
         viewport: SelectionViewport,
         rows: Int,
     ) {
+        val cell = viewport.cell
         val hasGrid = viewport.columns > 0 && rows > 0
-        val hasFont = viewport.fontWidth > 0f && viewport.lineSpacing > 0
+        val hasFont = cell.fontWidth > 0f && cell.lineSpacing > 0
         if (!hasGrid || !hasFont) return
         val visibleStart = maxOf(range.startY, viewport.topRow)
         val visibleEnd = minOf(range.endY, viewport.topRow + rows - 1)
-        val lineHeight = viewport.lineSpacing.toFloat()
+        val lineHeight = cell.lineSpacing.toFloat()
         for (row in visibleStart..visibleEnd) {
             val startCol = (if (row == range.startY) range.startX else 0).coerceIn(0, viewport.columns - 1)
             val endCol =
                 (if (row == range.endY) range.endX else viewport.columns - 1).coerceIn(startCol, viewport.columns - 1)
-            val left = startCol * viewport.fontWidth
-            val right = (endCol + 1) * viewport.fontWidth
-            val top = (row - viewport.topRow) * lineHeight
+            val left = startCol * cell.fontWidth
+            val right = (endCol + 1) * cell.fontWidth
+            val top = (row - viewport.topRow) * lineHeight + cell.rowTopOffset
             canvas.drawRect(left, top, right, top + lineHeight, selectionPaint)
         }
     }
@@ -205,17 +216,28 @@ internal class TerminalSelectionOverlay {
                 null
             }
         if (range == null || emulator == null || renderer == null) return null
-        val viewport =
-            SelectionViewport(
-                topRow = terminal.topRow,
-                columns = emulator.mColumns,
-                fontWidth = renderer.fontWidth,
-                lineSpacing = renderer.fontLineSpacing,
-                viewWidth = terminal.width,
-                viewHeight = terminal.height,
-            )
+        val viewport = viewportFor(terminal, emulator.mColumns, renderer)
         val clearance = (ACTION_BAR_CLEARANCE_DP * terminal.resources.displayMetrics.density).toInt()
         return selectionActionContentRect(range, viewport, clearance)
+    }
+
+    private fun viewportFor(terminal: TerminalView, columns: Int, renderer: TerminalRenderer): SelectionViewport =
+        SelectionViewport(
+            topRow = terminal.topRow,
+            columns = columns,
+            viewWidth = terminal.width,
+            viewHeight = terminal.height,
+            cell =
+                SelectionCellMetrics(
+                    fontWidth = renderer.fontWidth,
+                    lineSpacing = renderer.fontLineSpacing,
+                    rowTopOffset = rowTopOffset(renderer),
+                ),
+        )
+
+    private fun rowTopOffset(renderer: TerminalRenderer): Int {
+        val paint = RENDERER_PAINT_FIELD?.get(renderer) as? Paint ?: return 0
+        return renderer.fontLineSpacing + ceil(paint.ascent().toDouble()).toInt()
     }
 
     private fun selectionController(terminal: TerminalView): TextSelectionCursorController? =
@@ -226,6 +248,11 @@ internal class TerminalSelectionOverlay {
         val CONTROLLER_FIELD: Field? =
             TerminalView::class.java.declaredFields
                 .firstOrNull { it.type == TextSelectionCursorController::class.java }
+                ?.apply { isAccessible = true }
+
+        val RENDERER_PAINT_FIELD: Field? =
+            TerminalRenderer::class.java.declaredFields
+                .firstOrNull { it.type == Paint::class.java }
                 ?.apply { isAccessible = true }
     }
 }

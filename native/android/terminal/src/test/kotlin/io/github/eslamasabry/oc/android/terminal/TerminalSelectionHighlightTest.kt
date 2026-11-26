@@ -452,10 +452,9 @@ class TerminalSelectionHighlightTest {
             SelectionViewport(
                 topRow = 0,
                 columns = 40,
-                fontWidth = 24f,
-                lineSpacing = 48,
                 viewWidth = 1080,
                 viewHeight = 1920,
+                cell = SelectionCellMetrics(fontWidth = 24f, lineSpacing = 48),
             )
         val rect = selectionActionContentRect(range, viewport, clearancePx = 24)
         assertEquals(0, rect.left)
