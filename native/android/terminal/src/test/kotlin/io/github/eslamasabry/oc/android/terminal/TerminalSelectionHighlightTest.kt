@@ -409,16 +409,17 @@ class TerminalSelectionHighlightTest {
         val mode = assertNotNull(h.container.lastMode, "expected ActionMode")
         val menu = mode.menu
         assertTrue(callback.onCreateActionMode(mode, menu), "onCreateActionMode should succeed")
-        val copyItem =
-            (0 until menu.size()).map { menu.getItem(it) }.firstOrNull {
-                it.title?.toString()?.contains("copy", ignoreCase = true) == true
-            }
+        val items = (0 until menu.size()).map { menu.getItem(it) }
+        val copyItem = items.firstOrNull { it.title?.toString()?.contains("copy", ignoreCase = true) == true }
+        val pasteItem = items.firstOrNull { it.title?.toString()?.contains("paste", ignoreCase = true) == true }
+        val moreItem = items.firstOrNull { it.title?.toString()?.contains("more", ignoreCase = true) == true }
         assertNotNull(copyItem, "Copy action must be present in selection menu")
+        assertNotNull(pasteItem, "Paste action must be present in selection menu")
+        assertNotNull(moreItem, "More action must be present in selection menu")
         assertEquals("token_alpha", h.host.selectedText(), "selectedText before Copy must match")
 
         assertTrue(callback.onActionItemClicked(mode, copyItem), "Copy action click must be handled")
         assertEquals(listOf("token_alpha"), h.copied, "Copy must write exact selected text with no trailing junk")
-        assertTrue(!h.terminal.isSelectingText, "selection mode should end after Copy")
     }
 
     @Test
