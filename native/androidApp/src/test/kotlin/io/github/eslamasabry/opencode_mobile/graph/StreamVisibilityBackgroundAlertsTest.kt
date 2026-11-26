@@ -336,20 +336,14 @@ class StreamVisibilityBackgroundAlertsTest {
                     fixture.streamVisibility.value,
                     "armed re-arm must keep stream HiddenWatching after watch ends",
                 )
-                assertFalse(
-                    statuses.any { it == StreamStatus.Suspended },
-                    "stream suspended while re-arm was armed: $statuses",
-                )
+                assertFalse(StreamStatus.Suspended in statuses, "stream suspended while re-arm armed: $statuses")
                 server.sendEvent("rearm-wake")
                 withTimeout(3_000) { gotRearmFrame.await() }
 
                 fixture.replyWatch.setRearming(false)
                 awaitVisibility(fixture.streamVisibility, Visibility.HiddenIdle)
                 withTimeout(3_000) { suspended.await() }
-                assertTrue(
-                    server.clientClosed.await(3, TimeUnit.SECONDS),
-                    "SSE socket stayed open after re-arm cleared",
-                )
+                assertTrue(server.clientClosed.await(3, TimeUnit.SECONDS), "SSE socket stayed open after re-arm")
                 assertEquals(0, liveCallsCount(net), "LiveCalls retained SSE call after re-arm cleared")
             } finally {
                 collector?.cancel()
