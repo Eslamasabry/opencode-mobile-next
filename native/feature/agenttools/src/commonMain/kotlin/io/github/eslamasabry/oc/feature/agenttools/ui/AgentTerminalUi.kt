@@ -42,8 +42,9 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Plain folder name for display without exposing raw internal path segments. */
 internal fun plainFolderName(directory: String): String {
-    val trimmed = directory.trim().trimEnd('/', '\\')
-    return trimmed.substringAfterLast('/').substringAfterLast('\\').ifEmpty { trimmed }
+    val raw = directory.trim()
+    val trimmed = raw.trimEnd('/', '\\')
+    return trimmed.substringAfterLast('/').substringAfterLast('\\').ifEmpty { trimmed }.ifEmpty { raw }
 }
 
 @Composable
