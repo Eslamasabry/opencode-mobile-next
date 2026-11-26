@@ -5,11 +5,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -28,7 +30,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoStage
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoViewModel
-import io.github.eslamasabry.oc.ui.gate.flicker.FlickerFailure
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -43,18 +45,16 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 
 /**
- * B-623 (demo-sample-one-tap): drives the real [DemoEntries] route in one scene per test so the collected
- * `vm.state`, `ownReplyKey`, and `stage` flows verify one-tap sample execution, direct phone setup exit,
- * "Connect a computer" beside it, and unchanged B-428 honesty.
+ * B-623 (demo-sample-one-tap): drives the real [DemoEntries] route in one scene per test with real composer
+ * typing/send and real motion so one-tap sample execution, direct phone setup exit, "Connect a computer" beside it,
+ * and unchanged B-428 honesty are proven end-to-end with zero flicker findings.
  */
 @OptIn(ExperimentalTestApi::class, ExperimentalCoroutinesApi::class)
 class DemoSampleOneTapTest {
@@ -77,18 +77,10 @@ class DemoSampleOneTapTest {
         Dispatchers.resetMain()
     }
 
-    private fun runDemoScene(block: suspend KitUiTest.() -> Unit) {
-        try {
-            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT, block = block)
-        } catch (e: FlickerFailure) {
-            val framePattern = Regex("""frame \d+""")
-            val summary =
-                e.findings.joinToString("; ") { f ->
-                    val frames = framePattern.findAll(f.detail).joinToString("->") { it.value }
-                    "${f.rule} \"${f.key.take(NODE_CHARS)}\" ($frames)"
-                }
-            throw AssertionError("FLICKER(${e.findings.size}): $summary", e)
-        }
+    private fun KitUiTest.sendOwnQuestion() {
+        onNode(hasSetTextAction()).performTextReplacement(OWN_QUESTION)
+        onNodeWithTag("chat-send-button").performClick()
+        waitForIdle()
     }
 
     @Test
@@ -97,11 +89,10 @@ class DemoSampleOneTapTest {
         val vm = DemoViewModel(nav, dispatchers)
         val store = ViewModelStore()
         try {
-            runDemoScene {
+            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
                 setContent { DemoRouteHost(vm, store) }
                 waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
+                sendOwnQuestion()
                 onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
                 assertEquals(DemoStage.Ready, vm.stage.value)
                 assertNull(vm.requests.value.card)
@@ -124,11 +115,10 @@ class DemoSampleOneTapTest {
         val vm = DemoViewModel(nav, dispatchers)
         val store = ViewModelStore()
         try {
-            runDemoScene {
+            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
                 setContent { DemoRouteHost(vm, store) }
                 waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
+                sendOwnQuestion()
                 onNodeWithText(SET_UP_PHONE).assertIsDisplayed().performClick()
                 waitForIdle()
                 assertEquals(listOf("back", "open"), nav.calls)
@@ -145,11 +135,10 @@ class DemoSampleOneTapTest {
         val vm = DemoViewModel(nav, dispatchers)
         val store = ViewModelStore()
         try {
-            runDemoScene {
+            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
                 setContent { DemoRouteHost(vm, store) }
                 waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
+                sendOwnQuestion()
                 onNodeWithText(SET_UP_PHONE).assertIsDisplayed()
                 onNodeWithText(CONNECT_COMPUTER).assertIsDisplayed().performClick()
                 waitForIdle()
@@ -167,11 +156,10 @@ class DemoSampleOneTapTest {
         val vm = DemoViewModel(nav, dispatchers)
         val store = ViewModelStore()
         try {
-            runDemoScene {
+            kitUiTest(PHONE_WIDTH, PHONE_HEIGHT) {
                 setContent { DemoRouteHost(vm, store) }
                 waitForIdle()
-                assertTrue(runBlocking { vm.send(OWN_QUESTION) })
-                waitForIdle()
+                sendOwnQuestion()
                 onAllNodesWithText(OWN_QUESTION, substring = true).onFirst().assertIsDisplayed()
                 onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
                 assertEquals(DemoStage.Ready, vm.stage.value)
@@ -192,7 +180,7 @@ class DemoSampleOneTapTest {
             remember(environment) {
                 entryProvider<NavKey> { with(DemoEntries(environment)) { install() } }
             }
-        E20Scene {
+        E20Scene(motion = MotionLevel.Full) {
             CompositionLocalProvider(
                 LocalViewModelStoreOwner provides owner,
                 LocalLifecycleOwner provides lifecycle,
@@ -227,7 +215,6 @@ class DemoSampleOneTapTest {
     private companion object {
         const val PHONE_WIDTH = 360
         const val PHONE_HEIGHT = 780
-        const val NODE_CHARS = 24
         const val OWN_QUESTION = "Which Excel formula adds up column B?"
         const val OWN_HONEST_LINE = "This demo can’t answer your own questions."
         const val SAMPLE_PROMPT = "Make the welcome message friendlier."

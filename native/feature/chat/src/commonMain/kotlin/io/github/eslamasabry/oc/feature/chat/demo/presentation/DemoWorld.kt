@@ -158,27 +158,29 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         sendLocked(content.prompt, content)
     }
 
+    private data class ReplyStep(
+        val text: String,
+        val stage: DemoStage,
+        val request: PermissionRequest?,
+        val own: Boolean,
+    )
+
     private fun sendLocked(text: String, content: DemoWords): Outcome<Unit> {
-        append(text, prompt = true)
-        if (stage.value == DemoStage.Finished) {
-            // The sample is one ask and one answer; anything after it gets one honest line.
-            append(content.more, prompt = false)
-        } else {
-            replyInReady(text, content)
-        }
+        val next =
+            when {
+                stage.value == DemoStage.Finished ->
+                    ReplyStep(content.more, DemoStage.Finished, null, own = false)
+                isSample(text, content) ->
+                    ReplyStep(content.reply, DemoStage.Review, editRequest(content), own = false)
+                else -> ReplyStep(content.own, DemoStage.Ready, null, own = true)
+            }
+        if (!next.own) ownReplyKey.value = null
+        request.value = next.request
+        stage.value = next.stage
+        val replyKey = appendPair(text, next.text)
+        if (next.own) ownReplyKey.value = replyKey
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
         return Outcome.Ok(Unit)
-    }
-
-    private fun replyInReady(text: String, content: DemoWords) {
-        if (isSample(text, content)) {
-            ownReplyKey.value = null
-            append(content.reply, prompt = false)
-            request.value = editRequest(content)
-            stage.value = DemoStage.Review
-        } else {
-            ownReplyKey.value = append(content.own, prompt = false)
-        }
     }
 
     private fun isSample(text: String, content: DemoWords): Boolean =
@@ -218,8 +220,22 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         val saved = owner.prefs.stringList(HISTORY).orEmpty().toMutableList()
         saved += (if (prompt) "p:" else "r:") + text
         owner.prefs.setStringList(HISTORY, saved)
+        publishHistory(saved)
+        return "demo-${saved.lastIndex}"
+    }
+
+    private fun appendPair(prompt: String, reply: String): String {
+        val saved = owner.prefs.stringList(HISTORY).orEmpty().toMutableList()
+        saved += "p:$prompt"
+        saved += "r:$reply"
+        owner.prefs.setStringList(HISTORY, saved)
+        publishHistory(saved)
+        return "demo-${saved.lastIndex}"
+    }
+
+    private fun publishHistory(saved: List<String>) {
         val rows: List<TranscriptRow> =
-            owner.prefs.stringList(HISTORY).orEmpty().mapIndexed { index, stored ->
+            saved.mapIndexed { index, stored ->
                 val key = "demo-$index"
                 if (stored.startsWith("p:")) PromptRow(key, "demo-turn", stored.substring(2))
                 else
@@ -242,7 +258,6 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
                 rows.mapIndexed { index, row -> row.key to index }.toMap().toPersistentMap(),
                 RunFacts(),
             )
-        return "demo-${saved.lastIndex}"
     }
 
     public suspend fun reset() = lock.withLock {

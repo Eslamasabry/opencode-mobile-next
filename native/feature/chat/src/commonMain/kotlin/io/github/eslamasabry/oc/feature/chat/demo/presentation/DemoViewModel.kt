@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
@@ -31,6 +32,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+public data class DemoScreenUi(
+    val chat: ChatUi,
+    val stage: DemoStage = DemoStage.Ready,
+    val ownReplyKey: String? = null,
+    val requests: RequestSlotUi = RequestSlotUi(),
+)
+
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
@@ -41,7 +49,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } })
     public val actions: ChatActions = presenter
     public val state =
-        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(5_000))
+        presenter.states(viewModelScope, world.work, SharingStarted.Eagerly)
     public val stage = world.stage
     public val ownReplyKey = world.ownReplyKey
     public val composer =
@@ -64,7 +72,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 BasicComposerUi(available = false, sending = false, steers = false),
             )
 
@@ -85,7 +93,18 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
                     }
                 )
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RequestSlotUi())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, RequestSlotUi())
+
+    /** One atomic screen snapshot so button dismiss, reply insert, and request card land in the same frame. */
+    public val ui =
+        combine(state, stage, ownReplyKey, requests) { chat, phase, ownKey, reqs ->
+                DemoScreenUi(chat, phase, ownKey, reqs)
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                DemoScreenUi(state.value, stage.value, ownReplyKey.value, requests.value),
+            )
 
     /** Allow and Deny answer the sample; the demo has no questions, no saved rules and nothing to undo. */
     public val requestActions: ChatRequestActions =

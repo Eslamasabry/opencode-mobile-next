@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -50,26 +49,23 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
     override fun EntryProviderScope<NavKey>.install() {
         entry<DemoRoute> {
             val vm = metroViewModel<DemoViewModel>()
-            val state by vm.state.collectAsStateWithLifecycle()
-            val stage by vm.stage.collectAsStateWithLifecycle()
-            val ownReplyKey by vm.ownReplyKey.collectAsStateWithLifecycle()
             val words = demoWords()
-            LaunchedEffect(words) { vm.configure(words) }
+            remember(vm, words) { vm.configure(words) }
+            val ui by vm.ui.collectAsStateWithLifecycle()
             val demoOwnReply =
-                remember(ownReplyKey, stage, words.prompt, vm) {
-                    demoOwnReplyOf(ownReplyKey, stage, words.prompt, vm)
+                remember(ui.ownReplyKey, ui.stage, words.prompt, vm) {
+                    demoOwnReplyOf(ui.ownReplyKey, ui.stage, words.prompt, vm)
                 }
             val composer = remember(vm) { DemoComposerHost(vm) }
             // The sample agent's ask is the app's own request card over the message box, as in a real conversation
             // (owner 2026-11-10: two "simulated edit" buttons in the message box's place "feels slop").
-            val requests by vm.requests.collectAsStateWithLifecycle()
             environment.Provide {
                 CompositionLocalProvider(LocalDemoOwnReply provides demoOwnReply) {
                     ChatScreen(
-                        state,
+                        ui.chat,
                         vm.actions,
                         composer,
-                        requests = requests,
+                        requests = ui.requests,
                         requestActions = vm.requestActions,
                         demoMode = true,
                         extraActions =
