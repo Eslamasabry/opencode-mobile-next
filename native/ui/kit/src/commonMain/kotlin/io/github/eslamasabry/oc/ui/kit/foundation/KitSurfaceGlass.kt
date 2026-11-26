@@ -962,6 +962,11 @@ internal fun rimLightMatrix(groundLuma: Float, gain: Float = RIM_LIGHT_GAIN): an
 /** The rim light's ground luma and the glass look's gain, most and band ([BackdropRimLight]). */
 internal data class KitRimLight(val groundLuma: Float, val gain: Float, val max: Float, val bandDp: Float)
 
+private const val LIGHT_RIM_LUMA_SCALE: Float = 0.55f
+private const val LIGHT_RIM_LUMA_CAP: Float = 0.7f
+private const val LIGHT_RIM_GAIN_SCALE: Float = 0.45f
+private const val LIGHT_RIM_MAX_CAP: Float = 0.55f
+
 /** The rim light under a look that has one (dark and light themes, B-612), or null for a look without it. */
 @Composable
 internal fun kitRimLightGround(): KitRimLight? {
@@ -975,9 +980,9 @@ internal fun kitRimLightGround(): KitRimLight? {
     } else {
         // Light mode (B-612): luminous white specular catch along edges over bright/colorful passing backdrops.
         KitRimLight(
-            groundLuma = (luma * 0.55f).coerceIn(0f, 0.7f),
-            gain = look.backdropLightGain * 0.45f,
-            max = minOf(0.55f, look.backdropLightMax),
+            groundLuma = (luma * LIGHT_RIM_LUMA_SCALE).coerceIn(0f, LIGHT_RIM_LUMA_CAP),
+            gain = look.backdropLightGain * LIGHT_RIM_GAIN_SCALE,
+            max = minOf(LIGHT_RIM_MAX_CAP, look.backdropLightMax),
             bandDp = look.backdropLightBandDp,
         )
     }

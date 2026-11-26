@@ -841,9 +841,14 @@ public fun KitScreen(
                         ).then(
                             when {
                                 // The floating bar (owner 2026-11-16): no pane or plate over the background.
-                                floats -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
-                                    .then(if (floatingBar?.scrollsElsewhere == true) Modifier.kitMaxWidth(cap) else Modifier)
-                                    .kitTouchSink()
+                                floats -> {
+                                    val barCap =
+                                        if (floatingBar?.scrollsElsewhere == true) Modifier.kitMaxWidth(cap)
+                                        else Modifier
+                                    Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
+                                        .then(barCap)
+                                        .kitTouchSink()
+                                }
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, underFade?.fadedSource ?: under) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
                                     .then(

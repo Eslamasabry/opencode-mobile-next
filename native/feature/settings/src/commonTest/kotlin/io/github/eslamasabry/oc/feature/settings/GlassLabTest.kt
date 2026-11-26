@@ -99,6 +99,7 @@ class GlassLabTest {
         val delta = 44f - GlassTuning.shipped(GlassPaneKind.Bar, false).lensStrengthDp
         val expectedSheet = GlassTuning.shipped(GlassPaneKind.Sheet, false).lensStrengthDp + delta
         assertEquals(expectedSheet, t.knobs(GlassPaneKind.Sheet, false).lensStrengthDp)
-        assertEquals(22f, t.knobs(GlassPaneKind.Chip, false).lensStrengthDp)
+        val expectedChip = GlassTuning.shipped(GlassPaneKind.Chip, false).lensStrengthDp + delta
+        assertEquals(expectedChip, t.knobs(GlassPaneKind.Chip, false).lensStrengthDp)
     }
 }

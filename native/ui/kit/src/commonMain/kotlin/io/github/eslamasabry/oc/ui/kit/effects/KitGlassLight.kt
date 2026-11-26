@@ -44,6 +44,21 @@ public object GlassLightMath {
     /** Exponential smoothing factor for gravity tilt updates. */
     public const val TILT_EMA: Float = 0.20f
 
+    private const val MIN_NORM: Float = 1e-3f
+    private const val MIN_PLANAR: Float = 0.04f
+    private const val ROLL_DENOM_MIN: Float = 0.35f
+    private const val HALF_TURN_DEG: Float = 180f
+    private const val PITCH_REST_NY: Float = 0.55f
+    private const val PITCH_GAIN_DEG: Float = 14f
+    private const val ROLL_GAIN: Float = 0.65f
+    internal const val MIN_ANGLE_DEG: Float = 5f
+    internal const val MAX_ANGLE_DEG: Float = 175f
+    private const val MIN_SCROLL_PX: Float = 0.5f
+    private const val SCROLL_DP_GAIN: Float = 0.22f
+    internal const val SCROLL_DECAY_CARRY: Float = 0.72f
+    internal const val SCROLL_MIN_STEP_DEG: Float = 0.25f
+    internal const val SCROLL_REST_EPS_DEG: Float = 0.1f
+
     /**
      * Maps Android gravity vector `(gx, gy, gz)` (m/s²) to a specular light direction in degrees around
      * [GlassTuning.LIGHT_DEG] (45°). Flat on a table (`gx ≈ 0, gy ≈ 0`) rests calmly at 45°; tilting left/right or
@@ -51,16 +66,21 @@ public object GlassLightMath {
      */
     public fun tiltAngleDeg(gx: Float, gy: Float, gz: Float): Float {
         val norm = sqrt(gx * gx + gy * gy + gz * gz)
-        if (norm < 1e-3f) return GlassTuning.LIGHT_DEG
-        val nx = (gx / norm).coerceIn(-1f, 1f)
-        val ny = (gy / norm).coerceIn(-1f, 1f)
-        val planar = sqrt(nx * nx + ny * ny).coerceIn(0f, 1f)
-        if (planar < 0.04f) return GlassTuning.LIGHT_DEG
-        // Horizontal roll shifts specular clockwise/counter-clockwise; pitch adds a gentle secondary shift.
-        val roll = atan2(nx, maxOf(abs(ny), 0.35f)) * (180f / PI.toFloat())
-        val pitchShift = (ny - 0.55f) * 14f
-        val delta = (roll * 0.65f + pitchShift).coerceIn(-MAX_TILT_SWEEP_DEG, MAX_TILT_SWEEP_DEG)
-        return (GlassTuning.LIGHT_DEG + delta * planar).coerceIn(5f, 175f)
+        val planar = if (norm >= MIN_NORM) {
+            val nx = (gx / norm).coerceIn(-1f, 1f)
+            val ny = (gy / norm).coerceIn(-1f, 1f)
+            sqrt(nx * nx + ny * ny).coerceIn(0f, 1f)
+        } else 0f
+        return if (planar < MIN_PLANAR) {
+            GlassTuning.LIGHT_DEG
+        } else {
+            val nx = (gx / norm).coerceIn(-1f, 1f)
+            val ny = (gy / norm).coerceIn(-1f, 1f)
+            val roll = atan2(nx, maxOf(abs(ny), ROLL_DENOM_MIN)) * (HALF_TURN_DEG / PI.toFloat())
+            val pitchShift = (ny - PITCH_REST_NY) * PITCH_GAIN_DEG
+            val delta = (roll * ROLL_GAIN + pitchShift).coerceIn(-MAX_TILT_SWEEP_DEG, MAX_TILT_SWEEP_DEG)
+            (GlassTuning.LIGHT_DEG + delta * planar).coerceIn(MIN_ANGLE_DEG, MAX_ANGLE_DEG)
+        }
     }
 
     /** Returns [targetDeg] only when it moved at least [DEADBAND_DEG] from [currentDeg]; else returns [currentDeg]. */
@@ -68,15 +88,16 @@ public object GlassLightMath {
         if (abs(targetDeg - currentDeg) >= deadbandDeg) targetDeg else currentDeg
 
     /** Maps a vertical scroll delta in px to a bounded specular nudge in degrees. */
-    public fun scrollImpulseDeg(deltaYPx: Float, density: Float): Float {
-        if (density <= 0f || abs(deltaYPx) < 0.5f) return 0f
-        val dp = deltaYPx / density
-        return (dp * 0.22f).coerceIn(-MAX_SCROLL_SWEEP_DEG, MAX_SCROLL_SWEEP_DEG)
-    }
+    public fun scrollImpulseDeg(deltaYPx: Float, density: Float): Float =
+        if (density <= 0f || abs(deltaYPx) < MIN_SCROLL_PX) {
+            0f
+        } else {
+            ((deltaYPx / density) * SCROLL_DP_GAIN).coerceIn(-MAX_SCROLL_SWEEP_DEG, MAX_SCROLL_SWEEP_DEG)
+        }
 
     /** Unit direction vector `(cos, sin)` for [deg] degrees. */
     public fun unitDir(deg: Float): FloatArray {
-        val rad = deg * (PI.toFloat() / 180f)
+        val rad = deg * (PI.toFloat() / HALF_TURN_DEG)
         return floatArrayOf(cos(rad), sin(rad))
     }
 }
@@ -102,8 +123,8 @@ public class KitGlassLight {
         val impulse = GlassLightMath.scrollImpulseDeg(deltaYPx, density)
         if (impulse == 0f) return
         val maxSweep = GlassLightMath.MAX_SCROLL_SWEEP_DEG
-        val next = (scrollOffsetDeg * 0.72f + impulse).coerceIn(-maxSweep, maxSweep)
-        if (abs(next - scrollOffsetDeg) >= 0.25f) {
+        val next = (scrollOffsetDeg * GlassLightMath.SCROLL_DECAY_CARRY + impulse).coerceIn(-maxSweep, maxSweep)
+        if (abs(next - scrollOffsetDeg) >= GlassLightMath.SCROLL_MIN_STEP_DEG) {
             scrollOffsetDeg = next
             scrollPulse++
         }
@@ -118,7 +139,10 @@ public class KitGlassLight {
     /** Effective light direction in degrees (base [fallbackDeg] + live tilt delta + scroll sweep). */
     public fun effectiveDeg(fallbackDeg: Float = GlassTuning.LIGHT_DEG): Float {
         val tiltShift = tiltDeg - GlassTuning.LIGHT_DEG
-        return (fallbackDeg + tiltShift + scrollOffsetDeg).coerceIn(5f, 175f)
+        return (fallbackDeg + tiltShift + scrollOffsetDeg).coerceIn(
+            GlassLightMath.MIN_ANGLE_DEG,
+            GlassLightMath.MAX_ANGLE_DEG,
+        )
     }
 
     /** Effective unit light vector `(x, y)` for shader uniforms, read in the draw phase. */
@@ -146,7 +170,7 @@ internal fun Modifier.kitGlassScrollLight(active: Boolean): Modifier {
     val decaySpec = KitMotion.specs.effectsSlow<Float>()
     val pulse = light.scrollPulse
     LaunchedEffect(light, pulse) {
-        if (pulse == 0 || abs(light.scrollOffsetDeg) < 0.1f) return@LaunchedEffect
+        if (pulse == 0 || abs(light.scrollOffsetDeg) < GlassLightMath.SCROLL_REST_EPS_DEG) return@LaunchedEffect
         decay.snapTo(light.scrollOffsetDeg)
         decay.animateTo(
             targetValue = 0f,

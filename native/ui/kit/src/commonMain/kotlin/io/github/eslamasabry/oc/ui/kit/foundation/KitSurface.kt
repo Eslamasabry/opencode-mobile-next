@@ -152,6 +152,9 @@ public data class KitSurfaceInput(
     val cell: KitPaneCell? = null,
 )
 
+private const val NESTED_SELECTED_EDGE_START: Float = 0.45f
+private const val NESTED_SELECTED_EDGE_END: Float = 0.25f
+
 /** Where a cell lies in a pane drawn in pieces ([KitSurfaceInput.cell]). */
 public enum class KitPaneCell { First, Middle, Last }
 
@@ -289,8 +292,10 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
                             sheen = none,
                             specular = none,
                             innerGlow = none,
-                            edgeStart = if (request.selected) roles.accent.withAlpha(0.45f) else none,
-                            edgeEnd = if (request.selected) roles.accent.withAlpha(0.25f) else none,
+                            edgeStart =
+                                if (request.selected) roles.accent.withAlpha(NESTED_SELECTED_EDGE_START) else none,
+                            edgeEnd =
+                                if (request.selected) roles.accent.withAlpha(NESTED_SELECTED_EDGE_END) else none,
                             edgeRest = null,
                             edgeWidthDp = if (request.selected) 1f else 0f,
                             shadows = emptyList(),

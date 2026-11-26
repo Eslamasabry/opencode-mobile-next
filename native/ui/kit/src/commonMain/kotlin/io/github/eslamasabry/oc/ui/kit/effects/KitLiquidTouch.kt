@@ -62,6 +62,11 @@ internal object LiquidTouchRules {
     const val FLEX_AXIS_BIAS: Float = .035f
     const val GEL_STIFFNESS: Float = 520f
     const val GEL_DAMPING: Float = 0.58f
+    const val MIN_FLEX_SCALE: Float = 0.85f
+    const val ORTHO_FLEX_SHARE: Float = 0.65f
+    const val HALF_SHARE: Float = 0.5f
+    const val PRESS_BLOOM_DIM_SHARE: Float = 0.85f
+    const val PRESS_BLOOM_MIN_SHARE: Float = 0.65f
 
     /** Inner press glow on any liquid glass control (B-616): blooms and spills across joined panes. */
     const val BLOOM_DP: Float = 84f
@@ -134,8 +139,9 @@ internal fun Modifier.kitLiquidSwell(press: KitLiquidPress?): Modifier {
         val nx = if (at.isSpecified && size.width > 1f) ((at.x / size.width) * 2f - 1f).coerceIn(-1f, 1f) else 0f
         val ny = if (at.isSpecified && size.height > 1f) ((at.y / size.height) * 2f - 1f).coerceIn(-1f, 1f) else 0f
         val axisBias = (kotlin.math.abs(nx) - kotlin.math.abs(ny)) * LiquidTouchRules.FLEX_AXIS_BIAS * a
-        scaleX = (1f + LiquidTouchRules.SWELL * a + axisBias).coerceAtLeast(0.85f)
-        scaleY = (1f + LiquidTouchRules.SWELL * a - axisBias * 0.65f).coerceAtLeast(0.85f)
+        scaleX = (1f + LiquidTouchRules.SWELL * a + axisBias).coerceAtLeast(LiquidTouchRules.MIN_FLEX_SCALE)
+        val ortho = axisBias * LiquidTouchRules.ORTHO_FLEX_SHARE
+        scaleY = (1f + LiquidTouchRules.SWELL * a - ortho).coerceAtLeast(LiquidTouchRules.MIN_FLEX_SCALE)
     }
 }
 
@@ -162,8 +168,13 @@ internal fun Modifier.kitLiquidPressLight(press: KitLiquidPress?, shape: Shape, 
         drawContent()
         val a = press.amount.value.coerceIn(0f, 1f)
         if (a > 0f && join?.composedJoined != true) {
-            val centre = if (press.localAt.isSpecified) press.localAt else Offset(size.width * 0.5f, size.height * 0.5f)
-            val radius = maxOf(size.maxDimension * 0.85f, LiquidTouchRules.BLOOM_DP.dp.toPx() * 0.65f)
+            val centre =
+                if (press.localAt.isSpecified) press.localAt
+                else Offset(size.width * LiquidTouchRules.HALF_SHARE, size.height * LiquidTouchRules.HALF_SHARE)
+            val radius = maxOf(
+                size.maxDimension * LiquidTouchRules.PRESS_BLOOM_DIM_SHARE,
+                LiquidTouchRules.BLOOM_DP.dp.toPx() * LiquidTouchRules.PRESS_BLOOM_MIN_SHARE,
+            )
             val strength = (if (dark) LiquidTouchRules.BLOOM_DARK else LiquidTouchRules.BLOOM_LIGHT) * a
             val outline = shape.createOutline(size, layoutDirection, this)
             clipPath(Path().apply { addOutline(outline) }) {

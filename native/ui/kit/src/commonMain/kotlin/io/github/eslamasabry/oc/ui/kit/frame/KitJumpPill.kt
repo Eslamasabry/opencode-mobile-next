@@ -471,7 +471,9 @@ public fun KitJumpButton(
         backdrop != null && motionState.travels && kitScreenBottomIsSlab() &&
             !kitScreenBottomIsStacked() && joinBody?.granted == true
     if (joinable && joinBody != null) {
-        JoinedRoundJumpButton(visible, spoken, joinBody, onClick, look, backdrop)
+        JoinedRoundJumpButton(visible, spoken, joinBody) { mod, drop ->
+            RoundLiquidJumpFace(onClick, look, backdrop, mod, drop)
+        }
         return
     }
     AnimatedVisibility(
@@ -487,9 +489,7 @@ private fun JoinedRoundJumpButton(
     visible: Boolean,
     spoken: Modifier,
     joinBody: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinBody,
-    onClick: () -> Unit,
-    look: io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook,
-    backdrop: KitFrostState?,
+    face: @Composable (Modifier, io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop?) -> Unit,
 ) {
     val specs = KitMotion.specs
     AnimatedVisibility(
@@ -512,24 +512,20 @@ private fun JoinedRoundJumpButton(
             kotlinx.coroutines.delay(JOIN_WAIT_MS)
             waited.value = true
         }
-        RoundLiquidJumpFace(
-            onClick = onClick,
-            look = look,
-            backdrop = backdrop,
-            faceModifier =
-                Modifier.kitLeaving(leaving)
-                    .graphicsLayer { alpha = if (drop == null || joinedNow || waited.value) 1f else 0f }
-                    .onGloballyPositioned {
-                        outer.value = androidx.compose.ui.geometry.Rect(it.positionInWindow(), it.size.toSize())
-                    }
-                    .offset {
-                        val box = joinBody.rest
-                        val faceH = drop?.rest?.height ?: 0f
-                        val o = outer.value
-                        if (box.height <= 0f || o.height <= 0f || faceH <= 0f) IntOffset.Zero
-                        else IntOffset(0, kotlin.math.round(box.top + sinkPx - (o.center.y + faceH / 2f)).toInt())
-                    },
-            drop = drop,
+        face(
+            Modifier.kitLeaving(leaving)
+                .graphicsLayer { alpha = if (drop == null || joinedNow || waited.value) 1f else 0f }
+                .onGloballyPositioned {
+                    outer.value = androidx.compose.ui.geometry.Rect(it.positionInWindow(), it.size.toSize())
+                }
+                .offset {
+                    val box = joinBody.rest
+                    val faceH = drop?.rest?.height ?: 0f
+                    val o = outer.value
+                    if (box.height <= 0f || o.height <= 0f || faceH <= 0f) IntOffset.Zero
+                    else IntOffset(0, kotlin.math.round(box.top + sinkPx - (o.center.y + faceH / 2f)).toInt())
+                },
+            drop,
         )
     }
 }
