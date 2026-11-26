@@ -41,6 +41,14 @@ public enum class DemoStage {
     Finished,
 }
 
+/** One atomic demo transition paired with [newestRowKey] so UI state never lands out of sync with the transcript. */
+public data class DemoStep(
+    val newestRowKey: String? = null,
+    val stage: DemoStage = DemoStage.Ready,
+    val request: PermissionRequest? = null,
+    val ownReplyKey: String? = null,
+)
+
 /**
  * Localized sample content is supplied by the UI, never copied into presentation code. [reply] is what the agent says
  * before it asks; [before] and [after] the sample file's line as it is and as the agent would make it; [allowed] and
@@ -118,6 +126,9 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     /** The row key of the newest off-script reply so the UI can attach one-tap sample and exit actions to it. */
     public val ownReplyKey: MutableStateFlow<String?> = MutableStateFlow(null)
 
+    /** Atomic snapshot of stage, request, and ownReplyKey keyed to [transcript]'s newest row. */
+    public val step: MutableStateFlow<DemoStep> = MutableStateFlow(DemoStep())
+
     public fun configure(content: DemoWords) {
         words = content
         model.value = content.model
@@ -174,11 +185,12 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
                     ReplyStep(content.reply, DemoStage.Review, editRequest(content), own = false)
                 else -> ReplyStep(content.own, DemoStage.Ready, null, own = true)
             }
-        if (!next.own) ownReplyKey.value = null
+        val replyKey = appendPair(text, next.text)
+        val nextOwn = if (next.own) replyKey else null
+        ownReplyKey.value = nextOwn
         request.value = next.request
         stage.value = next.stage
-        val replyKey = appendPair(text, next.text)
-        if (next.own) ownReplyKey.value = replyKey
+        step.value = DemoStep(replyKey, next.stage, next.request, nextOwn)
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
         return Outcome.Ok(Unit)
     }
@@ -206,13 +218,15 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     public suspend fun decide(allow: Boolean): Outcome<Unit> = lock.withLock {
         val content = words ?: return@withLock unavailable()
         if (closed || stage.value != DemoStage.Review) return@withLock unavailable()
-        request.value = null
         owner.prefs.setBoolean(DECISION, allow)
-        append(
-            if (owner.prefs.boolean(DECISION) == true) content.allowed else content.denied,
-            prompt = false,
-        )
+        val replyKey =
+            append(
+                if (owner.prefs.boolean(DECISION) == true) content.allowed else content.denied,
+                prompt = false,
+            )
+        request.value = null
         stage.value = DemoStage.Finished
+        step.value = DemoStep(replyKey, DemoStage.Finished, null, ownReplyKey.value)
         Outcome.Ok(Unit)
     }
 
@@ -267,6 +281,7 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         ownReplyKey.value = null
         stage.value = DemoStage.Ready
         transcript.value = TranscriptState.Empty.copy(revision = ++sequence)
+        step.value = DemoStep(null, DemoStage.Ready, null, null)
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
         words?.let { draftChanged(it.prompt) }
     }
@@ -275,6 +290,7 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         closed = true
         request.value = null
         ownReplyKey.value = null
+        step.value = step.value.copy(request = null, ownReplyKey = null)
         owner.prefs.clear()
     }
 

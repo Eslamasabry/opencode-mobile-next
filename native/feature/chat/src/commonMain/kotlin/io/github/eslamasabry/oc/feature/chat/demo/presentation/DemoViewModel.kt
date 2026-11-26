@@ -10,6 +10,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.ask.PermissionAsk
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
@@ -28,6 +29,7 @@ import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -79,32 +81,35 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
     /** The sample agent's request as the app's own request card: one waiting permission ask, or nothing. */
     public val requests =
         world.request
-            .map { asked ->
-                RequestSlotUi(
-                    asked?.let {
-                        RequestCardUi.Permission(
-                            id = it.id,
-                            waitingSinceMs = null,
-                            state = CardState.Waiting,
-                            ask = PermissionAsk.of(it),
-                            canAlwaysAllow = false,
-                            captured = PendingRequest.Permission(it),
-                        )
-                    }
-                )
-            }
+            .map(::requestSlotOf)
             .stateIn(viewModelScope, SharingStarted.Eagerly, RequestSlotUi())
 
     /** One atomic screen snapshot so button dismiss, reply insert, and request card land in the same frame. */
     public val ui =
-        combine(state, stage, ownReplyKey, requests) { chat, phase, ownKey, reqs ->
-                DemoScreenUi(chat, phase, ownKey, reqs)
+        combine(state, world.step) { chat, snap ->
+                if (chat.newestRowKey != snap.newestRowKey) null
+                else DemoScreenUi(chat, snap.stage, snap.ownReplyKey, requestSlotOf(snap.request))
             }
+            .filterNotNull()
             .stateIn(
                 viewModelScope,
                 SharingStarted.Eagerly,
                 DemoScreenUi(state.value, stage.value, ownReplyKey.value, requests.value),
             )
+
+    private fun requestSlotOf(asked: PermissionRequest?): RequestSlotUi =
+        RequestSlotUi(
+            asked?.let {
+                RequestCardUi.Permission(
+                    id = it.id,
+                    waitingSinceMs = null,
+                    state = CardState.Waiting,
+                    ask = PermissionAsk.of(it),
+                    canAlwaysAllow = false,
+                    captured = PendingRequest.Permission(it),
+                )
+            }
+        )
 
     /** Allow and Deny answer the sample; the demo has no questions, no saved rules and nothing to undo. */
     public val requestActions: ChatRequestActions =

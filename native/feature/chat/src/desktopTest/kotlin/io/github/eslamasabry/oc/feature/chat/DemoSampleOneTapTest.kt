@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
@@ -11,7 +12,8 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -78,7 +80,9 @@ class DemoSampleOneTapTest {
     }
 
     private fun KitUiTest.sendOwnQuestion() {
-        onNode(hasSetTextAction()).performTextReplacement(OWN_QUESTION)
+        onNode(hasSetTextAction()).performSemanticsAction(SemanticsActions.SetText) {
+            it(AnnotatedString(OWN_QUESTION))
+        }
         onNodeWithTag("chat-send-button").performClick()
         waitForIdle()
     }
@@ -180,7 +184,7 @@ class DemoSampleOneTapTest {
             remember(environment) {
                 entryProvider<NavKey> { with(DemoEntries(environment)) { install() } }
             }
-        E20Scene(motion = MotionLevel.Full) {
+        E20Scene(motion = MotionLevel.Calm) {
             CompositionLocalProvider(
                 LocalViewModelStoreOwner provides owner,
                 LocalLifecycleOwner provides lifecycle,
