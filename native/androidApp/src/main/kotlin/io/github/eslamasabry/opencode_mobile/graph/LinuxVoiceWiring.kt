@@ -424,8 +424,9 @@ internal constructor(
     private val leases: NativeChatLeases,
     private val policies: AppAutomationPolicies,
     private val consents: NativePhoneFirstStartConsents,
-    private val gates: LocalServerGates,
+    gates: LocalServerGates,
 ) {
+    private val localGates = gates
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
         get() = app.filesDir
@@ -1756,7 +1757,7 @@ internal constructor(
             }
         )
         // B-486: if MainActivity already resumed before oc-startup registered this callback, catch up at once.
-        if (gates.hasResumedActivity() && !foreground) resumed(true)
+        if (localGates.hasResumedActivity() && !foreground) resumed(true)
         scope.launch { publish() }
     }
 
@@ -1773,7 +1774,7 @@ internal constructor(
         // The runtime may refuse to follow the activity; its own recovery then stays off for that visit.
         // Nothing is told to the person: if recovery is needed and missing, the "phone server stopped" state shows.
         activityFollow.follow(on) { linux.setActivityResumed(it) }
-        gates.activityResumed.value = on
+        localGates.activityResumed.value = on
         if (on)
             scope.launch {
                 adoptNativeAddress()
