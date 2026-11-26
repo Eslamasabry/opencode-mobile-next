@@ -110,7 +110,7 @@ class ChatSpokenLabelsTest {
     private fun Theme(content: @Composable () -> Unit) {
         KitTheme(
             platform = DesktopKitPlatform(),
-            appearance = KitAppearance(motion = MotionLevel.Off),
+            appearance = KitAppearance(motion = MotionLevel.Calm),
             stillFrame = true,
             localeTag = "en",
         ) {
