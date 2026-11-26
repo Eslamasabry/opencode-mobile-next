@@ -451,21 +451,13 @@ class SetupRunner private constructor(private val context: Context) {
      */
     private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? {
         var attempt = 1
-        var compatible = linux.serverCompat()
         while (true) {
             try {
-                lastExitCode = null
-                val failure = runScriptProven(spec, component, compatible)
-                if (SetupStepRetry.compatibility(lastExitCode, compatible, cancelled)) {
-                    // A program inside Ubuntu segfaulted (issue #117): once more, the careful way.
-                    compatible = true
-                    Log.w(BuiltinLinux.TAG, "setup step ${spec.id} segfaulted; running it again in compatibility mode")
-                    val label = spec.labels["compat"] ?: "Trying again in compatibility mode"
-                    logLine("==> $label")
-                    event(component, SetupProtocol.Event.Stage(label))
-                    continue
+                val outcome = runWithCompatFallback(spec, component)
+                outcome.terminalDetail?.let(::logLine)
+                if (!SetupStepRetry.again(attempt, cancelled, SetupStepRetry.interrupted(outcome.failure))) {
+                    return outcome.failure
                 }
-                if (!SetupStepRetry.again(attempt, cancelled, SetupStepRetry.interrupted(failure))) return failure
             } catch (error: InstallerInterruptedException) {
                 if (!SetupStepRetry.again(attempt, cancelled, interrupted = true)) throw error
             }
@@ -480,8 +472,44 @@ class SetupRunner private constructor(private val context: Context) {
         }
     }
 
+    private fun runWithCompatFallback(spec: Spec, component: SetupComponentStatus): SetupCompatFallback.Outcome =
+        SetupCompatFallback.run(
+            stepId = spec.id,
+            initialCompat = linux.serverCompat(),
+            hooks =
+                object : SetupCompatFallback.Hooks {
+                    override fun isCancelled(): Boolean = cancelled
+
+                    override fun persistCompat() {
+                        linux.persistProotCompat()
+                    }
+
+                    override fun clearCompat() {
+                        linux.clearProotCompat()
+                    }
+
+                    override fun onCompatRetry(reasonLine: String) {
+                        Log.w(BuiltinLinux.TAG, "setup step ${spec.id} retrying in compatibility mode")
+                        logLine(reasonLine)
+                        val label = spec.labels["compat"] ?: "Trying again in compatibility mode"
+                        logLine("==> $label")
+                        event(component, SetupProtocol.Event.Stage(label))
+                    }
+
+                    override fun runOnce(compatible: Boolean): SetupCompatFallback.StepAttempt {
+                        lastExitCode = null
+                        lastStalled = false
+                        val failure = runScriptProven(spec, component, compatible)
+                        return SetupCompatFallback.StepAttempt(failure, lastExitCode, lastStalled)
+                    }
+                },
+        )
+
     /** The exit status of the last script run (the guest's own result when it reported one). */
     @Volatile private var lastExitCode: Int? = null
+
+    /** Whether the last script run was stopped by the silence watchdog (B-488). */
+    @Volatile private var lastStalled: Boolean = false
 
     private fun runScript(spec: Spec, component: SetupComponentStatus, compatible: Boolean = false): String? {
         val script = spec.script
@@ -532,10 +560,14 @@ class SetupRunner private constructor(private val context: Context) {
             return "cancelled"
         }
         val seen = ScriptOutput()
+        val silence = SetupStepSilence()
+        val stalled = java.util.concurrent.atomic.AtomicBoolean(false)
+        val finished = java.util.concurrent.atomic.AtomicBoolean(false)
+        val watchdog = startSilenceWatchdog(started, silence, stalled, finished)
         try {
             started.outputStream.close()
             started.inputStream.bufferedReader().forEachLine { line ->
-                handleScriptLine(spec, component, completion, seen, line)
+                handleScriptLine(spec, component, completion, seen, silence, line)
             }
         } catch (error: SetupPersistenceException) {
             linux.stopInstaller(started)
@@ -544,14 +576,62 @@ class SetupRunner private constructor(private val context: Context) {
         } catch (_: Exception) {
             // A failed/closed pipe must not leak a running child.
             try { linux.stopInstaller(started) } catch (_: Exception) { }
+        } finally {
+            finished.set(true)
+            watchdog.interrupt()
         }
         val code = try { started.waitFor() } finally {
             synchronized(lock) { process = null }
         }
         lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, seen.sawSegfault)
-        return if (cancelled) "cancelled"
-        else if (code == 0 && completion.exitCode != 0) SetupStepRetry.missingResult(seen.last)
-        else installerFailure(spec, component, code, seen.last)
+        lastStalled = stalled.get()
+        return when {
+            cancelled -> "cancelled"
+            lastStalled -> SetupStepRetry.stalledFailure(compatible = false)
+            code == 0 && completion.exitCode != 0 -> SetupStepRetry.missingResult(seen.last)
+            else -> installerFailure(spec, component, code, seen.last)
+        }
+    }
+
+    private fun startSilenceWatchdog(
+        started: Process,
+        silence: SetupStepSilence,
+        stalled: java.util.concurrent.atomic.AtomicBoolean,
+        finished: java.util.concurrent.atomic.AtomicBoolean,
+    ): Thread =
+        Thread(
+            {
+                while (!finished.get() && !cancelled) {
+                    val waitMs = silence.remainingMs()
+                    if (waitMs <= 0L) {
+                        stopIfStillSilent(started, stalled, finished)
+                        break
+                    }
+                    try {
+                        Thread.sleep(waitMs.coerceAtMost(SILENCE_POLL_MS))
+                    } catch (_: InterruptedException) {
+                        break
+                    }
+                }
+            },
+            "oc-setup-silence",
+        ).apply {
+            isDaemon = true
+            start()
+        }
+
+    private fun stopIfStillSilent(
+        started: Process,
+        stalled: java.util.concurrent.atomic.AtomicBoolean,
+        finished: java.util.concurrent.atomic.AtomicBoolean,
+    ) {
+        if (!finished.get() && !cancelled && stalled.compareAndSet(false, true)) {
+            try {
+                linux.stopInstaller(started)
+            } catch (_: IllegalStateException) {
+                // Installer already drained before the silence stop reached it.
+            }
+        }
     }
 
     /** What a script's output showed so far: its last plain line, and whether a program segfaulted. */
@@ -565,6 +645,7 @@ class SetupRunner private constructor(private val context: Context) {
         component: SetupComponentStatus,
         completion: SetupScriptCompletion,
         seen: ScriptOutput,
+        silence: SetupStepSilence,
         line: String,
     ) {
         if (completion.accept(line)) return
@@ -572,18 +653,23 @@ class SetupRunner private constructor(private val context: Context) {
         val parsed = SetupProtocol.parse(line)
         val event = installerEvent(spec, parsed)
         when {
-            parsed is SetupProtocol.Event.Fetch -> appFetch(component, parsed, spec.agentUser)
-            parsed is SetupProtocol.Event.Unpack -> appUnpack(parsed, spec.agentUser)
+            parsed is SetupProtocol.Event.Fetch -> appFetch(component, parsed, spec.agentUser, silence)
+            parsed is SetupProtocol.Event.Unpack -> appUnpack(parsed, spec.agentUser, silence)
             event != null -> {
+                silence.recordEvent(event)
                 if (event is SetupProtocol.Event.Stage) logLine("==> ${event.label}")
                 event(component, event)
             }
             !spec.agentUser -> {
+                silence.recordOutput(line)
                 logLine(line)
                 if (line.isNotBlank()) seen.last = line.trim()
             }
             // An agent step's output is not logged; only its fixed marker lines are kept, so a failure can say why.
-            else -> SetupStepRetry.agentLine(line)?.let { seen.last = it }
+            else -> {
+                silence.recordOutput(line)
+                SetupStepRetry.agentLine(line)?.let { seen.last = it }
+            }
         }
     }
 
@@ -592,10 +678,18 @@ class SetupRunner private constructor(private val context: Context) {
      * (issue #117). Android's own networking fills the file the script then
      * checks against its pinned checksum.
      */
-    private fun appFetch(component: SetupComponentStatus, request: SetupProtocol.Event.Fetch, agentUser: Boolean) {
+    private fun appFetch(
+        component: SetupComponentStatus,
+        request: SetupProtocol.Event.Fetch,
+        agentUser: Boolean,
+        silence: SetupStepSilence,
+    ) {
+        silence.touch()
         logLine("==> The app is downloading this itself")
         SetupAppFetch(linux.rootfs, allowed = agentFolders(agentUser)).run(request, { cancelled }) { done, total ->
-            event(component, SetupProtocol.Event.Bytes(done, total))
+            val bytesEvent = SetupProtocol.Event.Bytes(done, total)
+            silence.recordEvent(bytesEvent)
+            event(component, bytesEvent)
         }
     }
 
@@ -603,9 +697,11 @@ class SetupRunner private constructor(private val context: Context) {
      * The script's `tar` crashed and it asked us to unpack instead (issue
      * #117). The script checked the archive's checksum before this point.
      */
-    private fun appUnpack(request: SetupProtocol.Event.Unpack, agentUser: Boolean) {
+    private fun appUnpack(request: SetupProtocol.Event.Unpack, agentUser: Boolean, silence: SetupStepSilence) {
+        silence.touch()
         logLine("==> The app is unpacking this itself")
         SetupAppUnpack(linux.rootfs, agentFolders(agentUser)).run(request) { cancelled }
+        silence.touch()
     }
 
     /** A step running as the agent user may only have the app write where agents install. */
@@ -660,12 +756,16 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     private fun event(component: SetupComponentStatus, event: SetupProtocol.Event) {
-        synchronized(lock) {
-            component.apply(event)
-            job?.updatedAt = System.currentTimeMillis()
-            dirty = true
-        }
-        if (event is SetupProtocol.Event.Stage) writeNow()
+        val changed =
+            synchronized(lock) {
+                val updated = component.applyIfChanged(event)
+                if (updated) {
+                    job?.updatedAt = System.currentTimeMillis()
+                    dirty = true
+                }
+                updated
+            }
+        if (changed && event is SetupProtocol.Event.Stage) writeNow()
     }
 
     private fun logLine(line: String) {
@@ -789,6 +889,7 @@ class SetupRunner private constructor(private val context: Context) {
         private const val OWNERSHIP_PAUSE_MS = 3000L
         private const val WRITE_INTERVAL_MS = 250L
         private const val NOTIFY_INTERVAL_MS = 1000L
+        private const val SILENCE_POLL_MS = 1_000L
 
         @Volatile private var instance: SetupRunner? = null
 

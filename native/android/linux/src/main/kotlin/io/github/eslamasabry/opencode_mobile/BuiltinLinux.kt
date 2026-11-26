@@ -1138,6 +1138,12 @@ class BuiltinLinux(private val context: Context) {
         } catch (error: Exception) {
             Log.w(TAG, "Git shared-folder setting not written: ${error.javaClass.simpleName}")
         }
+        // B-488: keep /etc/resolv.conf aligned with the phone's active network DNS.
+        try {
+            BuiltinDnsConfig.sync(context, rootfs)
+        } catch (error: java.io.IOException) {
+            Log.w(TAG, "DNS setting not written: ${error.javaClass.simpleName}")
+        }
     }
 
     private fun procMaskBinds(): List<String> {
@@ -2835,6 +2841,10 @@ class BuiltinLinux(private val context: Context) {
      * `proot-compat` under the rootfs safe-mode state (NodeCompatState, issues #117/#151).
      */
     fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
+
+    internal fun persistProotCompat(): Boolean = NodeCompatState.writeProotCompat(rootfs)
+
+    internal fun clearProotCompat() = NodeCompatState.clearProotCompat(rootfs)
 
     private val prootProbeLock = Any()
     private var recentProotProbe: Pair<Long, LinuxProotProbe.Result>? = null
@@ -7070,10 +7080,8 @@ exec gc supervisor run
             componentUpdateFailure
         }
         val etc = File(rootfs, "etc")
-        File(etc, "resolv.conf").apply {
-            delete()
-            writeText("nameserver 1.1.1.1\nnameserver 8.8.8.8\n")
-        }
+        etc.mkdirs()
+        BuiltinDnsConfig.sync(context, rootfs)
         File(etc, "hosts")
             .writeText("127.0.0.1 localhost\n::1 localhost ip6-localhost ip6-loopback\n")
         // apt drops to its own user to download; proot's fake root cannot

@@ -98,22 +98,38 @@ class SetupComponentStatus(
 ) {
     /** A new stage starts measuring from nothing. */
     fun apply(event: SetupProtocol.Event) {
+        applyIfChanged(event)
+    }
+
+    /** Applies [event] and returns true only when state actually changed (ignores repeated identical bytes/percent). */
+    fun applyIfChanged(event: SetupProtocol.Event): Boolean =
         when (event) {
             is SetupProtocol.Event.Stage -> {
+                val changed = stage != event.label || done != null || percent != null
                 stage = event.label
                 done = null
                 total = null
                 percent = null
+                changed
             }
             is SetupProtocol.Event.Bytes -> {
+                val changed = done != event.done || total != event.total
                 done = event.done
                 total = event.total
+                changed
             }
-            is SetupProtocol.Event.Percent -> percent = event.value
-            is SetupProtocol.Event.Version -> version = event.text
-            is SetupProtocol.Event.Fetch, is SetupProtocol.Event.Unpack -> Unit
+            is SetupProtocol.Event.Percent -> {
+                val changed = percent != event.value
+                percent = event.value
+                changed
+            }
+            is SetupProtocol.Event.Version -> {
+                val changed = version != event.text
+                version = event.text
+                changed
+            }
+            is SetupProtocol.Event.Fetch, is SetupProtocol.Event.Unpack -> true
         }
-    }
 
     /** The most this component has shown while running, kept in memory only. */
     private var reached = 0.0

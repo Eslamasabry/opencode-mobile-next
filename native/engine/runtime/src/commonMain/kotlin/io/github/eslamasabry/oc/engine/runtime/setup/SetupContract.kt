@@ -313,20 +313,42 @@ public enum class SetupActivity {
     ;
 
     public companion object {
-        /** The newest meaningful line of [log]; null for an empty log. Matches only fixed apt/curl/tar phrases. */
+        private val downloadingPattern =
+            Regex(
+                "^(Get:|Fetched|Downloading|Hit:|Ign:|Connecting to |Waiting for headers|" +
+                    "Updating package lists|==> Downloading|==> Updating package lists|" +
+                    "==> The app is downloading)|curl",
+                RegexOption.IGNORE_CASE,
+            )
+        private val unpackingPattern =
+            Regex(
+                "^(Unpacking|Extracting|Preparing to unpack|Selecting previously)|extract|unpack|tar ",
+                RegexOption.IGNORE_CASE,
+            )
+        private val configuringPattern =
+            Regex(
+                "^(Setting up|Processing triggers|Configuring|Created symlink|" +
+                    "Installing|Repairing|Trying again in compatibility mode|Starting|" +
+                    "==> Installing|==> Repairing|==> Trying again in compatibility mode|==> Starting)",
+                RegexOption.IGNORE_CASE,
+            )
+        private val checkingPattern =
+            Regex(
+                "^(Reading package lists|Building dependency tree|Reading state|" +
+                    "Checking|==> Checking|\\[oc\\] Linux probe)",
+                RegexOption.IGNORE_CASE,
+            )
+
+        /** The newest meaningful line of [log]; null for an empty log. Matches fixed apt/curl/tar/stage phrases. */
         public fun fromLog(log: String): SetupActivity? {
             val line =
                 log.lineSequence().map { it.trim() }.lastOrNull { it.isNotEmpty() && !it.contains("OCTRACE") }
                     ?: return null
             return when {
-                Regex("^(Get:|Fetched|Downloading|Hit:|Ign:|==> Downloading)|curl", RegexOption.IGNORE_CASE)
-                    .containsMatchIn(line) -> Downloading
-                Regex("^(Unpacking|Extracting|Preparing to unpack|Selecting previously)|extract|unpack|tar ", RegexOption.IGNORE_CASE)
-                    .containsMatchIn(line) -> Unpacking
-                Regex("^(Setting up|Processing triggers|Configuring|Created symlink)", RegexOption.IGNORE_CASE)
-                    .containsMatchIn(line) -> Configuring
-                Regex("^(Reading package lists|Building dependency tree|Reading state)", RegexOption.IGNORE_CASE)
-                    .containsMatchIn(line) -> Checking
+                downloadingPattern.containsMatchIn(line) -> Downloading
+                unpackingPattern.containsMatchIn(line) -> Unpacking
+                configuringPattern.containsMatchIn(line) -> Configuring
+                checkingPattern.containsMatchIn(line) -> Checking
                 else -> Working
             }
         }

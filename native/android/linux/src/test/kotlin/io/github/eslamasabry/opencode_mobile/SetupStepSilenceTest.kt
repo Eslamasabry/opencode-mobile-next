@@ -1,0 +1,143 @@
+package io.github.eslamasabry.opencode_mobile
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/** B-488: real-progress silence tracking and one-shot compatible Linux mode fallback. */
+class SetupStepSilenceTest {
+    private class FakeHooks(
+        private val cancelled: () -> Boolean = { false },
+        private val runAttempt: (Boolean) -> SetupCompatFallback.StepAttempt,
+    ) : SetupCompatFallback.Hooks {
+        val modes = mutableListOf<Boolean>()
+        val retryReasons = mutableListOf<String>()
+        var persisted = false
+        var cleared = false
+
+        override fun isCancelled(): Boolean = cancelled()
+
+        override fun persistCompat() {
+            persisted = true
+        }
+
+        override fun clearCompat() {
+            cleared = true
+        }
+
+        override fun onCompatRetry(reasonLine: String) {
+            retryReasons += reasonLine
+        }
+
+        override fun runOnce(compatible: Boolean): SetupCompatFallback.StepAttempt {
+            modes += compatible
+            return runAttempt(compatible)
+        }
+    }
+
+    @Test
+    fun `B-SETUP-022 repeated identical bytes do not reset step silence timer or component change flag`() {
+        var clock = 1_000L
+        val silence = SetupStepSilence(timeoutMs = 120_000L, nowMs = { clock })
+        val component = SetupComponentStatus("node", state = "running")
+
+        val initialBytes = SetupProtocol.Event.Bytes(done = 0L, total = 58_000_000L)
+        assertTrue(silence.recordEvent(initialBytes))
+        assertTrue(component.applyIfChanged(initialBytes))
+
+        clock += 60_000L
+        assertFalse(silence.recordEvent(initialBytes))
+        assertFalse(component.applyIfChanged(initialBytes))
+        assertEquals(60_000L, silence.silentForMs())
+        assertFalse(silence.isTimedOut())
+
+        clock += 60_000L
+        assertFalse(silence.recordEvent(initialBytes))
+        assertTrue(silence.isTimedOut())
+
+        val advancedBytes = SetupProtocol.Event.Bytes(done = 4_096L, total = 58_000_000L)
+        assertTrue(silence.recordEvent(advancedBytes))
+        assertTrue(component.applyIfChanged(advancedBytes))
+        assertFalse(silence.isTimedOut())
+        assertEquals(0L, silence.silentForMs())
+    }
+
+    @Test
+    fun `B-SETUP-023 silent step in normal mode automatically retries once in compatible mode and persists marker`() {
+        val hooks =
+            FakeHooks { compatible ->
+                if (!compatible) SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
+                else SetupCompatFallback.StepAttempt(null, exitCode = 0, stalled = false)
+            }
+
+        val outcome = SetupCompatFallback.run("essentials", initialCompat = false, hooks = hooks)
+
+        assertNull(outcome.failure)
+        assertTrue(outcome.usedCompat)
+        assertTrue(outcome.retriedInCompat)
+        assertEquals(listOf(false, true), hooks.modes)
+        assertTrue(hooks.persisted)
+        assertFalse(hooks.cleared)
+        assertEquals(1, hooks.retryReasons.size)
+        assertTrue(hooks.retryReasons.single().contains("compatibility mode"))
+    }
+
+    @Test
+    fun `B-SETUP-024 silent step that stalls again in compatible mode fails with Linux mode in Details`() {
+        val hooks =
+            FakeHooks {
+                SetupCompatFallback.StepAttempt("proot info: vpid 1: terminated with signal 15", 143, stalled = true)
+            }
+
+        val outcome = SetupCompatFallback.run("essentials", initialCompat = false, hooks = hooks)
+
+        assertEquals(SetupStepRetry.stalledFailure(compatible = true), outcome.failure)
+        assertTrue(SetupStepRetry.isStalled(outcome.failure))
+        assertFalse(SetupStepRetry.interrupted(outcome.failure))
+        assertTrue(outcome.usedCompat)
+        assertTrue(outcome.retriedInCompat)
+        assertEquals(listOf(false, true), hooks.modes)
+        assertTrue(hooks.persisted)
+        assertTrue(hooks.cleared)
+        assertTrue(outcome.detailLines.any { it.contains("Linux mode: compatible") })
+        assertTrue(outcome.terminalDetail?.contains("Linux mode: compatible") == true)
+    }
+
+    @Test
+    fun `B-SETUP-025 segfault crash in normal mode still retries once in compatible mode`() {
+        val hooks =
+            FakeHooks { compatible ->
+                if (!compatible) {
+                    SetupCompatFallback.StepAttempt("Segmentation fault", SetupStepRetry.SEGFAULT_EXIT, false)
+                } else {
+                    SetupCompatFallback.StepAttempt(null, exitCode = 0, stalled = false)
+                }
+            }
+
+        val outcome = SetupCompatFallback.run("node", initialCompat = false, hooks = hooks)
+
+        assertNull(outcome.failure)
+        assertTrue(outcome.usedCompat)
+        assertTrue(outcome.retriedInCompat)
+        assertEquals(listOf(false, true), hooks.modes)
+        assertTrue(hooks.persisted)
+        assertFalse(hooks.cleared)
+    }
+
+    @Test
+    fun `B-SETUP-026 cancelled step never triggers compatible retry`() {
+        val hooks =
+            FakeHooks(cancelled = { true }) {
+                SetupCompatFallback.StepAttempt("cancelled", exitCode = null, stalled = true)
+            }
+
+        val outcome = SetupCompatFallback.run("essentials", initialCompat = false, hooks = hooks)
+
+        assertEquals("cancelled", outcome.failure)
+        assertFalse(outcome.retriedInCompat)
+        assertEquals(listOf(false), hooks.modes)
+        assertFalse(hooks.persisted)
+    }
+}

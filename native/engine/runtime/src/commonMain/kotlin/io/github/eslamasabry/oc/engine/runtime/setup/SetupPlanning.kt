@@ -264,6 +264,8 @@ public object SetupPlanning {
     private val interrupted =
         Regex("""terminated with signal (?:9|15)\b|\bSIG(?:KILL|TERM)\b""", RegexOption.IGNORE_CASE)
     private val checksum = Regex("checksum|did not match its checksum", RegexOption.IGNORE_CASE)
+    private const val STEP_STALLED_PREFIX = "[oc] Step stopped making progress"
+    private const val LINUX_PROBE_FAILED = "Linux did not answer in normal or compatibility mode"
 
     /** A failed component as values for its row and for the whole job (`describeSetupFailure`). */
     public fun describeFailure(
@@ -306,6 +308,9 @@ public object SetupPlanning {
                 return both(SetupError.PortBusy(it))
             }
         if (NodeCompatScripts.cannotRun(reason, logTail)) return both(SetupError.NodeCannotRun)
+        if (reason.startsWith(STEP_STALLED_PREFIX) || reason == LINUX_PROBE_FAILED) {
+            return both(SetupError.StepTimedOut(title))
+        }
         if (step) return both(kind?.let { SetupError.StartStepFailed(it) } ?: SetupError.CannotStart)
         if (reason.startsWith(OpenCodeInstallFailure.NO_PROGRAM))
             return both(SetupError.OpenCodeNoProgram)
@@ -422,7 +427,13 @@ public object SetupPlanning {
             stepElapsedSeconds = running?.let { row ->
                 row.startedAt?.let { ((nowMillis - it) / 1000).toInt().coerceAtLeast(0) }
             },
-            activity = if (running != null) SetupActivity.fromLog(setupLogForPeople(record.logTail)) else null,
+            activity =
+                if (running != null) {
+                    SetupActivity.fromLog(setupLogForPeople(record.logTail))
+                        ?: running.stage?.let(SetupActivity::fromLog)
+                } else {
+                    null
+                },
             quietSeconds = if (running != null && record.updatedAt > 0) {
                 ((nowMillis - record.updatedAt) / 1000).toInt().coerceAtLeast(0)
             } else {
