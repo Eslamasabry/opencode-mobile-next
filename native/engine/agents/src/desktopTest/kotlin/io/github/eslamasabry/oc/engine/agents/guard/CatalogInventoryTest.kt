@@ -116,14 +116,30 @@ class CatalogInventoryTest {
         ),
         "codex" to listOf(
             text("0.167.0", "0.172.0"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.172.0/codex-package-aarch64-unknown-linux-musl.tar.gz"),
-            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "faf17b8071927f33346a805dc8cb45de4e08c0d75cf0e5e68cecddca28b8861e"),
+            text(
+                "https://github.com/openai/codex/releases/download/rust-v0.167.0/" +
+                    "codex-aarch64-unknown-linux-musl.tar.gz",
+                "https://github.com/openai/codex/releases/download/rust-v0.172.0/" +
+                    "codex-package-aarch64-unknown-linux-musl.tar.gz",
+            ),
+            text(
+                "843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281",
+                "faf17b8071927f33346a805dc8cb45de4e08c0d75cf0e5e68cecddca28b8861e",
+            ),
             number("downloadBytes", 114300898, 201917755),
             number("installedBytes", 278794648, 521575724),
             // Issue 147: the official package, whose entry is bin/codex beside its code-mode host.
             text("codex-aarch64-unknown-linux-musl", "bin/codex"),
-            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.172.0/codex-package-x86_64-unknown-linux-musl.tar.gz"),
-            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "63e3b00065ed7f62166d0522e17f663cb866a31d80d03e63365482ed34a1d991"),
+            text(
+                "https://github.com/openai/codex/releases/download/rust-v0.167.0/" +
+                    "codex-x86_64-unknown-linux-musl.tar.gz",
+                "https://github.com/openai/codex/releases/download/rust-v0.172.0/" +
+                    "codex-package-x86_64-unknown-linux-musl.tar.gz",
+            ),
+            text(
+                "9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a",
+                "63e3b00065ed7f62166d0522e17f663cb866a31d80d03e63365482ed34a1d991",
+            ),
             number("downloadBytes", 122587028, 200434347),
             number("installedBytes", 320575976, 527693622),
             text("codex-x86_64-unknown-linux-musl", "bin/codex"),
