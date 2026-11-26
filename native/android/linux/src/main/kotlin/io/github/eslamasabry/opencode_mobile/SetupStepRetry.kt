@@ -61,40 +61,17 @@ internal object SetupStepRetry {
     fun crashExit(exitCode: Int, sawSegfaultReport: Boolean): Int =
         if (exitCode != 0 && sawSegfaultReport) SEGFAULT_EXIT else exitCode
 
-    /** Wait bound for a silent setup step with no forward progress before trying compatibility mode (B-488). */
-    const val SILENCE_TIMEOUT_MS: Long = 120_000L
-
-    /** Fixed marker prefix recorded when a step stops making progress past its wait bound (B-488). */
-    const val STALLED_PREFIX: String = "[oc] Step stopped making progress"
-
-    /** Human-readable Linux mode name for setup Details. */
-    fun linuxModeLabel(compatible: Boolean): String = if (compatible) "compatible" else "normal"
-
-    /** Fixed failure message when a step stops making progress, naming the Linux mode used. */
-    fun stalledFailure(compatible: Boolean): String =
-        "$STALLED_PREFIX (Linux mode: ${linuxModeLabel(compatible)})"
-
-    /** Fixed Details line recording which Linux mode was used for [stepId]. */
-    fun linuxModeDetail(stepId: String, compatible: Boolean, outcome: String): String =
-        "[oc] Step $stepId $outcome (Linux mode: ${linuxModeLabel(compatible)})"
-
-    /** Whether [failure] came from a step stalling past its silence bound. */
-    fun isStalled(failure: String?): Boolean = failure != null && failure.startsWith(STALLED_PREFIX)
-
     /**
      * Run a step once more in compatibility mode (proot without seccomp
      * acceleration, glibc without rseq) when it died of a segmentation
      * fault (issue #117) or went silent past its wait bound (B-488) and has
      * not been run that way yet.
      */
-    fun compatibility(exitCode: Int?, alreadyCompatible: Boolean, cancelled: Boolean): Boolean =
-        compatibility(exitCode, stalled = false, alreadyCompatible = alreadyCompatible, cancelled = cancelled)
-
     fun compatibility(
         exitCode: Int?,
-        stalled: Boolean,
         alreadyCompatible: Boolean,
         cancelled: Boolean,
+        stalled: Boolean = false,
     ): Boolean = !cancelled && !alreadyCompatible && (exitCode == SEGFAULT_EXIT || stalled)
 
     /** Effective proot compatibility mode: explicit request or persisted rootfs marker (issue #151). */

@@ -204,4 +204,16 @@ class SetupAppUnpackTest {
         assertEquals(0, SetupStepRetry.crashExit(0, true))
         assertEquals(1, SetupStepRetry.crashExit(1, false))
     }
+
+    @Test fun `B-SETUP-028 app side unpack reports progress on entries and file bodies`() {
+        val payload = "a".repeat(140_000)
+        val file = archive {
+            dir("pkg/")
+            file("pkg/bin", payload, mode = 0x1ED)
+        }
+        var ticks = 0
+        SetupAppUnpack(rootfs, onProgress = { ticks++ })
+            .unpack(file, File(rootfs, "opt/node.new"), strip = 1, member = null) { false }
+        assertTrue("expected progress ticks for entries and body chunks, got $ticks", ticks >= 4)
+    }
 }

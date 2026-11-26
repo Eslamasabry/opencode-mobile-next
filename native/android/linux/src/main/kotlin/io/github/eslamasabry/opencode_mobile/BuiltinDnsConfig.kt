@@ -56,6 +56,7 @@ internal object BuiltinDnsConfig {
      * Syncs `/etc/resolv.conf` under [rootfs] to [addresses], replacing any guest symlink safely without
      * following it, and skipping disk writes when the file already matches. Returns true when rewritten.
      */
+    @Synchronized
     fun writeResolvConf(rootfs: File, addresses: List<InetAddress>): Boolean {
         val target = safeTarget(rootfs) ?: return false
         val desired = formatResolvConf(addresses)

@@ -24,7 +24,11 @@ import java.util.zip.ZipException
  * absolute path or a `..` part is refused (the whole unpack fails), and so is
  * an entry that would be written through a link that leaves the destination.
  */
-class SetupAppUnpack(private val rootfs: File, private val allowed: List<String>? = null) {
+class SetupAppUnpack(
+    private val rootfs: File,
+    private val allowed: List<String>? = null,
+    private val onProgress: () -> Unit = {},
+) {
     /** Never throws for a bad archive; the answer is in the `.oc-unpack-done` file. */
     fun run(request: SetupProtocol.Event.Unpack, cancelled: () -> Boolean) {
         val paths = RootfsPaths(rootfs, allowed)
@@ -76,6 +80,7 @@ class SetupAppUnpack(private val rootfs: File, private val allowed: List<String>
             var matched = member == null
             while (entry != null) {
                 if (cancelled()) throw UnpackFailure("cancelled")
+                onProgress()
                 if (extract(entry, reader, base, strip, member)) matched = true
                 entry = reader.next()
             }
@@ -112,7 +117,7 @@ class SetupAppUnpack(private val rootfs: File, private val allowed: List<String>
 
     private fun writeFile(reader: TarReader, target: File) {
         if (Files.isSymbolicLink(target.toPath()) || target.isFile) target.delete()
-        target.outputStream().buffered(BUFFER).use { out -> reader.copyBody(out) }
+        target.outputStream().buffered(BUFFER).use { out -> reader.copyBody(out, onProgress) }
     }
 
     private fun copyHardLink(base: File, target: File, linkName: String, strip: Int) {
@@ -186,13 +191,14 @@ internal class TarReader(private val input: InputStream) {
     }
 
     /** Copies the current regular file's bytes; a short archive is an [EOFException]. */
-    fun copyBody(out: java.io.OutputStream) {
+    fun copyBody(out: java.io.OutputStream, onProgress: () -> Unit = {}) {
         val buffer = ByteArray(COPY_BUFFER)
         while (remaining > 0) {
             val n = input.read(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
             if (n < 0) throw EOFException("short archive")
             out.write(buffer, 0, n)
             remaining -= n
+            onProgress()
         }
     }
 

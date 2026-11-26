@@ -93,8 +93,8 @@ class SetupStepSilenceTest {
 
         val outcome = SetupCompatFallback.run("essentials", initialCompat = false, hooks = hooks)
 
-        assertEquals(SetupStepRetry.stalledFailure(compatible = true), outcome.failure)
-        assertTrue(SetupStepRetry.isStalled(outcome.failure))
+        assertEquals(SetupCompatFallback.stalledFailure(compatible = true), outcome.failure)
+        assertTrue(SetupCompatFallback.isStalled(outcome.failure))
         assertFalse(SetupStepRetry.interrupted(outcome.failure))
         assertTrue(outcome.usedCompat)
         assertTrue(outcome.retriedInCompat)
@@ -139,5 +139,40 @@ class SetupStepSilenceTest {
         assertFalse(outcome.retriedInCompat)
         assertEquals(listOf(false), hooks.modes)
         assertFalse(hooks.persisted)
+    }
+
+    @Test
+    fun `B-SETUP-027 compat mode uses longer silence bound and watchdog stops silent process once`() {
+        assertEquals(SetupCompatFallback.SILENCE_TIMEOUT_MS, SetupCompatFallback.timeoutForMode(compatible = false))
+        assertEquals(
+            SetupCompatFallback.COMPAT_SILENCE_TIMEOUT_MS,
+            SetupCompatFallback.timeoutForMode(compatible = true),
+        )
+        assertTrue(SetupCompatFallback.COMPAT_SILENCE_TIMEOUT_MS > SetupCompatFallback.SILENCE_TIMEOUT_MS)
+
+        var clock = 0L
+        val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock })
+        val stops = java.util.concurrent.atomic.AtomicInteger(0)
+        val stopped = java.util.concurrent.CountDownLatch(1)
+        val watchdog =
+            SetupSilenceWatchdog(
+                silence = silence,
+                isCancelled = { false },
+                stopProcess = {
+                    stops.incrementAndGet()
+                    stopped.countDown()
+                },
+                pollMs = 5L,
+            )
+        watchdog.start()
+        try {
+            clock = 60L
+            assertTrue(stopped.await(2, java.util.concurrent.TimeUnit.SECONDS))
+            assertTrue(watchdog.isStalled)
+            assertTrue(watchdog.isStopped())
+            assertEquals(1, stops.get())
+        } finally {
+            watchdog.stop()
+        }
     }
 }

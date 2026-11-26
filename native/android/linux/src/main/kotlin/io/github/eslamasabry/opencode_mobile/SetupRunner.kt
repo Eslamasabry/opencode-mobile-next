@@ -528,7 +528,7 @@ class SetupRunner private constructor(private val context: Context) {
                 completion.wrap(script), NativeInstallerOwnership.targetsForComponent(spec.id),
                 InstallerOperation.INSTALL, InstallerOptions(agentUser = spec.agentUser, compat = compatible))
         }
-        return try { runInstallerScript(spec, component, started, completion) }
+        return try { runInstallerScript(spec, component, started, completion, compatible) }
         finally { linux.finishInstaller(started) }
     }
 
@@ -549,8 +549,13 @@ class SetupRunner private constructor(private val context: Context) {
         }
     }
 
-    private fun runInstallerScript(spec: Spec, component: SetupComponentStatus, started: Process,
-        completion: SetupScriptCompletion): String? {
+    private fun runInstallerScript(
+        spec: Spec,
+        component: SetupComponentStatus,
+        started: Process,
+        completion: SetupScriptCompletion,
+        compatible: Boolean,
+    ): String? {
         val wasCancelled = synchronized(lock) {
             process = started
             cancelled
@@ -559,15 +564,14 @@ class SetupRunner private constructor(private val context: Context) {
             linux.stopInstaller(started)
             return "cancelled"
         }
-        val seen = ScriptOutput()
-        val silence = SetupStepSilence()
-        val stalled = java.util.concurrent.atomic.AtomicBoolean(false)
-        val finished = java.util.concurrent.atomic.AtomicBoolean(false)
-        val watchdog = startSilenceWatchdog(started, silence, stalled, finished)
+        val silence = SetupStepSilence(timeoutMs = SetupCompatFallback.timeoutForMode(compatible))
+        val watchdog = SetupSilenceWatchdog(silence, { cancelled }, { linux.stopInstaller(started) })
+        val run = ScriptRun(completion, watchdog)
+        watchdog.start()
         try {
             started.outputStream.close()
             started.inputStream.bufferedReader().forEachLine { line ->
-                handleScriptLine(spec, component, completion, seen, silence, line)
+                handleScriptLine(spec, component, run, line)
             }
         } catch (error: SetupPersistenceException) {
             linux.stopInstaller(started)
@@ -577,98 +581,52 @@ class SetupRunner private constructor(private val context: Context) {
             // A failed/closed pipe must not leak a running child.
             try { linux.stopInstaller(started) } catch (_: Exception) { }
         } finally {
-            finished.set(true)
-            watchdog.interrupt()
+            watchdog.stop()
         }
         val code = try { started.waitFor() } finally {
             synchronized(lock) { process = null }
         }
-        lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, seen.sawSegfault)
-        lastStalled = stalled.get()
+        lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, run.sawSegfault)
+        lastStalled = watchdog.isStalled && completion.exitCode != 0
         return when {
             cancelled -> "cancelled"
-            lastStalled -> SetupStepRetry.stalledFailure(compatible = false)
-            code == 0 && completion.exitCode != 0 -> SetupStepRetry.missingResult(seen.last)
-            else -> installerFailure(spec, component, code, seen.last)
+            lastStalled -> SetupCompatFallback.stalledFailure(compatible)
+            code == 0 && completion.exitCode != 0 -> SetupStepRetry.missingResult(run.last)
+            else -> installerFailure(spec, component, code, run.last)
         }
     }
 
-    private fun startSilenceWatchdog(
-        started: Process,
-        silence: SetupStepSilence,
-        stalled: java.util.concurrent.atomic.AtomicBoolean,
-        finished: java.util.concurrent.atomic.AtomicBoolean,
-    ): Thread =
-        Thread(
-            {
-                while (!finished.get() && !cancelled) {
-                    val waitMs = silence.remainingMs()
-                    if (waitMs <= 0L) {
-                        stopIfStillSilent(started, stalled, finished)
-                        break
-                    }
-                    try {
-                        Thread.sleep(waitMs.coerceAtMost(SILENCE_POLL_MS))
-                    } catch (_: InterruptedException) {
-                        break
-                    }
-                }
-            },
-            "oc-setup-silence",
-        ).apply {
-            isDaemon = true
-            start()
-        }
-
-    private fun stopIfStillSilent(
-        started: Process,
-        stalled: java.util.concurrent.atomic.AtomicBoolean,
-        finished: java.util.concurrent.atomic.AtomicBoolean,
+    /** Per-run output state and silence watchdog for a setup script. */
+    private class ScriptRun(
+        val completion: SetupScriptCompletion,
+        val watchdog: SetupSilenceWatchdog,
     ) {
-        if (!finished.get() && !cancelled && stalled.compareAndSet(false, true)) {
-            try {
-                linux.stopInstaller(started)
-            } catch (_: IllegalStateException) {
-                // Installer already drained before the silence stop reached it.
-            }
-        }
-    }
-
-    /** What a script's output showed so far: its last plain line, and whether a program segfaulted. */
-    private class ScriptOutput {
         var last: String? = null
         var sawSegfault = false
     }
 
-    private fun handleScriptLine(
-        spec: Spec,
-        component: SetupComponentStatus,
-        completion: SetupScriptCompletion,
-        seen: ScriptOutput,
-        silence: SetupStepSilence,
-        line: String,
-    ) {
-        if (completion.accept(line)) return
-        if (SetupStepRetry.reportsSegfault(line)) seen.sawSegfault = true
+    private fun handleScriptLine(spec: Spec, component: SetupComponentStatus, run: ScriptRun, line: String) {
+        if (run.completion.accept(line)) return
+        if (SetupStepRetry.reportsSegfault(line)) run.sawSegfault = true
         val parsed = SetupProtocol.parse(line)
         val event = installerEvent(spec, parsed)
         when {
-            parsed is SetupProtocol.Event.Fetch -> appFetch(component, parsed, spec.agentUser, silence)
-            parsed is SetupProtocol.Event.Unpack -> appUnpack(parsed, spec.agentUser, silence)
+            parsed is SetupProtocol.Event.Fetch -> appFetch(component, parsed, spec.agentUser, run.watchdog)
+            parsed is SetupProtocol.Event.Unpack -> appUnpack(parsed, spec.agentUser, run.watchdog)
             event != null -> {
-                silence.recordEvent(event)
+                run.watchdog.silence.recordEvent(event)
                 if (event is SetupProtocol.Event.Stage) logLine("==> ${event.label}")
                 event(component, event)
             }
             !spec.agentUser -> {
-                silence.recordOutput(line)
+                run.watchdog.silence.recordOutput(line)
                 logLine(line)
-                if (line.isNotBlank()) seen.last = line.trim()
+                if (line.isNotBlank()) run.last = line.trim()
             }
             // An agent step's output is not logged; only its fixed marker lines are kept, so a failure can say why.
             else -> {
-                silence.recordOutput(line)
-                SetupStepRetry.agentLine(line)?.let { seen.last = it }
+                run.watchdog.silence.recordOutput(line)
+                SetupStepRetry.agentLine(line)?.let { run.last = it }
             }
         }
     }
@@ -682,26 +640,29 @@ class SetupRunner private constructor(private val context: Context) {
         component: SetupComponentStatus,
         request: SetupProtocol.Event.Fetch,
         agentUser: Boolean,
-        silence: SetupStepSilence,
+        watchdog: SetupSilenceWatchdog,
     ) {
-        silence.touch()
+        watchdog.silence.touch()
         logLine("==> The app is downloading this itself")
-        SetupAppFetch(linux.rootfs, allowed = agentFolders(agentUser)).run(request, { cancelled }) { done, total ->
-            val bytesEvent = SetupProtocol.Event.Bytes(done, total)
-            silence.recordEvent(bytesEvent)
-            event(component, bytesEvent)
-        }
+        SetupAppFetch(linux.rootfs, allowed = agentFolders(agentUser))
+            .run(request, { watchdog.isStopped() }) { done, total ->
+                val bytesEvent = SetupProtocol.Event.Bytes(done, total)
+                watchdog.silence.recordEvent(bytesEvent)
+                event(component, bytesEvent)
+            }
+        watchdog.silence.touch()
     }
 
     /**
      * The script's `tar` crashed and it asked us to unpack instead (issue
      * #117). The script checked the archive's checksum before this point.
      */
-    private fun appUnpack(request: SetupProtocol.Event.Unpack, agentUser: Boolean, silence: SetupStepSilence) {
-        silence.touch()
+    private fun appUnpack(request: SetupProtocol.Event.Unpack, agentUser: Boolean, watchdog: SetupSilenceWatchdog) {
+        watchdog.silence.touch()
         logLine("==> The app is unpacking this itself")
-        SetupAppUnpack(linux.rootfs, agentFolders(agentUser)).run(request) { cancelled }
-        silence.touch()
+        SetupAppUnpack(linux.rootfs, agentFolders(agentUser), onProgress = { watchdog.silence.touch() })
+            .run(request) { watchdog.isStopped() }
+        watchdog.silence.touch()
     }
 
     /** A step running as the agent user may only have the app write where agents install. */
@@ -889,7 +850,6 @@ class SetupRunner private constructor(private val context: Context) {
         private const val OWNERSHIP_PAUSE_MS = 3000L
         private const val WRITE_INTERVAL_MS = 250L
         private const val NOTIFY_INTERVAL_MS = 1000L
-        private const val SILENCE_POLL_MS = 1_000L
 
         @Volatile private var instance: SetupRunner? = null
 
