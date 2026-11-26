@@ -156,3 +156,5 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10141 | build | 2026-11-24 | 3.0.2 release candidate build 3 |
 | 10142 | build | 2026-11-24 | 3.0.2 release candidate build 4 |
 | 10150 | release | 2026-11-24 | native release 3.0.2+10150 (public lineage) |
+| 10160 | seen | 2026-11-26 | installed on a device when 10161 was taken |
+| 10161 | build | 2026-11-26 | owner test build of native/glass-apple (Apple Liquid Glass) |
