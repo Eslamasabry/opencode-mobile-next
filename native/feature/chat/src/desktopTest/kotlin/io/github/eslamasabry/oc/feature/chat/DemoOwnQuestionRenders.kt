@@ -15,7 +15,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.AppDispatchers
@@ -175,10 +176,10 @@ class DemoOwnQuestionRenders {
                 mainClock.advanceTimeBy(SETTLE_MS)
                 waitForIdle()
                 assertOutcome(world, beforeFix)
-                onNodeWithText(question, substring = true).assertIsDisplayed()
+                onAllNodesWithText(question, substring = true).onFirst().assertIsDisplayed()
                 if (!beforeFix) {
                     val expected = if (locale == "ar") AR_OWN_SNIPPET else EN_OWN_SNIPPET
-                    onNodeWithText(expected, substring = true).assertIsDisplayed()
+                    onAllNodesWithText(expected, substring = true).onFirst().assertIsDisplayed()
                 }
                 val image = onRoot().captureToImage().toAwtImage()
                 val file = File(out, "$name.png")
@@ -283,8 +284,8 @@ class DemoOwnQuestionRenders {
                         demoMode = true,
                         extraActions =
                             listOf(
-                                KitLineAction(stringResource(Res.string.stateDemoReset)) { Unit },
-                                KitLineAction(stringResource(Res.string.stateDemoLeave)) { Unit },
+                                KitLineAction(stringResource(Res.string.stateDemoReset), onClick = { Unit }),
+                                KitLineAction(stringResource(Res.string.stateDemoLeave), onClick = { Unit }),
                             ),
                     )
                 }
