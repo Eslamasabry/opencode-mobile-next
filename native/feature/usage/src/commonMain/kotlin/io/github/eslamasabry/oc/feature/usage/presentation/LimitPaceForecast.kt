@@ -217,17 +217,19 @@ public object LimitPaceMath {
     }
 
     private fun bestRoomWindow(account: LimitAccountUi): Pair<Double, Int>? {
+        val windows = account.groups.flatMap { it.windows }
+        if (windows.any { it.forecast is PaceForecast.Out || it.forecast is PaceForecast.RunsOut }) {
+            return null
+        }
         val lasting =
-            account.groups
-                .flatMap { it.windows }
-                .mapNotNull { w ->
-                    val lasts = w.forecast as? PaceForecast.Lasts
-                    if (lasts != null && lasts.atReset >= ROOM_THRESHOLD) {
-                        Triple(!lasts.frame.shortWindow, lasts.atReset, w.leftPercent)
-                    } else {
-                        null
-                    }
+            windows.mapNotNull { w ->
+                val lasts = w.forecast as? PaceForecast.Lasts
+                if (lasts != null && lasts.atReset >= ROOM_THRESHOLD) {
+                    Triple(!lasts.frame.shortWindow, lasts.atReset, w.leftPercent)
+                } else {
+                    null
                 }
+            }
         val preferred = lasting.filter { it.first }.ifEmpty { lasting }
         val top = preferred.maxByOrNull { it.second }
         return top?.let { it.second to it.third }

@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -163,9 +164,10 @@ public fun KitPaceBendChart(
                 today = baseCaption.copy(color = colors.text1, fontWeight = FontWeight.SemiBold),
                 attention = baseCaption.copy(color = colors.attention, fontWeight = FontWeight.SemiBold),
             )
-        val ctx = ChartDrawContext(geom, colors, measurer, styles)
+        val baseCtx = ChartDrawContext(geom, colors, measurer, styles)
+        val ctx = baseCtx.withGuides(PaceBendPainter.measureGuides(this, baseCtx, data, safeElapsed, safeLeft))
         PaceBendPainter.drawFrameAndAxis(this, ctx, data.axisMarks, data.labels.reset)
-        PaceBendPainter.drawEvenPace(this, ctx, data)
+        PaceBendPainter.drawEvenPace(this, ctx)
         PaceBendPainter.drawForecastAndDot(this, ctx, safeElapsed, safeLeft, data.state)
     }
 }
@@ -199,9 +201,59 @@ private class ChartDrawContext(
     val colors: KitColors,
     val measurer: TextMeasurer,
     val styles: ChartStyles,
+    val guides: MeasuredGuideLabels = MeasuredGuideLabels(null, null, PaceGuidePlacement(null, null)),
+) {
+    fun withGuides(guides: MeasuredGuideLabels): ChartDrawContext =
+        ChartDrawContext(geom, colors, measurer, styles, guides)
+}
+
+private class MeasuredGuideLabels(
+    val landingLayout: TextLayoutResult?,
+    val evenPaceLayout: TextLayoutResult?,
+    val placement: PaceGuidePlacement,
 )
 
 private object PaceBendPainter {
+    fun measureGuides(
+        scope: DrawScope,
+        ctx: ChartDrawContext,
+        data: KitPaceBendData,
+        elapsed: Float,
+        left: Float,
+    ): MeasuredGuideLabels =
+        with(scope) {
+            val lasts = data.state as? KitPaceBendState.Lasts
+            val landingLayout =
+                lasts?.landingLabel?.takeIf { it.isNotBlank() }?.let {
+                    ctx.measurer.measure(it, ctx.styles.secondary)
+                }
+            val evenText = data.labels.evenPace
+            val showEven = !data.short && data.state !is KitPaceBendState.Out && evenText.isNotBlank()
+            val evenLayout = if (showEven) ctx.measurer.measure(evenText, ctx.styles.regular) else null
+            val usedAbove = data.state is KitPaceBendState.Lasts || data.state is KitPaceBendState.TooLittle
+            val geom = ctx.geom
+            val placement =
+                PaceBendRules.placeGuideLabels(
+                    PaceGuideLayoutInput(
+                        x0 = geom.x0,
+                        x1 = geom.x1,
+                        top = geom.top,
+                        plotHeight = geom.plotH,
+                        rtl = geom.rtl,
+                        elapsed = elapsed,
+                        left = left,
+                        atReset = lasts?.atReset?.coerceIn(0f, 1f),
+                        usedAbove = usedAbove,
+                        landingSize =
+                            landingLayout?.let { PaceLabelSize(it.size.width.toFloat(), it.size.height.toFloat()) },
+                        evenPaceSize =
+                            evenLayout?.let { PaceLabelSize(it.size.width.toFloat(), it.size.height.toFloat()) },
+                        pad = LANDING_LABEL_PAD_DP.dp.toPx(),
+                        minGap = LABEL_GAP_DP.dp.toPx(),
+                    ),
+                )
+            MeasuredGuideLabels(landingLayout, evenLayout, placement)
+        }
     fun drawFrameAndAxis(
         scope: DrawScope,
         ctx: ChartDrawContext,
@@ -244,7 +296,7 @@ private object PaceBendPainter {
         }
     }
 
-    fun drawEvenPace(scope: DrawScope, ctx: ChartDrawContext, data: KitPaceBendData) = with(scope) {
+    fun drawEvenPace(scope: DrawScope, ctx: ChartDrawContext) = with(scope) {
         val geom = ctx.geom
         val dash = DASH_LEN_DP.dp.toPx()
         drawLine(
@@ -254,19 +306,10 @@ private object PaceBendPainter {
             strokeWidth = EVEN_STROKE_DP.dp.toPx(),
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash)),
         )
-        val labelText = data.labels.evenPace
-        if (!data.short && data.state !is KitPaceBendState.Out && labelText.isNotBlank()) {
-            val usedAbove = data.state is KitPaceBendState.Lasts || data.state is KitPaceBendState.TooLittle
-            val frac = if (usedAbove) EVEN_LABEL_BELOW_F else EVEN_LABEL_ABOVE_F
-            val layout = ctx.measurer.measure(labelText, ctx.styles.regular)
-            val ex = geom.xOf(frac)
-            val ey = geom.yOf(1f - frac)
-            val rawX = if (usedAbove xor geom.rtl) ex - layout.size.width else ex
-            val x = rawX.coerceIn(geom.x0, (geom.x1 - layout.size.width).coerceAtLeast(geom.x0))
-            val pad = EVEN_LABEL_PAD_DP.dp.toPx()
-            val rawY = if (usedAbove) ey + pad else ey - layout.size.height - pad
-            val y = rawY.coerceIn(geom.top, (geom.base - layout.size.height).coerceAtLeast(geom.top))
-            drawText(layout, topLeft = Offset(x, y))
+        val layout = ctx.guides.evenPaceLayout
+        val rect = ctx.guides.placement.evenPace
+        if (layout != null && rect != null) {
+            drawText(layout, topLeft = Offset(rect.left, rect.top))
         }
     }
 
@@ -302,19 +345,10 @@ private object PaceBendPainter {
         val landPt = Offset(geom.xReset, geom.yOf(state.atReset.coerceIn(0f, 1f)))
         drawDotted(this, nowPt, landPt, color)
         drawLanding(this, landPt, ctx.colors.ground, color)
-        if (state.landingLabel.isNotBlank()) {
-            val layout = ctx.measurer.measure(state.landingLabel, ctx.styles.secondary)
-            val pad = LANDING_LABEL_PAD_DP.dp.toPx()
-            val x =
-                if (geom.rtl) {
-                    (landPt.x + pad).coerceAtMost((geom.x1 - layout.size.width).coerceAtLeast(geom.x0))
-                } else {
-                    (landPt.x - pad - layout.size.width).coerceAtLeast(geom.x0)
-                }
-            val below = nowPt.y <= landPt.y + 1f
-            val rawY = if (below) landPt.y + pad else landPt.y - layout.size.height - pad
-            val y = rawY.coerceIn(geom.top, (geom.base - layout.size.height).coerceAtLeast(geom.top))
-            drawText(layout, topLeft = Offset(x, y))
+        val layout = ctx.guides.landingLayout
+        val rect = ctx.guides.placement.landing
+        if (layout != null && rect != null) {
+            drawText(layout, topLeft = Offset(rect.left, rect.top))
         }
     }
 
@@ -423,9 +457,11 @@ public data class PaceLabelRect(
     public val centerX: Float get() = (left + right) / 2f
 
     /** True when this box overlaps [other] (within [gap] on both axes). */
-    public fun overlaps(other: PaceLabelRect, gap: Float = 0f): Boolean =
-        left < other.right + gap && other.left < right + gap &&
-            top < other.bottom + gap && other.top < bottom + gap
+    public fun overlaps(other: PaceLabelRect, gap: Float = 0f): Boolean {
+        val horiz = left < other.right + gap && other.left < right + gap
+        val vert = top < other.bottom + gap && other.top < bottom + gap
+        return horiz && vert
+    }
 }
 
 /** Width and height of a measured guide label. */
@@ -473,10 +509,74 @@ public object PaceBendRules {
 
     /**
      * Places the optional landing and even-pace guide labels inside `[top, top + plotHeight]`.
-     * The landing label has priority; the even-pace label is omitted when it cannot fit cleanly.
+     * The landing label has priority and sits on the side of the landing point away from the
+     * even-pace diagonal; the even-pace label is kept only when it fits without colliding.
      */
-    public fun placeGuideLabels(input: PaceGuideLayoutInput): PaceGuidePlacement =
-        PaceGuidePlacement(landing = null, evenPace = null)
+    public fun placeGuideLabels(input: PaceGuideLayoutInput): PaceGuidePlacement {
+        val base = input.top + input.plotHeight
+        val landing = placeLandingLabel(input, base)
+        val evenPace = placeEvenPaceLabel(input, base, landing)
+        return PaceGuidePlacement(landing = landing, evenPace = evenPace)
+    }
+
+    private fun placeLandingLabel(input: PaceGuideLayoutInput, base: Float): PaceLabelRect? {
+        val atReset = input.atReset
+        val size = input.landingSize?.takeIf { it.width > 0f && it.height > 0f }
+        if (atReset == null || size == null) return null
+        val xReset = xForFraction(1f, input.x0, input.x1, input.rtl)
+        val maxLeft = (input.x1 - size.width).coerceAtLeast(input.x0)
+        val rawLeft = if (input.rtl) xReset + input.pad else xReset - input.pad - size.width
+        val left = rawLeft.coerceIn(input.x0, maxLeft)
+        val right = left + size.width
+        val landY = yForLeft(atReset, input.top, input.plotHeight)
+        val nowY = yForLeft(input.left, input.top, input.plotHeight)
+        val evenAtMid = evenPaceY((left + right) / 2f, input)
+        val elapsed = input.elapsed.coerceIn(0f, 1f)
+        val nearEdgeX = if (input.rtl) right else left
+        val nearFrac = fractionForX(nearEdgeX, input).coerceIn(elapsed, 1f)
+        val remain = 1f - elapsed
+        val t = if (remain > FRAC_EPSILON) ((nearFrac - elapsed) / remain).coerceIn(0f, 1f) else 1f
+        val forecastNearY = nowY + t * (landY - nowY)
+        val ceilingY = minOf(landY, forecastNearY, evenAtMid)
+        val maxTop = (base - size.height).coerceAtLeast(input.top)
+        val topY = (ceilingY - input.pad - size.height).coerceIn(input.top, maxTop)
+        return PaceLabelRect(left = left, top = topY, right = right, bottom = topY + size.height)
+    }
+
+    private fun placeEvenPaceLabel(
+        input: PaceGuideLayoutInput,
+        base: Float,
+        landing: PaceLabelRect?,
+    ): PaceLabelRect? {
+        val plotW = input.x1 - input.x0
+        val size =
+            input.evenPaceSize
+                ?.takeIf { it.width > 0f && it.height > 0f }
+                ?.takeIf { it.width <= plotW && it.height <= input.plotHeight }
+                ?: return null
+        val frac = if (input.usedAbove) EVEN_LABEL_BELOW_F else EVEN_LABEL_ABOVE_F
+        val ex = xForFraction(frac, input.x0, input.x1, input.rtl)
+        val ey = yForLeft(1f - frac, input.top, input.plotHeight)
+        val maxLeft = (input.x1 - size.width).coerceAtLeast(input.x0)
+        val rawLeft = if (input.usedAbove xor input.rtl) ex - size.width else ex
+        val left = rawLeft.coerceIn(input.x0, maxLeft)
+        val maxTop = (base - size.height).coerceAtLeast(input.top)
+        val rawTop = if (input.usedAbove) ey + input.pad else ey - size.height - input.pad
+        val topY = rawTop.coerceIn(input.top, maxTop)
+        val rect = PaceLabelRect(left = left, top = topY, right = left + size.width, bottom = topY + size.height)
+        val evenAtMid = evenPaceY(rect.centerX, input)
+        val clearsLine = if (input.usedAbove) rect.top > evenAtMid else rect.bottom < evenAtMid
+        val clearsLanding = landing == null || !rect.overlaps(landing, input.minGap)
+        return if (clearsLine && clearsLanding) rect else null
+    }
+
+    private fun fractionForX(x: Float, input: PaceGuideLayoutInput): Float {
+        val span = (input.x1 - input.x0).coerceAtLeast(1f)
+        return (if (input.rtl) (input.x1 - x) / span else (x - input.x0) / span).coerceIn(0f, 1f)
+    }
+
+    private fun evenPaceY(x: Float, input: PaceGuideLayoutInput): Float =
+        yForLeft(1f - fractionForX(x, input), input.top, input.plotHeight)
 
     /**
      * Places axis labels in priority order, clamping every label inside `[x0, x1]` and dropping any
@@ -522,7 +622,7 @@ private const val DASH_LEN_DP = 4f
 private const val EVEN_STROKE_DP = 1.5f
 private const val EVEN_LABEL_BELOW_F = 0.50f
 private const val EVEN_LABEL_ABOVE_F = 0.28f
-private const val EVEN_LABEL_PAD_DP = 8f
+private const val FRAC_EPSILON = 0.001f
 private const val FORECAST_STROKE_DP = 2.5f
 private const val DOT_ON_PX = 0.1f
 private const val DOT_GAP_DP = 6f
