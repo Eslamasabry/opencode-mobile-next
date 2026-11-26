@@ -38,6 +38,12 @@ class JourneyMilestonesTest {
     private fun Rig.milestones(): List<Pair<String, String>> =
         vendor.events.filter { it.first == "journey_milestone" }.map { it.second.getValue("step") to it.second.getValue("after_range") }
 
+    /** How the first message ended: the milestone events of that step, each without its `after_range`. */
+    private fun Rig.endings(): List<Map<String, String>> =
+        vendor.events
+            .filter { it.first == "journey_milestone" && it.second["step"] == "first_prompt_ended" }
+            .map { it.second - "after_range" }
+
     @Test
     fun `B-NEXT-001 the funnel is sent once per step, in the order it happens, with how long after the start`() = runTest {
         val r = rig()
@@ -82,7 +88,7 @@ class JourneyMilestonesTest {
         assertEquals(listOf("opened"), r.milestones().map { it.first })
         // A send that failed still counts as trying: the person reached the message box.
         r.service.track(ProductEvent.SendResult, mapOf("result" to "fail", "fail_kind" to "refused"))
-        assertEquals("first_prompt", r.milestones().last().first)
+        assertEquals(listOf("opened", "first_prompt", "first_prompt_ended"), r.milestones().map { it.first })
     }
 
     @Test
@@ -284,5 +290,88 @@ class JourneyMilestonesTest {
         )
         for (s in io.github.eslamasabry.oc.engine.analytics.product.ProductScreen.entries.filter { it != review })
             assertNull(io.github.eslamasabry.oc.engine.analytics.product.ProductFeature.openedBy(s), s.name)
+    }
+
+    // ---- how the first message ended ----
+
+    @Test
+    fun `B-NEXT-070 a first message that got a reply records the ending done`() = runTest {
+        val r = rig()
+        r.service.track(ProductEvent.SendResult, mapOf("result" to "ok"))
+        r.service.track(ProductEvent.FirstReply, mapOf("server_kind" to "phone", "first_reply_range" to "2-10s"))
+        r.service.track(ProductEvent.ChatTurn, mapOf("outcome" to "done", "server_kind" to "phone"))
+        assertEquals(listOf(mapOf("step" to "first_prompt_ended", "outcome" to "done")), r.endings())
+        // The ending comes after the reply it belongs to, and the stage stays the furthest step.
+        assertEquals(
+            listOf("first_prompt", "first_reply", "first_prompt_ended"),
+            r.milestones().takeLast(3).map { it.first },
+        )
+        assertEquals("first_reply", r.vendor.properties.last().getValue("journey_stage"))
+    }
+
+    @Test
+    fun `B-NEXT-071 a first message to a gone model records error and model_not_found`() = runTest {
+        val r = rig()
+        r.service.track(ProductEvent.SendResult, mapOf("result" to "ok"))
+        r.service.track(ProductEvent.ChatTurn, mapOf("outcome" to "error", "fail_kind" to "model_not_found"))
+        // The turn's kind words and nothing else: never what the model said.
+        val ending = mapOf("step" to "first_prompt_ended", "outcome" to "error", "fail_kind" to "model_not_found")
+        assertEquals(listOf(ending), r.endings())
+        assertEquals("first_prompt_ended", r.vendor.properties.last().getValue("journey_stage"))
+    }
+
+    @Test
+    fun `B-NEXT-072 a refused first send records send_failed with its kind`() = runTest {
+        val r = rig()
+        r.service.track(ProductEvent.SendResult, mapOf("result" to "fail", "fail_kind" to "model_error"))
+        val ending = mapOf("step" to "first_prompt_ended", "outcome" to "send_failed", "fail_kind" to "model_error")
+        assertEquals(listOf(ending), r.endings())
+        // A turn that follows a refused send is not the first message's ending.
+        r.service.track(ProductEvent.ChatTurn, mapOf("outcome" to "done", "server_kind" to "phone"))
+        assertEquals(listOf(ending), r.endings())
+    }
+
+    @Test
+    fun `B-NEXT-073 only the first message's ending is sent, once per install`() = runTest {
+        val r = rig()
+        val t = r.service
+        // A turn that ends before this install sent anything is not the first message's.
+        t.track(ProductEvent.ChatTurn, mapOf("outcome" to "done", "server_kind" to "phone"))
+        assertEquals(emptyList(), r.endings())
+        t.track(ProductEvent.SendResult, mapOf("result" to "ok"))
+        t.track(ProductEvent.ChatTurn, mapOf("outcome" to "stopped_by_user", "server_kind" to "phone"))
+        val one = listOf(mapOf("step" to "first_prompt_ended", "outcome" to "stopped_by_user"))
+        assertEquals(one, r.endings())
+        // A second message's ending is not the first's.
+        t.track(ProductEvent.SendResult, mapOf("result" to "ok"))
+        t.track(ProductEvent.ChatTurn, mapOf("outcome" to "no_output", "server_kind" to "phone"))
+        assertEquals(one, r.endings())
+        // An upgrade whose saved funnel already holds its first send never sends an ending.
+        val upgraded = rig(memory = MemoryJourneyMemory("1000000;opened,first_prompt"))
+        upgraded.service.track(ProductEvent.ChatTurn, mapOf("outcome" to "done", "server_kind" to "phone"))
+        assertEquals(emptyList(), upgraded.endings())
+        // Usage off: nothing leaves the phone.
+        val off = rig(usage = false)
+        off.service.track(ProductEvent.SendResult, mapOf("result" to "ok"))
+        off.service.track(ProductEvent.ChatTurn, mapOf("outcome" to "done", "server_kind" to "phone"))
+        assertEquals(emptyList(), off.endings())
+    }
+
+    @Test
+    fun `B-NEXT-074 the ending is kind words only`() = runTest {
+        val r = rig()
+        // A word that is not a kind rides on both events; it may not reach an ending.
+        val words = mapOf("prompt" to "my secret project")
+        r.service.track(ProductEvent.SendResult, mapOf("result" to "ok") + words)
+        r.service.track(ProductEvent.ChatTurn, mapOf("outcome" to "error", "fail_kind" to "model_not_found") + words)
+        val kindKeys = setOf("step", "after_range", "outcome", "fail_kind")
+        val sent = r.vendor.events.filter { it.first == "journey_milestone" }.map { it.second }
+        assertTrue(sent.isNotEmpty())
+        for (props in sent) assertTrue(props.keys.all { it in kindKeys }, props.keys.toString())
+        assertTrue(sent.none { it.values.contains("my secret project") })
+        // The schema is the last door: exactly these four names, and `outcome` is the turn's words plus send_failed.
+        val schema = productSchema.getValue("journey_milestone")
+        assertEquals(kindKeys, schema.keys)
+        assertEquals(HealthWords.turnOutcomes + "send_failed", schema.getValue("outcome"))
     }
 }

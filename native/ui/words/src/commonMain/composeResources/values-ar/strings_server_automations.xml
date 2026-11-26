@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverAutomationsSection">الأتمتة</string>
+    <string name="serverAutomationsLoadFailed">تعذّر تحميل عمليات الأتمتة من %1$s.</string>
+    <string name="serverAutomationsActionFailed">تعذّر تحديث عمليات الأتمتة على %1$s. حاول مرة أخرى.</string>
+    <string name="serverAutomationsNext">التالي: %1$s</string>
+    <string name="serverAutomationsOnEvent">تعمل عند حدوث حدث</string>
+    <string name="serverAutomationsStatusPaused">متوقفة مؤقتًا</string>
+    <string name="serverAutomationsStatusDone">مكتملة</string>
+    <string name="serverAutomationsStatusActive">نشطة</string>
+    <string name="serverAutomationsLastFired">عملت %1$s</string>
+    <string name="serverAutomationsLastLate">عملت متأخرة %1$s</string>
+    <string name="serverAutomationsLastSkipped">تم تخطيها %1$s</string>
+    <string name="serverAutomationsLastDisabled">أوقفها الخادم مؤقتًا %1$s</string>
+    <string name="serverAutomationsLastFailed">فشل آخر تشغيل %1$s</string>
+    <string name="serverAutomationsLastExpired">انتهت صلاحيتها %1$s</string>
+    <string name="serverAutomationsLastUnknown">عملت %1$s</string>
+    <string name="serverAutomationsNeverRan">لم تعمل بعد</string>
+    <string name="serverAutomationsPause">إيقاف %1$s مؤقتًا على %2$s</string>
+    <string name="serverAutomationsResume">استئناف %1$s على %2$s</string>
+    <string name="serverAutomationsDeleteFrom">حذف %1$s من %2$s</string>
+    <string name="serverAutomationsDeleteTitle">حذف %1$s من %2$s؟</string>
+    <string name="serverAutomationsDeleteBody">يزيل هذا الأتمتة من %1$s. تبقى الرسائل التي أرسلتها في محادثاتك.</string>
+    <string name="serverAutomationsStopAll">إيقاف كل عمليات الأتمتة مؤقتًا على %1$s</string>
+    <string name="serverAutomationsStopAllTitle">إيقاف كل عمليات الأتمتة مؤقتًا على %1$s؟</string>
+    <plurals name="serverAutomationsStopAllBody">
+        <item quantity="zero">يوقف هذا %1$s عملية أتمتة نشطة مؤقتًا على %2$s. يمكنك استئنافها لاحقًا.</item>
+        <item quantity="one">يوقف هذا عملية أتمتة نشطة واحدة (%1$s) مؤقتًا على %2$s. يمكنك استئنافها لاحقًا.</item>
+        <item quantity="two">يوقف هذا عمليتي أتمتة نشطتين (%1$s) مؤقتًا على %2$s. يمكنك استئنافهما لاحقًا.</item>
+        <item quantity="few">يوقف هذا %1$s عمليات أتمتة نشطة مؤقتًا على %2$s. يمكنك استئنافها لاحقًا.</item>
+        <item quantity="many">يوقف هذا %1$s عملية أتمتة نشطة مؤقتًا على %2$s. يمكنك استئنافها لاحقًا.</item>
+        <item quantity="other">يوقف هذا %1$s عملية أتمتة نشطة مؤقتًا على %2$s. يمكنك استئنافها لاحقًا.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedAll">
+        <item quantity="zero">تم إيقاف %1$s عملية أتمتة مؤقتًا على %2$s.</item>
+        <item quantity="one">تم إيقاف عملية أتمتة واحدة (%1$s) مؤقتًا على %2$s.</item>
+        <item quantity="two">تم إيقاف عمليتي أتمتة (%1$s) مؤقتًا على %2$s.</item>
+        <item quantity="few">تم إيقاف %1$s عمليات أتمتة مؤقتًا على %2$s.</item>
+        <item quantity="many">تم إيقاف %1$s عملية أتمتة مؤقتًا على %2$s.</item>
+        <item quantity="other">تم إيقاف %1$s عملية أتمتة مؤقتًا على %2$s.</item>
+    </plurals>
+    <plurals name="serverAutomationsStoppedPartial">
+        <item quantity="zero">تم إيقاف %1$s من أصل %2$s عملية أتمتة نشطة مؤقتًا على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="one">تم إيقاف %1$s من أصل %2$s عملية أتمتة نشطة مؤقتًا على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="two">تم إيقاف %1$s من أصل %2$s عملية أتمتة نشطة مؤقتًا على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="few">تم إيقاف %1$s من أصل %2$s عمليات أتمتة نشطة مؤقتًا على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="many">تم إيقاف %1$s من أصل %2$s عملية أتمتة نشطة مؤقتًا على %3$s. حاول مرة أخرى للبقية.</item>
+        <item quantity="other">تم إيقاف %1$s من أصل %2$s عملية أتمتة نشطة مؤقتًا على %3$s. حاول مرة أخرى للبقية.</item>
+    </plurals>
+    <string name="serverAutomationsDetailSchedule">الجدول</string>
+    <string name="serverAutomationsDetailAction">الإجراء</string>
+    <string name="serverAutomationsDetailLastRun">آخر تشغيل</string>
+    <string name="serverAutomationsDetailRuns">عدد التشغيلات</string>
+    <string name="serverAutomationsDetailOutput">آخر ناتج</string>
+    <string name="serverAutomationsTriggerEvery">كل %1$s</string>
+    <string name="serverAutomationsTriggerOnce">مرة واحدة، %1$s</string>
+    <string name="serverAutomationsTriggerEvent">عندما يرسل %1$s الحدث %2$s</string>
+    <string name="serverAutomationsTriggerEventAny">عندما يُشغّل %1$s الحدث</string>
+    <string name="serverAutomationsActionPrompt">رسالة</string>
+    <string name="serverAutomationsActionPromptAgent">رسالة (%1$s)</string>
+    <string name="serverAutomationsActionShell">أمر طرفية</string>
+    <string name="serverAutomationsActionCode">برنامج Code Mode</string>
+    <string name="serverAutomationsToday">اليوم</string>
+    <string name="serverAutomationsTomorrow">غدًا</string>
+    <string name="serverAutomationsYesterday">أمس</string>
+    <string name="chatAutomationOrigin">من أتمتة · %1$s</string>
+    <string name="chatAutomationOriginRun">من أتمتة · %1$s · التشغيل %2$s</string>
+    <string name="serverAutomationsStatusUnknown">الحالة غير معروفة</string>
+    <string name="serverAutomationsDetailExpression">تعبير الجدول</string>
+    <plurals name="serverAutomationsEverySeconds">
+        <item quantity="zero">كل %1$s ثانية</item>
+        <item quantity="one">كل ثانية</item>
+        <item quantity="two">كل ثانيتين</item>
+        <item quantity="few">كل %1$s ثوانٍ</item>
+        <item quantity="many">كل %1$s ثانية</item>
+        <item quantity="other">كل %1$s ثانية</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryMinutes">
+        <item quantity="zero">كل %1$s دقيقة</item>
+        <item quantity="one">كل دقيقة</item>
+        <item quantity="two">كل دقيقتين</item>
+        <item quantity="few">كل %1$s دقائق</item>
+        <item quantity="many">كل %1$s دقيقة</item>
+        <item quantity="other">كل %1$s دقيقة</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryHours">
+        <item quantity="zero">كل %1$s ساعة</item>
+        <item quantity="one">كل ساعة</item>
+        <item quantity="two">كل ساعتين</item>
+        <item quantity="few">كل %1$s ساعات</item>
+        <item quantity="many">كل %1$s ساعة</item>
+        <item quantity="other">كل %1$s ساعة</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryDays">
+        <item quantity="zero">كل %1$s يوم</item>
+        <item quantity="one">كل يوم</item>
+        <item quantity="two">كل يومين</item>
+        <item quantity="few">كل %1$s أيام</item>
+        <item quantity="many">كل %1$s يومًا</item>
+        <item quantity="other">كل %1$s يوم</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryWeeks">
+        <item quantity="zero">كل %1$s أسبوع</item>
+        <item quantity="one">كل أسبوع</item>
+        <item quantity="two">كل أسبوعين</item>
+        <item quantity="few">كل %1$s أسابيع</item>
+        <item quantity="many">كل %1$s أسبوعًا</item>
+        <item quantity="other">كل %1$s أسبوع</item>
+    </plurals>
+    <plurals name="serverAutomationsInSeconds">
+        <item quantity="zero">خلال %1$s ثانية</item>
+        <item quantity="one">خلال ثانية واحدة</item>
+        <item quantity="two">خلال ثانيتين</item>
+        <item quantity="few">خلال %1$s ثوانٍ</item>
+        <item quantity="many">خلال %1$s ثانية</item>
+        <item quantity="other">خلال %1$s ثانية</item>
+    </plurals>
+    <plurals name="serverAutomationsInMinutes">
+        <item quantity="zero">خلال %1$s دقيقة</item>
+        <item quantity="one">خلال دقيقة واحدة</item>
+        <item quantity="two">خلال دقيقتين</item>
+        <item quantity="few">خلال %1$s دقائق</item>
+        <item quantity="many">خلال %1$s دقيقة</item>
+        <item quantity="other">خلال %1$s دقيقة</item>
+    </plurals>
+    <plurals name="serverAutomationsInHours">
+        <item quantity="zero">خلال %1$s ساعة</item>
+        <item quantity="one">خلال ساعة واحدة</item>
+        <item quantity="two">خلال ساعتين</item>
+        <item quantity="few">خلال %1$s ساعات</item>
+        <item quantity="many">خلال %1$s ساعة</item>
+        <item quantity="other">خلال %1$s ساعة</item>
+    </plurals>
+    <plurals name="serverAutomationsInDays">
+        <item quantity="zero">خلال %1$s يوم</item>
+        <item quantity="one">خلال يوم واحد</item>
+        <item quantity="two">خلال يومين</item>
+        <item quantity="few">خلال %1$s أيام</item>
+        <item quantity="many">خلال %1$s يومًا</item>
+        <item quantity="other">خلال %1$s يوم</item>
+    </plurals>
+    <string name="serverAutomationsCronHourlyAt">كل ساعة عند الدقيقة :%1$s</string>
+    <string name="serverAutomationsCronDaily">كل يوم الساعة %1$s</string>
+    <string name="serverAutomationsCronWeekdays">أيام العمل الساعة %1$s</string>
+    <string name="serverAutomationsCronWeekends">عطلة نهاية الأسبوع الساعة %1$s</string>
+    <string name="serverAutomationsCronWeekly">كل %1$s الساعة %2$s</string>
+    <string name="serverAutomationsCronMonthly">اليوم %1$s من كل شهر الساعة %2$s</string>
+    <string name="serverAutomationsCronCustom">جدول مخصّص</string>
+    <string name="serverAutomationsWithZone">%1$s (%2$s)</string>
+    <string name="serverAutomationsSummaryPair">%1$s · %2$s</string>
+    <string name="serverAutomationsDayTime">%1$s %2$s</string>
+</resources>

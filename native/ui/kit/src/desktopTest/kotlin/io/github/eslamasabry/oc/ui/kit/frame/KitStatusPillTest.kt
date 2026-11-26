@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -158,5 +159,18 @@ class KitStatusPillTest {
             }
         }
         onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNode()
+    }
+
+    @Test
+    fun `B-573 the state word sits one space after the server name`() = runComposeUiTest {
+        setContent {
+            Themed(rtl = false, fontScale = 1f) {
+                KitStatusPill("Laptop", KitConnectionTone.Problem, "Laptop, Not answering", {}, word = "Not answering")
+            }
+        }
+        val name = onNodeWithText("Laptop", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val word = onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val gap = word.left - name.right
+        assertTrue(gap < 1.dp, "expected word right after name (< 1 dp), was $gap")
     }
 }

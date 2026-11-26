@@ -608,7 +608,15 @@ internal class TranscriptModel(
                 when (p.type) {
                     PartType.Text ->
                         if (m.info.role == Role.User) {
-                            val row = promptRowOf(pe, m.info.id, turnId, m.info.createdMs)
+                            val row =
+                                promptRowOf(
+                                    pe,
+                                    m.info.id,
+                                    turnId,
+                                    m.info.createdMs,
+                                    m.info.automationName,
+                                    m.info.automationRun,
+                                )
                             rows +=
                                 if (filesShown) row
                                 else {
@@ -664,6 +672,8 @@ internal class TranscriptModel(
                             "",
                             m.info.createdMs,
                             files = sentFiles,
+                            automationName = m.info.automationName,
+                            automationRun = m.info.automationRun,
                         )
                     )
         }
@@ -743,18 +753,19 @@ internal class TranscriptModel(
         return out ?: emptyList()
     }
 
+    @Suppress("LongParameterList")
     private fun promptRowOf(
         pe: PartEntry,
         messageId: String,
         turnId: String,
         createdMs: Long?,
+        automationName: String?,
+        automationRun: Int?,
     ): PromptRow {
         val cached = pe.promptRow
         if (
             cached != null &&
-                pe.promptVersion == pe.version &&
-                cached.turnId == turnId &&
-                cached.createdMs == createdMs
+                matchesCachedPrompt(cached, pe, turnId, createdMs, automationName, automationRun)
         )
             return cached
         val row =
@@ -764,11 +775,31 @@ internal class TranscriptModel(
                     turnId,
                     pe.blocks?.text?.toString() ?: pe.part.text,
                     createdMs,
+                    automationName = automationName,
+                    automationRun = automationRun,
                 )
             )
         pe.promptRow = row
         pe.promptVersion = pe.version
         return row
+    }
+
+    @Suppress("LongParameterList")
+    private fun matchesCachedPrompt(
+        cached: PromptRow,
+        pe: PartEntry,
+        turnId: String,
+        createdMs: Long?,
+        automationName: String?,
+        automationRun: Int?,
+    ): Boolean {
+        val sameBase =
+            pe.promptVersion == pe.version &&
+                cached.turnId == turnId &&
+                cached.createdMs == createdMs
+        val sameOrigin =
+            cached.automationName == automationName && cached.automationRun == automationRun
+        return sameBase && sameOrigin
     }
 
     /** The reasoning part's whole thought text, copied once per part version and counted once. */

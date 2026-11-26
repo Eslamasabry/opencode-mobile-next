@@ -191,6 +191,10 @@ else
   say "              OC_SMOKE_SERIAL=<adb serial> native/tool/qa/release_smoke.sh --new-apk <switch arm64-v8a APK> [--previous-apk <last release APK>]"
   gate_fail=true
 fi
+# B-604: report first-run docs pictures status; informational only, never refuses the release.
+docs_report="$(python3 -I "$NATIVE/tool/release/docs_pictures.py" "$ROOT" "$NAME" 2>&1)" ||
+  docs_report="cannot read docs/native/qa/s31-app/PICTURES.tsv: $docs_report"
+while IFS= read -r docs_line; do say "  docs pics   $docs_line"; done <<<"$docs_report"
 GATE_MSG="a release needs a passing CI verdict and a passing device smoke for the commit (see above); nothing was committed, tagged or pushed."
 # --go stops here. A dry run goes on to build, so the APK exists to run the smoke on, and refuses at its end.
 if $GO && $gate_fail; then fail "$GATE_MSG"; fi
@@ -299,6 +303,7 @@ GO checklist for $TAG ($LINEAGE lineage) — every line is a person's check, in 
   [ ] run the native-release workflow on $TAG (Actions › Native release › Run workflow); it makes a DRAFT release
   [ ] the draft holds the three APKs and SHA256SUMS, identical to the ones built here (compare SHA256SUMS)
   [ ] device smoke PASS for this commit (checked above; native/tool/qa/release_smoke.sh on the APK built here)
+  [ ] docs first-run pictures: no STALE line under "docs pics" above (redraw: docs/native/release.md step 1)
   [ ] publish the draft by hand; never mark it latest until the owner says GO
 EOF
 if $gate_fail; then fail "dry run built and gated the tree, but $GATE_MSG"; fi

@@ -103,4 +103,8 @@
     <string name="agentErrorServerDiskFullHintPhone">أخلِ بعض المساحة على هذا الهاتف ثم حاول مرة أخرى.</string>
     <string name="chatSendPhoneHelperNoAnswer">لم يردّ الوكلاء على هذا الهاتف. قد يكونون ما زالوا يبدؤون؛ امنحهم لحظة ثم حاول مرة أخرى.</string>
     <string name="chatSendFailureSignedInPast">احتاج %1$s إلى تسجيل دخولك مرة أخرى</string>
+    <string name="agentErrorFreeDailyLimit">نفدت الرسائل المجانية لهذا اليوم.</string>
+    <string name="agentErrorFreeDailyLimitHint">تعود غدًا. للمتابعة الآن، اربط مزوّدك الخاص.</string>
+    <string name="agentErrorModelCountryRefused">%1$s غير متاح في بلدك.</string>
+    <string name="agentErrorModelCountryRefusedHint">اختر نموذجًا آخر للمتابعة.</string>
 </resources>

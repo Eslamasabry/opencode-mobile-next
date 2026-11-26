@@ -206,19 +206,32 @@ class PartADesktopTest {
     }
 
     @Test
+    // The owner's fill rule (2026-11-21, big-screen shared frame): from medium up a Reading or List body fills its
+    // pane up to the 960 dp cap; once the pane is wider than the cap the body is centred with two EQUAL margins;
+    // compact stays full width.
     fun `B-KIT-029 reading and list widths centre the body from medium up and compact is full`() = runComposeUiTest {
         var width by mutableStateOf(KitScreenWidth.Reading)
         var window by mutableStateOf(1280)
         setContent { Themed { InWindow(window, 800) { ScreenScene(w, width = width) } } }
-        assertEquals(720.dp, onNodeWithTag("scene-body").getBoundsInRoot().width)
-        assertEquals(280.dp, inWindow("scene-body").left)
+        fun equalMargins() {
+            val body = inWindow("scene-body")
+            assertEquals(body.left, window.dp - body.right, "the margins either side of the body are equal")
+        }
+        assertEquals(960.dp, onNodeWithTag("scene-body").getBoundsInRoot().width)
+        equalMargins()
         width = KitScreenWidth.List
         waitForIdle()
         assertEquals(960.dp, onNodeWithTag("scene-body").getBoundsInRoot().width)
+        equalMargins()
         width = KitScreenWidth.Full
         waitForIdle()
         assertEquals(1280.dp, onNodeWithTag("scene-body").getBoundsInRoot().width)
         width = KitScreenWidth.Reading
+        window = 800
+        waitForIdle()
+        // Medium, under the cap: the body fills the pane (wider than the old 720 column), margins equal.
+        assertTrue(onNodeWithTag("scene-body").getBoundsInRoot().width > 720.dp)
+        equalMargins()
         window = 412
         waitForIdle()
         assertEquals(412.dp, onNodeWithTag("scene-body").getBoundsInRoot().width)

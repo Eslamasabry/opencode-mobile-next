@@ -81,6 +81,19 @@ public object ErrorRecovery {
                 )
         }
 
+    private fun blockFixes(
+        block: ReplyBlock?,
+        cause: AgentErrorCause?,
+        model: List<ErrorFix>,
+    ): List<ErrorFix>? =
+        when {
+            block == ReplyBlock.FreeDailyLimit -> listOf(ErrorFix.ConnectProvider)
+            block == ReplyBlock.Limit && cause == AgentErrorCause.UsageLimit ->
+                listOf(ErrorFix.ChooseModel)
+            block == ReplyBlock.CountryRefusal -> model
+            else -> null
+        }
+
     /** The fixes for a failed reply, most useful first. */
     public fun fixes(
         typed: MessageErrorKind?,
@@ -93,19 +106,20 @@ public object ErrorRecovery {
             if (hasSuggestion) listOf(ErrorFix.UseModel, ErrorFix.ChooseModel)
             else listOf(ErrorFix.ChooseModel)
         val cause = AgentErrorText.classify(reason.orEmpty())
-        return when {
-            typed == MessageErrorKind.ModelNotFound -> model
-            typed == MessageErrorKind.ContextOverflow ->
-                if (canCompact) listOf(ErrorFix.Compact) else emptyList()
-            typed == MessageErrorKind.ProviderAuth ->
-                listOf(ErrorFix.OpenProviders, ErrorFix.ChooseModel)
-            cause == AgentErrorCause.FreeTierLimit ->
-                listOfNotNull(ErrorFix.Compact.takeIf { canCompact }, ErrorFix.ChooseModel)
-            reply == ReplyFailureKind.SignIn -> listOf(ErrorFix.OpenProviders, ErrorFix.ChooseModel)
-            reply == ReplyFailureKind.NoCredit -> listOf(ErrorFix.OpenAccount, ErrorFix.ChooseModel)
-            reply == ReplyFailureKind.Model -> model
-            reply == ReplyFailureKind.Busy -> listOf(ErrorFix.ChooseModel)
-            else -> emptyList()
-        }
+        return blockFixes(ReplyBlock.of(reason), cause, model)
+            ?: when {
+                typed == MessageErrorKind.ModelNotFound -> model
+                typed == MessageErrorKind.ContextOverflow ->
+                    if (canCompact) listOf(ErrorFix.Compact) else emptyList()
+                typed == MessageErrorKind.ProviderAuth ->
+                    listOf(ErrorFix.OpenProviders, ErrorFix.ChooseModel)
+                cause == AgentErrorCause.FreeTierLimit ->
+                    listOfNotNull(ErrorFix.Compact.takeIf { canCompact }, ErrorFix.ChooseModel)
+                reply == ReplyFailureKind.SignIn -> listOf(ErrorFix.OpenProviders, ErrorFix.ChooseModel)
+                reply == ReplyFailureKind.NoCredit -> listOf(ErrorFix.OpenAccount, ErrorFix.ChooseModel)
+                reply == ReplyFailureKind.Model -> model
+                reply == ReplyFailureKind.Busy -> listOf(ErrorFix.ChooseModel)
+                else -> emptyList()
+            }
     }
 }

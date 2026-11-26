@@ -444,7 +444,8 @@ public interface ServerOperationsGateway :
     CatalogGateway,
     McpGateway,
     IntegrationGateway,
-    RequestGateway {
+    RequestGateway,
+    ServerAutomationGateway {
     /** Follows the live gateway's location (Dart `setLocation`). */
     public fun setLocation(location: ServerLocation) {}
 }

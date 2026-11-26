@@ -53,7 +53,14 @@ class ComposerChipsFitTest {
                                     running = false,
                                     stacked = stacked,
                                     hasLeading = true,
-                                    field = { KitText("Ask", role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Frame) },
+                                    field = {
+                                        KitText(
+                                            if (rtl) "اسأل" else "Ask",
+                                            role = TypeRole.Body,
+                                            tone = TextTone.Tertiary,
+                                            kind = KitTextKind.Frame,
+                                        )
+                                    },
                                     leading = { KitComposerAdd("Tools", onClick = {}, open = false) },
                                     chips = {
                                         KitComposerChip(label = "Auto-approve on", onClick = {}, icon = KitIcons.shield, opensPicker = false, semanticsLabel = "Approval", collapsible = true)

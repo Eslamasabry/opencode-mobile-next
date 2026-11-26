@@ -114,4 +114,5 @@
     <string name="editor40SaveChanges">保存更改</string>
     <string name="editor40Stale">这个已保存的服务器或其登录信息已变更。请关闭此页面并重新打开该服务器，然后再试。</string>
     <string name="editor40Deleted">此服务器已被移除。请关闭此页面，回到已保存的服务器列表。</string>
+    <string name="serversEditNamed">编辑 %1$s</string>
 </resources>

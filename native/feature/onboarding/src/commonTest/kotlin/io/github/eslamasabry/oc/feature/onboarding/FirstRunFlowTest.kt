@@ -123,4 +123,32 @@ class FirstRunFlowTest {
         WelcomeViewModel(nav).openSettings()
         assertEquals(SettingsRoute.Home, nav.top.value)
     }
+
+    @Test
+    fun `B-619 a language change that brings the shell back on Conversations alone returns to the welcome`() =
+        runTest {
+            val nav = StackNavigator()
+            val flow = FirstRunFlow(FirstRun(Prefs()), nav)
+            flow.start(active = null, saved = emptySet())
+            nav.replaceRoot(ChatsRoute.Home)
+            flow.resume(nav.top.value, null, emptySet())
+            assertEquals(listOf<AppRoute>(OnboardingRoute.Welcome), nav.stack)
+        }
+
+    @Test
+    fun `B-619 Settings opened over the welcome stays open after a language change`() {
+        val nav = StackNavigator(OnboardingRoute.Welcome)
+        val flow = FirstRunFlow(FirstRun(Prefs()), nav)
+        nav.open(SettingsRoute.Home)
+        flow.resume(nav.top.value, null, emptySet())
+        assertEquals(listOf<AppRoute>(OnboardingRoute.Welcome, SettingsRoute.Home), nav.stack)
+    }
+
+    @Test
+    fun `B-619 with a saved server Conversations stays`() {
+        val nav = StackNavigator()
+        val flow = FirstRunFlow(FirstRun(Prefs()), nav)
+        flow.resume(nav.top.value, p1, setOf(p1))
+        assertEquals(listOf<AppRoute>(ChatsRoute.Home), nav.stack)
+    }
 }

@@ -10,6 +10,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.width
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.*
 import io.github.eslamasabry.oc.feature.phonesetup.ui.JourneyProgressMemory
@@ -209,12 +210,12 @@ class SetupJourneyGateTest {
             val total = state.bytes
             assertTrue(total > 30_000_000, "the fixture's whole download is more than one step")
             val whole = io.github.eslamasabry.oc.engine.runtime.setup.SetupProgressRules.formatBytePair(30_000_000, total).second
-            val said =
+            val node =
                 onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
                     .fetchSemanticsNode()
-                    .config[SemanticsProperties.ContentDescription]
-                    .joinToString()
-            assertTrue(said.contains(whole), "the ring says: $said (whole download $whole)")
+            assertEquals(listOf("Setup progress"), node.config[SemanticsProperties.ContentDescription])
+            val said = node.config[SemanticsProperties.StateDescription]
+            assertTrue(said.contains(whole), "the ring state says: $said (whole download $whole)")
         }
 
     @Test
@@ -450,7 +451,7 @@ class SetupJourneyGateTest {
 
     @Test
     fun `progress body rests above the middle of the viewport and details stays reachable`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(360, 800) {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
                     SetupJourneyScreen(

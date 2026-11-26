@@ -350,4 +350,5 @@
     <string name="chatsNewRunsOn">S’exécute sur</string>
     <string name="chatsNewWhereSpoken">Où ça s’exécute : %1$s. Ouvre les choix de projet et de connexion.</string>
     <string name="chatsNewAgentChipSpoken">Qui s’en occupe : %1$s, %2$s. Ouvre les choix d’agent et de modèle.</string>
+    <string name="chatsHomeUnreachableReason">Impossible de joindre %1$s, cette liste n’est peut-être pas à jour.</string>
 </resources>

@@ -85,8 +85,8 @@ public enum class KitButtonRole {
 /**
  * One action a block or menu can offer (Dart `KitAction`). [onClick] null means the action cannot
  * run now, and then [enabled] must carry the reason. [working] marks the tap in flight: the action
- * stays its enabled colour but ignores taps (STATE-7). [destructive] is never red: a strong
- * neutral, and it is offered apart (B-KIT-011).
+ * stays its enabled colour but ignores taps (STATE-7). [destructive] is offered apart (B-KIT-011):
+ * a filled button shows it as the strong neutral, a tertiary one in the danger ink.
  */
 @Immutable
 public data class KitAction(
@@ -176,7 +176,7 @@ public fun KitButton(
     // other bold line. It reads as an action in every style as a native text button does: its words in the accent's
     // readable ink (danger: the attention colour), with no face at rest; the press, focus and hover state layer is its
     // touch shape. A style whose links are underlined (Brutal) underlines it too.
-    val tertiaryInk = kitTertiaryInk(danger)
+    val tertiaryInk = kitTertiaryInk(danger || destructive)
     val fill: Color =
         when {
             role == KitButtonRole.Tertiary -> Color.Transparent
@@ -429,6 +429,7 @@ public fun KitButton(
         role = role,
         icon = action.icon,
         destructive = action.destructive,
+        danger = action.destructive && role == KitButtonRole.Tertiary,
         semanticsLabel = action.semanticsLabel,
         enabled =
             if (run == null && action.enabled.isEnabled) KitEnabled.Disabled(action.label)

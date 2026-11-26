@@ -152,14 +152,44 @@ private fun NoticeMarkBox(mark: NoticeMark, glyph: ImageVector, tint: TextTone, 
     }
 }
 
-/** A notice's acts under its words (Dart `_actionsRow`): small neutral tonal buttons, start-aligned, wrapping. */
+/**
+ * A notice's acts (Dart `_actionsRow`): small neutral tonal buttons, start-aligned, wrapping, a step under what
+ * stands above them; nothing while there are none.
+ */
 @Composable
 private fun NoticeActions(shown: List<KitLineAction>) {
+    if (shown.isEmpty()) return
+    Spacer(Modifier.height(Space.S2.dp))
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         shown.forEach { it.asButton(KitButtonRole.Secondary, Modifier.testTag(it.testTag ?: "kit-notice-action")) }
+    }
+}
+
+/** A notice's words under its optional title, then its notes. */
+@Composable
+private fun NoticeWords(
+    title: String?,
+    message: String,
+    notes: List<String>,
+    messageRole: TypeRole,
+    messageTone: TextTone,
+) {
+    if (title != null) {
+        KitText(title, role = TypeRole.RowTitle)
+        Spacer(Modifier.height((Space.S1 / 2).dp)) // F: lib/ui/kit/kit_notice.dart:518
+    }
+    KitText(
+        message,
+        Modifier.testTag("kit-notice-message"),
+        role = messageRole,
+        tone = messageTone,
+    )
+    notes.forEach {
+        Spacer(Modifier.height(Space.S1.dp))
+        KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
     }
 }
 
@@ -219,6 +249,7 @@ private fun NoticeFrame(
  * States: neutral, working, ok, warning, error, cost, offer Text: reading Cap: Reading Motion: fades and rises in
  * (KitEntrance), again when the tone changes; Off = instant Hidden: none Replaces: KitNotice (lib/ui/kit/kit_notice.dart)
  */
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitNotice(
     message: String,
@@ -231,6 +262,11 @@ public fun KitNotice(
     liveRegion: Boolean = true,
     trailing: (@Composable () -> Unit)? = null,
     icon: ImageVector? = null,
+    /**
+     * The actions on the notice's content edge, under its mark and start-aligned with the page (B-573: Home's offline
+     * line). The default keeps them under the words.
+     */
+    actionsAtEdge: Boolean = false,
 ) {
     NoticeBody(
         message = message,
@@ -243,9 +279,11 @@ public fun KitNotice(
         shown = actions.take(2), // F: lib/ui/kit/kit_notice.dart:403
         trailingParts = listOfNotNull(trailing, dismiss?.let { d -> @Composable { NoticeClose(d) } }),
         liveRegion = liveRegion,
+        actionsAtEdge = actionsAtEdge,
     )
 }
 
+@Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 private fun NoticeBody(
     message: String,
@@ -258,36 +296,27 @@ private fun NoticeBody(
     shown: List<KitLineAction>,
     trailingParts: List<@Composable () -> Unit>,
     liveRegion: Boolean,
+    actionsAtEdge: Boolean = false,
 ) {
-    val mark = noticeMark(if (title == null) TypeRole.Body else TypeRole.RowTitle)
+    val calmNeutral = title == null && tone == StatusTone.Neutral && !liveRegion
+    val messageRole = if (title == null && !calmNeutral) TypeRole.Body else TypeRole.Secondary
+    val messageTone = if (title == null && !calmNeutral) TextTone.Primary else TextTone.Secondary
+    val mark = noticeMark(if (title == null) messageRole else TypeRole.RowTitle)
     NoticeFrame(modifier, tag, liveRegion, key = tone to glyph) {
-        Row(verticalAlignment = Alignment.Top) {
-            NoticeMarkBox(mark, glyph, noticeTint(tone))
-            Spacer(Modifier.width(Space.S3.dp))
-            Column(Modifier.weight(1f)) {
-                if (title != null) {
-                    KitText(title, role = TypeRole.RowTitle)
-                    Spacer(Modifier.height((Space.S1 / 2).dp)) // F: lib/ui/kit/kit_notice.dart:518
+        Column(Modifier.fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.Top) {
+                NoticeMarkBox(mark, glyph, noticeTint(tone))
+                Spacer(Modifier.width(Space.S3.dp))
+                Column(Modifier.weight(1f)) {
+                    NoticeWords(title, message, notes, messageRole, messageTone)
+                    if (!actionsAtEdge) NoticeActions(shown)
                 }
-                KitText(
-                    message,
-                    Modifier.testTag("kit-notice-message"),
-                    role = if (title == null) TypeRole.Body else TypeRole.Secondary,
-                    tone = if (title == null) TextTone.Primary else TextTone.Secondary,
-                )
-                notes.forEach {
-                    Spacer(Modifier.height(Space.S1.dp))
-                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
-                }
-                if (shown.isNotEmpty()) {
-                    Spacer(Modifier.height(Space.S2.dp))
-                    NoticeActions(shown)
+                trailingParts.forEachIndexed { i, part ->
+                    if (i > 0) Spacer(Modifier.width(Space.S2.dp))
+                    part()
                 }
             }
-            trailingParts.forEachIndexed { i, part ->
-                if (i > 0) Spacer(Modifier.width(Space.S2.dp))
-                part()
-            }
+            if (actionsAtEdge) NoticeActions(shown)
         }
     }
 }

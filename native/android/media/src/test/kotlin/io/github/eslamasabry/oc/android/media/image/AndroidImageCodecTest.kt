@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream
 /** Real decode/encode through Robolectric's native graphics (plan 10 §10.3 step 2). */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34])
+@Config(sdk = [35])
 class AndroidImageCodecTest {
     private object Direct : AppDispatchers {
         private val direct = UnconfinedTestDispatcher()

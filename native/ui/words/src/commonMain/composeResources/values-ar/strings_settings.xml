@@ -918,4 +918,5 @@
     <string name="languageNameFrench">الفرنسية</string>
     <string name="languageNameChinese">الصينية</string>
     <string name="languageNameItalian">الإيطالية</string>
+    <string name="notifySendTestBlockedDetail">يبقى نشطًا أثناء إيقاف الإشعارات لتتحقّق من إعداد Android.</string>
 </resources>

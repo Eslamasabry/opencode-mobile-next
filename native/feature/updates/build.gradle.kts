@@ -11,6 +11,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))
         implementation(project(":engine:updates"))
+        implementation(project(":ui:kit-chat"))
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests

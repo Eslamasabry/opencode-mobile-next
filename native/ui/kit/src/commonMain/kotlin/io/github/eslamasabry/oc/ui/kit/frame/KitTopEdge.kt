@@ -117,6 +117,9 @@ public class KitScreenScroll internal constructor() {
      */
     internal var footRoom: Int by mutableIntStateOf(0)
 
+    /** True when the pinned foot separates itself with a crisp divider and suppresses the bottom dissolve above it. */
+    internal var suppressBottomFade: Boolean by mutableStateOf(false)
+
     /**
      * A page frame that watches its body's scrolling (the stacked layout): for a body whose scroller reports nothing,
      * whether the person has scrolled its content up under the chrome ([KitScreenEdgeWatch]). Only changes on a

@@ -590,6 +590,11 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, block
                 else -> stringResource(Res.string.homeOpeningFailedBody)
             },
         failure = if (opening.phoneOff) null else opening.failure,
+        // B-555: the checks are the card's own start-aligned list, and its quiet actions sit on Try again's middle.
+        // The card that says a New conversation tap started nothing keeps only that sentence.
+        checks = if (blocked) emptyList() else words?.checks.orEmpty(),
+        checksTitle = stringResource(Res.string.e7SetupWhatToCheck),
+        tertiaryCentred = true,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)
                 if (opening.phoneOff)

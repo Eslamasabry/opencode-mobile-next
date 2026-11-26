@@ -338,7 +338,13 @@ public fun KitScreen(
     // What the bottom block says it is (one pane of glass: KitReportBottomSlab), kept across the frame's two layouts.
     val bottomState = remember { KitScreenBottom() }
     val window = LocalKitWindow.current
-    val cap = if (window.cls == WindowClass.Compact) CapRole.Fill else width.cap
+    // Big screens: a Reading page fills up to the List cap (960) instead of a 720 column with two bands;
+    // in a pane beside a list the pane's column ([LocalKitPaneColumn]) grows it to the pane. Under 600 dp
+    // (Compact) nothing is capped.
+    val cap =
+        if (window.cls == WindowClass.Compact) CapRole.Fill
+        else if (width == KitScreenWidth.Reading) CapRole.List
+        else width.cap
     // The frame's parts are movable content: a page whose layout changes (a floating bar that comes or goes, Find's or a
     // header's slot on a page without overlaid chrome) moves the bar, body and bottom instead of rebuilding them, so a
     // field keeps its focus and the body its scroll position. A page with overlaid chrome (a conversation) never changes
@@ -837,7 +843,7 @@ public fun KitScreen(
                             // (owner 2026-11-16). The page clears what scrolls under them above that foot (the block's
                             // bottom) and dissolves it in below it, so nothing passes behind their words.
                             Box(Modifier.fillMaxWidth().testTag(FLOATING_CHROME_TAG)) {
-                                Column(Modifier.fillMaxWidth()) {
+                                Column(Modifier.fillMaxWidth().kitMaxWidth(cap)) {
                                     stackTop()
                                     // The second row keeps the room under it the title has above it, and its sideways
                                     // lines keep their place (FloatingPaneRow).
@@ -853,11 +859,14 @@ public fun KitScreen(
                             if (belowPinned && belowPart != null) {
                                 // Pinned under the bar, one block with it (whatever lies behind the bar lies behind the row),
                                 // on the page margin.
-                                Column(Modifier.fillMaxWidth()) {
+                                Column(Modifier.fillMaxWidth().kitMaxWidth(cap)) {
                                     stackTop()
                                     Box(Modifier.fillMaxWidth().padding(horizontal = kitPageGutter()).testTag("kit-pinned-below")) { belowPart() }
                                 }
-                            } else stackTop()
+                            } else if (cap.capDp == null) stackTop()
+                            // Big screens: the header shares the body's edges (title, Back, actions on the
+                            // body's gutter).
+                            else Box(Modifier.fillMaxWidth().kitMaxWidth(cap)) { stackTop() }
                         }
                     }
                 }
@@ -950,7 +959,7 @@ public fun KitScreen(
                                     },
                                     bottomReach = 0.dp,
                                     bottomReachPx = { dissolvePx },
-                                    bottomStrength = moreBelow,
+                                    bottomStrength = { if (pageScroll.suppressBottomFade) 0f else moreBelow() },
                                     keepBottomPx = { pageScroll.footRoom.toFloat() },
                                     ground = flatGround,
                                 )
@@ -1276,7 +1285,10 @@ private fun Panes(
                 ) {
                     // Dart _Centred(paneDetailMaxWidth, fill: true): the pane's view takes the whole pane, so an
                     // empty state centres in it.
-                    Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize(), propagateMinConstraints = true) {
+                    // The detail takes the rest of the window up to the page's column cap, then two equal margins: no
+                    // dead gutter beside the list. Its page is its own window, so the frame inside reads
+                    // the pane's width.
+                    io.github.eslamasabry.oc.ui.kit.foundation.KitPaneColumnPage(Modifier.fillMaxSize()) {
                         (detail ?: emptyDetail)()
                     }
                 }

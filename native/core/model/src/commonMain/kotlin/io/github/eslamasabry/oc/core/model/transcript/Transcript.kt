@@ -29,6 +29,14 @@ public data class MsgTime(val createdMs: Long?, val completedMs: Long?)
 /** Dart MessageErrorKind, same seven values. */
 public enum class MessageErrorKind { ContextOverflow, OutputLength, ProviderAuth, ContentFilter, Aborted, ModelNotFound, Unknown }
 
+/** Origin stamped on a user message sent by a server automation (`metadata.automation`, B-605). */
+public data class MessageAutomation(
+    val id: String? = null,
+    val name: String,
+    val run: Int? = null,
+    val late: Boolean = false,
+)
+
 public data class MessageInfo(
     val id: String,
     val sessionId: String,
@@ -45,6 +53,7 @@ public data class MessageInfo(
     /** Raw: stop | length | tool-calls | content-filter | error | … */
     val finish: String? = null,
     val parentId: String? = null,
+    val automation: MessageAutomation? = null,
 )
 
 public enum class PartType { Text, Reasoning, Tool, File, StepStart, StepFinish, Snapshot, Patch, Switch, Notice, Compaction, Unknown }

@@ -9,6 +9,10 @@ android {
     defaultConfig { consumerProguardFiles("sherpa.keep") }
 }
 
+// B-CI-342: Robolectric fetched its Android jar from Maven Central as a test class started; a failed fetch on a CI
+// runner failed AndroidImageCodecTest > classMethod. Gradle resolves the jar now (cached, retried); tests run offline.
+val robolectricSdk = configurations.create("robolectricSdk")
+
 dependencies {
     api(project(":engine:media"))
     implementation(libs.androidx.core.ktx)
@@ -19,4 +23,17 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
+    robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
+}
+
+val robolectricJars = tasks.register<Sync>("robolectricJars") {
+    from(robolectricSdk)
+    into(layout.buildDirectory.dir("robolectric-jars"))
+}
+
+tasks.withType<Test>().configureEach {
+    dependsOn(robolectricJars)
+    val jarDir = layout.buildDirectory.dir("robolectric-jars").get().asFile
+    systemProperty("robolectric.offline", "true")
+    systemProperty("robolectric.dependency.dir", jarDir.absolutePath)
 }

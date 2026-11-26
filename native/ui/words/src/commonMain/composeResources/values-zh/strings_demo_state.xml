@@ -14,4 +14,5 @@
     <string name="stateDemoModel">示例模型</string>
     <string name="stateDemoReset">重置演示</string>
     <string name="stateDemoLeave">退出演示</string>
+    <string name="stateDemoOwn">此演示无法回答你自己的问题。它只会播放一个示例：发送“%1$s”即可查看。如果想问自己的问题，请退出演示并进行正式设置。</string>
 </resources>

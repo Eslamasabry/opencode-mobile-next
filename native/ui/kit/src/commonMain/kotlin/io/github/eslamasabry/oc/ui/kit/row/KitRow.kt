@@ -327,9 +327,9 @@ private fun RowBody(
                 }
             }
             leading != null -> Box(lead) { RowLeadingTile(leading, dim = !enabled || unavailable, selected = selected) }
-            state != null -> Box(lead) { RowStateMark(state.tone) }
+            state != null && state.lead -> Box(lead) { RowStateMark(state.tone) }
         }
-        if (leading != null || state != null) Spacer(Modifier.width(Space.S3.dp))
+        if (leading != null || (state != null && state.lead)) Spacer(Modifier.width(Space.S3.dp))
         val middle: @Composable (Modifier, Boolean) -> Unit = { middleModifier, valueBelow ->
             // The text never runs into what trails it: space2 before the trailing part (kit_row.dart:640).
             Row(middleModifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -419,7 +419,7 @@ private fun RowBody(
                             )
                         }
                     }
-                    if (valueBelow && value != null) RowValue(value)
+                    if (valueBelow && value != null) RowValue(value.copy(chevron = false))
                     if (actionBelow) KitInlineAction(action)
                 }
                 when {
@@ -434,6 +434,11 @@ private fun RowBody(
                     value != null && !valueBelow ->
                         if (chevronEnds) Box(Modifier.padding(end = chevronEndPad(tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)))) { RowValue(value) }
                         else RowValue(value)
+                    value != null && valueBelow && value.chevron ->
+                        if (chevronEnds) {
+                            val pad = chevronEndPad(tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP))
+                            Box(Modifier.padding(end = pad)) { RowChevron() }
+                        } else RowChevron()
                     // One tertiary button, trailing (Dart `KitButton.fromAction(enable, role: tertiary, expand: false)`); it
                     // keeps its own side padding beside the words.
                     // Its words end on the row's end rail like a chevron's ink does (audit 2: "Update and import" ended 12 dp in,

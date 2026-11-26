@@ -105,4 +105,19 @@
         <item quantity="many">circa %1$s min</item>
         <item quantity="other">circa %1$s min</item>
     </plurals>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="one">%1$s g</item>
+        <item quantity="many">%1$s g</item>
+        <item quantity="other">%1$s g</item>
+    </plurals>
 </resources>

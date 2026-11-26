@@ -201,15 +201,18 @@ class UsageScreenTest {
     fun `B-L10N-010 the usage screen reads in Arabic`() = runDesktopComposeUiTest(412, 2600) {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         setContent { Screen(ready(), Actions(), "ar") }
-        onNodeWithText("إنفاق آخر 30 يومًا").assertExists()
+        val expected = io.github.eslamasabry.oc.core.common.text.Numbers.digits("إنفاق آخر 30 يومًا")
+        onNodeWithText(expected).assertExists()
     }
 
     @Test
-    fun `B-160 the cost segment switches between 24 hours, 7, 30 and 90 days`() = runDesktopComposeUiTest(412, 2600) {
+    fun `B-160 the cost range picker switches between 7 and 90 days`() = runDesktopComposeUiTest(412, 2600) {
         val actions = Actions()
         setContent { Screen(ready(), actions) }
-        onNodeWithText("7d").performClick()
-        onNodeWithText("90d").performClick()
+        onNodeWithTag("usage-range").performClick()
+        onNodeWithText("Last 7 days").performClick()
+        onNodeWithTag("usage-range").performClick()
+        onNodeWithText("Last 90 days").performClick()
         assertEquals(listOf("range:SevenDays", "range:NinetyDays"), actions.calls)
     }
 

@@ -88,6 +88,8 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
     )
     LifecycleResumeEffect(actions) {
         if (state.page == ServerSettingsPage.Shell) actions.refresh()
+        if (state.page == ServerSettingsPage.Home && state.showAutomations)
+            actions.refreshAutomations()
         onPauseOrDispose {}
     }
     KitScreen(
@@ -105,8 +107,11 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                 state.checkingHealth ||
                 state.checking ||
                 state.working ||
-                state.modelWorking,
+                state.modelWorking ||
+                state.automationsLoading ||
+                state.automationsWorking,
     ) {
+        ServerAutomationsOverlays(state, actions)
         Column(
             Modifier.verticalScroll(kitPageScrollState()).padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
@@ -273,6 +278,7 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                     trailing = KitRowTrailing.Chevron,
                 )
         }
+        ServerAutomationsSection(state, actions)
     } else
         KitNotice(
             stringResource(Res.string.settingsV3ConnectToChange),
@@ -618,6 +624,7 @@ private fun CapabilitiesBody(state: ServerSettingsUi) {
             Res.string.serverSettingsFiles to flags.fileBrowsing,
             Res.string.serverSettingsProjects to flags.projectManagement,
             Res.string.serverSettingsSchedules to flags.scheduledPrompts,
+            Res.string.serverAutomationsSection to flags.serverAutomations,
             Res.string.serverSettingsProviders to flags.serverCatalog,
             Res.string.serverSettingsPermissions to flags.permissionRequests,
             Res.string.serverSettingsSteering to flags.promptSteering,

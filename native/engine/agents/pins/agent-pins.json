@@ -114,7 +114,7 @@
       "providerId": "codex",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "0.171.0",
+        "version": "0.172.0",
         "executable": "codex",
         "launchArgs": [
           "app-server"
@@ -125,20 +125,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.171.0/codex-package-aarch64-unknown-linux-musl.tar.gz",
-            "sha256": "d8c43bee6cf11b01eb18b95f4d7961092bc40228180808859e70dabb7784c1c9",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.172.0/codex-package-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "faf17b8071927f33346a805dc8cb45de4e08c0d75cf0e5e68cecddca28b8861e",
             "format": "tarGz",
             "member": "bin/codex",
-            "downloadBytes": 199315347,
-            "installedBytes": 516528332
+            "downloadBytes": 201917755,
+            "installedBytes": 521575724
           },
           "x64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.171.0/codex-package-x86_64-unknown-linux-musl.tar.gz",
-            "sha256": "8391d67757496bfd14893eca6cbf0c96994bf2627566ff1f018f70600c9ef6b3",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.172.0/codex-package-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "63e3b00065ed7f62166d0522e17f663cb866a31d80d03e63365482ed34a1d991",
             "format": "tarGz",
             "member": "bin/codex",
-            "downloadBytes": 197763180,
-            "installedBytes": 521571182
+            "downloadBytes": 200434347,
+            "installedBytes": 527693622
           }
         }
       }
@@ -150,7 +150,7 @@
       "providerId": "antigravity",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "1.5.15",
+        "version": "1.5.17",
         "executable": "agy",
         "launchArgs": [
           "acp",
@@ -162,20 +162,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-arm/cli_linux_arm64.tar.gz",
-            "sha256": "e5b5d7ca1dda2cfdc0b09c72931320c3ef5c481a14dbda137304107ce6e776b1",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "d6d2b88493e6e02854da478b215cd1dd98fd8cf985b6be37829dacadea4ffc07",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 92373221,
-            "installedBytes": 256660144
+            "downloadBytes": 93662528,
+            "installedBytes": 260657840
           },
           "x64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-x64/cli_linux_x64.tar.gz",
-            "sha256": "8d9913298602049ef29e9669f35252b6b79571979ce1bd0fb27753c7bac84114",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "6304b4f592ae97e59231cfb1b365ee29c155750c9a881f0cc8efe5f5281077cf",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 101464790,
-            "installedBytes": 273879752
+            "downloadBytes": 102886235,
+            "installedBytes": 278438600
           }
         }
       }

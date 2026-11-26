@@ -590,6 +590,65 @@ git checkout -q line; git checkout -q -b leaf; echo 'x' >native/core/common/Leaf
 expect "B-CI-313 fast selection: a change in :core:common reaches a module that only gets it from its plugin" 0 native/tool/ci/fast_tasks.sh line
 expect_out "B-CI-313 fast selection: (a feature)" '^:feature:alpha:desktopTest$'
 
+# B-CI-313b: hub narrowing on job branches (avoiding the 30-module ALL cliff) while keeping conservative ALL on
+# line / merge-proof / master branches.
+R="$(new_repo)"; cd "$R" || exit 1
+mkdir -p native/ui/words/src/commonMain/composeResources/values native/tools/strings/src/test/kotlin native/ui/kit/src/commonMain/kotlin native/ui/kit/src/desktopTest/kotlin native/engine/solo/src/commonMain/kotlin
+printf 'plugins { id("oc.kmp.library") }\n' >native/ui/words/build.gradle.kts
+printf 'plugins { id("oc.jvm.library") }\n' >native/tools/strings/build.gradle.kts
+printf 'plugins { id("oc.kmp.library") }\n' >native/engine/solo/build.gradle.kts
+printf 'package oc.kit\nfun KitSpecialChip() = Unit\n' >native/ui/kit/src/commonMain/kotlin/KitSpecialChip.kt
+printf 'package oc.kit\nclass KitChipTest\n' >native/ui/kit/src/desktopTest/kotlin/KitChipTest.kt
+printf '<resources><string name="only_in_f1">Hello</string><string name="shared_all">All</string></resources>\n' >native/ui/words/src/commonMain/composeResources/values/strings_f1.xml
+printf 'class DriftTest\n' >native/tools/strings/src/test/kotlin/DriftTest.kt
+for i in $(seq 1 34); do
+  mkdir -p "native/feature/f$i/src/commonMain/kotlin"
+  printf 'plugins { id("oc.kmp.feature") }\n' >"native/feature/f$i/build.gradle.kts"
+  printf 'package oc.f%d\nfun screen%d() = Unit\n' "$i" "$i" >"native/feature/f$i/src/commonMain/kotlin/Screen$i.kt"
+done
+printf 'package oc.f1\nfun screen1() { KitSpecialChip(); val s = Res.string.only_in_f1 }\n' >native/feature/f1/src/commonMain/kotlin/Screen1.kt
+printf 'package oc.f2\nfun screen2() { KitSpecialChip() }\n' >native/feature/f2/src/commonMain/kotlin/Screen2.kt
+git add -A && git commit -q -m "chore(tool): 34-feature hub graph [skip ci]" -m "Base." && git branch -f line HEAD
+
+# 1) Job branch editing one ui:kit component selects only :ui:kit and its actual consumers (f1, f2), never ALL.
+git checkout -q -b native/glm-kit-chip line
+printf 'package oc.kit\nfun KitSpecialChip() = 1\n' >native/ui/kit/src/commonMain/kotlin/KitSpecialChip.kt
+git add -A && git commit -q -m "fix(ui-kit): chip tweak [skip ci]" -m "Tweak chip."
+expect "B-CI-313 smart selection: job branch ui:kit change avoids ALL cliff" 0 native/tool/ci/fast_tasks.sh line 30 native/glm-kit-chip
+expect_out "B-CI-313 smart selection: selects :ui:kit" '^:ui:kit:desktopTest$'
+expect_out "B-CI-313 smart selection: selects consumer :feature:f1" '^:feature:f1:desktopTest$'
+expect_out "B-CI-313 smart selection: selects consumer :feature:f2" '^:feature:f2:desktopTest$'
+expect_no_out "B-CI-313 smart selection: does not fall back to ALL" 'ALL'
+expect_no_out "B-CI-313 smart selection: skips unrelated :feature:f10" ':feature:f10:desktopTest'
+expect_no_out "B-CI-313 smart selection: skips unrelated :engine:solo" ':engine:solo:desktopTest'
+for protected in native/glass-next native/merge-proof-35 native/rf-merge-proof-1 master; do
+  expect "B-CI-313 conservative: $protected still selects ALL on >30 hub fanout" 0 native/tool/ci/fast_tasks.sh line 30 "$protected"
+  expect_out "B-CI-313 conservative: $protected output is ALL" '^ALL$'
+done
+
+# 2) Job branch editing a ui:kit test-only file selects only :ui:kit (zero dependents).
+git checkout -q -b native/glm-kit-test-only line
+printf 'package oc.kit\nclass KitChipTest { val x = 1 }\n' >native/ui/kit/src/desktopTest/kotlin/KitChipTest.kt
+git add -A && git commit -q -m "test(ui-kit): chip test [skip ci]" -m "Test only."
+expect "B-CI-313 smart selection: test-only ui:kit edit selects only :ui:kit" 0 native/tool/ci/fast_tasks.sh line 30 native/glm-kit-test-only
+expect_out "B-CI-313 smart selection: test-only includes :ui:kit" '^:ui:kit:desktopTest$'
+expect_no_out "B-CI-313 smart selection: test-only skips :feature:f1" ':feature:f1:desktopTest'
+expect_no_out "B-CI-313 smart selection: test-only never returns ALL" 'ALL'
+
+# 3) Job branch editing one string key in :ui:words + :tools:strings selects only :ui:words, :tools:strings, and :feature:f1.
+git checkout -q -b native/glm-words-f1 line
+printf '<resources><string name="only_in_f1">Hello world</string><string name="shared_all">All</string></resources>\n' >native/ui/words/src/commonMain/composeResources/values/strings_f1.xml
+printf 'class DriftTest { val v = 2 }\n' >native/tools/strings/src/test/kotlin/DriftTest.kt
+git add -A && git commit -q -m "fix(ui-words): update f1 copy [skip ci]" -m "Copy tweak."
+expect "B-CI-313 smart selection: job branch ui:words XML change avoids ALL cliff" 0 native/tool/ci/fast_tasks.sh line 30 native/glm-words-f1
+expect_out "B-CI-313 smart selection: words selects :ui:words" '^:ui:words:desktopTest$'
+expect_out "B-CI-313 smart selection: words selects :tools:strings" '^:tools:strings:test$'
+expect_out "B-CI-313 smart selection: words selects consumer :feature:f1" '^:feature:f1:desktopTest$'
+expect_no_out "B-CI-313 smart selection: words does not fall back to ALL" 'ALL'
+expect_no_out "B-CI-313 smart selection: words skips non-consumer :feature:f2" ':feature:f2:desktopTest'
+expect "B-CI-313 conservative: merge-proof still selects ALL on ui:words change" 0 native/tool/ci/fast_tasks.sh line 30 native/merge-proof-99
+expect_out "B-CI-313 conservative: merge-proof words output is ALL" '^ALL$'
+
 # ------------------------------------------------------------------------------------ qa/layout_baseline.sh (E02-S13)
 R="$(new_repo)"; cd "$R" || exit 1
 expect "E02-S13 layout ratchet: before any baseline exists it is the adoption bootstrap" 0 native/tool/qa/layout_baseline.sh --base native/main

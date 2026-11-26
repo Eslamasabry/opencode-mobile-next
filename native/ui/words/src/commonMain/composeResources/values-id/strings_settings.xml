@@ -802,4 +802,5 @@
     <string name="languageNameFrench">Prancis</string>
     <string name="languageNameChinese">Tionghoa</string>
     <string name="languageNameItalian">Italia</string>
+    <string name="notifySendTestBlockedDetail">Tetap aktif saat notifikasi mati agar kamu bisa memeriksa setelan Android.</string>
 </resources>

@@ -406,4 +406,73 @@ sync() {
         // The replacement is really there: the link is switched by one rename.
         assertTrue("mv -T \"\$node_link_new\" \"\$node_dir\"" in generated)
     }
+
+    @Test
+    fun `B-LINUX-311 the Paseo read sweeps old leftovers while install size stays unchanged`() {
+        val installScript = PaseoPhoneScripts.install(lock, JvmPaseoLockCodec)
+        assertEquals(65249, installScript.toByteArray().size, "install size changed from base")
+        assertEquals(1783, ScriptPrune.FUNCTION.toByteArray().size)
+        for (moved in listOf("oc_prune_stale", "oc_prune_downloads", "oc_prune_probes", "oc_prune_node_parts")) {
+            assertFalse(moved in installScript, moved)
+        }
+        val first = runInstall()
+        assertEquals(0, first.exitCode, first.stderr)
+        val root = File(directory).parent
+        val current = File(directory).name
+        val go = listOf(
+            "$root/0.1.0-aaaaaaaaaaaa.new",
+            "$root/0.1.0-aaaaaaaaaaaa.old.4242",
+            "$root/0.1.0-aaaaaaaaaaaa.oc-good",
+        )
+        for (path in go) mkdirs(path)
+        val stay = listOf(
+            "$root/$current.old.4242".also { mkdirs(it) },
+            "$root/0.2.0-bbbbbbbbbbbb.new".also { mkdirs(it) },
+            "$root/0.2.0-bbbbbbbbbbbb.oc-pending".also { write(it, "existing\n") },
+            "$root/notes.new".also { mkdirs(it) },
+        )
+        val checked = runCheck()
+        assertEquals(0, checked.exitCode, checked.stderr)
+        for (path in go) assertFalse(exists(path), path)
+        for (path in stay) assertTrue(exists(path), path)
+        val listing = File(root).list()!!.sorted()
+        val secondCheck = runCheck()
+        assertEquals(0, secondCheck.exitCode, secondCheck.stderr)
+        assertEquals(listing, File(root).list()!!.sorted())
+    }
+
+    @Test
+    fun `B-LINUX-312 Node removes staging folders and downloads of versions it no longer uses`() {
+        val local = "${temp.path}/oc/.local"
+        val ver = PaseoPhoneScripts.NODE_VERSION
+        val cache = "${temp.path}/oc/.cache/oc-setup"
+        val nodeBin = "$local/node-$ver/bin/node"
+        write(nodeBin, "#!/bin/sh\necho $ver\n")
+        assertEquals(0, run(listOf("chmod", "755", nodeBin)).exitCode)
+        link("$local/node", "node-$ver")
+        mkdirs("$local/bin")
+        link("$local/bin/node", "$local/node/bin/node")
+        val go = listOf(
+            "$local/node-v1.0.0.new".also { mkdirs(it) },
+            "$local/node-v1.0.0.old.4242".also { mkdirs(it) },
+            "$local/node-v1.0.0.oc-good".also { mkdirs(it) },
+            "$cache/node-v1.0.0-linux-arm64.tar.gz".also { write(it, "old") },
+        )
+        val stay = listOf(
+            "$local/node-$ver.old.4242".also { mkdirs(it) },
+            "$local/node-v2.0.0.new".also { mkdirs(it) },
+            "$local/node-v2.0.0.oc-pending".also { write(it, "existing\n") },
+            "$cache/node-$ver-linux-arm64.tar.gz".also { write(it, "keep") },
+            "$cache/notes.tar.gz".also { write(it, "notes") },
+        )
+        val env = mapOf("HOME" to "${temp.path}/oc")
+        val first = run(listOf("/bin/sh", "-c", isolated(PaseoPhoneScripts.nodeCheck)), environment = env)
+        assertEquals(0, first.exitCode, first.stderr)
+        for (path in go) assertFalse(exists(path), path)
+        for (path in stay) assertTrue(exists(path), path)
+        val listing = File(local).list()!!.sorted()
+        val second = run(listOf("/bin/sh", "-c", isolated(PaseoPhoneScripts.nodeCheck)), environment = env)
+        assertEquals(0, second.exitCode, second.stderr)
+        assertEquals(listing, File(local).list()!!.sorted())
+    }
 }
