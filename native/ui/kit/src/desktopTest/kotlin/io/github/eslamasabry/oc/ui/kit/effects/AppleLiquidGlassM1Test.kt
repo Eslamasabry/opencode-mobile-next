@@ -178,7 +178,7 @@ class AppleLiquidGlassM1Test {
             assertTrue(specs.isNotEmpty(), "liquid specs captured")
             for (s in specs) {
                 assertTrue(s.bendShape < 0f, "dome bend must be negative (was ${s.bendShape})")
-                assertTrue(s.specular.alpha > 0.3f, "specular enabled (was ${s.specular.alpha})")
+                assertTrue(s.specular.alpha > 0.15f, "specular enabled (was ${s.specular.alpha})")
                 assertTrue(s.sheen.alpha > 0f, "top sheen enabled (was ${s.sheen.alpha})")
                 assertEquals(0f, s.dispersion, "chromatic dispersion stays OFF by default")
                 assertTrue(s.shadow.alpha > 0f, "B-613 adaptive elevation shadow must be active")

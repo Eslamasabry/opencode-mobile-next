@@ -1,11 +1,14 @@
 package io.github.eslamasabry.opencode_mobile.proof
 
+import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
@@ -90,18 +94,26 @@ private suspend fun LazyListState.glide(total: Float, ms: Long) {
     }
 }
 
+private const val AUTOSTART_DELAY_MS: Long = 1_200L
+private const val CHIP_GAP_DP: Int = 8
+
 class GlassProofActivity : ComponentActivity() {
     private var started by mutableStateOf(false)
     private var done by mutableStateOf(false)
     private var hold = false
+    private var autoStart = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
-        super.onCreate(savedInstanceState)
         val look = intent.getStringExtra("look") ?: "glass-aurora"
+        val barStyle =
+            if (look == "glass-light") SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+            else SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+        enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
+        super.onCreate(savedInstanceState)
         val scene = intent.getStringExtra("scene") ?: "list"
         // `hold`: the menu scene opens the menu once and keeps it open (for a still screenshot of the look).
         hold = intent.getBooleanExtra("hold", false)
+        autoStart = intent.getBooleanExtra("autostart", false)
         val appearance =
             when (look) {
                 "solid" -> KitAppearance()
@@ -166,12 +178,19 @@ class GlassProofActivity : ComponentActivity() {
         val list = rememberLazyListState()
         val source = rememberKitFrostState()
         var menu by remember { mutableStateOf(false) }
+        LaunchedEffect(autoStart) {
+            if (autoStart && runs) {
+                delay(AUTOSTART_DELAY_MS)
+                started = true
+            }
+        }
         LaunchedEffect(started) {
             if (started && runs) playScript(scene, list) { menu = it }
         }
         KitScreen(
             page = true,
             overlayChrome = true,
+            floating = scene != "list",
             frost = if (scene != "list") source else null,
             topBar = { ProofTopBar(scene, menu) { menu = false } },
             bottom = if (scene != "list") ({ ProofBottom(scene, menu) { menu = false } }) else null,
@@ -180,6 +199,7 @@ class GlassProofActivity : ComponentActivity() {
             Box(Modifier.fillMaxSize()) {
                 LazyColumn(
                     state = list,
+                    contentPadding = kitScreenChromePadding(),
                     modifier = Modifier.fillMaxSize().then(if (scene != "list") Modifier.kitFrostSource(source) else Modifier.kitGlassSource(source)),
                 ) {
                     item(key = "start", contentType = "start") {
@@ -244,8 +264,11 @@ class GlassProofActivity : ComponentActivity() {
         // join-pill / join-composer-menu: the message box is one slab of glass joined to its drop.
         val joinedBottom = scene == "join-pill" || scene == "join-composer-menu"
         if (joinedBottom) KitReportBottomSlab(true)
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Row { KitChip("Ask first", icon = KitIcons.add); KitChip("build · Model") }
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(CHIP_GAP_DP.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(CHIP_GAP_DP.dp)) {
+                KitChip("Ask first", icon = KitIcons.add)
+                KitChip("build · Model")
+            }
             val shape = RoundedCornerShape(28.dp)
             val body = if (joinedBottom) rememberKitLiquidJoinBody("bottom") else null
             val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)

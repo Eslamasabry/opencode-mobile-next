@@ -14,7 +14,7 @@ class RimLightTest {
         assertEquals(1f, RimLight.lit(1f), 1e-6f, "facing the light")
         assertEquals(1f, RimLight.lit(-1f), 1e-6f, "facing away (the bottom-end arc)")
         assertEquals(RimLight.FLOOR, RimLight.lit(0f), 1e-6f, "along the light (the top-end and bottom-start corners)")
-        assertTrue(RimLight.FLOOR in .12f..0.22f, "low non-wireframe floor that keeps corners continuous (B-610)")
+        assertTrue(RimLight.FLOOR in .08f..0.20f, "low non-wireframe floor that keeps corners continuous (B-610)")
     }
 
     @Test

@@ -263,8 +263,8 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** Kept for source compatibility; light liquid glass uses [LIGHT_RIM_ALPHA] white speculars (B-612). */
         public const val LIGHT_EDGE_ALPHA: Float = .10f
 
-        /** The rim light's shipped width, dp: crisp specular contour (B-609). */
-        public const val RIM_WIDTH_DP: Float = 1.25f
+        /** The rim light's shipped width, dp: razor-fine Apple specular contour (B-609, B-610). */
+        public const val RIM_WIDTH_DP: Float = .75f
 
         /** The rim light's shipped direction: along the top-start / bottom-end diagonal. */
         public const val LIGHT_DEG: Float = 45f
@@ -275,9 +275,9 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         /** Shipped dome refraction bend profile (-0.6 soft thick-glass dome, B-609). */
         public const val SHIPPED_BEND_SHAPE: Float = -.6f
 
-        /** Shipped specular highlight strength in dark and light themes (B-609, B-612). */
-        public const val SHIPPED_SPECULAR_DARK: Float = .55f
-        public const val SHIPPED_SPECULAR_LIGHT: Float = .72f
+        /** Shipped corner specular catchlight strength in dark and light themes (B-609, B-612). */
+        public const val SHIPPED_SPECULAR_DARK: Float = .22f
+        public const val SHIPPED_SPECULAR_LIGHT: Float = .48f
 
         /** Shipped top sheen alpha in dark and light themes (B-609: matches LiquidEdge, preserves WCAG). */
         public const val SHIPPED_SHEEN_DARK: Float = .06f
