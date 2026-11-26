@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -21,18 +23,34 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
+import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
+import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
+import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesViewModel
 import io.github.eslamasabry.oc.feature.updates.presentation.updatesUi
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
 import io.github.eslamasabry.oc.feature.updates.ui.UPDATED_HOLD_MS
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateOfferSheet
@@ -351,4 +369,119 @@ class UpdatesScreenUiTest {
                 }
             assertTrue(hasBold, "expected bold span for '$boldLead'")
         }
+
+    @Test
+    fun `B-218 test build explains up front before any download and offers no Update`() = runComposeUiTest {
+        val testInstalled = InstalledApp(PACKAGE, "3.0.2-test.10142", 10142)
+        page(available.copy(installed = testInstalled))
+        onNodeWithText(
+                "This is a test build. Public updates can't install over it.",
+                substring = true,
+            )
+            .assertExists()
+        onNodeWithText("data", substring = true).assertExists()
+        assertTrue(!shows("Update"), "test build must not offer Update")
+    }
+
+    @Test
+    fun `B-218 signer failure shows both signatures only under Details with plain labels`() = runComposeUiTest {
+        val own = "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+        val update = "842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
+        page(
+            available.copy(
+                phase = UpdatePhase.Failed,
+                failure = UpdateFailure.Signer,
+                detail = "signer $update, expected $own",
+            ),
+        )
+        assertTrue(onAllNodesWithText(own, substring = true).fetchSemanticsNodes().isEmpty())
+        assertTrue(onAllNodesWithText(update, substring = true).fetchSemanticsNodes().isEmpty())
+        onNodeWithText("Details").performScrollTo().performClick()
+        waitForIdle()
+        onNodeWithText("This app's signature", substring = true, useUnmergedTree = true).assertExists()
+        onNodeWithText("The update's signature", substring = true, useUnmergedTree = true).assertExists()
+        onNodeWithText(own, substring = true, useUnmergedTree = true).assertExists()
+        onNodeWithText(update, substring = true, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `B-627 signer failure names what the release action does and failures say why and what next`() =
+        runComposeUiTest {
+            val actions =
+                page(
+                    available.copy(
+                        phase = UpdatePhase.Failed,
+                        failure = UpdateFailure.Signer,
+                        detail = "signer BB22, expected AA11",
+                    ),
+                )
+            assertTrue(!shows("Open on GitHub"), "Open on GitHub does not say what you get there")
+            onNodeWithText("View release on GitHub").performClick()
+            assertEquals(listOf("openRelease"), actions.calls)
+            val failureText =
+                onNodeWithTag("updates-failure")
+                    .fetchSemanticsNode()
+                    .config
+                    .getOrNull(SemanticsProperties.Text)
+                    .orEmpty()
+                    .joinToString(" ") { it.text }
+            assertTrue(". " !in failureText, "expected one plain sentence: $failureText")
+            assertTrue("install" in failureText.lowercase(), "expected next step in: $failureText")
+        }
+
+    @Test
+    fun `B-628 tapping an https link in What's new asks to open it outside the app`() = runComposeUiTest {
+        val url = "https://example.com/release-guide"
+        val rig = UpdateRig(TestClock())
+        rig.feed.latestJson =
+            RELEASE_JSON.replace(
+                "This release is faster.\\n\\n- Smaller downloads",
+                "See [Release guide]($url) for details.",
+            )
+        runBlocking { rig.updates.start() }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val nav =
+            object : AppNavigator {
+                override val top = MutableStateFlow<AppRoute?>(null)
+
+                override fun open(route: AppRoute) = Unit
+
+                override fun openChat(ref: ConversationRef, focusComposer: Boolean) = Unit
+
+                override fun land() = Unit
+
+                override fun replaceRoot(root: AppRoute) = Unit
+
+                override fun back() = Unit
+            }
+        val vm =
+            UpdatesViewModel(
+                rig.updates,
+                UpdateLinks { Outcome.Ok(Unit) },
+                AppCoroutineScope(scope.coroutineContext),
+                TestClock(),
+                nav,
+            )
+        try {
+            setContent {
+                val ui by vm.state.collectAsState()
+                Themed { UpdatesScreen(ui, vm) }
+            }
+            waitForIdle()
+            onNodeWithText("Release guide", substring = true, useUnmergedTree = true).assertExists()
+            val link =
+                textLayouts()
+                    .flatMap { it.layoutInput.text.getLinkAnnotations(0, it.layoutInput.text.length) }
+                    .map { it.item }
+                    .filterIsInstance<LinkAnnotation.Clickable>()
+                    .firstOrNull { it.tag == url }
+            assertTrue(link != null, "expected clickable link annotation for $url")
+            runOnUiThread { link.linkInteractionListener?.onClick(link) }
+            waitForIdle()
+            onNodeWithText("Open link?", useUnmergedTree = true).assertExists()
+            onNodeWithText("This opens example.com outside the app.", useUnmergedTree = true).assertExists()
+        } finally {
+            scope.cancel()
+        }
+    }
 }

@@ -67,9 +67,11 @@ internal class FakeFeed : UpdateFeed {
 
 internal class FakePlatform : UpdatePlatform {
     var build = 57
+    var version = "2.1.0"
     var abis = listOf("arm64-v8a", "armeabi-v7a")
     var hash = GOOD_HASH
     var signer = SIGNER
+    var ownSigner = SIGNER
     var pkg = PKG
     var versionCode = 58L
     var canInstallNow = true
@@ -80,7 +82,7 @@ internal class FakePlatform : UpdatePlatform {
     var cleared = 0
     val files = mutableSetOf<String>()
 
-    override suspend fun installed() = InstalledApp(PKG, "2.1.0", build)
+    override suspend fun installed() = InstalledApp(PKG, version, build)
 
     override suspend fun supportedAbis() = abis
 
@@ -105,7 +107,7 @@ internal class FakePlatform : UpdatePlatform {
 
     override suspend fun inspectApk(path: String) = ApkInfo(pkg, versionCode, signer)
 
-    override suspend fun ownSignerSha256() = SIGNER
+    override suspend fun ownSignerSha256() = ownSigner
 
     override suspend fun canInstall() = canInstallNow
 

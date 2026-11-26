@@ -297,4 +297,19 @@ class AppUpdatesTest {
         assertEquals(UpdateFailure.Installer, c.state.value.failure)
         assertEquals("INSTALL_FAILED_X", c.state.value.detail)
     }
+
+    @Test
+    fun `B-218 a test build never offers or downloads a public release`() = runTest {
+        platform.version = "3.0.2-test.10142"
+        platform.build = 10142
+        feed.latestBody = releaseJson(tag = "v3.0.3+10160").ok()
+        val c = make()
+        c.start()
+        c.checkNow()
+        c.updateNow()
+        assertFalse(c.state.value.hasPendingRelease, "test build must not offer a public update")
+        assertFalse(c.state.value.noticeVisible)
+        assertEquals(0, feed.downloads, "no public APK downloaded onto a test build")
+        assertTrue(platform.installs.isEmpty())
+    }
 }
