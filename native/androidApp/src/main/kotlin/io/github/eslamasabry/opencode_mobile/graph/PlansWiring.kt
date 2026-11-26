@@ -615,19 +615,18 @@ class AndroidPlansSource(
             if (target.provider == AndroidPlansPaseoSource.PROVIDER)
                 paseo?.setEnabled(target, enabled) == true
             else quota?.setEnabled(target, enabled) == true
-        if (changed && !enabled) {
-            val cleared =
-                if (
-                    target.provider == AndroidPlansPaseoSource.PROVIDER ||
-                        target.provider == PlansQuotaSource.BUILTIN
-                ) {
-                    engine?.removeProfile(target.profile.raw, deleted = false) == true
-                } else {
-                    engine?.removeProvider(target.profile.raw, target.provider) == true
-                }
-            return cleared
+        return if (changed && !enabled) {
+            if (
+                target.provider == AndroidPlansPaseoSource.PROVIDER ||
+                    target.provider == PlansQuotaSource.BUILTIN
+            ) {
+                engine?.removeProfile(target.profile.raw, deleted = false) == true
+            } else {
+                engine?.removeProvider(target.profile.raw, target.provider) == true
+            }
+        } else {
+            changed
         }
-        return changed
     }
 
     override fun supported(profile: ProfileId): Boolean {
