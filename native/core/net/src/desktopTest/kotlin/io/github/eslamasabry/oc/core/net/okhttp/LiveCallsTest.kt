@@ -5,6 +5,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -61,6 +64,34 @@ class LiveCallsTest {
             closer.join(10_000)
         }
         assertNull(thrown.get(), "closing threw ${thrown.get()}")
+    }
+
+    @Test
+    fun `B-617 completed and failed calls drop tracked count to zero without gc`() {
+        val okCall = client.newCall(Request.Builder().url("http://127.0.0.1:9/ok").build())
+        val response = okCall.execute()
+        assertEquals(1, liveCalls.trackedCount(), "open response should be tracked until closed")
+        response.close()
+        assertEquals(0, liveCalls.trackedCount(), "closed response must drop tracked count to zero immediately")
+        liveCalls.cancelAll()
+        assertFalse(okCall.isCanceled(), "completed call should no longer be cancelled by cancelAll")
+
+        val failingClient =
+            LiveCalls.install(OkHttpClient()).newBuilder()
+                .addInterceptor { throw IOException("simulated failure") }
+                .build()
+        val failingLiveCalls = failingClient.interceptors.filterIsInstance<LiveCalls>().single()
+        val failedCall = failingClient.newCall(Request.Builder().url("http://127.0.0.1:9/fail").build())
+        assertFailsWith<IOException> { failedCall.execute() }
+        assertEquals(0, failingLiveCalls.trackedCount(), "failed call must drop tracked count to zero immediately")
+        failingLiveCalls.cancelAll()
+        assertFalse(failedCall.isCanceled(), "failed call should no longer be cancelled by cancelAll")
+    }
+
+    private fun LiveCalls.trackedCount(): Int {
+        val field = LiveCalls::class.java.getDeclaredField("calls")
+        field.isAccessible = true
+        return (field.get(this) as Collection<*>).size
     }
 
     /** This test is about the collector clearing a weak key mid-close, so it asks for a collection on purpose. */
