@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -45,6 +44,8 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
@@ -317,7 +318,7 @@ private fun leavingTakesNoTaps(
     }
     return Modifier.drawWithContent {
             drawContent()
-            if (isLeaving()) drawLayer(picture)
+            if (isLeaving()) kitDrawLayer(picture)
         }
         .graphicsLayer {
             val leaving = isLeaving()
@@ -325,7 +326,7 @@ private fun leavingTakesNoTaps(
             shape = if (leaving) NoArea else RectangleShape
         }
         .drawWithContent {
-            if (isLeaving()) picture.record { this@drawWithContent.drawContent() } else drawContent()
+            if (isLeaving()) kitRecord(picture) { this@drawWithContent.drawContent() } else drawContent()
         }
 }
 
