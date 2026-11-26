@@ -6,7 +6,6 @@ import android.system.Os
 import android.system.OsConstants
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.SecureRandom
@@ -359,7 +358,7 @@ internal class PhoneEngineNative(private val context: Context) {
     private fun readPrivate(file: File): String {
         if (!regularNoLinks(file)) throw Failure("private_state_invalid")
         val fd = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
-        return java.io.FileInputStream(fd).use { input ->
+        return OsFileDescriptors.useInputStream(fd) { input ->
             val bytes = readBounded(input)
             if (bytes.size > 8192) throw Failure("private_state_invalid")
             String(bytes, Charsets.UTF_8)
@@ -374,7 +373,7 @@ internal class PhoneEngineNative(private val context: Context) {
         val fd = Os.open(temporary.absolutePath, OsConstants.O_WRONLY or OsConstants.O_CREAT or
             OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, 384) // 0600
         try {
-            FileOutputStream(fd).use { output ->
+            OsFileDescriptors.useOutputStream(fd) { output ->
                 output.write(text.toByteArray(Charsets.UTF_8))
                 output.flush()
                 output.fd.sync()

@@ -272,6 +272,7 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                     )
                 },
             finish = finish,
+            automation = automation,
         )
 
     private fun Oc2AdaptedPart.toCore(): Part =

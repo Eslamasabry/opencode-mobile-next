@@ -675,6 +675,43 @@ class Workflow(unittest.TestCase):
         text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()
         self.assertIn('[ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then', text)
 
+    def test_quality_shard_avoids_duplicate_compile_all_test_sources_while_local_keeps_it(self):
+        root = os.path.join(HERE, '..', '..', '..')
+        wf = open(os.path.join(root, '.github', 'workflows', 'native-ci.yml')).read()
+        qbuild = open(os.path.join(root, 'native', 'quality', 'build.gradle.kts')).read()
+        self.assertIn('-Poc.testCompileGuard=off', wf)
+        self.assertIn('providers.gradleProperty("oc.testCompileGuard").orElse("auto")', qbuild)
+        self.assertIn('"off"', qbuild)
+
+    def test_junit_xml_reports_always_upload_on_passing_shards_and_custom_job(self):
+        root = os.path.join(HERE, '..', '..', '..')
+        wf = open(os.path.join(root, '.github', 'workflows', 'native-ci.yml')).read()
+        test_job = wf[wf.index('  test:'):wf.index('  record:')]
+        self.assertRegex(
+            test_job,
+            r'if:\s*always\(\)[\s\S]{0,200}name:\s*test-reports-\$\{\{\s*matrix\.shard\s*\}\}[\s\S]{0,200}build/test-results/\*\*/\*\.xml',
+        )
+        custom_job = wf[wf.index('  custom:'):wf.index('  detekt:')]
+        detekt_job = wf[wf.index('  detekt:'):wf.index('  android-unit:')]
+        self.assertIn('name: report-junit-custom', custom_job)
+        self.assertNotIn('name: report-junit-custom', detekt_job)
+
+    def test_apk_job_always_runs_on_protected_and_merge_proof_lanes_and_skips_cleanly_when_planned_false(self):
+        root = os.path.join(HERE, '..', '..', '..')
+        wf = open(os.path.join(root, '.github', 'workflows', 'native-ci.yml')).read()
+        plan_job = wf[wf.index('  plan:'):wf.index('  compile:')]
+        self.assertIn('run_apk:', plan_job)
+        for ref in ('native/glass-next', 'native/merge-proof-', 'native/rf-merge-proof-', 'master'):
+            self.assertIn(ref, plan_job)
+        code, md = run_gate(
+            '> Task :feature:chats:desktopTest\n',
+            ':feature:chats:desktopTest',
+            [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
+            jobs={'compile': {'failed': False, 'gradle_ran': True}},
+            results={'RESULT_APK': 'skipped'},
+        )
+        self.assertEqual(code, 0, md)
+
 
 class GradleCache(unittest.TestCase):
     """B-CI-340/341: only the line and master write the Gradle cache; every other ref reads it and never saves."""

@@ -189,6 +189,7 @@
     <string name="notifyBlockedMessage">Android is not letting OpenCode notify you, so questions and finished conversations cannot reach you.</string>
     <string name="notifySendTest">Send a test notification</string>
     <string name="notifySendTestDetail">See if Android lets them through.</string>
+    <string name="notifySendTestBlockedDetail">Stays active while notifications are off so you can check Android's setting.</string>
     <string name="notifyQuietDetail">Silent during the hours you choose.</string>
     <string name="notifySectionBackground">Background</string>
     <string name="notifySectionServers">Saved servers</string>

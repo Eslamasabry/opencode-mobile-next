@@ -253,22 +253,50 @@ internal class NativeComponentUpdateRecovery(
             catch (error: ErrnoException) { if (error.errno == OsConstants.ENOENT) null else throw error }
         override fun openReceiptNoFollow(file: File): ReceiptHandle {
             val descriptor = Os.open(file.absolutePath, OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
-            val stream = FileInputStream(descriptor)
+            return receiptHandle(
+                descriptor = descriptor,
+                statOf = { stat(Os.fstat(descriptor)) },
+                streamOf = ::FileInputStream,
+                closeFd = OsFileDescriptors::closeQuietly,
+            )
+        }
+
+        internal fun receiptHandle(
+            descriptor: java.io.FileDescriptor,
+            statOf: () -> Stat,
+            streamOf: (java.io.FileDescriptor) -> java.io.InputStream,
+            closeFd: (java.io.FileDescriptor) -> Unit,
+        ): ReceiptHandle {
+            var stream: java.io.InputStream? = null
+            try {
+                stream = streamOf(descriptor)
+            } finally {
+                if (stream == null) OsFileDescriptors.closeQuietly(descriptor, closeFd)
+            }
+            val input = stream
+            val closed = java.util.concurrent.atomic.AtomicBoolean(false)
             return object : ReceiptHandle {
-                override fun stat() = stat(Os.fstat(descriptor))
+                override fun stat() = statOf()
                 override fun read(maximum: Int): ByteArray {
                     check(maximum in 1..RECEIPT_READ_LIMIT)
                     val bytes = ByteArray(maximum)
                     var total = 0
                     while (total < maximum) {
-                        val count = stream.read(bytes, total, maximum - total)
+                        val count = input.read(bytes, total, maximum - total)
                         if (count < 0) break
                         check(count > 0)
                         total += count
                     }
                     return bytes.copyOf(total)
                 }
-                override fun close() = stream.close()
+                override fun close() {
+                    if (!closed.compareAndSet(false, true)) return
+                    try {
+                        input.close()
+                    } finally {
+                        OsFileDescriptors.closeQuietly(descriptor, closeFd)
+                    }
+                }
             }
         }
         override fun children(directory: File): List<File> {

@@ -57,6 +57,8 @@ public data class DemoWords(
     val more: String = "",
     /** The sample model's name on the message box's model chip. */
     val model: String = "",
+    /** The honest line for a question of the person's own. */
+    val own: String = "",
 )
 
 /**
@@ -145,13 +147,24 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
             // The sample is one ask and one answer; anything after it gets one honest line.
             append(content.more, prompt = false)
         } else {
-            append(content.reply, prompt = false)
-            request.value = editRequest(content)
-            stage.value = DemoStage.Review
+            replyInReady(text, content)
         }
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
         Outcome.Ok(Unit)
     }
+
+    private fun replyInReady(text: String, content: DemoWords) {
+        if (isSample(text, content)) {
+            append(content.reply, prompt = false)
+            request.value = editRequest(content)
+            stage.value = DemoStage.Review
+        } else {
+            append(content.own, prompt = false)
+        }
+    }
+
+    private fun isSample(text: String, content: DemoWords): Boolean =
+        text.trim().equals(content.prompt.trim(), ignoreCase = true)
 
     private fun editRequest(content: DemoWords): PermissionRequest =
         PermissionRequest(

@@ -14,4 +14,5 @@
     <string name="stateDemoModel">Пример модели</string>
     <string name="stateDemoReset">Сбросить демо</string>
     <string name="stateDemoLeave">Выйти из демо</string>
+    <string name="stateDemoOwn">Это демо не может отвечать на ваши собственные вопросы. Оно показывает только один пример: отправьте «%1$s», чтобы увидеть его. Чтобы задавать свои вопросы, выйдите из демо и настройте приложение по-настоящему.</string>
 </resources>

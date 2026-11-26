@@ -23,7 +23,6 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.StringReader
 
@@ -106,7 +105,7 @@ class BuiltinInstallerProducerQaService : Service() {
         if (error != null) value.put("error", error)
         val descriptor = Os.open(temporary.absolutePath, OsConstants.O_WRONLY or OsConstants.O_CREAT or
             OsConstants.O_EXCL or OsConstants.O_NOFOLLOW, PRIVATE_MODE)
-        val temporaryIdentity = FileOutputStream(descriptor).use {
+        val temporaryIdentity = OsFileDescriptors.useOutputStream(descriptor) {
             checkSafe(OsConstants.S_ISREG(Os.fstat(descriptor).st_mode), "producer_metadata_invalid")
             it.write(value.toString().toByteArray(Charsets.UTF_8)); it.fd.sync()
             Os.fstat(descriptor)
@@ -185,7 +184,7 @@ class BuiltinInstallerProducerQaService : Service() {
                 before.st_size in 1..maximum.toLong(), "producer_file_invalid")
             val descriptor = Os.open(file.absolutePath,
                 OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW or OsConstants.O_NONBLOCK, 0)
-            return FileInputStream(descriptor).use { stream ->
+            return OsFileDescriptors.useInputStream(descriptor) { stream ->
                 val opened = Os.fstat(descriptor)
                 checkSafe(sameFile(before, opened), "producer_file_changed")
                 val bytes = ByteArray(maximum + 1)
@@ -212,7 +211,7 @@ class BuiltinInstallerProducerQaService : Service() {
         fun kernel(pid: Int, name: String, maximum: Int): String {
             checkSafe(pid > 1 && name in setOf("stat", "status", "environ"), "producer_kernel_invalid")
             val descriptor = Os.open("/proc/$pid/$name", OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW, 0)
-            return FileInputStream(descriptor).use { stream ->
+            return OsFileDescriptors.useInputStream(descriptor) { stream ->
                 val bytes = ByteArray(maximum + 1)
                 var used = 0
                 while (used < bytes.size) {

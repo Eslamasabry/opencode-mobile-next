@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">Provider con numeri: %1$d</string>
     <string name="agentToolsMonitorRefresh">Leggi l'utilizzo ora</string>
     <string name="agentToolsMonitorEnableFirst">Attiva il monitoraggio dell'utilizzo prima di leggere.</string>
+    <string name="agentToolsTerminalsSection">Terminali</string>
+    <string name="agentToolsUsageMonitorSection">Monitoraggio uso</string>
+    <string name="agentToolsMaintenanceSection">Manutenzione</string>
 </resources>

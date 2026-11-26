@@ -44,6 +44,7 @@ internal class Oc2History(private val redactor: Redactor) {
                 errorKind = assistant?.error?.let {
                     refineMessageErrorKind(messageErrorKind(it.type) ?: MessageErrorKind.Unknown, it.message)
                 },
+                automation = (wire as? Oc2Message.User)?.metadata?.let(::parseAutomationMetadata),
             )
         val parts =
             if (assistant != null) {

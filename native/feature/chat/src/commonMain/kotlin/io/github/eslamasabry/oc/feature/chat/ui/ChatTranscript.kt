@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyBlock
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
@@ -164,10 +165,23 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyNote
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptDockLive
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentErrorFreeDailyLimit
+import io.github.eslamasabry.oc.ui.words.res.agentErrorFreeDailyLimitHint
+import io.github.eslamasabry.oc.ui.words.res.agentErrorModelCountryRefused
+import io.github.eslamasabry.oc.ui.words.res.agentErrorModelCountryRefusedHint
+import io.github.eslamasabry.oc.ui.words.res.chatAutomationOrigin
+import io.github.eslamasabry.oc.ui.words.res.chatAutomationOriginRun
+import io.github.eslamasabry.oc.ui.words.res.chatUiRetryingSoon
 import io.github.eslamasabry.oc.ui.words.res.revertReview
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWaitingForYou
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWriting
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatLiveHideSteps
 import io.github.eslamasabry.oc.ui.words.res.chatLiveShowSteps
@@ -299,6 +313,7 @@ internal class ReplyActions(
     /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
     val onOpenChanges: (() -> Unit)? = null,
     val answered: () -> List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptyList() },
+    val refused: () -> Set<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptySet() },
     val modelGoneLabel: ((model: String, provider: String) -> String)? = null,
 )
 
@@ -606,6 +621,35 @@ internal fun ChatTranscriptList(
         list.lazy.scrollToItem(at)
         androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { list.following = false }
     }
+    // B-CHAT-547 (owner decision O2 = D, 2026-11-24): the running turn's dock status is built without reading the
+    // clock (B-CHAT-340: clock ticks recompose only the row that draws a time, never the list).
+    val runTurn = unique.firstOrNull()?.turnId
+    val runWork = runTurn?.let { facts.work[it] }
+    val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
+    val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
+    val liveStyled = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
+    val liveUi = if (liveRow) live else null
+    val dockLine =
+        if (liveUi != null && listWords != null && liveStyled)
+            liveLineWords(
+                live = liveUi,
+                listWords = listWords,
+                notice = facts.live,
+                work = runWork,
+                writing = streaming,
+                elapsedMs = null,
+            )
+        else null
+    val dockLive =
+        if (dockLine != null && liveUi != null && listWords != null) {
+            KitTranscriptDockLive(
+                words = dockStatusWords(liveUi, listWords, facts.live, runWork, streaming),
+                tone = dockLine.tone,
+                spoken = dockLine.spoken,
+                onRail = onRail,
+                key = ListKeys.LIVE,
+            )
+        } else null
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -615,6 +659,8 @@ internal fun ChatTranscriptList(
         // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
         // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
         contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
+        // The live line, repeated at the docked "Jump to latest" row's start while the person reads older rows.
+        dockLive = dockLive,
         // Reading back to the top of what is loaded brings the earlier messages by itself; the row stays the visible
         // way to them (and the way to try again after a read that failed).
         onReachOldest = if (older != null && !older.loading && older.failure == null) onLoadOlder else null,
@@ -642,24 +688,21 @@ internal fun ChatTranscriptList(
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }
-                val runTurn = unique.firstOrNull()?.turnId
-                val runWork = runTurn?.let { facts.work[it] }
                 val nowMs = facts.clock.read()
-                if (LocalKitAppearance.current.style != KitSurfaceStyle.Signal) {
+                if (liveStyled) {
+                    val startedMs =
+                        facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs }
                     val line =
                         liveLineWords(
                             live = live,
                             listWords = listWords,
                             notice = notice,
                             work = runWork,
-                            writing = unique.firstOrNull().let { it is BlockRow && it.live },
+                            writing = streaming,
                             // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
-                            elapsedMs =
-                                (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
-                                    ?.let { nowMs - it },
+                            elapsedMs = startedMs?.let { nowMs - it },
                         )
                     // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
-                    val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
                     // A retry that keeps failing offers another model besides waiting or Stop.
                     val retryWayOut =
                         notice is LiveNoticeUi.Retry && notice.facts.offerWayOut && !live.canUndoStopAfterStep &&
@@ -688,7 +731,6 @@ internal fun ChatTranscriptList(
                             modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
-                    val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
                     if (line != null) KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
@@ -1511,11 +1553,14 @@ private fun ChatRow(
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
                         val goneKey = goneModelKey(row)
-                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
-                        // B-523: a known gone model names the model and offers Use/Choose; omit "send a message to
-                        // carry on" so the card does not contradict the primary button.
-                        val modelGoneKnown = modelGone != null && setUp == null && limit == null
-                        if (signInAgainEarly == null && (stillWorking || !modelGoneKnown))
+                        val block = ReplyBlock.of(reason)
+                        val blockWords = failedBlockWords(block, row, reply)
+                        val modelGone =
+                            if (blockWords != null) null else modelGoneWords(row, kind, block, goneKey, reply)
+                        // B-523: a known gone model, free daily limit or country refusal already states the block;
+                        // omit "send a message to carry on" so the card does not contradict the primary action.
+                        val omitCarryOn = (modelGone != null || blockWords != null) && setUp == null && limit == null
+                        if (signInAgainEarly == null && (stillWorking || !omitCarryOn))
                             KitQuietLine(
                                 stringResource(
                                     if (stillWorking) Res.string.liveFailedStillWorking
@@ -1548,7 +1593,10 @@ private fun ChatRow(
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
-                        else if (modelGone != null) KitQuietLine(modelGone)
+                        else if (blockWords != null) {
+                            KitQuietLine(blockWords.first)
+                            KitQuietLine(blockWords.second)
+                        } else if (modelGone != null) KitQuietLine(modelGone)
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
@@ -1606,18 +1654,7 @@ private fun ChatRow(
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
                             if (reply != null && otherWays) {
-                                val suggestion =
-                                    if (
-                                        row.errorKind == MessageErrorKind.ModelNotFound ||
-                                            kind == ReplyFailureKind.Model
-                                    ) {
-                                        ErrorRecovery.suggestedModel(reason, reply.models)
-                                            ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
-                                                goneKey,
-                                                reply.answered(),
-                                                reply.models,
-                                            )
-                                    } else null
+                                val suggestion = failedModelSuggestion(row, kind, block, goneKey, reply)
                                 val showSignIn =
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                         reply.signInSettingsLabel != null
@@ -1901,23 +1938,46 @@ private fun goneModelKey(row: FooterRow): io.github.eslamasabry.oc.feature.chat.
         }
     }
 
+private fun failedModelName(row: FooterRow, reply: ReplyActions?): String? =
+    row.modelId?.takeIf { it.isNotBlank() }?.let { modelId ->
+        val listed =
+            reply?.models?.firstOrNull {
+                it.modelId == modelId && (row.providerId.isNullOrBlank() || it.providerId == row.providerId)
+            }
+        listed?.label?.takeIf { it.isNotBlank() }
+            ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(modelId)
+    }
+
+@Composable
+private fun failedBlockWords(
+    block: ReplyBlock?,
+    row: FooterRow,
+    reply: ReplyActions?,
+): Pair<String, String>? =
+    when (block) {
+        ReplyBlock.FreeDailyLimit ->
+            stringResource(Res.string.agentErrorFreeDailyLimit) to
+                stringResource(Res.string.agentErrorFreeDailyLimitHint)
+        ReplyBlock.CountryRefusal ->
+            failedModelName(row, reply)?.let { model ->
+                stringResource(Res.string.agentErrorModelCountryRefused, model) to
+                    stringResource(Res.string.agentErrorModelCountryRefusedHint)
+            }
+        else -> null
+    }
+
 private fun modelGoneWords(
     row: FooterRow,
     kind: ReplyFailureKind,
+    block: ReplyBlock?,
     goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
     reply: ReplyActions?,
 ): String? {
     val format = reply?.modelGoneLabel
     val isModelError = row.errorKind == MessageErrorKind.ModelNotFound || kind == ReplyFailureKind.Model
-    return if (format == null || goneKey == null || !isModelError) null
+    val modelName = if (block == null && goneKey != null && isModelError) failedModelName(row, reply) else null
+    return if (format == null || goneKey == null || modelName == null) null
     else {
-        val listed =
-            reply.models.firstOrNull {
-                it.providerId == goneKey.providerId && it.modelId == goneKey.modelId
-            }
-        val modelName =
-            listed?.label?.takeIf { it.isNotBlank() }
-                ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(goneKey.modelId)
         val providerName =
             reply.models
                 .firstOrNull { it.providerId == goneKey.providerId && it.providerName.isNotBlank() }
@@ -1925,6 +1985,31 @@ private fun modelGoneWords(
                 ?: goneKey.providerId
         format(modelName, providerName)
     }
+}
+
+private fun failedModelSuggestion(
+    row: FooterRow,
+    kind: ReplyFailureKind,
+    block: ReplyBlock?,
+    goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
+    reply: ReplyActions,
+): io.github.eslamasabry.oc.feature.chat.world.ComposerModel? {
+    val needsModel =
+        row.errorKind == MessageErrorKind.ModelNotFound ||
+            kind == ReplyFailureKind.Model ||
+            block == ReplyBlock.CountryRefusal
+    if (!needsModel) return null
+    val refused = reply.refused()
+    return ErrorRecovery.suggestedModel(row.reason, reply.models)
+        ?.takeUnless {
+            io.github.eslamasabry.oc.feature.chat.world.ModelKey(it.providerId, it.modelId) in refused
+        }
+        ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
+            goneKey,
+            reply.answered(),
+            reply.models,
+            refused,
+        )
 }
 
 /**
@@ -2088,10 +2173,18 @@ private fun SentPromptBubble(row: PromptRow) {
         rememberKitSentFiles(
             remember(row.files) { row.files.map { KitSentFile(it.name, it.mime, it.url) } }
         )
+    val origin =
+        row.automationName?.takeIf { it.isNotBlank() }?.let { name ->
+            val run = row.automationRun?.takeIf { it > 0 }
+            if (run != null)
+                stringResource(Res.string.chatAutomationOriginRun, name, Numbers.digits(run.toString()))
+            else stringResource(Res.string.chatAutomationOrigin, name)
+        }
     KitPromptBubble(
         CardAnswerDisplay.text(row.text),
         photos = sent.photos,
         attachments = sent.attachments,
+        origin = origin,
     )
 }
 
@@ -2120,3 +2213,39 @@ private fun AnchoredStretches(
 private fun RowTime(createdMs: Long, clock: FactsClock) {
     KitMessageTimestamp(createdMs, clock.read())
 }
+
+/**
+ * The one short status word the docked "Jump to latest" row carries for a running turn (the lead's rule of
+ * 2026-11-25): the live line's own short word for the state, with no elapsed time, countdown or tool name, so it
+ * stays one whole line beside the label or gives way to the dot alone.
+ */
+@Composable
+private fun dockStatusWords(
+    live: LiveTurnUi,
+    listWords: ChatListWords,
+    notice: LiveNoticeUi?,
+    work: TurnWork?,
+    writing: Boolean,
+): String {
+    val slow =
+        notice is LiveNoticeUi.Stall &&
+            notice.notice == io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice.ModelSlow
+    return when {
+        live.stopping -> listWords.stopping
+        live.stoppingAfterStep -> listWords.stoppingAfterStep
+        notice is LiveNoticeUi.Retry -> stringResource(Res.string.chatUiRetryingSoon, "")
+        notice is LiveNoticeUi.ToolWait || notice is LiveNoticeUi.StuckCommand ->
+            stringResource(Res.string.kitTurnLiveWaitingForYou)
+        notice != null && !slow -> liveNoticeWords(notice)
+        else -> stringResource(Res.string.kitTurnLiveNow, dockWorkingWord(slow, work, writing))
+    }
+}
+
+@Composable
+private fun dockWorkingWord(slow: Boolean, work: TurnWork?, writing: Boolean): String =
+    when {
+        slow -> stringResource(Res.string.kitTurnLiveStillThinking)
+        work?.now != null || work?.steps?.isNotEmpty() == true -> stringResource(Res.string.kitTurnLiveWorking)
+        writing -> stringResource(Res.string.kitTurnLiveWriting)
+        else -> stringResource(Res.string.kitTurnLiveThinking)
+    }

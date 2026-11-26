@@ -42,7 +42,8 @@ import kotlin.test.assertTrue
  * here... just below the Jump to latest". Scrolled away from the newest message, the transcript's soft fade above the
  * composer ended at its strongest where the composer's room begins; under liquid glass nothing lay below it, so the
  * transcript came back at full brightness in one pixel row. Guard: a chat scrolled away, its words a bright even
- * block; down the side column the brightness never jumps from one row to the next.
+ * block; down the side column the brightness never jumps from one row to the next. Since owner decision O2 = D
+ * (2026-11-24) what ends the words there is the docked "Jump to latest" row's clear band and its soft edge.
  */
 class JumpFadeEdgeTest {
     private val rows = (0 until 80).map { "Row $it" }
@@ -54,6 +55,7 @@ class JumpFadeEdgeTest {
 
     private fun render(appearance: KitAppearance, platform: KitPlatform): PixelMap {
         lateinit var image: PixelMap
+        lateinit var list: TranscriptListState
         runDesktopComposeUiTest((W * DENSITY).toInt(), (H * DENSITY).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
@@ -61,6 +63,7 @@ class JumpFadeEdgeTest {
                         Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                             val source = rememberKitFrostState()
                             val state = rememberTranscriptListState()
+                            list = state
                             KitScreen(
                                 page = true,
                                 overlayChrome = true,
@@ -81,6 +84,8 @@ class JumpFadeEdgeTest {
             }
             waitForIdle()
             onNodeWithTag("transcript-list").performScrollToIndex(40)
+            // A scroll from code keeps following the newest row; the person's drag stops it, and the docked row shows.
+            runOnUiThread { list.following = false }
             waitForIdle()
             onNodeWithTag("jump-to-latest").assertExists()
             image = onNodeWithTag("scene").captureToImage().toPixelMap()

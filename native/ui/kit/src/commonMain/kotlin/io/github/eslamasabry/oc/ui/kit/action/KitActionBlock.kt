@@ -71,7 +71,8 @@ public object ActionBlockRules {
  * side, pulled back to the column's edge ([KitInset]); a destructive tertiary or a reason to show puts each tertiary
  * action on its own line, and a destructive tertiary forces the stack on every window (LAY-14). From medium up the
  * block is one end-aligned row, primary at the end, its reasons collected under it. [pair]: a primary with one short
- * secondary beside it on a phone, while both fit.
+ * secondary beside it on a phone, while both fit. [tertiaryCentred]: where it stacks, the tertiary actions sit on the
+ * primary's middle instead of at the column's start edge (a centred card: the home's opening failure, B-555).
  *
  * States: default, disabled reasons, working
  * Text: frame
@@ -80,6 +81,8 @@ public object ActionBlockRules {
  * Replaces: KitActionBlock (lib/ui/kit/kit_buttons.dart)
  */
 @OptIn(ExperimentalLayoutApi::class)
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
+// composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitActionBlock(
     modifier: Modifier = Modifier,
@@ -88,6 +91,8 @@ public fun KitActionBlock(
     tertiary: List<KitAction> = emptyList(),
     pair: Boolean = false,
     answerPair: Boolean = false,
+    /** In the stacked block, the tertiary actions are centred on the primary's middle, not set at its start edge. */
+    tertiaryCentred: Boolean = false,
 ) {
     if (primary == null && secondary == null && tertiary.isEmpty()) return
     val (shown, overflow) = ActionBlockRules.split(tertiary)
@@ -115,7 +120,7 @@ public fun KitActionBlock(
                     Spacer(Modifier.height(gap))
                     Stacked(primary!!, KitButtonRole.Primary)
                 }
-            paired && !large && maxWidth.value >= Layout.PAIR_ROW_MIN_WIDTH ->
+            paired && !large && LocalKitWindow.current.widthDp >= Layout.PAIR_ROW_MIN_WIDTH ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
                     KitButton(primary!!, Modifier.weight(1f), KitButtonRole.Primary)
                     KitButton(secondary!!, role = KitButtonRole.Secondary, expand = false)
@@ -167,13 +172,27 @@ public fun KitActionBlock(
                                     if (overflow.isNotEmpty()) KitInset { MoreActions(overflow) }
                                 }
                             } else {
-                                KitInset {
+                                val line: @Composable () -> Unit = {
+                                    shown.forEach { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
+                                    if (overflow.isNotEmpty()) MoreActions(overflow)
+                                }
+                                if (tertiaryCentred) {
                                     FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement =
+                                            Arrangement.spacedBy(Space.S1.dp, Alignment.CenterHorizontally),
                                         itemVerticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        shown.forEach { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
-                                        if (overflow.isNotEmpty()) MoreActions(overflow)
+                                        line()
+                                    }
+                                } else {
+                                    KitInset {
+                                        FlowRow(
+                                            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                                            itemVerticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            line()
+                                        }
                                     }
                                 }
                             }

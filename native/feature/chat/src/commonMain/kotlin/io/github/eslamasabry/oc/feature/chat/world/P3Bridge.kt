@@ -108,6 +108,8 @@ internal class P3Bridge(private val sessionId: String) {
             errorKind = m.errorKind,
             providerId = m.providerId,
             modelId = m.modelId,
+            automationName = m.automation?.name,
+            automationRun = m.automation?.run,
         )
 
     private fun part(raw: CorePart): Part {

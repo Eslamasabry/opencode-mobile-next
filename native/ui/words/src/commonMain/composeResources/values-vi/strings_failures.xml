@@ -102,4 +102,8 @@
     <string name="agentErrorServerDiskFullHintPhone">Hãy giải phóng một ít dung lượng trên điện thoại này rồi thử lại.</string>
     <string name="chatSendPhoneHelperNoAnswer">Các tác nhân trên điện thoại này không phản hồi. Có thể chúng vẫn đang khởi động; hãy chờ một lát rồi thử lại.</string>
     <string name="chatSendFailureSignedInPast">%1$s đã cần bạn đăng nhập lại</string>
+    <string name="agentErrorFreeDailyLimit">Tin nhắn miễn phí cho hôm nay đã hết.</string>
+    <string name="agentErrorFreeDailyLimitHint">Chúng sẽ có lại vào ngày mai. Để tiếp tục ngay bây giờ, hãy kết nối nhà cung cấp của riêng bạn.</string>
+    <string name="agentErrorModelCountryRefused">%1$s không được cung cấp tại quốc gia của bạn.</string>
+    <string name="agentErrorModelCountryRefusedHint">Chọn mô hình khác để tiếp tục.</string>
 </resources>

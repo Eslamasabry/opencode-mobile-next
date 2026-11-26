@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">Nhà cung cấp có số liệu: %1$d</string>
     <string name="agentToolsMonitorRefresh">Đọc mức sử dụng ngay</string>
     <string name="agentToolsMonitorEnableFirst">Hãy bật theo dõi mức sử dụng trước khi đọc.</string>
+    <string name="agentToolsTerminalsSection">Các terminal</string>
+    <string name="agentToolsUsageMonitorSection">Theo dõi mức sử dụng</string>
+    <string name="agentToolsMaintenanceSection">Bảo trì</string>
 </resources>

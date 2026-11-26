@@ -195,6 +195,9 @@ public object TabRules {
         fun at(v: Int): Float = if (rtl) (max - v).toFloat() else v.toFloat()
         fun back(x: Float): Int = (if (rtl) max - x else x).roundToInt().coerceIn(0, max)
         val tol = 0.5f
+        val minLeft = lefts.min()
+        val maxRight = lefts.indices.maxOf { lefts[it] + widths[it] }
+        if (maxRight - minLeft <= view + tol) return null
         fun whole(x: Float): Boolean {
             val l = x
             val r = x + view
@@ -369,12 +372,11 @@ internal fun TabStrip(
     // The strip follows the pill: its scroll is the pill's own place (TabPill.stripScroll), set as the pages move. A
     // strip the person has scrolled by hand eases back under the pill as the pages travel, never in one jump.
     val padPx = with(LocalDensity.current) { gutter.toPx() }
-    // A strip that overruns its window by less than a tab has no place to rest on whole tabs: it packs the tabs closer
-    // (the Appearance page's four tabs at 360 dp), and only then scrolls.
-    var tight by remember(tabs) { mutableStateOf(false) }
-    // Packed and still without a place to rest on whole tabs (Appearance's four tabs at 2x text, look of build 10093:
-    // "Text & motion" stood cut at the edge), the words shrink toward their own size until the strip fits.
-    var fit by remember(tabs, LocalDensity.current.fontScale) { mutableFloatStateOf(1f) }
+    val appDensity = LocalKitAppDensity.current ?: LocalDensity.current
+    // A strip that overruns its window by less than a tab has no place to rest on whole tabs: it packs to compact
+    // padding (8 dp), shrinks large text toward spec size, and falls back to 4 dp only on narrow widths.
+    var pack by remember(tabs, appDensity.fontScale) { mutableIntStateOf(0) }
+    var fit by remember(tabs, appDensity.fontScale) { mutableFloatStateOf(1f) }
     val rest: (Int) -> Int = { v ->
         val s = model.slots
         TabRules.restSnap(v, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl) ?: v
@@ -404,7 +406,7 @@ internal fun TabStrip(
     }
     // A strip that overflows never comes to rest with a tab cut by an edge: once the pages stop and no finger is on it,
     // it eases to the nearest place that starts and ends between tabs and keeps the chosen tab whole.
-    LaunchedEffect(model, scroll, rtl, selected, tight) {
+    LaunchedEffect(model, scroll, rtl, selected, pack, fit) {
         snapshotFlow {
             val s = model.slots
             if (s.lefts.isEmpty() || scroll.viewportSize == 0 || scroll.isScrollInProgress) null else Triple(position(), scroll.value, s)
@@ -413,9 +415,10 @@ internal fun TabStrip(
             val s = model.slots
             val goal = TabRules.restSnap(scroll.value, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl)
             when {
-                goal == null && !tight -> tight = true
-                goal == null && fit > TabRules.MIN_FIT ->
+                goal == null && pack == 0 -> pack = 1
+                goal == null && appDensity.fontScale > 1f && fit > TabRules.MIN_FIT ->
                     fit = TabRules.fitAfter(fit, scroll.viewportSize.toFloat(), s.content)
+                goal == null && pack == 1 -> pack = 2
                 goal != null && goal != scroll.value -> scroll.animateScrollTo(goal)
             }
         }
@@ -543,7 +546,7 @@ internal fun TabStrip(
                                 if (needsYouWords != null) stateDescription = needsYouWords
                             }
                             .tabSplit(model, i, onPill = false, position, elastic, inset, squash, corner, snap = !solid)
-                            .padding(horizontal = if (tight) Space.S1.dp else Space.S3.dp),
+                            .padding(horizontal = tabHorizontalPadding(pack)),
                         contentAlignment = Alignment.Center,
                     ) {
                         // A count stays in the first ink beside its quieter word, as it always has.
@@ -556,7 +559,7 @@ internal fun TabStrip(
                         Modifier
                             .clearAndSetSemantics {}
                             .tabSplit(model, i, onPill = true, position, elastic, inset, squash, corner, snap = !solid)
-                            .padding(horizontal = if (tight) Space.S1.dp else Space.S3.dp),
+                            .padding(horizontal = tabHorizontalPadding(pack)),
                         contentAlignment = Alignment.Center,
                     ) {
                         TabFace(tab, onPill, onPill, rtl)
@@ -566,7 +569,7 @@ internal fun TabStrip(
         ) { measurables, constraints ->
             val n = tabs.size
             val pad = gutter.roundToPx()
-            val between = (if (tight) Space.S1.dp else gap).roundToPx()
+            val between = (if (pack > 0) Space.S1.dp else gap).roundToPx()
             val loose = Constraints(maxHeight = constraints.maxHeight)
             val base = ArrayList<Placeable>(n)
             var height = 0
@@ -606,6 +609,14 @@ internal fun TabStrip(
       }
     }
 }
+
+/** Horizontal pill padding across the three packing steps: normal (12 dp), compact (8 dp), tight (4 dp). */
+private fun tabHorizontalPadding(pack: Int): Dp =
+    when (pack) {
+        0 -> Space.S3.dp
+        1 -> Space.S2.dp
+        else -> Space.S1.dp
+    }
 
 /** How far a packed strip's words are shrunk to fit ([TabRules.fitAfter]); 1 = their usual size. */
 private val LocalTabFit = androidx.compose.runtime.compositionLocalOf { 1f }

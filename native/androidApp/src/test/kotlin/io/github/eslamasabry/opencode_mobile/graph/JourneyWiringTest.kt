@@ -325,4 +325,29 @@ class JourneyWiringTest {
             io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.reset()
         }
     }
+
+    @Test
+    fun `B-JOURNEY-112 OpenCode's limit types are free_limit and its no-route type is model_not_found`() {
+        val free =
+            "Free usage limit reached. Connect a provider or subscribe to OpenCode Go to keep going, or switch models."
+        val country = "This model is not available in your country."
+        val noRoute = "Model unavailable: opencode/glm-5.3-flash-free"
+        val cases =
+            listOf(
+                Triple(null, "provider.free-limit", free) to "free_limit",
+                Triple(null, "provider.free-limit", null) to "free_limit",
+                Triple(null, "provider.go-limit", null) to "free_limit",
+                Triple(null, "provider.budget-limit", null) to "free_limit",
+                Triple(null, " Provider.Model-Budget-Limit ", null) to "free_limit",
+                Triple(null, "provider.quota", null) to "free_limit",
+                Triple(null, "provider.no-route", noRoute) to "model_not_found",
+                Triple(null, "provider.auth", country) to "model_not_found",
+                Triple(null, null, free) to "model_not_found",
+            )
+        for ((input, expected) in cases) {
+            val actual = turnErrorWord(input.first, input.second, input.third)
+            assertEquals(expected, actual, input.toString())
+            assertTrue(actual in HealthWords.turnErrorKinds, "$actual not in turnErrorKinds")
+        }
+    }
 }

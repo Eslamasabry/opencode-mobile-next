@@ -847,6 +847,12 @@ public interface NewConversationActions {
 
     public fun shown() {}
 
+    /**
+     * Big screens: this page rests beside the conversation list (not on the back stack). It is on screen though the
+     * navigator's top is the list, so what it opens opens beside the list.
+     */
+    public fun restingBeside(resting: Boolean): Unit = Unit
+
     public fun back()
 
     public fun agents() {}
@@ -953,6 +959,9 @@ public class NewConversationViewModel(
     kept: Set<ImportsLastKnown> = emptySet(),
 ) : ViewModel(), NewConversationActions {
     private val importShelf = kept.firstOrNull()
+
+    /** Big screens: resting beside the conversation list (the screen says so; see [restingBeside]). */
+    private var besideList = false
     private val mutable =
         MutableStateFlow(
             if (route.initialText.isEmpty()) NewConversationUi()
@@ -1004,6 +1013,13 @@ public class NewConversationViewModel(
 
     /** [ChatsRoute.New.phoneAgent] is applied once, on the first setup that offers it. */
     private var wantedApplied = false
+
+    override fun restingBeside(resting: Boolean) {
+        besideList = resting
+    }
+
+    /** This page is what the person sees: on top of the stack, or resting beside the conversation list. */
+    private fun shownHere(): Boolean = nav.top.value == route || besideList
 
     override fun shown() {
         // Back from Android's All files access page: the Phone storage row says what the person answered.
@@ -1367,7 +1383,7 @@ public class NewConversationViewModel(
             val profile = startProfile(shown) ?: return@launch
             val current = host.review(profile, shown.directory)
             if (current is Outcome.Ok && current.value == ref) {
-                if (nav.top.value == route) nav.back()
+                if (shownHere()) nav.back()
                 nav.openChat(ref)
             } else mutable.update { it.copy(reviewConversation = null) }
         }
@@ -1409,7 +1425,7 @@ public class NewConversationViewModel(
                                 textRevision = if (made != null) it.textRevision + 1 else it.textRevision,
                             )
                         }
-                        if (made != null && nav.top.value == route) {
+                        if (made != null && shownHere()) {
                             nav.back()
                             nav.openChat(made)
                         }
@@ -2018,7 +2034,7 @@ public class NewConversationViewModel(
         viewModelScope.launch {
             when (val result = host.import(profile, directory, conversation)) {
                 is Outcome.Ok -> {
-                    if (nav.top.value == route) nav.back()
+                    if (shownHere()) nav.back()
                     nav.openChat(result.value)
                 }
                 is Outcome.Failed ->
@@ -2166,7 +2182,7 @@ public class NewConversationViewModel(
                                         shown.separateCopy,
                                         attempt,
                                         onStarted = { ref ->
-                                            if (nav.top.value == route) {
+                                            if (shownHere()) {
                                                 // Keep this entry's ViewModel alive until the
                                                 // receipt settles, while the real chat owns the
                                                 // composer and the engine's pending bubble.
@@ -2203,7 +2219,7 @@ public class NewConversationViewModel(
             if (!unopenedPhoneStart && (result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
                 // Once the session exists, its chat owns the receipt and always has an editor.
                 // An uncertain send must not strand the person on the chip-only starting frame.
-                if (openedConversation == null && nav.top.value == route) {
+                if (openedConversation == null && shownHere()) {
                     nav.back()
                     nav.openChat(result.ref)
                 }

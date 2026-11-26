@@ -1,7 +1,18 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.chat.E20Goldens.picture
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTrayRules
@@ -12,12 +23,29 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
+import java.io.File
+import javax.imageio.ImageIO
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /** E20-S20: the composer's "+" tray and its More list copy Flutter (composer_tray.dart, composer_tools.dart). */
@@ -177,5 +205,224 @@ class E20S20ComposerTrayTest {
         onNodeWithTag("composer-tools-sheet").assertDoesNotExist()
         assertTrue("draftChanged <>" in actions.calls)
         assertEquals(0, commands)
+    }
+
+    private data class CompactCase(
+        val scale: Float,
+        val scaleTag: String,
+        val dark: Boolean,
+        val modeTag: String,
+    )
+
+    private val compactCases =
+        listOf(
+            CompactCase(1.0f, "1_0", false, "light"),
+            CompactCase(1.0f, "1_0", true, "dark"),
+            CompactCase(1.3f, "1_3", false, "light"),
+            CompactCase(1.3f, "1_3", true, "dark"),
+        )
+
+    private val trayTileTags =
+        listOf(
+            "composer-tool-gallery",
+            "composer-tool-camera",
+            "composer-tool-attach",
+            "composer-tray-more",
+        )
+
+    private fun Rect.overlapsRect(other: Rect): Boolean =
+        right > other.left && other.right > left && bottom > other.top && other.bottom > top
+
+    private fun forEachCompactCase(
+        phrases: List<String>,
+        block: KitUiTest.(CompactCase, Actions) -> Unit,
+    ) {
+        for (case in compactCases) {
+            val actions = Actions()
+            kitUiTest(360, 480) {
+                setContent {
+                    E20Scene(scale = case.scale, dark = case.dark, motion = MotionLevel.Full) {
+                        KitSheetHost {
+                            Box(
+                                Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.BottomCenter,
+                            ) {
+                                BasicComposer(ui().copy(phrases = phrases), actions, chrome())
+                            }
+                        }
+                    }
+                }
+                waitForIdle()
+                block(case, actions)
+            }
+        }
+    }
+
+    private fun KitUiTest.assertNoPhraseTrayOverlap(phrases: List<String>, where: String) {
+        val tiles =
+            trayTileTags.map { tag ->
+                val rect = boundsOfTag(tag)
+                assertTrue(rect.width > 0f && rect.height > 0f, "$where: tray tile $tag empty $rect")
+                tag to rect
+            }
+        val phraseBoxes = buildList {
+            onAllNodesWithTag("chat-phrase-chips", useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .forEach { add("row" to it.boundsInRoot) }
+            phrases.forEach { phrase ->
+                onAllNodesWithText(phrase, useUnmergedTree = true)
+                    .fetchSemanticsNodes()
+                    .forEach { add(phrase to it.boundsInRoot) }
+            }
+        }
+        for ((phraseLabel, chipRect) in phraseBoxes) {
+            for ((tileTag, tileRect) in tiles) {
+                assertFalse(
+                    chipRect.overlapsRect(tileRect),
+                    "$where: phrase '$phraseLabel' $chipRect overlaps tray '$tileTag' $tileRect",
+                )
+            }
+        }
+    }
+
+    private fun KitUiTest.settleTrayMotion() {
+        mainClock.advanceTimeBy(1_500L)
+        waitForIdle()
+    }
+
+    @Test
+    fun `B-483 plus tray at 360 dp has zero overlap with learned-phrase chips`() {
+        val phrases = listOf("Hi", "Continue", "Run the tests")
+        forEachCompactCase(phrases) { case, _ ->
+            val where = "360dp ${case.modeTag} ${case.scaleTag}"
+            onNodeWithTag("chat-phrase-chips", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithTag("kit-composer-tray").assertDoesNotExist()
+            onNodeWithTag("chat-attach-button").performClick()
+            mainClock.advanceTimeBy(64L)
+            assertNoPhraseTrayOverlap(phrases, "$where mid")
+            settleTrayMotion()
+            onNodeWithTag("kit-composer-tray").assertIsDisplayed()
+            val out = File("build/renders/b483-plus-tray-360-after-${case.modeTag}-${case.scaleTag}.png")
+            out.parentFile.mkdirs()
+            ImageIO.write(picture(), "png", out)
+            assertNoPhraseTrayOverlap(phrases, where)
+        }
+    }
+
+    @Composable
+    private fun BeforeFixComposer(phrases: List<String>) {
+        val field = remember { TextFieldState() }
+        val trayActions =
+            listOf(
+                KitComposerTrayAction("Photos", KitIcons.images, { Unit }, testTag = "composer-tool-gallery"),
+                KitComposerTrayAction("Camera", KitIcons.camera, { Unit }, testTag = "composer-tool-camera"),
+                KitComposerTrayAction("File", KitIcons.attach, { Unit }, testTag = "composer-tool-attach"),
+                KitComposerTrayAction("More", KitIcons.more, { Unit }, testTag = "composer-tray-more"),
+            )
+        KitComposerBox(
+            running = false,
+            stacked = true,
+            hasLeading = true,
+            chips = { KitComposerChip(label = "", onClick = { Unit }, icon = KitIcons.model, shrinks = true) },
+            above = {
+                // Pre-fix layout: phrase chips and tray placed directly in KitComposerBox's Box without Column.
+                KitPhraseChips(
+                    phrases = phrases,
+                    label = "Quick phrases",
+                    insertLabel = { "Insert $it" },
+                    menuLabel = { "$it options" },
+                    hideLabel = "Hide",
+                    onChoose = { Unit },
+                    onHide = { Unit },
+                    modifier = Modifier.testTag("chat-phrase-chips"),
+                )
+                KitComposerTray(open = true, actions = trayActions)
+            },
+            field = {
+                KitComposerFieldRow {
+                    KitField(
+                        state = field,
+                        label = "",
+                        kind = KitFieldKind.Multiline,
+                        multilineLines = 1..5,
+                        composer = true,
+                        labelShown = false,
+                        framed = false,
+                    )
+                }
+            },
+            leading = { KitComposerAdd(label = "Close", onClick = { Unit }, open = true) },
+            trailing = {
+                KitComposerSend(label = "Send", onClick = { Unit }, enabled = KitEnabled.Disabled("Message"))
+            },
+        )
+    }
+
+    @Test
+    fun `B-483 before-fix unstacked above slot reproduces overlap at 360 dp`() {
+        val phrases = listOf("Hi", "Continue", "Run the tests")
+        for (case in compactCases) {
+            val where = "360dp ${case.modeTag} ${case.scaleTag}"
+            kitUiTest(360, 480) {
+                setContent {
+                    E20Scene(scale = case.scale, dark = case.dark) {
+                        Box(
+                            Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.BottomCenter,
+                        ) {
+                            BeforeFixComposer(phrases)
+                        }
+                    }
+                }
+                waitForIdle()
+                val chipRect = boundsOfTag("chat-phrase-chips")
+                val photosRect = boundsOfTag("composer-tool-gallery")
+                assertTrue(chipRect.overlapsRect(photosRect), "$where: before-fix scene must show overlap")
+                val out = File("build/renders/b483-plus-tray-360-before-${case.modeTag}-${case.scaleTag}.png")
+                out.parentFile.mkdirs()
+                ImageIO.write(picture(), "png", out)
+            }
+        }
+    }
+
+    @Test
+    fun `B-483 tapping Photos with learned-phrase chips invokes Photos and never fires a phrase`() {
+        val phrases = listOf("Hi", "Continue")
+        forEachCompactCase(phrases) { case, actions ->
+            val where = "360dp ${case.modeTag} ${case.scaleTag}"
+            onNodeWithTag("chat-attach-button").performClick()
+            settleTrayMotion()
+            onNodeWithTag("kit-composer-tray").assertIsDisplayed()
+            onNodeWithTag("composer-tool-gallery").performClick()
+            settleTrayMotion()
+            assertEquals(listOf("attach Photos"), actions.calls, "$where: Photos tap must invoke Photos only")
+            onNodeWithTag("kit-composer-tray").assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `B-483 closing the plus tray restores learned-phrase chips cleanly`() {
+        val phrases = listOf("Hi", "Continue")
+        forEachCompactCase(phrases) { case, actions ->
+            val where = "360dp ${case.modeTag} ${case.scaleTag}"
+            onNodeWithText("Hi", useUnmergedTree = true).assertIsDisplayed()
+            val restingTop = boundsOfTag("chat-phrase-chips").top
+            onNodeWithTag("chat-attach-button").performClick()
+            settleTrayMotion()
+            onNodeWithTag("kit-composer-tray").assertIsDisplayed()
+            val openTop = boundsOfTag("chat-phrase-chips").top
+            assertTrue(openTop < restingTop, "$where: phrase chips should step above open tray")
+            onNodeWithTag("chat-attach-button").performClick()
+            settleTrayMotion()
+            onNodeWithTag("kit-composer-tray").assertDoesNotExist()
+            onNodeWithTag("chat-phrase-chips", useUnmergedTree = true).assertIsDisplayed()
+            val restoredTop = boundsOfTag("chat-phrase-chips").top
+            assertTrue(abs(restoredTop - restingTop) < 1f, "$where: phrase chips must return cleanly")
+            onNodeWithText("Hi", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Continue", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Hi", useUnmergedTree = true).performClick()
+            waitForIdle()
+            assertEquals(listOf("draftChanged <Hi>"), actions.calls, "$where: restored chip must insert phrase")
+        }
     }
 }

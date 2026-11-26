@@ -72,6 +72,11 @@ they can never be delivered.
    `scripts/native-release.sh` (dry run) tells you the code it will take.
    Then add the notes to `llms.txt` at the repository root, which lists the current documents; `LlmsTxtTest` in
    `:quality:test` fails until the newest release note is linked there.
+
+   Before proving the commit, check the first-run docs pictures with
+   `python3 -I native/tool/release/docs_pictures.py . <name>`. For every `STALE` line, run the printed command, look at
+   the new picture, set its row's `drawn_for` in `docs/native/qa/s31-app/PICTURES.tsv` to `<name>`, and commit. A
+   `none:` row cannot be redrawn and is named in every dry run.
 2. Prove the commit. A release needs two things for the exact commit on master, and both the dry run and `--go` refuse
    without them (the dry run still builds, so the APK exists to test):
    - a **passing Native CI run** of that commit: dispatch Native CI on master with `lane=candidate`. This includes pictures, whole quality/security,

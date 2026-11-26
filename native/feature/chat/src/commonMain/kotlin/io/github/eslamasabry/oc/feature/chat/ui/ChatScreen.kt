@@ -2112,6 +2112,7 @@ internal fun rememberReplyActions(
             onRerunCommand = callbacks.onRerunCommand,
             onOpenChanges = actions::openChanges,
             answered = { io.github.eslamasabry.oc.feature.chat.world.ModelFallback.answered(latestRows) },
+            refused = { io.github.eslamasabry.oc.feature.chat.world.ModelFallback.refused(latestRows) },
             modelGoneLabel = { model, provider ->
                 modelGoneTemplate.replace("\u0000", model).replace("\u0001", provider)
             },

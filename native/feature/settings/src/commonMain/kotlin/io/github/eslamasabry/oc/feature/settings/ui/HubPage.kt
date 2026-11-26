@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
+import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
 import io.github.eslamasabry.oc.ui.words.res.settingsHubDetailEmpty
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -52,7 +53,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -111,7 +111,10 @@ internal fun HubPage(
                 actions = actions,
                 scroll = scroll,
             ) {
-                HubBody(state, actions)
+                // Standing beside a page opened from it (big screens, shell pane): the group whose rows that page
+                // came from stays marked, as it was in the wide two-pane view.
+                val beside = LocalOpenBeside.current != null
+                HubBody(state, actions, selected = if (beside) state.firstGroup?.id else null)
             }
         }
     }
@@ -174,6 +177,59 @@ private fun SettingsPanes(
                 icon = KitIcons.search,
             )
         },
+    )
+}
+
+/**
+ * Settings on a wide window with an in-module page open (Privacy, Notifications, About, ...): the list the page came
+ * from stands at the start (the open group's rows with this page's row marked, else the groups), the page fills the
+ * rest. Back from the page is the page's own: it returns to the group's two panes.
+ */
+@Composable
+internal fun SettingsPagePanes(
+    state: SettingsUi,
+    actions: SettingsActions,
+    parts: SettingsPagePanesParts,
+    onExit: (() -> Unit)?,
+    detail: @Composable () -> Unit,
+) {
+    val listGroup = state.listGroup
+    val listScroll = parts.listScroll
+    KitPaneScreen(
+        topBar = {
+            KitTopBar(
+                title = settingsTitle(),
+                exit = if (onExit != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = onExit,
+                backBesideTitle = true,
+            )
+        },
+        list = {
+            Column(
+                Modifier.fillMaxSize()
+                    .testTag("settings-list-pane")
+                    .verticalScroll(listScroll.also { KitReportPageScroll(it) })
+                    .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+            ) {
+                if (listGroup != null)
+                    GroupBody(
+                        state.copy(group = listGroup),
+                        actions,
+                        SettingsPage.Group(listGroup.id),
+                        openPage = parts.page,
+                    )
+                else
+                    HubBody(
+                        state,
+                        actions,
+                        selected =
+                            (state.stack.lastOrNull { it is SettingsPage.Group } as? SettingsPage.Group)?.id,
+                    )
+            }
+        },
+        detail = { Box(Modifier.fillMaxSize().testTag("settings-detail-pane")) { detail() } },
+        emptyDetail = {},
     )
 }
 
@@ -398,54 +454,25 @@ internal fun GroupPage(
 
 @Composable
 private fun ColumnScope.GroupBody(
-    state: SettingsUi,
-    actions: SettingsActions,
-    page: SettingsPage.Group,
+    state: SettingsUi, actions: SettingsActions, page: SettingsPage.Group,
+    openPage: SettingsPage? = null, // the page open beside this list (big screens): its row is marked
 ) {
     var languageOpen by rememberSaveable(page.id) { mutableStateOf(false) }
     var otherOpen by rememberSaveable(page.id) { mutableStateOf(false) }
-    val otherNow = state.group?.rows.orEmpty().firstNotNullOfOrNull { (it.door as? SettingsDoor.Choice)?.mode }
-    if (otherOpen && otherNow != null) {
-        KitSheet(
-            visible = true,
-            onDismissRequest = { otherOpen = false },
-            title = stringResource(Res.string.dockModeTitle),
-        ) {
-            OtherConversationsBody(otherNow) {
-                actions.onOtherConversations(it)
-                otherOpen = false
-            }
-        }
-    }
-    if (languageOpen) {
-        KitSheet(
-            visible = true,
-            onDismissRequest = { languageOpen = false },
-            title = stringResource(Res.string.settingsV3Language),
-        ) {
-            LanguageBody(
-                state.language,
-                object : SettingsActions by actions {
-                    override fun onLanguage(
-                        language: io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
-                    ) {
-                        actions.onLanguage(language)
-                        languageOpen = false
-                    }
-                },
-            )
-        }
-    }
+    GroupOtherSheet(state, actions, otherOpen) { otherOpen = false }
+    GroupLanguageSheet(state, actions, languageOpen) { languageOpen = false }
     val rows = state.group?.rows.orEmpty()
     KitRowGroup(leadingTiles = true) {
         rows.forEach { row ->
             val title = rowWords(row.id)
             val request = remember(row.id) { BringIntoViewRequester() }
             val focused = state.focusedRow == row.id
+            // The page open beside this list: its row is the chosen one.
+            val open = openPage != null && (row.door as? SettingsDoor.Page)?.page == openPage
             LaunchedEffect(focused) { if (focused) request.bringIntoView() }
             val rowModifier =
                 Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
-                    selected = focused
+                    selected = focused || open
                 }
             when {
                 row.door is SettingsDoor.Choice ->
@@ -469,7 +496,7 @@ private fun ColumnScope.GroupBody(
                     KitRow(
                         title = title,
                         modifier = rowModifier,
-                        selected = focused,
+                        selected = focused || open,
                         leading = KitRowLeading.Glyph(rowGlyph(row.id)),
                         trailing =
                             rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
@@ -482,22 +509,7 @@ private fun ColumnScope.GroupBody(
             }
         }
     }
-    if (page.id == SettingsGroupId.Conversations)
-        state.phrases
-            ?.takeIf { it.hiddenCount > 0 && it.profile != null }
-            ?.let { phrases ->
-                KitRow(
-                    title = stringResource(Res.string.settingsPhraseChipsShowHidden),
-                    leading = KitRowLeading.Glyph(KitIcons.hidden),
-                    supporting =
-                        pluralStringResource(
-                            Res.plurals.settingsPhraseChipsHiddenCount,
-                            phrases.hiddenCount,
-                            phrases.hiddenCount,
-                        ),
-                    onClick = actions::onShowHiddenPhrases,
-                )
-            }
+    GroupHiddenPhrases(state, actions, page)
     // P-031: the saved servers are listed once, behind Servers (each opens its own page there); a second list
     // here, under a sentence for a label, repeated them.
 }

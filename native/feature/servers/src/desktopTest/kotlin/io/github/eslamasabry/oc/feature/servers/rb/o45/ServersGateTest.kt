@@ -5,6 +5,7 @@ package io.github.eslamasabry.oc.feature.servers.rb.o45
 import io.github.eslamasabry.oc.feature.servers.ServersTestTheme
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.SavedServer
@@ -193,7 +194,7 @@ class ServersGateTest {
 
     @Test
     fun `P-019 a list of one kind says each fact once, with no addresses and distinct names`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(360, 800) {
             setContent { ServersTestTheme { ServersScreen(sameKindState(), Actions()) } }
             onNodeWithText("My computer (1)").assertExists()
             onNodeWithText("My computer (2)").assertExists()
@@ -207,7 +208,7 @@ class ServersGateTest {
         }
 
     @Test
-    fun `P-019 the address is still one tap away in Details`() = runComposeUiTest {
+    fun `P-019 the address is still one tap away in Details`() = runDesktopComposeUiTest(360, 800) {
         setContent { ServersTestTheme { ServersScreen(sameKindState(), Actions()) } }
         onNodeWithContentDescription("My computer (2)").performClick()
         onNodeWithText("Details").performClick()
@@ -275,7 +276,7 @@ class ServersGateTest {
 
     @Test
     fun `server tap opens its settings while removal stays a named menu action`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(360, 800) {
             val actions = Actions()
             setContent {
                 ServersTestTheme {

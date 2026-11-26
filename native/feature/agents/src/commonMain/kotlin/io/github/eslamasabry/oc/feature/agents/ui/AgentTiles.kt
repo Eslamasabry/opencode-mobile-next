@@ -547,7 +547,12 @@ internal fun PhoneAgentSheet(
                 null ->
                     when (tile?.state) {
                         AgentTileState.Installing ->
-                            KitAction(stringResource(Res.string.linuxAgentInstallCancel), actions::cancelPhoneInstall, enabled = can)
+                            KitAction(
+                                stringResource(Res.string.linuxAgentInstallCancel),
+                                actions::cancelPhoneInstall,
+                                enabled = can,
+                                destructive = true,
+                            )
                         // Flutter's "Use {agent}": choose it and open New conversation with it selected.
                         AgentTileState.Ready ->
                             KitAction(

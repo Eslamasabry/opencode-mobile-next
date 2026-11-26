@@ -67,4 +67,13 @@
     <string name="kitDurLessThanMinute">kurang dari semenit</string>
     <string name="kitRelJustNow">Baru saja</string>
     <string name="kitRelYesterday">Kemarin</string>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="other">%1$s mnt</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="other">%1$s jam</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="other">%1$s hr</item>
+    </plurals>
 </resources>

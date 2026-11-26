@@ -208,6 +208,9 @@ public object HealthWords {
     public val turnOutcomes: Set<String> =
         linkedSetOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout", "no_output")
 
+    /** `journey_milestone.outcome`: how the first message ended, or `send_failed` when the server refused its send. */
+    public val firstPromptEndings: Set<String> = turnOutcomes + "send_failed"
+
     /** `send_result.input`: how the prompt was made. */
     public val inputs: Set<String> = linkedSetOf("text", "voice", "attachment", "voice_attachment")
 

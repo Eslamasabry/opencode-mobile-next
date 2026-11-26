@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
@@ -38,6 +39,7 @@ import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlinx.coroutines.test.runCurrent
@@ -58,6 +60,8 @@ class VoicePolishTest {
             natural = NaturalVoiceUi(bytes = 64_000_000, installed = true, chosen = true, downloading = false, available = true),
         )
 
+    private var attentionInk: Color = Color.Unspecified
+
     private fun ComposeUiTest.show(state: VoiceSettingsUi, presenter: VoiceSettingsPresenter, fontScale: Float = 1f) {
         setContent {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
@@ -67,6 +71,7 @@ class VoicePolishTest {
                     localeTag = "en",
                     stillFrame = true,
                 ) {
+                    attentionInk = LocalKitColors.current.attention
                     // The auditor's phone: 1080 px at 2.625 = 412 dp wide.
                     Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) {
                         VoiceSettingsScreen(state, presenter)
@@ -86,7 +91,7 @@ class VoicePolishTest {
         onNode(hasText(words, substring = true), useUnmergedTree = true).fetchSemanticsNode().layout()
 
     @Test
-    fun `P-026 Download again and Delete are worded and coloured alike`() = runTest {
+    fun `P-026 Download again and Delete match in weight while Delete wears the destructive tone`() = runTest {
         val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
         runCurrent()
         val state = installed(presenter.state.value)
@@ -95,9 +100,15 @@ class VoicePolishTest {
             onNodeWithTag("voice-redownload-base").assertExists()
             onNodeWithTag("voice-delete-base").assertExists()
             val again = text("speech model again").layoutInput.style
-            val delete = onNode(hasText("Delete", substring = true), useUnmergedTree = true).fetchSemanticsNode().layout().layoutInput.style
-            // Before: a green tertiary link above a bold white one.
-            assertEquals(again.color, delete.color)
+            val delete =
+                onNode(hasText("Delete", substring = true), useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .layout()
+                    .layoutInput
+                    .style
+            // B-548: destructive tertiary actions wear the kit's destructive tone, never the positive "go" green.
+            assertEquals(attentionInk, delete.color)
+            assertNotEquals(again.color, delete.color)
             assertEquals(again.fontWeight, delete.fontWeight)
         }
     }

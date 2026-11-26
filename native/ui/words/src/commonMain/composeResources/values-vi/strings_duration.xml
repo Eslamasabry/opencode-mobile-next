@@ -67,4 +67,13 @@
     <string name="kitDurLessThanMinute">chưa đến một phút</string>
     <string name="kitRelJustNow">Vừa xong</string>
     <string name="kitRelYesterday">Hôm qua</string>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="other">%1$s phút</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="other">%1$s giờ</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="other">%1$s ngày</item>
+    </plurals>
 </resources>

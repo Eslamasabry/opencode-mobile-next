@@ -80,6 +80,12 @@ class BuiltinLinux(private val context: Context) {
     // Stop.
     private val agentWorkAdmissions = java.util.IdentityHashMap<Process, Long>()
 
+    @Synchronized
+    internal fun pruneExitedProcesses() {
+        processes.removeAll { !it.isAlive }
+        processConfinement.entries.removeAll { !it.key.isAlive }
+    }
+
     // A corrupt/symlink marker still requires protection. Never fall back to
     // legacy execution merely because marker bytes or a packaged ELF changed.
     private fun markerPresent(): Boolean =
@@ -108,7 +114,7 @@ class BuiltinLinux(private val context: Context) {
                 )
             val bytes = ByteArray(32)
             val text =
-                java.io.FileInputStream(fd).use { input ->
+                OsFileDescriptors.useInputStream(fd) { input ->
                     val n = input.read(bytes)
                     if (n > 0) String(bytes, 0, n, Charsets.US_ASCII) else ""
                 }
@@ -401,7 +407,7 @@ class BuiltinLinux(private val context: Context) {
         compat: Boolean = false,
     ): Process {
         check(installed) { "Ubuntu is not installed in the app yet" }
-        processes.removeAll { !it.isAlive }
+        pruneExitedProcesses()
         return ProcessBuilder(prootCommand(listOf("/bin/sh", "-c", script), agentUser, compat))
             .redirectErrorStream(true)
             .apply {
@@ -788,6 +794,7 @@ class BuiltinLinux(private val context: Context) {
             process = launched
             installerProcess = launched
             installerLaunchId = nonce
+            pruneExitedProcesses()
             processes.add(launched)
             processConfinement[launched] = prootIsConfined
             exactRoot = pidOf(launched)?.let { kernelIdentity(it) }
@@ -1406,6 +1413,7 @@ class BuiltinLinux(private val context: Context) {
     ) {
         agentHostAdmissions.entries.removeAll { !it.key.isAlive }
         hostTicket?.let { agentHostAdmissions[process] = it }
+        pruneExitedProcesses()
         processes.add(process)
         agentProcessProfiles.entries.removeAll { !it.key.isAlive }
         agentProcessProfiles[process] = profileId
@@ -1500,6 +1508,7 @@ class BuiltinLinux(private val context: Context) {
                 val exited = services.getValue(name)
                 recordServiceExit(name, exited)
                 services.remove(name)
+                pruneExitedProcesses()
                 if (name == SERVER) {
                     synchronized(recoveryLock) {
                         val idle = idleState.snapshot()
@@ -1533,7 +1542,10 @@ class BuiltinLinux(private val context: Context) {
 
     /** A cancelled private flow cannot report drained while captured children survive. */
     fun stopAgentProcess(process: Process) {
-        if (!process.isAlive) return
+        if (!process.isAlive) {
+            pruneExitedProcesses()
+            return
+        }
         synchronized(this) {
             services.values.filter { it.process === process }.forEach { it.stopRequested = true }
         }
@@ -1559,6 +1571,7 @@ class BuiltinLinux(private val context: Context) {
         ) Thread.sleep(20)
         if (children.any { (pid, identity) -> identity != null && token(pid) == identity })
             throw IllegalStateException("The agent did not stop.")
+        pruneExitedProcesses()
     }
 
     private val privateAgentAuth by lazy {
@@ -1724,7 +1737,7 @@ class BuiltinLinux(private val context: Context) {
                         OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW,
                         0,
                     )
-                java.io.FileInputStream(fd).use { input ->
+                OsFileDescriptors.useInputStream(fd) { input ->
                     val bytes = ByteArray(8)
                     val read = input.read(bytes)
                     read == 4 &&
@@ -4134,6 +4147,7 @@ class BuiltinLinux(private val context: Context) {
                     environment()["OC_RUNTIME_OWNER"] = nonce
                 }
                 .start()
+        pruneExitedProcesses()
         processes.add(process)
         processConfinement[process] = prootIsConfined
         val gateState = NativeRuntimeGate()
@@ -6370,6 +6384,7 @@ exec gc supervisor run
                 if (service.process.isAlive) throw PhoneEngineNative.Failure("engine_stop_failed")
                 recordServiceExit(name, service)
                 services.remove(name)
+                pruneExitedProcesses()
             }
         } finally {
             serviceSetChanged()
@@ -6855,6 +6870,7 @@ exec gc supervisor run
         processes.filter { it.isAlive }.forEach { stopTree(it) }
         check(processes.none { it.isAlive }) { "A runtime process is still stopping" }
         processes.clear()
+        processConfinement.clear()
         check(sameUidInventory().all { it.pid in registeredRuntimePids() }) {
             "Another phone task is still running. Close it and try again."
         }

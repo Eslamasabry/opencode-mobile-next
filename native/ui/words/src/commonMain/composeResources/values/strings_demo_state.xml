@@ -10,6 +10,7 @@
     <string name="stateDemoBefore">Hello</string>
     <string name="stateDemoAfter">Welcome aboard!</string>
     <string name="stateDemoMore">That’s the end of the demo. Connect a server to work on your own projects.</string>
+    <string name="stateDemoOwn">This demo can’t answer your own questions. It plays one sample: send “%1$s” to see it. To ask your own, leave the demo and set it up for real.</string>
     <string name="stateDemoModel">Sample model</string>
     <string name="stateDemoReset">Reset demo</string>
     <string name="stateDemoLeave">Leave demo</string>

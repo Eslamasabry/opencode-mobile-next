@@ -110,6 +110,13 @@ import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
 import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
+import io.github.eslamasabry.oc.ui.kit.row.kitChosenRow
+import io.github.eslamasabry.oc.ui.kit.action.KitFab
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.LocalOpenBeside
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.row.KitRowPanel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
@@ -172,7 +179,12 @@ import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskNow
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskWait
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.words.res.kitRelJustNow
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutes
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeDaysShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeHoursShort
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeMinutesShort
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.statePin
@@ -195,6 +207,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableReason
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
@@ -293,6 +306,10 @@ public fun ChatsScreen(
     // skeleton or a filter that matched nothing had no way to start at all). A + tapped before the server is open is
     // answered by the home's "still opening" notice, so it never has to hide.
     val footBar = HomeFootBarRules.shown(state.phase)
+    // Big screens: the page open beside this list. With New conversation itself beside it, the + is not shown a second
+    // time (one name, one place); beside any page the empty state is one quiet line, the page beside already invites.
+    val openBeside = LocalOpenBeside.current
+    val newBeside = openBeside is ChatsRoute.New
     // Under Glass the floating + is liquid glass over the list (the kit records it only then).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
@@ -363,15 +380,25 @@ public fun ChatsScreen(
         // gives the list the room above it), so no row ever passes under the button.
         bottom =
             if (!footBar) null
+            // Beside a page the list already holds every conversation: only the + (none beside New conversation).
+            else if (openBeside != null) {
+                if (newBeside) null
+                else ({
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        KitFab(stringResource(Res.string.chatsHomeNewChat), KitIcons.add, actions::newConversation)
+                    }
+                })
+            }
             else ({
                 KitFootBar(
                     label = stringResource(Res.string.chats_all_title),
                     // Nothing is counted yet while the server first opens (the skeleton): no number, never a 0.
-                    count = if (state.phase == ChatsPhase.Opening) null else Numbers.format(state.shownCount ?: state.allCount),
+                    count = HomeFootBarRules.count(state)?.let(Numbers::format),
                     onLink = actions::showAll,
                     fabLabel = stringResource(Res.string.chatsHomeNewChat),
                     fabIcon = KitIcons.add,
                     onFab = actions::newConversation,
+                    fabVisible = !newBeside,
                     // The light runs round the + only while a New conversation tap is kept for a server that is still
                     // opening (the notice above names the wait, the same condition): the conversation is being
                     // prepared and opens by itself. It fades out the moment that ends: opened, cancelled, refused or
@@ -490,10 +517,26 @@ public fun ChatsScreen(
             if (shownNotice == HomeNoticeKind.ServerUnreachable) unreachable.take(1).forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        // B-573: a connection that did not answer is a warning, not information; its Try again sits
+                        // on the content edge (the mark's edge), as the rows do, not indented under the words.
+                        // When the server pill already says Not answering for this server, give the reason without
+                        // repeating "Not answering".
+                        val connection = state.connection
+                        val pillSaysNotAnswering =
+                            shellBar &&
+                                connection?.state == HomeConnectionState.NotAnswering &&
+                                connection.server == source.name
+                        val shownName = KitBidi.auto(serverNameShown(source.name))
                         KitNotice(
                             message =
-                                if (source.agents) stringResource(Res.string.chatsHomeAgentsUnreachable)
-                                else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(serverNameShown(source.name))),
+                                when {
+                                    source.agents -> stringResource(Res.string.chatsHomeAgentsUnreachable)
+                                    pillSaysNotAnswering ->
+                                        stringResource(Res.string.chatsHomeUnreachableReason, shownName)
+                                    else -> stringResource(Res.string.chatsHomeUnreachableShort, shownName)
+                                },
+                            tone = StatusTone.Attention,
+                            actionsAtEdge = true,
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
@@ -563,6 +606,21 @@ public fun ChatsScreen(
                 ChatsPhase.Opening ->
                     if (state.home.opening?.phase != ChatsOpeningPhase.Failed) item(key = "opening", contentType = "opening") { KitSkeletonRows() }
                 ChatsPhase.Empty ->
+                    if (openBeside != null)
+                        item(key = "empty", contentType = "empty") {
+                            val newWords = stringResource(Res.string.chatsHomeNewChat)
+                            val computerWords = stringResource(Res.string.chatsHomeConnectComputer)
+                            QuietEmpty(
+                                stringResource(Res.string.chatsHomeEmptyTitle),
+                                // New conversation beside it is the way to start; beside a conversation the button
+                                // stays.
+                                if (newBeside) null
+                                else KitAction(newWords, actions::newConversation, icon = KitIcons.add),
+                                if (state.hasComputer) null
+                                else KitAction(computerWords, actions::connectComputer, icon = KitIcons.computer),
+                            )
+                        }
+                    else
                     item(key = "empty", contentType = "empty") {
                         // A person with no computer saved may have come for one: the quiet second way in, only then.
                         CalmPage(
@@ -594,7 +652,9 @@ public fun ChatsScreen(
                     val above = state.brief?.rows.orEmpty().isNotEmpty()
                     // A conversation the return brief shows is said once, there.
                     val rightNow = state.rightNow.filterNot { it.key in briefKeys }
-                    val recent = state.recent.filterNot { it.key in briefKeys }
+                    // Beside a conversation the list holds every conversation, so switching is one tap.
+                    val shownRecent = if (openBeside != null) state.recent + state.earlier else state.recent
+                    val recent = shownRecent.filterNot { it.key in briefKeys }
                     if (rightNow.isNotEmpty())
                         item(key = "right-now", contentType = "right-now") {
                             Box(kitItemMotion()) {
@@ -720,6 +780,23 @@ private fun LazyItemScope.calmRoom(list: LazyListState, key: String): Modifier {
     return Modifier.fillParentMaxWidth().height(maxOf(with(LocalDensity.current) { px.toDp() }, CALM_MIN_ROOM_DP.dp))
 }
 
+/**
+ * The empty list beside a page (big screens): one quiet line at the list's gutter, and the quiet way to a computer when
+ * none is saved. The page beside (New conversation) already invites typing, so the calm page's title, body and button
+ * would only say it twice.
+ */
+@Composable
+private fun QuietEmpty(line: String, primary: KitAction?, tertiary: KitAction?) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S4.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        KitText(line, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        primary?.let { KitButton(it, fullWidth = true) }
+        tertiary?.let { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
+    }
+}
+
 @Composable
 private fun CalmPage(title: String, body: String, primary: KitAction, tertiary: KitAction?, modifier: Modifier) {
     val gutter = LocalKitTokens.current.gutter.dp
@@ -820,7 +897,9 @@ private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = fals
         HomeFilterChips(state, actions)
         val runningNow = state.runningShown
         KitChip(
-            label = if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, runningNow) else stringResource(Res.string.chatsHomeRunning),
+            label =
+                if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, Numbers.format(runningNow))
+                else stringResource(Res.string.chatsHomeRunning),
             kind = KitChipKind.Action,
             selected = state.filters.running, onClick = actions::toggleRunning,
         )
@@ -1064,9 +1143,10 @@ private fun ConversationRow(
         }
     var menuOpen by remember(row.key) { mutableStateOf(false) }
     val agent = KitFeedAgent(row.agentMark, row.agentName ?: words.otherAgent)
-    val time =
-        row.updatedAtMs?.takeIf { flags.nowMs > 0 }?.let { kitRelativeAge(it, flags.nowMs) }
-            ?: row.ago?.let { agoText(it) }
+    // B-558: the time beside the title is its short form ("5m"); the row still says the whole time ("5 min ago").
+    val updated = row.updatedAtMs?.takeIf { flags.nowMs > 0 }
+    val time = updated?.let { kitRelativeAgeShort(it, flags.nowMs) } ?: row.ago?.let { agoTextShort(it) }
+    val timeSpoken = updated?.let { kitRelativeAge(it, flags.nowMs) } ?: row.ago?.let { agoText(it) }
     val preview =
         row.permission?.let {
             // A short command reads as one piece: "ls -la" never breaks at its space.
@@ -1137,6 +1217,8 @@ private fun ConversationRow(
                 time = time,
                 // B-333: a row that cannot open yet still takes the tap; the home keeps it and opens the row when it can.
                 onClick = { actions.openConversation(row.ref) },
+                // Big screens: the conversation open beside the list is the chosen row.
+                modifier = Modifier.kitChosenRow((LocalOpenBeside.current as? ChatRoute)?.ref == row.ref),
                 preview = preview,
                 meta = meta,
                 project = project,
@@ -1149,6 +1231,7 @@ private fun ConversationRow(
                 speakAgent = flags.showAgents,
                 // F-022: a person is asked to allow what they can read: the command takes up to three lines.
                 previewLines = if (permission != null) 3 else 1,
+                timeSpoken = timeSpoken,
             )
         }
         // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action
@@ -1194,7 +1277,7 @@ private fun PermissionAnswers(
         KitButton(
             stringResource(Res.string.kitRequestAllowOnce),
             { actions.answerPermission(row, true) },
-            role = KitButtonRole.Secondary,
+            role = KitButtonRole.Primary,
             enabled = enabled,
             working = answering,
             expand = false,
@@ -1202,7 +1285,7 @@ private fun PermissionAnswers(
         KitButton(
             stringResource(Res.string.approvalDeny),
             { actions.answerPermission(row, false) },
-            role = KitButtonRole.Tertiary,
+            role = KitButtonRole.Secondary,
             enabled = enabled,
             expand = false,
         )
@@ -1316,6 +1399,16 @@ internal fun agoText(age: RelativeAge): String =
         is RelativeAge.Minutes -> kitRelativeAgeFromMinutes(age.count.toLong())
         is RelativeAge.Hours -> kitRelativeAgeFromMinutes(age.count * 60L)
         is RelativeAge.Days -> kitRelativeAgeFromMinutes(age.count * 1440L)
+    }
+
+/** [agoText] in the short form beside a title (B-558). */
+@Composable
+private fun agoTextShort(age: RelativeAge): String =
+    when (age) {
+        RelativeAge.JustNow -> stringResource(Res.string.kitRelJustNow)
+        is RelativeAge.Minutes -> kitRelativeMinutesShort(age.count.toLong())
+        is RelativeAge.Hours -> kitRelativeHoursShort(age.count.toLong())
+        is RelativeAge.Days -> kitRelativeDaysShort(age.count.toLong())
     }
 
 /** P2 proof page for ChatRoute: the box a row grows into (plan 08 §5.4). */

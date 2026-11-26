@@ -121,6 +121,11 @@ public data class ServerCapabilities(
      * no protocol gateway ever sets it. Applied by the app with [withCustomProviders].
      */
     val customProviders: Boolean = false,
+    /**
+     * B-605: the server exposes experimental server-side automations (`/api/experimental/automation`, OpenCode 2.4+).
+     * Defaults to false so older servers and the phone's built-in server never show the automations controls.
+     */
+    val serverAutomations: Boolean = false,
 ) {
     /** Whether a conversation runs shell commands here (Dart `conversationShellOn`). */
     public val conversationShellOn: Boolean

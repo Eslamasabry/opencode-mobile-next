@@ -49,6 +49,20 @@
         <item quantity="one">%1$sd ago</item>
         <item quantity="other">%1$sd ago</item>
     </plurals>
+    <!-- The short time beside a conversation's title on Home ("5m", "2h", "3d"); max length 6.
+         Read in full to screen readers. -->
+    <plurals name="kitRelShortMinutes">
+        <item quantity="one">%1$sm</item>
+        <item quantity="other">%1$sm</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="one">%1$sh</item>
+        <item quantity="other">%1$sh</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="one">%1$sd</item>
+        <item quantity="other">%1$sd</item>
+    </plurals>
     <string name="kitResetNow">resets now</string>
     <string name="kitResetNowSentence">Resets now</string>
     <plurals name="kitResetMinutes">

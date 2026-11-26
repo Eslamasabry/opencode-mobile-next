@@ -5,10 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -16,6 +21,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
@@ -37,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import java.io.File
 import java.util.Locale
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -104,6 +112,35 @@ class UpdatesScreenUiTest {
     }
 
     private fun ComposeUiTest.shows(text: String): Boolean = onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+
+    private fun releaseNotes(): String {
+        val path = "docs/releases/v3.0.3+10160.md"
+        var d: File? = File(System.getProperty("user.dir")).absoluteFile
+        while (d != null && !File(d, path).isFile) d = d.parentFile
+        val root = checkNotNull(d) { "$path not found from ${System.getProperty("user.dir")}" }
+        return File(root, path).readText()
+    }
+
+    private fun hasRawMarkdown(text: String): Boolean =
+        "**" in text ||
+            text.lines().any { line ->
+                val trimmed = line.trimStart()
+                trimmed.startsWith("#") || trimmed.startsWith("- ")
+            }
+
+    private fun ComposeUiTest.textLayouts(): List<TextLayoutResult> =
+        onAllNodes(
+                SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult),
+                useUnmergedTree = true,
+            )
+            .fetchSemanticsNodes()
+            .mapNotNull { node ->
+                node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.let { get ->
+                    val out = mutableListOf<TextLayoutResult>()
+                    get(out)
+                    out.firstOrNull()
+                }
+            }
 
     @Test
     fun `B-MIGR-012 up to date shows the version and when it looked, and no Update`() = runComposeUiTest {
@@ -266,4 +303,52 @@ class UpdatesScreenUiTest {
         onNodeWithText("Update now").performClick()
         assertEquals(listOf("later", "update"), calls)
     }
+
+    @Test
+    fun `B-MIGR-012 What's new shows the real release notes as headings, bold and lists, never raw Markdown`() =
+        runComposeUiTest {
+            val notes = releaseNotes()
+            page(available.copy(release = RELEASE.copy(notes = notes)))
+            val texts =
+                onAllNodes(
+                        SemanticsMatcher.keyIsDefined(SemanticsProperties.Text),
+                        useUnmergedTree = true,
+                    )
+                    .fetchSemanticsNodes()
+                    .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }
+                    .map { it.text }
+            val bad = texts.filter(::hasRawMarkdown)
+            assertTrue(
+                bad.isEmpty(),
+                "raw Markdown reached the screen: ${bad.map { it.take(60) }}",
+            )
+            val headings =
+                listOf(
+                    "OpenCode Mobile 3.0.3+10160",
+                    "In short",
+                    "Agents on this phone",
+                    "Known in this version",
+                )
+            for (h in headings) {
+                onNode(hasText(h) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+                    .assertExists()
+            }
+            onNodeWithText(
+                    "Get latest works on a branch the remote already has.",
+                    useUnmergedTree = true,
+                )
+                .assertExists()
+            val bullets = onAllNodesWithText("•", useUnmergedTree = true).fetchSemanticsNodes().size
+            assertEquals(notes.lines().count { it.startsWith("- ") }, bullets)
+            val boldLead = "The app no longer closes when left open for hours."
+            val hasBold =
+                textLayouts().any { layout ->
+                    val content = layout.layoutInput.text
+                    content.spanStyles.any { span ->
+                        span.item.fontWeight == FontWeight.Bold &&
+                            content.text.substring(span.start, span.end) == boldLead
+                    }
+                }
+            assertTrue(hasBold, "expected bold span for '$boldLead'")
+        }
 }

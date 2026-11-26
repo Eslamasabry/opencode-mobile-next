@@ -103,4 +103,8 @@
     <string name="chatSendFailureNeedsAccount">This model needs a %1$s account</string>
     <string name="agentErrorFreeTier">OpenCode's free models stopped this reply.</string>
     <string name="agentErrorFreeTierHint">Long conversations are often refused on the free tier, even when you've used little today. Shortening this one or starting a new one usually helps.</string>
+    <string name="agentErrorFreeDailyLimit">Free messages for today are used up.</string>
+    <string name="agentErrorFreeDailyLimitHint">They come back tomorrow. To keep going now, connect your own provider.</string>
+    <string name="agentErrorModelCountryRefused">%1$s isn't offered in your country.</string>
+    <string name="agentErrorModelCountryRefusedHint">Pick another model to keep going.</string>
 </resources>

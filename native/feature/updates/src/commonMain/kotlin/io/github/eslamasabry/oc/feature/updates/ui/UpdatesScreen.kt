@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -19,7 +20,6 @@ import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesLine
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -39,6 +39,9 @@ import io.github.eslamasabry.oc.ui.kit.text.kitRelativeDaysAgo
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeHoursAgo
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeMinutesAgo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateAvailableLine
@@ -195,11 +198,19 @@ public fun UpdatesScreen(
             state.notes?.let { notes ->
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                     KitSectionLabel(stringResource(Res.string.appUpdateWhatsNew))
-                    // Plain reading text: the kit's Markdown renderer takes parsed blocks that a
-                    // feature cannot build
-                    // (:core:markdown is out of reach), and a link in the notes must never open
-                    // without the link policy.
-                    KitText(notes, Modifier.padding(horizontal = gutter).testTag("updates-notes"))
+                    // The notes are GitHub Markdown, drawn by the kit's reader; a link in them
+                    // opens nothing, because the page's only opener takes the release page alone
+                    // and no link may open outside the link policy.
+                    val blocks =
+                        remember(notes) {
+                            KitMdSource.blocks("updates-notes", notes, streaming = false)
+                        }
+                    val links = remember { KitMarkdownActions(onLink = {}) }
+                    KitMarkdown(
+                        blocks,
+                        links,
+                        Modifier.padding(horizontal = gutter).testTag("updates-notes"),
+                    )
                 }
             }
         }

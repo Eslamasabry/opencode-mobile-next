@@ -126,6 +126,35 @@ internal class Oc2Gateway(
 
     private val signIns by lazy { Oc2ProviderSignIn(this, { location.value }, redactor) }
 
+    @kotlin.concurrent.Volatile private var automationsDisabled: Boolean = false
+    @kotlin.concurrent.Volatile private var lastHealthyVersion: String? = null
+
+    private val automations by lazy {
+        Oc2Automations(this, redactor) {
+            automationsDisabled = true
+            mutableCapabilities.update { it.copy(serverAutomations = false) }
+        }
+    }
+
+    override suspend fun listAutomations(
+        sessionId: SessionId?,
+        directory: String?,
+    ): Outcome<ImmutableList<ServerAutomation>> =
+        if (automationsDisabled) unavailable("serverAutomations")
+        else automations.list(sessionId, directory)
+
+    override suspend fun automation(id: String): Outcome<ServerAutomation> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.get(id)
+
+    override suspend fun pauseAutomation(id: String): Outcome<ServerAutomation> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.pause(id)
+
+    override suspend fun resumeAutomation(id: String): Outcome<ServerAutomation> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.resume(id)
+
+    override suspend fun deleteAutomation(id: String): Outcome<Unit> =
+        if (automationsDisabled) unavailable("serverAutomations") else automations.delete(id)
+
     override suspend fun integrations(): Outcome<ImmutableList<IntegrationInfo>> =
         signIns.integrations()
 
@@ -487,8 +516,7 @@ internal class Oc2Gateway(
                         is StreamSignal.Status -> {
                             status.value = signal.status
                             if (signal.status == StreamStatus.Connected) {
-                                lastConnectedAtMs = clock.now().toEpochMilliseconds()
-                                connects.value += 1
+                                onStreamConnected()
                                 envelopes.emit(
                                     GatewayEnvelope(
                                         GatewayEvent.Connected,
@@ -515,6 +543,20 @@ internal class Oc2Gateway(
                     }
                 }
             }
+    }
+
+    private fun onStreamConnected() {
+        lastConnectedAtMs = clock.now().toEpochMilliseconds()
+        val reconnected = connects.value > 0
+        connects.value += 1
+        if (!reconnected || !automationsDisabled) return
+        automationsDisabled = false
+        if (
+            dialect.value == Oc2Dialect.Stable &&
+                Oc2Dialect.supportsAutomations(lastHealthyVersion)
+        ) {
+            mutableCapabilities.update { it.copy(serverAutomations = true) }
+        }
     }
 
     private fun HttpRequestBuilder.request(
@@ -822,7 +864,14 @@ internal class Oc2Gateway(
                 if (known != null && known != detected) return@withLock mismatch.failed()
                 if (healthy) {
                     dialect.value = detected
-                    if (detected == Oc2Dialect.Stable) mutableCapabilities.update { it.stableWrites() }
+                    lastHealthyVersion = version
+                    if (detected == Oc2Dialect.Stable) {
+                        automationsDisabled = false
+                        val hasAutomations = Oc2Dialect.supportsAutomations(version)
+                        mutableCapabilities.update {
+                            it.stableWrites().copy(serverAutomations = hasAutomations)
+                        }
+                    }
                 }
                 Health(healthy, version).ok()
             }
