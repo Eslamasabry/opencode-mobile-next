@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import kotlin.math.abs
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,6 +63,7 @@ public class UsageHistory(
     private fun ensureLoadedLocked(connectionId: String) {
         if (connectionId.isEmpty() || !loadedConnections.add(connectionId)) return
         val decoded = decodeUsageHistoryConnection(store.string(key(connectionId)), MAX_SAMPLES_PER_WINDOW)
+        pruneConnectionSlot(decoded, clock())
         if (decoded.isNotEmpty()) {
             byConnection[connectionId] = decoded
             _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
@@ -138,16 +140,7 @@ public class UsageHistory(
         if (connectionId.isNotEmpty() && updates.isNotEmpty()) {
             ensureLoadedLocked(connectionId)
             val slot = byConnection.getOrPut(connectionId) { LinkedHashMap() }
-            var changed = false
-            for ((windowKey, sample) in updates) {
-                val prior = slot[windowKey].orEmpty()
-                val next = appendSample(prior, sample, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
-                if (next != prior) {
-                    slot[windowKey] = next
-                    changed = true
-                }
-            }
-            if (changed) {
+            if (applyWindowUpdates(slot, updates, clock())) {
                 result = persistConnection(store, lane, byConnection, connectionId)
                 _samples.value =
                     mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
@@ -159,12 +152,43 @@ public class UsageHistory(
     public companion object {
         public const val KEY_PREFIX: String = "oc.usageHistory."
         public const val MAX_SAMPLES_PER_WINDOW: Int = 300
+        public val MAX_SAMPLE_AGE: Duration = 90.days
         public val DEDUPE_REFRESH_INTERVAL: Duration = 15.minutes
         private const val MIN_PERCENT: Double = 0.0
         private const val MAX_PERCENT: Double = 100.0
         private const val VALUE_EPSILON: Double = 1e-6
 
         public fun key(connectionId: String): String = "$KEY_PREFIX$connectionId"
+
+        /** Drops samples strictly older than [maxAge] relative to [now]. */
+        public fun pruneExpiredSamples(
+            samples: List<UsageSample>,
+            now: Instant,
+            maxAge: Duration = MAX_SAMPLE_AGE,
+        ): List<UsageSample> {
+            val cutoff = now - maxAge
+            return samples.filter { it.fetchedAt >= cutoff }
+        }
+
+        internal fun pruneConnectionSlot(
+            slot: MutableMap<WindowKey, List<UsageSample>>,
+            now: Instant,
+        ): Boolean {
+            var changed = false
+            val iterator = slot.entries.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                val pruned = pruneExpiredSamples(entry.value, now)
+                if (pruned.isEmpty()) {
+                    iterator.remove()
+                    changed = true
+                } else if (pruned.size != entry.value.size) {
+                    entry.setValue(pruned)
+                    changed = true
+                }
+            }
+            return changed
+        }
 
         public val SHAPE: KeyShape =
             KeyShape(
@@ -238,4 +262,28 @@ private suspend fun persistConnection(
         val payload = encodeUsageHistoryConnection(slot)
         store.commit(lane) { putString(storageKey, payload) } is Outcome.Ok
     }
+}
+
+private fun applyWindowUpdates(
+    slot: MutableMap<WindowKey, List<UsageSample>>,
+    updates: List<Pair<WindowKey, UsageSample>>,
+    now: Instant,
+): Boolean {
+    var changed = UsageHistory.pruneConnectionSlot(slot, now)
+    for ((windowKey, sample) in updates) {
+        val prior = slot[windowKey].orEmpty()
+        val appended =
+            UsageHistory.appendSample(
+                prior,
+                sample,
+                UsageHistory.MAX_SAMPLES_PER_WINDOW,
+                UsageHistory.DEDUPE_REFRESH_INTERVAL,
+            )
+        val next = UsageHistory.pruneExpiredSamples(appended, now)
+        if (next != prior) {
+            if (next.isEmpty()) slot.remove(windowKey) else slot[windowKey] = next
+            changed = true
+        }
+    }
+    return changed
 }
