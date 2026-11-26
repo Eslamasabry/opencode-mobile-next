@@ -80,7 +80,6 @@ class E20S20ComposerTrayTest {
         imagesOnly: Boolean = false,
         sending: Boolean = false,
         draft: DraftFacts = DraftFacts(),
-        phrases: List<String> = emptyList(),
     ) = BasicComposerUi(
         available = true,
         sending = sending,
@@ -91,7 +90,6 @@ class E20S20ComposerTrayTest {
         attachKinds = kinds,
         attachmentsSupported = attachments,
         imagesOnly = imagesOnly,
-        phrases = phrases,
     )
 
     @Test
@@ -233,7 +231,7 @@ class E20S20ComposerTrayTest {
                                 Modifier.fillMaxSize().padding(horizontal = 16.dp),
                                 contentAlignment = Alignment.BottomCenter,
                             ) {
-                                BasicComposer(ui(phrases = phrases), actions, chrome())
+                                BasicComposer(ui().copy(phrases = phrases), actions, chrome())
                             }
                         }
                     }
