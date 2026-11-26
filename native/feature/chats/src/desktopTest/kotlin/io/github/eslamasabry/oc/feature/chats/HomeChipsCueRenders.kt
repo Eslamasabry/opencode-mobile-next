@@ -16,6 +16,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onLast
@@ -204,12 +205,29 @@ class HomeChipsCueRenders {
             range.value() > 0f && range.value() < range.maxValue(),
             "$tag after: expected mid scroll with hidden chips on both sides, got ${range.value()}/${range.maxValue()}",
         )
+        val chip =
+            onAllNodes(hasContentDescription("All connections"), useUnmergedTree = true)
+                .fetchSemanticsNodes().firstOrNull()?.boundsInRoot ?: rb
         val shot = onRoot().captureToImage()
-        val map = shot.toPixelMap()
-        assertEdgeCleared(map, line, atStart = true, label = "$tag after start")
-        assertEdgeCleared(map, line, atStart = false, label = "$tag after end")
         ImageIO.write(shot.toAwtImage(), "png", File(out, "$tag-after.png"))
         assertTrue(File(out, "$tag-after.png").isFile)
+        assertAfterEdges(shot.toPixelMap(), line, chip, tag)
+    }
+
+    private fun assertAfterEdges(
+        map: PixelMap,
+        line: androidx.compose.ui.geometry.Rect,
+        chip: androidx.compose.ui.geometry.Rect,
+        tag: String,
+    ) {
+        // Edge fades only cover a chip cut at that edge; when "All connections" itself starts or ends
+        // right at the visible edge (large text at 360 dp), that edge stays unfaded.
+        if (chip.left > line.left + EDGE_PROBE_PX) {
+            assertEdgeCleared(map, line, atStart = true, label = "$tag after start")
+        }
+        if (chip.right < line.right - EDGE_PROBE_PX || chip.right > line.right + EDGE_SLACK) {
+            assertEdgeCleared(map, line, atStart = false, label = "$tag after end")
+        }
     }
 
     private fun ComposeUiTest.scrollToEndAndCapture(out: File, tag: String) {
