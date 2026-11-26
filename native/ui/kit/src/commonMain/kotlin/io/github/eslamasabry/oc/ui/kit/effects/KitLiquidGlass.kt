@@ -526,93 +526,9 @@ private fun liquidSpecularAlpha(look: io.github.eslamasabry.oc.ui.design.style.G
     return (base * scale).coerceIn(0f, 1f)
 }
 
-private fun leanLiquidColor(
-    color: Color,
-    chosen: Boolean,
-    dark: Boolean,
-    roles: io.github.eslamasabry.oc.ui.design.color.Roles,
-    other: io.github.eslamasabry.oc.ui.design.color.Roles,
-): Color {
-    if (!chosen) return color
-    val theme = if (dark == roles.dark) roles else other
-    val opaque = io.github.eslamasabry.oc.ui.design.color.Argb(color.copy(alpha = 1f).toArgb())
-    return Color(GlassSpec.chosenTintOf(theme, opaque).v).copy(alpha = minOf(1f, color.alpha + GlassSpec.CHOSEN_LIFT))
-}
-
-private class LiquidPaneFlags(
-    val rtl: Boolean,
-    val chosen: Boolean,
-    val keepRim: Boolean,
-    val swell: Boolean,
-    val resolution: Float,
-)
-
-private class LiquidPaneContext(
-    val roles: io.github.eslamasabry.oc.ui.design.color.Roles,
-    val other: io.github.eslamasabry.oc.ui.design.color.Roles,
-    val role: LiquidRole,
-    val look: io.github.eslamasabry.oc.ui.design.style.GlassLookPreset,
-    val picture: List<io.github.eslamasabry.oc.ui.design.color.Argb>?,
-)
-
-private fun buildLiquidPaneSpec(
-    ctx: LiquidPaneContext,
-    flags: LiquidPaneFlags,
-    flip: LiquidFlip,
-    glassLight: KitGlassLight,
-): KitLiquidPaneSpec {
-    val smoke = if (ctx.look.smoked) (if (ctx.roles.dark) ctx.roles else ctx.other) else null
-    val face =
-        if (smoke != null) LiquidEdge.face(smoke, ctx.role, picture = ctx.picture, look = ctx.look, page = ctx.roles)
-        else LiquidEdge.face(ctx.roles, ctx.role, picture = ctx.picture, look = ctx.look)
-    val otherFace = if (smoke != null) face else LiquidEdge.face(ctx.other, ctx.role, look = ctx.look)
-    val faceDark = smoke?.dark ?: ctx.roles.dark
-    fun lean(c: Color, d: Boolean) = leanLiquidColor(c, flags.chosen, d, ctx.roles, ctx.other)
-    val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, faceDark)
-    val recipe =
-        if (flags.swell && ctx.role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, ctx.look)
-        else LiquidEdge.recipe(ctx.role, faceDark, ctx.look)
-    val small = ctx.role == LiquidRole.Pill || ctx.role == LiquidRole.Status || ctx.role == LiquidRole.Action
-    val gt = io.github.eslamasabry.oc.ui.design.effects.GlassTuning
-    val rimAlpha = if (faceDark) ctx.look.spec.liquidRimDark else gt.LIGHT_RIM_ALPHA
-    val flipStart =
-        if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill
-        else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !ctx.roles.dark) } ?: fill
-    return KitLiquidPaneSpec(
-        recipe = recipe,
-        fill = fill,
-        fillStart = face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill,
-        rtl = flags.rtl,
-        rim = LiquidRim.Light.copy(alpha = rimAlpha),
-        rimAdds = faceDark,
-        rimDp = RIM_LIGHT_DP,
-        shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
-        frostBlurDp = GlassSpec.FLOAT_FROST,
-        sheen = Color(face.sheen.v),
-        specular = LiquidRim.Light.copy(alpha = liquidSpecularAlpha(ctx.look.spec, faceDark)),
-        flipFill = if (smoke != null) fill else otherFace.fill?.let { lean(Color(it.v), !ctx.roles.dark) } ?: fill,
-        flipFillStart = flipStart,
-        flipSheen = Color(otherFace.sheen.v),
-        flip = flip,
-        keepRim = flags.keepRim,
-        glintShare = ctx.look.spec.glintShare,
-        resolution = liquidResolutionOf(recipe, flags.resolution),
-        bendShape = gt.SHIPPED_BEND_SHAPE,
-        specularReachDp = if (small) gt.SMALL_SPECULAR_REACH_DP else gt.SPECULAR_REACH_DP,
-        liveLight = glassLight,
-    )
-}
-
 /** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
 @Composable
-internal fun kitLiquidPaneSpec(
-    role: LiquidRole,
-    flip: LiquidFlip,
-    chosen: Boolean,
-    keepRim: Boolean,
-    swell: Boolean = false,
-    dialog: Boolean = false,
-): KitLiquidPaneSpec {
+internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean, swell: Boolean = false, dialog: Boolean = false): KitLiquidPaneSpec {
     val roles = LocalKitRoles.current
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -628,23 +544,60 @@ internal fun kitLiquidPaneSpec(
             val other = ThemeResolver.roles(
                 appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null,
             )
-            buildLiquidPaneSpec(
-                LiquidPaneContext(roles, other, role, look, picture),
-                LiquidPaneFlags(rtl, chosen, keepRim, swell, platform.liquidResolution),
-                flip,
-                glassLight,
+            val smoke = if (look.smoked) (if (roles.dark) roles else other) else null
+            val face =
+                if (smoke != null) LiquidEdge.face(smoke, role, picture = picture, look = look, page = roles)
+                else LiquidEdge.face(roles, role, picture = picture, look = look)
+            val otherFace = if (smoke != null) face else LiquidEdge.face(other, role, look = look)
+            fun lean(c: Color, dark: Boolean): Color {
+                if (!chosen) return c
+                val theme = if (dark == roles.dark) roles else other
+                val opaque = io.github.eslamasabry.oc.ui.design.color.Argb(c.copy(alpha = 1f).toArgb())
+                val lifted = GlassSpec.chosenTintOf(theme, opaque).v
+                return Color(lifted).copy(alpha = minOf(1f, c.alpha + GlassSpec.CHOSEN_LIFT))
+            }
+            val faceDark = smoke?.dark ?: roles.dark
+            val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, faceDark)
+            val recipe =
+                if (swell && role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, look)
+                else LiquidEdge.recipe(role, faceDark, look)
+            val small = role == LiquidRole.Pill || role == LiquidRole.Status || role == LiquidRole.Action
+            val gt = io.github.eslamasabry.oc.ui.design.effects.GlassTuning
+            val rimAlpha = if (faceDark) look.spec.liquidRimDark else gt.LIGHT_RIM_ALPHA
+            val flipStart =
+                if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill
+                else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill
+            KitLiquidPaneSpec(
+                recipe = recipe,
+                fill = fill,
+                fillStart = face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill,
+                rtl = rtl,
+                rim = LiquidRim.Light.copy(alpha = rimAlpha),
+                rimAdds = faceDark,
+                rimDp = RIM_LIGHT_DP,
+                shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
+                frostBlurDp = GlassSpec.FLOAT_FROST,
+                sheen = Color(face.sheen.v),
+                specular = LiquidRim.Light.copy(alpha = liquidSpecularAlpha(look.spec, faceDark)),
+                flipFill = if (smoke != null) fill else otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                flipFillStart = flipStart,
+                flipSheen = Color(otherFace.sheen.v),
+                flip = flip,
+                keepRim = keepRim,
+                glintShare = look.spec.glintShare,
+                resolution = liquidResolutionOf(recipe, platform.liquidResolution),
+                bendShape = gt.SHIPPED_BEND_SHAPE,
+                specularReachDp = if (small) gt.SMALL_SPECULAR_REACH_DP else gt.SPECULAR_REACH_DP,
+                liveLight = glassLight,
             )
         }
-    val tuning = LocalKitGlassTuning.current
-    return if (tuning == null || swell) {
-        spec
-    } else {
-        val kind = io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.of(role, dialog)
-        val dark = if (kitGlassLook().smoked) true else roles.dark
-        remember(spec, tuning, kind, dark, platform.liquidResolution) {
-            val shipped = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.shipped(kind, dark)
-            spec.tuned(tuning.knobs(kind, dark), shipped, platform.liquidResolution)
-        }
+    val tuning = LocalKitGlassTuning.current ?: return spec
+    if (swell) return spec
+    val kind = io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.of(role, dialog)
+    val dark = if (kitGlassLook().smoked) true else roles.dark
+    return remember(spec, tuning, kind, dark, platform.liquidResolution) {
+        val shipped = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.shipped(kind, dark)
+        spec.tuned(tuning.knobs(kind, dark), shipped, platform.liquidResolution)
     }
 }
 
