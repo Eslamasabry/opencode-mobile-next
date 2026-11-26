@@ -761,9 +761,8 @@ public fun BasicComposer(
                     },
                     onHide = actions::hidePhrase,
                     modifier = Modifier.testTag("chat-phrase-chips"),
-                    // Audit 2026-11-14 (finding 21): away while a message is being sent or a reply runs;
-                    // B-483: also fold away while the "+" tray is open so phrase chips never cover tray tiles.
-                    away = busy || state.sending || trayOpen,
+                    // Audit 2026-11-14 (finding 21): away while a message is being sent or a reply runs.
+                    away = busy || state.sending,
                 )
             }
         }

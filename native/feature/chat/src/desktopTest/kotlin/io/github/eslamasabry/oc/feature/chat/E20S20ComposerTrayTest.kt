@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import java.io.File
 import javax.imageio.ImageIO
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -314,13 +315,18 @@ class E20S20ComposerTrayTest {
         forEachCompactCase(phrases) { case, actions ->
             val where = "360dp ${case.modeTag} ${case.scaleTag}"
             onNodeWithText("Hi", useUnmergedTree = true).assertIsDisplayed()
+            val restingTop = boundsOfTag("chat-phrase-chips").top
             onNodeWithTag("chat-attach-button").performClick()
             settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertIsDisplayed()
+            val openTop = boundsOfTag("chat-phrase-chips").top
+            assertTrue(openTop < restingTop, "$where: phrase chips should step above open tray")
             onNodeWithTag("chat-attach-button").performClick()
             settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertDoesNotExist()
             onNodeWithTag("chat-phrase-chips", useUnmergedTree = true).assertIsDisplayed()
+            val restoredTop = boundsOfTag("chat-phrase-chips").top
+            assertTrue(abs(restoredTop - restingTop) < 1f, "$where: phrase chips must return cleanly")
             onNodeWithText("Hi", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithText("Continue", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithText("Hi", useUnmergedTree = true).performClick()
