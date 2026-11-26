@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -18,17 +19,22 @@ import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ProbeResult
 import io.github.eslamasabry.oc.core.domain.ProbeTarget
+import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.ProfileTrust
+import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.PromptDelivery
 import io.github.eslamasabry.oc.core.model.ServerOrigin
+import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionTime
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
+import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.Part
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -47,8 +53,13 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ConnectionSession
 import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
+import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore
+import io.github.eslamasabry.oc.engine.delivery.queue.QueueRead
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicy
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicyOwner
 import io.github.eslamasabry.oc.engine.transcript.TranscriptAccessors
 import io.github.eslamasabry.oc.engine.transcript.TranscriptEngine
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
@@ -63,6 +74,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -104,10 +118,32 @@ class OfflineOutboxTest {
         val payloads: MemoryPayloadStore = MemoryPayloadStore(),
     )
 
+    private class ScriptedGateway(
+        private val delegate: FakeServerGateway,
+        var history: List<MessageWithParts> = emptyList(),
+        var onPrompt: (suspend (SessionId, OutgoingPrompt) -> Outcome<PromptAdmission>?)? = null,
+    ) : ServerGateway by delegate {
+        override suspend fun messagePage(
+            id: SessionId,
+            cursor: String?,
+            limit: Int,
+        ): Outcome<ServerPage<MessageWithParts>> =
+            if (history.isEmpty()) delegate.messagePage(id, cursor, limit)
+            else Outcome.Ok(ServerPage(history.toImmutableList(), null))
+
+        override suspend fun prompt(
+            session: SessionId,
+            prompt: OutgoingPrompt,
+            commandId: String?,
+        ): Outcome<PromptAdmission> =
+            onPrompt?.invoke(session, prompt) ?: delegate.prompt(session, prompt, commandId)
+    }
+
     private inner class Fixture(
         val test: TestScope,
         val stores: Stores = Stores(),
         offlineQueueCapable: Boolean = true,
+        history: List<MessageWithParts> = emptyList(),
     ) {
         val base =
             FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20)))).apply {
@@ -118,6 +154,7 @@ class OfflineOutboxTest {
                         promptAttachments = true,
                     )
             }
+        val gateway = ScriptedGateway(base, history = history)
         val operations = FakeOperationsGateway()
         val dispatcher = StandardTestDispatcher(test.testScheduler)
         val dispatchers = TestDispatchers(dispatcher)
@@ -147,7 +184,7 @@ class OfflineOutboxTest {
                             Outcome.Failed(Failure.Network(NetworkWhy.Refused))
 
                         override suspend fun connect(spec: GatewaySpec) =
-                            Outcome.Ok(GatewayPair(base, operations))
+                            Outcome.Ok(GatewayPair(gateway, operations))
                     }
                 ),
                 { p, pair, scope ->
@@ -367,4 +404,195 @@ class OfflineOutboxTest {
         presenter.cancelWaitingSend(42L)
         assertEquals(listOf("cancelWaitingSend 42"), world.calls)
     }
+
+    @Test
+    fun `B-500 no-connection offline send respects closed profile and cancel removes entry`() =
+        runTest {
+            val f = Fixture(this)
+            f.world
+            runCurrent()
+            f.world.draftChanged("Typed while cold offline")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("Typed while cold offline"))
+            runCurrent()
+            val waiting =
+                assertNotNull(
+                    f.world.pending.value.waitingBubble(),
+                    "waiting bubble must appear even before any connection graph exists",
+                )
+            val stored =
+                assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
+            assertEquals(listOf("Typed while cold offline"), stored.entries.map { it.text })
+
+            assertIs<Outcome.Ok<Unit>>(f.world.cancelWaitingSend(waiting.localId))
+            runCurrent()
+            assertTrue(f.world.pending.value.isEmpty(), "cancelled no-connection bubble must clear")
+            val afterCancel =
+                assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
+            assertTrue(afterCancel.entries.isEmpty(), "cancelled no-connection entry must leave store")
+
+            f.storage.journals.closeProfile(ref.profileId)
+            f.world.draftChanged("Blocked after profile close")
+            val refused = f.world.send("Blocked after profile close")
+            runCurrent()
+            val failed =
+                assertIs<Outcome.Failed>(
+                    refused,
+                    "closed profile must refuse offline send through engine queue",
+                )
+            assertEquals(Failure.Refused(RefusalReason.ProfileClosing), failed.failure)
+            assertTrue(f.world.pending.value.isEmpty(), "refused send must not add a waiting bubble")
+        }
+
+    @Test
+    fun `B-500 non-queue backend keeps saved offline entry if dispatch fails on reconnect`() =
+        runTest {
+            val f = Fixture(this, offlineQueueCapable = false)
+            f.openOnline()
+            f.goOffline()
+            f.world.draftChanged("Survive failed reconnect dispatch")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("Survive failed reconnect dispatch"))
+            runCurrent()
+
+            f.gateway.onPrompt = { _, _ -> Outcome.Failed(Failure.Network(NetworkWhy.Offline)) }
+            f.reconnect()
+            advanceTimeBy(1_000)
+            runCurrent()
+            val saved =
+                assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
+            assertEquals(
+                listOf("Survive failed reconnect dispatch"),
+                saved.entries.map { it.text },
+                "failed dispatch must never delete the saved offline entry",
+            )
+            assertNotNull(
+                f.world.pending.value.waitingBubble(),
+                "failed offline dispatch must remain waiting for next reconnect",
+            )
+
+            f.goOffline()
+            f.gateway.onPrompt = null
+            f.reconnect()
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertEquals(
+                listOf("Survive failed reconnect dispatch"),
+                f.base.sentPrompts.map { it.second.text },
+            )
+            val afterSent =
+                assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
+            assertTrue(afterSent.entries.isEmpty(), "saved entry is removed only after dispatch accepts")
+        }
+
+    @Test
+    fun `B-500 non-queue backend honors disabled automatic queued sends policy`() = runTest {
+        val f = Fixture(this, offlineQueueCapable = false)
+        val policyJson =
+            AutomationPolicy()
+                .withBehavior(AutomationBehavior.ReconcileQueuedSends, false)
+                .toJson()
+                .toString()
+        f.kv.commit(f.storage.lanes.app) {
+            putString(AutomationPolicyOwner.keyFor(ref.profileId.raw), policyJson)
+        }
+        f.openOnline()
+        f.goOffline()
+        f.world.draftChanged("Respect policy off")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("Respect policy off"))
+        runCurrent()
+
+        f.reconnect()
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertTrue(
+            f.base.sentPrompts.isEmpty(),
+            "disabled reconcileQueuedSends must not auto-send on reconnect",
+        )
+        assertNotNull(f.world.pending.value.waitingBubble(), "message must remain waiting")
+    }
+
+    @Test
+    fun `B-500 cancelling waiting item while another send is on wire drops bubble`() = runTest {
+        val f = Fixture(this, offlineQueueCapable = true)
+        f.openOnline()
+        f.goOffline()
+        f.world.draftChanged("First on wire")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("First on wire"))
+        runCurrent()
+        f.world.draftChanged("Second to cancel")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("Second to cancel"))
+        runCurrent()
+
+        val firstStarted = CompletableDeferred<Unit>()
+        val releaseFirst = CompletableDeferred<Unit>()
+        f.gateway.onPrompt = { _, prompt ->
+            if (prompt.text == "First on wire") {
+                firstStarted.complete(Unit)
+                releaseFirst.await()
+            }
+            null
+        }
+
+        f.reconnect()
+        runCurrent()
+        firstStarted.await()
+
+        val queue = (f.registry.graphFor(ref) as ChatGraphAccessors).chatDelivery.queue!!
+        val secondId = queue.entries().first { it.text == "Second to cancel" }.id
+        assertEquals(Outcome.Ok(true), queue.remove(secondId))
+        runCurrent()
+
+        assertTrue(
+            f.world.pending.value.none { it.text == "Second to cancel" },
+            "cancelled entry must be dropped instead of stuck Sending while another send is on wire",
+        )
+        releaseFirst.complete(Unit)
+        runCurrent()
+    }
+
+    @Test
+    fun `B-500 reopened waiting message with same text as prior history refreshes baseline`() =
+        runTest {
+            val stores = Stores()
+            val prior =
+                MessageWithParts(
+                    MessageInfo("u-old", ref.sessionId.raw, Role.User),
+                    persistentListOf(
+                        Part("p-old", "u-old", ref.sessionId.raw, PartType.Text, "text", "Run the tests"),
+                    ),
+                )
+            val first = Fixture(this, stores = stores, history = listOf(prior))
+            first.openOnline()
+            first.goOffline()
+            first.world.draftChanged("Run the tests")
+            assertIs<Outcome.Ok<Unit>>(first.world.send("Run the tests"))
+            runCurrent()
+            first.worlds.release(first.world)
+
+            val reopened = Fixture(this, stores = stores, history = listOf(prior))
+            reopened.world
+            runCurrent()
+            assertNotNull(reopened.world.pending.value.waitingBubble())
+
+            reopened.base.events.status.value = StreamStatus.WaitingForNetwork
+            reopened.registry.open(profile)
+            runCurrent()
+            assertTrue(
+                reopened.world.transcript.value.rows.isNotEmpty(),
+                "prior history must load before reconnect flush",
+            )
+
+            reopened.reconnect()
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertEquals(listOf("Run the tests"), reopened.base.sentPrompts.map { it.second.text })
+            val sending = reopened.world.pending.value.singleOrNull()
+            assertNotNull(
+                sending,
+                "sending bubble must not prematurely settle against prior u-old history row",
+            )
+            assertEquals(PendingState.Sending, sending.state)
+
+            reopened.echoUser("u-new", "Run the tests")
+            assertTrue(reopened.world.pending.value.isEmpty(), "bubble settles once u-new arrives")
+        }
 }
