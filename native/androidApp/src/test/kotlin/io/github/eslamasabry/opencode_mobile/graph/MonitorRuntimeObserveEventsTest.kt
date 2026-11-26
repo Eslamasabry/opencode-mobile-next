@@ -59,13 +59,17 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
 class MonitorRuntimeObserveEventsTest {
+    private class Recorder {
+        val requestedPaths = CopyOnWriteArrayList<String>()
+        val specs = CopyOnWriteArrayList<GatewaySpec>()
+        val firstConnect = CompletableDeferred<Unit>()
+    }
+
     private class Fixture(
         val job: kotlinx.coroutines.CompletableJob,
         val stores: PreviewStores,
         val runtime: MonitorRuntime,
-        val requestedPaths: CopyOnWriteArrayList<String>,
-        val specs: CopyOnWriteArrayList<GatewaySpec>,
-        val firstConnect: CompletableDeferred<Unit>,
+        val recorder: Recorder,
     )
 
     @Test
@@ -90,17 +94,17 @@ class MonitorRuntimeObserveEventsTest {
                 fixture.runtime.start()
                 Robolectric.buildActivity(Activity::class.java).create().start()
                 assertIs<Outcome.Ok<Unit>>(fixture.runtime.setEnabled(profileId.raw, true))
-                withTimeout(10_000) { fixture.firstConnect.await() }
+                withTimeout(10_000) { fixture.recorder.firstConnect.await() }
                 // Give any wrongly-started SSE loop a brief chance to hit /api/event.
                 delay(200)
-                assertTrue(fixture.specs.isNotEmpty(), "monitor never connected to the server")
+                assertTrue(fixture.recorder.specs.isNotEmpty(), "monitor never connected to the server")
                 assertFalse(
-                    fixture.specs.first().observeEvents,
+                    fixture.recorder.specs.first().observeEvents,
                     "ReadOnlyMonitorGateway must pass observeEvents = false",
                 )
                 assertTrue(
-                    fixture.requestedPaths.none { it == "/api/event" },
-                    "monitor poll opened unexpected /api/event SSE stream: ${fixture.requestedPaths}",
+                    fixture.recorder.requestedPaths.none { it == "/api/event" },
+                    "monitor poll opened unexpected /api/event SSE stream: ${fixture.recorder.requestedPaths}",
                 )
             } finally {
                 fixture.job.cancel()
@@ -118,10 +122,8 @@ class MonitorRuntimeObserveEventsTest {
         val migration = MigrationWiring(app, build, redactor, scope, dispatchers, clock)
         val stores =
             PreviewStores(app, dispatchers, redactor, StateMigrationGate.alwaysOpen(), migration, build)
-        val requestedPaths = CopyOnWriteArrayList<String>()
-        val specs = CopyOnWriteArrayList<GatewaySpec>()
-        val firstConnect = CompletableDeferred<Unit>()
-        val factory = recordingOc2Factory(dispatchers, clock, redactor, requestedPaths, specs, firstConnect)
+        val recorder = Recorder()
+        val factory = recordingOc2Factory(dispatchers, clock, redactor, recorder)
         val registry =
             ConnectionRegistry(
                 emptySet(),
@@ -150,7 +152,7 @@ class MonitorRuntimeObserveEventsTest {
                 scope,
                 dispatchers,
             )
-        return Fixture(job, stores, runtime, requestedPaths, specs, firstConnect)
+        return Fixture(job, stores, runtime, recorder)
     }
 
     private fun testAppDispatchers(): AppDispatchers =
@@ -166,24 +168,22 @@ class MonitorRuntimeObserveEventsTest {
         dispatchers: AppDispatchers,
         clock: TestClock,
         redactor: Redactor,
-        requestedPaths: CopyOnWriteArrayList<String>,
-        specs: CopyOnWriteArrayList<GatewaySpec>,
-        firstConnect: CompletableDeferred<Unit>,
+        recorder: Recorder,
     ): GatewayFactory {
         val engines =
             OkHttpEngineFactory(
                 base = { spec ->
                     hardenedBaseClient(spec)
                         .newBuilder()
-                        .addInterceptor { chain -> syntheticAnswer(chain, requestedPaths) }
+                        .addInterceptor { chain -> syntheticAnswer(chain, recorder.requestedPaths) }
                         .build()
                 }
             )
         val realOc2 = Oc2GatewayFactory(HttpClientFactory(engines), dispatchers, clock, redactor, Random(1))
         return object : GatewayFactory by realOc2 {
             override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
-                specs += spec
-                firstConnect.complete(Unit)
+                recorder.specs += spec
+                recorder.firstConnect.complete(Unit)
                 return realOc2.connect(spec)
             }
         }

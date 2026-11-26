@@ -1424,24 +1424,23 @@ internal class Oc2Gateway(
     private suspend fun boundedBody(response: HttpResponse, byteLimit: Int): ByteArray? {
         val declared = response.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L
         val channel = response.bodyAsChannel()
-        if (declared > byteLimit) {
-            channel.cancel(null)
-            return null
-        }
         val chunks = ArrayList<ByteArray>()
         val buffer = ByteArray(8192)
         var size = 0
-        while (true) {
+        var overflow = declared > byteLimit
+        while (!overflow) {
             val count = channel.readAvailable(buffer, 0, buffer.size)
             if (count < 0) break
             if (count > byteLimit - size) {
-                channel.cancel(null)
-                return null
-            }
-            if (count > 0) {
+                overflow = true
+            } else if (count > 0) {
                 chunks += buffer.copyOf(count)
                 size += count
             }
+        }
+        if (overflow) {
+            channel.cancel(null)
+            return null
         }
         val bytes = ByteArray(size)
         var offset = 0
