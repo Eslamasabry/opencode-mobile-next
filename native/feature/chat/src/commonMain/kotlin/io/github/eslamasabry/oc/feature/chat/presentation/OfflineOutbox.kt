@@ -17,6 +17,16 @@ import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import kotlin.time.Clock
 
+/** Immutable payload of one prompt held in the offline outbox. */
+internal data class OutboxDraft(
+    val ref: ConversationRef,
+    val text: String,
+    val attachments: List<PromptAttachment>,
+    val mentions: List<PromptAgentMention>,
+    val model: ModelSelection?,
+    val agent: String?,
+)
+
 /**
  * B-500: durable offline outbox over the adopted `oc.offlineQueue` store.
  *
@@ -38,50 +48,44 @@ internal class OfflineOutbox(
     }
 
     /** Persists a new waiting prompt either through the active [queue] or directly to storage. */
-    suspend fun enqueue(
-        ref: ConversationRef,
-        text: String,
-        attachments: List<PromptAttachment>,
-        mentions: List<PromptAgentMention>,
-        model: ModelSelection?,
-        agent: String?,
-        queue: OfflineQueue?,
-    ): Outcome<QueuedPrompt> {
+    suspend fun enqueue(draft: OutboxDraft, queue: OfflineQueue?): Outcome<QueuedPrompt> {
         val now = clock?.now()?.toEpochMilliseconds() ?: 0L
         val existingIds = existingIds(queue)
         val entry =
             QueuedPrompt(
                 id = nextId(now, existingIds),
-                profileId = ref.profileId,
-                sessionId = ref.sessionId,
-                text = text,
-                attachments = attachments,
-                mentions = mentions,
-                modelProviderId = model?.model?.providerId,
-                modelId = model?.model?.modelId,
-                agent = agent,
-                variant = model?.variant,
+                profileId = draft.ref.profileId,
+                sessionId = draft.ref.sessionId,
+                text = draft.text,
+                attachments = draft.attachments,
+                mentions = draft.mentions,
+                modelProviderId = draft.model?.model?.providerId,
+                modelId = draft.model?.model?.modelId,
+                agent = draft.agent,
+                variant = draft.model?.variant,
                 createdAt = now,
                 dispatchedAt = null,
             )
-        if (queue != null) return enqueueWithQueue(queue, entry)
-        return enqueueDirect(entry, now)
+        return if (queue != null) enqueueWithQueue(queue, entry) else enqueueDirect(entry, now)
     }
 
     /**
      * Cancels a waiting entry by [entryId]. Returns `Ok(true)` when removed (or already absent),
      * `Ok(false)` if it is already dispatched or on the wire, and `Failed` if storage refused.
      */
-    suspend fun cancel(entryId: String, queue: OfflineQueue?): Outcome<Boolean> {
-        if (queue != null) return queue.remove(entryId)
-        val read =
-            queueStore.load() as? QueueRead.Readable
-                ?: return Outcome.Failed(Failure.StorageRefused())
-        val existing = read.entries.firstOrNull { it.id == entryId } ?: return Outcome.Ok(true)
-        if (existing.dispatched) return Outcome.Ok(false)
-        val kept = read.entries.filterNot { it.id == entryId }
-        return if (queueStore.save(kept)) Outcome.Ok(true)
-        else Outcome.Failed(Failure.StorageRefused())
+    suspend fun cancel(entryId: String, queue: OfflineQueue?): Outcome<Boolean> =
+        if (queue != null) queue.remove(entryId) else cancelDirect(entryId)
+
+    private suspend fun cancelDirect(entryId: String): Outcome<Boolean> {
+        val read = queueStore.load() as? QueueRead.Readable
+        val existing = read?.entries?.firstOrNull { it.id == entryId }
+        return when {
+            read == null -> Outcome.Failed(Failure.StorageRefused())
+            existing == null -> Outcome.Ok(true)
+            existing.dispatched -> Outcome.Ok(false)
+            queueStore.save(read.entries.filterNot { it.id == entryId }) -> Outcome.Ok(true)
+            else -> Outcome.Failed(Failure.StorageRefused())
+        }
     }
 
     private fun existingIds(queue: OfflineQueue?): Set<String> {
@@ -117,18 +121,18 @@ internal class OfflineOutbox(
         }
 
     private suspend fun enqueueDirect(entry: QueuedPrompt, now: Long): Outcome<QueuedPrompt> {
-        if (entry.payloadBytes > QueueLimits.MAX_ENTRY_BYTES) {
-            return Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
+        val read = queueStore.load() as? QueueRead.Readable
+        val limited = read?.let { QueueLimits.enforce(it.entries + entry, now) }
+        return when {
+            entry.payloadBytes > QueueLimits.MAX_ENTRY_BYTES ->
+                Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
+            read == null || limited == null ->
+                Outcome.Failed(Failure.StorageRefused())
+            limited.kept.none { it.id == entry.id } ->
+                Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
+            queueStore.save(limited.kept) -> Outcome.Ok(entry)
+            else -> Outcome.Failed(Failure.StorageRefused())
         }
-        val read =
-            queueStore.load() as? QueueRead.Readable
-                ?: return Outcome.Failed(Failure.StorageRefused())
-        val limited = QueueLimits.enforce(read.entries + entry, now)
-        if (limited.kept.none { it.id == entry.id }) {
-            return Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
-        }
-        return if (queueStore.save(limited.kept)) Outcome.Ok(entry)
-        else Outcome.Failed(Failure.StorageRefused())
     }
 
     companion object {

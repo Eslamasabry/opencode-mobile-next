@@ -1174,7 +1174,8 @@ private fun PendingBubble(
             photos = sent.photos,
             attachments = sent.attachments,
         )
-        val inTransit = p.state == PendingState.Sending || p.state == PendingState.WaitingForConnection
+        val inTransit =
+            p.state == PendingState.Sending || p.state == PendingState.WaitingForConnection
         val setUp = p.setUp?.takeIf { onSetUp != null && !inTransit }
         val signInNeed = p.signIn?.takeIf { !inTransit && words.signInAgainAction.isNotEmpty() }
         // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
@@ -1186,53 +1187,107 @@ private fun PendingBubble(
                 actionTag = "chat-send-set-up",
             )
         } else if (signInNeed != null) {
-            // The agent's own sign-in ran out: said with its name, and the one way on is its sign-in. Try again could
-            // never work here; the typed words stay in the bubble and the box, and the raw text stays under Details.
-            val agent = signInNeed
-            val failure = p.failure
-            KitSendFailed(
-                lines = listOf(words.notSent, words.signInAgain(agent.name)),
-                actionLabel = if (onSignIn != null) words.signInAgainAction else words.tryAgain,
-                onAction = { if (onSignIn != null) onSignIn(agent.providerId) else onRetry() },
-                details =
-                    failure
-                        ?.takeIf { words.details.isNotEmpty() }
-                        ?.let { KitSendFailedDetails(words.details, words.copyDetails, failureCode(it), it.details) },
-                detailsTag = "chat-send-failure-details",
-                actionTag = if (onSignIn != null) "chat-send-sign-in-again" else "chat-send-error-try-again",
+            PendingSignInFailed(signInNeed, p.failure, words, onSignIn, onRetry)
+        } else {
+            PendingBubbleStatus(
+                p = p,
+                words = words,
+                check = check,
+                actions = PendingBubbleCallbacks(onRetry, onCancel, onCheck, onReview),
             )
-        } else when (p.state) {
-            // One status slot (F28): "Sending" and the live words ("Thinking…") take this same line in turn.
-            PendingState.Sending -> PendingStatusLine(words.sending)
-            // B-500: held while offline; shows plain waiting status with a Cancel action.
-            PendingState.WaitingForConnection -> WaitingForConnectionLine(p.localId, words, onCancel)
-            // Review opens the waiting-sends page, which lists only sends with a record: without one it would
-            // open empty (Paseo fault 2), so the bubble offers Send again itself.
-            PendingState.Unconfirmed ->
-                ReceiptCheckLine(
-                    p.localId,
-                    check,
-                    onCheck,
-                    onReview = onReview?.takeIf { p.reviewable },
-                    onSendAgain = onRetry.takeIf { !p.reviewable },
-                )
-            PendingState.Failed -> {
-                val failure = p.failure
-                val action = failedSendAction(failure, words, onRetry)
-                KitSendFailed(
-                    lines = listOfNotNull(words.notSent, failure?.let(words.sendFailure)),
-                    actionLabel = action.label,
-                    onAction = action.onAction,
-                    details =
-                        failure
-                            ?.takeIf { words.details.isNotEmpty() }
-                            ?.let { KitSendFailedDetails(words.details, words.copyDetails, failureCode(it), it.details) },
-                    detailsTag = "chat-send-failure-details",
-                    actionTag = action.tag,
-                )
-            }
         }
     }
+}
+
+@Immutable
+private class PendingBubbleCallbacks(
+    val onRetry: () -> Unit,
+    val onCancel: (() -> Unit)?,
+    val onCheck: (() -> Unit)?,
+    val onReview: (() -> Unit)?,
+)
+
+@Composable
+private fun PendingSignInFailed(
+    agent: io.github.eslamasabry.oc.feature.chat.world.AgentSignInNeed,
+    failure: Failure?,
+    words: ChatListWords,
+    onSignIn: ((String) -> Unit)?,
+    onRetry: () -> Unit,
+) {
+    // The agent's own sign-in ran out: said with its name, and the one way on is its sign-in.
+    KitSendFailed(
+        lines = listOf(words.notSent, words.signInAgain(agent.name)),
+        actionLabel = if (onSignIn != null) words.signInAgainAction else words.tryAgain,
+        onAction = { if (onSignIn != null) onSignIn(agent.providerId) else onRetry() },
+        details =
+            failure
+                ?.takeIf { words.details.isNotEmpty() }
+                ?.let {
+                    KitSendFailedDetails(
+                        words.details,
+                        words.copyDetails,
+                        failureCode(it),
+                        it.details,
+                    )
+                },
+        detailsTag = "chat-send-failure-details",
+        actionTag = if (onSignIn != null) "chat-send-sign-in-again" else "chat-send-error-try-again",
+    )
+}
+
+@Composable
+private fun PendingBubbleStatus(
+    p: PendingSend,
+    words: ChatListWords,
+    check: ReceiptCheckUi?,
+    actions: PendingBubbleCallbacks,
+) {
+    when (p.state) {
+        // One status slot (F28): "Sending" and the live words ("Thinking…") take this same line in turn.
+        PendingState.Sending -> PendingStatusLine(words.sending)
+        // B-500: held while offline; shows plain waiting status with a Cancel action.
+        PendingState.WaitingForConnection ->
+            WaitingForConnectionLine(p.localId, words, actions.onCancel)
+        // Review opens the waiting-sends page, which lists only sends with a record: without one it would
+        // open empty (Paseo fault 2), so the bubble offers Send again itself.
+        PendingState.Unconfirmed ->
+            ReceiptCheckLine(
+                p.localId,
+                check,
+                actions.onCheck,
+                onReview = actions.onReview?.takeIf { p.reviewable },
+                onSendAgain = actions.onRetry.takeIf { !p.reviewable },
+            )
+        PendingState.Failed -> PendingSendFailed(p.failure, words, actions.onRetry)
+    }
+}
+
+@Composable
+private fun PendingSendFailed(
+    failure: Failure?,
+    words: ChatListWords,
+    onRetry: () -> Unit,
+) {
+    val action = failedSendAction(failure, words, onRetry)
+    KitSendFailed(
+        lines = listOfNotNull(words.notSent, failure?.let(words.sendFailure)),
+        actionLabel = action.label,
+        onAction = action.onAction,
+        details =
+            failure
+                ?.takeIf { words.details.isNotEmpty() }
+                ?.let {
+                    KitSendFailedDetails(
+                        words.details,
+                        words.copyDetails,
+                        failureCode(it),
+                        it.details,
+                    )
+                },
+        detailsTag = "chat-send-failure-details",
+        actionTag = action.tag,
+    )
 }
 
 /** A failed send's one way on, its label and its test handle. */
