@@ -40,16 +40,12 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Picture only, asserts nothing: failed reply cards for a used-up free daily limit and a country refusal.
- * Writes PNGs to `LIMIT_CARD_OUT` (or the server's render-out/limit-card folder); does nothing when neither exists.
+ * Writes PNGs to `LIMIT_CARD_OUT` or `build/limit-card` so test runs return them via render-pull.
  */
 @OptIn(ExperimentalTestApi::class)
 class LimitCardRenders {
-    private val out =
-        (System.getenv("LIMIT_CARD_OUT")?.let(::File)
-                ?: File(System.getProperty("user.home"), "render-out")
-                    .takeIf { it.isDirectory }
-                    ?.resolve("limit-card"))
-            ?.also(File::mkdirs)
+    private val out: File =
+        (System.getenv("LIMIT_CARD_OUT")?.let(::File) ?: File("build/limit-card")).also(File::mkdirs)
 
     private class ModelWorld(choices: List<ComposerModel>) : FakeChatWorld() {
         override val models: StateFlow<ComposerModels> = MutableStateFlow(ComposerModels(choices = choices))
@@ -173,7 +169,6 @@ class LimitCardRenders {
 
     @Test
     fun `limit card renders`() {
-        if (out == null) return
         val (limitRows, limitChoices) = limitFixture()
         val (countryRows, countryChoices) = countryFixture()
         shoot(limitRows, limitChoices, "limit-text1.0", 1.0f)

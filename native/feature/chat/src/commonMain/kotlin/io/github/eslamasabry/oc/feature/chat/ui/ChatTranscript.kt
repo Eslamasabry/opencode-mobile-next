@@ -1620,20 +1620,7 @@ private fun ChatRow(
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
                             if (reply != null && otherWays) {
-                                val suggestion =
-                                    if (
-                                        row.errorKind == MessageErrorKind.ModelNotFound ||
-                                            kind == ReplyFailureKind.Model ||
-                                            block == ReplyBlock.CountryRefusal
-                                    ) {
-                                        ErrorRecovery.suggestedModel(reason, reply.models)
-                                            ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
-                                                goneKey,
-                                                reply.answered(),
-                                                reply.models,
-                                                reply.refused(),
-                                            )
-                                    } else null
+                                val suggestion = failedModelSuggestion(row, kind, block, goneKey, reply)
                                 val showSignIn =
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                         reply.signInSettingsLabel != null
@@ -1882,6 +1869,31 @@ private fun modelGoneWords(
                 ?: goneKey.providerId
         format(modelName, providerName)
     }
+}
+
+private fun failedModelSuggestion(
+    row: FooterRow,
+    kind: ReplyFailureKind,
+    block: ReplyBlock?,
+    goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
+    reply: ReplyActions,
+): io.github.eslamasabry.oc.feature.chat.world.ComposerModel? {
+    val needsModel =
+        row.errorKind == MessageErrorKind.ModelNotFound ||
+            kind == ReplyFailureKind.Model ||
+            block == ReplyBlock.CountryRefusal
+    if (!needsModel) return null
+    val refused = reply.refused()
+    return ErrorRecovery.suggestedModel(row.reason, reply.models)
+        ?.takeUnless {
+            io.github.eslamasabry.oc.feature.chat.world.ModelKey(it.providerId, it.modelId) in refused
+        }
+        ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
+            goneKey,
+            reply.answered(),
+            reply.models,
+            refused,
+        )
 }
 
 /**
