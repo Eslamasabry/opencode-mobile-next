@@ -430,9 +430,9 @@
     <string name="reviewRevertRestoredBodyNoFiles">消息已恢复原状。</string>
     <string name="reviewUndoMessagesOnlyTitle">从这里撤销消息？</string>
     <string name="reviewUndoMessagesOnlyBody">这会隐藏从这些更改开始后的消息。这不是 Git 项目，所以文件保持原样。在删除之前，你可以随时恢复这些消息。</string>
-    <string name="reviewRevertSheetBodyWithFiles">查看期间，这条提示及之后的内容会暂时隐藏，文件会恢复到之前的样子。在你选择之前都不会生效，你可以恢复全部内容。</string>
+    <string name="reviewRevertSheetBodyWithFiles">查看期间，这条提示及之后的内容会暂时隐藏，已编辑的文件会恢复到此提示之前的状态。在你选择之前都不会生效，你可以恢复全部内容。</string>
     <string name="reviewRevertSheetBodyMessagesOnly">查看期间，这条提示及之后的内容会暂时隐藏。文件保持原样。在删除之前，你可以随时恢复这些消息。</string>
-    <string name="reviewRevertFilesToggleOffHint">文件保持原样，仅隐藏消息。</string>
+    <string name="reviewRevertFilesToggleOffHint">不会改动你的文件，仅隐藏消息。</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="other">这条提示和后面的 %1$d 条消息会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</item>
     </plurals>

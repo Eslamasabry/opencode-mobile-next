@@ -452,9 +452,9 @@
     <string name="reviewRevertRestoredBodyNoFiles">I messaggi sono tornati come prima.</string>
     <string name="reviewUndoMessagesOnlyTitle">Annullare i messaggi da qui?</string>
     <string name="reviewUndoMessagesOnlyBody">Questo nasconde i messaggi da dove sono iniziate queste modifiche. Questo non è un progetto Git, quindi i file restano come sono. Puoi ripristinare i messaggi finché non li elimini.</string>
-    <string name="reviewRevertSheetBodyWithFiles">Questo messaggio e tutto ciò che segue restano nascosti durante la revisione, e i file tornano a com'erano prima. Nulla è definitivo finché non scegli: puoi ripristinare tutto.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Questo messaggio e tutto ciò che segue restano nascosti durante la revisione, e i file modificati vengono riportati a prima di questo messaggio. Nulla è definitivo finché non scegli: puoi ripristinare tutto.</string>
     <string name="reviewRevertSheetBodyMessagesOnly">Questo messaggio e tutto ciò che segue restano nascosti durante la revisione. I file restano come sono. Puoi ripristinare i messaggi finché non li elimini.</string>
-    <string name="reviewRevertFilesToggleOffHint">I file restano come sono; vengono nascosti solo i messaggi.</string>
+    <string name="reviewRevertFilesToggleOffHint">I tuoi file non verranno toccati; vengono nascosti solo i messaggi.</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="one">Questo messaggio e il messaggio successivo vengono rimossi. Questo non è un progetto Git, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</item>
         <item quantity="many">Questo messaggio e i %1$d messaggi successivi vengono rimossi. Questo non è un progetto Git, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</item>

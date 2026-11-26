@@ -451,9 +451,9 @@
     <string name="reviewRevertRestoredBodyNoFiles">As mensagens voltaram como estavam.</string>
     <string name="reviewUndoMessagesOnlyTitle">Desfazer mensagens a partir daqui?</string>
     <string name="reviewUndoMessagesOnlyBody">Isso oculta as mensagens desde o início destas alterações. Este não é um projeto Git, então os arquivos permanecem como estão. É possível trazer as mensagens de volta até excluí-las.</string>
-    <string name="reviewRevertSheetBodyWithFiles">Este comando e tudo depois dele ficam ocultos enquanto você revisa, e os arquivos voltam a como estavam antes. Nada é definitivo até escolher — dá para trazer tudo de volta.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Este comando e tudo depois dele ficam ocultos enquanto você revisa, e os arquivos editados são revertidos para antes deste comando. Nada é definitivo até escolher — dá para trazer tudo de volta.</string>
     <string name="reviewRevertSheetBodyMessagesOnly">Este comando e tudo depois dele ficam ocultos enquanto você revisa. Os arquivos permanecem como estão. É possível trazer as mensagens de volta até excluí-las.</string>
-    <string name="reviewRevertFilesToggleOffHint">Os arquivos permanecem como estão; apenas as mensagens são ocultadas.</string>
+    <string name="reviewRevertFilesToggleOffHint">Seus arquivos não serão alterados; apenas as mensagens são ocultadas.</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="one">Este comando e a mensagem depois dele são removidos. Este não é um projeto Git, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</item>
         <item quantity="many">Este comando e as %1$d mensagens depois dele são removidos. Este não é um projeto Git, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</item>

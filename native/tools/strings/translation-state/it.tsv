@@ -10106,7 +10106,7 @@ reviewRevertFileSupporting	8773b54278
 reviewRevertFilesLabel	76c0f9434c
 reviewRevertFilesToggle	e13e427fcd
 reviewRevertFilesToggleHint	3bd4806c15
-reviewRevertFilesToggleOffHint	003c1382cb
+reviewRevertFilesToggleOffHint	60736084f8
 reviewRevertKeepConfirmAction	7db6f01840
 reviewRevertKeepConfirmBody	d6b0f236e4
 reviewRevertKeepConfirmTitle	b292a49975
@@ -10143,7 +10143,7 @@ reviewRevertScreenTitle	d78782d87e
 reviewRevertSheetAction	89753cf346
 reviewRevertSheetBody	086aa50c39
 reviewRevertSheetBodyMessagesOnly	2e82c0acd8
-reviewRevertSheetBodyWithFiles	55823ef51a
+reviewRevertSheetBodyWithFiles	cefb2af664
 reviewRevertSheetTitle	ea5cc12c40
 reviewRevertStageFailed	881315da9d
 reviewRevertStaleTitle	7e7797fef8

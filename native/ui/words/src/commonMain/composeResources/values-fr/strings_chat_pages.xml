@@ -451,9 +451,9 @@
     <string name="reviewRevertRestoredBodyNoFiles">Les messages sont revenus à leur état d'origine.</string>
     <string name="reviewUndoMessagesOnlyTitle">Annuler les messages à partir d'ici ?</string>
     <string name="reviewUndoMessagesOnlyBody">Ceci masque les messages à partir du début de ces changements. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez remettre les messages tant que vous ne les supprimez pas.</string>
-    <string name="reviewRevertSheetBodyWithFiles">Ce message et tout ce qui suit sont masqués pendant la vérification, et les fichiers reviennent à leur état précédent. Rien n'est définitif avant votre choix : vous pouvez tout remettre.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Ce message et tout ce qui suit sont masqués pendant la vérification, et les fichiers modifiés reviennent à leur état avant ce message. Rien n'est définitif avant votre choix : vous pouvez tout remettre.</string>
     <string name="reviewRevertSheetBodyMessagesOnly">Ce message et tout ce qui suit sont masqués pendant la vérification. Les fichiers restent tels quels. Vous pouvez remettre les messages tant que vous ne les supprimez pas.</string>
-    <string name="reviewRevertFilesToggleOffHint">Les fichiers restent tels quels ; seuls les messages sont masqués.</string>
+    <string name="reviewRevertFilesToggleOffHint">Vos fichiers ne seront pas modifiés ; seuls les messages sont masqués.</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="one">Ce message et le message suivant sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
         <item quantity="many">Ce message et les %1$d messages suivants sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>

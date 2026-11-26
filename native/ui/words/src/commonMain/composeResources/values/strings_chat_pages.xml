@@ -441,9 +441,9 @@
     <string name="reviewUndoBody">This hides the messages from where these changes began and puts your files back as they were. You can bring everything back until you delete the hidden messages.</string>
     <string name="reviewUndoMessagesOnlyTitle">Undo messages from here?</string>
     <string name="reviewUndoMessagesOnlyBody">This hides the messages from where these changes began. This isn't a Git project, so files stay as they are. You can put the messages back until you delete them.</string>
-    <string name="reviewRevertSheetBodyWithFiles">This prompt and everything after it are hidden while you review, and files go back to how they were before it. Nothing is final until you choose — you can put everything back.</string>
+    <string name="reviewRevertSheetBodyWithFiles">This prompt and everything after it are hidden while you review, and edited files revert to before this prompt. Nothing is final until you choose — you can put everything back.</string>
     <string name="reviewRevertSheetBodyMessagesOnly">This prompt and everything after it are hidden while you review. Files stay as they are. You can put the messages back until you delete them.</string>
-    <string name="reviewRevertFilesToggleOffHint">Files stay as they are; only messages are hidden.</string>
+    <string name="reviewRevertFilesToggleOffHint">Your files won't be touched; only messages are hidden.</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="one">This prompt and the message after it are removed. This isn't a Git project, so files stay as they are. You can put them back until you send another prompt.</item>
         <item quantity="other">This prompt and the %1$d messages after it are removed. This isn't a Git project, so files stay as they are. You can put them back until you send another prompt.</item>

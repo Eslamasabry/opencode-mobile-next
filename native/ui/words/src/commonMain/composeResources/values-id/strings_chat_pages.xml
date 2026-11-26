@@ -429,9 +429,9 @@
     <string name="reviewRevertRestoredBodyNoFiles">Pesan sudah kembali seperti semula.</string>
     <string name="reviewUndoMessagesOnlyTitle">Batalkan pesan dari sini?</string>
     <string name="reviewUndoMessagesOnlyBody">Ini menyembunyikan pesan sejak perubahan ini dimulai. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sampai dihapus.</string>
-    <string name="reviewRevertSheetBodyWithFiles">Pesan ini dan semua setelahnya disembunyikan saat ditinjau, dan file kembali ke keadaan sebelumnya. Belum ada yang final sampai Anda memilih — semuanya bisa dikembalikan.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Pesan ini dan semua setelahnya disembunyikan saat ditinjau, dan file yang diedit dikembalikan ke sebelum pesan ini. Belum ada yang final sampai Anda memilih — semuanya bisa dikembalikan.</string>
     <string name="reviewRevertSheetBodyMessagesOnly">Pesan ini dan semua setelahnya disembunyikan saat ditinjau. File tetap seperti sekarang. Pesan dapat dikembalikan sampai dihapus.</string>
-    <string name="reviewRevertFilesToggleOffHint">File tetap seperti sekarang; hanya pesan yang disembunyikan.</string>
+    <string name="reviewRevertFilesToggleOffHint">File Anda tidak akan diubah; hanya pesan yang disembunyikan.</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="other">Pesan ini dan %1$d pesan setelahnya dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</item>
     </plurals>

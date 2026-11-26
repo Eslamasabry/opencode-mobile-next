@@ -485,9 +485,9 @@
     <string name="reviewRevertRestoredBodyNoFiles">عادت الرسائل كما كانت.</string>
     <string name="reviewUndoMessagesOnlyTitle">التراجع عن الرسائل من هنا؟</string>
     <string name="reviewUndoMessagesOnlyBody">يُخفي هذا الرسائل من بداية هذه التغييرات. هذا ليس مشروع Git، لذا تبقى الملفات كما هي. يمكنك استعادة الرسائل حتى تحذفها.</string>
-    <string name="reviewRevertSheetBodyWithFiles">تُخفى هذه المطالبة وكل ما بعدها أثناء المراجعة، وتعود الملفات إلى حالتها قبلها. لا شيء نهائي حتى تختار، ويمكنك استعادة كل شيء.</string>
+    <string name="reviewRevertSheetBodyWithFiles">تُخفى هذه المطالبة وكل ما بعدها أثناء المراجعة، وتُعاد الملفات المعدلة إلى ما قبل هذه المطالبة. لا شيء نهائي حتى تختار، ويمكنك استعادة كل شيء.</string>
     <string name="reviewRevertSheetBodyMessagesOnly">تُخفى هذه المطالبة وكل ما بعدها أثناء المراجعة. تبقى الملفات كما هي. يمكنك استعادة الرسائل حتى تحذفها.</string>
-    <string name="reviewRevertFilesToggleOffHint">تبقى الملفات كما هي؛ تُخفى الرسائل فقط.</string>
+    <string name="reviewRevertFilesToggleOffHint">لن تُمس ملفاتك؛ تُخفى الرسائل فقط.</string>
     <plurals name="undoFromHereBodyNoGit">
         <item quantity="zero">تُزال هذه المطالبة و%1$d رسالة بعدها. هذا ليس مشروع Git، لذا تبقى الملفات كما هي. يمكنك استعادتها حتى ترسل مطالبة أخرى.</item>
         <item quantity="one">تُزال هذه المطالبة والرسالة بعدها. هذا ليس مشروع Git، لذا تبقى الملفات كما هي. يمكنك استعادتهما حتى ترسل مطالبة أخرى.</item>
