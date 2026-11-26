@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.android.terminal
 
-import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -28,7 +27,7 @@ private const val INDEX_X2: Int = 3
 /** Normalized inclusive cell range of an active terminal selection. */
 internal data class SelectionRange(val startY: Int, val startX: Int, val endY: Int, val endX: Int)
 
-/** Visible terminal viewport and cell metrics needed to position the selection action bar. */
+/** Visible terminal viewport and cell metrics needed to render selection and position the action bar. */
 internal data class SelectionViewport(
     val topRow: Int,
     val columns: Int,
@@ -90,12 +89,10 @@ internal fun selectionActionContentRect(
 }
 
 /**
- * Termux [TerminalView] subclass that renders text selection with a translucent highlight (instead
- * of Termux's opaque reverse-video swap, which hides characters when the terminal background is
- * transparent) and reports the true selected-lines content rect to the floating ActionMode so the
- * Copy / Paste / More bar never overlaps selected text.
+ * Coordinates translucent selection rendering and floating ActionMode content-rect clearance for a
+ * hosted Termux [TerminalView] (which is `final` upstream and cannot be subclassed).
  */
-internal class OcTerminalView(context: Context) : TerminalView(context, null) {
+internal class TerminalSelectionOverlay {
     private val selectionBounds = IntArray(SELECTOR_COUNT)
     private val selectionPaint =
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -103,62 +100,90 @@ internal class OcTerminalView(context: Context) : TerminalView(context, null) {
             color = terminalSelectionHighlight(null)
         }
 
-    fun updateSelectionHighlight(color: Int) {
+    fun updateHighlight(color: Int) {
         selectionPaint.color = color
     }
 
-    override fun onDraw(canvas: Canvas) {
-        val emulator = mEmulator
-        val renderer = mRenderer
-        val controller = if (isSelectingText) selectionController() else null
-        if (emulator == null || renderer == null || controller == null) {
-            super.onDraw(canvas)
-            return
-        }
+    /**
+     * Draws [terminal] with its real foreground/ANSI colors and a translucent selection highlight
+     * instead of Termux's opaque reverse-video swap. Returns `true` if it handled drawing.
+     */
+    fun drawTranslucentSelection(terminal: TerminalView, canvas: Canvas): Boolean {
+        val emulator = terminal.mEmulator
+        val renderer = terminal.mRenderer
+        val controller = if (terminal.isSelectingText) selectionController(terminal) else null
+        if (emulator == null || renderer == null || controller == null) return false
         controller.getSelectors(selectionBounds)
-        renderer.render(emulator, canvas, topRow, NO_SELECTION, NO_SELECTION, NO_SELECTION, NO_SELECTION)
-        drawSelectionHighlight(canvas, emulator.mColumns, emulator.mRows, renderer.fontWidth, renderer.fontLineSpacing)
+        val range = normalizeSelectionRange(selectionBounds) ?: return false
+        val viewport =
+            SelectionViewport(
+                topRow = terminal.topRow,
+                columns = emulator.mColumns,
+                fontWidth = renderer.fontWidth,
+                lineSpacing = renderer.fontLineSpacing,
+                viewWidth = terminal.width,
+                viewHeight = terminal.height,
+            )
+        canvas.save()
+        canvas.translate(terminal.left.toFloat() - terminal.scrollX, terminal.top.toFloat() - terminal.scrollY)
+        renderer.render(emulator, canvas, terminal.topRow, NO_SELECTION, NO_SELECTION, NO_SELECTION, NO_SELECTION)
+        drawHighlightRects(canvas, range, viewport, emulator.mRows)
+        canvas.restore()
         controller.render()
+        return true
     }
 
-    override fun startActionMode(callback: ActionMode.Callback?, type: Int): ActionMode? {
-        val wrapped =
-            if (type == ActionMode.TYPE_FLOATING && callback is ActionMode.Callback2) {
-                SelectionActionModeCallback(callback)
-            } else {
-                callback
+    fun wrapActionModeCallback(
+        terminal: TerminalView,
+        delegate: ActionMode.Callback2,
+    ): ActionMode.Callback2 =
+        object : ActionMode.Callback2() {
+            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean =
+                delegate.onCreateActionMode(mode, menu)
+
+            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean =
+                delegate.onPrepareActionMode(mode, menu)
+
+            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean =
+                delegate.onActionItemClicked(mode, item)
+
+            override fun onDestroyActionMode(mode: ActionMode) {
+                delegate.onDestroyActionMode(mode)
             }
-        return super.startActionMode(wrapped, type)
-    }
 
-    private fun drawSelectionHighlight(
+            override fun onGetContentRect(mode: ActionMode, view: View, outRect: Rect) {
+                val rect = computeActionContentRect(terminal)
+                if (rect != null) outRect.set(rect) else delegate.onGetContentRect(mode, view, outRect)
+            }
+        }
+
+    private fun drawHighlightRects(
         canvas: Canvas,
-        columns: Int,
+        range: SelectionRange,
+        viewport: SelectionViewport,
         rows: Int,
-        fontWidth: Float,
-        lineSpacing: Int,
     ) {
-        val active = normalizeSelectionRange(selectionBounds) ?: return
-        val hasGrid = columns > 0 && rows > 0
-        val hasFont = fontWidth > 0f && lineSpacing > 0
+        val hasGrid = viewport.columns > 0 && rows > 0
+        val hasFont = viewport.fontWidth > 0f && viewport.lineSpacing > 0
         if (!hasGrid || !hasFont) return
-        val visibleStart = maxOf(active.startY, topRow)
-        val visibleEnd = minOf(active.endY, topRow + rows - 1)
-        val lineHeight = lineSpacing.toFloat()
+        val visibleStart = maxOf(range.startY, viewport.topRow)
+        val visibleEnd = minOf(range.endY, viewport.topRow + rows - 1)
+        val lineHeight = viewport.lineSpacing.toFloat()
         for (row in visibleStart..visibleEnd) {
-            val startCol = (if (row == active.startY) active.startX else 0).coerceIn(0, columns - 1)
-            val endCol = (if (row == active.endY) active.endX else columns - 1).coerceIn(startCol, columns - 1)
-            val left = startCol * fontWidth
-            val right = (endCol + 1) * fontWidth
-            val top = (row - topRow) * lineHeight
+            val startCol = (if (row == range.startY) range.startX else 0).coerceIn(0, viewport.columns - 1)
+            val endCol =
+                (if (row == range.endY) range.endX else viewport.columns - 1).coerceIn(startCol, viewport.columns - 1)
+            val left = startCol * viewport.fontWidth
+            val right = (endCol + 1) * viewport.fontWidth
+            val top = (row - viewport.topRow) * lineHeight
             canvas.drawRect(left, top, right, top + lineHeight, selectionPaint)
         }
     }
 
-    private fun computeActionContentRect(): Rect? {
-        val emulator = mEmulator
-        val renderer = mRenderer
-        val controller = selectionController()?.takeIf { it.isActive }
+    private fun computeActionContentRect(terminal: TerminalView): Rect? {
+        val emulator = terminal.mEmulator
+        val renderer = terminal.mRenderer
+        val controller = selectionController(terminal)?.takeIf { it.isActive }
         val range =
             if (emulator != null && renderer != null && controller != null) {
                 controller.getSelectors(selectionBounds)
@@ -169,40 +194,19 @@ internal class OcTerminalView(context: Context) : TerminalView(context, null) {
         if (range == null || emulator == null || renderer == null) return null
         val viewport =
             SelectionViewport(
-                topRow = topRow,
+                topRow = terminal.topRow,
                 columns = emulator.mColumns,
                 fontWidth = renderer.fontWidth,
                 lineSpacing = renderer.fontLineSpacing,
-                viewWidth = width,
-                viewHeight = height,
+                viewWidth = terminal.width,
+                viewHeight = terminal.height,
             )
-        val clearance = (ACTION_BAR_CLEARANCE_DP * resources.displayMetrics.density).toInt()
+        val clearance = (ACTION_BAR_CLEARANCE_DP * terminal.resources.displayMetrics.density).toInt()
         return selectionActionContentRect(range, viewport, clearance)
     }
 
-    private fun selectionController(): TextSelectionCursorController? =
-        CONTROLLER_FIELD?.get(this) as? TextSelectionCursorController
-
-    private inner class SelectionActionModeCallback(private val delegate: ActionMode.Callback2) :
-        ActionMode.Callback2() {
-        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean =
-            delegate.onCreateActionMode(mode, menu)
-
-        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean =
-            delegate.onPrepareActionMode(mode, menu)
-
-        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean =
-            delegate.onActionItemClicked(mode, item)
-
-        override fun onDestroyActionMode(mode: ActionMode) {
-            delegate.onDestroyActionMode(mode)
-        }
-
-        override fun onGetContentRect(mode: ActionMode, view: View, outRect: Rect) {
-            val rect = computeActionContentRect()
-            if (rect != null) outRect.set(rect) else delegate.onGetContentRect(mode, view, outRect)
-        }
-    }
+    private fun selectionController(terminal: TerminalView): TextSelectionCursorController? =
+        CONTROLLER_FIELD?.get(terminal) as? TextSelectionCursorController
 
     private companion object {
         // Matched by declared type rather than field name so R8 minification cannot break lookup.
