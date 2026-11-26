@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
@@ -155,7 +156,7 @@ public fun KitRequestFrame(
         if (!inPlace && (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal)) Modifier.padding(horizontal = ringWidth)
         else Modifier
     KitSignalSlip(
-        modifier.widthIn(max = 700.dp).fillMaxWidth().kitMaxHeightAtLayout(maxCardHeight()),
+        modifier.widthIn(max = kitConversationCap()).fillMaxWidth().kitMaxHeightAtLayout(maxCardHeight()),
         endsWithTap = true,
     ) {
         Column(

@@ -119,7 +119,13 @@ class LampBackStackStateTest {
                 LocalViewModelStoreOwner provides storeOwner,
             ) {
                 KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
-                    NavShell(start = ChatsRoute.Home, deps = deps)
+                    // The phone's stack moves: from 840 dp a conversation opens beside the list (ShellListPaneTest).
+                    CompositionLocalProvider(
+                        io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow provides
+                            io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo.Phone,
+                    ) {
+                        NavShell(start = ChatsRoute.Home, deps = deps)
+                    }
                 }
             }
         }

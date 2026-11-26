@@ -122,4 +122,5 @@
     <string name="editor40SaveChanges">Save changes</string>
     <string name="editor40Stale">This saved server or its sign-in changed. Close this page and open the server again before trying.</string>
     <string name="editor40Deleted">This server was removed. Close this page to return to your saved servers.</string>
+    <string name="serversEditNamed">Edit %1$s</string>
 </resources>

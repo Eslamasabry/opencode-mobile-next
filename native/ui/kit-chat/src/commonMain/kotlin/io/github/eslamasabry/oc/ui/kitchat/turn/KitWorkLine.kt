@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.turn
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -90,7 +91,7 @@ public fun KitWorkLine(
     now: String? = null,
     steps: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(modifier.fillMaxWidth().widthIn(max = 700.dp)) { // F: lib/ui/kit/kit_layout.dart:48
+    Column(modifier.fillMaxWidth().widthIn(max = kitConversationCap())) { // F: lib/ui/kit/kit_layout.dart:48
         if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
             val colors = LocalKitColors.current
             val palette = SignalPalette.of(colors.dark)
