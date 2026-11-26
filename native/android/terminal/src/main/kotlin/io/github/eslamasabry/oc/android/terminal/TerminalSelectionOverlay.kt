@@ -112,25 +112,38 @@ internal class TerminalSelectionOverlay {
         val emulator = terminal.mEmulator
         val renderer = terminal.mRenderer
         val controller = if (terminal.isSelectingText) selectionController(terminal) else null
-        if (emulator == null || renderer == null || controller == null) return false
-        controller.getSelectors(selectionBounds)
-        val range = normalizeSelectionRange(selectionBounds) ?: return false
-        val viewport =
-            SelectionViewport(
-                topRow = terminal.topRow,
-                columns = emulator.mColumns,
-                fontWidth = renderer.fontWidth,
-                lineSpacing = renderer.fontLineSpacing,
-                viewWidth = terminal.width,
-                viewHeight = terminal.height,
-            )
-        canvas.save()
-        canvas.translate(terminal.left.toFloat() - terminal.scrollX, terminal.top.toFloat() - terminal.scrollY)
-        renderer.render(emulator, canvas, terminal.topRow, NO_SELECTION, NO_SELECTION, NO_SELECTION, NO_SELECTION)
-        drawHighlightRects(canvas, range, viewport, emulator.mRows)
-        canvas.restore()
-        controller.render()
-        return true
+        var handled = false
+        if (emulator != null && renderer != null && controller != null) {
+            controller.getSelectors(selectionBounds)
+            val range = normalizeSelectionRange(selectionBounds)
+            if (range != null) {
+                val viewport =
+                    SelectionViewport(
+                        topRow = terminal.topRow,
+                        columns = emulator.mColumns,
+                        fontWidth = renderer.fontWidth,
+                        lineSpacing = renderer.fontLineSpacing,
+                        viewWidth = terminal.width,
+                        viewHeight = terminal.height,
+                    )
+                canvas.save()
+                canvas.translate(terminal.left.toFloat() - terminal.scrollX, terminal.top.toFloat() - terminal.scrollY)
+                renderer.render(
+                    emulator,
+                    canvas,
+                    terminal.topRow,
+                    NO_SELECTION,
+                    NO_SELECTION,
+                    NO_SELECTION,
+                    NO_SELECTION,
+                )
+                drawHighlightRects(canvas, range, viewport, emulator.mRows)
+                canvas.restore()
+                controller.render()
+                handled = true
+            }
+        }
+        return handled
     }
 
     fun wrapActionModeCallback(
