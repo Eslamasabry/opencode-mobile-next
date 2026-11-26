@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.core.domain
 
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ProfileTrust
@@ -81,9 +82,13 @@ public data class GatewaySpec(
     val reconnectAllowed: StateFlow<Boolean> = AlwaysAllowed,
     /** Bounded read clients (the profile monitor) need no event subscription. */
     val observeEvents: Boolean = true,
+    /** Process visibility for event streams; defaults to foreground when omitted. */
+    val visibility: StateFlow<Visibility> = AlwaysForeground,
 )
 
 private val AlwaysAllowed: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+private val AlwaysForeground: StateFlow<Visibility> =
+    MutableStateFlow(Visibility.Foreground).asStateFlow()
 
 /**
  * Backends plug in here (plan 03 S3): a Metro Set multibinding, one factory per [BackendKind] (plan

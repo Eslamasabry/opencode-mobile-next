@@ -83,11 +83,21 @@ private class AppFactsBookAccess(
     /** One client per base URL, reused while the pairing stays the same. */
     private var client: Pair<String, FactsBookHttp>? = null
 
-    private fun httpFor(baseUrl: String): FactsBookHttp =
-        synchronized(this) {
-            client?.takeIf { it.first == baseUrl }?.second
-                ?: NetFactsBookHttp.create(http, baseUrl).also { client = baseUrl to it }
-        }
+    private fun httpFor(baseUrl: String): FactsBookHttp {
+        val (current, retired) =
+            synchronized(this) {
+                val existing = client
+                if (existing != null && existing.first == baseUrl) {
+                    existing.second to null
+                } else {
+                    val created = NetFactsBookHttp.create(http, baseUrl)
+                    client = baseUrl to created
+                    created to (existing?.second as? NetFactsBookHttp)
+                }
+            }
+        retired?.close()
+        return current
+    }
 
     override val engine: FactsBookEngine =
         FactsBookEngine(

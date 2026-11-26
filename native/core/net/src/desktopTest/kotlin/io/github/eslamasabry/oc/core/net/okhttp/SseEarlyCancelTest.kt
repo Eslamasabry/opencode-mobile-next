@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.net.stream.StreamInputs
 import io.github.eslamasabry.oc.core.net.stream.StreamPlan
 import io.github.eslamasabry.oc.core.net.stream.StreamSignal
 import io.github.eslamasabry.oc.core.security.HostClass
+import io.ktor.client.engine.okhttp.OkHttpConfig
 import io.ktor.client.request.url
 import java.io.IOException
 import java.net.InetAddress
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import okhttp3.OkHttpClient
 
 /**
  * B-617: when EventStreamLoop exits readUntilEnd early (HiddenIdle), the underlying Ktor/OkHttp
@@ -46,76 +46,21 @@ class SseEarlyCancelTest {
         runBlocking {
             val serverClosed = CountDownLatch(1)
             val server = ServerSocket(0, 5, InetAddress.getLoopbackAddress())
-            val acceptor =
-                thread(isDaemon = true, name = "sse-hang-server") {
-                    try {
-                        server.accept().use { client ->
-                            val input = client.getInputStream()
-                            val header = StringBuilder()
-                            while (!header.endsWith("\r\n\r\n")) {
-                                val b = input.read()
-                                if (b < 0) return@use
-                                header.append(b.toChar())
-                            }
-                            val out = client.getOutputStream()
-                            val payload = "data: hi\n\n".toByteArray()
-                            val head =
-                                "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: text/event-stream\r\n" +
-                                    "Transfer-Encoding: chunked\r\n\r\n" +
-                                    "${Integer.toHexString(payload.size)}\r\n"
-                            out.write(head.toByteArray())
-                            out.write(payload)
-                            out.write("\r\n".toByteArray())
-                            out.flush()
-                            // Hold the connection open until the client closes or cancels it.
-                            try {
-                                while (input.read() >= 0) {
-                                    // Drain until peer closes socket.
-                                }
-                            } catch (_: IOException) {
-                                // Peer reset/closed socket.
-                            } finally {
-                                serverClosed.countDown()
-                            }
-                        }
-                    } catch (_: IOException) {
-                        serverClosed.countDown()
-                    }
-                }
-
-            var capturedClient: OkHttpClient? = null
-            val engines =
-                OkHttpEngineFactory(
-                    base = { spec -> hardenedBaseClient(spec).also { capturedClient = it } }
-                )
+            val acceptor = startHangingSseServer(server, serverClosed)
             val origin = ServerOrigin("http", "127.0.0.1", server.localPort)
             val net =
-                HttpClientFactory(engines)
+                HttpClientFactory(OkHttpEngineFactory())
                     .create(TransportSpec(origin, HostClass.Loopback, cleartextPermitted = true))
             val visibility = MutableStateFlow(Visibility.Foreground)
-            val network =
-                object : NetworkStatus {
-                    override val state: StateFlow<NetworkState> =
-                        MutableStateFlow(NetworkState(NetworkState.Online.Yes, defaultNetworkId = 1L))
-                }
-            val connector = KtorSseConnector(net.http) { url("$origin/api/event") }
-            val loop =
-                EventStreamLoop(
-                    connector,
-                    StreamPlan(BackoffPolicy.OpenCode2, HostClass.Loopback),
-                    NetworkGate(network),
-                    Clock.System,
-                    Random(1),
-                    StreamInputs(visibility = visibility),
-                )
+            val loop = buildLoop(net.http, origin, visibility)
             val gotFrame = CompletableDeferred<Unit>()
             val suspended = CompletableDeferred<Unit>()
             val job =
                 launch(Dispatchers.Default) {
                     loop.signals().collect { signal ->
                         when (signal) {
-                            is StreamSignal.Frame -> if (signal.frame.data == "hi") gotFrame.complete(Unit)
+                            is StreamSignal.Frame ->
+                                if (signal.frame.data == "hi") gotFrame.complete(Unit)
                             is StreamSignal.Status ->
                                 if (signal.status == StreamStatus.Suspended) suspended.complete(Unit)
                         }
@@ -133,24 +78,75 @@ class SseEarlyCancelTest {
                     "underlying SSE socket stayed pinned open after HiddenIdle",
                 )
                 val liveCalls =
-                    (net.http.engine.config as io.ktor.client.engine.okhttp.OkHttpConfig)
+                    (net.http.engine.config as OkHttpConfig)
                         .preconfigured!!
                         .interceptors
                         .filterIsInstance<LiveCalls>()
                         .single()
-                assertEquals(0, liveCalls.trackedCallsCount(), "SSE call remained tracked after cancel")
+                assertEquals(0, liveCalls.trackedCount, "SSE call remained tracked after cancel")
             } finally {
                 job.cancel()
                 net.close()
                 server.close()
                 acceptor.join(2_000)
-                check(capturedClient != null)
             }
         }
 
-    private fun LiveCalls.trackedCallsCount(): Int {
-        val field = LiveCalls::class.java.getDeclaredField("calls")
-        field.isAccessible = true
-        return (field.get(this) as Collection<*>).size
+    private fun buildLoop(
+        http: io.ktor.client.HttpClient,
+        origin: ServerOrigin,
+        visibility: MutableStateFlow<Visibility>,
+    ): EventStreamLoop {
+        val network =
+            object : NetworkStatus {
+                override val state: StateFlow<NetworkState> =
+                    MutableStateFlow(NetworkState(NetworkState.Online.Yes, defaultNetworkId = 1L))
+            }
+        val connector = KtorSseConnector(http) { url("$origin/api/event") }
+        return EventStreamLoop(
+            connector,
+            StreamPlan(BackoffPolicy.OpenCode2, HostClass.Loopback),
+            NetworkGate(network),
+            Clock.System,
+            Random(1),
+            StreamInputs(visibility = visibility),
+        )
     }
+
+    private fun startHangingSseServer(server: ServerSocket, closed: CountDownLatch): Thread =
+        thread(isDaemon = true, name = "sse-hang-server") {
+            try {
+                server.accept().use { client ->
+                    val input = client.getInputStream()
+                    val header = StringBuilder()
+                    while (!header.endsWith("\r\n\r\n")) {
+                        val b = input.read()
+                        if (b < 0) return@use
+                        header.append(b.toChar())
+                    }
+                    val out = client.getOutputStream()
+                    val payload = "data: hi\n\n".toByteArray()
+                    val head =
+                        "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: text/event-stream\r\n" +
+                            "Transfer-Encoding: chunked\r\n\r\n" +
+                            "${Integer.toHexString(payload.size)}\r\n"
+                    out.write(head.toByteArray())
+                    out.write(payload)
+                    out.write("\r\n".toByteArray())
+                    out.flush()
+                    try {
+                        while (input.read() >= 0) {
+                            // Hold open until peer cancels or closes the socket.
+                        }
+                    } catch (_: IOException) {
+                        // Peer reset/closed socket.
+                    } finally {
+                        closed.countDown()
+                    }
+                }
+            } catch (_: IOException) {
+                closed.countDown()
+            }
+        }
 }

@@ -489,5 +489,6 @@ private class PinnedQuotaTransport(private val dispatchers: AppDispatchers, expe
     override fun close(force: Boolean) {
         client.dispatcher.cancelAll()
         client.connectionPool.evictAll()
+        client.dispatcher.executorService.shutdown()
     }
 }

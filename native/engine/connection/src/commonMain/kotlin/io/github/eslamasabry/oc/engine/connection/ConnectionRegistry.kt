@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.common.supervisedContext
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
@@ -47,6 +48,12 @@ public interface ConnectionMultibindings {
     @Multibinds(allowEmpty = true) public val gatewayFactories: Set<GatewayFactory>
     @Multibinds(allowEmpty = true) public val credentialSources: Set<ConnectionCredentialSource>
     @Multibinds(allowEmpty = true) public val transientSources: Set<TransientConnectionSource>
+    @Multibinds(allowEmpty = true) public val visibilitySources: Set<ConnectionVisibilitySource>
+}
+
+/** Optional process-visibility source wired into [GatewaySpec.visibility] for event streams. */
+public fun interface ConnectionVisibilitySource {
+    public fun visibility(): StateFlow<Visibility>
 }
 
 /**
@@ -98,7 +105,8 @@ public class TransientConnection(
  */
 @SingleIn(AppScope::class)
 @Inject
-public class ConnectionRegistry(
+// Optional visibility collaborator wired into GatewaySpec; splitting registry is a separate refactor.
+public class ConnectionRegistry @Suppress("LongParameterList") constructor(
     private val factories: Set<GatewayFactory>,
     private val graphFactory: ConnectionGraph.Factory,
     public val appScope: AppCoroutineScope,
@@ -106,12 +114,14 @@ public class ConnectionRegistry(
     private val credentialSources: Set<ConnectionCredentialSource> = emptySet(),
     private val transientSources: Set<TransientConnectionSource> = emptySet(),
     private val transientOwners: TransientOwners = TransientOwners(),
+    private val visibilitySources: Set<ConnectionVisibilitySource> = emptySet(),
 ) {
     init {
         check(factories.groupBy { it.backend }.all { it.value.size == 1 }) {
             "two GatewayFactory for one backend"
         }
         check(credentialSources.size <= 1) { "multiple connection credential sources" }
+        check(visibilitySources.size <= 1) { "multiple connection visibility sources" }
     }
 
     public val mainContext: kotlin.coroutines.CoroutineContext
@@ -175,7 +185,18 @@ public class ConnectionRegistry(
                     return@withLock read
                 }
             }
-        val spec = GatewaySpec(profile = profile, credentials = credentials, scope = scope)
+        val visibility = visibilitySources.singleOrNull()?.visibility()
+        val spec =
+            if (visibility != null) {
+                GatewaySpec(
+                    profile = profile,
+                    credentials = credentials,
+                    scope = scope,
+                    visibility = visibility,
+                )
+            } else {
+                GatewaySpec(profile = profile, credentials = credentials, scope = scope)
+            }
         val attempt = TimeSource.Monotonic.markNow()
         val connected = factory.connect(spec)
         // B-190: the kind of server and of failure only, never its address; dropped unless `usage` is on.
@@ -250,7 +271,19 @@ public class ConnectionRegistry(
         val proof =
             TransientConnection(profile, credentials, ownerProfileId, location, currentOwner)
         transientOwners.admit(proof)
-        val spec = GatewaySpec(profile, credentials, scope, location = location)
+        val visibility = visibilitySources.singleOrNull()?.visibility()
+        val spec =
+            if (visibility != null) {
+                GatewaySpec(
+                    profile,
+                    credentials,
+                    scope,
+                    location = location,
+                    visibility = visibility,
+                )
+            } else {
+                GatewaySpec(profile, credentials, scope, location = location)
+            }
         val connected =
             try {
                 factory.connect(spec)

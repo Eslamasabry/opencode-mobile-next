@@ -25,9 +25,9 @@ import java.net.Proxy
 import java.net.Socket
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
-import java.util.Collections
-import java.util.WeakHashMap
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import okhttp3.Call
@@ -40,7 +40,12 @@ import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.RequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody
+import okio.Buffer
 import okio.BufferedSink
+import okio.BufferedSource
+import okio.ForwardingSource
+import okio.buffer
 
 /**
  * The OkHttp engine for one live connection (plan 04 §3.2–3.3, N4-D1, N4-D2). Compiled into both
@@ -194,14 +199,32 @@ internal object StaleConnectionRetry {
     class StaleSocketException :
         IOException("the pooled connection was already closed; nothing was sent")
 
-    private val served: MutableSet<Connection> =
-        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+    private const val MAX_SERVED_CONNECTIONS = 128
+
+    private val served = LinkedHashSet<Connection>()
+
+    private fun rememberConnection(connection: Connection): Boolean =
+        synchronized(served) {
+            val iterator = served.iterator()
+            while (iterator.hasNext()) {
+                if (iterator.next().socket().isClosed) iterator.remove()
+            }
+            val reused = served.remove(connection)
+            served.add(connection)
+            while (served.size > MAX_SERVED_CONNECTIONS) {
+                val oldest = served.iterator()
+                if (!oldest.hasNext()) break
+                oldest.next()
+                oldest.remove()
+            }
+            reused
+        }
 
     private val observe = Interceptor { chain ->
         val trace = chain.request().tag(Trace::class.java)
         val connection = chain.connection()
         if (trace != null && connection != null) {
-            val reused = !served.add(connection)
+            val reused = rememberConnection(connection)
             trace.reusedConnection = reused
             if (
                 reused &&
@@ -288,20 +311,87 @@ internal object StaleConnectionRetry {
  * (plan 04 §3.1, B-PROTO-148).
  */
 internal class LiveCalls private constructor() : Interceptor {
-    private val calls: MutableSet<Call> =
-        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+    private val calls: MutableSet<Call> = ConcurrentHashMap.newKeySet()
+
+    internal val trackedCount: Int
+        get() = calls.size
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        calls += chain.call()
-        return chain.proceed(chain.request())
+        val call = chain.call()
+        calls += call
+        var handedOff = false
+        try {
+            val response = chain.proceed(chain.request())
+            val wrapped =
+                response
+                    .newBuilder()
+                    .body(ClosingResponseBody(call, response.body) { calls -= call })
+                    .build()
+            handedOff = true
+            return wrapped
+        } finally {
+            if (!handedOff) calls -= call
+        }
     }
 
     fun cancelAll() {
-        // Copied by walking the set, never by its size: the GC may clear a key at any moment, and the
-        // weak map still counts an entry it has cleared but not yet dropped while its iterator skips
-        // it, so a size-based copy (`toList()` of one entry) threw NoSuchElementException on close.
-        val live = synchronized(calls) { buildList { for (call in calls) add(call) } }
-        live.forEach { it.cancel() }
+        calls.toList().forEach { it.cancel() }
+    }
+
+    private class ClosingResponseBody(
+        private val call: Call,
+        private val delegate: ResponseBody,
+        private val onClose: () -> Unit,
+    ) : ResponseBody() {
+        private val finished = AtomicBoolean(false)
+        private val eof = AtomicBoolean(false)
+        private val inRead = AtomicInteger(0)
+        private val isEventStream =
+            delegate.contentType()?.let {
+                it.type.equals("text", ignoreCase = true) &&
+                    it.subtype.equals("event-stream", ignoreCase = true)
+            } == true
+        private val wrapped: BufferedSource by lazy {
+            object : ForwardingSource(delegate.source()) {
+                override fun read(sink: Buffer, byteCount: Long): Long {
+                    inRead.incrementAndGet()
+                    return try {
+                        super.read(sink, byteCount).also { if (it < 0L) eof.set(true) }
+                    } finally {
+                        inRead.decrementAndGet()
+                    }
+                }
+
+                override fun close() {
+                    try {
+                        super.close()
+                    } finally {
+                        finish()
+                    }
+                }
+            }.buffer()
+        }
+
+        private fun finish() {
+            if (finished.compareAndSet(false, true)) onClose()
+        }
+
+        override fun contentType(): MediaType? = delegate.contentType()
+
+        override fun contentLength(): Long = delegate.contentLength()
+
+        override fun source(): BufferedSource = wrapped
+
+        override fun close() {
+            try {
+                if (!eof.get() && (inRead.get() > 0 || isEventStream)) {
+                    call.cancel()
+                }
+                delegate.close()
+            } finally {
+                finish()
+            }
+        }
     }
 
     companion object {

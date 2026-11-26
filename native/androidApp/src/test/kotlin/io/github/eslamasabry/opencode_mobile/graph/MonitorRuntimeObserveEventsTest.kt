@@ -59,119 +59,24 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
 class MonitorRuntimeObserveEventsTest {
+    private class Fixture(
+        val job: kotlinx.coroutines.CompletableJob,
+        val stores: PreviewStores,
+        val runtime: MonitorRuntime,
+        val requestedPaths: CopyOnWriteArrayList<String>,
+        val specs: CopyOnWriteArrayList<GatewaySpec>,
+        val firstConnect: CompletableDeferred<Unit>,
+    )
+
     @Test
     fun `B-617 ReadOnlyMonitorGateway passes observeEvents false and opens no event stream`() =
         runBlocking {
-            val app = RuntimeEnvironment.getApplication()
-            val dispatchers =
-                object : AppDispatchers {
-                    override val main = Dispatchers.Default
-                    override val default = Dispatchers.Default
-                    override val io = Dispatchers.IO
-
-                    override fun serial(name: String) =
-                        Dispatchers.Default.limitedParallelism(1, name)
-                }
-            val redactor = Redactor()
-            val clock = TestClock()
-            val job = SupervisorJob()
-            val scope = AppCoroutineScope(job + dispatchers.default)
-            val build = AppBuildInfo("3.0.2", 10130, Channel.Preview, debuggable = true)
-            val migration = MigrationWiring(app, build, redactor, scope, dispatchers, clock)
-            val stores =
-                PreviewStores(
-                    app,
-                    dispatchers,
-                    redactor,
-                    StateMigrationGate.alwaysOpen(),
-                    migration,
-                    build,
-                )
-            val requestedPaths = CopyOnWriteArrayList<String>()
-            val specs = CopyOnWriteArrayList<GatewaySpec>()
-            val firstConnect = CompletableDeferred<Unit>()
-            val engines =
-                OkHttpEngineFactory(
-                    base = { spec ->
-                        hardenedBaseClient(spec)
-                            .newBuilder()
-                            .addInterceptor { chain ->
-                                val path = chain.request().url.encodedPath
-                                requestedPaths += path
-                                val (type, body) =
-                                    when (path) {
-                                        "/api/health" ->
-                                            "application/json" to
-                                                """{"healthy":true,"version":"0.0.0-beta-19242"}"""
-                                        "/api/event" -> "text/event-stream" to ": ping\n\n"
-                                        "/api/session/status" -> "application/json" to """{"data":{}}"""
-                                        else -> "application/json" to """{"data":[]}"""
-                                    }
-                                Response.Builder()
-                                    .request(chain.request())
-                                    .protocol(Protocol.HTTP_1_1)
-                                    .code(200)
-                                    .message("OK")
-                                    .header("Content-Type", type)
-                                    .body(body.toResponseBody(type.toMediaType()))
-                                    .build()
-                            }
-                            .build()
-                    }
-                )
-            val realOc2 =
-                Oc2GatewayFactory(
-                    HttpClientFactory(engines),
-                    dispatchers,
-                    clock,
-                    redactor,
-                    Random(1),
-                )
-            val recordingFactory =
-                object : GatewayFactory by realOc2 {
-                    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
-                        specs += spec
-                        firstConnect.complete(Unit)
-                        return realOc2.connect(spec)
-                    }
-                }
-            val registry =
-                ConnectionRegistry(
-                    emptySet(),
-                    ConnectionGraph.Factory { _, _, _ -> error("unused") },
-                    scope,
-                    dispatchers,
-                )
-            val policies = AppAutomationPolicies(stores, redactor, scope, dispatchers)
-            val network =
-                object : NetworkStatus {
-                    override val state: StateFlow<NetworkState> =
-                        MutableStateFlow(NetworkState(NetworkState.Online.Yes, onWifi = true))
-                }
-            val background =
-                BackgroundHub(app, scope, dispatchers, clock, stores, ResumedActivities(app))
-            val preferences = AppPreferences(stores, scope)
-            val runtime =
-                MonitorRuntime(
-                    app,
-                    stores,
-                    policies,
-                    registry,
-                    setOf(recordingFactory),
-                    setOf(ConnectionCredentialSource { Outcome.Ok(ConnectionCredentials("opencode", "pw")) }),
-                    network,
-                    background,
-                    preferences,
-                    redactor,
-                    clock,
-                    scope,
-                    dispatchers,
-                )
+            val fixture = createFixture()
             try {
-                assertIs<Outcome.Ok<Unit>>(stores.warm())
+                assertIs<Outcome.Ok<Unit>>(fixture.stores.warm())
                 val profileId = ProfileId("mon-1")
                 assertIs<Outcome.Ok<*>>(
-                    stores.profiles.upsert(
+                    fixture.stores.profiles.upsert(
                         StoredProfile(
                             id = profileId,
                             name = "Work",
@@ -182,23 +87,129 @@ class MonitorRuntimeObserveEventsTest {
                         SecretEdit.Set("pw"),
                     )
                 )
-                runtime.start()
+                fixture.runtime.start()
                 Robolectric.buildActivity(Activity::class.java).create().start()
-                assertIs<Outcome.Ok<Unit>>(runtime.setEnabled(profileId.raw, true))
-                withTimeout(10_000) { firstConnect.await() }
+                assertIs<Outcome.Ok<Unit>>(fixture.runtime.setEnabled(profileId.raw, true))
+                withTimeout(10_000) { fixture.firstConnect.await() }
                 // Give any wrongly-started SSE loop a brief chance to hit /api/event.
                 delay(200)
-                assertTrue(specs.isNotEmpty(), "monitor never connected to the server")
+                assertTrue(fixture.specs.isNotEmpty(), "monitor never connected to the server")
                 assertFalse(
-                    specs.first().observeEvents,
+                    fixture.specs.first().observeEvents,
                     "ReadOnlyMonitorGateway must pass observeEvents = false",
                 )
                 assertTrue(
-                    requestedPaths.none { it == "/api/event" },
-                    "monitor poll opened unexpected /api/event SSE stream: $requestedPaths",
+                    fixture.requestedPaths.none { it == "/api/event" },
+                    "monitor poll opened unexpected /api/event SSE stream: ${fixture.requestedPaths}",
                 )
             } finally {
-                job.cancel()
+                fixture.job.cancel()
             }
         }
+
+    private fun createFixture(): Fixture {
+        val app = RuntimeEnvironment.getApplication()
+        val dispatchers = testAppDispatchers()
+        val redactor = Redactor()
+        val clock = TestClock()
+        val job = SupervisorJob()
+        val scope = AppCoroutineScope(job + dispatchers.default)
+        val build = AppBuildInfo("3.0.2", 10130, Channel.Preview, debuggable = true)
+        val migration = MigrationWiring(app, build, redactor, scope, dispatchers, clock)
+        val stores =
+            PreviewStores(app, dispatchers, redactor, StateMigrationGate.alwaysOpen(), migration, build)
+        val requestedPaths = CopyOnWriteArrayList<String>()
+        val specs = CopyOnWriteArrayList<GatewaySpec>()
+        val firstConnect = CompletableDeferred<Unit>()
+        val factory = recordingOc2Factory(dispatchers, clock, redactor, requestedPaths, specs, firstConnect)
+        val registry =
+            ConnectionRegistry(
+                emptySet(),
+                ConnectionGraph.Factory { _, _, _ -> error("unused") },
+                scope,
+                dispatchers,
+            )
+        val network =
+            object : NetworkStatus {
+                override val state: StateFlow<NetworkState> =
+                    MutableStateFlow(NetworkState(NetworkState.Online.Yes, onWifi = true))
+            }
+        val runtime =
+            MonitorRuntime(
+                app,
+                stores,
+                AppAutomationPolicies(stores, redactor, scope, dispatchers),
+                registry,
+                setOf(factory),
+                setOf(ConnectionCredentialSource { Outcome.Ok(ConnectionCredentials("opencode", "pw")) }),
+                network,
+                BackgroundHub(app, scope, dispatchers, clock, stores, ResumedActivities(app)),
+                AppPreferences(stores, scope),
+                redactor,
+                clock,
+                scope,
+                dispatchers,
+            )
+        return Fixture(job, stores, runtime, requestedPaths, specs, firstConnect)
+    }
+
+    private fun testAppDispatchers(): AppDispatchers =
+        object : AppDispatchers {
+            override val main = Dispatchers.Default
+            override val default = Dispatchers.Default
+            override val io = Dispatchers.IO
+
+            override fun serial(name: String) = Dispatchers.Default.limitedParallelism(1, name)
+        }
+
+    private fun recordingOc2Factory(
+        dispatchers: AppDispatchers,
+        clock: TestClock,
+        redactor: Redactor,
+        requestedPaths: CopyOnWriteArrayList<String>,
+        specs: CopyOnWriteArrayList<GatewaySpec>,
+        firstConnect: CompletableDeferred<Unit>,
+    ): GatewayFactory {
+        val engines =
+            OkHttpEngineFactory(
+                base = { spec ->
+                    hardenedBaseClient(spec)
+                        .newBuilder()
+                        .addInterceptor { chain -> syntheticAnswer(chain, requestedPaths) }
+                        .build()
+                }
+            )
+        val realOc2 = Oc2GatewayFactory(HttpClientFactory(engines), dispatchers, clock, redactor, Random(1))
+        return object : GatewayFactory by realOc2 {
+            override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
+                specs += spec
+                firstConnect.complete(Unit)
+                return realOc2.connect(spec)
+            }
+        }
+    }
+
+    private fun syntheticAnswer(
+        chain: okhttp3.Interceptor.Chain,
+        requestedPaths: CopyOnWriteArrayList<String>,
+    ): Response {
+        val path = chain.request().url.encodedPath
+        requestedPaths += path
+        val (type, body) =
+            when (path) {
+                "/api/health" ->
+                    "application/json" to """{"healthy":true,"version":"0.0.0-beta-19242"}"""
+                "/api/event" -> "text/event-stream" to ": ping\n\n"
+                "/api/session/status" -> "application/json" to """{"data":{}}"""
+                else -> "application/json" to """{"data":[]}"""
+            }
+        return Response.Builder()
+            .request(chain.request())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .header("Content-Type", type)
+            .body(body.toResponseBody(type.toMediaType()))
+            .build()
+    }
 }

@@ -52,6 +52,11 @@ public class NetFactsBookHttp(private val client: NetClient, private val origin:
         }
     }
 
+    /** Closes the underlying trust-gated client and releases its connection pool and executor. */
+    public fun close() {
+        client.close()
+    }
+
     public companion object {
         /** The origin of a saved base URL ("http://127.0.0.1:8787"), or null when it is not a private address. */
         public fun originOf(baseUrl: String): ServerOrigin? {
