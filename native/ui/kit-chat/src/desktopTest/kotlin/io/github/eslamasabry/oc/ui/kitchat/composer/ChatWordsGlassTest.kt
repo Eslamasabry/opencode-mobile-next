@@ -74,6 +74,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
+import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import java.io.File
 import javax.imageio.ImageIO
@@ -92,9 +93,12 @@ import kotlin.test.assertTrue
  * under the bar must never have transcript text behind it. The transcript fades out as it passes under the message box,
  * full at the box's top edge and gone by the inner end of the lens rim, so the rim still bends real content while the
  * words sit on nothing bright. Every measure compares a scene whose rows are bright with the same scene whose rows draw
- * nothing: same layout, same jump pill, same join; only what lies behind the glass differs.
+ * nothing: same layout, same docked jump row, same join; only what lies behind the glass differs.
  */
 class ChatWordsGlassTest {
+    /** The scene's transcript state: the test sets the person's choice by hand (a scroll from code keeps following). */
+    private lateinit var list: TranscriptListState
+
     /**
      * Desktop with the lens, as Android 13+ has it: a liquid pane draws what it reads blurred by its recipe's blur,
      * under its tint. No bend and no rim light (the desktop cannot show those).
@@ -179,6 +183,7 @@ class ChatWordsGlassTest {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
                 val state = rememberTranscriptListState()
+                list = state
                 lazy[0] = state.lazy
                 seen[1] = source
                 KitScreen(
@@ -297,6 +302,9 @@ class ChatWordsGlassTest {
                     up()
                 }
             waitForIdle()
+            // A scroll from code keeps following the newest row: the person's choice is set by hand, so the docked
+            // "Jump to latest" row shows as it does for a person reading history.
+            if (scrollTo > 0) runOnIdle { list.following = false }
             // Near the newest message (not away from it): the newest row drawn [nudgeDp] past its resting place, so its
             // lower part lies under the bottom block.
             if (nudgeDp > 0) {
@@ -369,29 +377,34 @@ class ChatWordsGlassTest {
     /**
      * Owner 2026-11-14 ("Wtfff": "Jump to latest" sat on a code block's words and bent them; a smear of bent transcript
      * along the message box's top edge): reading history, nothing of the transcript shows in the bottom block (the box
-     * and its rim included) or behind the jump pill, at any scroll offset; it fades out above them over 16 dp in steps.
+     * and its rim included) or behind the docked jump row, at any scroll offset; it fades out above it in steps.
      */
     @Test
-    fun `B-CHAT-COL-01 nothing of the transcript shows in the bottom block or behind the jump pill, and it fades out above them`() {
+    fun `B-CHAT-COL-01 nothing of the transcript shows in the block or behind the docked jump row, fading above`() {
         for (at in listOf(SCROLLED_TO, SCROLLED_TO + 7)) {
             val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, scrollTo = at)
             val none = shot(dark(Style.Glass), LensPlatform(), bright = false, scrollTo = at)
             val block = bright.block!!
-            val face = assertNotNull(bright.pillFace, "scrolled to $at: the jump pill shows")
+            val row = assertNotNull(bright.pill, "scrolled to $at: the docked jump row shows")
             assertTrue(bright.rows.any { it.bottom > block.top + 40.dp }, "scrolled to $at: rows lie under the block: ${bright.rows.map { it.top..it.bottom }} block $block")
             // The whole block, its rim and its margins.
             val (blockMean, blockMax) = diff(bright.image, none.image, 0f, block.top.value, W.toFloat(), H.toFloat())
-            println("scrolled to $at: block mean $blockMean max $blockMax over $block, pill $face")
+            println("scrolled to $at: block mean $blockMean max $blockMax over $block, row $row")
             assertTrue(
                 blockMean <= WORDS_MEAN && blockMax <= WORDS_MAX,
                 "scrolled to $at: the rows show in the bottom block: mean $blockMean, max $blockMax\n" + map(bright.image, none.image, 0f, block.top.value - 40f, W.toFloat(), H.toFloat()),
             )
-            // The pill's face: nothing of a row behind it, through its glass or around it.
-            val (pillMean, pillMax) = diff(bright.image, none.image, face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value)
-            assertTrue(pillMean <= WORDS_MEAN && pillMax <= WORDS_MAX, "scrolled to $at: the rows show behind the jump pill: mean $pillMean, max $pillMax")
-            // Above them, beside the pill: whole, then a soft fade in steps, then gone before the pill's top.
-            val gone = minOf(block.top.value, face.top.value)
-            assertFadesOut(bright.image, none.image, x = 8f, from = gone - 40f, to = gone, what = "scrolled to $at")
+            // The docked row's whole rect: nothing of a row shows there, behind or around its words (the band is
+            // cleared).
+            val (rowMean, rowMax) =
+                diff(bright.image, none.image, row.left.value, row.top.value, row.right.value, row.bottom.value)
+            assertTrue(
+                rowMean <= WORDS_MEAN && rowMax <= WORDS_MAX,
+                "scrolled to $at: the rows show behind the docked jump row: mean $rowMean, max $rowMax",
+            )
+            // Above it: whole, then a soft fade in steps, then gone before the row's top.
+            val top = row.top.value
+            assertFadesOut(bright.image, none.image, x = 8f, from = top - 40f, to = top, what = "scrolled to $at")
         }
     }
 
@@ -431,42 +444,51 @@ class ChatWordsGlassTest {
 
     /**
      * Owner 2026-11-14 ("Why did you unlink jump to latest from the composer it was good already!!"): reading history
-     * with a phrase row above the box, the row folds away and the pill is a drop of the message box, one body of glass;
-     * at the newest message the chips are back and the pill is gone.
+     * with a phrase row above the box, the row folds away; at the newest message the chips are back. Since owner
+     * decision O2 = D (2026-11-24) the jump control is a docked row above the box while history is read, never a drop
+     * of the box.
      */
     @Test
-    fun `B-CHAT-COL-03 reading history the phrase row folds away and the pill joins the box, at the newest message the chips return`() {
+    fun `B-CHAT-COL-03 reading history the phrase row folds and the docked row shows, at the newest chips return`() {
         val away = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
-        println("away: chips ${away.chipRows} joined ${away.joined} pill ${away.pill} face ${away.pillFace} box ${away.box}")
+        println("away: chips ${away.chipRows} joined ${away.joined} row ${away.pill} box ${away.box}")
         assertEquals(0, away.chipRows, "no phrase row is laid out while reading history")
-        assertEquals(2, away.joined, "the box and the pill are one body of glass")
-        val face = assertNotNull(away.pillFace)
-        assertTrue(face.bottom > away.box.top, "the pill rests sunk into the box: face $face box ${away.box}")
+        val row = assertNotNull(away.pill, "the docked row shows while reading history")
+        assertTrue(row.bottom <= away.box.top, "the row stands above the box: $row box ${away.box}")
         val latest = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 0)
-        println("latest: chips ${latest.chipRows} joined ${latest.joined} pill ${latest.pillFace}")
+        println("latest: chips ${latest.chipRows} joined ${latest.joined} row ${latest.pill}")
         assertEquals(1, latest.chipRows, "the phrase row is back at the newest message")
-        assertNull(latest.pillFace, "no pill at the newest message")
+        assertNull(latest.pill, "no docked row at the newest message")
     }
 
     /**
-     * A decision waiting above the box: the pill stays clear of the card, not joined, in the faded zone above the block,
-     * with nothing of the transcript behind it.
+     * A decision waiting above the box: the docked row stands above the card (the bottom block's top), not on it, with
+     * nothing of the transcript behind it.
      */
     @Test
-    fun `B-CHAT-COL-04 with a request card above the box the pill stands apart over no words`() {
+    fun `B-CHAT-COL-04 with a request card above the box the docked row stands above the card over no words`() {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, card = true)
         val none = shot(dark(Style.Glass), LensPlatform(), bright = false, card = true)
-        val face = assertNotNull(bright.pillFace, "the pill shows")
-        assertEquals(0, bright.joined, "the pill is not joined to the box under the card")
-        assertTrue(face.bottom <= bright.block!!.top, "the pill sits above the block: $face block ${bright.block}")
-        val (mean, max) = diff(bright.image, none.image, face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value + 4f)
-        println("pill over card: mean $mean max $max at $face")
+        val row = assertNotNull(bright.pill, "the docked row shows")
+        val label = bright.label!!
+        assertTrue(row.bottom <= label.top, "the row sits above the card's label: $row label $label")
+        val (mean, max) =
+            diff(bright.image, none.image, row.left.value, row.top.value, row.right.value, row.bottom.value)
+        println("docked row over card: mean $mean max $max at $row")
         assertTrue(
             mean <= WORDS_MEAN && max <= WORDS_MAX,
-            "the rows show behind the pill: mean $mean, max $max (none: ${none.pillFace})\n" +
-                map(bright.image, none.image, face.left.value - 16f, face.top.value - 24f, face.right.value + 16f, bright.block!!.top.value + 8f),
+            "the rows show behind the docked row: mean $mean max $max (none: ${none.pill})\n" +
+                map(
+                    bright.image,
+                    none.image,
+                    row.left.value,
+                    row.top.value - 24f,
+                    row.right.value,
+                    bright.block!!.top.value + 8f,
+                ),
         )
-        assertFadesOut(bright.image, none.image, x = 8f, from = face.top.value - 40f, to = face.top.value, what = "over the card")
+        val top = row.top.value
+        assertFadesOut(bright.image, none.image, x = 8f, from = top - 40f, to = top, what = "over the card")
     }
 
     @Test

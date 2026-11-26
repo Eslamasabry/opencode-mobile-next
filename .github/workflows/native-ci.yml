@@ -53,6 +53,9 @@ on:
     branches:
       - "native/screens-merge*"
       - "native/ci-*"
+  schedule:
+    # Keep master's shared Gradle cache warm for all work branches (GitHub scopes default-branch caches repo-wide).
+    - cron: "0 3 * * *"
 
 permissions:
   contents: read
@@ -80,6 +83,7 @@ jobs:
     # used ONLY for native/next, native/screens-merge* and master, for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
     # `github`. Everything else, and every offline moment, runs on GitHub-hosted ubuntu-latest.
     name: runner
+    if: ${{ github.event_name != 'schedule' && inputs.tasks != 'cache_seed' && !startsWith(inputs.tasks, 'cache_seed ') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -554,7 +558,7 @@ jobs:
   custom:
     name: custom tasks
     needs: where
-    if: ${{ inputs.tasks != '' && !startsWith(inputs.tasks, 'owner_build ') }}
+    if: ${{ inputs.tasks != '' && !startsWith(inputs.tasks, 'owner_build ') && inputs.tasks != 'cache_seed' && !startsWith(inputs.tasks, 'cache_seed ') }}
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
@@ -878,10 +882,125 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
+  # `tasks=cache_seed [source_ref]` (and daily schedule on master): warms and saves the Gradle User Home, wrapper dist,
+  # and vendored sherpa-onnx caches under the workflow's ref scope (refs/heads/master once merged to master, making the
+  # cache readable by every work branch via GitHub's default-branch fallback). Lives in native-ci.yml for the same reason
+  # as owner-build: only a workflow already on the default branch can be dispatched via workflow_dispatch.
+  cache-seed:
+    name: cache seed
+    if: ${{ github.event_name == 'schedule' || inputs.tasks == 'cache_seed' || startsWith(inputs.tasks, 'cache_seed ') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Check out source ref to warm
+        id: source
+        env:
+          EVENT: ${{ github.event_name }}
+          TASKS: ${{ inputs.tasks }}
+        run: |
+          set -euo pipefail
+          ref="native/glass-next"
+          if [ "$EVENT" != "schedule" ]; then
+            read -r _ arg extra <<<"$TASKS"
+            if [ -n "${extra:-}" ]; then
+              echo "::error::cache_seed accepts at most one source ref argument"; exit 1
+            fi
+            if [ -n "${arg:-}" ]; then
+              ref="$arg"
+            fi
+          fi
+          if ! [[ "$ref" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] || [[ "$ref" == *".."* ]] || [[ "$ref" == *"//"* ]]; then
+            echo "::error::invalid source ref: $ref"; exit 1
+          fi
+          git fetch --no-tags --depth=1 origin "$ref"
+          git checkout -q --detach FETCH_HEAD
+          sha="$(git rev-parse HEAD)"
+          echo "source_ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Seeding cache from $ref @ $sha (cache scope ref: $GITHUB_REF)"
+      - name: Set up JDK 17 and 21 (build 17, host-test launcher 21)
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
+      - name: Android SDK platform 37.1
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "platform-tools" >/dev/null
+      - name: Gradle memory for a 4 CPU / 16 GB runner
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'EOP'
+          org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8
+          org.gradle.workers.max=4
+          oc.test.forks=2
+          systemProp.org.gradle.internal.repository.max.retries=8
+          systemProp.org.gradle.internal.repository.initial.backoff=2000
+          systemProp.org.gradle.internal.http.connectionTimeout=60000
+          systemProp.org.gradle.internal.http.socketTimeout=120000
+          EOP
+      - name: Gradle (cached, write mode)
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-read-only: false
+          cache-overwrite-existing: true
+      - name: Cache the Gradle wrapper distribution
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-dist-${{ hashFiles('native/gradle/wrapper/gradle-wrapper.properties') }}
+      - name: Download the Gradle distribution (retries with backoff)
+        working-directory: native
+        run: |
+          for wait in 0 15 45 90 180; do
+            sleep "$wait"
+            if ./gradlew --version >/dev/null 2>"$RUNNER_TEMP/gradle-dist.err"; then echo "Gradle distribution ready"; exit 0; fi
+            echo "::warning::Gradle distribution download failed (waited ${wait}s before this try): $(tail -n 1 "$RUNNER_TEMP/gradle-dist.err")"
+          done
+          cat "$RUNNER_TEMP/gradle-dist.err"; exit 1
+      - name: Cache vendored sherpa-onnx AAR
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: native/third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar
+          key: sherpa-onnx-${{ hashFiles('native/third_party/SHA256SUMS') }}
+      - name: Fetch vendored artifacts (hash-pinned, never committed)
+        run: native/tools/vendor/fetch.sh
+      - name: Warm Gradle dependencies, transforms, and build cache
+        working-directory: native
+        run: |
+          set -euo pipefail
+          start=$(date +%s)
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/cache-seed.log" \
+            :androidApp:compilePreviewBenchmarkKotlin \
+            compileAllTests \
+            :benchmark:compileBenchmarkKotlin \
+            --stacktrace
+          secs=$(( $(date +%s) - start ))
+          echo "CACHE-SEED-COMPILE-SECONDS $secs"
+          {
+            echo "### Master CI cache seed"
+            echo
+            echo "- Source: \`${{ steps.source.outputs.source_ref }}\` @ \`${{ steps.source.outputs.source_sha }}\`"
+            echo "- Cache scope ref: \`${{ github.ref }}\`"
+            echo "- Tasks: \`:androidApp:compilePreviewBenchmarkKotlin compileAllTests :benchmark:compileBenchmarkKotlin\`"
+            echo "- Gradle compile time: **${secs}s**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   summary:
     name: summary
     needs: [where, plan, compile, test, apk, record, custom, android-unit, detekt]
-    if: ${{ always() && !startsWith(inputs.tasks, 'owner_build ') }}
+    if: ${{ always() && github.event_name != 'schedule' && !startsWith(inputs.tasks, 'owner_build ') && inputs.tasks != 'cache_seed' && !startsWith(inputs.tasks, 'cache_seed ') }}
     # No job-level continue-on-error: this job's exit code is summary.py's verdict on every branch (1 = FAIL, 2 = integrity:
     # Gradle never ran, a shard left no report), so the run page reads red exactly when the summary says FAIL.
     runs-on: ubuntu-latest

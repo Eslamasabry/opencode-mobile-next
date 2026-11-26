@@ -1201,6 +1201,7 @@ private fun runtimeProblem(error: SetupError?): String =
         SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
         is SetupError.PortBusy -> stringResource(Res.string.phoneServerPortBusy, error.port.toString())
         SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
+        is SetupError.StartStepFailed -> stringResource(Res.string.phoneSetupErrorCannotStart)
         SetupError.OwnershipUnknown -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
         SetupError.StatusUnreadable -> stringResource(Res.string.setupRbStatusUnreadable)
         SetupError.ToolsUncheckable -> stringResource(Res.string.setupRbToolsUncheckable)

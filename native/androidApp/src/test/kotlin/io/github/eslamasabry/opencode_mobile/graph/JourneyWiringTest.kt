@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupError
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
+import io.github.eslamasabry.oc.engine.runtime.setup.StartStepKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,7 +44,24 @@ class JourneyWiringTest {
             SetupError.OpenCodeNoProgram, SetupError.OpenCodeWontRun, SetupError.OpenCodeNoStart, SetupError.NodeCannotRun,
             SetupError.Interrupted, SetupError.NoInternet, SetupError.NoSpace("Node"), SetupError.Offline("Node"),
             SetupError.Checksum("Node"), SetupError.Install("Node"), SetupError.StepTimedOut("Node"), SetupError.HostRefused, SetupError.Unexpected,
+        ) + StartStepKind.entries.map { SetupError.StartStepFailed(it) }
+
+    @Test
+    fun `B-SETUP-012 start kinds and busy port map to their closed fail kinds`() {
+        val words = StartStepKind.entries.associateWith { setupFailKindOf(SetupError.StartStepFailed(it)) }
+        assertEquals(
+            mapOf(
+                StartStepKind.TimedOut to "timeout",
+                StartStepKind.Ownership to "permission",
+                StartStepKind.Exited to "exited",
+                StartStepKind.Refused to "refused",
+                StartStepKind.Password to "password",
+                StartStepKind.Withdrawn to "withdrawn",
+            ),
+            words.filterValues { it != "unknown" },
         )
+        assertEquals("port_busy", setupFailKindOf(SetupError.PortBusy(4096)))
+    }
 
     @Test
     fun `B-JOURNEY-030 every setup error becomes one word of the closed fail kind list, never its text`() {

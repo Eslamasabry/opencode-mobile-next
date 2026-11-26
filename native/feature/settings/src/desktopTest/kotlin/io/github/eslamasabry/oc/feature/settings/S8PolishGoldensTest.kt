@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSavedServe
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.feature.settings.ui.ServerSettingsScreen
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import java.awt.image.BufferedImage
@@ -115,12 +116,18 @@ class S8PolishGoldensTest {
                 ),
         )
 
-    private fun each(scene: String, check: ComposeUiTest.(Variant) -> Unit = {}, content: @androidx.compose.runtime.Composable () -> Unit) {
+    private fun each(
+        scene: String,
+        check: ComposeUiTest.(Variant) -> Unit = {},
+        content: @androidx.compose.runtime.Composable (Variant) -> Unit,
+    ) {
         for (variant in variants) {
             Locale.setDefault(Locale.forLanguageTag(variant.locale))
             runComposeUiTest {
                 setContent {
-                    SettingsThemed(dark = variant.dark, locale = variant.locale, fontScale = variant.scale) { content() }
+                    SettingsThemed(dark = variant.dark, locale = variant.locale, fontScale = variant.scale) {
+                        content(variant)
+                    }
                 }
                 waitForIdle()
                 mainClock.advanceTimeBy(1_000)
@@ -244,8 +251,9 @@ class S8PolishGoldensTest {
         each(
             "colours",
             check = { v -> if (v.locale == "en") onAllNodesWithText("All").assertCountEquals(0) },
-        ) {
-            SettingsScreen(colours, RecordingActions())
+        ) { v ->
+            val mode = if (v.dark) AppearanceMode.Dark else AppearanceMode.Light
+            SettingsScreen(colours.copy(appearance = colours.appearance.copy(mode = mode)), RecordingActions())
         }
 
     private fun ComposeUiTest.compare(name: String) {

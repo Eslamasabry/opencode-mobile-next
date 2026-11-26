@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">GitHub 上的一颗星能帮助更多人发现它。</string>
     <string name="chatStarAskAction">在 GitHub 上加星标</string>
     <string name="chatStarAskDismiss">暂不</string>
+    <string name="firstReplyAskQuestion">喜欢吗？</string>
+    <string name="firstReplyAskYes">是</string>
+    <string name="firstReplyAskNo">否</string>
+    <string name="firstReplyAskUseTitle">你主要用它做什么？</string>
+    <string name="firstReplyAskUseEveryday">日常事务</string>
+    <string name="firstReplyAskUseCode">编写代码</string>
+    <string name="firstReplyAskUseBoth">两者都有</string>
+    <string name="firstReplyAskUseLooking">随便看看</string>
+    <string name="firstReplyAskThanks">谢谢。</string>
+    <string name="firstReplyAskSorry">抱歉。</string>
 </resources>

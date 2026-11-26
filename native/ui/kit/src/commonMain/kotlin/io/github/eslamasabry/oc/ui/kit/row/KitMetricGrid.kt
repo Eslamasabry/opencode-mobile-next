@@ -27,15 +27,20 @@ public fun KitMetricGrid(values: List<Pair<String, String>>, modifier: Modifier 
     ) {
         values.chunked(columns).forEach { row ->
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
             ) {
                 row.forEach { (label, value) ->
                     Column(
-                        Modifier.weight(1f).semantics(mergeDescendants = true) {},
-                        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                        Modifier.weight(1f).fillMaxHeight().semantics(mergeDescendants = true) {},
+                        verticalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        KitText(label, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                        KitText(
+                            label,
+                            Modifier.padding(bottom = Space.S1.dp),
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Secondary,
+                        )
                         KitText(value, role = TypeRole.Headline)
                     }
                 }

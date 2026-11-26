@@ -197,6 +197,10 @@ PhoneAgentLoadPageTest.OMP-OPEN-10 a phone agents' conversation whose agent is u
 PhoneAgentLoadPageTest.OMP-OPEN-10 a phone agents' conversation whose agent is unknown speaks of the phone's agents, never OpenCode	JUMP	#chat-load-error	1
 PhoneAgentLoadPageTest.OMP-OPEN-9 no phone agent's load-failure page names OpenCode, each names its agent and offers its set-up	FIRST	#chat-load-error	1
 PhoneAgentLoadPageTest.OMP-OPEN-9 no phone agent's load-failure page names OpenCode, each names its agent and offers its set-up	JUMP	#chat-load-error	1
+PolishB581Test.B-581 the copied-note scene keeps its words on the page gutter	FIRST	Hello there	26
+PolishB581Test.B-581 the copied-note scene keeps its words on the page gutter	JUMP	Hello there	26
+PolishB581Test.B-581 writes the before and after pictures	FIRST	Hello there	26
+PolishB581Test.B-581 writes the before and after pictures	JUMP	Hello there	26
 PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	ABA	#kit-screen-body	2
 PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	ABA	Attach and more	2
 PromptEditorInGrownChatTest.opening the prompt editor from Prompt tools in a chat opened from its row	ABA	Close	19

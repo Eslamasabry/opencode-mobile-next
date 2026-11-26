@@ -120,7 +120,7 @@ public fun KitActionBlock(
                     Spacer(Modifier.height(gap))
                     Stacked(primary!!, KitButtonRole.Primary)
                 }
-            paired && !large && maxWidth.value >= Layout.PAIR_ROW_MIN_WIDTH ->
+            paired && !large && LocalKitWindow.current.widthDp >= Layout.PAIR_ROW_MIN_WIDTH ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
                     KitButton(primary!!, Modifier.weight(1f), KitButtonRole.Primary)
                     KitButton(secondary!!, role = KitButtonRole.Secondary, expand = false)

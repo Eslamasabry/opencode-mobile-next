@@ -667,21 +667,18 @@ public class SetupEngine(
             if (start == null) {
                 START_UNAVAILABLE
             } else {
+                var kind: StartStepKind? = null
                 val request =
                     SetupFinishRequest(
                         host = hostKind,
                         runtime = runtimeWireName(step.data["runtime"]),
                         openCodeChanged = step.data["openCodeChanged"] == "true",
                         version = version,
+                        failedAs = { kind = it },
                     )
                 when (val result = guarded { start.finish(request) }) {
                     is Outcome.Ok -> null
-                    is Outcome.Failed ->
-                        when {
-                            SetupPlanning.isOwnershipFailure(result.failure) ->
-                                SetupPlanning.OWNERSHIP_UNKNOWN_CODE
-                            else -> redact(result.failure.details?.text ?: START_FAILED)
-                        }
+                    is Outcome.Failed -> storedStartError(kind, result.failure)
                 }
             }
         val completed = guarded {
@@ -700,6 +697,17 @@ public class SetupEngine(
             return
         }
         refresh()
+    }
+
+    /**
+     * What setup.json keeps when the finisher failed the start: the recovery code, or the redacted text with the kind
+     * the finisher named ([SetupFinishRequest.failed]) in front of it. A finisher that named no kind keeps its text
+     * as it is, and the last kind named wins.
+     */
+    private fun storedStartError(kind: StartStepKind?, failure: Failure): String {
+        if (SetupPlanning.isOwnershipFailure(failure)) return SetupPlanning.OWNERSHIP_UNKNOWN_CODE
+        val text = redact(failure.details?.text ?: START_FAILED)
+        return if (kind == null) text else StartStepKind.mark(kind, text)
     }
 
     /**

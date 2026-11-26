@@ -170,7 +170,13 @@ private fun NoticeActions(shown: List<KitLineAction>) {
 
 /** A notice's words under its optional title, then its notes. */
 @Composable
-private fun NoticeWords(title: String?, message: String, notes: List<String>) {
+private fun NoticeWords(
+    title: String?,
+    message: String,
+    notes: List<String>,
+    messageRole: TypeRole,
+    messageTone: TextTone,
+) {
     if (title != null) {
         KitText(title, role = TypeRole.RowTitle)
         Spacer(Modifier.height((Space.S1 / 2).dp)) // F: lib/ui/kit/kit_notice.dart:518
@@ -178,8 +184,8 @@ private fun NoticeWords(title: String?, message: String, notes: List<String>) {
     KitText(
         message,
         Modifier.testTag("kit-notice-message"),
-        role = if (title == null) TypeRole.Body else TypeRole.Secondary,
-        tone = if (title == null) TextTone.Primary else TextTone.Secondary,
+        role = messageRole,
+        tone = messageTone,
     )
     notes.forEach {
         Spacer(Modifier.height(Space.S1.dp))
@@ -292,14 +298,17 @@ private fun NoticeBody(
     liveRegion: Boolean,
     actionsAtEdge: Boolean = false,
 ) {
-    val mark = noticeMark(if (title == null) TypeRole.Body else TypeRole.RowTitle)
+    val calmNeutral = title == null && tone == StatusTone.Neutral && !liveRegion
+    val messageRole = if (title == null && !calmNeutral) TypeRole.Body else TypeRole.Secondary
+    val messageTone = if (title == null && !calmNeutral) TextTone.Primary else TextTone.Secondary
+    val mark = noticeMark(if (title == null) messageRole else TypeRole.RowTitle)
     NoticeFrame(modifier, tag, liveRegion, key = tone to glyph) {
         Column(Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.Top) {
                 NoticeMarkBox(mark, glyph, noticeTint(tone))
                 Spacer(Modifier.width(Space.S3.dp))
                 Column(Modifier.weight(1f)) {
-                    NoticeWords(title, message, notes)
+                    NoticeWords(title, message, notes, messageRole, messageTone)
                     if (!actionsAtEdge) NoticeActions(shown)
                 }
                 trailingParts.forEachIndexed { i, part ->

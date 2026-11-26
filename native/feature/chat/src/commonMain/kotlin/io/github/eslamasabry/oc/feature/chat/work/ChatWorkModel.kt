@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.model.BackgroundWorkSupport
 import io.github.eslamasabry.oc.core.model.ManagedShell
 import io.github.eslamasabry.oc.core.model.ManagedShellStatus
 import io.github.eslamasabry.oc.feature.chat.presentation.BackgroundWork
+import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import kotlin.time.Duration
@@ -106,6 +107,17 @@ public class ChatWorkModel(
      * commands nor moves work to the background (once both were read).
      */
     public fun poll() {
+        var wasLive = world.link.value == ChatLink.Live
+        launch {
+            world.link.collect { link ->
+                val live = link == ChatLink.Live
+                val returned = !wasLive && live
+                wasLive = live
+                if (returned && world.capabilities.value.conversationShellOn && mutable.value.supported) {
+                    load(quiet = true)
+                }
+            }
+        }
         launch {
             while (mutable.value.supported || !supportRead || backgroundSupport != BackgroundWorkSupport.Unavailable) {
                 if (world.capabilities.value.conversationShellOn && mutable.value.supported) load(quiet = true)
