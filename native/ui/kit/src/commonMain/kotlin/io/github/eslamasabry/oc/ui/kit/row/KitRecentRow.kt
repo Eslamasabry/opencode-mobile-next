@@ -160,6 +160,8 @@ public object KitRecentRowRules {
  * Hidden: long-press (the row's menu; the same acts are on the conversation's own page)
  * Replaces: none
  */
+@Suppress("LongParameterList", "LongMethod")
+// composable part; rule retired for @Composable in the 3.0.1 rule-set review
 @Composable
 public fun KitRecentRow(
     title: String,
@@ -180,6 +182,11 @@ public fun KitRecentRow(
     speakAgent: Boolean = true,
     /** How many lines the [preview] may take: 1 for a quiet line, more where the words decide something (a command to allow). */
     previewLines: Int = 1,
+    /**
+     * What a screen reader says for the [time] when the time drawn is its short form ("5m"); null says the [time]
+     * itself (B-558: the short time beside a title, the whole "5 min ago" spoken).
+     */
+    timeSpoken: String? = null,
 ) {
     val colors = LocalKitColors.current
     val gutter = kitRowGutter()
@@ -190,7 +197,17 @@ public fun KitRecentRow(
     // A waiting row shows the working mark in the time's place: the time is neither drawn nor said, the word is said.
     val waiting = state?.waiting == true
     val shownTime = time.takeUnless { waiting }
-    val words = KitRecentRowRules.spoken(title, pinnedWord, agent.name.takeIf { speakAgent }, state?.word, shownProject, line, shownTime)
+    val saidTime = timeSpoken?.takeUnless { waiting } ?: shownTime
+    val words =
+        KitRecentRowRules.spoken(
+            title,
+            pinnedWord,
+            agent.name.takeIf { speakAgent },
+            state?.word,
+            shownProject,
+            line,
+            saidTime,
+        )
     val m =
         Modifier.fillMaxWidth()
             .kitGrowSource(growKey)

@@ -364,4 +364,5 @@
     <string name="chatsNewRunsOn">يعمل على</string>
     <string name="chatsNewWhereSpoken">مكان التشغيل: %1$s. يفتح خيارات المشروع والاتصال.</string>
     <string name="chatsNewAgentChipSpoken">من يعمل عليه: %1$s، %2$s. يفتح خيارات الوكيل والنموذج.</string>
+    <string name="chatsHomeUnreachableReason">تعذّر الوصول إلى %1$s، فقد تكون هذه القائمة غير محدّثة.</string>
 </resources>

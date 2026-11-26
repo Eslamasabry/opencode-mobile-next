@@ -21,4 +21,15 @@ public object HomeFootBarRules {
             ChatsPhase.Opening, ChatsPhase.List, ChatsPhase.NoMatch -> true
             ChatsPhase.Empty, ChatsPhase.NotRead -> false
         }
+
+    /**
+     * The count beside "All conversations": null while the server first opens, the filtered count when narrowed,
+     * otherwise at least the distinct rows already shown on Home.
+     */
+    public fun count(state: ChatsUi): Int? =
+        when {
+            state.phase == ChatsPhase.Opening -> null
+            state.shownCount != null -> state.shownCount
+            else -> maxOf(state.allCount, (state.rightNow + state.recent).mapTo(hashSetOf()) { it.key }.size)
+        }
 }

@@ -162,4 +162,28 @@
     <string name="kitDurLessThanMinute">أقل من دقيقة</string>
     <string name="kitRelJustNow">الآن</string>
     <string name="kitRelYesterday">أمس</string>
+    <plurals name="kitRelShortMinutes">
+        <item quantity="zero">%1$s د</item>
+        <item quantity="one">%1$s د</item>
+        <item quantity="two">%1$s د</item>
+        <item quantity="few">%1$s د</item>
+        <item quantity="many">%1$s د</item>
+        <item quantity="other">%1$s د</item>
+    </plurals>
+    <plurals name="kitRelShortHours">
+        <item quantity="zero">%1$s س</item>
+        <item quantity="one">%1$s س</item>
+        <item quantity="two">%1$s س</item>
+        <item quantity="few">%1$s س</item>
+        <item quantity="many">%1$s س</item>
+        <item quantity="other">%1$s س</item>
+    </plurals>
+    <plurals name="kitRelShortDays">
+        <item quantity="zero">%1$s ي</item>
+        <item quantity="one">%1$s ي</item>
+        <item quantity="two">%1$s ي</item>
+        <item quantity="few">%1$s ي</item>
+        <item quantity="many">%1$s ي</item>
+        <item quantity="other">%1$s ي</item>
+    </plurals>
 </resources>

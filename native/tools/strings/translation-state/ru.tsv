@@ -2289,6 +2289,7 @@ chatsHomeStopped	de2f135c98
 chatsHomeTitle	7fd3ccb9ee
 chatsHomeToday	6b1be5a6a0
 chatsHomeUnreachable	5fd14af36f
+chatsHomeUnreachableReason	cb96e828b0
 chatsHomeUnreachableShort	526e6c53d0
 chatsNewAddAgent	c3c155e5e8
 chatsNewAgentChipSpoken	76d550a8cd
@@ -6358,6 +6359,9 @@ kitRelDaysAgo	46d83f018e
 kitRelHoursAgo	74d1083a63
 kitRelJustNow	45ec77c15d
 kitRelMinutesAgo	40510cad32
+kitRelShortDays	7dcdf9ed4e
+kitRelShortHours	27f483131c
+kitRelShortMinutes	46a6240f04
 kitRelYesterday	e9933d4553
 kitReportProblem	bbbbb87df8
 kitRequestAge	e10dd91cdc

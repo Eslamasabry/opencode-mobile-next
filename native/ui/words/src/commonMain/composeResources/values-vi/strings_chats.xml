@@ -342,4 +342,5 @@
     <string name="chatsNewRunsOn">Chạy trên</string>
     <string name="chatsNewWhereSpoken">Nơi chạy: %1$s. Mở các lựa chọn dự án và kết nối.</string>
     <string name="chatsNewAgentChipSpoken">Ai làm việc này: %1$s, %2$s. Mở các lựa chọn tác nhân và mô hình.</string>
+    <string name="chatsHomeUnreachableReason">Không thể kết nối tới %1$s nên danh sách này có thể chưa được cập nhật.</string>
 </resources>

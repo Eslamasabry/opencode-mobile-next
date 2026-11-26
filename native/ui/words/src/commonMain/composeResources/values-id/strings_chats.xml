@@ -342,4 +342,5 @@
     <string name="chatsNewRunsOn">Berjalan di</string>
     <string name="chatsNewWhereSpoken">Tempat berjalan: %1$s. Membuka pilihan proyek dan koneksi.</string>
     <string name="chatsNewAgentChipSpoken">Yang mengerjakan: %1$s, %2$s. Membuka pilihan agen dan model.</string>
+    <string name="chatsHomeUnreachableReason">Tidak dapat menghubungi %1$s, sehingga daftar ini mungkin belum terbaru.</string>
 </resources>
