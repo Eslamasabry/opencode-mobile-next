@@ -88,8 +88,8 @@ public data class ChatUi(
      * turn says "Attach {file} again to send".
      */
     val attachAgain: AttachAgainUi? = null,
-    /** The one-time GitHub star ask rides under the live line while this turn waits for its reply. */
-    val starAsk: Boolean = false,
+    /** The one-time first-reply ask riding the newest finished reply's footer; null when not shown. */
+    val replyAsk: ReplyAskUi? = null,
     /**
      * Set up at first use: the failed replies (by turn id) whose agent needs setting up; they say so and offer the
      * agent's set-up instead of today's fixes. A turn missing here keeps today's words.
@@ -173,6 +173,9 @@ public data class ChatStatusUi(
      * updating) and opens by itself; the connection line says which, without a Try again.
      */
     val serverWait: io.github.eslamasabry.oc.feature.chat.world.ChatServerWait? = null,
+    /** A stale model replaced before sending: its old and replacement display names. */
+    val oldModel: String? = null,
+    val newModel: String? = null,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
@@ -225,6 +228,9 @@ public enum class ChatStatusKind {
 
     /** This conversation was delegated by another one: the way back to it (Flutter `_subagentStatus`). */
     Subagent,
+
+    /** A stale session/default model was replaced with a listed one before sending. */
+    ModelReplaced,
 }
 
 /**
@@ -490,13 +496,31 @@ public enum class ChatPlace {
     Appearance,
 }
 
+/** Stage of the one-time first-reply footer ask. */
+public enum class ReplyAskStage { Ask, Thanks, Sorry }
+
+/** State of the one-time first-reply ask on [turnId]'s footer. */
+public data class ReplyAskUi(
+    val turnId: String,
+    val stage: ReplyAskStage = ReplyAskStage.Ask,
+    val menu: Boolean = false,
+)
+
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
-    /** "Star on GitHub" on the live line's ask: opens the repository and ends the ask. */
-    public fun starTapped() {}
+    public fun replyAskYes(): Unit = Unit
 
-    /** "Not now" on the live line's ask. */
-    public fun starDismissed() {}
+    public fun replyAskNo(): Unit = Unit
+
+    public fun replyAskSkip(): Unit = Unit
+
+    public fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse): Unit = Unit
+
+    public fun replyAskMenuClosed(): Unit = Unit
+
+    public fun replyAskStar(): Unit = Unit
+
+    public fun replyAskReport(): Unit = Unit
 
     /** Back (button, gesture or Esc): pops when nothing is lost (07 §3.4). */
     public fun leaveRequested()

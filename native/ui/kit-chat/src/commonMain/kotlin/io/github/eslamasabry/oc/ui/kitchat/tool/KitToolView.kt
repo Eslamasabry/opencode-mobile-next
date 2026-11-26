@@ -32,7 +32,9 @@ public enum class KitToolStatus { Pending, Running, Done, Failed, Stopped, Waiti
  * @param statusLabel the status in words ("Stopped"), always given: a screen reader reads it.
  * @param icon the glyph when the caller knows more than [kind] (owner 2026-11-14: a command that ran tests draws the
  *   test glyph, a search the magnifier, git the branch); null draws the kind's own glyph.
+ * @param still draw a running step's light still (e.g. a command an ended turn left running).
  */
+@Suppress("LongParameterList")
 @Immutable
 public data class KitToolView(
     val id: String,
@@ -46,4 +48,5 @@ public data class KitToolView(
     val removed: Int?,
     val statusLabel: String,
     val icon: ImageVector? = null,
+    val still: Boolean = false,
 )

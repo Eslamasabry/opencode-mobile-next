@@ -701,4 +701,5 @@
     <string name="browserEditorInsecureOrigin">このページはネットワークアドレスから暗号化されていないHTTPで開かれているため、ブラウザはサーバーのパスワードを保存しません。パスワードがないサーバーの場合は空欄にするか、保存するにはHTTPSまたはlocalhostからアプリを開いてください。</string>
     <string name="browserAgentSocketUnavailable">CodexおよびPaseo接続はブラウザでは利用できません。これらはブラウザから送信できないWebSocketヘッダーでサインインするため、ブラウザでのサインインにはまだ対応していません。これらにはスマートフォン版またはデスクトップ版アプリをご利用ください。OpenCodeサーバーはここでも動作します。</string>
     <string name="phoneServerPortBusy">別のOpenCodeサーバーがこのスマートフォンですでにポート%1$sを使用しています。</string>
+    <string name="appUpdateUpdateTo">%1$sに更新</string>
 </resources>

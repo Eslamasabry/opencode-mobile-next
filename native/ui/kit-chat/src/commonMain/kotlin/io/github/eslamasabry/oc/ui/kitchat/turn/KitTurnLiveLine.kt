@@ -13,21 +13,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
@@ -53,6 +55,7 @@ public enum class KitTurnLiveTone { Working, WaitingForYou, Quiet }
  *
  * Motion: the sweep (a progress loop, still under Off and while it waits); the step line reveals (size and fade).
  */
+@Suppress("LongParameterList")
 @Composable
 public fun KitTurnLiveLine(
     words: String,
@@ -65,11 +68,8 @@ public fun KitTurnLiveLine(
     /** A way out of a long wait (Stop), drawn quietly under the words; null draws none. */
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
-    /** A one-time ask under the words (see [KitLiveAsk]); null draws none. It unfolds in and folds away. */
-    ask: KitLiveAsk? = null,
     onRail: Boolean = false,
 ) {
-    val colors = LocalKitColors.current
     val style = LocalKitTypography.current.style(TypeRole.Secondary)
     val firstLine = with(LocalDensity.current) { style.lineHeight.toDp() }
     val dot = FlutterKitTokens.LIVE_DOT.dp
@@ -78,40 +78,9 @@ public fun KitTurnLiveLine(
     val lead = if (rail != null) rail.glyph / 2 - dot / 2 else 0.dp
     val gap = if (rail != null) rail.column - lead - dot else Space.S2.dp
     val above = if (rail != null) (rail.stepLine - rail.first) / 2 else 0.dp
-    val dotColor =
-        when (tone) {
-            KitTurnLiveTone.Working -> colors.accent
-            KitTurnLiveTone.WaitingForYou -> colors.attention
-            KitTurnLiveTone.Quiet -> colors.text3
-        }
-    val ink =
-        when (tone) {
-            KitTurnLiveTone.Working -> TextTone.Accent
-            KitTurnLiveTone.WaitingForYou -> TextTone.Attention
-            KitTurnLiveTone.Quiet -> TextTone.Secondary
-        }
+    val (dotColor, ink) = liveLineColors(tone)
     val line: @Composable (Modifier) -> Unit = { m ->
-        Row(
-            // One node: a polite live region named by the phase ([spoken]); the seconds are never announced. The words
-            // stay its text, so they can still be found by what they say.
-            m.testTag(LIVE_LINE_TAG).semantics(mergeDescendants = true) {
-                if (spoken != words) contentDescription = spoken
-                liveRegion = LiveRegionMode.Polite
-            },
-            verticalAlignment = Alignment.Top,
-        ) {
-            Box(
-                Modifier.padding(start = lead, top = maxOf(0.dp, (firstLine - dot) / 2))
-                    .size(dot)
-                    .background(dotColor, CircleShape)
-                    .clearAndSetSemantics {}
-            )
-            Spacer(Modifier.width(gap))
-            // F: kit_turn.dart:1063 waiting for the person, nothing sweeps: nothing works meanwhile
-            KitLiveSweep(working = tone == KitTurnLiveTone.Working) {
-                KitText(words, role = TypeRole.Secondary, tone = ink, tabular = true)
-            }
-        }
+        LiveLineRow(words, spoken, tone, dotColor, ink, firstLine, dot, lead, gap, m)
     }
     val under = lead + dot + gap
     Column(modifier.padding(top = above)) {
@@ -121,33 +90,79 @@ public fun KitTurnLiveLine(
             KitTappable(onClick = onTap, onClickLabel = tapLabel, shape = KitShapeId.Button) {
                 line(Modifier.padding(vertical = Space.S1.dp))
             }
-        if (actionLabel != null && onAction != null)
+        if (actionLabel != null && onAction != null) {
             KitButton(
                 actionLabel,
                 onAction,
                 role = KitButtonRole.Tertiary,
                 modifier = Modifier.padding(start = under).testTag(LIVE_ACTION_TAG),
             )
-        // The leaving line keeps its words while it folds away.
-        val held = remember { arrayOfNulls<String>(1) }
-        if (!step.isNullOrEmpty()) held[0] = step
-        KitReveal(visible = !step.isNullOrEmpty()) {
-            // F: kit_turn.dart:1127-1139 under the words, not under the dot; two lines at most
-            KitText(
-                step?.takeIf { it.isNotEmpty() } ?: held[0].orEmpty(),
-                Modifier.padding(start = under).testTag(LIVE_STEP_TAG),
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
-                maxLines = 2,
-            )
         }
-        // The leaving ask keeps its words while it folds away.
-        val heldAsk = remember { arrayOfNulls<KitLiveAsk>(1) }
-        if (ask != null) heldAsk[0] = ask
-        KitReveal(visible = ask != null) {
-            val shown = ask ?: heldAsk[0]
-            if (shown != null) KitLiveAskView(shown, Modifier.padding(top = Space.S2.dp).testTag(LIVE_ASK_TAG))
+        LiveStepLine(step, under)
+    }
+}
+
+@Composable
+private fun liveLineColors(tone: KitTurnLiveTone): Pair<Color, TextTone> {
+    val colors = LocalKitColors.current
+    return when (tone) {
+        KitTurnLiveTone.Working -> colors.accent to TextTone.Accent
+        KitTurnLiveTone.WaitingForYou -> colors.attention to TextTone.Attention
+        KitTurnLiveTone.Quiet -> colors.text3 to TextTone.Secondary
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun LiveLineRow(
+    words: String,
+    spoken: String,
+    tone: KitTurnLiveTone,
+    dotColor: Color,
+    ink: TextTone,
+    firstLine: Dp,
+    dot: Dp,
+    lead: Dp,
+    gap: Dp,
+    modifier: Modifier,
+) {
+    Row(
+        // One node: a polite live region named by the phase ([spoken]); the seconds are never announced. The words
+        // stay its text, so they can still be found by what they say.
+        modifier.testTag(LIVE_LINE_TAG).semantics(mergeDescendants = true) {
+            if (spoken != words) contentDescription = spoken
+            liveRegion = LiveRegionMode.Polite
+        },
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(
+            Modifier.padding(start = lead, top = maxOf(0.dp, (firstLine - dot) / 2))
+                .size(dot)
+                .background(dotColor, CircleShape)
+                .clearAndSetSemantics {}
+        )
+        Spacer(Modifier.width(gap))
+        // F: kit_turn.dart:1063 waiting for the person, nothing sweeps: nothing works meanwhile
+        KitLiveSweep(working = tone == KitTurnLiveTone.Working) {
+            KitText(words, role = TypeRole.Secondary, tone = ink, tabular = true)
         }
+    }
+}
+
+@Composable
+private fun LiveStepLine(step: String?, under: Dp) {
+    // The leaving line keeps its words while it folds away.
+    val held = remember { arrayOfNulls<String>(1) }
+    if (!step.isNullOrEmpty()) held[0] = step
+    KitReveal(visible = !step.isNullOrEmpty()) {
+        // F: kit_turn.dart:1127-1139 under the words, not under the dot; two lines at most
+        KitText(
+            step?.takeIf { it.isNotEmpty() } ?: held[0].orEmpty(),
+            Modifier.padding(start = under).testTag(LIVE_STEP_TAG),
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+            maxLines = 2,
+        )
     }
 }
 

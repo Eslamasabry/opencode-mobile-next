@@ -623,4 +623,76 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         assertEquals(0, installed.exitCode, installed.stderr)
         assertEquals(0, guest.run(AgentPhoneScripts.check(agent)).exitCode)
     }
+
+    private fun createStaleAgentLeftovers(): List<String> {
+        val base = "$agents/fixture"
+        val hex = "a".repeat(64)
+        val dirs = listOf("$base/1.0.0.new", "$base/1.0.0.old.4242", "$base/1.0.0.oc-good")
+        for (path in dirs) mkdirs(path)
+        val download = "$base/.downloads/1.0.0-x64-$hex"
+        write(download, "old")
+        val oldProbe = "$agents/.probe.old1"
+        mkdirs(oldProbe)
+        assertTrue(File(oldProbe).setLastModified(System.currentTimeMillis() - 2L * 24 * 60 * 60 * 1000))
+        return dirs + listOf(download, oldProbe)
+    }
+
+    @Test
+    fun `B-LINUX-310 an agent install removes leftovers of versions it no longer uses`() {
+        val agent = fixtureAgent(guest.hash)
+        val installed = guest.run(AgentPhoneScripts.install(agent))
+        assertEquals(0, installed.exitCode, installed.stderr)
+        val base = "$agents/fixture"
+        val hex = "a".repeat(64)
+        val go = createStaleAgentLeftovers()
+        val pendingDir = "$base/0.9.0.new".also { mkdirs(it) }
+        val pendingFile = "$base/0.9.0.oc-pending".also { write(it, "existing\n") }
+        val inUse = File("$base/0.8.0.old.7").also { it.mkdirs() }
+        val keptOld = "$base/1.2.3.old.4242".also { mkdirs(it) }
+        val notes = "$base/notes.new".also { mkdirs(it) }
+        val outside = "${temp.path}/outside".also { mkdirs(it) }
+        val linked = "$base/0.7.0.new".also { link(it, outside) }
+        val keptDownload = "$base/.downloads/1.2.3-x64-$hex".also { write(it, "keep") }
+        val partialDownload = "$base/.downloads/partial".also { write(it, "part") }
+        val freshProbe = "$agents/.probe.new1".also { mkdirs(it) }
+        val stay = listOf(
+            pendingDir, pendingFile, inUse.path, keptOld, notes,
+            outside, linked, keptDownload, partialDownload, freshProbe,
+        )
+        // Stand-in for a live process whose cwd is inUse (replacing `sleep 60`, which expired on slow
+        // runners before the third install finished): stay in inUse until the third-install marker
+        // appears, bounded at 180 s so a crashed test never leaves a background process behind.
+        val doneMarker = "${temp.path}/third-install-done"
+        val holder = ProcessBuilder(
+            "sh",
+            "-c",
+            "i=0; while [ ! -e ${q(doneMarker)} ] && [ \"\$i\" -lt 180 ]; do sleep 1; i=\$((i + 1)); done",
+        ).directory(inUse).start()
+        try {
+            val again = guest.run(AgentPhoneScripts.install(agent))
+            assertEquals(0, again.exitCode, again.stderr)
+            for (path in go) assertFalse(exists(path), path)
+            for (path in stay) assertTrue(exists(path), path)
+            assertTrue(isLink(linked))
+            val listing = File(base).list()!!.sorted()
+            val third = guest.run(AgentPhoneScripts.install(agent))
+            assertEquals(0, third.exitCode, third.stderr)
+            assertTrue(holder.isAlive, "in-use holder exited before third install finished")
+            assertEquals(listing, File(base).list()!!.sorted())
+        } finally {
+            write(doneMarker, "done")
+            holder.destroyForcibly()
+        }
+    }
+
+    @Test
+    fun `B-LINUX-310 the check script removes no stale leftover`() {
+        val agent = fixtureAgent(guest.hash)
+        val installed = guest.run(AgentPhoneScripts.install(agent))
+        assertEquals(0, installed.exitCode, installed.stderr)
+        val go = createStaleAgentLeftovers()
+        val checked = guest.run(AgentPhoneScripts.check(agent))
+        assertEquals(0, checked.exitCode, checked.stderr)
+        for (path in go) assertTrue(exists(path), path)
+    }
 }

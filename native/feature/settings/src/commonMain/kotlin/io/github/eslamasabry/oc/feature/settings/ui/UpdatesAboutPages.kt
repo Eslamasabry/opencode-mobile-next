@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +23,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -52,39 +51,40 @@ internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
             supportingMaxLines = 3,
         )
     }
-    Column(
-        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
-        when (u.state) {
+    val checkNow =
+        KitAction(
+            stringResource(Res.string.appUpdateCheckNow),
+            actions::onCheckForUpdates,
+            working = u.state == UpdateState.Checking,
+        )
+    val primary =
+        when (val st = u.state) {
             is UpdateState.Available ->
-                KitButton(stringResource(Res.string.appUpdateUpdate), actions::onUpdateAction)
-            is UpdateState.Downloading ->
-                KitButton(
-                    stringResource(Res.string.appUpdateCancel),
-                    actions::onUpdateAction,
-                    role = KitButtonRole.Secondary,
-                )
+                KitAction(stringResource(Res.string.appUpdateUpdateTo, st.version), actions::onUpdateAction)
             is UpdateState.Downloaded ->
-                KitButton(stringResource(Res.string.appUpdateInstall), actions::onUpdateAction)
+                KitAction(stringResource(Res.string.appUpdateInstall), actions::onUpdateAction)
             is UpdateState.Failed ->
-                KitButton(stringResource(Res.string.appUpdateTryAgain), actions::onCheckForUpdates)
-            else -> Unit
+                KitAction(stringResource(Res.string.appUpdateTryAgain), actions::onCheckForUpdates)
+            UpdateState.NeverChecked,
+            UpdateState.Checking,
+            is UpdateState.UpToDate -> checkNow
+            is UpdateState.Downloading,
+            UpdateState.Installing -> null
         }
-        val busy = u.state is UpdateState.Downloading || u.state == UpdateState.Installing
-        if (!busy && u.state !is UpdateState.Failed) {
-            KitButton(
-                stringResource(Res.string.appUpdateCheckNow),
-                actions::onCheckForUpdates,
-                modifier = Modifier.testTag("updates-check-now"),
-                role =
-                    if (u.state is UpdateState.Available || u.state is UpdateState.Downloaded)
-                        KitButtonRole.Secondary
-                    else KitButtonRole.Primary,
-                working = u.state == UpdateState.Checking,
-            )
+    val secondary =
+        when (u.state) {
+            is UpdateState.Available,
+            is UpdateState.Downloaded -> checkNow
+            is UpdateState.Downloading ->
+                KitAction(stringResource(Res.string.appUpdateCancel), actions::onUpdateAction)
+            else -> null
         }
-    }
+    KitActionBlock(
+        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+        primary = primary,
+        secondary = secondary,
+        pair = primary != null && secondary != null,
+    )
     KitRowGroup {
         KitSwitchRow(
             title = stringResource(Res.string.appUpdateCheckSwitch),

@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatUndone
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
+import io.github.eslamasabry.oc.feature.chat.world.ReplacedModel
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -125,8 +126,10 @@ internal data class ChatLocal(
     /** B-169 §5: switches sent per stopped prompt ([LimitSwitchRules.promptKey]). */
     val switches: PersistentMap<String, Int> = persistentMapOf(),
     val attachAgain: AttachAgainUi? = null,
-    /** The one-time star ask is up for this wait. */
-    val starAsk: Boolean = false,
+    /** The one-time first-reply ask riding the finished reply's footer. */
+    val replyAsk: ReplyAskUi? = null,
+    /** Stale-choice replacement notice the person already dismissed. */
+    val dismissedModelReplaced: ReplacedModel? = null,
 )
 
 internal data class PendingArrival(
@@ -256,7 +259,11 @@ public class ChatPresenter(
             .onEach { live -> if (live) loadBackgroundSupport() }
             .launchIn(scope)
         // S28 story 3: the undone line follows the session as well.
-        val extra = feed.combine(world.undone) { f, u -> f to u }.combine(world.parent) { x, _ -> x }
+        val extra =
+            feed
+                .combine(world.undone) { f, u -> f to u }
+                .combine(world.parent) { x, _ -> x }
+                .combine(world.models.map { it.replaced }.distinctUntilChanged()) { x, _ -> x }
         // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
         // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
         // after the first frame is drawn), and again on every return.
@@ -282,6 +289,18 @@ public class ChatPresenter(
     private fun watchTurns(scope: CoroutineScope) {
         val port = star ?: return
         var wasBusy: Boolean? = null
+        var heldTurnId: String? = null
+        val hold: (String?) -> Unit = { heldTurnId = it }
+        world.requests
+            .latest { req -> req?.state?.map { it.card != null } ?: flowOf(false) }
+            .onEach { hasCard ->
+                val turnId = heldTurnId
+                if (!hasCard && turnId != null && isAskLiveAtRest()) {
+                    heldTurnId = null
+                    askAfterReply(port, turnId, hold)
+                }
+            }
+            .launchIn(scope)
         world.transcript
             .onEach { t ->
                 val busy = t.run.busy
@@ -289,35 +308,88 @@ public class ChatPresenter(
                 wasBusy = busy
                 if (before == false && busy && world.link.value == ChatLink.Live) {
                     // Never while a turn runs: a new turn takes the ask down, and counting it asks nothing.
-                    local.update { it.copy(starAsk = false) }
+                    heldTurnId = null
+                    local.update { it.copy(replyAsk = null) }
                     launcher.launch { port.promptStarted() }
                 } else if (before == true && !busy) {
-                    local.update { it.copy(starAsk = false) }
-                    val good = StarPromptTurn.succeeded(t.rows)
-                    launcher.launch {
-                        // The ask comes at rest: this turn is over and nothing new started meanwhile.
-                        if (port.replyEnded(good) && !world.transcript.value.run.busy && world.link.value == ChatLink.Live) {
-                            local.update { it.copy(starAsk = true) }
-                            port.report(StarPromptEvent.Shown)
-                        }
-                    }
+                    heldTurnId = null
+                    local.update { it.copy(replyAsk = null) }
+                    val turnId = StarPromptTurn.succeededTurnId(t.rows)
+                    if (turnId != null) askAfterReply(port, turnId, hold)
+                    else launcher.launch { port.replyEnded(false) }
                 }
             }
             .launchIn(scope)
     }
 
-    override fun starTapped() {
-        if (!local.value.starAsk) return
-        local.update { it.copy(starAsk = false) }
+    private fun isAskLiveAtRest(): Boolean =
+        !world.transcript.value.run.busy && world.link.value == ChatLink.Live
+
+    private fun askAfterReply(port: ChatStarPrompt, turnId: String, hold: (String?) -> Unit) {
+        launcher.launch {
+            if (!isAskLiveAtRest()) return@launch
+            if (world.requests.value?.state?.value?.card != null) {
+                hold(turnId)
+            } else {
+                val asked = port.replyEnded(true)
+                val clear = isAskLiveAtRest() && world.requests.value?.state?.value?.card == null
+                if (asked && clear) {
+                    local.update { it.copy(replyAsk = ReplyAskUi(turnId = turnId)) }
+                    port.report(StarPromptEvent.Shown)
+                }
+            }
+        }
+    }
+
+    override fun replyAskYes() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = cur.copy(stage = ReplyAskStage.Thanks, menu = true)) }
+        launcher.launch { star?.answered(io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer.Yes) }
+    }
+
+    override fun replyAskNo() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = cur.copy(stage = ReplyAskStage.Sorry, menu = true)) }
+        launcher.launch { star?.answered(io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer.No) }
+    }
+
+    override fun replyAskSkip() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = null) }
+        launcher.launch { star?.answered(io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer.Skip) }
+        star?.report(StarPromptEvent.Dismissed)
+    }
+
+    override fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse) {
+        val cur = local.value.replyAsk ?: return
+        if (!cur.menu || cur.stage == ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = cur.copy(menu = false)) }
+        launcher.launch { star?.usedFor(use) }
+    }
+
+    override fun replyAskMenuClosed() {
+        val cur = local.value.replyAsk ?: return
+        if (!cur.menu) return
+        local.update { it.copy(replyAsk = cur.copy(menu = false)) }
+    }
+
+    override fun replyAskStar() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Thanks) return
+        local.update { it.copy(replyAsk = null) }
         star?.report(StarPromptEvent.Tapped)
         // Opened on the app's own link path; a refusal costs nothing, the ask is already spent.
         outside?.openOwnLink(StarPromptRules.URL)
     }
 
-    override fun starDismissed() {
-        if (!local.value.starAsk) return
-        local.update { it.copy(starAsk = false) }
-        star?.report(StarPromptEvent.Dismissed)
+    override fun replyAskReport() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Sorry) return
+        local.update { it.copy(replyAsk = null) }
+        reportProblem()
     }
 
     private data class Five(
@@ -394,6 +466,18 @@ public class ChatPresenter(
         val connection = line?.kind == ChatStatusKind.Offline || line?.kind == ChatStatusKind.Connecting
         return if (staged != null && !connection) staged else line
     }
+
+    private fun modelReplacedLine(l: ChatLocal): ChatStatusUi? =
+        world.models.value.replaced
+            ?.takeIf { it != l.dismissedModelReplaced }
+            ?.let { replaced ->
+                ChatStatusUi(
+                    id = MODEL_REPLACED_STATUS,
+                    kind = ChatStatusKind.ModelReplaced,
+                    oldModel = replaced.oldLabel,
+                    newModel = replaced.newLabel,
+                )
+            }
 
     private fun agentLine(line: ChatStatusUi?, l: ChatLocal): ChatStatusUi? =
         if (line == null || !world.serverIsAgentHelper ||
@@ -478,7 +562,8 @@ public class ChatPresenter(
                         )
                     }
                     ?: undoneLine(world.undone.value)
-                    ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
+                    ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) }
+                    ?: modelReplacedLine(l),
                 ),
                 l,
               ),
@@ -558,9 +643,10 @@ public class ChatPresenter(
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
-            starAsk =
-                l.starAsk && !t.run.busy && i.link == ChatLink.Live &&
-                    world.requests.value?.state?.value?.card == null,
+            replyAsk =
+                l.replyAsk?.takeIf {
+                    !t.run.busy && i.link == ChatLink.Live && world.requests.value?.state?.value?.card == null
+                },
             setUpReplies = setUpReplies(t.rows),
             signInTurns = signInTurns(t.rows, waiting = i.pending.isNotEmpty()),
         )
@@ -1147,19 +1233,31 @@ public class ChatPresenter(
         }
     }
 
+    private val resendingTurns = HashSet<String>()
+
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
-        val t = world.transcript.value
-        val words = t.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow
-        val text = words?.text?.takeIf { it.isNotBlank() } ?: return
+        val text =
+            if (turnId in resendingTurns) null
+            else
+                (world.transcript.value.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow)
+                    ?.text
+                    ?.takeIf { it.isNotBlank() }
         val choice =
-            world.models.value.choices.firstOrNull {
-                it.providerId == providerId && it.modelId == modelId
-            } ?: return
+            if (text == null) null
+            else
+                world.models.value.choices.firstOrNull {
+                    it.providerId == providerId && it.modelId == modelId
+                }
+        if (text == null || choice == null || !resendingTurns.add(turnId)) return
         launcher.launch {
-            when (val picked = world.selectModel(choice)) {
-                // A refused switch keeps the old model and sends nothing.
-                is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
-                is Outcome.Ok -> world.sendAgain(text)
+            try {
+                when (val picked = world.selectModel(choice)) {
+                    // A refused switch keeps the old model and sends nothing.
+                    is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
+                    is Outcome.Ok -> world.sendAgain(text)
+                }
+            } finally {
+                resendingTurns.remove(turnId)
             }
         }
     }
@@ -1391,6 +1489,9 @@ public class ChatPresenter(
         if (id == RECEIPT_STATUS) local.update { it.copy(receiptResult = null) }
         if (id == StatusPick.ACTION) local.update { it.copy(actionFailure = null) }
         if (id == StatusPick.LINK) local.update { it.copy(linkRefused = false) }
+        if (id == MODEL_REPLACED_STATUS) {
+            local.update { it.copy(dismissedModelReplaced = world.models.value.replaced) }
+        }
     }
 
     private fun capsOf(c: ServerCapabilities): ChatCapabilitiesUi =
@@ -2012,3 +2113,4 @@ private const val STAGED_UNDO_STATUS: String = "staged-revert"
 private const val UNDONE_STATUS: String = "undone"
 private const val SUBAGENT_STATUS: String = "subagent"
 private const val KEPT_OFFLINE_STATUS: String = "chat-kept-offline"
+private const val MODEL_REPLACED_STATUS: String = "model-replaced"

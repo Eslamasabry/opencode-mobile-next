@@ -331,6 +331,7 @@ public class ThisPhoneModel(
         scope.launch {
             visible.collectLatest { shown ->
                 phoneDetails?.shown(shown)
+                source.sizeShown(shown)
                 if (!shown) return@collectLatest
                 source.refresh()
                 details.singleOrNull()?.refresh()

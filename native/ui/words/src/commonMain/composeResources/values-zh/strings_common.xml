@@ -701,4 +701,5 @@
     <string name="connectUpdatingAgents">正在更新这部手机上的智能体。完成后对话会打开。</string>
     <string name="kitChipsMore">显示更多筛选</string>
     <string name="kitChipsFirst">显示前面的筛选</string>
+    <string name="appUpdateUpdateTo">更新至 %1$s</string>
 </resources>

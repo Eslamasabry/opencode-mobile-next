@@ -58,10 +58,13 @@ class SettingsGoldensTest {
     @AfterTest
     fun restoreLocale() = Locale.setDefault(savedLocale)
 
-    private fun scene(scene: String, state: SettingsUi) {
+    private fun scene(scene: String, state: SettingsUi) = scene(scene) { state }
+
+    private fun scene(scene: String, stateFor: (Variant) -> SettingsUi) {
         for (variant in variants) {
             // The words follow the JVM locale, as the app's locale applier sets it on a device.
             Locale.setDefault(Locale.forLanguageTag(variant.locale))
+            val state = stateFor(variant)
             runComposeUiTest {
                 setContent { SettingsThemed(dark = variant.dark, locale = variant.locale) { SettingsScreen(state, RecordingActions()) } }
                 waitForIdle()
@@ -119,19 +122,22 @@ class SettingsGoldensTest {
 
     @Test
     fun `SCREENS-NAV-91 appearance with the most used packs, the styles and motion`() =
-        scene(
-            "appearance",
+        scene("appearance") { variant ->
             on(
                 SettingsPage.Appearance,
                 SettingsUi(
                     appearance =
                         AppearanceUi(
-                            mode = AppearanceMode.Dark, pack = PackId.Nord, packs = Packs.mostUsed.toImmutableList(), seeAllCount = 31,
-                            style = SurfaceStyle.Soft, motion = MotionLevel.Calm,
+                            mode = if (variant.dark) AppearanceMode.Dark else AppearanceMode.Light,
+                            pack = PackId.Nord,
+                            packs = Packs.mostUsed.toImmutableList(),
+                            seeAllCount = 31,
+                            style = SurfaceStyle.Soft,
+                            motion = MotionLevel.Calm,
                         ),
                 ),
-            ),
-        )
+            )
+        }
 
     @Test
     fun `plan 07 I05 notifications blocked, with quiet hours and the background row`() =

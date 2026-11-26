@@ -239,6 +239,7 @@ printf '%s
 oc_version_pattern=${versionPattern(recipe.version)}
 $PROBE
 ${ScriptPrune.FUNCTION}
+${ScriptPrune.LEFTOVERS}
 $updatePrelude
 command -v python3 >/dev/null && command -v timeout >/dev/null || {
   echo '[oc] Agent setup needs the Linux tools first' >&2; exit 1
@@ -345,8 +346,14 @@ oc_version $version
         """if [ "${D}(readlink "${D}oc_bin")" = "${D}oc_final/launch" ]${if (probe) " && oc_probe_version \"${D}oc_final\"" else ""}; then
   oc_prune_versions /home/oc/.local/share/oc-agents/${agent.id} ${quote(keep)} \
     '^[0-9]+\.[0-9]+\.[0-9]+${D}' "${D}oc_bin"
-  oc_prune_one "${D}oc_final.oc-good"
+  oc_prune_one "${D}oc_final.oc-good"${if (probe) staleLeftovers(agent, keep) else ""}
 fi"""
+
+    private fun staleLeftovers(agent: AgentDescriptor, keep: String): String =
+        """
+  oc_prune_stale /home/oc/.local/share/oc-agents/${agent.id} ${quote(keep)} '[0-9]+\.[0-9]+\.[0-9]+' "${D}oc_bin"
+  oc_prune_downloads /home/oc/.local/share/oc-agents/${agent.id}/.downloads ${quote(keep)}
+  oc_prune_probes /home/oc/.local/share/oc-agents"""
 
     public val bootstrapUser: String =
         """set -eu

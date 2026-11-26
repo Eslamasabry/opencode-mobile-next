@@ -959,7 +959,7 @@ public fun KitScreen(
                                     },
                                     bottomReach = 0.dp,
                                     bottomReachPx = { dissolvePx },
-                                    bottomStrength = moreBelow,
+                                    bottomStrength = { if (pageScroll.suppressBottomFade) 0f else moreBelow() },
                                     keepBottomPx = { pageScroll.footRoom.toFloat() },
                                     ground = flatGround,
                                 )

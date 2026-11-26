@@ -4,6 +4,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 
@@ -174,5 +175,38 @@ class SetupJourneyTest {
         later.now += 24 * 3_600_000L
         later.journey.coldStart()
         assertEquals(0, later.events().size)
+    }
+
+    @Test
+    fun `B-JOURNEY-027 a failed step first seen on a job that already ended is not sent again`() = runTest {
+        val r = Rig(this)
+        val j = r.journey
+        val ended =
+            listOf(
+                SetupStepView("linux", SetupStepState.Done),
+                SetupStepView("start", SetupStepState.Failed, "unknown"),
+            )
+        j.observe("job1", SetupJobState.Failed, ended, true)
+        j.observe(null, SetupJobState.Idle, emptyList(), true)
+        // The same job read again later: still a job that had already ended when this process first saw it.
+        j.observe("job1", SetupJobState.Failed, ended, true)
+        assertTrue(
+            r.events().none { it.first == "linux_setup_step" && it.second["result"] == "fail" },
+            r.events().toString(),
+        )
+    }
+
+    @Test
+    fun `B-JOURNEY-028 a failed step never seen running carries no duration`() = runTest {
+        val r = Rig(this)
+        val j = r.journey
+        j.observe("job1", SetupJobState.Running, listOf(SetupStepView("start", SetupStepState.Pending)), true)
+        r.now += 30_000
+        j.observe("job1", SetupJobState.Failed, listOf(SetupStepView("start", SetupStepState.Failed, "timeout")), true)
+        val fails = r.events().filter { it.first == "linux_setup_step" && it.second["result"] == "fail" }
+        assertEquals(1, fails.size, r.events().toString())
+        assertEquals("timeout", fails.single().second["fail_kind"])
+        assertNull(fails.single().second["ms_range"], "a step never seen running has no measured time")
+        assertTrue(r.vendor.traces.isEmpty(), "no measured time, so no performance trace")
     }
 }
