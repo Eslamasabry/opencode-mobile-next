@@ -1176,6 +1176,18 @@ class FirstRunStarter(
                 }
         }
     }
+
+    /** B-619: MainActivity calls this once a recreated window's shell is up (main thread). */
+    fun resume() {
+        if (!started) return
+        scope.launch {
+            rootReady.await()
+            val saved = stores.profiles.profiles.value.map { it.id }.toSet()
+            withContext(dispatchers.main) {
+                flow.resume(nav.top.value, stores.profiles.activeId.value, saved)
+            }
+        }
+    }
 }
 
 /** A stored language below 95 % coverage reads English as a whole, never string by string. */

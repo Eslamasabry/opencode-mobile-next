@@ -57,6 +57,16 @@ public class FirstRunFlow(private val firstRun: FirstRun, private val nav: AppNa
         nav.land()
     }
 
+    /**
+     * B-619: a recreated window whose shell came back on Conversations alone gets the root a fresh
+     * start would give.
+     */
+    public fun resume(top: AppRoute?, active: ProfileId?, saved: Set<ProfileId>) {
+        if (top != ChatsRoute.Home) return
+        val choice = RootDecision.decide(RootWorld(activeProfileId = active, savedProfileIds = saved))
+        if (choice == RootChoice.Servers(welcome = true)) nav.replaceRoot(OnboardingRoute.Welcome)
+    }
+
     /** The welcome's one obvious action. */
     public fun addServer(): Unit = nav.open(ServersRoute.Home)
 
