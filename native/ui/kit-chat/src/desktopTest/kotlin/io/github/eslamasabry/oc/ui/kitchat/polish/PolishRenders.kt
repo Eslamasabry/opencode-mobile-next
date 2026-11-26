@@ -195,32 +195,7 @@ class PolishRenders {
                                     .background(LocalKitColors.current.ground)
                                     .padding(16.dp),
                             ) {
-                                KitStepList {
-                                    KitToolRow(
-                                        KitToolView(
-                                            "c1", KitToolKind.Read, "Read", "app.kt", null,
-                                            KitToolStatus.Done, "0.2s", null, null, "Done",
-                                        ),
-                                        opened = false,
-                                        onToggle = {},
-                                    )
-                                    KitToolRow(
-                                        KitToolView(
-                                            "c2", KitToolKind.Edit, "Edit", "checkout.kt", null,
-                                            KitToolStatus.Running, "1.2s", null, null, "Running",
-                                        ),
-                                        opened = false,
-                                        onToggle = {},
-                                    )
-                                    KitToolRow(
-                                        KitToolView(
-                                            "c3", KitToolKind.Shell, "Run", "npm test", null,
-                                            KitToolStatus.WaitingForYou, null, null, null, "Waiting for you",
-                                        ),
-                                        opened = false,
-                                        onToggle = {},
-                                    )
-                                }
+                                RunningClipSteps()
                             }
                         }
                     }
@@ -236,6 +211,36 @@ class PolishRenders {
         val strip = stitchVertically(listOf(frames[2], frames[6], frames[9], frames[14]))
         ImageIO.write(strip, "png", File(dir, "568-$PHASE-running-node-strip-360-1.0-dark.png"))
         writeAnimatedGif(frames, File(dir, "568-$PHASE-running-node-360-1.0-dark.gif"), delayCs = 10)
+    }
+
+    @Composable
+    private fun RunningClipSteps() {
+        KitStepList {
+            KitToolRow(
+                KitToolView(
+                    "c1", KitToolKind.Read, "Read", "app.kt", null,
+                    KitToolStatus.Done, "0.2s", null, null, "Done",
+                ),
+                opened = false,
+                onToggle = {},
+            )
+            KitToolRow(
+                KitToolView(
+                    "c2", KitToolKind.Edit, "Edit", "checkout.kt", null,
+                    KitToolStatus.Running, "1.2s", null, null, "Running",
+                ),
+                opened = false,
+                onToggle = {},
+            )
+            KitToolRow(
+                KitToolView(
+                    "c3", KitToolKind.Shell, "Run", "npm test", null,
+                    KitToolStatus.WaitingForYou, null, null, null, "Waiting for you",
+                ),
+                opened = false,
+                onToggle = {},
+            )
+        }
     }
 
     private fun stitchVertically(images: List<BufferedImage>): BufferedImage {

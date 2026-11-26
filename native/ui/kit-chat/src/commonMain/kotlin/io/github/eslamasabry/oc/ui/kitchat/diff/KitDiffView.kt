@@ -363,8 +363,15 @@ public fun KitDiffView(
         val gutter = (if (splitOn) numberWidth else numberWidth * 2) + glyphWidth
         val wraps = lineWrap || splitOn
         val previewItems =
-            if (full) display
-            else previewVisible(display, width, gutter, wraps, maxLines, density, measurer, mono, redactor::redact)
+            if (full || !wraps) display
+            else {
+                val maxPx = with(density) { (width - gutter - Space.S2.dp).toPx().toInt().coerceAtLeast(1) }
+                previewVisible(display, maxLines) { text ->
+                    measurer.measure(redactor.redact(text), mono, constraints = Constraints(maxWidth = maxPx))
+                        .lineCount
+                        .coerceAtLeast(1)
+                }
+            }
         val omitted = if (full) 0 else previewOmitted(file.totalLines, previewItems)
         Column(Modifier.fillMaxWidth()) {
             if (full) {
@@ -440,27 +447,14 @@ private fun grouped(n: Int): String = n.toString().reversed().chunked(3).joinToS
 /** Caps inline wrapped previews to whole visual lines within [maxLines] (B-567). */
 private fun previewVisible(
     display: List<DiffDisplay>,
-    width: Dp,
-    gutter: Dp,
-    wraps: Boolean,
     maxLines: Int,
-    density: androidx.compose.ui.unit.Density,
-    measurer: androidx.compose.ui.text.TextMeasurer,
-    mono: TextStyle,
-    redact: (String) -> String,
+    measureLines: (String) -> Int,
 ): List<DiffDisplay> {
-    if (!wraps) return display
-    val maxPx = with(density) { (width - gutter - Space.S2.dp).toPx().toInt().coerceAtLeast(1) }
     var used = 0
     return buildList {
         for (item in display) {
             val src = (item as? DiffDisplay.Source)?.row
-            val count =
-                if (src is DiffRow.Line) {
-                    measurer.measure(redact(src.line.text), mono, constraints = Constraints(maxWidth = maxPx))
-                        .lineCount
-                        .coerceAtLeast(1)
-                } else 1
+            val count = if (src is DiffRow.Line) measureLines(src.line.text) else 1
             if (isNotEmpty() && used + count > maxLines) break
             add(item)
             used += count

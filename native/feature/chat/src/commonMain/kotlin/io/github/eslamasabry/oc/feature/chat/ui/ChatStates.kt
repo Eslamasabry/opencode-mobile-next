@@ -94,7 +94,7 @@ internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
     // Reserve space for the waiting words before sizing the decorative turns so short/1.3x chats keep them visible.
     val tokens = LocalKitTokens.current
     val fontScale = maxOf(1f, LocalDensity.current.fontScale)
-    val wordsReserve = if (label == null) 0.dp else Space.S4.dp + (56f * fontScale).dp
+    val wordsReserve = if (label == null) 0.dp else Space.S4.dp + (LOADING_WORDS_RESERVE_DP * fontScale).dp
     val twoTurnsHeight = (tokens.gutter * 2 + Space.S2 + TWO_SKELETON_TURNS_DP).dp
     BoxWithConstraints(
         modifier
@@ -127,6 +127,7 @@ internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
 }
 
 private const val TWO_SKELETON_TURNS_DP = 244
+private const val LOADING_WORDS_RESERVE_DP = 56f
 
 /**
  * OMP-OPEN: the load-failure page's words name what did not answer. A conversation of this phone's agents names its
