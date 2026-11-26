@@ -143,6 +143,7 @@ internal class TerminalSelectionOverlay {
                 )
                 drawHighlightRects(canvas, range, viewport, emulator.mRows)
                 canvas.restore()
+                controller.render()
                 handled = true
             }
         }
