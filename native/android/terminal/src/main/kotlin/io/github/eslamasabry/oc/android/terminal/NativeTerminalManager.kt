@@ -172,7 +172,7 @@ class NativeTerminalManager(
                     client,
                 )
             view =
-                TerminalView(app, null).apply {
+                OcTerminalView(app).apply {
                     setTerminalViewClient(TerminalInputClient(this))
                     setIsTerminalViewKeyLoggingEnabled(false)
                     setTextSize(

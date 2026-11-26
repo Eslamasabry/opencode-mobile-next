@@ -44,6 +44,7 @@ internal open class TerminalSurfaceHost(context: Context, protected val terminal
 
     override fun appearance(palette: TerminalPalette) {
         this.palette = palette
+        (terminal as? OcTerminalView)?.updateSelectionHighlight(terminalSelectionHighlight(palette))
         applyPalette()
         terminal.invalidate()
     }

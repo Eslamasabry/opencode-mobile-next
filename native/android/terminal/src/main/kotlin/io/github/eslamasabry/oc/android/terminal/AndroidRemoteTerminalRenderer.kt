@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.android.terminal
 import android.app.Application
 import android.graphics.Typeface
 import com.termux.terminal.TerminalSession
-import com.termux.view.TerminalView
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.domain.RemoteTerminalRenderSession
 import io.github.eslamasabry.oc.core.domain.RemoteTerminalRenderer
@@ -35,7 +34,7 @@ class AndroidRemoteTerminalRenderer(
         private val text = MutableStateFlow("")
         override val transcript = text.asStateFlow()
         private val grid =
-            TerminalView(app, null).apply {
+            OcTerminalView(app).apply {
                 setTerminalViewClient(TerminalInputClient(this))
                 setIsTerminalViewKeyLoggingEnabled(false)
                 setTextSize(

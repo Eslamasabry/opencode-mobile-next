@@ -122,15 +122,19 @@ class TerminalSelectionHighlightTest {
         ): ActionMode? {
             lastType = type
             lastCallback = callback as? ActionMode.Callback2
-            val mode = FakeActionMode(context, originalView ?: this)
+            val mode = FakeActionMode(context, originalView ?: this, callback)
             lastMode = mode
             return mode
         }
     }
 
-    private class FakeActionMode(private val ctx: android.content.Context, private val anchor: View) :
-        ActionMode() {
+    private class FakeActionMode(
+        private val ctx: android.content.Context,
+        private val anchor: View,
+        private val callback: ActionMode.Callback?,
+    ) : ActionMode() {
         private val popupMenu = PopupMenu(ctx, anchor)
+        private var finished = false
 
         override fun setTitle(title: CharSequence?) = Unit
 
@@ -144,7 +148,12 @@ class TerminalSelectionHighlightTest {
 
         override fun invalidate() = Unit
 
-        override fun finish() = Unit
+        override fun finish() {
+            if (!finished) {
+                finished = true
+                callback?.onDestroyActionMode(this)
+            }
+        }
 
         override fun getMenu(): Menu = popupMenu.menu
 
@@ -272,6 +281,55 @@ class TerminalSelectionHighlightTest {
         return (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
     }
 
+    private fun assertThemeSelection(
+        h: Harness,
+        sample: ThemeSample,
+        rowTop: Float,
+        rowBottom: Float,
+        lineSpacing: Float,
+    ) {
+        h.host.appearance(sample.palette)
+        val event = longPressCell(h.terminal, col = 8, row = 1)
+        h.terminal.startTextSelectionMode(event)
+        event.recycle()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(h.terminal.isSelectingText, "${sample.name}: selection should be active")
+
+        val bitmap = Bitmap.createBitmap(h.terminal.width, h.terminal.height, Bitmap.Config.ARGB_8888)
+        val canvas = RecordingCanvas(bitmap)
+        h.host.draw(canvas)
+
+        val rowRects =
+            canvas.rects.filter { r ->
+                r.rect.width() > 0f &&
+                    r.rect.height() > 0f &&
+                    r.rect.bottom > rowTop &&
+                    r.rect.top < rowBottom &&
+                    r.rect.width() < h.terminal.width.toFloat()
+            }
+        assertTrue(rowRects.isNotEmpty(), "${sample.name}: expected a selection highlight rect")
+        for (r in rowRects) {
+            val alpha = Color.alpha(r.color)
+            val hex = Integer.toHexString(r.color)
+            assertTrue(alpha in 1..254, "${sample.name}: alpha must be translucent (1..254), got $alpha (0x$hex)")
+            val fgBlend = blendOver(r.color, sample.palette.foreground)
+            val bgBlend = blendOver(r.color, sample.ground)
+            val contrast = contrastRatio(fgBlend, bgBlend)
+            assertTrue(contrast >= 4.5, "${sample.name}: contrast too low ($contrast) with 0x$hex")
+        }
+
+        val selectedTexts =
+            canvas.texts.filter { t -> t.text.contains("target") && t.y >= rowTop && t.y <= rowBottom + lineSpacing }
+        assertTrue(selectedTexts.isNotEmpty(), "${sample.name}: selected characters must be drawn")
+        for (t in selectedTexts) {
+            val hex = Integer.toHexString(t.color)
+            assertEquals(255, Color.alpha(t.color), "${sample.name}: selected text must stay opaque, got 0x$hex")
+        }
+
+        h.terminal.stopTextSelectionMode()
+        bitmap.recycle()
+    }
+
     @Test
     fun `B-481 selection highlight is translucent and keeps selected text readable in dark and light themes`() {
         val h = setupHarness()
@@ -284,64 +342,7 @@ class TerminalSelectionHighlightTest {
         val rowBottom = 2f * lineSpacing
 
         for (sample in themeSamples()) {
-            h.host.appearance(sample.palette)
-            val event = longPressCell(h.terminal, col = 8, row = 1)
-            h.terminal.startTextSelectionMode(event)
-            event.recycle()
-            shadowOf(Looper.getMainLooper()).idle()
-            assertTrue(h.terminal.isSelectingText, "${sample.name}: selection should be active")
-
-            val bitmap = Bitmap.createBitmap(h.terminal.width, h.terminal.height, Bitmap.Config.ARGB_8888)
-            val canvas = RecordingCanvas(bitmap)
-            h.host.draw(canvas)
-
-            val rowRects =
-                canvas.rects.filter { r ->
-                    r.rect.width() > 0f &&
-                        r.rect.height() > 0f &&
-                        r.rect.bottom > rowTop &&
-                        r.rect.top < rowBottom &&
-                        r.rect.width() < h.terminal.width.toFloat()
-                }
-            assertTrue(
-                rowRects.isNotEmpty(),
-                "${sample.name}: expected a selection highlight rect over the selected row",
-            )
-            for (r in rowRects) {
-                val alpha = Color.alpha(r.color)
-                val hex = Integer.toHexString(r.color)
-                assertTrue(
-                    alpha in 1..254,
-                    "${sample.name}: highlight alpha must be translucent (1..254), got $alpha (0x$hex)",
-                )
-                val bgComposite = blendOver(r.color, sample.ground)
-                val fgComposite = blendOver(r.color, sample.palette.foreground)
-                val contrast = contrastRatio(fgComposite, bgComposite)
-                assertTrue(
-                    contrast >= 4.5,
-                    "${sample.name}: selected text contrast too low ($contrast) with 0x$hex",
-                )
-            }
-
-            val selectedTexts =
-                canvas.texts.filter { t ->
-                    t.text.contains("target") && t.y >= rowTop && t.y <= rowBottom + lineSpacing
-                }
-            assertTrue(
-                selectedTexts.isNotEmpty(),
-                "${sample.name}: selected characters must be drawn",
-            )
-            for (t in selectedTexts) {
-                val hex = Integer.toHexString(t.color)
-                assertEquals(
-                    255,
-                    Color.alpha(t.color),
-                    "${sample.name}: selected characters must stay opaque, got 0x$hex",
-                )
-            }
-
-            h.terminal.stopTextSelectionMode()
-            bitmap.recycle()
+            assertThemeSelection(h, sample, rowTop, rowBottom, lineSpacing)
         }
     }
 
@@ -418,5 +419,25 @@ class TerminalSelectionHighlightTest {
         assertTrue(callback.onActionItemClicked(mode, copyItem), "Copy action click must be handled")
         assertEquals(listOf("token_alpha"), h.copied, "Copy must write exact selected text with no trailing junk")
         assertTrue(!h.terminal.isSelectingText, "selection mode should end after Copy")
+    }
+
+    @Test
+    fun `B-481 multi-line selection content rect encloses all selected rows cleanly`() {
+        val range = normalizeSelectionRange(intArrayOf(6, 2, 12, 4))
+        assertNotNull(range)
+        val viewport =
+            SelectionViewport(
+                topRow = 0,
+                columns = 40,
+                fontWidth = 24f,
+                lineSpacing = 48,
+                viewWidth = 1080,
+                viewHeight = 1920,
+            )
+        val rect = selectionActionContentRect(range, viewport, clearancePx = 24)
+        assertEquals(0, rect.left)
+        assertEquals(40 * 24, rect.right)
+        assertTrue(rect.top <= 2 * 48, "top (${rect.top}) must be <= first selected row (${2 * 48})")
+        assertTrue(rect.bottom >= 7 * 48, "bottom (${rect.bottom}) must be >= last selected row (${7 * 48})")
     }
 }

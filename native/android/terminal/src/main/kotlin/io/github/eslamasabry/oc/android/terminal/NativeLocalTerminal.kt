@@ -214,7 +214,7 @@ class NativeLocalTerminal(
                     client,
                 )
             held.view =
-                TerminalView(context, null).apply {
+                OcTerminalView(context).apply {
                     setTerminalViewClient(client)
                     setTextSize((14 * resources.displayMetrics.scaledDensity).toInt())
                     attachSession(held.session)
