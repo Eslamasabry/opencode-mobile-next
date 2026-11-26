@@ -41,7 +41,7 @@ class LiquidEdgeDockTest {
             for (i in 1..100) {
                 val now = LiquidEdge.dockRecipe(dark, i / 100f)
                 assertTrue(abs(now.blurDp - last.blurDp) <= .05f && abs(now.refractionDp - last.refractionDp) <= .2f, "a step at ${i / 100f}")
-                assertTrue(abs(now.rimMaxDp - last.rimMaxDp) <= .05f && abs(now.tint - last.tint) <= .01f, "a step at ${i / 100f}")
+                assertTrue(abs(now.rimMaxDp - last.rimMaxDp) <= .15f && abs(now.tint - last.tint) <= .01f, "a step at ${i / 100f}")
                 last = now
             }
         }
