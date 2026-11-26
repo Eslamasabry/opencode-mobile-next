@@ -169,7 +169,7 @@ class AgentUpdateSheetRedrawTest {
             onNodeWithText("Keep").assertDoesNotExist()
             onNodeWithText("Codex", substring = true).performClick()
             waitForIdle()
-            onNodeWithText("Update 4 agents").assertExists()
+            onNodeWithText("Update 4 selected · ${PhoneSizes.text(612_000_000L)}").assertExists()
         }
 
     @Test
@@ -180,7 +180,7 @@ class AgentUpdateSheetRedrawTest {
             onNodeWithText(HELPER_TOO_NEW, substring = true, useUnmergedTree = true).assertExists()
             gemini.performScrollTo().performClick()
             waitForIdle()
-            onNodeWithText("Update 5 agents").assertExists()
+            onNodeWithText(updateAllFive()).assertExists()
         }
 
     @Test
@@ -223,7 +223,7 @@ class AgentUpdateSheetRedrawTest {
             codex.performScrollTo().performClick()
             waitForIdle()
             assertEquals(before, codex.fetchSemanticsNode().size.height, "Codex row height changed when turned off")
-            onNodeWithText("Update 4 agents").assertExists()
+            onNodeWithText("Update 4 selected · ${PhoneSizes.text(612_000_000L)}").assertExists()
             // Wait past the 60-frame ABA window before toggling back on so the second tap is a separate user action.
             mainClock.advanceTimeBy(1_500)
             codex.performClick()
@@ -238,24 +238,22 @@ class AgentUpdateSheetRedrawTest {
             val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
             wifi.assertIsOn()
             onNodeWithText("Will update on Wi-Fi", substring = true, useUnmergedTree = true).assertExists()
-            onNodeWithText("Update 5 agents").performClick()
+            onNodeWithText(updateAllFive()).performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
             assertEquals(true, offered.lastWaitForWifi)
         }
     }
 
     @Test
-    fun `B-UPD-014 turning Wi-Fi only off keeps row height and decides mobile download`() {
+    fun `B-UPD-014 turning Wi-Fi only off reveals mobile notice without flicker and decides mobile download`() {
         val offered = RedrawOffered(redrawFiveOffer())
-        runSheet(redrawFiveOffer(), offered = offered) {
+        runSheet(redrawFiveOffer(), offered = offered, motion = MotionLevel.Full) {
             val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
-            val before = wifi.fetchSemanticsNode().size.height
             wifi.performClick()
             waitForIdle()
             wifi.assertIsOff()
-            assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only row height changed")
             onNodeWithText(METERED_LINE, substring = true, useUnmergedTree = true).assertExists()
-            onNodeWithText("Update 5 agents").performClick()
+            onNodeWithText(updateAllFive()).performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
             assertEquals(false, offered.lastWaitForWifi)
         }
@@ -268,36 +266,42 @@ class AgentUpdateSheetRedrawTest {
             onNodeWithText("Wi-Fi only").assertDoesNotExist()
             onNodeWithText("Will update on Wi-Fi").assertDoesNotExist()
             onAllNodes(isToggleable()).assertCountEquals(1)
-            onNodeWithText("Update 1 agent").performClick()
+            onNodeWithText("Update all · ${PhoneSizes.text(422_000_000L)}").performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
             assertEquals(false, offered.lastWaitForWifi)
         }
     }
 
     @Test
-    fun `B-UPD-016 turning Wi-Fi only off at text 1_3 keeps its row height and moves nothing`() =
-        runSheet(redrawFiveOffer(), fontScale = 1.3f) {
+    fun `B-UPD-016 at text 1_3 Wi-Fi only row has no empty band when on and toggles smoothly`() =
+        runSheet(redrawFiveOffer(), fontScale = 1.3f, motion = MotionLevel.Full) {
             val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
-            val before = wifi.fetchSemanticsNode().size.height
+            val onHeight = wifi.fetchSemanticsNode().size.height
             wifi.performClick()
             waitForIdle()
-            assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only height changed when turned off")
+            val offHeight = wifi.fetchSemanticsNode().size.height
+            assertTrue(
+                onHeight < offHeight,
+                "expected compact 2-line Wi-Fi row when on ($onHeight) < 3-line metered notice when off ($offHeight)",
+            )
             mainClock.advanceTimeBy(1_500)
             wifi.performClick()
             waitForIdle()
-            assertEquals(before, wifi.fetchSemanticsNode().size.height, "Wi-Fi only height changed when turned on")
+            assertEquals(onHeight, wifi.fetchSemanticsNode().size.height, "Wi-Fi only height did not return when on")
         }
 
     @Test
     fun `B-UPD-017 on mobile data with every agent off the Wi-Fi only row is gone`() {
         runSheet(redrawFiveOffer()) {
             listOf("Claude Code", "Codex", "Antigravity", "Qwen Code").forEach { switchOff(it) }
-            onNodeWithText("Update 1 agent").assertExists()
+            onNodeWithText("Update 1 selected · ${PhoneSizes.text(401_000_000L)}").assertExists()
             onNode(isToggleable() and hasText("Wi-Fi only", substring = true)).assertExists()
         }
         runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
-            onNodeWithText("Keep these versions").assertExists()
+            onNodeWithText(updateAllFive()).assertExists()
+            onNodeWithText("Keep these versions").assertDoesNotExist()
+            onNodeWithText("Skip these versions").assertExists()
             onNodeWithText("Wi-Fi only").assertDoesNotExist()
             onNodeWithText("Will update on Wi-Fi", substring = true, useUnmergedTree = true).assertDoesNotExist()
         }
@@ -307,6 +311,7 @@ class AgentUpdateSheetRedrawTest {
     fun `B-UPD-018 turning the last agent off folds the total, Wi-Fi only and the helper away without a jump`() =
         runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
             ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
+            val notNowBefore = onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot
             val fold = walkSwitch("Qwen Code")
             assertTrue(fold.heights.last() < fold.heights.first(), "the sheet kept its height: ${fold.heights}")
             assertTrue(
@@ -317,8 +322,10 @@ class AgentUpdateSheetRedrawTest {
                 assertTrue(now <= was + ONE_DP_PX, "the sheet's height rose again while it shrank: ${fold.heights}")
             }
             fold.noRowForOneFrame("the fold")
-            fold.buttonGlidesSmoothly(rising = true)
-            onNodeWithText("Keep these versions").assertExists()
+            fold.buttonStaysPut()
+            assertEquals(notNowBefore, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
+            onNodeWithText(updateAllFive()).assertExists()
+            onNodeWithText("Keep these versions").assertDoesNotExist()
             onNodeWithText("Download").assertDoesNotExist()
             onNodeWithText("Wi-Fi only").assertDoesNotExist()
             onNodeWithText("Agent helper", substring = true).assertDoesNotExist()
@@ -328,6 +335,7 @@ class AgentUpdateSheetRedrawTest {
     fun `B-UPD-019 turning an agent back on unfolds the total, Wi-Fi only and the helper the same way`() =
         runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
+            val notNowBefore = onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot
             val unfold = walkSwitch("Qwen Code")
             assertTrue(unfold.heights.last() > unfold.heights.first(), "the sheet did not grow back: ${unfold.heights}")
             assertTrue(
@@ -338,8 +346,9 @@ class AgentUpdateSheetRedrawTest {
                 assertTrue(now + ONE_DP_PX >= was, "the sheet's height fell again while it grew: ${unfold.heights}")
             }
             unfold.noRowForOneFrame("the unfold")
-            unfold.buttonGlidesSmoothly(rising = false)
-            onNodeWithText("Update 1 agent").assertExists()
+            unfold.buttonStaysPut()
+            assertEquals(notNowBefore, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
+            onNodeWithText("Update 1 selected · ${PhoneSizes.text(385_000_000L)}").assertExists()
             onNodeWithText("Wi-Fi only").assertExists()
             onNodeWithText("Agent helper", substring = true).assertExists()
         }
@@ -382,23 +391,39 @@ class AgentUpdateSheetRedrawTest {
         }
 
     @Test
-    fun `B-UPD-023 with every agent off Update all with size is primary above Keep and Not now`() =
+    fun `B-UPD-023 two buttons follow selection with size and Keep these versions is gone`() =
         runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
+            val allBtn = onNodeWithText(updateAllFive())
+            val notNow = onNodeWithText("Not now")
+            allBtn.assertExists()
+            notNow.assertExists()
+            onNodeWithText("Keep these versions").assertDoesNotExist()
+            val primarySlot = allBtn.fetchSemanticsNode().boundsInRoot
+            val notNowSlot = notNow.fetchSemanticsNode().boundsInRoot
+            assertTrue(primarySlot.bottom <= notNowSlot.top, "expected Update all above Not now")
+
             ALL_AGENTS.forEach { switchOff(it) }
             onNodeWithText("Stays", substring = true, useUnmergedTree = true).assertDoesNotExist()
-            val updateAll = onNodeWithText("Update all · ${PhoneSizes.text(660_000_000L)}")
-            val keep = onNodeWithText("Keep these versions")
-            val notNow = onNodeWithText("Not now")
-            updateAll.assertExists()
-            keep.assertExists()
-            notNow.assertExists()
-            val updateAllBounds = updateAll.fetchSemanticsNode().boundsInRoot
-            val keepBounds = keep.fetchSemanticsNode().boundsInRoot
-            val notNowBounds = notNow.fetchSemanticsNode().boundsInRoot
-            assertTrue(
-                updateAllBounds.bottom <= keepBounds.top && keepBounds.bottom <= notNowBounds.top,
-                "expected Update all ($updateAllBounds) above Keep ($keepBounds) above Not now ($notNowBounds)",
-            )
+            onNodeWithText("Keep these versions").assertDoesNotExist()
+            onNodeWithText("Skip these versions").assertExists()
+            assertEquals(primarySlot, onNodeWithText(updateAllFive()).fetchSemanticsNode().boundsInRoot)
+            assertEquals(notNowSlot, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
+
+            switchOff("Claude Code")
+            val oneSize = PhoneSizes.text(394_000_000L)
+            onNodeWithText("About $oneSize", useUnmergedTree = true).assertExists()
+            val oneBtn = onNodeWithText("Update 1 selected · $oneSize")
+            oneBtn.assertExists()
+            assertEquals(primarySlot, oneBtn.fetchSemanticsNode().boundsInRoot)
+            assertEquals(notNowSlot, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
+
+            switchOff("Codex")
+            val twoSize = PhoneSizes.text(442_000_000L)
+            onNodeWithText("About $twoSize", useUnmergedTree = true).assertExists()
+            val twoBtn = onNodeWithText("Update 2 selected · $twoSize")
+            twoBtn.assertExists()
+            assertEquals(primarySlot, twoBtn.fetchSemanticsNode().boundsInRoot)
+            assertEquals(notNowSlot, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
         }
 
     @Test
@@ -406,7 +431,7 @@ class AgentUpdateSheetRedrawTest {
         val offered = RedrawOffered(noLockedFiveOffer())
         runSheet(noLockedFiveOffer(), offered = offered, motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
-            onNodeWithText("Update all · ${PhoneSizes.text(660_000_000L)}").performClick()
+            onNodeWithText(updateAllFive()).performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastChoices != null }
             assertEquals(5, offered.lastChoices?.size)
             assertTrue(offered.lastChoices?.values?.all { it == AgentUpdateChoice.Update } == true)
@@ -415,11 +440,11 @@ class AgentUpdateSheetRedrawTest {
     }
 
     @Test
-    fun `B-UPD-025 tapping Keep these versions when every agent is off keeps all`() {
+    fun `B-UPD-025 tapping Skip these versions under the list keeps all`() {
         val offered = RedrawOffered(noLockedFiveOffer())
         runSheet(noLockedFiveOffer(), offered = offered, motion = MotionLevel.Full) {
             ALL_AGENTS.forEach { switchOff(it) }
-            onNodeWithText("Keep these versions").performClick()
+            onNodeWithText("Skip these versions").performScrollTo().performClick()
             waitUntil(timeoutMillis = 2_000) { offered.lastChoices != null }
             assertEquals(5, offered.lastChoices?.size)
             assertTrue(offered.lastChoices?.values?.all { it == AgentUpdateChoice.Keep } == true)
@@ -480,9 +505,11 @@ class AgentUpdateSheetRedrawTest {
             }
             ?: Float.NaN
 
+    private fun updateAllFive(): String = "Update all · ${PhoneSizes.text(660_000_000L)}"
+
     /** The primary button's words before and after the last switch changes (read under the sheet's own language). */
     private fun mainButtonWords(): List<String> =
-        listOf("Update 1 agent", "Update all · ${PhoneSizes.text(660_000_000L)}")
+        listOf("Update 1 selected · ${PhoneSizes.text(385_000_000L)}", updateAllFive())
 
     private fun KitUiTest.sheetHeight(): Int =
         onNodeWithTag("kit-sheet", useUnmergedTree = true).fetchSemanticsNode().size.height
@@ -512,19 +539,15 @@ class AgentUpdateSheetRedrawTest {
             }
         }
 
-        fun buttonGlidesSmoothly(rising: Boolean) {
+        fun buttonStaysPut() {
             val tops = buttonTops.filter { !it.isNaN() }
             assertTrue(tops.size > 1, "the main button was not found on the frames: $buttonTops")
-            assertTrue(tops.distinct().size > 2, "the main button jumped in one frame: $tops")
-            if (rising) {
-                assertTrue(tops.last() < tops.first(), "the main button did not rise for the third action: $tops")
-            } else {
-                assertTrue(tops.last() > tops.first(), "the main button did not settle back down: $tops")
-            }
-            tops.zipWithNext().forEach { (was, now) ->
-                val step = if (rising) was - now else now - was
-                assertTrue(step >= -ONE_DP_PX, "the main button reversed direction while gliding: $tops")
-                assertTrue(step <= MAX_BUTTON_STEP_PX, "the main button jumped ${step}px in one frame: $tops")
+            val first = tops.first()
+            tops.forEach { top ->
+                assertTrue(
+                    kotlin.math.abs(top - first) <= ONE_DP_PX,
+                    "the main button moved from $first to $top while crossing 1-on <-> 0-on: $tops",
+                )
             }
         }
 
@@ -546,7 +569,6 @@ class AgentUpdateSheetRedrawTest {
         const val METERED_LINE = "You're on mobile data. The updates download over it."
         const val FOLD_FRAMES = 40
         const val ONE_DP_PX = 3
-        const val MAX_BUTTON_STEP_PX = 60f
         val ALL_AGENTS = listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
     }
 }
