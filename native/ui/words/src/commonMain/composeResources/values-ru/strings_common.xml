@@ -734,4 +734,5 @@
     <string name="connectAgentNeedsSignIn">Агенту нужно, чтобы вы вошли. Откройте «Агенты» и нажмите «Войти» — после этого чат откроется.</string>
     <string name="kitChipsMore">Показать больше фильтров</string>
     <string name="kitChipsFirst">Показать первые фильтры</string>
+    <string name="appUpdateUpdateTo">Обновить до %1$s</string>
 </resources>

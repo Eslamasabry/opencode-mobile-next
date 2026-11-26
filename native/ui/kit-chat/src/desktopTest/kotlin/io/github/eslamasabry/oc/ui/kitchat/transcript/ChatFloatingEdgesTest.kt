@@ -22,9 +22,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -62,7 +67,8 @@ import kotlin.test.assertTrue
 /**
  * B-438 (owner 2026-11-17, build 10073): a chat's chrome floats. One header capsule on top, the live message box at the
  * bottom, the transcript running behind both with nothing painted but each part's own fill: no band above the box, no
- * mask, no fade, and "Jump to latest" a round arrow at the box's end corner. One scene, every state; [Scene.floating]
+ * mask, no fade, and "Jump to latest" a docked row in the live line's place (owner decision O2 = D, 2026-11-24; it
+ * was a round arrow at the box's end corner). One scene, every state; [Scene.floating]
  * false is the old frame, which the red runs use.
  */
 // Pixel-measuring scenes: the messages carry the numbers, and the sampling loops nest.
@@ -87,6 +93,9 @@ class ChatFloatingEdgesTest {
         val navDp: Int = NAV_DP,
     )
 
+    /** The scene's list state, hoisted out of the composition so the harness sets the person's choice by hand. */
+    private lateinit var list: TranscriptListState
+
     private val rows = (0 until 40).map { i -> if (i == 0) "Row zero the newest line of the conversation" else "Row $i: the build finished and every check passed, then the notes were written." }
 
     private fun ComposeUiTest.show(scene: Scene) {
@@ -107,6 +116,7 @@ class ChatFloatingEdgesTest {
                         Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                             val source = rememberKitFrostState()
                             val state = rememberTranscriptListState()
+                            list = state
                             KitScreen(
                                 page = true,
                                 overlayChrome = true,
@@ -172,8 +182,10 @@ class ChatFloatingEdgesTest {
 
     private fun ComposeUiTest.boundsOfText(text: String): Rect = onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
 
+    /** The list scrolled away from its newest rows: a scroll from code keeps following, so the person's choice is set by hand. */
     private fun ComposeUiTest.scrollAway(white: Boolean = false) {
         onNodeWithTag("transcript-list").performScrollToIndex(if (white) 3 else 12)
+        runOnUiThread { list.following = false }
         waitForIdle()
     }
 
@@ -241,53 +253,54 @@ class ChatFloatingEdgesTest {
         }
 
     @Test
-    fun `B-CHAT-EDGE-008 the jump control is a round arrow centred above the box, 48 dp, still named in words`() =
+    fun `B-CHAT-EDGE-008 the jump control is a full-width row above the box, 48 dp, its words at the end, named to a reader`() =
         run(Scene()) {
             scrollAway()
-            val button = bounds("jump-to-latest")
+            val row = bounds("jump-to-latest")
             val box = bounds("kit-composer-box")
-            assertTrue(button.width >= 48f && button.height >= 48f, "the target is ${button.width} x ${button.height}")
-            assertEquals(W / 2f, button.center.x, 1f, "the button is centred above the box")
-            assertTrue(button.bottom <= box.top + 1f, "the button stands above the box")
+            assertTrue(row.width >= W - 1f && row.height >= 48f, "the row is ${row.width} x ${row.height}")
+            assertTrue(row.bottom <= box.top + 1f, "the row stands above the box")
             onNodeWithContentDescription("Jump to latest").assertExists()
-            // No words on it: its label is spoken, never drawn.
-            assertTrue(onAllNodesWithText("Jump to latest", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "words are drawn on the button")
+            // Its label is drawn at the end, and a screen reader hears the same words.
+            assertTrue(boundsOfText("Jump to latest").center.x > W / 2f, "the words are not at the end")
         }
 
     @Test
-    fun `B-CHAT-EDGE-023 with motion on, the jump arrow stands centred just above the box and inside the screen`() {
+    fun `B-CHAT-EDGE-023 with motion on, the jump row spans the width just above the box and inside the screen`() {
         // Device check 46 (build 10077): with motion on, the arrow sat at [0,0][126,126] under the status bar, because
         // its place (align + padding) was given to the face inside the enter/exit transition, which ignores it. The
-        // earlier tests ran with motion off, where it is placed right, and only asked that the arrow exist.
+        // earlier tests ran with motion off, where it is placed right, and only asked that the arrow exist. The docked
+        // row takes no transition; it must still be placed right in every style, in both readings, with the keyboard.
         for (style in listOf(Style.Solid, Style.Glass, Style.Soft)) for (keyboard in listOf(false, true)) for (rtl in listOf(false, true))
-        run(Scene(motion = MotionLevel.Full, rtl = rtl, keyboard = keyboard, style = style)) {
-            scrollAway()
-            mainClock.advanceTimeBy(800)
-            waitForIdle()
-            val button = bounds("jump-to-latest")
-            val box = bounds("kit-composer-box")
-            assertEquals(W / 2f, button.center.x, 1f, "the arrow is centred ($style, keyboard $keyboard, rtl $rtl): $button")
-            assertTrue(button.bottom <= box.top + 1f && button.bottom >= box.top - 40f, "the arrow stands just above the box: $button, box $box")
-            assertTrue(button.top >= STATUS_DP + 48f, "the arrow is clear of the status area and the header: $button")
-            assertTrue(button.right <= W && button.left >= 0f && button.bottom <= H, "the arrow is inside the screen: $button")
-        }
+            run(Scene(motion = MotionLevel.Full, rtl = rtl, keyboard = keyboard, style = style)) {
+                scrollAway()
+                mainClock.advanceTimeBy(800)
+                waitForIdle()
+                val row = bounds("jump-to-latest")
+                val box = bounds("kit-composer-box")
+                assertTrue(row.left <= 0f && row.right >= W.toFloat() && row.height >= 48f, "the row does not span the width ($style, keyboard $keyboard, rtl $rtl): $row")
+                assertTrue(row.bottom <= box.top + 1f && row.bottom >= box.top - 46f, "the row stands just above the box: $row, box $box")
+                assertTrue(row.top >= STATUS_DP + 48f, "the row is clear of the status area and the header: $row")
+                assertTrue(row.right <= W && row.left >= 0f && row.bottom <= H, "the row is inside the screen: $row")
+            }
     }
 
     @Test
-    fun `B-CHAT-EDGE-009 the jump control stays centred in a right-to-left reading and leaves at the end`() =
+    fun `B-CHAT-EDGE-009 in a right-to-left reading the jump row's words sit at the end, and the row leaves at the end`() =
         run(Scene(rtl = true)) {
             scrollAway()
-            assertEquals(W / 2f, bounds("jump-to-latest").center.x, 1f, "the button is centred")
+            assertTrue(boundsOfText("Jump to latest").center.x < W / 2f, "the words are not at the end in a right-to-left reading")
             onNodeWithTag("transcript-list").performScrollToIndex(0)
             waitForIdle()
-            assertTrue(onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "the button stays at the end")
+            assertTrue(onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "the row stays at the end")
         }
 
     @Test
-    fun `B-CHAT-EDGE-013 the jump arrow reads over a white picture and over text, in dark and in light`() {
+    fun `B-CHAT-EDGE-013 the jump words read over a white picture and over text, in dark and in light`() {
         for (dark in listOf(true, false)) for (white in listOf(true, false)) for (picture in listOf(Color.White, Color(0xFF0D1117))) {
             run(Scene(white = white, dark = dark, picture = picture)) {
                 scrollAway(white)
+                // The row's rect: its words over the cleared ground (the picture and the rows under it are gone).
                 val b = bounds("jump-to-latest")
                 val image = onNodeWithTag("scene").captureToImage().toPixelMap()
                 val px = ArrayList<Color>()
@@ -301,18 +314,23 @@ class ChatFloatingEdgesTest {
                 val fill = px[px.size / 2]
                 val ink = px.maxByOrNull { kotlin.math.abs(lum(it) - lum(fill)) }!!
                 val ratio = (maxOf(lum(fill), lum(ink)) + 0.05f) / (minOf(lum(fill), lum(ink)) + 0.05f)
-                assertTrue(ratio >= 4.5f, "the arrow's contrast is $ratio (dark=$dark, picture behind=$white $picture)")
+                assertTrue(ratio >= 4.5f, "the words' contrast is $ratio (dark=$dark, picture behind=$white $picture)")
             }
         }
     }
 
     @Test
-    fun `B-CHAT-EDGE-014 the jump arrow is announced as a button named exactly Jump to latest`() =
+    fun `B-CHAT-EDGE-014 the jump row is announced as one button named exactly Jump to latest`() =
         run(Scene()) {
             scrollAway()
-            val node = onNodeWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNode()
-            assertEquals(listOf("Jump to latest"), node.config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription])
-            assertEquals(androidx.compose.ui.semantics.Role.Button, node.config[androidx.compose.ui.semantics.SemanticsProperties.Role])
+            // The row's own node merges its tappable and its label: what a screen reader meets, one control.
+            val node = onNodeWithTag("jump-to-latest").fetchSemanticsNode()
+            val words = SemanticsProperties.ContentDescription
+            assertEquals(listOf("Jump to latest"), node.config[words])
+            val taps = SemanticsActions.OnClick in node.config
+            assertEquals(Role.Button, node.config.getOrNull(SemanticsProperties.Role), "the row takes a tap: $taps")
+            assertTrue(taps, "the row announces no tap")
+            onAllNodesWithContentDescription("Jump to latest").assertCountEquals(1)
         }
 
     @Test

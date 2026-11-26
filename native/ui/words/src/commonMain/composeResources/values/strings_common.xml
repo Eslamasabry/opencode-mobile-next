@@ -695,6 +695,7 @@
     <string name="whatsNewTipsTitle">What's new in this version</string>
     <string name="appUpdateReadyTitle">Version %1$s is ready</string>
     <string name="appUpdateUpdate">Update</string>
+    <string name="appUpdateUpdateTo">Update to %1$s</string>
     <string name="appUpdateDownloadingTitle">Downloading version %1$s</string>
     <string name="appUpdatePercent">%1$s% done</string>
     <string name="appUpdateCancel">Cancel</string>

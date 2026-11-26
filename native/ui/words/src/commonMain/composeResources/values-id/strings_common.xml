@@ -700,4 +700,5 @@
     <string name="connectAgentNeedsSignIn">Agen Anda perlu Anda masuk. Buka Agen lalu ketuk Masuk; percakapan terbuka setelah itu.</string>
     <string name="kitChipsMore">Tampilkan filter lainnya</string>
     <string name="kitChipsFirst">Tampilkan filter pertama</string>
+    <string name="appUpdateUpdateTo">Perbarui ke %1$s</string>
 </resources>

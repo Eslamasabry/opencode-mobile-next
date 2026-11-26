@@ -162,7 +162,7 @@ class SettingsScreenUiTest {
             show()
             presenter.onOpen(SettingsPage.Updates); waitForIdle()
             onNodeWithText("3.1.0 is ready · 41 MB").assertExists()
-            tap("Update")
+            tap("Update to 3.1.0")
             assertEquals(listOf("act"), updates.calls)
         }
 

@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">GitHubでスターを付けると、他の人も見つけやすくなります。</string>
     <string name="chatStarAskAction">GitHubでスターを付ける</string>
     <string name="chatStarAskDismiss">今はしない</string>
+    <string name="firstReplyAskQuestion">気に入りましたか？</string>
+    <string name="firstReplyAskYes">はい</string>
+    <string name="firstReplyAskNo">いいえ</string>
+    <string name="firstReplyAskUseTitle">主な用途は何ですか？</string>
+    <string name="firstReplyAskUseEveryday">日常の作業</string>
+    <string name="firstReplyAskUseCode">コードを書く</string>
+    <string name="firstReplyAskUseBoth">両方</string>
+    <string name="firstReplyAskUseLooking">見ているだけ</string>
+    <string name="firstReplyAskThanks">ありがとうございます。</string>
+    <string name="firstReplyAskSorry">申し訳ありません。</string>
 </resources>

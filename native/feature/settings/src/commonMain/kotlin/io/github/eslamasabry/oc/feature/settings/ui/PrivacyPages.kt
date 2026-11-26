@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,12 +19,17 @@ import io.github.eslamasabry.oc.feature.settings.presentation.PrivacyUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -114,51 +124,122 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
         )
     }
     KitGroupNote(stringResource(Res.string.collectRules))
-    KitRowGroup(
+    CollectSection(
         label = stringResource(Res.string.collectUsageLabel),
+        items = HealthContract.items.getValue(CollectGroup.Usage),
         modifier = Modifier.testTag("collect-usage"),
-    ) {
-        privacy.usage?.let { on ->
-            KitSwitchRow(
-                title = stringResource(Res.string.telemetryUsageTitle),
-                checked = on,
-                onCheckedChange = actions::onUsage,
-            )
-        }
-        HealthContract.items.getValue(CollectGroup.Usage).forEach { CollectRow(it) }
-    }
-    KitRowGroup(
+        toggle =
+            privacy.usage?.let { on ->
+                {
+                    KitSwitchRow(
+                        title = stringResource(Res.string.telemetryUsageTitle),
+                        checked = on,
+                        onCheckedChange = actions::onUsage,
+                    )
+                }
+            },
+    )
+    CollectSection(
         label = stringResource(Res.string.collectCrashesLabel),
+        items = HealthContract.items.getValue(CollectGroup.Crashes),
         modifier = Modifier.testTag("collect-crashes"),
-    ) {
-        privacy.crashReports?.let { on ->
-            KitSwitchRow(
-                title = stringResource(Res.string.privacyCrashSendTitle),
-                checked = on,
-                onCheckedChange = actions::onCrashReports,
-            )
-        }
-        HealthContract.items.getValue(CollectGroup.Crashes).forEach { CollectRow(it) }
-    }
-    KitRowGroup(
+        toggle =
+            privacy.crashReports?.let { on ->
+                {
+                    KitSwitchRow(
+                        title = stringResource(Res.string.privacyCrashSendTitle),
+                        checked = on,
+                        onCheckedChange = actions::onCrashReports,
+                    )
+                }
+            },
+    )
+    CollectSection(
         label = stringResource(Res.string.collectOwnLabel),
+        items = HealthContract.items.getValue(CollectGroup.OwnServer),
         modifier = Modifier.testTag("collect-own-server"),
-    ) {
-        HealthContract.items.getValue(CollectGroup.OwnServer).forEach { CollectRow(it) }
-        KitRow(title = stringResource(Res.string.collectOwnTogether), titleMaxLines = Int.MAX_VALUE)
-    }
-    KitRowGroup(label = stringResource(Res.string.collectReportLabel)) {
-        HealthContract.items.getValue(CollectGroup.Report).forEach { CollectRow(it) }
-    }
-    KitRowGroup(label = stringResource(Res.string.collectNeverLabel)) {
-        KitRow(title = stringResource(Res.string.collectNever), titleMaxLines = Int.MAX_VALUE)
+        closing = stringResource(Res.string.collectOwnTogether),
+    )
+    CollectSection(
+        label = stringResource(Res.string.collectReportLabel),
+        items = HealthContract.items.getValue(CollectGroup.Report),
+    )
+    CollectSection(
+        label = stringResource(Res.string.collectNeverLabel),
+        items = emptyList(),
+        closing = stringResource(Res.string.collectNever),
+    )
+}
+
+@Composable
+private fun CollectSection(
+    label: String,
+    items: List<CollectItem>,
+    modifier: Modifier = Modifier,
+    toggle: (@Composable () -> Unit)? = null,
+    closing: String? = null,
+) {
+    val gutter = LocalKitTokens.current.gutter
+    Column(modifier.fillMaxWidth()) {
+        if (toggle != null) {
+            KitRowGroup(label = label, section = true) { toggle() }
+            Spacer(Modifier.height(Space.S3.dp))
+        } else {
+            KitSectionLabel(label, gapBefore = LocalKitTokens.current.sectionGap.dp)
+        }
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = gutter.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
+            items.forEach { CollectDisclosure(it) }
+            closing?.let { KitText(it, role = TypeRole.Body, tone = TextTone.Secondary) }
+        }
     }
 }
 
 @Composable
-private fun CollectRow(item: CollectItem) {
-    KitRow(title = stringResource(collectWords(item)), titleMaxLines = Int.MAX_VALUE)
+private fun CollectDisclosure(item: CollectItem) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        KitText(stringResource(collectLead(item)), role = TypeRole.Label, tone = TextTone.Primary)
+        KitText(stringResource(collectWords(item)), role = TypeRole.Body, tone = TextTone.Secondary)
+    }
 }
+
+private val collectLeads: Map<CollectItem, StringResource> =
+    mapOf(
+        CollectItem.Connect to Res.string.collectConnectLead,
+        CollectItem.Drop to Res.string.collectDropLead,
+        CollectItem.Send to Res.string.collectSendLead,
+        CollectItem.Turns to Res.string.collectTurnsLead,
+        CollectItem.Approvals to Res.string.collectApprovalsLead,
+        CollectItem.Stall to Res.string.collectStallLead,
+        CollectItem.Queue to Res.string.collectQueueLead,
+        CollectItem.PhoneSetup to Res.string.collectPhoneSetupLead,
+        CollectItem.Agents to Res.string.collectAgentsLead,
+        CollectItem.Background to Res.string.collectBackgroundLead,
+        CollectItem.Updates to Res.string.collectUpdatesLead,
+        CollectItem.Pages to Res.string.collectPagesLead,
+        CollectItem.Journey to Res.string.collectJourneyLead,
+        CollectItem.Starters to Res.string.collectStartersLead,
+        CollectItem.ShareIn to Res.string.collectShareInLead,
+        CollectItem.StarAsk to Res.string.collectStarAskLead,
+        CollectItem.Start to Res.string.collectStartLead,
+        CollectItem.Smooth to Res.string.collectSmoothLead,
+        CollectItem.Memory to Res.string.collectMemoryLead,
+        CollectItem.Device to Res.string.collectDeviceLead,
+        CollectItem.CrashKind to Res.string.collectCrashKindLead,
+        CollectItem.Exit to Res.string.collectExitLead,
+        CollectItem.Steps to Res.string.collectStepsLead,
+        CollectItem.CrashKeys to Res.string.collectCrashKeysLead,
+        CollectItem.Report to Res.string.collectReportLead,
+        CollectItem.OwnBuild to Res.string.collectOwnBuildLead,
+        CollectItem.OwnPhone to Res.string.collectOwnPhoneLead,
+        CollectItem.OwnLook to Res.string.collectOwnLookLead,
+        CollectItem.OwnUse to Res.string.collectOwnUseLead,
+        CollectItem.OwnInstall to Res.string.collectOwnInstallLead,
+    )
+
+internal fun collectLead(item: CollectItem): StringResource = collectLeads.getValue(item)
 
 internal fun collectWords(item: CollectItem): StringResource =
     when (item) {

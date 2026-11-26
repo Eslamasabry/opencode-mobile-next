@@ -20,12 +20,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -43,7 +43,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitSelectedCheck
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /** One actual agent choice, or the visible first card that opens agent setup. */
@@ -156,11 +156,10 @@ public fun KitAgentChoice(
 
 @Composable
 private fun AgentCheck() {
-    val colors = LocalKitColors.current
     Box(
-        Modifier.size(24.dp).background(colors.accent, CircleShape).clearAndSetSemantics {},
+        Modifier.size(24.dp).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
-        KitGlyph(KitIcons.check, colors.onAccent, 16.dp)
+        KitSelectedCheck(Modifier.testTag("kit-agent-choice-check"))
     }
 }

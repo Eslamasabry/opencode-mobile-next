@@ -722,4 +722,5 @@
     <string name="connectUpdatingAgents">Aggiornamento dei tuoi agenti su questo telefono. La conversazione si apre a fine aggiornamento.</string>
     <string name="kitChipsMore">Mostra altri filtri</string>
     <string name="kitChipsFirst">Mostra i primi filtri</string>
+    <string name="appUpdateUpdateTo">Aggiorna alla %1$s</string>
 </resources>

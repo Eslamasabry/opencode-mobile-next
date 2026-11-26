@@ -1,0 +1,755 @@
+@file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+
+package io.github.eslamasabry.oc.ui.kitchat.transcript
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PixelMap
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarScope
+import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
+import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPending
+import io.github.eslamasabry.oc.ui.words.res.chatUiRateLimitRetry
+import io.github.eslamasabry.oc.ui.words.res.chatUiRetryingSoon
+import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWaitingForYou
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWriting
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.pow
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.fail
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import org.jetbrains.compose.resources.stringResource
+
+/**
+ * B-CHAT-540..546 (owner decision O2 = D, 2026-11-24; O4 = the first pixel): "Jump to latest" is a docked row in
+ * the live line's place, in the tree exactly while the person does not follow the newest end, over no text. The
+ * scene is [ChatFloatingEdgesTest]'s (the header capsule, the message box, 40 rows); [Scene.live] puts a running
+ * reply's live words at the row's start. The list's state is hoisted, so a test turns following off and on by hand.
+ *
+ * The lead's two rules of 2026-11-25, proved here too: one live line is on screen at a time (the row carries the
+ * status only while the list's own line lies in the row's clear band), and the status is one whole short line or
+ * gives way to the dot alone, with the label never shortened.
+ */
+class ChatJumpDockTest {
+    private data class Scene(
+        val floating: Boolean = true,
+        val rtl: Boolean = false,
+        val fontScale: Float = 1f,
+        val dark: Boolean = true,
+        val motion: MotionLevel = MotionLevel.Off,
+        /** A reply runs: the row carries its live words at its start. */
+        val live: Boolean = false,
+        /** The list's newest item is the running reply's own live line: the one the row's status repeats. */
+        val listLive: Boolean = false,
+        /** A tall item sits under that line, so the line rests above the row's clear band: on screen. */
+        val below: Boolean = false,
+        /** A Stop action sits under the live words, inside the same LIVE item. */
+        val action: Boolean = false,
+    )
+
+    private val rows =
+        (0 until 40).map { i ->
+            if (i == 0) "Row zero the newest line of the conversation"
+            else "Row $i: the build finished and every check passed, then the notes were written."
+        }
+
+    /** The scene's list state, hoisted out of the composition. */
+    private lateinit var list: TranscriptListState
+
+    private fun ComposeUiTest.show(scene: Scene) {
+        setContent { Themed(scene) { Page(scene) } }
+        waitForIdle()
+    }
+
+    @Composable
+    private fun Themed(scene: Scene, content: @Composable () -> Unit) {
+        CompositionLocalProvider(
+            LocalDensity provides Density(1f, scene.fontScale),
+            LocalLayoutDirection provides if (scene.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+        ) {
+            KitTheme(
+                KitAppearance(
+                    mode = if (scene.dark) AppearanceMode.Dark else AppearanceMode.Light,
+                    motion = scene.motion,
+                ),
+                DesktopKitPlatform(),
+                if (scene.rtl) "ar" else "en",
+                stillFrame = true,
+            ) {
+                Inseted(content)
+            }
+        }
+    }
+
+    /** The scene's 360 by 780 box and the phone's status and gesture bars the harness stands in for. */
+    @Composable
+    private fun Inseted(content: @Composable () -> Unit) {
+        CompositionLocalProvider(
+            LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp),
+        ) {
+            Box(Modifier.size(W.dp, H.dp).testTag("scene")) { content() }
+        }
+    }
+
+    /** The page: a header capsule over the transcript, the message box over it. */
+    @Composable
+    private fun Page(scene: Scene) {
+        val source = rememberKitFrostState()
+        list = rememberTranscriptListState()
+        KitScreen(
+            page = true,
+            overlayChrome = true,
+            frost = source,
+            floating = scene.floating,
+            topBar = { Bar() },
+            bottom = { Composer() },
+            edges = KitScreenEdges.Bleed,
+        ) {
+            Box(Modifier.fillMaxSize().kitFrostSource(source)) { Rows(scene) }
+        }
+    }
+
+    @Composable
+    private fun Rows(scene: Scene) {
+        KitTranscriptList(
+            state = list,
+            newestKey = rows.first(),
+            jumpLabel = JUMP,
+            motion = KitMotionLevel.Off,
+            dockLive = if (scene.live) DOCK_LIVE else null,
+        ) {
+            // Under the live line (the list is reversed: its first item rests on the bottom): the dock's own room, as
+            // the chat gives it to the edge dock's Undo bar.
+            if (scene.below) item(key = BELOW, contentType = "below") { Spacer(Modifier.height(BELOW_DP.dp)) }
+            if (scene.listLive) {
+                item(key = LIVE, contentType = "live") {
+                    Box(kitTranscriptItemMotion()) {
+                        if (scene.action) {
+                            KitTurnLiveLine(
+                                DOCK_LIVE.words,
+                                Modifier.padding(horizontal = 16.dp).testTag("list-live"),
+                                actionLabel = "Stop",
+                                onAction = {},
+                            )
+                        } else {
+                            KitTurnLiveLine(DOCK_LIVE.words, Modifier.padding(horizontal = 16.dp).testTag("list-live"))
+                        }
+                    }
+                }
+            }
+            items(rows.indices.toList(), key = { it }) { i ->
+                KitText(rows[i], Modifier.padding(horizontal = 16.dp, vertical = 8.dp), role = TypeRole.Body)
+            }
+        }
+    }
+
+    @Composable
+    private fun Bar() {
+        KitTopBar(
+            "Tidy the README",
+            scope = {
+                KitTopBarScope(
+                    "demo-shop",
+                    "This phone",
+                    "Files of demo-shop",
+                    onProject = {},
+                    branch = "Git",
+                    onBranch = {},
+                )
+            },
+            exit = KitTopBarExit.Back,
+            exitLabel = "Back",
+            onExit = {},
+            backBesideTitle = true,
+        )
+    }
+
+    @Composable
+    private fun Composer() {
+        KitComposerBox(
+            running = false,
+            stacked = true,
+            hasLeading = true,
+            field = {
+                KitText("Ask OpenCode…", role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Frame)
+            },
+            leading = { KitComposerAdd("Tools", onClick = {}, open = false) },
+            trailing = { KitComposerSend("Send", onClick = {}) },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+    }
+
+    private fun ComposeUiTest.bounds(tag: String): Rect =
+        onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+    private fun ComposeUiTest.boundsOfText(text: String): Rect =
+        onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+    private fun ComposeUiTest.rowShown(): Boolean =
+        onAllNodesWithTag("jump-to-latest", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+
+    /** The list at its twelfth row. A scroll from code keeps following, so the test sets following off by hand. */
+    private fun ComposeUiTest.scrollAway() {
+        onNodeWithTag("transcript-list").performScrollToIndex(12)
+        runOnUiThread { list.following = false }
+        waitForIdle()
+    }
+
+    private fun run(scene: Scene, body: ComposeUiTest.() -> Unit) =
+        runDesktopComposeUiTest(W, H) { show(scene); body() }
+
+    /** The arrow after the label: the row's gap, then the small glyph on the label's bottom line. */
+    private fun arrow(label: Rect, rtl: Boolean): Rect {
+        val gap = Space.S2.dp.value
+        val glyph = KitIconSize.Small.dp.toFloat()
+        val left = if (rtl) label.left - gap - glyph else label.right + gap
+        return Rect(left, label.bottom - glyph, left + glyph, label.bottom)
+    }
+
+    private fun lum(c: Color): Float {
+        fun f(v: Float): Float {
+            val even = ((v + 0.055f) / 1.055f).toDouble().pow(2.4)
+            return if (v <= 0.03928f) v / 12.92f else even.toFloat()
+        }
+        return 0.2126f * f(c.red) + 0.7152f * f(c.green) + 0.0722f * f(c.blue)
+    }
+
+    /** Whether the pixel (x, y) lies in one of the rects, each widened by [INK_PAD]. */
+    private fun onInk(x: Int, y: Int, ink: List<Rect>): Boolean =
+        ink.any { r ->
+            x >= r.left - INK_PAD && x <= r.right + INK_PAD && y >= r.top - INK_PAD && y <= r.bottom + INK_PAD
+        }
+
+    /**
+     * Every pixel of the row's rect outside [ink] is the ground the row sits on (read at 2 dp in the same pixel
+     * row): no text lies under the row.
+     */
+    private fun assertOverGround(image: PixelMap, row: Rect, ink: List<Rect>, what: String) {
+        var y = ceil(row.top).toInt()
+        while (y < row.bottom.toInt()) {
+            val ground = lum(image[GROUND_X, y])
+            var x = ceil(row.left).toInt()
+            while (x < row.right.toInt()) {
+                val off = abs(lum(image[x, y]) - ground)
+                val cleared = !onInk(x, y, ink)
+                if (cleared) assertTrue(off <= 0.02f, "$what: the pixel ($x, $y) is ${image[x, y]} off $ground")
+                x += 1
+            }
+            y += 1
+        }
+    }
+
+    private fun SemanticsNode.words(): String = config[SemanticsProperties.Text].joinToString(" ") { it.text }
+
+    /** The top of every text node, by its words (the same words may sit on more than one node). */
+    private fun ComposeUiTest.tops(): Map<String, List<Float>> =
+        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .groupBy { it.words() }
+            .mapValues { (_, nodes) -> nodes.map { it.boundsInRoot.top }.sorted() }
+
+    /** Each text node is where it was at rest ([rest]), within half a pixel. */
+    private fun ComposeUiTest.assertTops(rest: Map<String, List<Float>>, moment: String) {
+        val now = tops()
+        for ((words, was) in rest) for (top in was) {
+            val nowTops = now[words].orEmpty()
+            assertTrue(nowTops.any { abs(it - top) <= 0.5f }, "$moment: \"$words\" moved from $top to $nowTops")
+        }
+    }
+
+    /** The words drawn in the row: their text nodes. */
+    private fun ComposeUiTest.rowWords(): List<SemanticsNode> {
+        val text = SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult)
+        return onAllNodes(hasAnyAncestor(hasTestTag("jump-to-latest")) and text, useUnmergedTree = true)
+            .fetchSemanticsNodes()
+    }
+
+    private fun inside(inner: Rect, outer: Rect): Boolean =
+        inner.left >= outer.left - 0.5f &&
+            inner.right <= outer.right + 0.5f &&
+            inner.top >= outer.top - 0.5f &&
+            inner.bottom <= outer.bottom + 0.5f
+
+    /** The words a text node shows; empty when it shows none. */
+    private fun SemanticsNode.shownWords(): String =
+        config.getOrNull(SemanticsProperties.Text).orEmpty().joinToString(" ") { it.text }
+
+    /** Whether the node's text lies whole on one line: nothing overflows its box and nothing wraps. */
+    private fun wholeOnOneLine(node: SemanticsNode): Boolean {
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(layouts)
+        return layouts.isNotEmpty() && layouts.all { !it.hasVisualOverflow && it.lineCount == 1 }
+    }
+
+    /** The nodes under the docked row's status tag [tag] that draw text. */
+    private fun ComposeUiTest.statusText(tag: String): List<SemanticsNode> =
+        onAllNodes(
+            SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult) and hasAnyAncestor(hasTestTag(tag)),
+            useUnmergedTree = true,
+        )
+            .fetchSemanticsNodes()
+
+    /** Floating and solid, dark and light, left to right and right to left, text 1.0 and 1.3, with a reply running. */
+    private fun everyLook(): List<Scene> =
+        listOf(true, false).flatMap { floating ->
+            listOf(true, false).flatMap { dark ->
+                listOf(false, true).flatMap { rtl ->
+                    listOf(1f, 1.3f).map { scale ->
+                        Scene(floating = floating, dark = dark, rtl = rtl, fontScale = scale, live = true)
+                    }
+                }
+            }
+        }
+
+    @Test
+    fun `B-CHAT-540 the jump row appears at the first pixel of the person's drag`() =
+        run(Scene()) {
+            mainClock.autoAdvance = false
+            // Cross touch slop, then move 2 dp toward the older rows (they come down from the top) and stay down.
+            var slop = Float.NaN
+            onNodeWithTag("transcript-list").performTouchInput {
+                slop = viewConfiguration.touchSlop
+                down(center)
+                moveBy(Offset(0f, slop))
+                moveBy(Offset(0f, 2.dp.toPx()))
+            }
+            mainClock.advanceTimeByFrame()
+            val why =
+                "following = ${list.following}, the touch slop is $slop px, " +
+                    "the list is at ${list.lazy.firstVisibleItemIndex}/${list.lazy.firstVisibleItemScrollOffset}"
+            assertTrue(rowShown(), "the row is not in the tree one frame into the drag: $why")
+        }
+
+    @Test
+    fun `B-CHAT-541 scrolled up with no reply the row is full width, at least 44 dp tall, words at the trailing end`() {
+        for (rtl in listOf(false, true)) run(Scene(rtl = rtl)) {
+            scrollAway()
+            val row = bounds("jump-to-latest")
+            val label = boundsOfText(JUMP)
+            assertTrue(row.width >= W - 1f, "the row is ${row.width} dp wide (rtl = $rtl)")
+            assertTrue(row.height >= 44f, "the row is ${row.height} dp tall (rtl = $rtl)")
+            val atTheEnd = if (rtl) label.center.x < W / 2f else label.center.x > W / 2f
+            assertTrue(atTheEnd, "the words are at x = ${label.center.x} (rtl = $rtl)")
+        }
+    }
+
+    @Test
+    fun `B-CHAT-542 the jump row never lies on a line of text`() {
+        for (scene in everyLook()) run(scene) {
+            scrollAway()
+            val label = boundsOfText(JUMP)
+            val ink = listOf(label, arrow(label, scene.rtl), bounds("transcript-dock-live"))
+            val image = onNodeWithTag("scene").captureToImage().toPixelMap()
+            assertOverGround(image, bounds("jump-to-latest"), ink, "$scene")
+        }
+    }
+
+    @Test
+    fun `B-CHAT-543 nothing above the row moves when it appears or goes`() =
+        run(Scene(motion = MotionLevel.Full)) {
+            mainClock.autoAdvance = false
+            val rest = tops()
+            mainClock.advanceTimeByFrame()
+            assertTops(rest, "at rest")
+            runOnUiThread { list.following = false }
+            repeat(30) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertTops(rest, "frame $frame of the row appearing")
+                assertTrue(rowShown(), "the row is not in the tree in frame $frame of its appearing")
+            }
+            runOnUiThread { list.following = true }
+            repeat(30) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertTops(rest, "frame $frame of the row leaving")
+                assertFalse(rowShown(), "the row is still in the tree in frame $frame of its leaving")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-544 a tap anywhere on the row follows the newest line`() {
+        for (live in listOf(false, true)) run(Scene(live = live)) {
+            scrollAway()
+            // A quarter of the way along the row from its start edge: the row spans the whole width.
+            onNodeWithTag("jump-to-latest").performTouchInput { click(Offset(W / 4f, height / 2f)) }
+            waitForIdle()
+            assertTrue(list.following, "following after the tap (live = $live)")
+            val newest = boundsOfText(rows.first())
+            assertTrue(
+                newest.bottom <= bounds("kit-composer-box").top,
+                "the newest line is not back above the box: $newest",
+            )
+        }
+    }
+
+    @Test
+    fun `B-CHAT-545 at 360 dp, text 1_3 and in Arabic the row's words are whole`() =
+        run(Scene(fontScale = 1.3f, rtl = true, live = true)) {
+            scrollAway()
+            val row = bounds("jump-to-latest")
+            val words = rowWords()
+            assertTrue(words.isNotEmpty(), "the row shows no words")
+            for (node in words) {
+                val layouts = mutableListOf<TextLayoutResult>()
+                node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+                assertTrue(layouts.none { it.hasVisualOverflow }, "\"${node.words()}\" is cut: $layouts")
+                val place = node.boundsInRoot
+                assertTrue(inside(place, row), "\"${node.words()}\" lies at $place, outside the row $row")
+            }
+        }
+
+    @Test
+    fun `B-CHAT-546 with a reply running, the scrolled row carries the live words at its start, the jump at its end`() {
+        for (rtl in listOf(false, true)) run(Scene(live = true, rtl = rtl)) {
+            scrollAway()
+            val live = bounds("transcript-dock-live")
+            val label = boundsOfText(JUMP)
+            val dy = abs(live.center.y - label.center.y)
+            assertTrue(dy <= 2f, "the live words' centre is at y = ${live.center.y}, the label's at ${label.center.y}")
+            val beforeTheLabel = if (rtl) live.left >= label.right else live.right <= label.left
+            assertTrue(beforeTheLabel, "the live words are at $live and the label at $label (rtl = $rtl)")
+        }
+    }
+
+    @Test
+    fun `B-CHAT-546 frame by frame the row repeats the live words only while the list's own line is cleared`() {
+        // At rest the list's own line lies in the row's clear band: the row carries the live words.
+        val cleared = Scene(live = true, listLive = true)
+        // A tall item under the line lifts it above the band: the line is on screen and the row shows only the jump.
+        val onScreen = Scene(live = true, listLive = true, below = true)
+        for (scene in listOf(cleared, onScreen)) run(scene) { walkOneLiveLine(scene) }
+    }
+
+    @Test
+    fun `B-CHAT-546 with a Stop under the live words, one readable live line in every frame`() =
+        run(Scene(live = true, listLive = true, action = true)) {
+            mainClock.autoAdvance = false
+            runOnUiThread { list.following = false }
+            val ownWords = hasText(DOCK_LIVE.words) and hasAnyAncestor(hasTestTag("list-live"))
+            repeat(30) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertTrue(rowShown(), "frame $frame: the row is not in the tree")
+                val row = bounds("jump-to-latest")
+                val carried = onAllNodesWithTag("transcript-dock-live", useUnmergedTree = true).fetchSemanticsNodes()
+                val wordsBottom = onNode(ownWords, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.bottom
+                val readableOwn = wordsBottom <= row.top - DOCK_CLEAR_FADE_DP
+                assertTrue(
+                    carried.isNotEmpty() || readableOwn,
+                    "frame $frame: neither docked live nor readable list live " +
+                        "(wordsBottom=$wordsBottom, fadeTop=${row.top - DOCK_CLEAR_FADE_DP})",
+                )
+            }
+        }
+
+    /** The lead's rule (2026-11-25): with room under the live line the row shows just the jump, from frame one. */
+    private fun ComposeUiTest.walkOneLiveLine(scene: Scene) {
+        mainClock.autoAdvance = false
+        runOnUiThread { list.following = false }
+        repeat(30) { frame ->
+            mainClock.advanceTimeByFrame()
+            assertOneLiveLine(scene, frame)
+        }
+    }
+
+    /** Frame [frame] of the row standing while the person does not follow: one live line, where [scene] puts it. */
+    private fun ComposeUiTest.assertOneLiveLine(scene: Scene, frame: Int) {
+        assertTrue(rowShown(), "$scene: the row is not in the tree in frame $frame")
+        val own = bounds("list-live")
+        val row = bounds("jump-to-latest")
+        val carried = onAllNodesWithTag("transcript-dock-live", useUnmergedTree = true).fetchSemanticsNodes()
+        val dot = onAllNodesWithTag("transcript-dock-dot", useUnmergedTree = true).fetchSemanticsNodes()
+        assertTrue(dot.isEmpty(), "$scene: the row shows the bare dot in frame $frame")
+        if (scene.below) {
+            assertTrue(own.bottom <= row.top, "$scene: the list's own line is not above the row: $own, $row")
+            assertTrue(
+                carried.isEmpty(),
+                "$scene: frame $frame repeats the live words while the list's line is on screen",
+            )
+        } else {
+            assertTrue(own.top >= row.top, "$scene: the list's own line is not inside the row's band: $own, $row")
+            assertTrue(
+                carried.isNotEmpty(),
+                "$scene: frame $frame carries no live words while the list's line is cleared",
+            )
+            val repeated = hasText(DOCK_LIVE.words) and hasAnyAncestor(hasTestTag("transcript-dock-live"))
+            onNode(repeated, useUnmergedTree = true).assertExists()
+        }
+    }
+
+    /** Every shipped language at text 1.3, where the least fits; Arabic, the one reading the other way, also at 1.0. */
+    private fun tightLanguages(): List<Pair<String, Float>> =
+        SHIPPED.flatMap { locale ->
+            if (locale == ARABIC) listOf(locale to 1f, locale to 1.3f) else listOf(locale to 1.3f)
+        }
+
+    @Test
+    fun `B-CHAT-545 at text 1_3 every shipped language's longest status word lies whole or gives way to the dot`() {
+        val before = Locale.getDefault()
+        try {
+            for ((locale, scale) in tightLanguages()) {
+                Locale.setDefault(Locale.forLanguageTag(locale))
+                // Every word is tried, so the longest of the language is.
+                checkStatusWords(locale, scale) { status, _ -> status }
+            }
+        } finally {
+            Locale.setDefault(before)
+        }
+    }
+
+    @Test
+    fun `B-CHAT-545 a status word too long to lie whole gives way to the dot alone and the label stays whole`() {
+        val before = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.ENGLISH)
+            val long = "Supercalifragilisticexpialidocious".repeat(4)
+            for (scale in listOf(1f, 1.3f)) checkStatusWords(ENGLISH, scale) { _, _ -> listOf(long, DOCK_LIVE.words) }
+        } finally {
+            Locale.setDefault(before)
+        }
+    }
+
+    /**
+     * The docked row beside each status word [choose] names, at 360 dp and text [scale], in the phone's language
+     * [locale]: the label is whole on one line, never moved or shortened, and the status is that word, whole on one
+     * line before the label, or has given way to the dot alone.
+     */
+    private fun checkStatusWords(
+        locale: String,
+        scale: Float,
+        choose: (status: List<String>, label: String) -> List<String>,
+    ) = runDesktopComposeUiTest(W, H) {
+        var status: List<String> = emptyList()
+        var label = ""
+        var word by mutableStateOf<String?>(null)
+        var ready by mutableStateOf(false)
+        setContent {
+            Bare(locale, scale, word, ready) { words, jump ->
+                status = words
+                label = jump
+                ready = true
+            }
+        }
+        waitForIdle()
+        val words = choose(status, label)
+        assertTrue(words.isNotEmpty(), "$locale: no status words to check")
+        val why = "$locale at text $scale"
+        val rtl = locale == ARABIC
+        onNodeWithTag("transcript-list").performScrollToIndex(12)
+        runOnUiThread { list.following = false }
+        waitForIdle()
+        // The label with no status at all: where it rests, whole.
+        val rest = onNodeWithText(label, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertRowBeside(null, label, rest, rtl, why)
+        for (w in words) {
+            word = w
+            waitForIdle()
+            assertRowBeside(w, label, rest, rtl, why)
+        }
+    }
+
+    /**
+     * The docked row beside the status [word] (null: no reply runs): the label is whole on one line, where it rested
+     * with no status ([rest]), and the status is [word], whole on one line before the label, or the dot alone.
+     */
+    private fun ComposeUiTest.assertRowBeside(word: String?, label: String, rest: Rect, rtl: Boolean, why: String) {
+        val jump = onNodeWithText(label, useUnmergedTree = true).fetchSemanticsNode()
+        assertTrue(wholeOnOneLine(jump), "$why: the label \"$label\" is not one whole line")
+        val now = jump.boundsInRoot
+        val still =
+            abs(now.left - rest.left) <= 0.5f && abs(now.top - rest.top) <= 0.5f && abs(now.width - rest.width) <= 0.5f
+        assertTrue(still, "$why: the label moved or changed beside \"$word\": $rest, now $now")
+        val live = onAllNodesWithTag("transcript-dock-live", useUnmergedTree = true).fetchSemanticsNodes()
+        val dot = onAllNodesWithTag("transcript-dock-dot", useUnmergedTree = true).fetchSemanticsNodes()
+        if (word == null) {
+            assertTrue(live.isEmpty() && dot.isEmpty(), "$why: the row shows a status while no reply runs")
+            return
+        }
+        when {
+            live.size == 1 -> {
+                assertTrue(dot.isEmpty(), "$why: the row shows the dot and the words")
+                assertWordBefore(word, now, rtl, why)
+            }
+            dot.size == 1 ->
+                assertTrue(
+                    live.isEmpty() && statusText("transcript-dock-dot").all { it.shownWords().isBlank() },
+                    "$why: \"$word\" gave way to the dot, which shows words: $live",
+                )
+            else -> fail("$why: \"$word\" shows ${live.size} statuses and ${dot.size} dots")
+        }
+    }
+
+    /** The status [word] lies whole on one line inside the row, before the label at [jump] ([rtl]: at its right). */
+    private fun ComposeUiTest.assertWordBefore(word: String, jump: Rect, rtl: Boolean, why: String) {
+        val text = statusText("transcript-dock-live").single()
+        assertEquals(word, text.shownWords(), "$why: the status is not \"$word\"")
+        assertTrue(wholeOnOneLine(text), "$why: \"$word\" is not one whole line")
+        val place = text.boundsInRoot
+        assertTrue(inside(place, bounds("jump-to-latest")), "$why: \"$word\" lies at $place, outside the row")
+        val before = if (rtl) place.left >= jump.right else place.right <= jump.left
+        assertTrue(before, "$why: \"$word\" lies at $place, not before the label $jump")
+    }
+
+    /** A bare transcript page in the phone's language, no chrome: the words scenes run one after another. */
+    @Composable
+    private fun Bare(
+        locale: String,
+        scale: Float,
+        word: String?,
+        ready: Boolean,
+        onWords: (List<String>, String) -> Unit,
+    ) {
+        CompositionLocalProvider(
+            LocalDensity provides Density(1f, scale),
+            LocalLayoutDirection provides if (locale == ARABIC) LayoutDirection.Rtl else LayoutDirection.Ltr,
+        ) {
+            KitTheme(
+                KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                DesktopKitPlatform(),
+                locale,
+                stillFrame = true,
+            ) {
+                val status = statusWords()
+                val label = stringResource(Res.string.kitJumpLatest)
+                SideEffect { onWords(status, label) }
+                if (ready) Box(Modifier.size(W.dp, H.dp)) { WordsPage(label, word) }
+            }
+        }
+    }
+
+    /** The short status words the live line already has for a turn's states, in the phone's language. */
+    @Composable
+    private fun statusWords(): List<String> =
+        listOf(
+            stringResource(Res.string.kitTurnLiveNow, stringResource(Res.string.kitTurnLiveWorking)),
+            stringResource(Res.string.kitTurnLiveNow, stringResource(Res.string.kitTurnLiveWriting)),
+            stringResource(Res.string.kitTurnLiveNow, stringResource(Res.string.kitTurnLiveThinking)),
+            stringResource(Res.string.kitTurnLiveNow, stringResource(Res.string.kitTurnLiveStillThinking)),
+            stringResource(Res.string.kitTurnLiveWaitingForYou),
+            stringResource(Res.string.chatUiRetryingSoon, ""),
+            stringResource(Res.string.chatUiRateLimitRetry, ""),
+            stringResource(Res.string.chatStopAfterStepPending),
+            stringResource(Res.string.phoneServerCardStopping),
+        )
+
+    /** The transcript with a running reply's own live line above the rows; [word] is the docked row's status. */
+    @Composable
+    private fun WordsPage(label: String, word: String?) {
+        list = rememberTranscriptListState()
+        KitTranscriptList(
+            state = list,
+            newestKey = LIVE,
+            jumpLabel = label,
+            motion = KitMotionLevel.Off,
+            dockLive = word?.let { KitTranscriptDockLive(it, KitTurnLiveTone.Working, it, false, LIVE) },
+        ) {
+            item(key = LIVE, contentType = "live") {
+                Box(kitTranscriptItemMotion()) { KitTurnLiveLine(LIVE_WORDS, Modifier.padding(horizontal = 16.dp)) }
+            }
+            items(rows.indices.toList(), key = { it }) { i ->
+                KitText(rows[i], Modifier.padding(horizontal = 16.dp, vertical = 8.dp), role = TypeRole.Body)
+            }
+        }
+    }
+
+    private companion object {
+        const val W = 360
+        const val H = 780
+        const val STATUS_DP = 28
+        const val NAV_DP = 20
+
+        /** Where the ground is read in each pixel row of the row's rect: 2 dp in, inside the row's own padding. */
+        const val GROUND_X = 2
+
+        /** How far round the label, the arrow and the live words their pixels are left alone, dp. */
+        const val INK_PAD = 2f
+
+        const val JUMP = "Jump to latest"
+
+        /** The key of the scene's own live line, and how tall the item under it is, dp. */
+        const val LIVE = "live"
+        const val BELOW = "below"
+        const val BELOW_DP = 96
+        const val LIVE_WORDS = "Working…"
+
+        /** The languages the app ships, and the one of them that reads from the right. */
+        const val ENGLISH = "en"
+        const val ARABIC = "ar"
+        val SHIPPED = listOf(ENGLISH, ARABIC, "es", "fr", "id", "it", "ja", "pt", "ru", "vi", "zh")
+
+        val DOCK_LIVE = KitTranscriptDockLive("Working…", KitTurnLiveTone.Working, "Working…", false, LIVE)
+    }
+}

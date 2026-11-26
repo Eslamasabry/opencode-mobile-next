@@ -241,7 +241,11 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             )
         KitActionRow(
             title = stringResource(Res.string.notifySendTest),
-            supporting = stringResource(Res.string.notifySendTestDetail),
+            supporting =
+                stringResource(
+                    if (n.blocked) Res.string.notifySendTestBlockedDetail
+                    else Res.string.notifySendTestDetail
+                ),
             icon = KitIcons.notificationImportant,
             onClick = actions::onSendTestNotification,
         )
@@ -251,14 +255,18 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             icon = KitIcons.darkMode,
             checked = quiet != null,
             supporting = stringResource(Res.string.notifyQuietDetail),
+            enabled = enabled,
             modifier = twoLine,
             onCheckedChange = actions::onQuietHours,
         )
         if (quiet != null) {
+            val quietReason = if (n.blocked) stringResource(Res.string.notifyBlockedMessage) else null
             KitRow(
                 title = stringResource(Res.string.monitorQuietStart),
                 leading = KitRowLeading.Glyph(KitIcons.clock),
                 trailing = KitRowTrailing.Value(clock(quiet.start)),
+                enabled = !n.blocked,
+                disabledReason = quietReason,
                 onClick = { actions.onOpen(SettingsPage.QuietTime(start = true)) },
             )
             KitRow(
@@ -267,6 +275,8 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
                 trailing = KitRowTrailing.Value(clock(quiet.end)),
                 supporting =
                     if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
+                enabled = !n.blocked,
+                disabledReason = quietReason,
                 onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
             )
         }

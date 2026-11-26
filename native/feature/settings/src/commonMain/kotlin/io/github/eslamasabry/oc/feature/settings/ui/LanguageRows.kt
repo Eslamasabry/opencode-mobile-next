@@ -74,7 +74,7 @@ internal fun languageChoices(current: AppLanguage): List<KitChoice<AppLanguage>>
             item,
             own,
             supporting = listOfNotNull(named, share).joinToString(" · ").ifEmpty { null },
-            leading = { KitLanguageMark(markOf(item, facts), selected = item == current) },
+            leading = { KitLanguageMark(markOf(item, facts)) },
         )
     }
 }

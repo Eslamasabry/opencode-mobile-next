@@ -36,6 +36,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
@@ -92,6 +94,8 @@ public data class KitRowState(
      * screen reader instead ("Tidy the README, agent getting ready"). Other rows ignore it.
      */
     val waiting: Boolean = false,
+    /** False drops the lead mark slot so the row's title starts on the row's gutter. */
+    val lead: Boolean = true,
 )
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
@@ -255,6 +259,17 @@ internal fun RowLockedValue(value: KitRowTrailing.Locked) {
 internal fun RowChevron() {
     val size = LocalKitTokens.current.smallIcon * minOf(kitTextScale(), TextScalePolicy.FRAME_CAP)
     KitGlyph(KitIcons.chevronRight, LocalKitColors.current.text3, size.dp, Modifier.testTag("kit-row-chevron"))
+}
+
+/** The kit's one selected-item check (C04): the bare accent check glyph at [KitIconSize.Small]. */
+@Composable
+internal fun KitSelectedCheck(modifier: Modifier = Modifier) {
+    KitIcon(
+        KitIcons.check,
+        modifier,
+        size = KitIconSize.Small,
+        tone = TextTone.Accent,
+    )
 }
 
 /** The lead-column mark of a live row: an 8 dp amber dot for "needs you", a 12 dp mint ring for "running". */

@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">Bintang di GitHub membantu orang lain menemukannya.</string>
     <string name="chatStarAskAction">Beri bintang di GitHub</string>
     <string name="chatStarAskDismiss">Nanti saja</string>
+    <string name="firstReplyAskQuestion">Menyukainya?</string>
+    <string name="firstReplyAskYes">Ya</string>
+    <string name="firstReplyAskNo">Tidak</string>
+    <string name="firstReplyAskUseTitle">Dipakai untuk apa?</string>
+    <string name="firstReplyAskUseEveryday">Tugas sehari-hari</string>
+    <string name="firstReplyAskUseCode">Menulis kode</string>
+    <string name="firstReplyAskUseBoth">Keduanya</string>
+    <string name="firstReplyAskUseLooking">Hanya melihat-lihat</string>
+    <string name="firstReplyAskThanks">Terima kasih.</string>
+    <string name="firstReplyAskSorry">Maaf.</string>
 </resources>

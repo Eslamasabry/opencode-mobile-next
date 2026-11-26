@@ -385,9 +385,20 @@ public class ChatViewModel(
 
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
 
-    override fun starTapped(): Unit = presenter.starTapped()
+    override fun replyAskYes(): Unit = presenter.replyAskYes()
 
-    override fun starDismissed(): Unit = presenter.starDismissed()
+    override fun replyAskNo(): Unit = presenter.replyAskNo()
+
+    override fun replyAskSkip(): Unit = presenter.replyAskSkip()
+
+    override fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse): Unit =
+        presenter.replyAskUse(use)
+
+    override fun replyAskMenuClosed(): Unit = presenter.replyAskMenuClosed()
+
+    override fun replyAskStar(): Unit = presenter.replyAskStar()
+
+    override fun replyAskReport(): Unit = presenter.replyAskReport()
 
     override fun openLink(url: String): Unit = presenter.openLink(url)
 

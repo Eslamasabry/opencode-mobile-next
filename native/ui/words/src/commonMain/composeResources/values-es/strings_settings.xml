@@ -850,4 +850,5 @@
     <string name="languageNameFrench">Francés</string>
     <string name="languageNameChinese">Chino</string>
     <string name="languageNameItalian">Italiano</string>
+    <string name="notifySendTestBlockedDetail">Sigue activo con las notificaciones desactivadas para comprobar el ajuste de Android.</string>
 </resources>

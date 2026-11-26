@@ -292,7 +292,7 @@ public fun AgentsScreen(
             visible = state.resettingSignIns,
             onDismissRequest = actions::cancelSignInReset,
             title = stringResource(Res.string.agentsResetSavedSignIns),
-            icon = KitIcons.login,
+            icon = KitIcons.personRemove,
             dismissible = !state.busy,
             primary =
                 KitAction(
@@ -420,7 +420,7 @@ private fun agentsMenu(
     for (account in state.accounts)
         item(stringResource(Res.string.agentsHostAccount, account.name), KitIcons.account) { actions.openAccount(account.id) }
     if (phoneAvailable)
-        item(stringResource(Res.string.agentsResetSavedSignIns), KitIcons.login, actions::requestSignInReset)
+        item(stringResource(Res.string.agentsResetSavedSignIns), KitIcons.personRemove, actions::requestSignInReset)
     return items
 }
 
@@ -538,14 +538,11 @@ private fun PhoneTab(
     PhoneStatusLine(state, actions, enabled)
 }
 
-/** "This phone is ready · arm64 · Android 15" with Check again, under the tiles (it replaces "Check this phone"). */
+/** "This phone is ready" with Check again, under the tiles (it replaces "Check this phone"). */
 @Composable
 private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
     if (!state.phone.available || state.phone.needsRestart) return
-    val device = state.phone.device
-    val ready =
-        if (device == null) stringResource(Res.string.agentsPhoneReady)
-        else stringResource(Res.string.agentsPhoneReadyDetails, device.processor, device.android)
+    val ready = stringResource(Res.string.agentsPhoneReady)
     // The automatic update says what it does or waits for on this same line, never as a new row.
     val named = state.phone.updateNote?.let { it.name.startsWith("Waiting") } == true
     val update =
@@ -615,7 +612,7 @@ private fun ComputersTab(
     for (computer in shown) {
         KitRow(
             title = computer.name,
-            server = computer.folder.ifEmpty { computer.address },
+            server = computerFolderLabel(computer.folder, computer.address),
             supporting =
                 stringResource(if (computer.connected) Res.string.serversConnected else Res.string.agentsHubNotConnected),
             leading = KitRowLeading.Glyph(KitIcons.computer),
@@ -644,8 +641,16 @@ private fun ComputersTab(
             role = KitButtonRole.Secondary,
             icon = KitIcons.add,
             enabled = enabled,
+            fullWidth = true,
         )
     }
+}
+
+private fun computerFolderLabel(folder: String, address: String): String {
+    if (folder.isEmpty()) return address
+    val trimmed = folder.replace('\\', '/').trimEnd('/')
+    val tail = trimmed.substringAfterLast('/')
+    return tail.ifEmpty { folder }
 }
 
 @Composable
