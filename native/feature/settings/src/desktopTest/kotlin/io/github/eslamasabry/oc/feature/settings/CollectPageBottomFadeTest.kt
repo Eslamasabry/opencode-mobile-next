@@ -121,14 +121,15 @@ class CollectPageBottomFadeTest {
         return lastLineBottom to viewportBottom
     }
 
-    private fun runEndScene(
-        lastTextRes: StringResource,
-        dark: Boolean,
-        fontScale: Float,
-        renderName: String?,
-        tag: String,
-        content: @Composable () -> Unit,
-    ): Pair<Float, Float> {
+    private data class SceneSpec(
+        val lastTextRes: StringResource,
+        val dark: Boolean,
+        val fontScale: Float,
+        val renderName: String?,
+        val tag: String,
+    )
+
+    private fun runEndScene(spec: SceneSpec, content: @Composable () -> Unit): Pair<Float, Float> {
         val previous = Locale.getDefault()
         Locale.setDefault(Locale.ENGLISH)
         var result = 0f to 0f
@@ -137,19 +138,24 @@ class CollectPageBottomFadeTest {
                 var lastText = ""
                 var density = 1f
                 setContent {
-                    SettingsThemed(dark = dark, locale = "en", fontScale = fontScale, width = PHONE_W.toFloat()) {
+                    SettingsThemed(
+                        dark = spec.dark,
+                        locale = "en",
+                        fontScale = spec.fontScale,
+                        width = PHONE_W.toFloat(),
+                    ) {
                         density = LocalDensity.current.density
-                        lastText = stringResource(lastTextRes)
+                        lastText = stringResource(spec.lastTextRes)
                         content()
                     }
                 }
                 waitForIdle()
-                scrollPageToEnd(tag)
-                if (renderName != null) {
+                scrollPageToEnd(spec.tag)
+                if (spec.renderName != null) {
                     val img = onRoot().captureToImage().toAwtImage()
-                    ImageIO.write(img, "png", File(rendersDir, "$renderName.png"))
+                    ImageIO.write(img, "png", File(rendersDir, "${spec.renderName}.png"))
                 }
-                result = measureLastLineBottom(lastText, density, tag)
+                result = measureLastLineBottom(lastText, density, spec.tag)
             }
         } finally {
             Locale.setDefault(previous)
@@ -174,19 +180,23 @@ class CollectPageBottomFadeTest {
                 val tag = "WhatWeCollect ($mode, ${scale}x)"
                 val (beforeBottom, _) =
                     runEndScene(
-                        lastTextRes = Res.string.collectNever,
-                        dark = dark,
-                        fontScale = scale,
-                        renderName = "what-we-collect-before-360dp-$mode-$scale",
-                        tag = "$tag before",
+                        SceneSpec(
+                            lastTextRes = Res.string.collectNever,
+                            dark = dark,
+                            fontScale = scale,
+                            renderName = "what-we-collect-before-360dp-$mode-$scale",
+                            tag = "$tag before",
+                        )
                     ) { PreFixWhatWeCollect() }
                 val (afterBottom, viewportBottom) =
                     runEndScene(
-                        lastTextRes = Res.string.collectNever,
-                        dark = dark,
-                        fontScale = scale,
-                        renderName = "what-we-collect-after-360dp-$mode-$scale",
-                        tag = "$tag after",
+                        SceneSpec(
+                            lastTextRes = Res.string.collectNever,
+                            dark = dark,
+                            fontScale = scale,
+                            renderName = "what-we-collect-after-360dp-$mode-$scale",
+                            tag = "$tag after",
+                        )
                     ) { SettingsScreen(settingsUi(SettingsPage.WhatWeCollect), RecordingActions()) }
                 assertClearsBottomFade(afterBottom, viewportBottom, tag)
                 assertTrue(
@@ -204,11 +214,13 @@ class CollectPageBottomFadeTest {
             val tag = "PrivacyPolicy ($mode, 1.3x)"
             val (lastLineBottom, viewportBottom) =
                 runEndScene(
-                    lastTextRes = Res.string.nativeBundledPrivacy,
-                    dark = dark,
-                    fontScale = 1.3f,
-                    renderName = null,
-                    tag = tag,
+                    SceneSpec(
+                        lastTextRes = Res.string.nativeBundledPrivacy,
+                        dark = dark,
+                        fontScale = 1.3f,
+                        renderName = null,
+                        tag = tag,
+                    )
                 ) { SettingsScreen(settingsUi(SettingsPage.PrivacyPolicy), RecordingActions()) }
             assertClearsBottomFade(lastLineBottom, viewportBottom, tag)
         }
