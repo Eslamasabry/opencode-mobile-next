@@ -148,6 +148,12 @@ internal constructor(
     /** True while Hybrid holds normal order so a toggled fold expands downward while following stays on. */
     internal var foldHeld by mutableStateOf(false)
 
+    /** Monotonic bump per [holdForFold] call so a second tap restarts the settle window. */
+    internal var foldHoldSeq by mutableStateOf(0)
+
+    /** Preserves the visual anchor on the next normal-to-reversed flip when a fold hold settles. */
+    internal var keepPlaceOnFlip: Boolean = false
+
     /** Standing bottom room (px) applied while laid out in normal order (plain field). */
     internal var roomPx: Int = 0
 
@@ -171,13 +177,19 @@ internal constructor(
     public var following: Boolean
         get() = followingState.value
         set(value) {
-            if (foldHeld) foldHeld = false
+            if (foldHeld) {
+                foldHeld = false
+                keepPlaceOnFlip = false
+            }
             followingState.value = value
         }
 
     /** Keeps normal order while following so a toggled fold expands downward without mounting the jump dock. */
     public fun holdForFold() {
-        if (anchor == TranscriptAnchor.Hybrid && following) foldHeld = true
+        if (anchor == TranscriptAnchor.Hybrid && following) {
+            foldHeld = true
+            foldHoldSeq++
+        }
     }
 
     /** Translates a newest-first item index to the underlying [LazyListState] index. */
@@ -235,7 +247,10 @@ internal constructor(
     /** Requests a same-frame scroll to the newest row (bottom edge). */
     public fun requestScrollToNewest() {
         when {
-            foldHeld -> foldHeld = false
+            foldHeld -> {
+                keepPlaceOnFlip = false
+                foldHeld = false
+            }
             laidOutNormal -> if (itemCount > 0) lazy.requestScrollToItem(itemCount - 1, MAX_SCROLL_OFFSET)
             else -> lazy.requestScrollToItem(0)
         }
@@ -244,6 +259,7 @@ internal constructor(
     /** Scrolls to the newest row (bottom edge). */
     public suspend fun scrollToNewest() {
         if (foldHeld) {
+            keepPlaceOnFlip = false
             foldHeld = false
             snapshotFlow { laidOutNormal }.first { !it }
         }
@@ -486,6 +502,16 @@ private object TranscriptPlumbing {
                     if (!scrolling && !personScroll.actionActive) personScroll.end()
                 }
             }
+            LaunchedEffect(state, state.foldHoldSeq) {
+                if (!state.foldHeld) return@LaunchedEffect
+                snapshotFlow { state.laidOutNormal || !state.foldHeld }.first { it }
+                if (!state.foldHeld) return@LaunchedEffect
+                awaitFoldSettle(state)
+                if (state.foldHeld) {
+                    state.keepPlaceOnFlip = true
+                    state.foldHeld = false
+                }
+            }
         } else {
             LaunchedEffect(state) {
                 state.lazy.interactionSource.interactions.collect {
@@ -534,6 +560,40 @@ private object TranscriptPlumbing {
                     Modifier
                 }
             )
+
+    private const val FOLD_QUIET_FRAMES = 8
+    private const val FOLD_MAX_FRAMES = 45
+    private const val LAYOUT_HASH_MUL = 31L
+
+    private suspend fun awaitFoldSettle(state: TranscriptListState) {
+        var prev = Snapshot.withoutReadObservation { layoutSignature(state.lazy.layoutInfo) }
+        var quiet = 0
+        var frames = 0
+        while (state.foldHeld && quiet < FOLD_QUIET_FRAMES && frames < FOLD_MAX_FRAMES) {
+            withFrameNanos { }
+            frames++
+            val cur = Snapshot.withoutReadObservation { layoutSignature(state.lazy.layoutInfo) }
+            val busy = Snapshot.withoutReadObservation { state.lazy.isScrollInProgress }
+            if (cur == prev && !busy) {
+                quiet++
+            } else {
+                prev = cur
+                quiet = 0
+            }
+        }
+    }
+
+    private fun layoutSignature(info: LazyListLayoutInfo): Long {
+        var hash = info.totalItemsCount.toLong()
+        val items = info.visibleItemsInfo
+        for (i in items.indices) {
+            val item = items[i]
+            hash = hash * LAYOUT_HASH_MUL + item.index
+            hash = hash * LAYOUT_HASH_MUL + item.size
+            hash = hash * LAYOUT_HASH_MUL + item.offset
+        }
+        return hash
+    }
 
     /**
      * What the list composes on [list] this pass: Hybrid replays the recorded intervals in the order laid out
@@ -605,9 +665,11 @@ internal class BottomPin(private val state: TranscriptListState) {
         val targetNormal = state.composedNormal
         val currentNormal = Snapshot.withoutReadObservation { state.laidOutNormal }
         if (targetNormal == currentNormal) return false
+        val keepPlace = state.keepPlaceOnFlip
+        state.keepPlaceOnFlip = false
         val req =
             Snapshot.withoutReadObservation {
-                TranscriptAnchorOps.computeFlipRequest(state, targetNormal, topPadPx, bottomPadPx)
+                TranscriptAnchorOps.computeFlipRequest(state, targetNormal, topPadPx, bottomPadPx, keepPlace)
             }
         state.lazy.requestScrollToItem(req.first, req.second)
         lastReq = "${req.first},${req.second}"
@@ -668,6 +730,7 @@ private class PersonScroll(
         if (source == NestedScrollSource.UserInput || source == NestedScrollSource.SideEffect) {
             personScrolled = true
         }
+        if (available.y != 0f) jumpedToIndex = false
         return when {
             available.y > 0f -> {
                 scrolledTowardNewest = false
@@ -705,8 +768,12 @@ private class PersonScroll(
             scrollTodayBy(motion, y)
             return
         }
+        if (y == 0f) return
         val id = ++actionSeq
         activeActionId = id
+        personScrolled = false
+        scrolledTowardNewest = false
+        jumpedToIndex = false
         try {
             state.lazy.scroll {
                 if (motion == KitMotionLevel.Off) {
@@ -783,6 +850,7 @@ private class PersonScroll(
         val id = ++actionSeq
         activeActionId = id
         personScrolled = true
+        scrolledTowardNewest = false
         jumpedToIndex = true
         try {
             state.lazy.scrollToItem(index)
@@ -840,11 +908,12 @@ private object TranscriptAnchorOps {
         toNormal: Boolean,
         topPadPx: Int,
         bottomPadPx: Int,
+        keepPlace: Boolean = false,
     ): Pair<Int, Int> {
         val info = state.lazy.layoutInfo
         return if (toNormal) {
             flipToNormal(state, info, topPadPx)
-        } else if (state.jumping) {
+        } else if (state.jumping || keepPlace) {
             flipToReversedForJump(state, info, bottomPadPx)
         } else {
             0 to 0

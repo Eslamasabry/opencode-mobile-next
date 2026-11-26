@@ -206,6 +206,27 @@ private object ScrollWalkScene {
         )
     }
 
+    private fun editPart(n: Int, status: ToolStatus): Part {
+        val start = 152_000L + n * 2_000L
+        return Part(
+            id = "b-e$n",
+            messageId = MSG_B,
+            sessionId = sid,
+            type = PartType.Tool,
+            rawType = "tool",
+            callId = "call-b-e$n",
+            toolName = "edit",
+            tool =
+                ToolState(
+                    status = status,
+                    input = JsonObject(mapOf("filePath" to JsonPrimitive("src/File$n.kt"))),
+                    output = if (status == ToolStatus.Error) "failed" else "ok",
+                    startedAtMs = start,
+                    completedAtMs = start + 1_000L,
+                ),
+        )
+    }
+
     private fun turnB(steps: Int, ended: Boolean, failed: Boolean = false): List<MessageWithParts> {
         val userB =
             MessageWithParts(
@@ -214,18 +235,19 @@ private object ScrollWalkScene {
             )
         val parts =
             (1..steps).map { n ->
-                val status =
-                    when {
-                        failed && n == steps -> ToolStatus.Error
-                        !ended && n == steps -> ToolStatus.Running
-                        else -> ToolStatus.Completed
-                    }
+                val status = if (!ended && n == steps) ToolStatus.Running else ToolStatus.Completed
                 bashPart(n, status)
+            }
+        val extra =
+            if (failed) {
+                listOf(editPart(1, ToolStatus.Completed), editPart(2, ToolStatus.Error))
+            } else {
+                emptyList()
             }
         val assistantB =
             MessageWithParts(
                 info = info(MSG_B, Role.Assistant, 101_000L, if (ended) 160_000L else null),
-                parts = parts.toImmutableList(),
+                parts = (parts + extra).toImmutableList(),
             )
         return listOf(userB, assistantB)
     }
