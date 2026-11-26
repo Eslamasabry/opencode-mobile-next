@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -125,7 +126,7 @@ class UsagePaceBendTest {
             onNodeWithText("14% a day", substring = true).assertDoesNotExist()
             // Next-step hint suggests slowing down or switching to Claude which has room.
             onNodeWithText("Slow down on this one, or switch to Claude (80% left).").assertExists()
-            onNodeWithTag("pace-bend-chart", useUnmergedTree = true).assertExists()
+            assertEquals(2, onAllNodesWithTag("pace-bend-chart", useUnmergedTree = true).fetchSemanticsNodes().size)
             // Details explains no-history forecast source.
             onAllNodesWithText("Details")[0].performClick()
             onNodeWithText("Forecast from the average since the reset; not enough readings stored yet.").assertExists()

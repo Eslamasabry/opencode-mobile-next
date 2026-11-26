@@ -73,7 +73,7 @@ class LimitsScreenTest {
             stillFrame = true,
         ) {
             CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
-                Box(Modifier.width(360.dp).height(1_400.dp)) { LimitsContent(state, actions) }
+                Box(Modifier.width(360.dp).height(2_400.dp)) { LimitsContent(state, actions) }
             }
         }
     }

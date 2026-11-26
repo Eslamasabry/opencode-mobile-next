@@ -127,6 +127,7 @@ public object LimitPaceMath {
     private const val DAY_MS: Long = 86_400_000L
     private const val PER_DAY_MIN_MS: Long = 48L * HOUR_MS
     private const val PERCENT_SCALE: Double = 100.0
+    private const val FLOAT_EPSILON: Double = 1e-9
     private const val MAX_DAY_SCAN: Int = 10
 
     /** Minimum share of the window that must have elapsed before projecting a run-out time. */
@@ -173,7 +174,8 @@ public object LimitPaceMath {
             val span = buildSpan(left, nowMs, resetsAtMs, lengthMs, zone)
             when {
                 span.frame.left <= OUT_EPSILON -> PaceForecast.Out(span.frame, moment(resetsAtMs, nowMs, zone))
-                span.frame.elapsed < MIN_ELAPSED || span.used <= MIN_USED -> PaceForecast.TooLittle(span.frame)
+                span.frame.elapsed < MIN_ELAPSED - FLOAT_EPSILON || span.used <= MIN_USED + FLOAT_EPSILON ->
+                    PaceForecast.TooLittle(span.frame)
                 else -> project(span)
             }
         }
