@@ -137,6 +137,7 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
                     if (shown.neededWhy == AgentNeedRule.Always) Res.string.agentUpdatesNeededAlways
                     else Res.string.agentUpdatesNeededWhy
                 ),
+            section = shown.optional.isNotEmpty(),
         ) {
             shown.needed.forEach { row -> NeededRow(row) }
         }

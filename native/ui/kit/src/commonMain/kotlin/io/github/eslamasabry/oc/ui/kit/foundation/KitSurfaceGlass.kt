@@ -591,7 +591,13 @@ internal fun DrawScope.drawGlassSpecular(
     if (size.width <= w * 4f || size.height <= w * 4f || color.alpha <= 0f) return
     val corner = Offset(if (rtl) size.width else 0f, 0f)
     val reach = minOf(reachDp.dp.toPx(), size.width * SPECULAR_REACH_SHARE).coerceAtLeast(1f)
-    val segment = Brush.radialGradient(0f to color, .45f to color.copy(alpha = color.alpha * .55f), 1f to color.copy(alpha = 0f), center = corner, radius = reach)
+    val segment = Brush.radialGradient(
+        0f to color,
+        SPECULAR_MID_STOP to color.copy(alpha = color.alpha * SPECULAR_MID_ALPHA),
+        1f to color.copy(alpha = 0f),
+        center = corner,
+        radius = reach,
+    )
     inset(w / 2f) { drawOutline(shape.createOutline(size, layoutDirection, this), segment, style = Stroke(w)) }
     // The glint: one thin line inside the top edge, clear of the corners' curve.
     val y = SurfaceDecoration.GLINT_DROP_DP.dp.toPx()
@@ -610,6 +616,8 @@ internal fun DrawScope.drawGlassSpecular(
 /** How far the specular's bright rim segment reaches from the top-start corner, in dp, and at most this share of the width. */
 internal const val SPECULAR_REACH_DP: Float = 120f
 internal const val SPECULAR_REACH_SHARE: Float = .45f
+private const val SPECULAR_MID_STOP: Float = .45f
+private const val SPECULAR_MID_ALPHA: Float = .55f
 
 /**
  * Records [block] into [layer] in the layer's own draw scope, with a snapshot of this scope's density, direction and

@@ -614,14 +614,18 @@ internal fun tintNow(spec: KitLiquidPaneSpec): Color {
 private const val JOIN_SHADOW_OFFSET_DP: Float = 6f
 private const val JOIN_SHADOW_BLUR_DP: Float = 14f
 private const val JOIN_SHADOW_REACH_DP: Float = 22f
+private const val JOIN_FLIP_MID: Float = .5f
+private const val JOIN_LIGHT_LIFT: Float = .38f
+private const val JOIN_DARK_DIM: Float = .20f
+private const val JOIN_LIGHT_CONTOUR_ALPHA: Float = .14f
 
 /** Joined glass face tint with the same luminous light lift / dark legibility cushion as standalone panes. */
 private fun joinedTint(spec: KitLiquidPaneSpec): Color {
     val base = tintNow(spec)
     val f = spec.flip?.progress?.value ?: 0f
-    val lightFace = (spec.rimAdds && f > .5f) || (!spec.rimAdds && f <= .5f)
+    val lightFace = (spec.rimAdds && f > JOIN_FLIP_MID) || (!spec.rimAdds && f <= JOIN_FLIP_MID)
     return if (lightFace) {
-        val lift = Color.White.copy(alpha = .38f)
+        val lift = Color.White.copy(alpha = JOIN_LIGHT_LIFT)
         Color(
             red = lift.red * lift.alpha + base.red * (1f - lift.alpha),
             green = lift.green * lift.alpha + base.green * (1f - lift.alpha),
@@ -629,7 +633,7 @@ private fun joinedTint(spec: KitLiquidPaneSpec): Color {
             alpha = (lift.alpha + base.alpha * (1f - lift.alpha)).coerceIn(0f, 1f),
         )
     } else {
-        val dim = Color.Black.copy(alpha = .20f)
+        val dim = Color.Black.copy(alpha = JOIN_DARK_DIM)
         Color(
             red = base.red * (1f - dim.alpha),
             green = base.green * (1f - dim.alpha),
@@ -663,7 +667,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawJoinedRim(
         drawRect(
             programs.brush.brush,
             size = boxSize,
-            alpha = .14f,
+            alpha = JOIN_LIGHT_CONTOUR_ALPHA,
             colorFilter = ColorFilter.tint(Color.Black),
             blendMode = BlendMode.SrcOver,
         )

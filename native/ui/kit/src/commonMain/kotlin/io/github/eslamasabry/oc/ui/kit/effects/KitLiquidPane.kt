@@ -176,29 +176,44 @@ internal fun DrawScope.drawLiquidTint(spec: KitLiquidPaneSpec, shape: Shape? = n
     }
 }
 
+private const val FLIP_MIDPOINT: Float = .5f
+private const val LIGHT_LIFT_TOP: Float = .56f
+private const val LIGHT_LIFT_MID_STOP: Float = .45f
+private const val LIGHT_LIFT_MID: Float = .34f
+private const val LIGHT_LIFT_BOT: Float = .24f
+private const val LIGHT_BEVEL_DP: Int = 8
+private const val LIGHT_BEVEL_SHARE: Float = .32f
+private const val LIGHT_BEVEL_ALPHA: Float = .68f
+private const val LIGHT_EDGE_START: Float = .07f
+private const val LIGHT_EDGE_END: Float = .16f
+private const val LIGHT_EDGE_STROKE_DP: Float = 1.25f
+private const val DARK_SHADE_START: Float = .66f
+private const val DARK_CUSHION_ALPHA: Float = .22f
+private const val DARK_SHADE_ALPHA: Float = .28f
+
 /**
  * Physical 3D bevel depth, dark-mode center legibility cushion, and light-mode lifted luminous glass body + subtle
  * outer definition (so light glass reads as sculpted bright glass instead of a flat tinted rectangle).
  */
 private fun DrawScope.drawGlassBevelAndLift(spec: KitLiquidPaneSpec, shape: Shape?, flip: Float) {
     if (size.width <= 0f || size.height <= 0f) return
-    val lightFace = (spec.rimAdds && flip > .5f) || (!spec.rimAdds && flip <= .5f)
+    val lightFace = (spec.rimAdds && flip > FLIP_MIDPOINT) || (!spec.rimAdds && flip <= FLIP_MIDPOINT)
     if (lightFace) {
         // Lifted luminous pure-white glass body (brighter than underlying content, Apple iOS 26 light mode).
         drawRect(
             Brush.verticalGradient(
-                0f to Color.White.copy(alpha = .56f),
-                .45f to Color.White.copy(alpha = .34f),
-                1f to Color.White.copy(alpha = .24f),
+                0f to Color.White.copy(alpha = LIGHT_LIFT_TOP),
+                LIGHT_LIFT_MID_STOP to Color.White.copy(alpha = LIGHT_LIFT_MID),
+                1f to Color.White.copy(alpha = LIGHT_LIFT_BOT),
                 startY = 0f,
                 endY = size.height,
             )
         )
         // Soft inner top white bevel highlight + subtle dark-glass outer contour so silhouette pops off bright pages.
-        val bevelH = minOf(8.dp.toPx(), size.height * .32f)
+        val bevelH = minOf(LIGHT_BEVEL_DP.dp.toPx(), size.height * LIGHT_BEVEL_SHARE)
         drawRect(
             Brush.verticalGradient(
-                0f to Color.White.copy(alpha = .68f),
+                0f to Color.White.copy(alpha = LIGHT_BEVEL_ALPHA),
                 1f to Color.Transparent,
                 startY = 0f,
                 endY = bevelH,
@@ -206,21 +221,22 @@ private fun DrawScope.drawGlassBevelAndLift(spec: KitLiquidPaneSpec, shape: Shap
         )
         if (shape != null && spec.rim.alpha > 0f) {
             val edgeBrush = Brush.linearGradient(
-                0f to Color.Black.copy(alpha = .07f),
-                1f to Color.Black.copy(alpha = .16f),
+                0f to Color.Black.copy(alpha = LIGHT_EDGE_START),
+                1f to Color.Black.copy(alpha = LIGHT_EDGE_END),
                 start = Offset(if (spec.rtl) size.width else 0f, 0f),
                 end = Offset(if (spec.rtl) 0f else size.width, size.height),
             )
-            drawOutline(shape.createOutline(size, layoutDirection, this), edgeBrush, style = Stroke(1.25.dp.toPx()))
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(outline, edgeBrush, style = Stroke(LIGHT_EDGE_STROKE_DP.dp.toPx()))
         }
     } else {
         // Dark mode: subtle adaptive dimming cushion for label clarity + soft bottom-inner bevel shade for thickness.
-        val shadeTop = size.height * .66f
-        drawRect(Color.Black.copy(alpha = .22f))
+        val shadeTop = size.height * DARK_SHADE_START
+        drawRect(Color.Black.copy(alpha = DARK_CUSHION_ALPHA))
         drawRect(
             Brush.verticalGradient(
                 0f to Color.Transparent,
-                1f to Color.Black.copy(alpha = .28f),
+                1f to Color.Black.copy(alpha = DARK_SHADE_ALPHA),
                 startY = shadeTop,
                 endY = size.height,
             )

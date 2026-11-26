@@ -294,14 +294,15 @@ private fun <T> RowSegments(
     ) {
         // B-611: segments sit inside the track — mark nested so Glass never stacks glass-on-glass double rims.
         CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true) {
-        segments.forEachIndexed { i, s ->
-            val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
-            val weight = spec.weights?.getOrNull(i) ?: 1f
-            val style = SegmentCellStyle(weight, spec.tall, spec.compact, tallHeight, step, thumbRadius)
-            SegmentCell(s, s.value == selected, segEnabled, style) {
-                SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
-                    haptics(KitHaptic.Select)
-                    onChange(it)
+            segments.forEachIndexed { i, s ->
+                val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
+                val weight = spec.weights?.getOrNull(i) ?: 1f
+                val style = SegmentCellStyle(weight, spec.tall, spec.compact, tallHeight, step, thumbRadius)
+                SegmentCell(s, s.value == selected, segEnabled, style) {
+                    SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
+                        haptics(KitHaptic.Select)
+                        onChange(it)
+                    }
                 }
             }
         }
@@ -402,7 +403,6 @@ private fun <T> SegmentLabel(
                 Spacer(Modifier.width(Space.S1.dp))
                 KitText(count, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
             }
-        }
         }
     }
 }

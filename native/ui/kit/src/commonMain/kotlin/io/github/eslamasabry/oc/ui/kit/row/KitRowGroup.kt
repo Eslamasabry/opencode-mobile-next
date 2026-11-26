@@ -66,20 +66,33 @@ public fun KitRowGroup(
 ) {
     val tokens = LocalKitTokens.current
     val hairline = LocalKitColors.current.hairline
-    // The rows inside a panel keep their gutter (the panel is a surface of its own), so read it inside the panel.
-    val rowGutter = kitRowGutterDp(LocalKitOnRail.current && LocalKitStyle.current.spec.tokens.flatLists, tokens.gutter)
-    val inset = (rowGutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
-    val colors = LocalKitColors.current
-    // Solid and Signal run lists flat on the page; Soft and Brutal set a group on a panel with 18 dp corners.
-    val panel = !LocalKitStyle.current.spec.tokens.flatLists
-    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
+    val style = LocalKitStyle.current
     // A sheet's body already sits on the sheet's rail: the panel lines up with the sheet's title instead of stepping in
     // a second gutter (the owner's project sheet, 2026-11-06).
     val onRail = LocalKitOnRail.current
+    // Inside a Glass modal sheet, row groups sit flat on the sheet's own glass surface (no card-inside-card).
+    val inGlassModal =
+        style.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
+            io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidOverModal.current
+    // Solid and Signal run flat; Soft, Brutal and page-level Glass set a group on a panel with 18 dp corners.
+    val panel = !style.spec.tokens.flatLists && !(inGlassModal && onRail)
+    // The rows inside a panel keep their gutter (the panel is a surface of its own), so read it inside the panel.
+    val rowGutter = kitRowGutterDp(onRail && !panel, tokens.gutter)
+    val inset = (rowGutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
+    val colors = LocalKitColors.current
+    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
     // Glass keeps its pane inset inside the panel (owner 2026-11-09): the rows sit clear of its rim and sheen.
     val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
     val panelModifier =
-        if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()).padding(paneInset) else Modifier
+        if (panel) {
+            Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp)
+                .then(look.modifier)
+                .clip(KitShapeId.Panel.shape())
+                .padding(paneInset)
+                .testTag("kit-row-group-panel")
+        } else {
+            Modifier
+        }
     // A group with no rows and nothing destructive draws nothing at all: no panel, hairline box, label or note
     // (a list's empty state stands alone). The rows report their count while they are measured.
     val rowSeams = remember { Seams() }
@@ -95,7 +108,6 @@ public fun KitRowGroup(
         Column(panelModifier) {
             // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).
             // A panel is its rows' container: a chosen row's face is inset from the panel's inner edge (ChosenFaceRules).
-            val style = LocalKitStyle.current
             val container =
                 if (!panel) LocalKitRowContainer.current
                 else KitRowContainer(
