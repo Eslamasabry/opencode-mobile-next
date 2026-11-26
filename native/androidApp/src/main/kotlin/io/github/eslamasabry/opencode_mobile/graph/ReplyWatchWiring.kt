@@ -65,9 +65,21 @@ import kotlinx.coroutines.withTimeoutOrNull
 class ReplyWatchFlag {
     private val mutable = MutableStateFlow(false)
     val active: StateFlow<Boolean> = mutable
+    private val pending = MutableStateFlow(false)
+    private val watchingState = MutableStateFlow(false)
+
+    /** True while reply watch is active OR handing off on activity stop before start/skip settles. */
+    val watching: StateFlow<Boolean> = watchingState
 
     internal fun set(on: Boolean) {
         mutable.value = on
+        if (on) pending.value = false
+        watchingState.value = mutable.value || pending.value
+    }
+
+    internal fun setPending(on: Boolean) {
+        pending.value = on
+        watchingState.value = mutable.value || pending.value
     }
 }
 
@@ -260,6 +272,7 @@ class ReplyWatchHub(
 
     override fun onActivityStarted(activity: Activity) {
         started += activity
+        flag.setPending(false)
         decision?.cancel()
         decision = null
         rearmJob?.cancel()
@@ -271,6 +284,9 @@ class ReplyWatchHub(
         if (started.isNotEmpty()) return
         val changing = activity.isChangingConfigurations
         val covering = ownRequestCovering()
+        if (!changing && !covering && measure(SystemClock.elapsedRealtime())) {
+            flag.setPending(true)
+        }
         decision?.cancel()
         decision = scope.launch { decide(changing, covering) }
     }
@@ -278,7 +294,10 @@ class ReplyWatchHub(
     private suspend fun decide(changing: Boolean, covering: Boolean) {
         // A short read off the main thread; Android allows the start for a few seconds after the app hides.
         val server = withTimeoutOrNull(SERVER_READ_MS) { serverRunning() } == true
-        if (started.isNotEmpty()) return
+        if (started.isNotEmpty()) {
+            flag.setPending(false)
+            return
+        }
         val now = SystemClock.elapsedRealtime()
         progressing.value = measure(now)
         serverHoldsRow.value = server
@@ -294,12 +313,19 @@ class ReplyWatchHub(
                 serverHoldsRow = server,
             )
         when (ReplyWatchPolicy.onStop(facts)) {
-            ReplyWatchStart.StartService -> startService()
+            ReplyWatchStart.StartService ->
+                if (startService()) {
+                    delay(HANDOFF_TIMEOUT_MS)
+                    if (!flag.active.value) flag.setPending(false)
+                } else {
+                    flag.setPending(false)
+                }
             ReplyWatchStart.JoinServerRow -> {
                 body.joinServerRow()
                 activated()
+                if (!flag.active.value) flag.setPending(false)
             }
-            is ReplyWatchStart.Skip -> Unit
+            is ReplyWatchStart.Skip -> flag.setPending(false)
         }
     }
 
@@ -334,18 +360,21 @@ class ReplyWatchHub(
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 
-    private fun startService() {
+    private fun startService(): Boolean {
         val intent =
             Intent()
                 .setClassName(application.packageName, SERVICE_FQCN)
                 .setAction(ACTION_REPLY_WATCH)
-        try {
+        return try {
             ContextCompat.startForegroundService(application, intent)
+            true
         } catch (_: IllegalStateException) {
             // ForegroundServiceStartNotAllowedException (Android 12+), the spent dataSync budget (Android 15+):
             // no watch this time; the next leave tries again.
+            false
         } catch (_: SecurityException) {
             // Same: never a crash.
+            false
         }
     }
 
@@ -421,6 +450,7 @@ class ReplyWatchHub(
         private const val SERVER_READ_MS = 400L
         private const val SERVER_POLL_MS = 5_000L
         private const val FOLLOW_TICK_MS = 1_000L
+        private const val HANDOFF_TIMEOUT_MS = 5_000L
     }
 }
 
