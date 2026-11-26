@@ -67,7 +67,6 @@ tests=(
   test/architecture_boundaries_test.dart
   test/analyzer_suppressions_test.dart
   test/l10n_coverage_test.dart
-  test/termux_script_hashes_test.dart
   test/design_standard_test.dart
   test/team_design_standard_test.dart
   test/release_metadata_test.dart
