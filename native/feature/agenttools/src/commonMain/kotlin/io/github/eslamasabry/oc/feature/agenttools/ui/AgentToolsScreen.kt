@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.model.AgentFeatureKind
 import io.github.eslamasabry.oc.core.model.HostUpdatePhase
 import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageStatus
@@ -52,10 +51,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -177,13 +174,7 @@ private fun ProjectFolderHeader(directory: String) {
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
-                values =
-                    listOf(
-                        KitTechnicalValue(
-                            label = stringResource(Res.string.workspaceContextFolder),
-                            value = Redacted(directory),
-                        )
-                    ),
+                notes = listOf("${stringResource(Res.string.workspaceContextFolder)}: $directory"),
             )
         }
     }
@@ -313,7 +304,7 @@ private fun UsageMonitorSection(state: AgentToolsUi, working: String, actions: A
                 onCheckedChange = actions::setUsageMonitor,
             )
             KitRow(
-                title = stringResource(monitorStatusRes(monitor.status)),
+                title = monitorStatusLabel(monitor.status),
                 supporting = details,
                 supportingMaxLines = 3,
             )
@@ -332,16 +323,19 @@ private fun UsageMonitorSection(state: AgentToolsUi, working: String, actions: A
     }
 }
 
-private fun monitorStatusRes(status: PaseoUsageStatus): StringResource =
-    when (status) {
-        PaseoUsageStatus.Off -> Res.string.agentToolsMonitorOff
-        PaseoUsageStatus.Paused -> Res.string.agentToolsMonitorPaused
-        PaseoUsageStatus.Waiting -> Res.string.agentToolsMonitorWaiting
-        PaseoUsageStatus.HostStopped -> Res.string.agentToolsMonitorStopped
-        PaseoUsageStatus.Checking -> Res.string.agentToolsMonitorChecking
-        PaseoUsageStatus.Current -> Res.string.agentToolsMonitorCurrent
-        PaseoUsageStatus.Unavailable -> Res.string.agentToolsMonitorUnavailable
-    }
+@Composable
+private fun monitorStatusLabel(status: PaseoUsageStatus): String =
+    stringResource(
+        when (status) {
+            PaseoUsageStatus.Off -> Res.string.agentToolsMonitorOff
+            PaseoUsageStatus.Paused -> Res.string.agentToolsMonitorPaused
+            PaseoUsageStatus.Waiting -> Res.string.agentToolsMonitorWaiting
+            PaseoUsageStatus.HostStopped -> Res.string.agentToolsMonitorStopped
+            PaseoUsageStatus.Checking -> Res.string.agentToolsMonitorChecking
+            PaseoUsageStatus.Current -> Res.string.agentToolsMonitorCurrent
+            PaseoUsageStatus.Unavailable -> Res.string.agentToolsMonitorUnavailable
+        }
+    )
 
 @Composable
 private fun MaintenanceSection(
