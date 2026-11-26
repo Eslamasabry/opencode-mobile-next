@@ -2,7 +2,11 @@ package io.github.eslamasabry.oc.android.terminal
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.view.ActionMode
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
@@ -20,6 +24,11 @@ internal open class TerminalSurfaceHost(context: Context, protected val terminal
     FrameLayout(context), TerminalSurface {
     private var onOpen: ((String) -> Unit)? = null
     private var palette: TerminalPalette? = null
+    private val selection = TerminalSelectionOverlay()
+    private var selecting = false
+    private val scratchCanvas by lazy {
+        Canvas(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)).apply { clipRect(0, 0, 0, 0) }
+    }
 
     init {
         // Termux's TerminalView leaves focus to its layout XML (the Termux app sets both flags there). Built in code
@@ -44,13 +53,47 @@ internal open class TerminalSurfaceHost(context: Context, protected val terminal
 
     override fun appearance(palette: TerminalPalette) {
         this.palette = palette
+        selection.updateHighlight(terminalSelectionHighlight(palette))
         applyPalette()
         terminal.invalidate()
+        if (terminal.isSelectingText) invalidate()
     }
 
-    override fun dispatchDraw(canvas: android.graphics.Canvas) {
+    override fun dispatchDraw(canvas: Canvas) {
         applyPalette()
         super.dispatchDraw(canvas)
+    }
+
+    override fun onDescendantInvalidated(child: View, target: View) {
+        super.onDescendantInvalidated(child, target)
+        if (child === terminal && (terminal.isSelectingText || selecting)) {
+            selecting = terminal.isSelectingText
+            invalidate()
+        }
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        if (child === terminal && selection.drawTranslucentSelection(terminal, canvas)) {
+            return super.drawChild(scratchCanvas, child, drawingTime)
+        }
+        return super.drawChild(canvas, child, drawingTime)
+    }
+
+    override fun startActionModeForChild(
+        originalView: View?,
+        callback: ActionMode.Callback?,
+        type: Int,
+    ): ActionMode? {
+        val callback2 = callback as? ActionMode.Callback2
+        val wrapped =
+            if (originalView === terminal && type == ActionMode.TYPE_FLOATING && callback2 != null) {
+                selecting = true
+                invalidate()
+                selection.wrapActionModeCallback(terminal, callback2)
+            } else {
+                callback
+            }
+        return super.startActionModeForChild(originalView, wrapped, type)
     }
 
     fun applyPalette() {
