@@ -54,7 +54,6 @@ import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsAction
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsLine
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFreesUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepHelperTooNew
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepNotSupported
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesMetered
@@ -318,7 +317,7 @@ private fun Totals(sheet: AgentUpdateSheetUi) {
                 stringResource(Res.string.agentUpdatesTotalFrees),
                 trailing =
                     KitRowTrailing.Value(
-                        amount(sheet.freesBytes, sheet.freesKnown, Res.string.agentUpdatesFreesUnknown),
+                        amount(sheet.freesBytes, sheet.freesKnown, frees = true),
                         chevron = false,
                     ),
             )

@@ -549,7 +549,7 @@ class AgentUpdateSheetRedrawTest {
 
     @Test
     fun `B-UPD-027 a partial download size is labelled as a lower bound`() {
-        runSheet(partialUnknownOffer()) {
+        runSheet(partialUnknownOffer(), motion = MotionLevel.Full) {
             val allKnown = PhoneSizes.text(612_000_000L)
             onNodeWithText("At least $allKnown", useUnmergedTree = true).assertExists()
             onNodeWithText("Update all · At least $allKnown").assertExists()
@@ -592,10 +592,23 @@ class AgentUpdateSheetRedrawTest {
                     .top
             assertTrue(helperTop < nodeTop, "expected Agent helper ($helperTop) above Node.js ($nodeTop)")
 
+            ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
+            val fold = walkSwitch("Qwen Code")
+            val helperFrames = fold.frames.count { words -> words.any { it.contains("Agent helper") } }
+            assertTrue(helperFrames >= 2, "Agent helper left in $helperFrames frame(s) after the tap")
+            onNodeWithText("Node.js", substring = true).assertExists()
+            onNodeWithText(
+                "Your agents need these to keep working.",
+                substring = true,
+                useUnmergedTree = true,
+            ).assertExists()
+
             val needed = initial.items.filter { it.group == AgentUpdateGroup.Needed }
             val optional = initial.items.filter { it.group == AgentUpdateGroup.Optional }
             offered.mutableOffer.value = initial.copy(items = needed.reversed() + optional)
             waitForIdle()
+            mainClock.advanceTimeBy(1_500)
+            switchOff("Qwen Code")
             val nodeTopAfter =
                 onNodeWithText("Node.js", substring = true, useUnmergedTree = true)
                     .fetchSemanticsNode()
@@ -611,17 +624,6 @@ class AgentUpdateSheetRedrawTest {
                 "expected refreshed order Node.js ($nodeTopAfter) above Agent helper ($helperTopAfter)",
             )
             onNodeWithText("Needed for these updates", substring = true, useUnmergedTree = true).assertExists()
-            onNodeWithText(
-                "Your agents need these to keep working.",
-                substring = true,
-                useUnmergedTree = true,
-            ).assertExists()
-
-            ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
-            val fold = walkSwitch("Qwen Code")
-            val helperFrames = fold.frames.count { words -> words.any { it.contains("Agent helper") } }
-            assertTrue(helperFrames >= 2, "Agent helper left in $helperFrames frame(s) after the tap")
-            onNodeWithText("Node.js", substring = true).assertExists()
             onNodeWithText(
                 "Your agents need these to keep working.",
                 substring = true,

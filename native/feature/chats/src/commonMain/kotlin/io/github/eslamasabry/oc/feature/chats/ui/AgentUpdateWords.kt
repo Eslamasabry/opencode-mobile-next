@@ -35,7 +35,6 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -140,17 +139,14 @@ internal fun frees(bytes: Long?): String =
     bytes?.let { stringResource(Res.string.agentUpdatesFrees, PhoneSizes.text(it)) }
         ?: stringResource(Res.string.agentUpdatesFreesUnknown)
 
-/** "About 1.2 GB", "At least 1.2 GB" when a part's size is unknown, or [unknown] when no size is known. */
+/** "About 1.2 GB", "At least 1.2 GB" when a part's size is unknown, or an unknown-size line when none is known. */
 @Composable
-internal fun amount(
-    bytes: Long,
-    known: Boolean,
-    unknown: StringResource = Res.string.agentUpdatesDownloadsUnknown,
-): String =
+internal fun amount(bytes: Long, known: Boolean, frees: Boolean = false): String =
     when {
         known -> stringResource(Res.string.agentUpdatesAbout, PhoneSizes.text(bytes))
         bytes > 0L -> stringResource(Res.string.agentUpdatesAtLeast, PhoneSizes.text(bytes))
-        else -> stringResource(unknown)
+        frees -> stringResource(Res.string.agentUpdatesFreesUnknown)
+        else -> stringResource(Res.string.agentUpdatesDownloadsUnknown)
     }
 
 private object UpdateSheetCopy {
