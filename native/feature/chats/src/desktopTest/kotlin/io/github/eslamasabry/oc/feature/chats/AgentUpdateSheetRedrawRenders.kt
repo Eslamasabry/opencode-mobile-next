@@ -819,21 +819,26 @@ private object BeforeRedesignView {
                 }
                 if ((hasOptional || hasNeeded) && hasTotals) Spacer(Modifier.height(KIT_CONTAINER_GAP_DP.dp))
                 BeforeTotals(shown)
-                when (shown.network) {
-                    AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
-                    AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
-                    AgentUpdateNetwork.Unmetered -> Unit
-                }
-                KitGroupNote(
-                    stringResource(Res.string.agentUpdatesAgentsLine),
-                    action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), {}),
-                )
-                KitGroupNote(
-                    stringResource(Res.string.agentUpdatesLinuxLine),
-                    action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), {}),
-                )
+                BeforeFooter(shown)
             }
         }
+    }
+
+    @Composable
+    private fun BeforeFooter(shown: AgentUpdateSheetUi) {
+        when (shown.network) {
+            AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
+            AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
+            AgentUpdateNetwork.Unmetered -> Unit
+        }
+        KitGroupNote(
+            stringResource(Res.string.agentUpdatesAgentsLine),
+            action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), {}),
+        )
+        KitGroupNote(
+            stringResource(Res.string.agentUpdatesLinuxLine),
+            action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), {}),
+        )
     }
 
     @Composable
