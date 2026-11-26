@@ -797,15 +797,7 @@ public class ServerSettingsViewModel(
             hideAutomationsSection()
             return
         }
-        val expected = active.size - missingIds.size
-        val stopped = updatedById.size
-        val notice =
-            when {
-                expected == 0 -> null
-                stopped == expected -> AutomationsNotice.StoppedAll(stopped)
-                stopped > 0 -> AutomationsNotice.StoppedPartial(stopped, expected)
-                else -> AutomationsNotice.ActionFailed
-            }
+        val notice = pauseAllNotice(updatedById.size, active.size - missingIds.size)
         mutable.update { current ->
             val merged =
                 sortAutomations(
@@ -822,6 +814,14 @@ public class ServerSettingsViewModel(
         }
         if (missingIds.isNotEmpty()) refreshAutomations()
     }
+
+    private fun pauseAllNotice(stopped: Int, expected: Int): AutomationsNotice? =
+        when {
+            expected == 0 -> null
+            stopped == expected -> AutomationsNotice.StoppedAll(stopped)
+            stopped > 0 -> AutomationsNotice.StoppedPartial(stopped, expected)
+            else -> AutomationsNotice.ActionFailed
+        }
 
     private fun handleAutomationMutationFailure(failure: Failure, targetId: String) {
         when (failure) {

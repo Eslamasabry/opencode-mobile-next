@@ -102,46 +102,54 @@ private fun parseTrigger(
     obj: JsonObject?,
     effectiveTz: String?,
     redactor: Redactor,
-): AutomationTrigger {
-    if (obj == null) return AutomationTrigger.Unknown
-    return when (obj.str("type")?.lowercase()) {
-        "at" -> {
-            val rawEl = obj["at"] ?: obj["time"]
-            val rawText =
-                (rawEl as? JsonPrimitive)
-                    ?.takeIf { it.isString }
-                    ?.content
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() }
-            AutomationTrigger.At(
-                atMs = parseTimestampMs(rawEl),
-                raw = rawText,
-                timeZone = effectiveTz,
-            )
+): AutomationTrigger = Oc2AutomationTriggers.parse(obj, effectiveTz, redactor)
+
+private object Oc2AutomationTriggers {
+    fun parse(obj: JsonObject?, effectiveTz: String?, redactor: Redactor): AutomationTrigger {
+        if (obj == null) return AutomationTrigger.Unknown
+        return when (obj.str("type")?.lowercase()) {
+            "at" -> parseAt(obj, effectiveTz)
+            "every" ->
+                AutomationTrigger.Every(
+                    obj.str("every") ?: obj.str("interval") ?: obj.str("duration") ?: ""
+                )
+            "cron" ->
+                AutomationTrigger.Cron(
+                    expression = obj.str("cron") ?: obj.str("expression") ?: "",
+                    timeZone = effectiveTz,
+                )
+            "event" -> parseEvent(obj, redactor)
+            else -> AutomationTrigger.Unknown
         }
-        "every" ->
-            AutomationTrigger.Every(
-                obj.str("every") ?: obj.str("interval") ?: obj.str("duration") ?: ""
-            )
-        "cron" ->
-            AutomationTrigger.Cron(
-                expression = obj.str("cron") ?: obj.str("expression") ?: "",
-                timeZone = effectiveTz,
-            )
-        "event" -> {
-            val rawArgs =
-                obj["args"]
-                    ?.takeUnless { it is JsonNull || (it is JsonObject && it.isEmpty()) }
-                    ?.toString()
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let(redactor::details)
-            AutomationTrigger.Event(
-                server = obj.str("server")?.trim()?.takeIf { it.isNotEmpty() },
-                event = obj.str("event")?.trim()?.takeIf { it.isNotEmpty() },
-                args = rawArgs,
-            )
-        }
-        else -> AutomationTrigger.Unknown
+    }
+
+    private fun parseAt(obj: JsonObject, effectiveTz: String?): AutomationTrigger.At {
+        val rawEl = obj["at"] ?: obj["time"]
+        val rawText =
+            (rawEl as? JsonPrimitive)
+                ?.takeIf { it.isString }
+                ?.content
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+        return AutomationTrigger.At(
+            atMs = parseTimestampMs(rawEl),
+            raw = rawText,
+            timeZone = effectiveTz,
+        )
+    }
+
+    private fun parseEvent(obj: JsonObject, redactor: Redactor): AutomationTrigger.Event {
+        val rawArgs =
+            obj["args"]
+                ?.takeUnless { it is JsonNull || (it is JsonObject && it.isEmpty()) }
+                ?.toString()
+                ?.takeIf { it.isNotBlank() }
+                ?.let(redactor::details)
+        return AutomationTrigger.Event(
+            server = obj.str("server")?.trim()?.takeIf { it.isNotEmpty() },
+            event = obj.str("event")?.trim()?.takeIf { it.isNotEmpty() },
+            args = rawArgs,
+        )
     }
 }
 

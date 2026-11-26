@@ -161,16 +161,18 @@ class ServerAutomationsViewModelTest {
         ): Outcome<ServerAutomation> {
             pausedIds += id
             val deferred = nextPauseDeferred
-            if (deferred != null) {
-                nextPauseDeferred = null
-                return deferred.await()
+            if (deferred != null) nextPauseDeferred = null
+            return when {
+                deferred != null -> deferred.await()
+                id in notFoundPauseIds -> Outcome.Failed(Failure.NotFound())
+                id in failPauseIds -> Outcome.Failed(Failure.Network())
+                else -> {
+                    val found =
+                        (listResult as? Outcome.Ok)?.value?.first { it.id == id }
+                            ?: error("Missing $id")
+                    Outcome.Ok(found.copy(status = AutomationStatus.Paused, nextDueAtMs = null))
+                }
             }
-            if (id in notFoundPauseIds) return Outcome.Failed(Failure.NotFound())
-            if (id in failPauseIds) return Outcome.Failed(Failure.Network())
-            val found =
-                (listResult as? Outcome.Ok)?.value?.first { it.id == id }
-                    ?: error("Missing $id")
-            return Outcome.Ok(found.copy(status = AutomationStatus.Paused, nextDueAtMs = null))
         }
 
         override suspend fun resumeAutomation(
@@ -186,9 +188,11 @@ class ServerAutomationsViewModelTest {
 
         override suspend fun deleteAutomation(profile: ProfileId, id: String): Outcome<Unit> {
             deletedIds += id
-            if (id in notFoundDeleteIds) return Outcome.Failed(Failure.NotFound())
-            if (id in failDeleteIds) return Outcome.Failed(Failure.Network())
-            return Outcome.Ok(Unit)
+            return when {
+                id in notFoundDeleteIds -> Outcome.Failed(Failure.NotFound())
+                id in failDeleteIds -> Outcome.Failed(Failure.Network())
+                else -> Outcome.Ok(Unit)
+            }
         }
     }
 
