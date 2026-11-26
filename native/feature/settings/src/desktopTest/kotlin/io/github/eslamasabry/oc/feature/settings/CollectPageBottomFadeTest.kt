@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
@@ -16,14 +20,26 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.analytics.ConsentState
 import io.github.eslamasabry.oc.engine.analytics.WhatWeCollectSource
 import io.github.eslamasabry.oc.feature.settings.presentation.PrivacyUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
+import io.github.eslamasabry.oc.feature.settings.ui.WhatWeCollectBody
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitPinnedFootBody
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.collectNever
+import io.github.eslamasabry.oc.ui.words.res.collectTitle
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
 import java.io.File
 import java.util.Locale
@@ -43,10 +59,45 @@ import org.jetbrains.compose.resources.stringResource
 class CollectPageBottomFadeTest {
     private val rendersDir = File("build/renders").also { it.mkdirs() }
 
-    private fun ComposeUiTest.scrollPageToEnd(page: SettingsPage, fontScale: Float) {
+    private fun collectPrivacy() =
+        PrivacyUi(WhatWeCollectSource.build(ConsentState(), RemoteSink), crashReports = false, usage = false)
+
+    private fun settingsUi(page: SettingsPage) =
+        SettingsUi(stack = persistentListOf(SettingsPage.Hub, SettingsPage.Privacy, page), privacy = collectPrivacy())
+
+    @Composable
+    private fun PreFixWhatWeCollect() {
+        val actions = RecordingActions()
+        val scroll = rememberScrollState()
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    title = stringResource(Res.string.collectTitle),
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = actions::onBack,
+                    backBesideTitle = true,
+                )
+            },
+            width = KitScreenWidth.Reading,
+            page = true,
+            edges = KitScreenEdges.Bleed,
+            floatingBar = KitFloatingBar(below = null, belowPinned = true),
+        ) {
+            KitPinnedFootBody(
+                scroll = scroll,
+                contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                WhatWeCollectBody(collectPrivacy(), actions)
+            }
+        }
+    }
+
+    private fun ComposeUiTest.scrollPageToEnd(tag: String) {
         val scroller = onNode(hasScrollAction() and !hasTestTag("kit-screen-status"))
         val before = scroller.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
-        assertTrue(before.maxValue() > 0f, "$page must be scrollable at ${PHONE_W}dp scale=$fontScale")
+        assertTrue(before.maxValue() > 0f, "$tag must be scrollable at ${PHONE_W}dp")
         scroller.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, before.maxValue() + EXTRA_SCROLL) }
         waitForIdle()
         mainClock.advanceTimeBy(SETTLE_MS)
@@ -54,13 +105,12 @@ class CollectPageBottomFadeTest {
         val after = scroller.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
         assertTrue(
             after.value() >= after.maxValue() - 1f,
-            "$page did not reach end of scroll: ${after.value()} / ${after.maxValue()}",
+            "$tag did not reach end of scroll: ${after.value()} / ${after.maxValue()}",
         )
     }
 
-    private fun ComposeUiTest.assertLastLineAboveFade(lastText: String, density: Float, tag: String) {
+    private fun ComposeUiTest.measureLastLineBottom(lastText: String, density: Float, tag: String): Pair<Float, Float> {
         val viewportBottom = onNodeWithTag("kit-screen").getBoundsInRoot().bottom.value
-        val fadeTop = viewportBottom - BOTTOM_FADE_DP
         val lastNode = onNodeWithText(lastText, useUnmergedTree = true).fetchSemanticsNode()
         val layouts = mutableListOf<TextLayoutResult>()
         lastNode.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
@@ -68,33 +118,21 @@ class CollectPageBottomFadeTest {
         assertFalse(layout.hasVisualOverflow, "$tag last text has visual overflow")
         assertTrue((0 until layout.lineCount).none(layout::isLineEllipsized), "$tag last text is ellipsized")
         val lastLineBottom = (lastNode.positionInRoot.y + layout.getLineBottom(layout.lineCount - 1)) / density
-        assertTrue(
-            lastLineBottom <= fadeTop - MIN_CLEARANCE_DP,
-            "$tag last line bottom ${lastLineBottom}dp does not clear bottom fade top ${fadeTop}dp " +
-                "(viewport bottom ${viewportBottom}dp, need >= ${MIN_CLEARANCE_DP}dp clearance)",
-        )
+        return lastLineBottom to viewportBottom
     }
 
-    private fun assertLastLineClearsBottomFade(
-        page: SettingsPage,
+    private fun runEndScene(
         lastTextRes: StringResource,
         dark: Boolean,
         fontScale: Float,
-        renderName: String? = null,
-    ) {
+        renderName: String?,
+        tag: String,
+        content: @Composable () -> Unit,
+    ): Pair<Float, Float> {
         val previous = Locale.getDefault()
         Locale.setDefault(Locale.ENGLISH)
+        var result = 0f to 0f
         try {
-            val ui =
-                SettingsUi(
-                    stack = persistentListOf(SettingsPage.Hub, SettingsPage.Privacy, page),
-                    privacy =
-                        PrivacyUi(
-                            WhatWeCollectSource.build(ConsentState(), RemoteSink),
-                            crashReports = false,
-                            usage = false,
-                        ),
-                )
             runDesktopComposeUiTest(PHONE_W, PHONE_H) {
                 var lastText = ""
                 var density = 1f
@@ -102,21 +140,30 @@ class CollectPageBottomFadeTest {
                     SettingsThemed(dark = dark, locale = "en", fontScale = fontScale, width = PHONE_W.toFloat()) {
                         density = LocalDensity.current.density
                         lastText = stringResource(lastTextRes)
-                        SettingsScreen(ui, RecordingActions())
+                        content()
                     }
                 }
                 waitForIdle()
-                scrollPageToEnd(page, fontScale)
+                scrollPageToEnd(tag)
                 if (renderName != null) {
                     val img = onRoot().captureToImage().toAwtImage()
                     ImageIO.write(img, "png", File(rendersDir, "$renderName.png"))
                 }
-                val mode = if (dark) "dark" else "light"
-                assertLastLineAboveFade(lastText, density, "$page ($mode, ${fontScale}x)")
+                result = measureLastLineBottom(lastText, density, tag)
             }
         } finally {
             Locale.setDefault(previous)
         }
+        return result
+    }
+
+    private fun assertClearsBottomFade(lastLineBottom: Float, viewportBottom: Float, tag: String) {
+        val fadeTop = viewportBottom - BOTTOM_FADE_DP
+        assertTrue(
+            lastLineBottom <= fadeTop - MIN_CLEARANCE_DP,
+            "$tag last line bottom ${lastLineBottom}dp does not clear bottom fade top ${fadeTop}dp " +
+                "(viewport bottom ${viewportBottom}dp, need >= ${MIN_CLEARANCE_DP}dp clearance)",
+        )
     }
 
     @Test
@@ -124,12 +171,27 @@ class CollectPageBottomFadeTest {
         for (dark in listOf(false, true)) {
             val mode = if (dark) "dark" else "light"
             for (scale in listOf(1.0f, 1.3f)) {
-                assertLastLineClearsBottomFade(
-                    page = SettingsPage.WhatWeCollect,
-                    lastTextRes = Res.string.collectNever,
-                    dark = dark,
-                    fontScale = scale,
-                    renderName = "collect-end-360dp-$mode-$scale",
+                val tag = "WhatWeCollect ($mode, ${scale}x)"
+                val (beforeBottom, _) =
+                    runEndScene(
+                        lastTextRes = Res.string.collectNever,
+                        dark = dark,
+                        fontScale = scale,
+                        renderName = "what-we-collect-before-360dp-$mode-$scale",
+                        tag = "$tag before",
+                    ) { PreFixWhatWeCollect() }
+                val (afterBottom, viewportBottom) =
+                    runEndScene(
+                        lastTextRes = Res.string.collectNever,
+                        dark = dark,
+                        fontScale = scale,
+                        renderName = "what-we-collect-after-360dp-$mode-$scale",
+                        tag = "$tag after",
+                    ) { SettingsScreen(settingsUi(SettingsPage.WhatWeCollect), RecordingActions()) }
+                assertClearsBottomFade(afterBottom, viewportBottom, tag)
+                assertTrue(
+                    afterBottom <= beforeBottom - MIN_CLEARANCE_DP,
+                    "$tag after ($afterBottom dp) did not move up from before ($beforeBottom dp)",
                 )
             }
         }
@@ -138,12 +200,17 @@ class CollectPageBottomFadeTest {
     @Test
     fun `B-624 sibling scrollable settings page clears bottom fade at 360dp 1-3x in light and dark`() {
         for (dark in listOf(false, true)) {
-            assertLastLineClearsBottomFade(
-                page = SettingsPage.PrivacyPolicy,
-                lastTextRes = Res.string.nativeBundledPrivacy,
-                dark = dark,
-                fontScale = 1.3f,
-            )
+            val mode = if (dark) "dark" else "light"
+            val tag = "PrivacyPolicy ($mode, 1.3x)"
+            val (lastLineBottom, viewportBottom) =
+                runEndScene(
+                    lastTextRes = Res.string.nativeBundledPrivacy,
+                    dark = dark,
+                    fontScale = 1.3f,
+                    renderName = null,
+                    tag = tag,
+                ) { SettingsScreen(settingsUi(SettingsPage.PrivacyPolicy), RecordingActions()) }
+            assertClearsBottomFade(lastLineBottom, viewportBottom, tag)
         }
     }
 
