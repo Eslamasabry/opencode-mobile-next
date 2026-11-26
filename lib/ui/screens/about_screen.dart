@@ -14,8 +14,7 @@ import '../../telemetry/telemetry_provider.dart' show telemetryOf;
 import '../../state/factsbook/factsbook_flag.dart';
 import '../../state/factsbook/factsbook_phone_node.dart';
 import 'factsbook/factsbook_routes.dart';
-import '../../update/in_app_update_notice.dart';
-import '../../update/shorebird_update_notice.dart';
+import '../../update/shorebird_update_notice.dart' show AppUpdateService;
 import '../../voice/notices.dart';
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
@@ -56,36 +55,20 @@ class AboutScreen extends StatefulWidget {
   /// route) leaves that row out.
   final ConnectionController? controller;
 
-  /// Checks for and fetches an update. Null: on Android the app's own
-  /// updater (made on the first check), elsewhere no update row.
+  /// Kept for callers that inject a service. This build never checks for or
+  /// installs an update: a new version is installed manually by the person.
   final AppUpdateService? updateService;
 
   @override
   State<AboutScreen> createState() => _AboutScreenState();
 }
 
-/// What the last update check found.
-enum _UpdateCheck {
-  idle,
-  checking,
-  current,
-  downloading,
-  ready,
-  cannot,
-  failed,
-}
-
 class _AboutScreenState extends State<AboutScreen> {
   Future<String>? _notices;
   late final Future<_BuildData> _build = _loadBuild();
-  _UpdateCheck _update = _UpdateCheck.idle;
-  AppUpdateService? _service;
 
   /// Show tips again ran: the row says so in place of a snackbar (KIT-34).
   bool _tipsReset = false;
-
-  bool get _canCheckUpdates =>
-      widget.updateService != null || platformCapabilities.supportsCodePush;
 
   @override
   void initState() {
@@ -130,60 +113,6 @@ class _AboutScreenState extends State<AboutScreen> {
       reportCode: await reportCode,
     );
   }
-
-  Future<void> _checkForUpdate() async {
-    if (_update == _UpdateCheck.checking ||
-        _update == _UpdateCheck.downloading) {
-      return;
-    }
-    setState(() => _update = _UpdateCheck.checking);
-    try {
-      // A new release (a new APK) first; when there is none, the patch check
-      // below still runs. An injected update service (tests) skips this.
-      if (platformCapabilities.isAndroid && widget.updateService == null) {
-        final release = await InAppUpdateCoordinator.checkManually(
-          context: context,
-        );
-        if (!mounted) return;
-        if (release != null) {
-          setState(() => _update = _UpdateCheck.ready);
-          return;
-        }
-      }
-      final service = _service ??=
-          widget.updateService ?? ShorebirdAppUpdateService();
-      if (!service.isAvailable) {
-        if (mounted) setState(() => _update = _UpdateCheck.cannot);
-        return;
-      }
-      final state = await service.checkForUpdate();
-      if (!mounted) return;
-      switch (state) {
-        case AppUpdateState.current:
-          setState(() => _update = _UpdateCheck.current);
-        case AppUpdateState.restartRequired:
-          setState(() => _update = _UpdateCheck.ready);
-        case AppUpdateState.unavailable:
-          setState(() => _update = _UpdateCheck.cannot);
-        case AppUpdateState.available:
-          setState(() => _update = _UpdateCheck.downloading);
-          await service.downloadUpdate();
-          if (mounted) setState(() => _update = _UpdateCheck.ready);
-      }
-    } catch (_) {
-      if (mounted) setState(() => _update = _UpdateCheck.failed);
-    }
-  }
-
-  String _updateLine(AppLocalizations l10n) => switch (_update) {
-    _UpdateCheck.idle => l10n.aboutUpdateIdle,
-    _UpdateCheck.checking => l10n.aboutUpdateChecking,
-    _UpdateCheck.current => l10n.aboutUpdateCurrent,
-    _UpdateCheck.downloading => l10n.aboutUpdateDownloading,
-    _UpdateCheck.ready => l10n.aboutUpdateReady,
-    _UpdateCheck.cannot => l10n.aboutUpdateCannot,
-    _UpdateCheck.failed => l10n.aboutUpdateFailed,
-  };
 
   Future<String> _licenceText() async {
     final out = StringBuffer();
@@ -369,7 +298,7 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   /// The build, once: product and version (copyable), the platform line,
-  /// the update check, and the package id and signer under Details.
+  /// and the package id and signer under Details.
   Widget _identity(BuildContext context, AppLocalizations l10n, _BuildData? d) {
     final tokens = KitTokens.of(context);
     final package = d?.package;
@@ -377,8 +306,6 @@ class _AboutScreenState extends State<AboutScreen> {
     final version = package == null
         ? l10n.appTitle
         : l10n.aboutBuildVersion(package.version, package.buildNumber);
-    final checking =
-        _update == _UpdateCheck.checking || _update == _UpdateCheck.downloading;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -410,17 +337,6 @@ class _AboutScreenState extends State<AboutScreen> {
                   tooltip: l10n.reportCodeCopy,
                   text: () => code,
                 ),
-              ),
-            if (_canCheckUpdates)
-              KitRow(
-                key: const ValueKey('about-check-updates'),
-                leading: KitRow.icon(context, AppIconography.systemDownload),
-                title: l10n.aboutCheckUpdates,
-                supporting: TextSpan(text: _updateLine(l10n)),
-                supportingMaxLines: 2,
-                enabled: !checking,
-                disabledReason: checking ? _updateLine(l10n) : null,
-                onTap: () => unawaited(_checkForUpdate()),
               ),
           ],
         ),

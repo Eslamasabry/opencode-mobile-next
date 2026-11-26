@@ -63,17 +63,14 @@ import 'state/session_address_controller.dart'
 import 'platform/platform_capabilities.dart';
 import 'platform/share_intent.dart';
 import 'domain/session_handoff.dart';
-import 'domain/while_away.dart' show AutomaticActKind;
 import 'domain/team_link.dart';
 import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/connection.dart';
 import 'state/in_app_auto_update.dart';
 import 'state/managed_move.dart';
-import 'state/automation_policy.dart';
 import 'state/profiles.dart';
-import 'update/desktop_release_check.dart';
-import 'update/in_app_update_notice.dart';
-import 'update/shorebird_update_notice.dart';
+import 'update/shorebird_update_notice.dart'
+    show AppUpdateService, UpdateStatusScope;
 import 'ui/app_theme.dart';
 import 'ui/screens/chats/chats_host.dart' show ConnectionChatsHost;
 import 'ui/screens/project_hub_screen.dart' show ProjectHub, openProjectFiles;
@@ -232,7 +229,6 @@ class OcApp extends ConsumerStatefulWidget {
 
 class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   late final ConnectionController _controller;
-  late final AppUpdateService _updateService;
   final _navigatorKey = GlobalKey<NavigatorState>();
   // Desktop only: the shell shortcut registry. Surfaces claim intents through
   // it, and the Ctrl+K launcher dispatches the same intents the keyboard does.
@@ -304,13 +300,6 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     _sessionLink.pendingAddress.addListener(_scheduleAddressLinkRoute);
     _sessionLink.pendingAddressFailure.addListener(_scheduleAddressLinkRoute);
     unawaited(_sessionLink.start());
-    // Only the Android build is Shorebird-released; desktop gets its update
-    // news from the GitHub release check in DesktopReleaseNotice below.
-    _updateService =
-        widget.updateService ??
-        (platformCapabilities.supportsCodePush
-            ? ShorebirdAppUpdateService()
-            : const UnavailableAppUpdateService());
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());
@@ -464,7 +453,8 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                     size: _controller.textSize,
                     max: AppTheme.maxTextScale,
                     // The app's own line joins the conditions every screen's
-                    // status slot reads; the update notices below add theirs.
+                    // status slot reads. This build never checks for or offers
+                    // an app update: installing a new version is manual.
                     child: AppConnectionStatusScope(
                       controller: _controller,
                       navigatorKey: _navigatorKey,
@@ -472,63 +462,30 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                         valueListenable: _notice,
                         builder: (context, notice, notices) =>
                             UpdateStatusScope(status: notice, child: notices!),
-                        child: ShorebirdUpdateNotice(
-                          service: _updateService,
-                          currentProfileId: () => _controller.profile?.id,
-                          allowsAutomaticUpdate: (id) =>
-                              AutomationPolicyController.forProfile(
-                                _controller.store.prefs,
-                                id,
-                              ).value.allows(AutomationBehavior.applyCodePush),
-                          onDownloaded:
-                              ({
-                                required profileId,
-                                required eventId,
-                                required at,
-                              }) async {
-                                await _controller.recordServerAct(
-                                  profileId: profileId,
-                                  kind: AutomaticActKind.update,
-                                  eventId: eventId,
-                                  at: at,
-                                );
-                              },
-                          child: InAppUpdateNotice(
-                            navigatorKey: _navigatorKey,
-                            child: DesktopReleaseNotice(
-                              navigatorKey: _navigatorKey,
-                              // Desktop only. On Android this returns its child
-                              // untouched, so the touch product gains no key handling.
-                              child: AppShortcuts(
-                                navigatorKey: _navigatorKey,
-                                signals: _shortcutSignals,
-                                handlers: AppShortcutHandlers(
-                                  onNewSession: () =>
-                                      unawaited(_startNewSession()),
-                                  onOpenSettings: _openSettings,
-                                  paletteCommands: _shellCommands,
-                                ),
-                                // Settings › Appearance › Effects, above the
-                                // navigator so every route and its transitions read
-                                // the same choices. Calls without a context (a send
-                                // from a controller) obey Vibration via the flag.
-                                child: ValueListenableBuilder<KitEffects>(
-                                  valueListenable: _controller.effects,
-                                  builder: (context, effects, navigator) {
-                                    KitHaptics.enabled = effects.haptics;
-                                    return KitEffectsScope(
-                                      effects: saver
-                                          ? effects.underSaver
-                                          : effects,
-                                      // The Style's own ground (design schools,
-                                      // hook H6); Solid keeps the theme as is.
-                                      child: kitStyleTheme(child: navigator!),
-                                    );
-                                  },
-                                  child: child ?? const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
+                        child: AppShortcuts(
+                          navigatorKey: _navigatorKey,
+                          signals: _shortcutSignals,
+                          handlers: AppShortcutHandlers(
+                            onNewSession: () => unawaited(_startNewSession()),
+                            onOpenSettings: _openSettings,
+                            paletteCommands: _shellCommands,
+                          ),
+                          // Settings › Appearance › Effects, above the
+                          // navigator so every route and its transitions read
+                          // the same choices. Calls without a context (a send
+                          // from a controller) obey Vibration via the flag.
+                          child: ValueListenableBuilder<KitEffects>(
+                            valueListenable: _controller.effects,
+                            builder: (context, effects, navigator) {
+                              KitHaptics.enabled = effects.haptics;
+                              return KitEffectsScope(
+                                effects: saver ? effects.underSaver : effects,
+                                // The Style's own ground (design schools,
+                                // hook H6); Solid keeps the theme as is.
+                                child: kitStyleTheme(child: navigator!),
+                              );
+                            },
+                            child: child ?? const SizedBox.shrink(),
                           ),
                         ),
                       ),

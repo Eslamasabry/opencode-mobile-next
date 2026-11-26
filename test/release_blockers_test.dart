@@ -379,7 +379,7 @@ void main() {
     expect(service, isNot(contains('errorMessage')));
   });
 
-  test('Shorebird updates have one app-controlled owner', () {
+  test('the app never checks for or prompts an app update itself', () {
     final shorebird = File('shorebird.yaml').readAsStringSync();
     final main = File('lib/main.dart').readAsStringSync();
 
@@ -387,8 +387,10 @@ void main() {
       shorebird,
       contains(RegExp(r'^auto_update: false$', multiLine: true)),
     );
-    expect(main, contains('ShorebirdUpdateNotice('));
-    expect(main, contains('ShorebirdAppUpdateService()'));
+    expect(main, isNot(contains('ShorebirdUpdateNotice(')));
+    expect(main, isNot(contains('InAppUpdateNotice(')));
+    expect(main, isNot(contains('DesktopReleaseNotice(')));
+    expect(main, isNot(contains('ShorebirdAppUpdateService()')));
   });
 
   test('privacy policy is bundled and names sensitive product surfaces', () {

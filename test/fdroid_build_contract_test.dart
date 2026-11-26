@@ -105,12 +105,10 @@ void main() {
       }
     }
 
-    testWidgets('offers "Check for updates" in the shipping build', (
-      tester,
-    ) async {
+    testWidgets('has no update row in the shipping build', (tester) async {
       debugPlatformCapabilities = const PlatformCapabilities.android();
       await pumpAbout(tester);
-      expect(find.byKey(const ValueKey('about-check-updates')), findsOneWidget);
+      expect(find.byKey(const ValueKey('about-check-updates')), findsNothing);
     });
 
     testWidgets('has no update row in the F-Droid build', (tester) async {
