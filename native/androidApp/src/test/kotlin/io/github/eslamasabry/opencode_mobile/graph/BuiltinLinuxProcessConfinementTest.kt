@@ -63,7 +63,7 @@ class BuiltinLinuxProcessConfinementTest {
     }
 
     @Test
-    fun `B-LINUX-617 OsFileDescriptors swallows ErrnoException on close without masking caller error`() {
+    fun `B-LINUX-617 OsFileDescriptors swallows ErrnoException on normal close`() {
         val fd = FileDescriptor()
         var closeCalls = 0
         val value =
@@ -76,7 +76,11 @@ class BuiltinLinuxProcessConfinementTest {
             ) { "done" }
         assertEquals("done", value)
         assertEquals(1, closeCalls)
+    }
 
+    @Test
+    fun `B-LINUX-617 OsFileDescriptors keeps primary error when close throws ErrnoException`() {
+        val fd = FileDescriptor()
         var errorCloseCalls = 0
         val failure =
             assertFailsWith<IOException> {
