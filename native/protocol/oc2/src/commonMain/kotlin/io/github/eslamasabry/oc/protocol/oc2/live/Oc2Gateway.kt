@@ -474,7 +474,6 @@ internal class Oc2Gateway(
                 clock,
                 Random.Default,
                 StreamInputs(
-                    visibility = spec.visibility,
                     reconnectAllowed = spec.reconnectAllowed,
                 ),
             )
