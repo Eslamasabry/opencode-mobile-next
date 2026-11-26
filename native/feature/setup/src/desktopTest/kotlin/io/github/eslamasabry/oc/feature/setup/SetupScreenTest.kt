@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.hasContentDescription
@@ -121,11 +124,13 @@ class SetupScreenTest {
         val actions = Recorder()
         setContent { Themed { SetupScreen(downloading, actions) } }
         onNodeWithText("Downloading Node.js").assertIsDisplayed()
-        // The progress ring (Flutter phone_setup_progress_screen.dart: KitProgressRing.measured) speaks its label,
-        // the measured share and the byte caption; the time left is its own line.
+        // The progress ring (Flutter phone_setup_progress_screen.dart: KitProgressRing.measured) keeps its label
+        // as its name and speaks the measured share and byte caption as its state; the time left is its own line.
         onNode(
-            hasContentDescription("Setup progress", substring = true) and
-                hasContentDescription("18 of 30 MB", substring = true),
+            hasContentDescription("Setup progress") and
+                SemanticsMatcher("state says 18 of 30 MB") {
+                    it.config.getOrNull(SemanticsProperties.StateDescription)?.contains("18 of 30 MB") == true
+                },
         ).assertExists()
         onNodeWithText("About 3 min left").assertExists()
         onNodeWithText("Pause setup").performClick()
@@ -184,7 +189,10 @@ class SetupScreenTest {
         onNodeWithText("All set").assertIsDisplayed()
         // Flutter's finished ring (phone_setup_progress_screen.dart:436, KitProgressRing.finished) has no note line;
         // "OpenCode is ready on this phone" belongs to the ready page Flutter opens next.
-        onNode(hasContentDescription("Setup progress, Finished")).assertExists()
+        onNode(
+            hasContentDescription("Setup progress") and
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Finished"),
+        ).assertExists()
         onNodeWithText("Done").performClick()
         assertEquals(listOf("back"), actions.calls)
     }
