@@ -114,6 +114,18 @@ class TerminalSelectionHighlightTest {
         var lastCallback: ActionMode.Callback2? = null
         var lastType: Int = -1
         var lastMode: ActionMode? = null
+        var descendantInvalidations: Int = 0
+
+        override fun onDescendantInvalidated(child: View, target: View) {
+            descendantInvalidations++
+            super.onDescendantInvalidated(child, target)
+        }
+
+        @Suppress("DEPRECATION")
+        override fun invalidateChildInParent(location: IntArray?, dirty: Rect?): android.view.ViewParent? {
+            descendantInvalidations++
+            return super.invalidateChildInParent(location, dirty)
+        }
 
         override fun startActionModeForChild(
             originalView: View?,
@@ -379,6 +391,16 @@ class TerminalSelectionHighlightTest {
                 outRect.bottom >= selectedBottom,
                 "row $row: outRect.bottom (${outRect.bottom}) must be >= selectedBottom ($selectedBottom)",
             )
+            if (row == 0) {
+                val delegate = unwrapDelegate(callback)
+                assertNotNull(delegate, "row 0: expected wrapped delegate ActionMode.Callback2")
+                val delegateRect = Rect()
+                delegate.onGetContentRect(mode, h.terminal, delegateRect)
+                assertTrue(
+                    outRect.bottom >= delegateRect.bottom,
+                    "row 0: outRect.bottom (${outRect.bottom}) must be >= delegate bottom (${delegateRect.bottom})",
+                )
+            }
 
             // Simulate Android FloatingToolbar: above outRect.top if room fits, else below outRect.bottom.
             val toolbarTop =
@@ -440,5 +462,129 @@ class TerminalSelectionHighlightTest {
         assertEquals(40 * 24, rect.right)
         assertTrue(rect.top <= 2 * 48, "top (${rect.top}) must be <= first selected row (${2 * 48})")
         assertTrue(rect.bottom >= 7 * 48, "bottom (${rect.bottom}) must be >= last selected row (${7 * 48})")
+    }
+
+    private fun unwrapDelegate(callback: ActionMode.Callback2): ActionMode.Callback2? =
+        callback.javaClass.declaredFields
+            .firstOrNull { ActionMode.Callback2::class.java.isAssignableFrom(it.type) }
+            ?.apply { isAccessible = true }
+            ?.get(callback) as? ActionMode.Callback2
+
+    private fun drawTree(container: View): RecordingCanvas {
+        val bitmap = Bitmap.createBitmap(container.width, container.height, Bitmap.Config.ARGB_8888)
+        val canvas = RecordingCanvas(bitmap)
+        container.draw(canvas)
+        bitmap.recycle()
+        return canvas
+    }
+
+    @Test
+    fun `B-481 repaint invalidates reach host during and after selection`() {
+        val h = setupHarness()
+        h.host.appearance(themeSamples().first().palette)
+        runSync { h.session.append("first line alpha\r\nsecond target beta\r\nthird line gamma\r\n") }
+        shadowOf(Looper.getMainLooper()).idle()
+
+        drawTree(h.container)
+        val event = longPressCell(h.terminal, col = 8, row = 1)
+        h.terminal.startTextSelectionMode(event)
+        event.recycle()
+        shadowOf(Looper.getMainLooper()).idle()
+        drawTree(h.container)
+
+        h.container.descendantInvalidations = 0
+        h.terminal.invalidate()
+        assertTrue(
+            h.host.isDirty || h.container.descendantInvalidations > 0,
+            "first invalidate during selection must reach host",
+        )
+
+        drawTree(h.container)
+        h.container.descendantInvalidations = 0
+        h.terminal.invalidate()
+        assertTrue(
+            h.host.isDirty || h.container.descendantInvalidations > 0,
+            "second invalidate during selection must still reach host",
+        )
+
+        Thread.sleep(350)
+        h.container.descendantInvalidations = 0
+        h.terminal.stopTextSelectionMode()
+        assertTrue(!h.terminal.isSelectingText, "selection mode should be stopped")
+        assertTrue(
+            h.host.isDirty || h.container.descendantInvalidations > 0,
+            "stopTextSelectionMode must dirty host",
+        )
+
+        val after = drawTree(h.container)
+        val translucent = after.rects.filter { Color.alpha(it.color) in 1..254 }
+        assertTrue(translucent.isEmpty(), "no translucent highlight rect should remain after stop")
+        assertTrue(after.texts.any { it.text.contains("target") }, "text must still be drawn after stop")
+    }
+
+    @Test
+    fun `B-481 scrollback row minus one keeps translucent highlight and clear bar`() {
+        assertNotNull(normalizeSelectionRange(intArrayOf(-1, 2, 0, 5)), "range starting at row -1")
+        assertNotNull(normalizeSelectionRange(intArrayOf(-1, -1, 3, 9)), "single-row range on row -1")
+
+        val h = setupHarness()
+        val sample = themeSamples().first()
+        h.host.appearance(sample.palette)
+        val lines = (0..65).joinToString("\r\n") { i -> "scroll_line_$i target_$i" } + "\r\n"
+        runSync { h.session.append(lines) }
+        shadowOf(Looper.getMainLooper()).idle()
+
+        h.terminal.topRow = -3
+        val event = longPressCell(h.terminal, col = 16, row = -1)
+        h.terminal.startTextSelectionMode(event)
+        event.recycle()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(h.terminal.isSelectingText, "selection on scrollback row -1 must be active")
+
+        val canvas = drawTree(h.container)
+        val lineSpacing = h.terminal.mRenderer.fontLineSpacing
+        val rowTop = (-1 - h.terminal.topRow) * lineSpacing
+        val rowBottom = rowTop + lineSpacing
+        val rowRects =
+            canvas.rects.filter { r ->
+                r.rect.width() > 0f && r.rect.height() > 0f && r.rect.bottom > rowTop && r.rect.top < rowBottom
+            }
+        assertTrue(rowRects.isNotEmpty(), "expected selection highlight rect on scrollback row -1")
+        for (r in rowRects) {
+            val alpha = Color.alpha(r.color)
+            assertTrue(alpha in 1..254, "scrollback row -1 highlight must be translucent, got $alpha")
+        }
+
+        val callback = assertNotNull(h.container.lastCallback, "expected ActionMode.Callback2")
+        val mode = assertNotNull(h.container.lastMode, "expected ActionMode")
+        val outRect = Rect()
+        callback.onGetContentRect(mode, h.terminal, outRect)
+        assertTrue(outRect.top <= rowTop, "outRect.top (${outRect.top}) must be <= rowTop ($rowTop)")
+        assertTrue(outRect.bottom >= rowBottom, "outRect.bottom (${outRect.bottom}) must be >= rowBottom ($rowBottom)")
+    }
+
+    @Test
+    fun `B-481 highlight rect aligns vertically with Termux cell background`() {
+        val h = setupHarness()
+        h.host.appearance(themeSamples().first().palette)
+        runSync { h.session.append("prefix \u001b[41mX\u001b[0m target\r\n") }
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val event = longPressCell(h.terminal, col = 10, row = 0)
+        h.terminal.startTextSelectionMode(event)
+        event.recycle()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val canvas = drawTree(h.container)
+        val fontWidth = h.terminal.mRenderer.fontWidth
+        val cellBg =
+            canvas.rects.firstOrNull { r ->
+                Color.alpha(r.color) == 255 && r.rect.width() > 0f && r.rect.width() <= fontWidth * 2f
+            }
+        val highlight = canvas.rects.firstOrNull { r -> Color.alpha(r.color) in 1..254 }
+        assertNotNull(cellBg, "expected Termux opaque cell background rect for ANSI 41m cell")
+        assertNotNull(highlight, "expected translucent selection highlight rect")
+        assertEquals(cellBg.rect.top, highlight.rect.top, 0.5f, "highlight top must match Termux cell top")
+        assertEquals(cellBg.rect.bottom, highlight.rect.bottom, 0.5f, "highlight bottom must match Termux cell bottom")
     }
 }
