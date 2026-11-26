@@ -47,7 +47,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-private const val STAGE = "before"
+private const val STAGE = "after"
 private const val DENSITY = 2f
 private const val TABLET_WIDTH_DP = 960
 private const val TABLET_HEIGHT_DP = 1200

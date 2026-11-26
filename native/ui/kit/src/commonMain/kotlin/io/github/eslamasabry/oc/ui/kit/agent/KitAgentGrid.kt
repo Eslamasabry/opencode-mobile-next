@@ -86,7 +86,7 @@ internal const val AGENT_TILE_MIN_WIDTH: Int = 200
 /**
  * How many tiles side by side in [widthDp]: one above 1.3x text, else as many [AGENT_TILE_MIN_WIDTH] tiles as fit
  * with the kit's gap, never fewer than two (a phone keeps two columns at 360 dp also at 1.3x text) nor more than four
- * (a wide window, still inside the Reading cap).
+ * (a wide window, inside the List cap).
  */
 internal fun agentTileColumns(widthDp: Float, textScale: Float): Int {
     if (agentGridOneColumn(textScale)) return 1
@@ -100,7 +100,7 @@ internal fun agentTileRows(count: Int, columns: Int): List<List<Int>> = (0 until
 
 /**
  * Agent tiles ([KitAgentTile]) in a bento grid: two columns on a phone (also at 360 dp and 1.3x text), three or four
- * when the window is wide (each at least [AGENT_TILE_MIN_WIDTH] dp, inside the Reading cap), every row as tall as its
+ * when the window is wide (each at least [AGENT_TILE_MIN_WIDTH] dp, inside the List cap), every row as tall as its
  * tallest tile with the kit's gap between them. A short last row (including a lone last tile in two columns) keeps the
  * column width at the start edge so the grid's rhythm holds; above 1.3x text it is one column of full-width tiles.
  * Unlike [KitAgentGrid] the tiles are separate buttons, not one choice.
@@ -111,7 +111,7 @@ internal fun agentTileRows(count: Int, columns: Int): List<List<Int>> = (0 until
 public fun KitAgentTiles(children: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
     // The person's chosen size, not the non-linear body size ([kitFontScale]).
     val scale = kitFontScale()
-    androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.List).fillMaxWidth()) {
         val columns = agentTileColumns(maxWidth.value, scale)
         val rows = agentTileRows(children.size, columns)
         val tileWidth =
