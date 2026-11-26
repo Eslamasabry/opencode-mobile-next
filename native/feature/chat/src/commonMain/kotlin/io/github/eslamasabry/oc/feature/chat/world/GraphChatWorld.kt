@@ -2021,10 +2021,23 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val previous = mutableModels.value
         // A choice verified while this load ran is newer than anything this load read.
         val newer = selectionEpoch != epoch
+        val missing = if (failure == null && !newer && resolved == null) effective else null
+        val fallback =
+            if (missing != null && choices.isNotEmpty())
+                ModelFallback.pick(
+                    ModelKey(missing.providerId, missing.modelId),
+                    ModelFallback.answered(transcript.value.rows),
+                    choices,
+                )
+            else null
+        val replaced =
+            if (missing != null && fallback != null)
+                ReplacedModel(ModelNames.fromId(missing.modelId), fallback.label)
+            else null
         mutableModels.value =
             ComposerModels(
                 choices,
-                if (newer || failure != null) previous.selected else resolved,
+                if (newer || failure != null) previous.selected else resolved ?: fallback,
                 failure = failure,
                 variant =
                     if (newer || failure != null) previous.variant else session?.variant.orEmpty(),
@@ -2032,7 +2045,8 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 subagents = subagents,
                 agent = if (newer) previous.agent else session?.agent ?: catalogDefaults?.agent,
                 usesDefault =
-                    if (newer) previous.usesDefault else session?.model == null && failure == null,
+                    if (newer) previous.usesDefault
+                    else fallback == null && session?.model == null && failure == null,
                 serverDefault =
                     catalogDefaults?.model?.let { ref ->
                         choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }
@@ -2040,6 +2054,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 recent = recentOf(choices),
                 favorites = favoritesOf(choices),
                 displayOnly = if (newer) previous.displayOnly else failure != null,
+                replaced = if (newer) previous.replaced else replaced,
             )
         return if (failure != null) Outcome.Failed(failure) else Outcome.Ok(Unit)
     }
@@ -2125,6 +2140,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 usesDefault = if (modelChanged) false else now.usesDefault,
                 agent = if (agentChanged) event.agent else now.agent,
                 displayOnly = if (modelChanged) false else now.displayOnly,
+                replaced = if (modelChanged) null else now.replaced,
             )
         if (modelChanged && remoteModel != null)
             registry.appScope.launch {
@@ -2273,6 +2289,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                                         usesDefault = false,
                                         displayOnly = false,
                                         recent = recentOf(mutableModels.value.choices),
+                                        replaced = null,
                                     )
                                 Outcome.Ok(Unit)
                             }
@@ -2538,9 +2555,15 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         retireFailedTwins(id)
         refreshDraftProtection()
         return try {
-            dispatch(id, text, snapshot, expected)
+            dispatch(id, text, snapshot, expected).also(::clearReplacedModel)
         } finally {
             if (submission != null) submissionOwner?.releaseSubmission(submission)
+        }
+    }
+
+    private fun clearReplacedModel(outcome: Outcome<Unit>) {
+        if (outcome is Outcome.Ok && mutableModels.value.replaced != null) {
+            mutableModels.value = mutableModels.value.copy(replaced = null)
         }
     }
 
