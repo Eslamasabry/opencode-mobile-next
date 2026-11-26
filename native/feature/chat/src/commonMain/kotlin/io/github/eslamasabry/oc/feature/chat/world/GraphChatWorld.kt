@@ -2666,13 +2666,8 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
     override suspend fun cancelWaitingSend(localId: Long): Outcome<Unit> {
         val entryId = outboxIds.entries.firstOrNull { it.value == localId }?.key
-        val outbox = offlineOutbox
-        if (
-            entryId == null ||
-                outbox == null ||
-                localId in flushingOutbox ||
-                !cancellingOutbox.add(entryId)
-        ) {
+        val outbox = offlineOutbox?.takeUnless { localId in flushingOutbox }
+        if (entryId == null || outbox == null || !cancellingOutbox.add(entryId)) {
             return Outcome.Ok(Unit)
         }
         val result =

@@ -86,11 +86,14 @@ internal class OfflineOutbox(
      * Honors the user's `reconcileQueuedSends` automation consent for [profileId]. Absent uses the
      * default (`true`); corrupt or wrongly typed storage grants nothing (`false`).
      */
-    fun allowsAutomaticQueuedSends(profileId: ProfileId): Boolean {
-        val raw = storage.store.get(AutomationPolicyOwner.keyFor(profileId.raw)) ?: return true
-        val text = (raw as? PrefValue.Str)?.value ?: return false
-        return ConsentAutomationPolicy.fromJson(text).allows(AutomationBehavior.ReconcileQueuedSends)
-    }
+    fun allowsAutomaticQueuedSends(profileId: ProfileId): Boolean =
+        when (val raw = storage.store.get(AutomationPolicyOwner.keyFor(profileId.raw))) {
+            null -> true
+            is PrefValue.Str ->
+                ConsentAutomationPolicy.fromJson(raw.value)
+                    .allows(AutomationBehavior.ReconcileQueuedSends)
+            else -> false
+        }
 
     /** Persists a new waiting prompt through [OfflineQueue.queuePrompt]. */
     suspend fun enqueue(draft: OutboxDraft, queue: OfflineQueue?): Outcome<QueuedPrompt> {
