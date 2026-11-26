@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNoSpace
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesShortSpace
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesVersionNew
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesVersions
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesVersionsSpoken
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveBusy
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnconfirmed
 import io.github.eslamasabry.oc.ui.words.res.agentsRemoveUnsupported
@@ -34,12 +35,14 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateNotNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * Main button copy: "Update all · 660 MB" when nothing or everything is switched on, "Update 1 selected · 390 MB"
- * when a subset is chosen (numbers through [Numbers.format], size matching the total line above).
+ * when a subset is chosen (numbers through [Numbers.format], size matching the total line above, with lower bound
+ * when a part has unknown size and never "0 B").
  */
 @Composable
 internal fun agentUpdatesButton(sheet: AgentUpdateSheetUi): String {
@@ -49,22 +52,29 @@ internal fun agentUpdatesButton(sheet: AgentUpdateSheetUi): String {
         sheet.updating > 0 && sheet.removing > 0 ->
             pluralStringResource(Res.plurals.agentUpdatesButtonBoth, sheet.removing, sheet.updating, sheet.removing)
         nothingChosen -> agentUpdatesUpdateAllButton(sheet)
-        allUpdating -> stringResource(Res.string.agentUpdatesButtonUpdateAll, PhoneSizes.text(sheet.downloadBytes))
+        allUpdating ->
+            stringResource(
+                Res.string.agentUpdatesButtonUpdateAll,
+                UpdateSheetCopy.buttonAmount(sheet.downloadBytes, sheet.downloadKnown),
+            )
         sheet.updating > 0 ->
             pluralStringResource(
                 Res.plurals.agentUpdatesButtonUpdateSelected,
                 sheet.updating,
                 Numbers.format(sheet.updating),
-                PhoneSizes.text(sheet.downloadBytes),
+                UpdateSheetCopy.buttonAmount(sheet.downloadBytes, sheet.downloadKnown),
             )
         else -> pluralStringResource(Res.plurals.agentUpdatesButtonRemove, sheet.removing, sheet.removing)
     }
 }
 
-/** "Update all · 660 MB": primary button when every agent switch is off. */
+/** "Update all · 660 MB" (or lower bound / unknown): primary button when every agent switch is off. */
 @Composable
 internal fun agentUpdatesUpdateAllButton(sheet: AgentUpdateSheetUi): String =
-    stringResource(Res.string.agentUpdatesButtonUpdateAll, PhoneSizes.text(sheet.allDownloadBytes))
+    stringResource(
+        Res.string.agentUpdatesButtonUpdateAll,
+        UpdateSheetCopy.buttonAmount(sheet.allDownloadBytes, sheet.allDownloadKnown),
+    )
 
 internal data class SheetButtons(
     val primary: KitAction,
@@ -97,6 +107,7 @@ internal fun sheetButtons(shown: AgentUpdateSheetUi, result: Boolean, actions: A
                 { actions.proceedAgentUpdates(submit) },
                 enabled = noRoom,
                 working = shown.working,
+                swapLabels = UpdateSheetCopy.candidatePrimaryLabels(shown),
             ),
         secondary = notNow,
     )
@@ -109,6 +120,16 @@ internal fun versionAndSize(from: String?, to: String, downloadBytes: Long?): St
     return "${versions(from, to)} · $size"
 }
 
+/** Spoken label for screen readers: "From 0.16.1 to 0.17.2 · 330 MB". */
+@Composable
+internal fun versionAndSizeSpoken(from: String?, to: String, downloadBytes: Long?): String {
+    val size = downloadBytes?.let(PhoneSizes::text) ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
+    val pair =
+        if (from != null) stringResource(Res.string.agentUpdatesVersionsSpoken, KitBidi.ltr(from), KitBidi.ltr(to))
+        else stringResource(Res.string.agentUpdatesVersionNew, KitBidi.ltr(to))
+    return "$pair · $size"
+}
+
 @Composable
 internal fun versions(from: String?, to: String): String =
     if (from != null) stringResource(Res.string.agentUpdatesVersions, KitBidi.ltr(from), KitBidi.ltr(to))
@@ -119,10 +140,44 @@ internal fun frees(bytes: Long?): String =
     bytes?.let { stringResource(Res.string.agentUpdatesFrees, PhoneSizes.text(it)) }
         ?: stringResource(Res.string.agentUpdatesFreesUnknown)
 
-/** "About 1.2 GB", or "At least 1.2 GB" when a part's size is not known. */
+/** "About 1.2 GB", "At least 1.2 GB" when a part's size is unknown, or [unknown] when no size is known. */
 @Composable
-internal fun amount(bytes: Long, known: Boolean): String =
-    stringResource(if (known) Res.string.agentUpdatesAbout else Res.string.agentUpdatesAtLeast, PhoneSizes.text(bytes))
+internal fun amount(
+    bytes: Long,
+    known: Boolean,
+    unknown: StringResource = Res.string.agentUpdatesDownloadsUnknown,
+): String =
+    when {
+        known -> stringResource(Res.string.agentUpdatesAbout, PhoneSizes.text(bytes))
+        bytes > 0L -> stringResource(Res.string.agentUpdatesAtLeast, PhoneSizes.text(bytes))
+        else -> stringResource(unknown)
+    }
+
+private object UpdateSheetCopy {
+    @Composable
+    fun buttonAmount(bytes: Long, known: Boolean): String =
+        when {
+            known -> PhoneSizes.text(bytes)
+            bytes > 0L -> stringResource(Res.string.agentUpdatesAtLeast, PhoneSizes.text(bytes))
+            else -> stringResource(Res.string.agentUpdatesDownloadsUnknown)
+        }
+
+    @Composable
+    fun candidatePrimaryLabels(sheet: AgentUpdateSheetUi): List<String> {
+        val maxAmount = buttonAmount(sheet.allDownloadBytes, sheet.allDownloadKnown)
+        val allLabel = agentUpdatesUpdateAllButton(sheet)
+        val selected =
+            (1 until sheet.optional.size).map { count ->
+                pluralStringResource(
+                    Res.plurals.agentUpdatesButtonUpdateSelected,
+                    count,
+                    Numbers.format(count),
+                    maxAmount,
+                )
+            }
+        return (listOf(allLabel, agentUpdatesButton(sheet)) + selected).distinct()
+    }
+}
 
 /** Why a removal did not happen, in the Agents page's own words (never the script's output). */
 @Composable

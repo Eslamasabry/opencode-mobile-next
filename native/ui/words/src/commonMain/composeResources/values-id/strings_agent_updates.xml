@@ -50,4 +50,5 @@
         <item quantity="other">Perbarui %1$s dipilih · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">Lewati versi ini</string>
+    <string name="agentUpdatesVersionsSpoken">Dari %1$s ke %2$s</string>
 </resources>

@@ -58,4 +58,5 @@
         <item quantity="other">Aggiorna %1$s selezionati · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">Salta queste versioni</string>
+    <string name="agentUpdatesVersionsSpoken">Da %1$s a %2$s</string>
 </resources>

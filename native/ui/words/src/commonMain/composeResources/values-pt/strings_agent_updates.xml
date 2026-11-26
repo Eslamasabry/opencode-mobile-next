@@ -58,4 +58,5 @@
         <item quantity="other">Atualizar %1$s selecionados · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">Ignorar estas versões</string>
+    <string name="agentUpdatesVersionsSpoken">De %1$s para %2$s</string>
 </resources>

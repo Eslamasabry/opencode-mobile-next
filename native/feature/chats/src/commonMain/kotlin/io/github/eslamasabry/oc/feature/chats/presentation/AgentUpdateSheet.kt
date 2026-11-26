@@ -44,13 +44,14 @@ public data class AgentUpdateRowUi(
     val installedBytes: Long?,
 )
 
-/** A part the updates need (the agent helper, Node.js): no choice, only what it is and its size. */
+/** A part the updates need (the agent helper, Node.js): no choice, only what it is, its size and why it is needed. */
 public data class AgentNeededRowUi(
     val id: AgentId,
     val name: String,
     val from: String?,
     val to: String,
     val downloadBytes: Long?,
+    val why: AgentNeedRule = AgentNeedRule.WithAnyUpdate,
 )
 
 /** The confirm before a removal: the agent, what it frees, and whether its accounts and conversations stay. */
@@ -180,10 +181,8 @@ public object AgentUpdateSheetRules {
                 // A Needed part without a rule comes with the updates, as every one does today (contract §4).
                 it.neededWhen == AgentNeedRule.Always || anyUpdate
             }
-        val needed =
-            neededItems.map { AgentNeededRowUi(it.id, it.name, it.fromVersion, it.toVersion, it.downloadBytes) }
-        val allNeeded =
-            allNeededItems.map { AgentNeededRowUi(it.id, it.name, it.fromVersion, it.toVersion, it.downloadBytes) }
+        val needed = neededItems.map(::neededRowUi)
+        val allNeeded = allNeededItems.map(::neededRowUi)
         val updates = optional.filter { it.choice == AgentUpdateChoice.Update }
         val removes = optional.filter { it.choice == AgentUpdateChoice.Remove }
         val downloads = updates.map { it.downloadBytes } + needed.map { it.downloadBytes }
@@ -242,6 +241,16 @@ public object AgentUpdateSheetRules {
     /** Why Keep is not offered; null when it is. */
     private fun keepBlock(item: AgentUpdateItem): AgentKeepBlock? =
         if (item.keepAllowed) null else item.notKeptReason ?: AgentKeepBlock.NotSupportedAnyMore
+
+    private fun neededRowUi(item: AgentUpdateItem): AgentNeededRowUi =
+        AgentNeededRowUi(
+            id = item.id,
+            name = item.name,
+            from = item.fromVersion,
+            to = item.toVersion,
+            downloadBytes = item.downloadBytes,
+            why = item.neededWhen ?: AgentNeedRule.WithAnyUpdate,
+        )
 }
 
 /**
@@ -274,34 +283,34 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
     public fun applyChoices(submit: AgentUpdateSubmit = AgentUpdateSubmit.Chosen) {
         val offer = offers.value ?: return
         val now = local.value
-        if (now.working || choices == null) return
+        val engine = choices
+        if (now.working || engine == null) return
+        val choiceVisible = wifiChoiceVisible(offer, now)
+        val forceWait = offer.network == AgentUpdateNetwork.Metered && !choiceVisible
         when (submit) {
             AgentUpdateSubmit.UpdateAll -> {
                 val all = allOptional(offer, AgentUpdateChoice.Update)
-                local.update { it.copy(picked = all, toConfirm = emptyList(), failure = null) }
-                start()
+                local.update {
+                    it.copy(
+                        picked = all,
+                        wifiOnly = if (choiceVisible) it.wifiOnly else true,
+                        toConfirm = emptyList(),
+                        failure = null,
+                    )
+                }
+                start(forceWaitForWifi = forceWait)
             }
             AgentUpdateSubmit.SkipAll -> {
-                val optional = offer.items.filter { it.group == AgentUpdateGroup.Optional }
-                if (optional.isNotEmpty() && optional.all { it.keepAllowed }) {
-                    val keep = allOptional(offer, AgentUpdateChoice.Keep)
+                val keep = skipAllPicks(offer)
+                if (keep != null) {
                     local.update { it.copy(picked = keep, toConfirm = emptyList(), failure = null) }
-                    start()
+                    start(forceWaitForWifi = forceWait)
                 }
             }
             AgentUpdateSubmit.Chosen -> {
-                val asks =
-                    AgentUpdateSheetRules.removals(offer, now.picked).map { id ->
-                        val item = offer.items.first { it.id == id }
-                        val facts = choices.removalFacts(id)
-                        AgentRemovalAskUi(
-                            id = id,
-                            name = item.name,
-                            freesBytes = facts.freesBytes ?: item.installedBytes,
-                            keepsAccountsAndConversations = facts.keepsSignIn && facts.keepsConversations,
-                        )
-                    }
-                if (asks.isEmpty()) start() else local.update { it.copy(toConfirm = asks, failure = null) }
+                val asks = removalAsks(offer, now.picked, engine)
+                if (asks.isEmpty()) start(forceWaitForWifi = forceWait)
+                else local.update { it.copy(toConfirm = asks, failure = null) }
             }
         }
     }
@@ -318,11 +327,11 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         local.update { it.copy(toConfirm = emptyList()) }
     }
 
-    private fun start() {
+    private fun start(forceWaitForWifi: Boolean = false) {
         val engine = choices ?: return
         val offer = offers.value ?: return
         val decision = AgentUpdateSheetRules.decision(offer, local.value.picked)
-        val waitForWifi = offer.network == AgentUpdateNetwork.Metered && local.value.wifiOnly
+        val waitForWifi = offer.network == AgentUpdateNetwork.Metered && (forceWaitForWifi || local.value.wifiOnly)
         log.i { "update sheet: decided " + decision.entries.joinToString { "${it.key.raw}=${it.value}" } }
         local.update { it.copy(working = true, failure = null) }
         scope.launch {
@@ -497,6 +506,37 @@ private data class SheetLocal(
 
 private fun allOptional(offer: AgentUpdateOffer, choice: AgentUpdateChoice): Map<AgentId, AgentUpdateChoice> =
     offer.items.filter { it.group == AgentUpdateGroup.Optional }.associate { it.id to choice }
+
+private fun skipAllPicks(offer: AgentUpdateOffer): Map<AgentId, AgentUpdateChoice>? {
+    val optional = offer.items.filter { it.group == AgentUpdateGroup.Optional }
+    return if (optional.isNotEmpty() && optional.all { it.keepAllowed }) {
+        optional.associate { it.id to AgentUpdateChoice.Keep }
+    } else {
+        null
+    }
+}
+
+private fun wifiChoiceVisible(offer: AgentUpdateOffer, now: SheetLocal): Boolean {
+    if (offer.network != AgentUpdateNetwork.Metered) return false
+    val before = AgentUpdateSheetRules.sheet(offer, now.picked, visible = true, waitForWifi = now.wifiOnly)
+    return before.updating > 0 || before.needed.isNotEmpty()
+}
+
+private fun removalAsks(
+    offer: AgentUpdateOffer,
+    picked: Map<AgentId, AgentUpdateChoice>,
+    engine: AgentUpdateChoices,
+): List<AgentRemovalAskUi> =
+    AgentUpdateSheetRules.removals(offer, picked).map { id ->
+        val item = offer.items.first { it.id == id }
+        val facts = engine.removalFacts(id)
+        AgentRemovalAskUi(
+            id = id,
+            name = item.name,
+            freesBytes = facts.freesBytes ?: item.installedBytes,
+            keepsAccountsAndConversations = facts.keepsSignIn && facts.keepsConversations,
+        )
+    }
 
 private fun buildHomeUi(offer: AgentUpdateOffer?, now: SheetLocal): AgentUpdateHomeUi {
     // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer

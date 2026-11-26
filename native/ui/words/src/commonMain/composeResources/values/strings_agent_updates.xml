@@ -15,6 +15,8 @@
     <string name="agentUpdatesChoiceLabel">What to do with %1$s</string>
     <!-- The version installed now, then the new one. -->
     <string name="agentUpdatesVersions">Version %1$s → %2$s</string>
+    <!-- Screen-reader version pair for an agent update row: old version then new version. -->
+    <string name="agentUpdatesVersionsSpoken">From %1$s to %2$s</string>
     <string name="agentUpdatesVersionNew">New version %1$s</string>
     <string name="agentUpdatesDownloads">Downloads about %1$s</string>
     <string name="agentUpdatesDownloadsUnknown">Download size not known</string>

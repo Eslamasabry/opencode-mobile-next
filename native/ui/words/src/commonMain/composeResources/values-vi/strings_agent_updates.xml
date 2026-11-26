@@ -50,4 +50,5 @@
         <item quantity="other">Cập nhật %1$s đã chọn · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">Bỏ qua các phiên bản này</string>
+    <string name="agentUpdatesVersionsSpoken">Từ %1$s đến %2$s</string>
 </resources>

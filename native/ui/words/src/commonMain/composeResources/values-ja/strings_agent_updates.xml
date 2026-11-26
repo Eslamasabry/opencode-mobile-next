@@ -50,4 +50,5 @@
         <item quantity="other">選択した%1$s件をアップデート · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">このバージョンをスキップ</string>
+    <string name="agentUpdatesVersionsSpoken">%1$sから%2$sへ</string>
 </resources>

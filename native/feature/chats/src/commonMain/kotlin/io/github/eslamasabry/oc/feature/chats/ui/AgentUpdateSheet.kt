@@ -8,6 +8,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
@@ -34,10 +36,13 @@ import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowReveal
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.row.kitRowSupportingLines
 import io.github.eslamasabry.oc.ui.kit.row.kitSwitchSupportingLines
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFontScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
@@ -49,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsAction
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAgentsLine
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFreesUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepHelperTooNew
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesKeepNotSupported
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesMetered
@@ -121,7 +127,7 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
     if (metered || shown.needed.isNotEmpty() || shown.optional.isNotEmpty()) {
         KitRowGroup {
             if (shown.network == AgentUpdateNetwork.Metered) {
-                KitReveal(visible = metered) { WifiOnlyRow(shown.wifiOnly, actions) }
+                KitRowReveal(visible = metered) { WifiOnlyRow(shown.wifiOnly, actions) }
             }
             NeededRows(shown)
             shown.optional.forEach { row -> OptionalRow(row, actions) }
@@ -184,10 +190,11 @@ private fun WifiOnlyRow(wifiOnly: Boolean, actions: AgentUpdateActions) {
     )
 }
 
-/** One agent: its name, versions and size (or what keeping/removing does), and one switch. */
+/** One agent: its name, versions and size (with spoken "from … to …" and quieter off ink), and one switch. */
 @Composable
 private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
     val facts = versionAndSize(row.from, row.to, row.downloadBytes)
+    val spokenFacts = versionAndSizeSpoken(row.from, row.to, row.downloadBytes)
     val block = row.keepBlock
     if (block != null) {
         val reason =
@@ -202,26 +209,42 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
             checked = true,
             enabled = KitEnabled.Disabled(reason),
             supportingMaxLines = 4,
-            below = { KitText(facts, role = TypeRole.Secondary, tone = TextTone.Secondary) },
+            below = {
+                KitText(
+                    facts,
+                    Modifier.semantics { contentDescription = spokenFacts },
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
+            },
             onCheckedChange = { actions.chooseAgentUpdate(row.id, AgentUpdateChoice.Update) },
         )
         return
     }
     val updating = row.choice == AgentUpdateChoice.Update
     val supporting = if (row.choice == AgentUpdateChoice.Remove) frees(row.installedBytes) else facts
+    val spoken = if (row.choice == AgentUpdateChoice.Remove) supporting else spokenFacts
+    val maxSupporting = kitRowSupportingLines(kitFontScale(), OPTIONAL_SUPPORTING_LINES)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val minLines =
             kitSwitchSupportingLines(
                 texts = listOf(facts, supporting),
                 rowWidth = maxWidth,
-                supportingMaxLines = 3,
+                supportingMaxLines = OPTIONAL_SUPPORTING_LINES,
             )
         KitSwitchRow(
             title = KitBidi.auto(row.name),
             checked = updating,
-            supporting = supporting,
-            supportingMaxLines = 3,
-            supportingMinLines = minLines,
+            below = {
+                KitText(
+                    supporting,
+                    Modifier.semantics { contentDescription = spoken },
+                    role = TypeRole.Secondary,
+                    tone = if (updating) TextTone.Primary else TextTone.Secondary,
+                    maxLines = maxSupporting,
+                    minLines = minLines.coerceIn(1, maxSupporting),
+                )
+            },
             onCheckedChange = {
                 actions.chooseAgentUpdate(row.id, if (it) AgentUpdateChoice.Update else AgentUpdateChoice.Keep)
             },
@@ -229,36 +252,32 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
     }
 }
 
+private const val OPTIONAL_SUPPORTING_LINES = 3
+
 @Composable
 private fun NeededRows(shown: AgentUpdateSheetUi) {
-    // Every needed row in the offer stays composed in offer order so parts fold in and out over KitReveal even when
-    // the sheet opens with every agent switch off or when one part leaves while another stays.
-    val seen = remember { mutableListOf<Pair<AgentNeededRowUi, AgentNeedRule>>() }
+    // Follow the current offer order while keeping departing rows composed long enough to fold over KitRowReveal.
+    val seen = remember { mutableListOf<AgentNeededRowUi>() }
     val source = shown.allNeeded.ifEmpty { shown.needed }
-    source.forEachIndexed { index, row ->
-        val at = seen.indexOfFirst { it.first.id == row.id }
-        val entry = row to shown.neededWhy
-        when {
-            at >= 0 -> seen[at] = entry
-            index > 0 -> seen.add(seen.indexOfFirst { it.first.id == source[index - 1].id } + 1, entry)
-            else -> {
-                val later = source.drop(1).mapTo(mutableSetOf()) { it.id }
-                seen.add(seen.indexOfFirst { it.first.id in later }.takeIf { it >= 0 } ?: seen.size, entry)
-            }
-        }
+    val currentIds = source.mapTo(mutableSetOf()) { it.id }
+    val merged = source.toMutableList()
+    seen.forEachIndexed { index, old ->
+        if (old.id !in currentIds) merged.add(index.coerceIn(0, merged.size), old)
     }
+    seen.clear()
+    seen.addAll(merged)
     val shownNow = shown.needed.mapTo(mutableSetOf()) { it.id }
-    seen.toList().forEach { (row, why) ->
-        key(row.id) { KitReveal(visible = row.id in shownNow) { NeededRow(row, why) } }
+    merged.forEach { row ->
+        key(row.id) { KitRowReveal(visible = row.id in shownNow) { NeededRow(row) } }
     }
 }
 
 /** A part the updates need: its name, versions, size and why it is needed, with no choice. */
 @Composable
-private fun NeededRow(row: AgentNeededRowUi, why: AgentNeedRule) {
+private fun NeededRow(row: AgentNeededRowUi) {
     val need =
         stringResource(
-            if (why == AgentNeedRule.WithAnyUpdate) Res.string.agentUpdatesNeededLabel
+            if (row.why == AgentNeedRule.WithAnyUpdate) Res.string.agentUpdatesNeededLabel
             else Res.string.agentUpdatesNeededAlways
         )
     KitRow(
@@ -297,7 +316,11 @@ private fun Totals(sheet: AgentUpdateSheetUi) {
         KitRowGroup {
             KitRow(
                 stringResource(Res.string.agentUpdatesTotalFrees),
-                trailing = KitRowTrailing.Value(amount(sheet.freesBytes, sheet.freesKnown), chevron = false),
+                trailing =
+                    KitRowTrailing.Value(
+                        amount(sheet.freesBytes, sheet.freesKnown, Res.string.agentUpdatesFreesUnknown),
+                        chevron = false,
+                    ),
             )
         }
     }

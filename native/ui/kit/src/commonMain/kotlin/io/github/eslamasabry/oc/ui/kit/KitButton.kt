@@ -69,11 +69,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 
@@ -106,6 +110,12 @@ public data class KitAction(
      * window up. Display only; the shortcut layer binds it.
      */
     val shortcut: String? = null,
+    /**
+     * Other labels this button may swap to in place: when non-empty, the label slot reserves the tallest height across
+     * all of them at the current width and text scale so wrapping swaps never move the button. Empty keeps default
+     * sizing for every existing caller.
+     */
+    val swapLabels: List<String> = emptyList(),
 ) {
     /** True when a tap would run the action now. */
     val runnable: Boolean
@@ -424,38 +434,54 @@ public fun KitButton(
     kitAssert(run != null || !action.enabled.isEnabled) {
         "KitAction: an action without a callback must say why it cannot run (B-KIT-011)"
     }
-    KitButton(
-        label = action.label,
-        onClick = { run?.invoke() },
-        modifier = modifier,
-        role = role,
-        icon = action.icon,
-        destructive = action.destructive,
-        semanticsLabel = action.semanticsLabel,
-        enabled =
-            if (run == null && action.enabled.isEnabled) KitEnabled.Disabled(action.label)
-            else action.enabled,
-        working = action.working,
-        haptic = action.haptic,
-        fullWidth = fullWidth,
-        hero = hero,
-        expand = expand,
-        shortcut = action.shortcut,
-    )
+    val content: @Composable () -> Unit = {
+        KitButton(
+            label = action.label,
+            onClick = { run?.invoke() },
+            modifier = modifier,
+            role = role,
+            icon = action.icon,
+            destructive = action.destructive,
+            semanticsLabel = action.semanticsLabel,
+            enabled =
+                if (run == null && action.enabled.isEnabled) KitEnabled.Disabled(action.label)
+                else action.enabled,
+            working = action.working,
+            haptic = action.haptic,
+            fullWidth = fullWidth,
+            hero = hero,
+            expand = expand,
+            shortcut = action.shortcut,
+        )
+    }
+    if (action.swapLabels.isEmpty()) content()
+    else CompositionLocalProvider(LocalKitButtonSwapLabels provides action.swapLabels, content = content)
 }
 
+private val LocalKitButtonSwapLabels =
+    androidx.compose.runtime.staticCompositionLocalOf<List<String>> { emptyList() }
+
 @Composable
-private fun KitButtonWords(label: String, color: Color, @Suppress("UNUSED_PARAMETER") maxLines: Int, shortcut: String?, role: KitButtonRole) {
+private fun KitButtonWords(
+    label: String,
+    color: Color,
+    @Suppress("UNUSED_PARAMETER") maxLines: Int,
+    shortcut: String?,
+    role: KitButtonRole,
+) {
     // Tone is resolved by the caller's eased colour; KitText takes a tone, so the words draw
     // through a tone-free path.
     val window = LocalKitWindow.current
+    val underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined()
     // Visual language §5: the shortcut shows on a fine pointer, from the expanded window up.
     if (shortcut == null || !window.finePointer || !window.cls.isWide) {
-        KitTextColored(label, color, ALL_LINES, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined())
+        KitTextColored(label, color, ALL_LINES, underline = underline)
         return
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f, fill = false)) { KitTextColored(label, color, ALL_LINES, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined()) }
+        Box(Modifier.weight(1f, fill = false)) {
+            KitTextColored(label, color, ALL_LINES, underline = underline)
+        }
         Spacer(Modifier.width(Space.S1.dp))
         // Mono, text3 on a tertiary button and the button's own words otherwise; always left to right.
         val mono = LocalKitTypography.current.style(TypeRole.Mono)
@@ -482,7 +508,49 @@ private fun KitTextColored(text: String, color: Color, maxLines: Int, underline:
             textDirection = TextDirection.Content,
             textDecoration = if (underline) androidx.compose.ui.text.style.TextDecoration.Underline else null,
         )
-    KitSwap(text, pace = KitPace.Quick) { shown -> ButtonLine(shown, style, maxLines) }
+    val swapLabels = LocalKitButtonSwapLabels.current
+    if (swapLabels.isEmpty()) {
+        KitSwap(text, pace = KitPace.Quick) { shown -> ButtonLine(shown, style, maxLines) }
+        return
+    }
+    ButtonSwapSlot.Reserved(text, style, maxLines, swapLabels)
+}
+
+private object ButtonSwapSlot {
+    @Composable
+    fun Reserved(
+        text: String,
+        style: androidx.compose.ui.text.TextStyle,
+        maxLines: Int,
+        swapLabels: List<String>,
+    ) {
+        val measurer = rememberTextMeasurer()
+        val density = LocalDensity.current
+        BoxWithConstraints(
+            Modifier.kitMaxWidth(CapRole.Reading, io.github.eslamasabry.oc.ui.design.layout.CapAlign.Center),
+            contentAlignment = Alignment.Center,
+        ) {
+            val measureConstraints = Constraints(maxWidth = constraints.maxWidth)
+            val overflow = if (maxLines == ALL_LINES) TextOverflow.Clip else TextOverflow.Ellipsis
+            val reservedPx =
+                (swapLabels + text).maxOf { candidate ->
+                    measurer
+                        .measure(
+                            candidate,
+                            style,
+                            maxLines = maxLines,
+                            overflow = overflow,
+                            constraints = measureConstraints,
+                        )
+                        .size
+                        .height
+                }
+            val reservedDp = with(density) { reservedPx.toDp() }
+            Box(Modifier.heightIn(min = reservedDp), contentAlignment = Alignment.Center) {
+                KitSwap(text, pace = KitPace.Quick) { shown -> ButtonLine(shown, style, maxLines) }
+            }
+        }
+    }
 }
 
 /**

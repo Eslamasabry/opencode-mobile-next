@@ -219,7 +219,7 @@ class AgentAutoUpdateTest {
         host.metered = true
         updater.changed()
         assertEquals(AgentUpdateStep.WaitingMetered, updater.decision.value.step)
-        assertEquals("agent update: waiting, network is metered", updater.decision.value.line())
+        assertEquals("agent update: waiting, download deferred", updater.decision.value.line())
         host.metered = false
         jobs.running = true
         updater.changed()

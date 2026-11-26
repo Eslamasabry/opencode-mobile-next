@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -27,6 +29,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitProminentRule
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitList
@@ -148,8 +154,23 @@ private class Seams {
 private val FULL_ROW_ALPHA: () -> Float = { 1f }
 private const val SEAM_ALPHA_EPS: Float = 0.001f
 
-/** Live fade opacity of a direct [HairlineColumn] child (0..1), reported by `KitReveal`. */
+/** Live fade opacity of a direct [HairlineColumn] child (0..1), reported by [KitRowReveal]. */
 internal class KitRowAlpha(val alpha: () -> Float)
+
+/**
+ * A row inside [KitRowGroup] that folds in and out with [KitReveal] while fading its hairline divider in lockstep
+ * (STANDARD in, QUICK out; instant under reduced motion).
+ */
+@Composable
+public fun KitRowReveal(visible: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val specs = KitMotion.specs
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = if (visible) specs.pace(KitPace.Standard) else specs.pace(KitPace.Quick),
+        label = "kit.row.reveal.alpha",
+    )
+    KitReveal(visible = visible, modifier = modifier.kitRowAlpha { alpha }, content = content)
+}
 
 internal val LocalKitInHairlineColumn: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
     androidx.compose.runtime.staticCompositionLocalOf { false }

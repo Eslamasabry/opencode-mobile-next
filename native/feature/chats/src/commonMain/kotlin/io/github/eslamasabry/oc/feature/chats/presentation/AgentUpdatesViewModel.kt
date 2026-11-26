@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
+@Suppress("TooManyFunctions") // implements the 10-method AgentUpdateActions contract plus private leaveSheet()
 public class AgentUpdatesViewModel(
     private val nav: AppNavigator,
     pacer: Pacer,
@@ -70,29 +71,29 @@ public class AgentUpdatesViewModel(
 
     override fun openAgentsFromUpdates() {
         // Agents is where an agent is removed: a refused removal is answered by going there.
-        leaveSheet(model)
+        leaveSheet()
         nav.open(AgentsRoute.Home)
     }
 
     override fun openLinuxPackages() {
-        leaveSheet(model)
+        leaveSheet()
         nav.open(LinuxRoute.Packages)
     }
 
     override fun closeAgentUpdateResult(): Unit = model.closeResult()
 
+    /** Leaving the sheet for another page: its result is read, or the question is Not now (Review brings it back). */
+    private fun leaveSheet() {
+        val sheet = model.current().sheet
+        when {
+            sheet.refused.isNotEmpty() -> model.closeResult()
+            sheet.visible -> model.notNow()
+        }
+    }
+
     private companion object {
         /** The state outlives a short pause in collection (a configuration change), as Home's does. */
         const val KEEP_MS = 5_000L
-    }
-}
-
-/** Leaving the sheet for another page: its result is read, or the question is Not now (Review brings it back). */
-private fun leaveSheet(model: AgentUpdateSheetModel) {
-    val sheet = model.current().sheet
-    when {
-        sheet.refused.isNotEmpty() -> model.closeResult()
-        sheet.visible -> model.notNow()
     }
 }
 

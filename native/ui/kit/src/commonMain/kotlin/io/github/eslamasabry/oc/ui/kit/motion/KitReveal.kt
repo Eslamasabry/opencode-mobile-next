@@ -2,8 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.motion
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
-import io.github.eslamasabry.oc.ui.kit.row.kitRowAlpha
 
 /**
  * A part that comes and goes (Dart `KitReveal`; plan 08 §5.15): it unfolds and fades in over STANDARD and folds out
@@ -33,23 +30,14 @@ public fun KitReveal(visible: Boolean, modifier: Modifier = Modifier, content: @
         return
     }
     val specs = KitMotion.specs
-    val reveal = updateTransition(targetState = visible, label = "kit.reveal")
-    val fade =
-        reveal.animateFloat(
-            transitionSpec = {
-                if (targetState) specs.pace(KitPace.Standard) else specs.pace(KitPace.Quick)
-            },
-            label = "kit.reveal.alpha",
-        ) { shown ->
-            if (shown) 1f else 0f
-        }
-    reveal.AnimatedVisibility(
-        visible = { it },
-        modifier = modifier.kitRowAlpha { fade.value },
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
         // Height on the spatial springs (interruptible: a part closed mid-unfold turns around with its speed), fades
         // on the timed paces.
         enter = expandVertically(specs.spatial<IntSize>()) + fadeIn(specs.pace(KitPace.Standard)),
         exit = shrinkVertically(specs.spatialFast<IntSize>()) + fadeOut(specs.pace(KitPace.Quick)),
+        label = "kit.reveal",
     ) {
         Box(Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)) { content() }
     }

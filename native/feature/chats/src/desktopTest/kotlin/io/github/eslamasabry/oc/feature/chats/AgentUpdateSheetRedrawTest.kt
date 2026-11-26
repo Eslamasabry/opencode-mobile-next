@@ -72,7 +72,14 @@ class AgentUpdateSheetRedrawTest {
         fontScale: Float = 1f,
         offered: RedrawOffered = RedrawOffered(offer),
         motion: MotionLevel = MotionLevel.Off,
-        localeTag: String = "en",
+        block: suspend KitUiTest.() -> Unit,
+    ): Unit = runSheetInLocale(offer, "en", SheetConfig(fontScale, motion), offered, block)
+
+    private fun runSheetInLocale(
+        offer: AgentUpdateOffer,
+        localeTag: String,
+        config: SheetConfig,
+        offered: RedrawOffered = RedrawOffered(offer),
         block: suspend KitUiTest.() -> Unit,
     ) {
         val previous = Locale.getDefault()
@@ -84,10 +91,10 @@ class AgentUpdateSheetRedrawTest {
             kitUiTest(900, 2000) {
                 setContent {
                     val updates by model.ui.collectAsState(initial = remember { model.current() })
-                    CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
+                    CompositionLocalProvider(LocalDensity provides Density(2.5f, config.fontScale)) {
                         ChatEnvironment {
                             KitTheme(
-                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = motion),
+                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = config.motion),
                                 platform = DesktopKitPlatform(),
                                 localeTag = localeTag,
                                 stillFrame = true,
@@ -455,7 +462,11 @@ class AgentUpdateSheetRedrawTest {
             assertEquals(primarySlot, twoBtn.fetchSemanticsNode().boundsInRoot)
             assertEquals(notNowSlot, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
         }
-        runSheet(partialUnknownOffer(), fontScale = 1.3f, motion = MotionLevel.Full, localeTag = "ar") {
+        assertRtlWrapBoundsFixed()
+    }
+
+    private fun assertRtlWrapBoundsFixed() =
+        runSheetInLocale(partialUnknownOffer(), "ar", SheetConfig(fontScale = 1.3f, motion = MotionLevel.Full)) {
             ALL_AGENTS.filter { it != "Claude Code" }.forEach { switchOff(it) }
             val primary = SemanticsMatcher.keyIsDefined(KitPrimaryButtonKey)
             val notNowAr = "ليس الآن"
@@ -491,7 +502,6 @@ class AgentUpdateSheetRedrawTest {
                 "expected wrapped Arabic primary label at 360 dp text 1.3, got lines=${layouts.map { it.lineCount }}",
             )
         }
-    }
 
     @Test
     fun `B-UPD-024 tapping Update all when every agent is off turns all on and starts`() {
@@ -620,70 +630,13 @@ class AgentUpdateSheetRedrawTest {
         }
     }
 
-    /** [noLockedFiveOffer] with Codex's download size unknown so totals and buttons carry a lower bound. */
-    private fun partialUnknownOffer(): AgentUpdateOffer =
-        noLockedFiveOffer().let { offer ->
-            offer.copy(
-                items = offer.items.map { if (it.id == AgentId("codex")) it.copy(downloadBytes = null) else it },
-            )
-        }
-
-    /** [noLockedFiveOffer] with every download size unknown. */
-    private fun allUnknownOffer(): AgentUpdateOffer =
-        noLockedFiveOffer().let { offer ->
-            offer.copy(items = offer.items.map { it.copy(downloadBytes = null) })
-        }
-
-    private fun spokenLabel(node: SemanticsNode): String =
-        node.config
-            .getOrNull(SemanticsProperties.ContentDescription)
-            ?.joinToString(" ")
-            ?.replace("\u2066", "")
-            ?.replace("\u2068", "")
-            ?.replace("\u2069", "")
-            .orEmpty()
-
-    private fun KitUiTest.peakLuminance(bounds: Rect): Float {
-        val map = onRoot().captureToImage().toPixelMap()
-        val x0 = bounds.left.toInt().coerceIn(0, map.width - 1)
-        val x1 = bounds.right.toInt().coerceIn(x0, map.width - 1)
-        val y0 = bounds.top.toInt().coerceIn(0, map.height - 1)
-        val y1 = bounds.bottom.toInt().coerceIn(y0, map.height - 1)
-        var peak = 0f
-        for (y in y0..y1) {
-            for (x in x0..x1) {
-                val c = map[x, y]
-                val lum = 0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue
-                if (lum > peak) peak = lum
-            }
-        }
-        return peak
-    }
-
-    /** [noLockedFiveOffer] with a second needed part that is always needed, right after the agent helper. */
-    private fun alwaysNeededOffer(): AgentUpdateOffer =
-        noLockedFiveOffer().let { offer ->
-            val helper = offer.items.first()
-            val node =
-                helper.copy(
-                    id = AgentId("node"),
-                    name = "Node.js",
-                    fromVersion = "22.11.0",
-                    toVersion = "22.12.0",
-                    downloadBytes = 40_000_000L,
-                    installedBytes = 40_000_000L,
-                    neededWhen = AgentNeedRule.Always,
-                )
-            offer.copy(items = listOf(helper, node) + offer.items.drop(1))
-        }
-
     private fun KitUiTest.switchOff(name: String) {
         onNode(isToggleable() and hasText(name, substring = true)).performScrollTo().performClick()
         waitForIdle()
         mainClock.advanceTimeBy(1_500)
     }
 
-    private fun KitUiTest.walkSwitch(name: String): Walk {
+    private fun KitUiTest.walkSwitch(name: String): RedrawWalk {
         val last = onNode(isToggleable() and hasText(name, substring = true))
         last.performScrollTo()
         waitForIdle()
@@ -703,7 +656,7 @@ class AgentUpdateSheetRedrawTest {
         }
         mainClock.autoAdvance = true
         waitForIdle()
-        return Walk(before, heights, frames, buttonTops)
+        return RedrawWalk(before, heights, frames, buttonTops)
     }
 
     private fun KitUiTest.mainButtonTop(words: Set<String>): Float =
@@ -713,12 +666,6 @@ class AgentUpdateSheetRedrawTest {
                 onAllNodesWithText(label).fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
             }
             ?: Float.NaN
-
-    private fun updateAllFive(): String = "Update all · ${PhoneSizes.text(660_000_000L)}"
-
-    /** The primary button's words before and after the last switch changes (read under the sheet's own language). */
-    private fun mainButtonWords(): List<String> =
-        listOf("Update 1 selected · ${PhoneSizes.text(385_000_000L)}", updateAllFive())
 
     private fun KitUiTest.sheetHeight(): Int =
         onNodeWithTag("kit-sheet", useUnmergedTree = true).fetchSemanticsNode().size.height
@@ -730,49 +677,6 @@ class AgentUpdateSheetRedrawTest {
                 node.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }.orEmpty()
             }
 
-    private class Walk(
-        val before: Set<String>,
-        val heights: List<Int>,
-        val frames: List<Set<String>>,
-        val buttonTops: List<Float>,
-    ) {
-        fun noRowForOneFrame(what: String) {
-            (before + frames.flatten()).forEach { words ->
-                val shown = booleanArrayOf(words in before) + BooleanArray(frames.size) { words in frames[it] }
-                runs(shown).drop(1).dropLast(1).forEach { (value, start, end) ->
-                    assertTrue(
-                        end > start,
-                        "$what: \"$words\" was ${if (value) "shown" else "gone"} for one frame (frame $start)",
-                    )
-                }
-            }
-        }
-
-        fun buttonStaysPut() {
-            val tops = buttonTops.filter { !it.isNaN() }
-            assertTrue(tops.size > 1, "the main button was not found on the frames: $buttonTops")
-            val first = tops.first()
-            tops.forEach { top ->
-                assertTrue(
-                    kotlin.math.abs(top - first) <= ONE_DP_PX,
-                    "the main button moved from $first to $top while crossing 1-on <-> 0-on: $tops",
-                )
-            }
-        }
-
-        private fun runs(shown: BooleanArray): List<Triple<Boolean, Int, Int>> {
-            val found = mutableListOf<Triple<Boolean, Int, Int>>()
-            var start = 0
-            for (i in 1..shown.size) {
-                if (i == shown.size || shown[i] != shown[start]) {
-                    found += Triple(shown[start], start, i - 1)
-                    start = i
-                }
-            }
-            return found
-        }
-    }
-
     private companion object {
         const val HELPER_TOO_NEW = "Its version can't work with the new agent helper, so it can't be kept."
         const val METERED_LINE = "You're on mobile data. The updates download over it."
@@ -780,5 +684,110 @@ class AgentUpdateSheetRedrawTest {
         const val SWAP_FRAMES = 20
         const val ONE_DP_PX = 3
         val ALL_AGENTS = listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
+    }
+}
+
+private data class SheetConfig(val fontScale: Float = 1f, val motion: MotionLevel = MotionLevel.Off)
+
+private fun updateAllFive(): String = "Update all · ${PhoneSizes.text(660_000_000L)}"
+
+private fun mainButtonWords(): List<String> =
+    listOf("Update 1 selected · ${PhoneSizes.text(385_000_000L)}", updateAllFive())
+
+private fun partialUnknownOffer(): AgentUpdateOffer =
+    noLockedFiveOffer().let { offer ->
+        offer.copy(
+            items = offer.items.map { if (it.id == AgentId("codex")) it.copy(downloadBytes = null) else it },
+        )
+    }
+
+private fun allUnknownOffer(): AgentUpdateOffer =
+    noLockedFiveOffer().let { offer ->
+        offer.copy(items = offer.items.map { it.copy(downloadBytes = null) })
+    }
+
+private fun alwaysNeededOffer(): AgentUpdateOffer =
+    noLockedFiveOffer().let { offer ->
+        val helper = offer.items.first()
+        val node =
+            helper.copy(
+                id = AgentId("node"),
+                name = "Node.js",
+                fromVersion = "22.11.0",
+                toVersion = "22.12.0",
+                downloadBytes = 40_000_000L,
+                installedBytes = 40_000_000L,
+                neededWhen = AgentNeedRule.Always,
+            )
+        offer.copy(items = listOf(helper, node) + offer.items.drop(1))
+    }
+
+private fun spokenLabel(node: SemanticsNode): String =
+    node.config
+        .getOrNull(SemanticsProperties.ContentDescription)
+        ?.joinToString(" ")
+        ?.replace("\u2066", "")
+        ?.replace("\u2068", "")
+        ?.replace("\u2069", "")
+        .orEmpty()
+
+@OptIn(ExperimentalTestApi::class)
+private fun KitUiTest.peakLuminance(bounds: Rect): Float {
+    val map = onRoot().captureToImage().toPixelMap()
+    val x0 = bounds.left.toInt().coerceIn(0, map.width - 1)
+    val x1 = bounds.right.toInt().coerceIn(x0, map.width - 1)
+    val y0 = bounds.top.toInt().coerceIn(0, map.height - 1)
+    val y1 = bounds.bottom.toInt().coerceIn(y0, map.height - 1)
+    var peak = 0f
+    for (y in y0..y1) {
+        for (x in x0..x1) {
+            val c = map[x, y]
+            val lum = 0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue
+            if (lum > peak) peak = lum
+        }
+    }
+    return peak
+}
+
+private class RedrawWalk(
+    val before: Set<String>,
+    val heights: List<Int>,
+    val frames: List<Set<String>>,
+    val buttonTops: List<Float>,
+) {
+    fun noRowForOneFrame(what: String) {
+        (before + frames.flatten()).forEach { words ->
+            val shown = booleanArrayOf(words in before) + BooleanArray(frames.size) { words in frames[it] }
+            runs(shown).drop(1).dropLast(1).forEach { (value, start, end) ->
+                assertTrue(
+                    end > start,
+                    "$what: \"$words\" was ${if (value) "shown" else "gone"} for one frame (frame $start)",
+                )
+            }
+        }
+    }
+
+    fun buttonStaysPut() {
+        val tops = buttonTops.filter { !it.isNaN() }
+        assertTrue(tops.size > 1, "the main button was not found on the frames: $buttonTops")
+        val first = tops.first()
+        tops.forEach { top ->
+            assertTrue(
+                kotlin.math.abs(top - first) <= 3,
+                "the main button moved from $first to $top while crossing 1-on <-> 0-on: $tops",
+            )
+        }
+    }
+
+    private fun runs(shown: BooleanArray): List<Triple<Boolean, Int, Int>> {
+        val found = mutableListOf<Triple<Boolean, Int, Int>>()
+        var start = 0
+        for (i in 1..shown.size) {
+            if (i == shown.size || shown[i] != shown[start]) {
+                found += Triple(shown[start], start, i - 1)
+                start = i
+            }
+        }
+        return found
     }
 }

@@ -50,4 +50,5 @@
         <item quantity="other">更新已选 %1$s 项 · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">跳过这些版本</string>
+    <string name="agentUpdatesVersionsSpoken">从 %1$s 到 %2$s</string>
 </resources>

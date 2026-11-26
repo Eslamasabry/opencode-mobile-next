@@ -30,7 +30,6 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.InWindow
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.math.abs
 import kotlin.test.Test
@@ -84,10 +83,10 @@ class KitRowGroupRevealDividerTest {
                     ground = LocalKitColors.current.ground
                     Column(Modifier.fillMaxSize().background(ground)) {
                         KitRowGroup {
-                            KitReveal(visible = shown) {
+                            KitRowReveal(visible = shown) {
                                 KitRow("Alpha", Modifier.testTag("r0"), supporting = "First line")
                             }
-                            KitReveal(visible = shown) {
+                            KitRowReveal(visible = shown) {
                                 KitRow("Beta", Modifier.testTag("r1"), supporting = "Second line")
                             }
                             KitRow("Gamma", Modifier.testTag("r2"), supporting = "Third line")
@@ -142,7 +141,7 @@ class KitRowGroupRevealDividerTest {
                     Column(Modifier.fillMaxSize().background(ground)) {
                         KitRowGroup {
                             KitRow("Top", Modifier.testTag("r0"), supporting = "First line")
-                            KitReveal(visible = shown) {
+                            KitRowReveal(visible = shown) {
                                 KitRow("Middle", Modifier.testTag("r1"), supporting = "Second line")
                             }
                             KitRow("Bottom", Modifier.testTag("r2"), supporting = "Third line")

@@ -70,4 +70,5 @@
         <item quantity="other">حدّث %1$s محدَّد · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">تخطَّ هذه الإصدارات</string>
+    <string name="agentUpdatesVersionsSpoken">من %1$s إلى %2$s</string>
 </resources>

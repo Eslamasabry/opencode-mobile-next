@@ -62,4 +62,5 @@
         <item quantity="other">Обновить %1$s выбранных · %2$s</item>
     </plurals>
     <string name="agentUpdatesSkipVersions">Пропустить эти версии</string>
+    <string name="agentUpdatesVersionsSpoken">С %1$s на %2$s</string>
 </resources>

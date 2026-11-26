@@ -172,7 +172,7 @@ public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: Agen
             AgentUpdateStep.WaitingAgentsBusy -> "agent update: waiting, agents busy"
             AgentUpdateStep.WaitingSetup -> "agent update: waiting, a setup job runs"
             AgentUpdateStep.WaitingSwitch -> "agent update: waiting, a server move is pending"
-            AgentUpdateStep.WaitingMetered -> "agent update: waiting, network is metered"
+            AgentUpdateStep.WaitingMetered -> "agent update: waiting, download deferred"
             AgentUpdateStep.Updating -> "agent update: started ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Updated -> "agent update: finished ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Refused -> "agent update: install refused for ${agent?.raw ?: "an agent"}"
