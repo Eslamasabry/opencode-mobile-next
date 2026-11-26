@@ -157,6 +157,56 @@ internal object ScrollPlaceRules {
         }
         return null
     }
+
+    fun pendingPlace(holder: ScrollPlaceHolder): ScrollPlace? =
+        if (holder.fromStore && holder.following) null else holder.place
+
+    suspend fun reset(list: TranscriptListState, holder: ScrollPlaceHolder) {
+        holder.place = null
+        holder.fromStore = false
+        holder.following = true
+        list.following = true
+        list.scrollToNewest()
+    }
+
+    fun restoreOnFirstFrame(
+        list: TranscriptListState,
+        holder: ScrollPlaceHolder,
+        keys: List<String>,
+    ): Boolean {
+        val saved = pendingPlace(holder)
+        val canSync = saved != null && list.anchor != TranscriptAnchor.Hybrid && keys.isNotEmpty()
+        val found = if (canSync) target(saved, keys) else null
+        val follow = found != null && holder.following && found.first == 0
+        val applied = found != null && (!follow || found.second == 0)
+        if (applied) {
+            list.following = follow
+            list.lazy.requestScrollToItem(list.lazyIndex(found.first), found.second)
+        }
+        return applied
+    }
+
+    suspend fun restoreAsync(
+        list: TranscriptListState,
+        holder: ScrollPlaceHolder,
+        saved: ScrollPlace,
+        restored: BooleanArray,
+        currentKeys: () -> List<String>,
+    ) {
+        // Wait for the rows (a conversation coming back may still be reading them).
+        val current = snapshotFlow { currentKeys() }.first { it.isNotEmpty() }
+        if (restored[0]) return
+        restored[0] = true
+        target(saved, current)?.let { (index, offset) ->
+            // Rows that arrived below put the place away from the newest edge.
+            list.following = holder.following && index == 0
+            if (list.anchor == TranscriptAnchor.Hybrid) {
+                list.scrollToPlace(index, offset, saved.normal)
+            } else {
+                list.lazy.scrollToItem(list.lazyIndex(index), offset)
+            }
+        }
+    }
 }
 
 /**
@@ -193,18 +243,18 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     val current by keysState
     val restored = remember(list) { booleanArrayOf(false) }
     SideEffect {
-        if (!restored[0] && resets == 0 && restorePlaceOnFirstFrame(list, holder, keys)) {
+        if (!restored[0] && resets == 0 && ScrollPlaceRules.restoreOnFirstFrame(list, holder, keys)) {
             restored[0] = true
         }
     }
     LaunchedEffect(list, resets) {
         if (resets > 0) {
             restored[0] = false
-            resetScrollPlace(list, holder)
+            ScrollPlaceRules.reset(list, holder)
         }
-        val saved = if (restored[0]) null else holder.pendingPlace()
+        val saved = if (restored[0]) null else ScrollPlaceRules.pendingPlace(holder)
         if (saved != null) {
-            restorePlaceAsync(list, holder, saved, restored) { current }
+            ScrollPlaceRules.restoreAsync(list, holder, saved, restored) { current }
         }
         snapshotFlow { list.placeIn(current) to list.following }
             .collect { (place, following) ->
@@ -213,56 +263,6 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
                 holder.following = following
                 if (conversation != null) ScrollPlaceStore.put(conversation, place, following)
             }
-    }
-}
-
-private fun ScrollPlaceHolder.pendingPlace(): ScrollPlace? =
-    if (fromStore && following) null else place
-
-private suspend fun resetScrollPlace(list: TranscriptListState, holder: ScrollPlaceHolder) {
-    holder.place = null
-    holder.fromStore = false
-    holder.following = true
-    list.following = true
-    list.scrollToNewest()
-}
-
-private fun restorePlaceOnFirstFrame(
-    list: TranscriptListState,
-    holder: ScrollPlaceHolder,
-    keys: List<String>,
-): Boolean {
-    val saved = holder.pendingPlace()
-    val canSync = saved != null && list.anchor != TranscriptAnchor.Hybrid && keys.isNotEmpty()
-    val target = if (canSync) ScrollPlaceRules.target(saved, keys) else null
-    val follow = target != null && holder.following && target.first == 0
-    val applied = target != null && (!follow || target.second == 0)
-    if (applied) {
-        list.following = follow
-        list.lazy.requestScrollToItem(list.lazyIndex(target.first), target.second)
-    }
-    return applied
-}
-
-private suspend fun restorePlaceAsync(
-    list: TranscriptListState,
-    holder: ScrollPlaceHolder,
-    saved: ScrollPlace,
-    restored: BooleanArray,
-    currentKeys: () -> List<String>,
-) {
-    // Wait for the rows (a conversation coming back may still be reading them).
-    val current = snapshotFlow { currentKeys() }.first { it.isNotEmpty() }
-    if (restored[0]) return
-    restored[0] = true
-    ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
-        // Rows that arrived below put the place away from the newest edge.
-        list.following = holder.following && index == 0
-        if (list.anchor == TranscriptAnchor.Hybrid) {
-            list.scrollToPlace(index, offset, saved.normal)
-        } else {
-            list.lazy.scrollToItem(list.lazyIndex(index), offset)
-        }
     }
 }
 
