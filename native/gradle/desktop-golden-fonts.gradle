@@ -8,11 +8,14 @@ if (!System.getProperty('os.name').toLowerCase(Locale.ROOT).startsWith('linux'))
 }
 
 def fontDirectory = rootProject.layout.projectDirectory.dir('fixtures/fonts/dejavu')
+def cjkFontDirectory = rootProject.layout.projectDirectory.dir('fixtures/fonts/cjk')
 def fontFiles = files(
     fontDirectory.file('DejaVuSans.ttf'),
     fontDirectory.file('DejaVuSans-Bold.ttf'),
     fontDirectory.file('DejaVuSans-Oblique.ttf'),
     fontDirectory.file('DejaVuSans-BoldOblique.ttf'),
+    cjkFontDirectory.file('NotoSansCJKjp-Regular-subset.otf'),
+    cjkFontDirectory.file('NotoSansCJKsc-Regular-subset.otf'),
 )
 def configFile = layout.buildDirectory.file('golden-fonts/fonts.conf')
 def isolatedFonts = layout.buildDirectory.dir('golden-fonts/fonts')
@@ -21,21 +24,38 @@ def xmlEscape = { String value ->
     value.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 }
 // Absolute paths are explicit inputs so relocation regenerates the configuration.
+// Keep DejaVu Sans first for Latin/Arabic golden parity; fall back to Noto Sans CJK for CJK glyphs (B-603).
 def fontConfigXml = '''<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
 <fontconfig>
   <dir>''' + xmlEscape(isolatedFonts.get().asFile.absolutePath) + '''</dir>
   <cachedir>''' + xmlEscape(cacheDirectory.get().asFile.absolutePath) + '''</cachedir>
+  <alias>
+    <family>sans-serif</family>
+    <prefer>
+      <family>DejaVu Sans</family>
+      <family>Noto Sans CJK JP</family>
+      <family>Noto Sans CJK SC</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>Noto Sans</family>
+    <prefer>
+      <family>DejaVu Sans</family>
+      <family>Noto Sans CJK JP</family>
+      <family>Noto Sans CJK SC</family>
+    </prefer>
+  </alias>
 </fontconfig>
 '''
 
 def prepareFonts = tasks.register('prepareDesktopGoldenFonts', Sync) {
     group = 'verification'
-    description = 'Prepare the isolated DejaVu font inventory for Linux desktop goldens.'
+    description = 'Prepare the isolated DejaVu and CJK fallback font inventory for Linux desktop goldens.'
     inputs.files(fontFiles).withPropertyName('desktopGoldenFonts')
         .withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.property('fontconfigXml', fontConfigXml)
-    // Sync's declared output contains exactly the four named faces, even after a fixture inventory change.
+    // Sync's declared output contains exactly the named faces, even after a fixture inventory change.
     from(fontFiles)
     into(isolatedFonts)
     outputs.file(configFile)
