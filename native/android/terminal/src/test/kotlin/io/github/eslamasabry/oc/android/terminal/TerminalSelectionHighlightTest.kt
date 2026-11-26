@@ -113,7 +113,7 @@ class TerminalSelectionHighlightTest {
     private class ActionModeCaptureFrame(activity: Activity) : FrameLayout(activity) {
         var lastCallback: ActionMode.Callback2? = null
         var lastType: Int = -1
-        var lastMode: ActionMode? = null
+        var lastMode: FakeActionMode? = null
         var descendantInvalidations: Int = 0
 
         override fun onDescendantInvalidated(child: View, target: View) {
@@ -147,6 +147,7 @@ class TerminalSelectionHighlightTest {
     ) : ActionMode() {
         private val popupMenu = PopupMenu(ctx, anchor)
         private var finished = false
+        var invalidateCount: Int = 0
 
         override fun setTitle(title: CharSequence?) = Unit
 
@@ -158,7 +159,9 @@ class TerminalSelectionHighlightTest {
 
         override fun setCustomView(view: View?) = Unit
 
-        override fun invalidate() = Unit
+        override fun invalidate() {
+            invalidateCount++
+        }
 
         override fun finish() {
             if (!finished) {
@@ -585,5 +588,56 @@ class TerminalSelectionHighlightTest {
         assertNotNull(highlight, "expected translucent selection highlight rect")
         assertEquals(cellBg.rect.top, highlight.rect.top, 0.5f, "highlight top must match Termux cell top")
         assertEquals(cellBg.rect.bottom, highlight.rect.bottom, 0.5f, "highlight bottom must match Termux cell bottom")
+    }
+
+    private fun endHandlePointY(terminal: TerminalView): Int {
+        val controllerField =
+            TerminalView::class.java.declaredFields
+                .first { it.type.simpleName == "TextSelectionCursorController" }
+                .apply { isAccessible = true }
+        val controller = requireNotNull(controllerField.get(terminal))
+        val handleFields =
+            controller.javaClass.declaredFields
+                .filter { it.type.simpleName == "TextSelectionHandleView" }
+                .onEach { it.isAccessible = true }
+        val handle = requireNotNull(handleFields.last().get(controller))
+        val pointYField = handle.javaClass.getDeclaredField("mPointY").apply { isAccessible = true }
+        return pointYField.getInt(handle)
+    }
+
+    @Test
+    fun `B-481 selection render updates ActionMode and handle position once per frame`() {
+        val h = setupHarness()
+        h.host.appearance(themeSamples().first().palette)
+        val lines = (0..65).joinToString("\r\n") { i -> "line_$i target_$i" } + "\r\n"
+        runSync { h.session.append(lines) }
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val event = longPressCell(h.terminal, col = 8, row = 2)
+        h.terminal.startTextSelectionMode(event)
+        event.recycle()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val mode = assertNotNull(h.container.lastMode, "expected FakeActionMode")
+        val callback = assertNotNull(h.container.lastCallback, "expected ActionMode.Callback2")
+        mode.invalidateCount = 0
+
+        drawTree(h.container)
+        assertEquals(1, mode.invalidateCount, "first draw must call ActionMode.invalidate() exactly once")
+
+        drawTree(h.container)
+        assertEquals(2, mode.invalidateCount, "second draw must call ActionMode.invalidate() exactly once")
+
+        val beforeY = endHandlePointY(h.terminal)
+        val beforeRect = Rect().also { callback.onGetContentRect(mode, h.terminal, it) }
+
+        h.terminal.topRow = -2
+        drawTree(h.container)
+        assertEquals(3, mode.invalidateCount, "scroll redraw must call ActionMode.invalidate() once")
+
+        val afterY = endHandlePointY(h.terminal)
+        val afterRect = Rect().also { callback.onGetContentRect(mode, h.terminal, it) }
+        assertTrue(afterY > beforeY, "end handle Y ($afterY) must move down from $beforeY after scroll")
+        assertTrue(afterRect.top > beforeRect.top, "action bar rect top must follow scroll")
     }
 }
