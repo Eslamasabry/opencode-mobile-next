@@ -1,9 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.*
@@ -226,9 +227,12 @@ class E20S20ComposerTrayTest {
             val actions = Actions()
             kitUiTest(360, 480) {
                 setContent {
-                    E20Scene(scale = case.scale, dark = case.dark) {
+                    E20Scene(scale = case.scale, dark = case.dark, motion = MotionLevel.Full) {
                         KitSheetHost {
-                            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                            Box(
+                                Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.BottomCenter,
+                            ) {
                                 BasicComposer(ui(phrases = phrases), actions, chrome())
                             }
                         }
@@ -267,6 +271,11 @@ class E20S20ComposerTrayTest {
         }
     }
 
+    private fun KitUiTest.settleTrayMotion() {
+        mainClock.advanceTimeBy(1_500L)
+        waitForIdle()
+    }
+
     @Test
     fun `B-483 plus tray at 360 dp has zero overlap with learned-phrase chips`() {
         val phrases = listOf("Hi", "Continue", "Run the tests")
@@ -275,7 +284,9 @@ class E20S20ComposerTrayTest {
             onNodeWithTag("chat-phrase-chips", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithTag("kit-composer-tray").assertDoesNotExist()
             onNodeWithTag("chat-attach-button").performClick()
-            waitForIdle()
+            mainClock.advanceTimeBy(64L)
+            assertNoPhraseTrayOverlap(phrases, "$where mid")
+            settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertIsDisplayed()
             val out = File("build/renders/b483-plus-tray-360-${case.modeTag}-${case.scaleTag}.png")
             out.parentFile.mkdirs()
@@ -290,10 +301,10 @@ class E20S20ComposerTrayTest {
         forEachCompactCase(phrases) { case, actions ->
             val where = "360dp ${case.modeTag} ${case.scaleTag}"
             onNodeWithTag("chat-attach-button").performClick()
-            waitForIdle()
+            settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertIsDisplayed()
             onNodeWithTag("composer-tool-gallery").performClick()
-            waitForIdle()
+            settleTrayMotion()
             assertEquals(listOf("attach Photos"), actions.calls, "$where: Photos tap must invoke Photos only")
             onNodeWithTag("kit-composer-tray").assertDoesNotExist()
         }
@@ -306,10 +317,10 @@ class E20S20ComposerTrayTest {
             val where = "360dp ${case.modeTag} ${case.scaleTag}"
             onNodeWithText("Hi", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithTag("chat-attach-button").performClick()
-            waitForIdle()
+            settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertIsDisplayed()
             onNodeWithTag("chat-attach-button").performClick()
-            waitForIdle()
+            settleTrayMotion()
             onNodeWithTag("kit-composer-tray").assertDoesNotExist()
             onNodeWithTag("chat-phrase-chips", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithText("Hi", useUnmergedTree = true).assertIsDisplayed()
