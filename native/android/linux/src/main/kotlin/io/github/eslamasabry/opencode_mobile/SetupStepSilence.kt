@@ -208,6 +208,21 @@ internal object SetupCompatFallback {
         fun runOnce(compatible: Boolean): StepAttempt
     }
 
+    fun hooks(
+        isCancelled: () -> Boolean,
+        persistCompat: () -> Unit,
+        clearCompat: () -> Unit,
+        onCompatRetry: (String) -> Unit,
+        runOnce: (Boolean) -> StepAttempt,
+    ): Hooks =
+        object : Hooks {
+            override fun isCancelled(): Boolean = isCancelled()
+            override fun persistCompat() = persistCompat()
+            override fun clearCompat() = clearCompat()
+            override fun onCompatRetry(reasonLine: String) = onCompatRetry(reasonLine)
+            override fun runOnce(compatible: Boolean): StepAttempt = runOnce(compatible)
+        }
+
     fun run(stepId: String, initialCompat: Boolean, hooks: Hooks): Outcome {
         val first = hooks.runOnce(initialCompat)
         return when {

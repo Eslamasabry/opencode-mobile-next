@@ -476,34 +476,30 @@ class SetupRunner private constructor(private val context: Context) {
         SetupCompatFallback.run(
             stepId = spec.id,
             initialCompat = linux.serverCompat(),
-            hooks =
-                object : SetupCompatFallback.Hooks {
-                    override fun isCancelled(): Boolean = cancelled
-
-                    override fun persistCompat() {
-                        linux.persistProotCompat()
-                    }
-
-                    override fun clearCompat() {
-                        linux.clearProotCompat()
-                    }
-
-                    override fun onCompatRetry(reasonLine: String) {
-                        Log.w(BuiltinLinux.TAG, "setup step ${spec.id} retrying in compatibility mode")
-                        logLine(reasonLine)
-                        val label = spec.labels["compat"] ?: "Trying again in compatibility mode"
-                        logLine("==> $label")
-                        event(component, SetupProtocol.Event.Stage(label))
-                    }
-
-                    override fun runOnce(compatible: Boolean): SetupCompatFallback.StepAttempt {
-                        lastExitCode = null
-                        lastStalled = false
-                        val failure = runScriptProven(spec, component, compatible)
-                        return SetupCompatFallback.StepAttempt(failure, lastExitCode, lastStalled)
-                    }
-                },
+            hooks = SetupCompatFallback.hooks(
+                isCancelled = { cancelled },
+                persistCompat = { linux.persistProotCompat() },
+                clearCompat = { linux.clearProotCompat() },
+                onCompatRetry = { reason -> notifyCompatRetry(spec, component, reason) },
+                runOnce = { compat -> runAttempt(spec, component, compat) },
+            ),
         )
+
+    private fun notifyCompatRetry(spec: Spec, component: SetupComponentStatus, reasonLine: String) {
+        Log.w(BuiltinLinux.TAG, "setup step ${spec.id} retrying in compatibility mode")
+        logLine(reasonLine)
+        val label = spec.labels["compat"] ?: "Trying again in compatibility mode"
+        logLine("==> $label")
+        event(component, SetupProtocol.Event.Stage(label))
+    }
+
+    private fun runAttempt(spec: Spec, component: SetupComponentStatus, compatible: Boolean):
+        SetupCompatFallback.StepAttempt {
+        lastExitCode = null
+        lastStalled = false
+        val failure = runScriptProven(spec, component, compatible)
+        return SetupCompatFallback.StepAttempt(failure, lastExitCode, lastStalled)
+    }
 
     /** The exit status of the last script run (the guest's own result when it reported one). */
     @Volatile private var lastExitCode: Int? = null
@@ -550,29 +546,21 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     private fun runInstallerScript(
-        spec: Spec,
-        component: SetupComponentStatus,
-        started: Process,
-        completion: SetupScriptCompletion,
-        compatible: Boolean,
+        spec: Spec, component: SetupComponentStatus, started: Process,
+        completion: SetupScriptCompletion, compatible: Boolean,
     ): String? {
-        val wasCancelled = synchronized(lock) {
-            process = started
-            cancelled
-        }
+        val wasCancelled = synchronized(lock) { process = started; cancelled }
         if (wasCancelled) {
             linux.stopInstaller(started)
             return "cancelled"
         }
         val silence = SetupStepSilence(timeoutMs = SetupCompatFallback.timeoutForMode(compatible))
         val watchdog = SetupSilenceWatchdog(silence, { cancelled }, { linux.stopInstaller(started) })
-        val run = ScriptRun(completion, watchdog)
+        val run = SetupScriptRun(completion, watchdog)
         watchdog.start()
         try {
             started.outputStream.close()
-            started.inputStream.bufferedReader().forEachLine { line ->
-                handleScriptLine(spec, component, run, line)
-            }
+            started.inputStream.bufferedReader().forEachLine { line -> handleScriptLine(spec, component, run, line) }
         } catch (error: SetupPersistenceException) {
             linux.stopInstaller(started)
             synchronized(lock) { process = null }
@@ -583,9 +571,7 @@ class SetupRunner private constructor(private val context: Context) {
         } finally {
             watchdog.stop()
         }
-        val code = try { started.waitFor() } finally {
-            synchronized(lock) { process = null }
-        }
+        val code = try { started.waitFor() } finally { synchronized(lock) { process = null } }
         lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, run.sawSegfault)
         lastStalled = watchdog.isStalled && completion.exitCode != 0
         return when {
@@ -596,16 +582,7 @@ class SetupRunner private constructor(private val context: Context) {
         }
     }
 
-    /** Per-run output state and silence watchdog for a setup script. */
-    private class ScriptRun(
-        val completion: SetupScriptCompletion,
-        val watchdog: SetupSilenceWatchdog,
-    ) {
-        var last: String? = null
-        var sawSegfault = false
-    }
-
-    private fun handleScriptLine(spec: Spec, component: SetupComponentStatus, run: ScriptRun, line: String) {
+    private fun handleScriptLine(spec: Spec, component: SetupComponentStatus, run: SetupScriptRun, line: String) {
         if (run.completion.accept(line)) return
         if (SetupStepRetry.reportsSegfault(line)) run.sawSegfault = true
         val parsed = SetupProtocol.parse(line)
@@ -858,4 +835,13 @@ class SetupRunner private constructor(private val context: Context) {
                 instance ?: SetupRunner(context.applicationContext).also { instance = it }
             }
     }
+}
+
+/** Per-run output state and silence watchdog for a setup script. */
+private class SetupScriptRun(
+    val completion: SetupScriptCompletion,
+    val watchdog: SetupSilenceWatchdog,
+) {
+    var last: String? = null
+    var sawSegfault = false
 }
