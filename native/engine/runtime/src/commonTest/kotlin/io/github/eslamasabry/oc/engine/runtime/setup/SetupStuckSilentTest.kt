@@ -72,7 +72,10 @@ class SetupStuckSilentTest {
         assertEquals(SetupActivity.Downloading, SetupActivity.fromLog("==> The app is downloading this itself\n"))
         assertEquals(SetupActivity.Configuring, SetupActivity.fromLog("==> Installing packages\n"))
         assertEquals(SetupActivity.Configuring, SetupActivity.fromLog("==> Trying again in compatibility mode\n"))
-        assertEquals(SetupActivity.Configuring, SetupActivity.fromLog("==> Repairing interrupted package installation\n"))
+        assertEquals(
+            SetupActivity.Configuring,
+            SetupActivity.fromLog("==> Repairing interrupted package installation\n"),
+        )
 
         val record =
             SetupJobRecord(
