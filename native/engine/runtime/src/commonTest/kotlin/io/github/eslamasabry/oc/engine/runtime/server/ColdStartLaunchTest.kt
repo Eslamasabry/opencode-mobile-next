@@ -32,28 +32,31 @@ class ColdStartLaunchTest {
 
             val job = launch {
                 ColdStartLaunch.run(
-                    active = phone,
-                    phoneHelpers = listOf(helper),
-                    seed = { id -> events += testScheduler.currentTime to "seed:${id.raw}" },
-                    startHelper = { id ->
-                        events += testScheduler.currentTime to "startHelper:${id.raw}"
-                        helperJobRunning = true
-                        launch {
-                            delay(6_000)
-                            helperReadyAt = testScheduler.currentTime
-                            events += testScheduler.currentTime to "helperReady:${id.raw}"
-                        }
-                    },
-                    adoptHelpers = { events += testScheduler.currentTime to "adoptHelpers" },
-                    connectPrimary = { id ->
-                        events += testScheduler.currentTime to "connectPrimary:${id.raw}"
-                        openCodeGate.await()
-                        openCodeReadyAt = testScheduler.currentTime
-                        "ok"
-                    },
-                    emptyPrimary = { "empty" },
-                    onPrimaryComplete = { events += testScheduler.currentTime to "primaryComplete:$it" },
-                    syncRemaining = { events += testScheduler.currentTime to "syncRemaining" },
+                    ColdStartLaunch.Targets(active = phone, phoneHelpers = listOf(helper)),
+                    ColdStartLaunch.HelperHooks(
+                        seed = { id -> events += testScheduler.currentTime to "seed:${id.raw}" },
+                        start = { id ->
+                            events += testScheduler.currentTime to "startHelper:${id.raw}"
+                            helperJobRunning = true
+                            launch {
+                                delay(6_000)
+                                helperReadyAt = testScheduler.currentTime
+                                events += testScheduler.currentTime to "helperReady:${id.raw}"
+                            }
+                        },
+                        adopt = { events += testScheduler.currentTime to "adoptHelpers" },
+                    ),
+                    ColdStartLaunch.PrimaryHooks(
+                        connect = { id ->
+                            events += testScheduler.currentTime to "connectPrimary:${id.raw}"
+                            openCodeGate.await()
+                            openCodeReadyAt = testScheduler.currentTime
+                            "ok"
+                        },
+                        empty = { "empty" },
+                        onComplete = { events += testScheduler.currentTime to "primaryComplete:$it" },
+                        syncRemaining = { events += testScheduler.currentTime to "syncRemaining" },
+                    ),
                 )
             }
 
@@ -89,15 +92,18 @@ class ColdStartLaunchTest {
         runTest {
             val events = mutableListOf<String>()
             ColdStartLaunch.run(
-                active = null,
-                phoneHelpers = emptyList(),
-                seed = { events += "seed:${it.raw}" },
-                startHelper = { events += "startHelper:${it.raw}" },
-                adoptHelpers = { events += "adoptHelpers" },
-                connectPrimary = { "unexpected" },
-                emptyPrimary = { "empty" },
-                onPrimaryComplete = { events += "complete:$it" },
-                syncRemaining = { events += "syncRemaining" },
+                ColdStartLaunch.Targets(active = null, phoneHelpers = emptyList()),
+                ColdStartLaunch.HelperHooks(
+                    seed = { events += "seed:${it.raw}" },
+                    start = { events += "startHelper:${it.raw}" },
+                    adopt = { events += "adoptHelpers" },
+                ),
+                ColdStartLaunch.PrimaryHooks(
+                    connect = { "unexpected" },
+                    empty = { "empty" },
+                    onComplete = { events += "complete:$it" },
+                    syncRemaining = { events += "syncRemaining" },
+                ),
             )
             assertEquals(listOf("adoptHelpers", "complete:empty", "syncRemaining"), events)
         }

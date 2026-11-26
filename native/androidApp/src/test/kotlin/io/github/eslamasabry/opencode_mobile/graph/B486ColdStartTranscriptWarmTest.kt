@@ -34,6 +34,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -52,6 +53,11 @@ class B486ColdStartTranscriptWarmTest {
         File(System.getProperty("java.io.tmpdir"), "b486-cold-lk-${Random.nextLong().toULong()}")
     private val phoneId = ProfileId("phone")
     private val helperId = ProfileId("phone-agents")
+    private val clock = TestClock()
+    private val backend = InMemoryPrefsBackend()
+    private val secrets = MemorySecrets()
+    private val lanes = DefaultWriterLanes()
+    private val redactor = Redactor()
 
     @AfterTest
     fun cleanUp() {
@@ -98,76 +104,64 @@ class B486ColdStartTranscriptWarmTest {
             ),
         )
 
+    private fun newPrefs(dispatcher: CoroutineDispatcher): PrefsKeyValueStore =
+        PrefsKeyValueStore(
+            backend,
+            FlutterPrefsCodec(JavaListDecoder.Unsupported),
+            StateMigrationGate.alwaysOpen(),
+            dispatcher,
+        )
+
+    private fun newProfiles(prefs: PrefsKeyValueStore): ProfileStore =
+        ProfileStore(
+            prefs,
+            secrets,
+            lanes,
+            redactor,
+            phoneServer = { PhoneServerProfile.managedOnPhone(it, 4098) },
+        )
+
+    private suspend fun seedHelperTranscriptOnDisk(
+        dispatcher: CoroutineDispatcher,
+        ref: ConversationRef,
+    ) {
+        val prefs = newPrefs(dispatcher).also { it.warm() }
+        val profiles = newProfiles(prefs).also { it.load() }
+        profiles.upsert(
+            StoredProfile(phoneId, "This phone", "http://127.0.0.1:4098", backend = BackendKind.OpenCode2),
+            SecretEdit.Set("pw-phone"),
+        )
+        profiles.upsert(
+            StoredProfile(
+                helperId,
+                "This phone",
+                "ws://127.0.0.1:4099",
+                backend = BackendKind.Paseo,
+                codexDirectory = "/root/projects",
+            ),
+            SecretEdit.Set("pw-helper"),
+        )
+        prefs.commit(lanes.app) {
+            putString("oc.builtinServerOwner", phoneId.raw)
+            putString("oc.phoneAgentOwner.${helperId.raw}", phoneId.raw)
+        }
+        val lk = FileLastKnown(Path(rootDir.absolutePath), dispatcher, clock)
+        TranscriptLastKnownStore(lk, profiles, prefs) { 1 }
+            .keep(ref, "Explain the crash", sampleMessages(ref.sessionId.raw))
+    }
+
     @Test
     fun `B-CHAT-486 cold-start transcript read loads profiles before looking up server mark`() =
         runTest {
             val dispatcher = StandardTestDispatcher(testScheduler)
-            val clock = TestClock()
-            val backend = InMemoryPrefsBackend()
-            val secrets = MemorySecrets()
-            val lanes = DefaultWriterLanes()
-            val redactor = Redactor()
             val ref = ConversationRef(helperId, SessionId("claude-cold"))
-
-            // First run: save helper profile and keep its transcript on disk.
-            val prefs1 =
-                PrefsKeyValueStore(
-                    backend,
-                    FlutterPrefsCodec(JavaListDecoder.Unsupported),
-                    StateMigrationGate.alwaysOpen(),
-                    dispatcher,
-                )
-            prefs1.warm()
-            val profiles1 =
-                ProfileStore(
-                    prefs1,
-                    secrets,
-                    lanes,
-                    redactor,
-                    phoneServer = { PhoneServerProfile.managedOnPhone(it, 4098) },
-                )
-            profiles1.load()
-            profiles1.upsert(
-                StoredProfile(phoneId, "This phone", "http://127.0.0.1:4098", backend = BackendKind.OpenCode2),
-                SecretEdit.Set("pw-phone"),
-            )
-            profiles1.upsert(
-                StoredProfile(
-                    helperId,
-                    "This phone",
-                    "ws://127.0.0.1:4099",
-                    backend = BackendKind.Paseo,
-                    codexDirectory = "/root/projects",
-                ),
-                SecretEdit.Set("pw-helper"),
-            )
-            prefs1.commit(lanes.app) {
-                putString("oc.builtinServerOwner", phoneId.raw)
-                putString("oc.phoneAgentOwner.${helperId.raw}", phoneId.raw)
-            }
-            val lk1 = FileLastKnown(Path(rootDir.absolutePath), dispatcher, clock)
-            TranscriptLastKnownStore(lk1, profiles1, prefs1) { 1 }
-                .keep(ref, "Explain the crash", sampleMessages(ref.sessionId.raw))
+            seedHelperTranscriptOnDisk(dispatcher, ref)
 
             // Cold restart: fresh ProfileStore that has NOT run load() yet when Chat opens.
-            val prefs2 =
-                PrefsKeyValueStore(
-                    backend,
-                    FlutterPrefsCodec(JavaListDecoder.Unsupported),
-                    StateMigrationGate.alwaysOpen(),
-                    dispatcher,
-                )
-            prefs2.warm()
-            val profiles2 =
-                ProfileStore(
-                    prefs2,
-                    secrets,
-                    lanes,
-                    redactor,
-                    phoneServer = { PhoneServerProfile.managedOnPhone(it, 4098) },
-                )
-            val lk2 = FileLastKnown(Path(rootDir.absolutePath), dispatcher, clock)
-            val coldStore = TranscriptLastKnownStore(lk2, profiles2, prefs2) { 1 }
+            val prefs = newPrefs(dispatcher).also { it.warm() }
+            val profiles = newProfiles(prefs)
+            val lk = FileLastKnown(Path(rootDir.absolutePath), dispatcher, clock)
+            val coldStore = TranscriptLastKnownStore(lk, profiles, prefs) { 1 }
 
             val kept = coldStore.read(ref)
             assertNotNull(kept, "cold-start read must warm ProfileStore so saved agent transcript shows at once")

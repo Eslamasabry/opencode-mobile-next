@@ -28,6 +28,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -75,11 +76,20 @@ public class SettingsPresenter(
     private val edgeDock: EdgeDockSetting? = null,
     /** Appearance › Glass lab's numbers; null where the build offers no lab. */
     glassLabPort: GlassLabSetting? = null,
-    /** Settings › Help: built-in phone Linux speed mode and one-tap fast-mode retry. */
-    private val linuxSpeed: LinuxSpeedSetting? = null,
 ) : SettingsActions {
     private val lab: GlassLabPresenter? = glassLabPort?.let { GlassLabPresenter(scope, it) }
     override val glassLab: GlassLabActions? get() = lab
+    private var linuxSpeed: LinuxSpeedSetting? = null
+    private var linuxSpeedJob: Job? = null
+    private val linuxSpeedFacts = MutableStateFlow<LinuxSpeedFacts?>(null)
+
+    /** B-486: attaches the phone Linux speed port (null off Android) without widening the constructor. */
+    public fun bindLinuxSpeed(port: LinuxSpeedSetting) {
+        linuxSpeed = port
+        linuxSpeedJob?.cancel()
+        linuxSpeedFacts.value = port.facts.value
+        linuxSpeedJob = scope.launch { port.facts.collect { linuxSpeedFacts.value = it } }
+    }
 
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -149,7 +159,7 @@ public class SettingsPresenter(
             localModels?.facts ?: flowOf(null),
             localData?.facts ?: flowOf(null),
             phrases?.facts ?: flowOf(null),
-            linuxSpeed?.facts ?: flowOf(null),
+            linuxSpeedFacts,
         ) { m, d, p, s ->
             Extra(m, d, p, s)
         }
@@ -173,7 +183,7 @@ public class SettingsPresenter(
             localModels?.facts?.value,
             localData?.facts?.value,
             phrases?.facts?.value,
-            linuxSpeed?.facts?.value,
+            linuxSpeedFacts.value,
         )
 
     public val state: StateFlow<SettingsUi> =
@@ -392,15 +402,17 @@ public class SettingsPresenter(
                     demo = f.canOpen(SettingsOutside.Demo),
                     androidKeystore = f.platform.builtinLinux,
                 ),
-            linuxSpeed =
-                e.linuxSpeed?.let { speed ->
-                    speed.copy(
-                        checking = speed.checking || l.linuxSpeedChecking,
-                        lastOutcome = l.linuxSpeedOutcome ?: speed.lastOutcome,
-                    )
-                },
+            linuxSpeed = linuxSpeedUi(l, e),
         )
     }
+
+    private fun linuxSpeedUi(l: Local, e: Engines): LinuxSpeedFacts? =
+        e.linuxSpeed?.let { speed ->
+            speed.copy(
+                checking = speed.checking || l.linuxSpeedChecking,
+                lastOutcome = l.linuxSpeedOutcome ?: speed.lastOutcome,
+            )
+        }
 
     /** The notifications facts with the usage-alerts row only where the host can open Usage › Alerts. */
     private fun notificationsUi(e: Engines, f: SettingsFacts) =

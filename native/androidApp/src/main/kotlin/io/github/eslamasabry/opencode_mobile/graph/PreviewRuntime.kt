@@ -212,24 +212,30 @@ class PreviewRuntime(
                     .filter { it.id != active && isPhoneHelper(it) && listSourceShown(it.id) }
                     .map { it.id }
             io.github.eslamasabry.oc.engine.runtime.server.ColdStartLaunch.run(
-                active = active,
-                phoneHelpers = phoneHelpers,
-                seed = { id ->
-                    command {
-                        seedWhileStarting(id)
-                        Unit.ok()
-                    }
-                },
-                startHelper = ::joinPhoneHelper,
-                adoptHelpers = ::adoptPhoneAgents,
-                connectPrimary = { id ->
-                    connectCommand(id, makeActive = true) { turn ->
-                        connectForHome(id, makeActive = turn.activate, local = turn.local)
-                    }
-                },
-                emptyPrimary = { Unit.ok() },
-                onPrimaryComplete = { initialConnection.complete(it) },
-                syncRemaining = { synchronizeListSources() },
+                io.github.eslamasabry.oc.engine.runtime.server.ColdStartLaunch.Targets(
+                    active = active,
+                    phoneHelpers = phoneHelpers,
+                ),
+                io.github.eslamasabry.oc.engine.runtime.server.ColdStartLaunch.HelperHooks(
+                    seed = { id ->
+                        command {
+                            seedWhileStarting(id)
+                            Unit.ok()
+                        }
+                    },
+                    start = ::joinPhoneHelper,
+                    adopt = ::adoptPhoneAgents,
+                ),
+                io.github.eslamasabry.oc.engine.runtime.server.ColdStartLaunch.PrimaryHooks(
+                    connect = { id ->
+                        connectCommand(id, makeActive = true) { turn ->
+                            connectForHome(id, makeActive = turn.activate, local = turn.local)
+                        }
+                    },
+                    empty = { Unit.ok() },
+                    onComplete = { initialConnection.complete(it) },
+                    syncRemaining = { synchronizeListSources() },
+                ),
             )
         }
     }

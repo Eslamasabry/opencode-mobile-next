@@ -127,8 +127,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             problemReport = host.problemReport,
             edgeDock = host.edgeDock,
             glassLabPort = host.glassLab,
-            linuxSpeed = host.linuxSpeed,
-        )
+        ).also { p -> host.linuxSpeed?.let(p::bindLinuxSpeed) }
 
     public val state: StateFlow<SettingsUi> = presenter.state
     public val actions: SettingsActions = presenter

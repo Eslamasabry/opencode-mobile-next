@@ -238,7 +238,11 @@ class OcApplication : Application(), GraphOwner {
             (appGraph as io.github.eslamasabry.opencode_mobile.graph.ReplyWatchAccessors).replyWatch.start()
         }
         step("resumedActivities") {
-            appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
+            // P12-VOICE: follow the resumed activity from the start (mic permission)
+            val resumed = appGraph.resumedActivities
+            (appGraph as io.github.eslamasabry.opencode_mobile.graph.LocalServerGatesAccessors)
+                .localServerGates
+                .hasResumedActivity = { resumed.current != null }
         }
         startDeferred()
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }

@@ -92,8 +92,10 @@ class B486HelpLinuxSpeedUiTest {
                                     MutableStateFlow(phoneFacts()),
                                     FakeChoices(),
                                     RecordingOpeners(),
-                                    linuxSpeed = port,
-                                ).also { it.onOpen(SettingsPage.Group(SettingsGroupId.Help)) }
+                                ).also {
+                                    it.bindLinuxSpeed(port)
+                                    it.onOpen(SettingsPage.Group(SettingsGroupId.Help))
+                                }
                             }
                         val state by presenter.state.collectAsState()
                         SettingsScreen(state, presenter)
@@ -140,8 +142,10 @@ class B486HelpLinuxSpeedUiTest {
                                     MutableStateFlow(phoneFacts()),
                                     FakeChoices(),
                                     RecordingOpeners(),
-                                    linuxSpeed = port,
-                                ).also { it.onOpen(SettingsPage.Group(SettingsGroupId.Help)) }
+                                ).also {
+                                    it.bindLinuxSpeed(port)
+                                    it.onOpen(SettingsPage.Group(SettingsGroupId.Help))
+                                }
                             }
                         val state by presenter.state.collectAsState()
                         SettingsScreen(state, presenter)
@@ -184,8 +188,10 @@ class B486HelpLinuxSpeedUiTest {
                                 MutableStateFlow(phoneFacts()),
                                 FakeChoices(),
                                 RecordingOpeners(),
-                                linuxSpeed = port,
-                            ).also { it.onOpen(SettingsPage.Group(SettingsGroupId.Help)) }
+                            ).also {
+                                it.bindLinuxSpeed(port)
+                                it.onOpen(SettingsPage.Group(SettingsGroupId.Help))
+                            }
                         }
                     val state by presenter.state.collectAsState()
                     SettingsScreen(state, presenter)
@@ -218,8 +224,10 @@ class B486HelpLinuxSpeedUiTest {
                                 MutableStateFlow(phoneFacts()),
                                 FakeChoices(),
                                 RecordingOpeners(),
-                                linuxSpeed = failing,
-                            ).also { it.onOpen(SettingsPage.Group(SettingsGroupId.Help)) }
+                            ).also {
+                                it.bindLinuxSpeed(failing)
+                                it.onOpen(SettingsPage.Group(SettingsGroupId.Help))
+                            }
                         }
                     val state by presenter.state.collectAsState()
                     SettingsScreen(state, presenter)
@@ -243,8 +251,10 @@ class B486HelpLinuxSpeedUiTest {
                                 MutableStateFlow(phoneFacts()),
                                 FakeChoices(),
                                 RecordingOpeners(),
-                                linuxSpeed = notInstalled,
-                            ).also { it.onOpen(SettingsPage.Group(SettingsGroupId.Help)) }
+                            ).also {
+                                it.bindLinuxSpeed(notInstalled)
+                                it.onOpen(SettingsPage.Group(SettingsGroupId.Help))
+                            }
                         }
                     val state by presenter.state.collectAsState()
                     SettingsScreen(state, presenter)

@@ -116,7 +116,6 @@ object LinuxRuntimeWiring {
         policies: AppAutomationPolicies,
         consents: NativePhoneFirstStartConsents,
         gates: LocalServerGates,
-        resumedActivities: ResumedActivities,
     ): BuiltinRuntime =
         BuiltinRuntime(
                 app,
@@ -130,7 +129,6 @@ object LinuxRuntimeWiring {
                 policies,
                 consents,
                 gates,
-                resumedActivities,
             )
             .also { leases.start() }
 
@@ -427,7 +425,6 @@ internal constructor(
     private val policies: AppAutomationPolicies,
     private val consents: NativePhoneFirstStartConsents,
     private val gates: LocalServerGates,
-    private val resumedActivities: ResumedActivities? = null,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
@@ -1759,7 +1756,7 @@ internal constructor(
             }
         )
         // B-486: if MainActivity already resumed before oc-startup registered this callback, catch up at once.
-        if (resumedActivities?.current != null && !foreground) resumed(true)
+        if (gates.hasResumedActivity() && !foreground) resumed(true)
         scope.launch { publish() }
     }
 
@@ -1920,6 +1917,11 @@ object OfflineSpeechEngine : SherpaRuntime {
  * The seam between the connection runtime and the phone's own server (phase 0): the built-in runtime installs the gate,
  * the connection runtime asks it before the first connection to the managed local profile. Unset means no gating.
  */
+@ContributesTo(AppScope::class)
+interface LocalServerGatesAccessors {
+    val localServerGates: LocalServerGates
+}
+
 @SingleIn(AppScope::class)
 @dev.zacsweers.metro.Inject
 class LocalServerGates {
@@ -1930,4 +1932,7 @@ class LocalServerGates {
 
     /** B-486: true once BuiltinLinux.setActivityResumed(true) ran; wakes waiting helper starts immediately. */
     val activityResumed: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    /** B-486: reports whether an activity is already resumed when BuiltinRuntime initializes. */
+    @Volatile var hasResumedActivity: () -> Boolean = { false }
 }
