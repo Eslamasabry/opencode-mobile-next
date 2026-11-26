@@ -93,7 +93,7 @@ public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
                 ?.takeIf { !scrolled(frames, k - 1, it, node.scrollers) }
         return back?.let {
             val what = "gone at ${frames[k]} and back at ${frames[it]} (was at ${node.box})"
-            Hit(FlickerRule.ABA, k, node, what, swapsBack(frames, k, it, node, limits))
+            Hit(FlickerRule.ABA, k, node, what, LabelSwap.swapsBack(frames, k, it, node, limits))
         }
     }
 
@@ -113,7 +113,7 @@ public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
             frames[k].nodes.mapNotNull { now ->
                 before[now.id]?.takeIf { isJump(frames, k, it, now, limits) }?.let { was ->
                     val what = "moved from ${was.box} to ${now.box} in one frame (${frames[k]})"
-                    Hit(FlickerRule.JUMP, k, now, what, swapped(was, now, limits))
+                    Hit(FlickerRule.JUMP, k, now, what, LabelSwap.swapped(was, now, limits))
                 }
             }
         }
@@ -164,35 +164,38 @@ private fun moveBack(
         end?.takeIf { frames[it].picture.byId[was.id] != null && !scrolled(frames, k - 1, it, was.scrollers) }
     return back?.let {
         val path = "moved from ${was.box} to ${away.box} at ${frames[k]} and back at ${frames[it]}"
-        Hit(FlickerRule.ABA, k, was, path, swapped(was, away, limits))
+        Hit(FlickerRule.ABA, k, was, path, LabelSwap.swapped(was, away, limits))
     }
 }
 
-/** [new] took [old]'s place on one control. */
-private fun swapped(old: FrameNode, new: FrameNode, limits: FlickerLimits): Boolean =
-    old.control != null && old.control == new.control &&
-        shortSwap(old, new) && sameSlot(old.box, new.box, limits.stillDp)
+/** Label-swap checks shared by jump and return rules. */
+private object LabelSwap {
+    /** [new] took [old]'s place on one control. */
+    fun swapped(old: FrameNode, new: FrameNode, limits: FlickerLimits): Boolean =
+        old.control != null && old.control == new.control &&
+            shortSwap(old, new) && sameSlot(old.box, new.box, limits.stillDp)
 
-/** Text to other text, both short. */
-private fun shortSwap(old: FrameNode, new: FrameNode): Boolean =
-    old.isText && new.isText && old.label != new.label && max(old.label.length, new.label.length) <= SWAP_CHARS
+    /** Text to other text, both short. */
+    private fun shortSwap(old: FrameNode, new: FrameNode): Boolean =
+        old.isText && new.isText && old.label != new.label && max(old.label.length, new.label.length) <= SWAP_CHARS
 
-/** Same line (top and bottom within [still]) and overlapping across: the box stayed in its slot. */
-private fun sameSlot(a: DpBox, b: DpBox, still: Float): Boolean =
-    abs(a.top - b.top) <= still && abs(a.bottom - b.bottom) <= still && a.left < b.right && b.left < a.right
+    /** Same line (top and bottom within [still]) and overlapping across: the box stayed in its slot. */
+    private fun sameSlot(a: DpBox, b: DpBox, still: Float): Boolean =
+        abs(a.top - b.top) <= still && abs(a.bottom - b.bottom) <= still && a.left < b.right && b.left < a.right
 
-/** [node]'s words gave way to a label swap on frame [k] and came back to its control and slot on [back]. */
-private fun swapsBack(
-    frames: List<RecordedFrame>,
-    k: Int,
-    back: Int,
-    node: FrameNode,
-    limits: FlickerLimits,
-): Boolean {
-    val key = flickerKey(node.label)
-    val returned = frames[back].nodes.firstOrNull { flickerKey(it.label) == key } ?: return false
-    return frames[k].nodes.any { swapped(node, it, limits) } &&
-        returned.control == node.control && sameSlot(node.box, returned.box, limits.stillDp)
+    /** [node]'s words gave way to a label swap on frame [k] and came back to its control and slot on [back]. */
+    fun swapsBack(
+        frames: List<RecordedFrame>,
+        k: Int,
+        back: Int,
+        node: FrameNode,
+        limits: FlickerLimits,
+    ): Boolean {
+        val key = flickerKey(node.label)
+        val returned = frames[back].nodes.firstOrNull { flickerKey(it.label) == key } ?: return false
+        return frames[k].nodes.any { swapped(node, it, limits) } &&
+            returned.control == node.control && sameSlot(node.box, returned.box, limits.stillDp)
+    }
 }
 
 /** A step over the jump distance between k-1 and k, the node still on the frames around it, nothing scrolled. */
