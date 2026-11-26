@@ -105,7 +105,12 @@ import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
 import java.util.zip.CRC32
+import javax.imageio.IIOImage
 import javax.imageio.ImageIO
+import javax.imageio.ImageTypeSpecifier
+import javax.imageio.metadata.IIOMetadata
+import javax.imageio.metadata.IIOMetadataNode
+import javax.imageio.stream.FileImageOutputStream
 import kotlin.test.Test
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -368,40 +373,92 @@ class AgentUpdateSheetRedrawRenders {
         )
     }
 
+    private fun beforeFive(): ChatsUi = sheetState(redrawFiveOffer())
+
+    private fun beforeFiveOneOn(): ChatsUi =
+        sheetState(noLockedFiveOffer(), keepNames = ALL_AGENT_NAMES - "Claude Code")
+
+    private fun beforeFiveAllOff(): ChatsUi = sheetState(noLockedFiveOffer(), keepNames = ALL_AGENT_NAMES)
+
+    private fun beforeOne(): ChatsUi = sheetState(redrawOneOffer())
+
     @Test
-    fun `before redesign renders at 360 dp matching the same states`() {
-        val allNames = setOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
-        val five = sheetState(redrawFiveOffer())
-        val fiveOneOn = sheetState(noLockedFiveOffer(), keepNames = allNames - "Claude Code")
-        val fiveAllOff = sheetState(noLockedFiveOffer(), keepNames = allNames)
-        val one = sheetState(redrawOneOffer())
-        shootBefore("before-five-agents-mobile-data-text100-dark", five, dark = true, fontScale = 1f)
-        shootBefore("before-five-agents-mobile-data-text100-light", five, dark = false, fontScale = 1f)
-        shootBefore("before-five-agents-mobile-data-text130-dark", five, dark = true, fontScale = 1.3f)
-        shootBefore("before-five-agents-mobile-data-text130-light", five, dark = false, fontScale = 1.3f)
-        shootBefore("before-five-agents-one-on-text100-dark", fiveOneOn, dark = true, fontScale = 1f)
-        shootBefore("before-five-agents-one-on-text130-dark", fiveOneOn, dark = true, fontScale = 1.3f)
-        shootBefore("before-five-agents-all-off-text100-dark", fiveAllOff, dark = true, fontScale = 1f)
-        shootBefore("before-five-agents-all-off-text130-dark", fiveAllOff, dark = true, fontScale = 1.3f)
-        shootBefore("before-one-agent-text100-dark", one, dark = true, fontScale = 1f)
-        shootBefore("before-one-agent-text130-dark", one, dark = true, fontScale = 1.3f)
+    fun `before redesign five agents mobile data text100 dark`() {
+        shootBefore("before-five-agents-mobile-data-text100-dark", beforeFive(), dark = true, fontScale = 1f)
+    }
+
+    @Test
+    fun `before redesign five agents mobile data text100 light`() {
+        shootBefore("before-five-agents-mobile-data-text100-light", beforeFive(), dark = false, fontScale = 1f)
+    }
+
+    @Test
+    fun `before redesign five agents mobile data text130 dark`() {
+        shootBefore("before-five-agents-mobile-data-text130-dark", beforeFive(), dark = true, fontScale = 1.3f)
+    }
+
+    @Test
+    fun `before redesign five agents mobile data text130 light`() {
+        shootBefore("before-five-agents-mobile-data-text130-light", beforeFive(), dark = false, fontScale = 1.3f)
+    }
+
+    @Test
+    fun `before redesign five agents one on text100 dark`() {
+        shootBefore("before-five-agents-one-on-text100-dark", beforeFiveOneOn(), dark = true, fontScale = 1f)
+    }
+
+    @Test
+    fun `before redesign five agents one on text130 dark`() {
+        shootBefore("before-five-agents-one-on-text130-dark", beforeFiveOneOn(), dark = true, fontScale = 1.3f)
+    }
+
+    @Test
+    fun `before redesign five agents all off text100 dark`() {
+        shootBefore("before-five-agents-all-off-text100-dark", beforeFiveAllOff(), dark = true, fontScale = 1f)
+    }
+
+    @Test
+    fun `before redesign five agents all off text130 dark`() {
+        shootBefore("before-five-agents-all-off-text130-dark", beforeFiveAllOff(), dark = true, fontScale = 1.3f)
+    }
+
+    @Test
+    fun `before redesign one agent text100 dark`() {
+        shootBefore("before-one-agent-text100-dark", beforeOne(), dark = true, fontScale = 1f)
+    }
+
+    @Test
+    fun `before redesign one agent text130 dark`() {
+        shootBefore("before-one-agent-text130-dark", beforeOne(), dark = true, fontScale = 1.3f)
+    }
+
+    @Test
+    fun `before redesign five agents mobile data ar text130 dark`() {
         shootBefore(
             "before-five-agents-mobile-data-ar-text130-dark",
-            five,
+            beforeFive(),
             dark = true,
             fontScale = 1.3f,
             localeTag = "ar",
         )
+    }
+
+    @Test
+    fun `before redesign five agents mobile data ar text130 light`() {
         shootBefore(
             "before-five-agents-mobile-data-ar-text130-light",
-            five,
+            beforeFive(),
             dark = false,
             fontScale = 1.3f,
             localeTag = "ar",
         )
+    }
+
+    @Test
+    fun `before redesign five agents one on ar text130 dark`() {
         shootBefore(
             "before-five-agents-one-on-ar-text130-dark",
-            fiveOneOn,
+            beforeFiveOneOn(),
             dark = true,
             fontScale = 1.3f,
             localeTag = "ar",
@@ -475,6 +532,7 @@ class AgentUpdateSheetRedrawRenders {
                 waitForIdle()
             }
             writeApng(frames, File(out, "us-plus-journey-recording.png"))
+            writeGif(frames, File(out, "us-plus-journey-recording.gif"))
             writeStrip(strip, File(out, "us-plus-journey-strip.png"))
         } finally {
             scope.cancel()
@@ -683,6 +741,63 @@ class AgentUpdateSheetRedrawRenders {
         ImageIO.write(canvas, "png", file)
     }
 
+    private fun writeGif(frames: List<Pair<BufferedImage, Int>>, file: File) {
+        val writer = ImageIO.getImageWritersByFormatName("gif").next()
+        try {
+            FileImageOutputStream(file).use { stream ->
+                writer.output = stream
+                val param = writer.defaultWriteParam
+                writer.prepareWriteSequence(null)
+                frames.forEachIndexed { index, (img, delayMs) ->
+                    val rgb = toOpaqueRgb(img)
+                    val meta = writer.getDefaultImageMetadata(ImageTypeSpecifier.createFromRenderedImage(rgb), param)
+                    applyGifFrameMeta(meta, delayMs, loop = index == 0)
+                    writer.writeToSequence(IIOImage(rgb, null, meta), param)
+                }
+                writer.endWriteSequence()
+            }
+        } finally {
+            writer.dispose()
+        }
+    }
+
+    private fun toOpaqueRgb(img: BufferedImage): BufferedImage =
+        BufferedImage(img.width, img.height, BufferedImage.TYPE_INT_RGB).also { dst ->
+            val g = dst.createGraphics()
+            g.drawImage(img, 0, 0, null)
+            g.dispose()
+        }
+
+    private fun applyGifFrameMeta(meta: IIOMetadata, delayMs: Int, loop: Boolean) {
+        val format = meta.nativeMetadataFormatName
+        val root = meta.getAsTree(format) as IIOMetadataNode
+        val gce = gifChild(root, "GraphicControlExtension")
+        gce.setAttribute("disposalMethod", "none")
+        gce.setAttribute("userInputFlag", "FALSE")
+        gce.setAttribute("transparentColorFlag", "FALSE")
+        gce.setAttribute("delayTime", (delayMs / 10).coerceAtLeast(1).toString())
+        gce.setAttribute("transparentColorIndex", "0")
+        if (loop) {
+            val apps = gifChild(root, "ApplicationExtensions")
+            val app = IIOMetadataNode("ApplicationExtension").apply {
+                setAttribute("applicationID", "NETSCAPE")
+                setAttribute("authenticationCode", "2.0")
+                userObject = byteArrayOf(0x1, 0x0, 0x0)
+            }
+            apps.appendChild(app)
+        }
+        meta.setFromTree(format, root)
+    }
+
+    private fun gifChild(root: IIOMetadataNode, name: String): IIOMetadataNode {
+        for (i in 0 until root.length) {
+            if (root.item(i).nodeName.equals(name, ignoreCase = true)) {
+                return root.item(i) as IIOMetadataNode
+            }
+        }
+        return IIOMetadataNode(name).also { root.appendChild(it) }
+    }
+
     private fun writeApng(frames: List<Pair<BufferedImage, Int>>, file: File) {
         val encoded = frames.map { (img, ms) -> pngChunks(img) to ms }
         val ihdr = encoded.first().first.first { it.first == "IHDR" }.second
@@ -790,6 +905,7 @@ class AgentUpdateSheetRedrawRenders {
         }
 
     private companion object {
+        val ALL_AGENT_NAMES = setOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
         val FOLD_SHOTS = listOf(4, 8, 12, 24)
         const val RECORD_W = 450
         const val RECORD_H = 1000
