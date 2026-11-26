@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +17,8 @@ import io.github.eslamasabry.oc.feature.agenttools.presentation.AgentTerminalAct
 import io.github.eslamasabry.oc.feature.agenttools.presentation.AgentTerminalUi
 import io.github.eslamasabry.oc.feature.agenttools.presentation.validTerminalName
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -34,15 +37,24 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
+
+/** Plain folder name for display without exposing raw internal path segments. */
+internal fun plainFolderName(directory: String): String {
+    val trimmed = directory.trim().trimEnd('/', '\\')
+    return trimmed.substringAfterLast('/').substringAfterLast('\\').ifEmpty { trimmed }
+}
 
 @Composable
 internal fun AgentTerminalRows(state: AgentTerminalUi, actions: AgentTerminalActions) {
     var menu by remember { mutableStateOf<String?>(null) }
+    val gutter = LocalKitTokens.current.gutter.dp
     val working = stringResource(Res.string.agentToolsWorking)
     val disabled =
         if (state.busy || state.uncertain)
@@ -51,52 +63,60 @@ internal fun AgentTerminalRows(state: AgentTerminalUi, actions: AgentTerminalAct
             )
         else KitEnabled.Enabled
     if (state.listed && state.terminals.isEmpty() && state.failure == null)
-        KitText(stringResource(Res.string.agentToolsNoTerminals))
-    for (terminal in state.terminals) KitMenu(
-        expanded = menu == terminal.id,
-        title = terminal.title,
-        onDismissRequest = { menu = null },
-        items =
-            listOf(
-                KitMenuItem(
-                    stringResource(Res.string.agentToolsRenameTerminal),
-                    {
-                        menu = null
-                        actions.askRenameTerminal(terminal.id)
-                    },
-                    enabled = disabled,
-                ),
-                KitMenuItem(
-                    stringResource(Res.string.agentToolsCloseTerminal),
-                    {
-                        menu = null
-                        actions.askCloseTerminal(terminal.id)
-                    },
-                    destructive = true,
-                    enabled = disabled,
-                ),
-            ),
-    ) {
-        KitRow(
-            title = terminal.title,
-            supporting = terminal.directory,
-            trailing =
-                KitRowTrailing.Action(
-                    KitLineAction(
-                        stringResource(Res.string.agentToolsTerminalMore),
-                        { menu = terminal.id },
-                        enabled = !state.busy,
-                        disabledReason = working,
-                    )
-                ),
-            onClick = { actions.openTerminal(terminal.id) },
-            enabled = !state.busy,
-            disabledReason = working,
+        KitText(
+            stringResource(Res.string.agentToolsNoTerminals),
+            Modifier.padding(horizontal = gutter),
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
         )
+    if (state.terminals.isNotEmpty()) KitRowGroup {
+        for (terminal in state.terminals) KitMenu(
+            expanded = menu == terminal.id,
+            title = terminal.title,
+            onDismissRequest = { menu = null },
+            items =
+                listOf(
+                    KitMenuItem(
+                        stringResource(Res.string.agentToolsRenameTerminal),
+                        {
+                            menu = null
+                            actions.askRenameTerminal(terminal.id)
+                        },
+                        enabled = disabled,
+                    ),
+                    KitMenuItem(
+                        stringResource(Res.string.agentToolsCloseTerminal),
+                        {
+                            menu = null
+                            actions.askCloseTerminal(terminal.id)
+                        },
+                        destructive = true,
+                        enabled = disabled,
+                    ),
+                ),
+        ) {
+            KitRow(
+                title = terminal.title,
+                supporting = plainFolderName(terminal.directory).ifEmpty { null },
+                trailing =
+                    KitRowTrailing.Action(
+                        KitLineAction(
+                            stringResource(Res.string.agentToolsTerminalMore),
+                            { menu = terminal.id },
+                            enabled = !state.busy,
+                            disabledReason = working,
+                        )
+                    ),
+                onClick = { actions.openTerminal(terminal.id) },
+                enabled = !state.busy,
+                disabledReason = working,
+            )
+        }
     }
     state.failure?.let { failure ->
         KitErrorNotice(
             message = stringResource(Res.string.agentToolsTerminalFailed),
+            modifier = Modifier.padding(horizontal = gutter),
             failure = failure,
             detailsLabel = stringResource(Res.string.kitDetails),
             copyLabel = stringResource(Res.string.kitCopyDetails),
@@ -107,7 +127,12 @@ internal fun AgentTerminalRows(state: AgentTerminalUi, actions: AgentTerminalAct
                 ),
         )
     }
-    if (state.uncertain) KitNotice(stringResource(Res.string.agentToolsUncertain))
+    if (state.uncertain) {
+        KitNotice(
+            stringResource(Res.string.agentToolsUncertain),
+            modifier = Modifier.padding(horizontal = gutter),
+        )
+    }
 }
 
 @Composable

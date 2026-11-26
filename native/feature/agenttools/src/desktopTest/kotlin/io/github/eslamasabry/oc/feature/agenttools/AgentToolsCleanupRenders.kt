@@ -34,7 +34,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-private const val PHASE = "before"
+private const val PHASE = "after"
 private const val WIDTH_DP = 360
 private const val HEIGHT_DP = 800
 private const val DENSITY = 2.625f
