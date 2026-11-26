@@ -51,8 +51,6 @@ public class UsageHistory(
     /** Reactive view of every loaded window's ordered samples. */
     public val samples: StateFlow<Map<WindowKey, List<UsageSample>>> = _samples.asStateFlow()
 
-    public fun forWindow(key: WindowKey): List<UsageSample> = _samples.value[key].orEmpty()
-
     /** Loads persisted history for [connectionId] once; corrupt or missing data loads as empty. */
     public fun loadConnection(connectionId: String) {
         if (connectionId.isEmpty() || !loadedConnections.add(connectionId)) return
@@ -78,18 +76,7 @@ public class UsageHistory(
     ): Boolean = recordSample(connectionId, key, UsageSample(fetchedAt, usedPercent, resetsAt))
 
     public suspend fun recordReadings(readings: List<UsageReading>) {
-        val grouped = LinkedHashMap<String, MutableList<Pair<WindowKey, UsageSample>>>()
-        for (reading in readings) {
-            if (!reading.hasNumbers || reading.problem == UsageProblem.Offline) continue
-            val subKey = usageSubscriptionKey(reading.providerId, reading.accountRef, reading.connectionId)
-            val updates = grouped.getOrPut(reading.connectionId) { ArrayList() }
-            for (window in reading.windows) {
-                updates +=
-                    WindowKey(subKey, window.id) to
-                        UsageSample(reading.fetchedAt, window.usedPercent, window.resetsAt)
-            }
-        }
-        for ((connectionId, updates) in grouped) {
+        for ((connectionId, updates) in collectReadingSamples(readings)) {
             recordBatch(connectionId, updates)
         }
     }
@@ -98,40 +85,12 @@ public class UsageHistory(
         connectionId: String,
         readings: List<ProviderUsageReading>,
     ) {
-        val updates = ArrayList<Pair<WindowKey, UsageSample>>()
-        for (reading in readings) {
-            if (reading.needsSignIn || reading.windows.isEmpty()) continue
-            val subKey = usageSubscriptionKey(reading.providerId, reading.accountRef, connectionId)
-            for (window in reading.windows) {
-                val used = (MAX_PERCENT - window.remainingPercent).coerceIn(MIN_PERCENT, MAX_PERCENT)
-                updates +=
-                    WindowKey(subKey, providerWindowId(window)) to
-                        UsageSample(reading.fetchedAt, used, window.resetsAt)
-            }
-        }
+        val updates = collectProviderSamples(connectionId, readings)
         if (updates.isNotEmpty()) recordBatch(connectionId, updates)
     }
 
     public suspend fun recordSnapshot(snapshot: UsageSnapshot) {
-        val grouped = LinkedHashMap<String, MutableList<Pair<WindowKey, UsageSample>>>()
-        for (sub in snapshot.subscriptions) {
-            val connection = sub.readFrom ?: continue
-            val fetchedAt = sub.fetchedAt ?: continue
-            if (
-                sub.windows.isEmpty() ||
-                    sub.state == SubscriptionState.OfflineStale ||
-                    sub.state == SubscriptionState.ReaderBroken
-            ) {
-                continue
-            }
-            val updates = grouped.getOrPut(connection.id) { ArrayList() }
-            for (window in sub.windows) {
-                updates +=
-                    WindowKey(sub.key, window.id) to
-                        UsageSample(fetchedAt, window.usedPercent, window.resetsAt)
-            }
-        }
-        for ((connectionId, updates) in grouped) {
+        for ((connectionId, updates) in collectSnapshotSamples(snapshot)) {
             recordBatch(connectionId, updates)
         }
     }
@@ -154,7 +113,7 @@ public class UsageHistory(
         if (!removed) {
             true
         } else {
-            val ok = saveConnection(connectionId)
+            val ok = persistConnection(store, lane, byConnection, connectionId)
             _samples.value = mergeUsageHistory(byConnection, maxSamplesPerWindow, dedupeRefreshInterval)
             ok
         }
@@ -178,25 +137,12 @@ public class UsageHistory(
                 }
             }
             if (changed) {
-                result = saveConnection(connectionId)
+                result = persistConnection(store, lane, byConnection, connectionId)
                 _samples.value =
                     mergeUsageHistory(byConnection, maxSamplesPerWindow, dedupeRefreshInterval)
             }
         }
         result
-    }
-
-    private suspend fun saveConnection(connectionId: String): Boolean {
-        val slot = byConnection[connectionId]
-        val storageKey = key(connectionId)
-        return if (slot.isNullOrEmpty()) {
-            byConnection.remove(connectionId)
-            store.string(storageKey) == null ||
-                store.commit(lane) { remove(storageKey) } is Outcome.Ok
-        } else {
-            val payload = encodeUsageHistoryConnection(slot)
-            store.commit(lane) { putString(storageKey, payload) } is Outcome.Ok
-        }
     }
 
     public companion object {
@@ -259,5 +205,26 @@ public class UsageHistory(
         private fun isSameReading(previous: UsageSample, current: UsageSample): Boolean =
             previous.resetsAt == current.resetsAt &&
                 abs(previous.usedPercent - current.usedPercent) <= VALUE_EPSILON
+    }
+}
+
+/** Returns the current ordered samples for [key], or an empty list when none are recorded. */
+public fun UsageHistory.forWindow(key: WindowKey): List<UsageSample> = samples.value[key].orEmpty()
+
+private suspend fun persistConnection(
+    store: KeyValueStore,
+    lane: WriterLane,
+    byConnection: MutableMap<String, MutableMap<WindowKey, List<UsageSample>>>,
+    connectionId: String,
+): Boolean {
+    val slot = byConnection[connectionId]
+    val storageKey = UsageHistory.key(connectionId)
+    return if (slot.isNullOrEmpty()) {
+        byConnection.remove(connectionId)
+        store.string(storageKey) == null ||
+            store.commit(lane) { remove(storageKey) } is Outcome.Ok
+    } else {
+        val payload = encodeUsageHistoryConnection(slot)
+        store.commit(lane) { putString(storageKey, payload) } is Outcome.Ok
     }
 }

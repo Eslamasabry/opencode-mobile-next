@@ -22,6 +22,72 @@ internal fun providerWindowId(window: ProviderUsageWindowReading): String =
         else -> window.label.ifEmpty { "window" }
     }
 
+internal fun collectReadingSamples(
+    readings: List<UsageReading>,
+): Map<String, List<Pair<WindowKey, UsageSample>>> {
+    val grouped = LinkedHashMap<String, MutableList<Pair<WindowKey, UsageSample>>>()
+    for (reading in readings) {
+        if (reading.hasNumbers && reading.problem != UsageProblem.Offline) {
+            val subKey = usageSubscriptionKey(reading.providerId, reading.accountRef, reading.connectionId)
+            val updates = grouped.getOrPut(reading.connectionId) { ArrayList() }
+            for (window in reading.windows) {
+                updates +=
+                    WindowKey(subKey, window.id) to
+                        UsageSample(reading.fetchedAt, window.usedPercent, window.resetsAt)
+            }
+        }
+    }
+    return grouped
+}
+
+internal fun collectProviderSamples(
+    connectionId: String,
+    readings: List<ProviderUsageReading>,
+): List<Pair<WindowKey, UsageSample>> {
+    val updates = ArrayList<Pair<WindowKey, UsageSample>>()
+    for (reading in readings) {
+        if (!reading.needsSignIn && reading.windows.isNotEmpty()) {
+            val subKey = usageSubscriptionKey(reading.providerId, reading.accountRef, connectionId)
+            for (window in reading.windows) {
+                val used =
+                    (HISTORY_MAX_PERCENT - window.remainingPercent)
+                        .coerceIn(HISTORY_MIN_PERCENT, HISTORY_MAX_PERCENT)
+                updates +=
+                    WindowKey(subKey, providerWindowId(window)) to
+                        UsageSample(reading.fetchedAt, used, window.resetsAt)
+            }
+        }
+    }
+    return updates
+}
+
+private val skippedSnapshotStates =
+    setOf(SubscriptionState.OfflineStale, SubscriptionState.ReaderBroken)
+
+internal fun collectSnapshotSamples(
+    snapshot: UsageSnapshot,
+): Map<String, List<Pair<WindowKey, UsageSample>>> {
+    val grouped = LinkedHashMap<String, MutableList<Pair<WindowKey, UsageSample>>>()
+    for (sub in snapshot.subscriptions) {
+        val connection = sub.readFrom
+        val fetchedAt = sub.fetchedAt
+        if (
+            connection != null &&
+                fetchedAt != null &&
+                sub.windows.isNotEmpty() &&
+                sub.state !in skippedSnapshotStates
+        ) {
+            val updates = grouped.getOrPut(connection.id) { ArrayList() }
+            for (window in sub.windows) {
+                updates +=
+                    WindowKey(sub.key, window.id) to
+                        UsageSample(fetchedAt, window.usedPercent, window.resetsAt)
+            }
+        }
+    }
+    return grouped
+}
+
 internal fun encodeUsageHistoryConnection(windows: Map<WindowKey, List<UsageSample>>): String {
     val entries =
         windows.entries.take(HISTORY_MAX_WINDOWS).map { (key, list) ->
@@ -101,22 +167,11 @@ internal fun mergeUsageHistory(
                 if (existing == null) {
                     samples.toList()
                 } else {
-                    combineWindowSamples(existing, samples, maxSamples, dedupeInterval)
+                    (existing + samples).sortedBy { it.fetchedAt }.fold(emptyList()) { acc, sample ->
+                        UsageHistory.appendSample(acc, sample, maxSamples, dedupeInterval)
+                    }
                 }
         }
     }
     return merged
-}
-
-private fun combineWindowSamples(
-    first: List<UsageSample>,
-    second: List<UsageSample>,
-    maxSamples: Int,
-    dedupeInterval: Duration,
-): List<UsageSample> {
-    var combined = emptyList<UsageSample>()
-    for (sample in (first + second).sortedBy { it.fetchedAt }) {
-        combined = UsageHistory.appendSample(combined, sample, maxSamples, dedupeInterval)
-    }
-    return combined
 }
