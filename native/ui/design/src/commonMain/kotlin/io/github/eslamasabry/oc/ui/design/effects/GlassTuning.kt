@@ -258,13 +258,13 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
         public val Shipped: GlassTuning = GlassTuning()
 
         /** Light-mode glass specular rim strength (white specular light, B-612; replaces old 10% black outline). */
-        public const val LIGHT_RIM_ALPHA: Float = .68f
+        public const val LIGHT_RIM_ALPHA: Float = .86f
 
         /** Kept for source compatibility; light liquid glass uses [LIGHT_RIM_ALPHA] white speculars (B-612). */
         public const val LIGHT_EDGE_ALPHA: Float = .10f
 
-        /** The rim light's shipped width, dp: crisp hairline Apple specular contour (B-609, B-610). */
-        public const val RIM_WIDTH_DP: Float = 1f
+        /** The rim light's shipped width, dp: soft sculpted glass bevel thickness (B-609, B-610). */
+        public const val RIM_WIDTH_DP: Float = 1.5f
 
         /** The rim light's shipped direction: along the top-start / bottom-end diagonal. */
         public const val LIGHT_DEG: Float = 45f

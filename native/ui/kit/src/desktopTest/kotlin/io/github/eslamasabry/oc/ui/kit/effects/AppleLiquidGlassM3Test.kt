@@ -138,5 +138,9 @@ class AppleLiquidGlassM3Test {
         u.set(effect, mode = 0f, res = 1f)
         u.set(brush, mode = 2f, res = 1f)
         assertNotNull((brush as DesktopLiveShader).skiaShader())
+        // Unified elevation shadow pass (mode 6) renders cleanly outside joined body (B-613).
+        val sh = floatArrayOf(6f, 14f, 0f, 0.34f)
+        u.set(brush, mode = 6f, res = 1f, light = sh)
+        assertNotNull(brush.skiaShader())
     }
 }

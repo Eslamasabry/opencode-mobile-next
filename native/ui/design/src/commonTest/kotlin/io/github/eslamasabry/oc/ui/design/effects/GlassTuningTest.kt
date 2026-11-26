@@ -45,15 +45,21 @@ class GlassTuningTest {
             val wantSheen = if (dark) GlassTuning.SHIPPED_SHEEN_DARK else GlassTuning.SHIPPED_SHEEN_LIGHT
             assertEquals(wantSpec, k.specular, "$kind specular")
             assertEquals(wantSheen, k.sheen, "$kind sheen")
-            // Menus, sheets and dialogs hold the fine detail behind their words (glass liquid 2026-11-14); nobody else.
-            val held = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
-            // Glass liquid round two: a sheet (and a dialog, drawn as one) may hold harder than a menu.
-            val h = if (kind == GlassPaneKind.Menu) LiquidEdge.MODAL_HOLD else LiquidEdge.SHEET_HOLD
-            assertEquals(if (held) h.localDp else 0f, k.localDp, "$kind local softening")
-            assertEquals(if (held) h.localFree else 0f, k.localFree, "$kind local free")
-            assertEquals(if (held) h.localSlope else 1f, k.localSlope, "$kind local slope")
-            assertEquals(if (held) h.inkKeep else 1f, k.inkKeep, "$kind ink-like strokes kept")
-            assertEquals(if (held) h.inkRim else 1f, k.inkRim, "$kind ink-like strokes held in the rim")
+            // Menus, sheets, dialogs (MODAL_HOLD) and floating bars/composer (WORDS_HOLD) hold center detail cleanly.
+            val modal = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
+            val words = kind == GlassPaneKind.Bar || kind == GlassPaneKind.MessageBox
+            val h =
+                when {
+                    kind == GlassPaneKind.Menu -> LiquidEdge.MODAL_HOLD
+                    modal -> LiquidEdge.SHEET_HOLD
+                    words -> LiquidEdge.WORDS_HOLD
+                    else -> LiquidHold.Off
+                }
+            assertEquals(h.localDp, k.localDp, "$kind local softening")
+            assertEquals(h.localFree, k.localFree, "$kind local free")
+            assertEquals(h.localSlope, k.localSlope, "$kind local slope")
+            assertEquals(h.inkKeep, k.inkKeep, "$kind ink-like strokes kept")
+            assertEquals(h.inkRim, k.inkRim, "$kind ink-like strokes held in the rim")
             assertEquals(
                 GlassTuning.WORDS_CLEAR_FLOATING,
                 k.wordsClear,

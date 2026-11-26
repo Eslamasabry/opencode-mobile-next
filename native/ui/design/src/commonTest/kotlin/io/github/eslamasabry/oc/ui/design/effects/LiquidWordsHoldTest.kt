@@ -37,8 +37,8 @@ class LiquidWordsHoldTest {
             assertEquals(wants || words, hold.knee, "$role knee dark=$dark")
             if (words) assertEquals(LiquidEdge.WORDS_HOLD, hold, "$role hold dark=$dark")
             assertEquals(if (wants) LiquidEdge.HOLD_CHROMA else 0f, hold.chroma, "$role colour hold dark=$dark")
-            // Glass liquid (2026-11-14): their fine detail is held round its local mean too; nobody else's.
-            assertEquals(wants, hold.local, "$role detail hold dark=$dark")
+            // Floating bars and message boxes use WORDS_HOLD center optical frost (inkRim=0 keeps curved rim crisp).
+            assertEquals(wants || words, hold.local, "$role detail hold dark=$dark")
             if (wants) assertEquals(if (role == LiquidRole.Sheet) LiquidEdge.SHEET_HOLD else LiquidEdge.MODAL_HOLD, hold, "$role hold dark=$dark")
         }
     }

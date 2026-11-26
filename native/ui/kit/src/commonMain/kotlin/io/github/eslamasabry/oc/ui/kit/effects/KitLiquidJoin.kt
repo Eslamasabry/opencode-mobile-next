@@ -486,9 +486,10 @@ private class JoinedPaneNode(
                     dropView(body)
                 }
             }
-        // Only this pane's side is drawn, and it lies within reach/6 of this pane's own box.
+        // Only this pane's side is drawn; pad enough for both the smin join reach and the unified elevation shadow.
         val origin = c.positionInWindow()
-        val grow = reach / 6f + 2f
+        val shadowReach = if (bodySpec.shadow.alpha > 0f) JOIN_SHADOW_REACH_DP.dp.toPx() else 0f
+        val grow = maxOf(reach / 6f + 2f, shadowReach)
         val area = Rect(floor(mine.left - grow), floor(mine.top - grow), ceil(mine.right + grow), ceil(mine.bottom + grow))
         val local = area.topLeft - origin
         val full = IntSize(area.width.toInt().coerceAtLeast(1), area.height.toInt().coerceAtLeast(1))
@@ -521,8 +522,8 @@ private class JoinedPaneNode(
                     val reach = if (frostsBody) drop!!.content().coerceIn(0f, 1f) else 1f
                     localOf(it, it.localDp.dp.toPx() * reach)
                 },
-                tintMine = tintNow(spec),
-                tintTheirs = tintNow(theirSpec),
+                tintMine = joinedTint(spec),
+                tintTheirs = joinedTint(theirSpec),
                 rimPx = spec.rimDp.dp.toPx(),
                 falloff = spec.rimFalloff,
                 rimFloor = spec.rimFloor,
@@ -544,16 +545,11 @@ private class JoinedPaneNode(
             drawRect(programs.brush.brush, blendMode = BlendMode.DstIn)
         }
         translate(local.x, local.y) {
+            // 2b. Unified floating elevation shadow underneath the entire joined liquid silhouette (B-613).
+            drawJoinedShadow(programs, u, full.toSize(), bodySpec.shadow.alpha)
             kitDrawLayer(mask)
-            // 3. One rim light along the body's outline on this side (the library's highlight on the body's direction).
-            u.set(programs.brush, mode = 2f, res = 1f)
-            drawRect(
-                programs.brush.brush,
-                size = full.toSize(),
-                alpha = spec.rim.alpha,
-                colorFilter = ColorFilter.tint(spec.rim.copy(alpha = 1f)),
-                blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver,
-            )
+            // 3. One rim light along the body's outline + concave-bridge specular caustic (B-610, B-616).
+            drawJoinedRim(programs, u, full.toSize(), spec)
             // 4. The finger's light, from this pane or its partner, on this side of the body.
             val dark = currentValueOf(LocalKitRoles).dark
             for (lit in arrayOf(part, partner)) {
@@ -613,6 +609,73 @@ public val LocalKitOnLiquidGlass: ProvidableCompositionLocal<Boolean> = staticCo
 internal fun tintNow(spec: KitLiquidPaneSpec): Color {
     val f = spec.flip?.progress?.value ?: 0f
     return if (f > 0f) lerp(spec.fill, spec.flipFill, f) else spec.fill
+}
+
+private const val JOIN_SHADOW_OFFSET_DP: Float = 6f
+private const val JOIN_SHADOW_BLUR_DP: Float = 14f
+private const val JOIN_SHADOW_REACH_DP: Float = 22f
+
+/** Joined glass face tint with the same luminous light lift / dark legibility cushion as standalone panes. */
+private fun joinedTint(spec: KitLiquidPaneSpec): Color {
+    val base = tintNow(spec)
+    val f = spec.flip?.progress?.value ?: 0f
+    val lightFace = (spec.rimAdds && f > .5f) || (!spec.rimAdds && f <= .5f)
+    return if (lightFace) {
+        val lift = Color.White.copy(alpha = .38f)
+        Color(
+            red = lift.red * lift.alpha + base.red * (1f - lift.alpha),
+            green = lift.green * lift.alpha + base.green * (1f - lift.alpha),
+            blue = lift.blue * lift.alpha + base.blue * (1f - lift.alpha),
+            alpha = (lift.alpha + base.alpha * (1f - lift.alpha)).coerceIn(0f, 1f),
+        )
+    } else {
+        val dim = Color.Black.copy(alpha = .20f)
+        Color(
+            red = base.red * (1f - dim.alpha),
+            green = base.green * (1f - dim.alpha),
+            blue = base.blue * (1f - dim.alpha),
+            alpha = (dim.alpha + base.alpha * (1f - dim.alpha)).coerceIn(0f, 1f),
+        )
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawJoinedShadow(
+    programs: LiquidJoinPrograms,
+    u: JoinUniforms,
+    boxSize: androidx.compose.ui.geometry.Size,
+    shadowAlpha: Float,
+) {
+    if (shadowAlpha <= 0f) return
+    val sh = floatArrayOf(JOIN_SHADOW_OFFSET_DP.dp.toPx(), JOIN_SHADOW_BLUR_DP.dp.toPx(), 0f, shadowAlpha)
+    u.set(programs.brush, mode = 6f, res = 1f, light = sh)
+    drawRect(programs.brush.brush, size = boxSize)
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawJoinedRim(
+    programs: LiquidJoinPrograms,
+    u: JoinUniforms,
+    boxSize: androidx.compose.ui.geometry.Size,
+    spec: KitLiquidPaneSpec,
+) {
+    if (!spec.rimAdds && spec.rim.alpha > 0f) {
+        // Subtle outer dark-glass contour in Light mode so joined menus/pills separate crisply off pale pages.
+        u.set(programs.brush, mode = 2f, res = 1f)
+        drawRect(
+            programs.brush.brush,
+            size = boxSize,
+            alpha = .14f,
+            colorFilter = ColorFilter.tint(Color.Black),
+            blendMode = BlendMode.SrcOver,
+        )
+    }
+    u.set(programs.brush, mode = 2f, res = 1f)
+    drawRect(
+        programs.brush.brush,
+        size = boxSize,
+        alpha = spec.rim.alpha,
+        colorFilter = ColorFilter.tint(spec.rim.copy(alpha = 1f)),
+        blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver,
+    )
 }
 
 /** The four boxes one joined pane draws from, in px: its own and its partner's, as the field and as the side see them. */
@@ -808,6 +871,25 @@ half4 main(float2 q) {
     float mine = das <= dbs ? 1.0 : 0.0;
     float t = ss(-band, band, das - dbs);
     float2 bend = mix(dirBox(p, a, ra, 1.5), dirBox(p, b, rb, 1.5), w);
+    if (mode > 5.5) {
+        float2 ps = p - float2(0.0, light.x);
+        float dsa = sdBox(ps, a, ra);
+        float dsb = sdBox(ps, b, rb);
+        float2 gsa = dirBox(ps, a, ra, 1.0);
+        float2 gsb = dirBox(ps, b, rb, 1.0);
+        float fs = sat01(0.5 - 0.5 * dot(gsa, gsb));
+        float ins = (1.0 - ss(0.5 * ma, ma, -dsa)) * (1.0 - ss(0.5 * mb, mb, -dsb));
+        float ks = max(reach * fs * ins, 0.001);
+        float hs = max(ks - abs(dsa - dsb), 0.0) / ks;
+        float ds = min(dsa, dsb) - hs * hs * hs * ks / 6.0;
+        float ws = dsa <= dsb ? hs * hs * 0.5 : 1.0 - hs * hs * 0.5;
+        float distS = ds / max(length(mix(gsa, gsb, ws)), 0.05);
+        float mineS = sdBox(ps, sa, ra) <= sdBox(ps, sb, rb) ? 1.0 : 0.0;
+        float spread = sat01(1.0 - max(distS, 0.0) / max(light.y, 1.0));
+        float fall = spread * spread * (3.0 - 2.0 * spread);
+        float aSh = fall * (1.0 - sat01(0.5 - dist)) * mineS * light.w;
+        return half4(0.0, 0.0, 0.0, aSh);
+    }
     if (mode < 0.5) {
         float rimW = mix(rim.x, rim.y, t);
         float amount = mix(refr.x, refr.y, t);
@@ -858,10 +940,12 @@ half4 main(float2 q) {
     if (mode < 2.5) {
         float gl = max(length(bend), 0.05);
         float nd = dot(bend / gl, lightDir);
-        // Live Fresnel rim + crisp concave-meniscus specular glint along the merged liquid neck (B-610, B-616).
-        float spec = pow(max(nd, 0.0), 8.0) * 0.42;
-        float lit = min(1.0, rimLit(nd, falloff, rimFloor) + spec);
-        float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
+        // Directional bevel + luminous concave-meniscus specular caustic along the smin bridge (B-610, B-616).
+        float dirGain = nd >= 0.0 ? 1.0 : 0.52;
+        float bridge = ss(0.12, 0.85, h);
+        float spec = pow(max(nd, 0.0), 10.0) * 0.28 + bridge * 0.88;
+        float lit = clamp(max(rimFloor, rimLit(nd, falloff, rimFloor) * dirGain) + spec, rimFloor, 1.0);
+        float edge = sat01(0.5 - dist) * ss(-rimPx - 0.5, -rimPx * 0.55, dist);
         return half4(edge * lit * mine);
     }
     if (mode > 4.5) {

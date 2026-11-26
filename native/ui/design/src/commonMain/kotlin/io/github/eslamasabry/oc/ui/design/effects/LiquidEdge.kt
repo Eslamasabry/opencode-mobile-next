@@ -177,11 +177,21 @@ public object LiquidEdge {
     public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 28f, localFree = .02f, localSlope = .10f, inkKeep = .10f, inkRim = .8f)
 
     /**
-     * What the plain bar and the plain message box hold back behind their words (glass-truth 2026-11-16): the luminance
-     * knee alone ([LiquidJoin.held]), as their joined body already has. Colour passes ([LiquidHold.chroma] 0) and no
-     * detail hold: the scroll-edge fade clears the content under their words, the knee tames what the rim still shows.
+     * What the plain bar and the plain message box hold back behind their words (B-608/B-609): the luminance knee plus
+     * center-only optical frost & ink softening (`localDp = 22f`, `inkKeep = 0.14f`, `inkRim = 0f`). Because `inkRim`
+     * is 0 and `deep` stays 0 across the outer half of the curved lens rim, passing text refracts crisply as light
+     * bending around the outer edge while dissolving into calm ambient bokeh behind header titles and composer hints.
      */
-    public val WORDS_HOLD: LiquidHold = LiquidHold(knee = true, chroma = 0f)
+    public val WORDS_HOLD: LiquidHold =
+        LiquidHold(
+            knee = true,
+            chroma = 0f,
+            localDp = 22f,
+            localFree = .02f,
+            localSlope = .12f,
+            inkKeep = .14f,
+            inkRim = 0f,
+        )
 
     /** A sheet's hold: a sheet is modal and holds a list, so the page's words between its rows may be held harder. */
     public val SHEET_HOLD: LiquidHold = MODAL_HOLD
@@ -300,12 +310,12 @@ public object LiquidEdge {
     private const val BAR_RIM_SHARE: Float = .28f
     private const val WIDE_RIM_SHARE: Float = .42f
     private const val ACTION_RIM_SHARE: Float = .5f
-    private const val BAR_SHADOW: Float = .16f
-    private const val COMPOSER_SHADOW: Float = .18f
-    private const val SHEET_SHADOW: Float = .22f
-    private const val MENU_SHADOW: Float = .24f
-    private const val PILL_SHADOW: Float = .14f
-    private const val ACTION_SHADOW: Float = .22f
+    private const val BAR_SHADOW: Float = .30f
+    private const val COMPOSER_SHADOW: Float = .34f
+    private const val SHEET_SHADOW: Float = .38f
+    private const val MENU_SHADOW: Float = .40f
+    private const val PILL_SHADOW: Float = .26f
+    private const val ACTION_SHADOW: Float = .34f
     private const val BAR_TINT_DARK: Float = .14f
     private const val BAR_TINT_LIGHT: Float = .10f
     private const val COMPOSER_TINT_DARK: Float = .16f

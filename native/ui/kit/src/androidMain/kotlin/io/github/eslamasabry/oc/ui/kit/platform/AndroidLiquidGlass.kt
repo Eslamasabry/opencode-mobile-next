@@ -95,7 +95,7 @@ internal object AndroidLiquidGlass {
                 val dir = spec.liveLightDir()
                 Highlight(
                     width = spec.rimDp.dp,
-                    blurRadius = 0.dp,
+                    blurRadius = 0.85.dp,
                     alpha = if (spec.keepRim) 1f else 1f - transform().coerceIn(0f, 1f),
                     style =
                         RimStyle(
@@ -112,12 +112,11 @@ internal object AndroidLiquidGlass {
                 if (spec.shadow.alpha > 0f) {
                     {
                         val flip = spec.flip?.progress?.value ?: 0f
-                        // Content-aware adaptive elevation shadow (B-613): featherlight over plain ground, deepening
-                        // smoothly when contrasting content/text scrolls underneath (both Dark and Light modes).
-                        val baseAlpha = spec.shadow.alpha * (0.70f + 0.30f * flip)
+                        // Adaptive elevation shadow (B-613): separates floating glass visibly off the page.
+                        val baseAlpha = spec.shadow.alpha * (0.85f + 0.15f * flip)
                         Shadow(
-                            radius = 20.dp,
-                            offset = DpOffset(0.dp, 4.dp),
+                            radius = 14.dp,
+                            offset = DpOffset(0.dp, 6.dp),
                             color = spec.shadow.copy(alpha = baseAlpha.coerceIn(0f, 1f)),
                         )
                     }

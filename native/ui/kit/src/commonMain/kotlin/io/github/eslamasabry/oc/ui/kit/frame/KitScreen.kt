@@ -76,6 +76,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_X
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoin
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
@@ -662,7 +664,15 @@ public fun KitScreen(
                                 if (lineInCapsule)
                                     Column(Modifier.fillMaxWidth()) {
                                         it()
-                                        statusFold(Modifier)
+                                        val insetMod =
+                                            if (barFace != null || frostedFace != null)
+                                                Modifier.padding(
+                                                    start = LIQUID_BAR_INSET_X.dp,
+                                                    end = (LIQUID_BAR_INSET_X + 6).dp,
+                                                    bottom = (LIQUID_BAR_INSET_Y + 4).dp,
+                                                )
+                                            else Modifier
+                                        statusFold(insetMod)
                                     }
                                 else it()
                             }

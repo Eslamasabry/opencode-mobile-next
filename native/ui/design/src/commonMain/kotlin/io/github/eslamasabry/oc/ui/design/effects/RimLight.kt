@@ -17,14 +17,14 @@ import kotlin.math.pow
  */
 public object RimLight {
     /** How tightly light gathers at curved corners (Apple Fresnel focus, avoiding flat-edge wireframes; B-610). */
-    public const val FALLOFF: Float = 3.5f
+    public const val FALLOFF: Float = 4.5f
 
     /**
-     * The least the rim ever is, as a share of its peak, all the way round a pane (B-610). Low enough (14 %) that
+     * The least the rim ever is, as a share of its peak, all the way round a pane (B-610). Low enough (8 %) that
      * unlit edges recede organically instead of drawing a static wireframe border, while never dropping to zero so
      * curved corners remain continuous.
      */
-    public const val FLOOR: Float = .14f
+    public const val FLOOR: Float = .08f
 
     /**
      * The rim's strength (0 to 1 of its peak) where the edge's outward direction makes [cosine] with the light: the

@@ -11,6 +11,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.LayoutCoordinates
 import io.github.eslamasabry.oc.ui.kit.foundation.drawGlassSpecular
 import io.github.eslamasabry.oc.ui.kit.foundation.sheenDepthPx
@@ -164,11 +167,64 @@ internal fun DrawScope.drawLiquidTint(spec: KitLiquidPaneSpec, shape: Shape? = n
     if (sheen.alpha > 0f) {
         drawRect(Brush.verticalGradient(0f to sheen, 1f to sheen.copy(alpha = 0f), startY = 0f, endY = sheenDepthPx()))
     }
+    drawGlassBevelAndLift(spec, shape, f)
     if (shape != null && spec.specular.alpha > 0f) {
         // The same crisp specular as Glass's in-flow panes: a bright rim segment at the top start and a thin glint line
         // just inside the top edge (owner 2026-11-09, "crisper glossy glass").
         val top = (shape as? CornerBasedShape)?.let { it.topStart.toPx(size, this) } ?: (size.minDimension / 2f)
         drawGlassSpecular(shape, spec.specular, spec.rtl, minOf(top, size.minDimension / 2f), glintShare = spec.glintShare, reachDp = spec.specularReachDp)
+    }
+}
+
+/**
+ * Physical 3D bevel depth, dark-mode center legibility cushion, and light-mode lifted luminous glass body + subtle
+ * outer definition (so light glass reads as sculpted bright glass instead of a flat tinted rectangle).
+ */
+private fun DrawScope.drawGlassBevelAndLift(spec: KitLiquidPaneSpec, shape: Shape?, flip: Float) {
+    if (size.width <= 0f || size.height <= 0f) return
+    val lightFace = (spec.rimAdds && flip > .5f) || (!spec.rimAdds && flip <= .5f)
+    if (lightFace) {
+        // Lifted luminous pure-white glass body (brighter than underlying content, Apple iOS 26 light mode).
+        drawRect(
+            Brush.verticalGradient(
+                0f to Color.White.copy(alpha = .56f),
+                .45f to Color.White.copy(alpha = .34f),
+                1f to Color.White.copy(alpha = .24f),
+                startY = 0f,
+                endY = size.height,
+            )
+        )
+        // Soft inner top white bevel highlight + subtle dark-glass outer contour so silhouette pops off bright pages.
+        val bevelH = minOf(8.dp.toPx(), size.height * .32f)
+        drawRect(
+            Brush.verticalGradient(
+                0f to Color.White.copy(alpha = .68f),
+                1f to Color.Transparent,
+                startY = 0f,
+                endY = bevelH,
+            )
+        )
+        if (shape != null && spec.rim.alpha > 0f) {
+            val edgeBrush = Brush.linearGradient(
+                0f to Color.Black.copy(alpha = .07f),
+                1f to Color.Black.copy(alpha = .16f),
+                start = Offset(if (spec.rtl) size.width else 0f, 0f),
+                end = Offset(if (spec.rtl) 0f else size.width, size.height),
+            )
+            drawOutline(shape.createOutline(size, layoutDirection, this), edgeBrush, style = Stroke(1.25.dp.toPx()))
+        }
+    } else {
+        // Dark mode: subtle adaptive dimming cushion for label clarity + soft bottom-inner bevel shade for thickness.
+        val shadeTop = size.height * .66f
+        drawRect(Color.Black.copy(alpha = .22f))
+        drawRect(
+            Brush.verticalGradient(
+                0f to Color.Transparent,
+                1f to Color.Black.copy(alpha = .28f),
+                startY = shadeTop,
+                endY = size.height,
+            )
+        )
     }
 }
 

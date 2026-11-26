@@ -70,7 +70,11 @@ half4 main(float2 coord) {
     float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
     float2 grad = gradSdRoundedRect(centeredCoord, halfSize, gradRadius);
     float d = dot(grad, lightDir);
-    float intensity = rimLit(d, falloff, rimFloor);
+    float raw = rimLit(d, falloff, rimFloor);
+    // Directional bevel: bright primary lit face, softer secondary Fresnel bounce on far corner, unlit sides fade out.
+    float dirGain = d >= 0.0 ? 1.0 : 0.52;
+    float glint = pow(max(d, 0.0), 10.0) * 0.28;
+    float intensity = clamp(max(rimFloor, raw * dirGain) + glint, rimFloor, 1.0);
     return half4(float4(rimColor.rgb * intensity, intensity));
 }
 """
