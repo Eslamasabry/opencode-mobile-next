@@ -160,3 +160,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10152 | build | 2026-11-26 | 3.0.3 release candidate build 2 (after the detekt and picture fix) |
 | 10160 | release | 2026-11-26 | native release 3.0.3+10160 (public lineage) |
 | 10161 | build | 2026-11-26 | owner test build of native/glass-apple (Apple Liquid Glass) |
+| 10162 | build | 2026-11-26 | owner test build of native/glass-apple (3.0.3 pins + flat Glass sheet) |
