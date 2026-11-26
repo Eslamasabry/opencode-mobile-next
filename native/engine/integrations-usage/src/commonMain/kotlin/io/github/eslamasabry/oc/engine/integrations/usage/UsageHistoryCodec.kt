@@ -71,12 +71,8 @@ internal fun collectSnapshotSamples(
     for (sub in snapshot.subscriptions) {
         val connection = sub.readFrom
         val fetchedAt = sub.fetchedAt
-        if (
-            connection != null &&
-                fetchedAt != null &&
-                sub.windows.isNotEmpty() &&
-                sub.state !in skippedSnapshotStates
-        ) {
+        val usable = sub.windows.isNotEmpty() && sub.state !in skippedSnapshotStates
+        if (connection != null && fetchedAt != null && usable) {
             val updates = grouped.getOrPut(connection.id) { ArrayList() }
             for (window in sub.windows) {
                 updates +=
