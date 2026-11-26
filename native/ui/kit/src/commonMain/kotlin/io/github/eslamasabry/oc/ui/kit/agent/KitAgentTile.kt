@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -20,7 +20,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -35,6 +37,8 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
+import io.github.eslamasabry.oc.ui.kit.chip.LocalKitChipFullWidth
+import io.github.eslamasabry.oc.ui.kit.chip.LocalKitChipSlotWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -77,8 +81,7 @@ internal fun agentTileLabel(name: String, state: String): String = if (state.isE
  * "Installing…"). While something runs, [progress] draws its bar under the line. At most one small [action] sits at the
  * tile's foot as a compact chip, only when it matters; tapping anywhere else on the tile opens the agent ([onClick]),
  * where every other act lives. The surface comes from the style resolver (as [KitAgentChoice]): Solid's matte face and
- * hairline, every other style its own card, on the corners knob's card radius. Spanning a whole row it lies sideways,
- * the mark beside the words and the chip at the end.
+ * hairline, every other style its own card, on the corners knob's card radius.
  *
  * States: calm, needs you, dimmed ([KitAgentTileTone]); with or without progress; with or without its act.
  */
@@ -107,6 +110,8 @@ public fun KitAgentTile(
     val hairline = kitHairline()
     val edge = if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, look.shape) else Modifier
     val inset = Space.S4.dp + if (solid) hairline else 0.dp
+    val tileWidth = LocalKitAgentTileWidth.current
+    val chipSlotWidth = if (tileWidth.isSpecified) (tileWidth - inset * 2).coerceAtLeast(0.dp) else Dp.Unspecified
     val markSize = (FlutterKitTokens.MARK_SIZE + Space.S2).dp // owner 2026-11-09: bigger logos
     val lineTone =
         when (tone) {
@@ -140,15 +145,19 @@ public fun KitAgentTile(
     }
     val chip: @Composable () -> Unit = {
         if (action != null) {
-            KitChip(
-                action.label,
-                kind = KitChipKind.Action,
-                tone = if (action.prominent) KitChipTone.Active else KitChipTone.Neutral,
-                icon = action.icon,
-                onClick = action.onClick,
-                spoken = action.spoken,
-                wraps = true,
-            )
+            CompositionLocalProvider(
+                LocalKitChipFullWidth provides true,
+                LocalKitChipSlotWidth provides chipSlotWidth,
+            ) {
+                KitChip(
+                    action.label,
+                    kind = KitChipKind.Action,
+                    tone = if (action.prominent) KitChipTone.Active else KitChipTone.Neutral,
+                    icon = action.icon,
+                    onClick = action.onClick,
+                    spoken = action.spoken,
+                )
+            }
         }
     }
     KitTappable(
@@ -169,35 +178,18 @@ public fun KitAgentTile(
                 .then(edge)
                 .padding(inset)
         ) {
-            if (wide) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.fillMaxWidth().fillMaxHeight()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     mark()
-                    Spacer(Modifier.width(Space.S4.dp))
-                    Box(Modifier.weight(1f)) { words() }
-                    // Lying sideways the check sits after the words, never over the mark.
-                    if (ready) {
-                        Spacer(Modifier.width(Space.S2.dp))
-                        ReadyCheck()
-                    }
-                    if (action != null) {
-                        Spacer(Modifier.width(Space.S2.dp))
-                        chip()
-                    }
+                    Spacer(Modifier.weight(1f))
+                    if (ready) ReadyCheck()
                 }
-            } else {
-                Column(Modifier.fillMaxWidth().fillMaxHeight()) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                        mark()
-                        Spacer(Modifier.weight(1f))
-                        if (ready) ReadyCheck()
-                    }
-                    Spacer(Modifier.height(Space.S4.dp))
-                    words()
-                    if (action != null) {
-                        // The chips of a row of tiles sit on one line at the tiles' foot.
-                        Spacer(Modifier.weight(1f).heightIn(min = Space.S3.dp))
-                        chip()
-                    }
+                Spacer(Modifier.height(Space.S4.dp))
+                words()
+                if (action != null) {
+                    // The chips of a row of tiles sit on one line at the tiles' foot.
+                    Spacer(Modifier.weight(1f).heightIn(min = Space.S3.dp))
+                    chip()
                 }
             }
         }
@@ -209,7 +201,9 @@ public fun KitAgentTile(
 private fun ReadyCheck() {
     val ok = LocalKitColors.current.success
     Box(
-        Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S2).dp).drawBehind { drawCircle(ok) }.clearAndSetSemantics {},
+        Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S2).dp)
+            .drawBehind { drawCircle(ok) }
+            .clearAndSetSemantics { testTag = "kit-agent-tile-ready" },
         contentAlignment = Alignment.Center,
     ) {
         KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.OnAccent)

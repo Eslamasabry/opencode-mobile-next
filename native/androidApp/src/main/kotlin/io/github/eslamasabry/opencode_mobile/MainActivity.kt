@@ -126,6 +126,9 @@ class MainActivity : ComponentActivity() {
                                     LastRoute.reopen(lastRoute, navigator.top.value, ChatsRoute.Home)
                                 )
                                 lastRoute = emptyList()
+                                // B-619: a recreated window that came back on Conversations alone gets the
+                                // welcome back while nothing is saved, as a fresh start would.
+                                if (savedInstanceState != null) settings.firstRunStarter.resume()
                                 if (routeWhenReady) {
                                     routeWhenReady = false
                                     platformHub.route(intent)

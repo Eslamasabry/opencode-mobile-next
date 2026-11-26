@@ -18,12 +18,15 @@ import kotlin.test.assertTrue
  * Plan 08 §5.4 `PredictiveBackPolicyTest`, run headless on the desktop JVM against the real NavShell, NavDisplay and
  * kit grow parts; the back gesture is a fake NavigationEventInput on the dispatcher NavDisplay listens to.
  */
+/** The row ↔ page transform is the phone's: from 840 dp the conversation opens beside the list (ShellListPaneTest). */
+private val PHONE = io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo.Phone
+
 @OptIn(ExperimentalTestApi::class)
 class PredictiveBackShellTest {
     @Test
     fun `B-KIT-054 tap grows the chat, the gate settles, button back returns to the list`() = runComposeUiTest {
         val h = Harness()
-        setContent { h.Content() }
+        setContent { h.Content(window = PHONE) }
         onNodeWithText("Row 2").performClick()
         waitForIdle()
         onNodeWithText("Chat s2").assertExists()
@@ -40,7 +43,7 @@ class PredictiveBackShellTest {
     @Test
     fun `B-KIT-054 P2-1 a committed gesture settles the gate only after the pop`() = runComposeUiTest {
         val h = Harness()
-        setContent { h.Content() }
+        setContent { h.Content(window = PHONE) }
         onNodeWithText("Row 3").performClick()
         waitForIdle()
         mainClock.autoAdvance = false
@@ -66,7 +69,7 @@ class PredictiveBackShellTest {
     @Test
     fun `B-KIT-054 P2-2 a cancelled gesture returns to the chat and the next tap still transforms`() = runComposeUiTest {
         val h = Harness()
-        setContent { h.Content() }
+        setContent { h.Content(window = PHONE) }
         onNodeWithText("Row 1").performClick()
         waitForIdle()
         runOnIdle {
@@ -95,7 +98,7 @@ class PredictiveBackShellTest {
     fun `B-KIT-054 a gesture during the opening transform takes it over and the pop still completes`() =
         runComposeUiTest {
             val h = Harness()
-            setContent { h.Content() }
+            setContent { h.Content(window = PHONE) }
             mainClock.autoAdvance = false
             onNodeWithText("Row 5").performClick()
             mainClock.advanceTimeBy(120)
@@ -113,7 +116,7 @@ class PredictiveBackShellTest {
     @Test
     fun `B-KIT-054 P2-6 reduced motion pops with no transform and the gate stays consistent`() = runComposeUiTest {
         val h = Harness(scale = 0f)
-        setContent { h.Content() }
+        setContent { h.Content(window = PHONE) }
         onNodeWithText("Row 2").performClick()
         waitForIdle()
         onNodeWithText("Chat s2").assertExists()
@@ -128,7 +131,7 @@ class PredictiveBackShellTest {
     @Test
     fun `B-KIT-054 the root never consumes back`() = runComposeUiTest {
         val h = Harness()
-        setContent { h.Content() }
+        setContent { h.Content(window = PHONE) }
         waitForIdle()
         runOnIdle {
             h.input.start(NavigationEvent.EDGE_LEFT)

@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.setup.KitServersLink
 import io.github.eslamasabry.oc.ui.kit.setup.KitServersLinkState
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
@@ -306,28 +307,7 @@ public fun ServerEditorScreen(
     val certificateChanged =
         certificate != null && heldPin != null && pinOrigin == certificate.origin &&
             !heldPin.equals(certificate.fingerprint, ignoreCase = true)
-    KitScreen(
-        topBar = {
-            KitTopBar(
-                title =
-                    stringResource(
-                        if (!state.newServer) Res.string.editor40Edit
-                        else if (state.step == ServerEditorStep.Connect)
-                            when (backend) {
-                                BackendKind.OpenCode2 -> Res.string.firstRunAgentOpenCode
-                                BackendKind.Codex -> Res.string.firstRunAgentCodex
-                                BackendKind.Paseo -> Res.string.firstRunPaseoTitle
-                            }
-                        else Res.string.serversAdd
-                    ),
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = { leave() },
-            )
-        },
-        width = KitScreenWidth.Reading,
-        loading = state.loading || state.checking || state.saving,
-        bottom =
+    val primaryBottom: (@Composable () -> Unit)? =
             if (state.step == ServerEditorStep.Tailscale)
                 ({
                     KitButton(
@@ -362,8 +342,32 @@ public fun ServerEditorScreen(
                                 KitButtonRole.Secondary
                             else KitButtonRole.Primary,
                     )
-                }),
-        edges = KitScreenEdges.Bleed,
+                })
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val wide = isServersWide(LocalKitWindow.current.cls, maxWidth.value)
+    KitScreen(
+        topBar = {
+            KitTopBar(
+                title =
+                    stringResource(
+                        if (!state.newServer) Res.string.editor40Edit
+                        else if (state.step == ServerEditorStep.Connect)
+                            when (backend) {
+                                BackendKind.OpenCode2 -> Res.string.firstRunAgentOpenCode
+                                BackendKind.Codex -> Res.string.firstRunAgentCodex
+                                BackendKind.Paseo -> Res.string.firstRunPaseoTitle
+                            }
+                        else Res.string.serversAdd
+                    ),
+                exit = KitTopBarExit.Back,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = { leave() },
+            )
+        },
+        width = if (wide) KitScreenWidth.Full else KitScreenWidth.Reading,
+        loading = state.loading || state.checking || state.saving,
+        bottom = if (wide) null else primaryBottom,
+        edges = if (wide) KitScreenEdges.Gutter else KitScreenEdges.Bleed,
     ) {
         KitConfirm(discard, actions::discard, actions::keepEditing)
         KitSheet(
@@ -447,6 +451,23 @@ public fun ServerEditorScreen(
         }
         RailColumn(
             Modifier.fillMaxSize().verticalScroll(scroll.also { KitReportPageScroll(it) }).padding(LocalKitTokens.current.gutter.dp),
+            wideScroll = if (wide) scroll else null,
+            wideBottom = if (wide) primaryBottom else null,
+            wideDetails = {
+                WideServerEditorDetails(
+                    WideServerEditorFacts(
+                        state.step,
+                        state.record?.name?.ifBlank { null }
+                            ?: name.text.toString().ifBlank { suggestedName },
+                        editorOrigin(address.text.toString())?.host,
+                        // The form's own facts line already says the version and tools; the panel adds the rest.
+                        null,
+                        emptyList(),
+                        directory.text.toString(),
+                    ),
+                    checked = state.checked != null || state.step == ServerEditorStep.Ready,
+                )
+            },
         ) {
             if (state.newServer) {
                 val total =
@@ -1079,6 +1100,7 @@ public fun ServerEditorScreen(
             }
         }
     }
+    }
 }
 
 /**
@@ -1222,8 +1244,26 @@ private fun EditorLinkMoment(link: KitServersLinkState, state: ServerEditorUi, a
  * emulator 2026-11-10).
  */
 @Composable
-private fun RailColumn(modifier: Modifier, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+private fun RailColumn(
+    modifier: Modifier,
+    wideScroll: androidx.compose.foundation.ScrollState? = null,
+    wideDetails: @Composable () -> Unit = {},
+    wideBottom: (@Composable () -> Unit)? = null,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
     androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides true) {
-        Column(modifier, verticalArrangement = Arrangement.spacedBy(Space.S3.dp), content = content)
+        // Wide windows: the same form, unchanged, in the start column; details on the right.
+        if (wideScroll != null)
+            ServersWideFrame(
+                scrollState = wideScroll,
+                start = {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                        content()
+                        wideBottom?.invoke()
+                    }
+                },
+                end = wideDetails,
+            )
+        else Column(modifier, verticalArrangement = Arrangement.spacedBy(Space.S3.dp), content = content)
     }
 }

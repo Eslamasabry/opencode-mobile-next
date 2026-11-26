@@ -189,7 +189,10 @@ public object HealthWords {
 
     /** `linux_setup_step.fail_kind`. */
     public val setupFailKinds: Set<String> =
-        linkedSetOf("network", "storage", "apt", "permission", "download", "checksum", "killed_by_system", "timeout", "unknown")
+        linkedSetOf(
+            "network", "storage", "apt", "permission", "download", "checksum", "killed_by_system", "timeout",
+            "exited", "refused", "password", "withdrawn", "port_busy", "unknown",
+        )
 
     /** `setup_abandoned.reason`: how the person left the setup unfinished. */
     public val abandonReasons: Set<String> = linkedSetOf("background", "closed")

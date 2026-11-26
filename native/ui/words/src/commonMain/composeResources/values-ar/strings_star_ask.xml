@@ -5,4 +5,14 @@
     <string name="chatStarAskBody">نجمة على GitHub تساعد الآخرين على العثور عليه.</string>
     <string name="chatStarAskAction">امنح نجمة على GitHub</string>
     <string name="chatStarAskDismiss">ليس الآن</string>
+    <string name="firstReplyAskQuestion">هل يعجبك؟</string>
+    <string name="firstReplyAskYes">نعم</string>
+    <string name="firstReplyAskNo">لا</string>
+    <string name="firstReplyAskUseTitle">لأي غرض تستخدمه؟</string>
+    <string name="firstReplyAskUseEveryday">مهام يومية</string>
+    <string name="firstReplyAskUseCode">كتابة الشيفرة</string>
+    <string name="firstReplyAskUseBoth">كلاهما</string>
+    <string name="firstReplyAskUseLooking">مجرد تصفح</string>
+    <string name="firstReplyAskThanks">شكرًا.</string>
+    <string name="firstReplyAskSorry">عذرًا.</string>
 </resources>

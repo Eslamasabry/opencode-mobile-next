@@ -57,7 +57,12 @@ fun Test.configureSourceGates() {
     }
 }
 
-tasks.test { configureSourceGates() }
+tasks.test {
+    configureSourceGates()
+    if (providers.gradleProperty("runQuarantined").orNull != "true") {
+        maxParallelForks = providers.gradleProperty("oc.test.forks").orElse("1").get().toInt().coerceAtMost(2)
+    }
+}
 
 // E02-S11c: a module whose unit-test sources stop compiling fails the gate. T1 runs only the touched modules' tests, so
 // a change to a shared API could leave another module's tests uncompilable until T2. `:quality:test` runs at every
@@ -66,7 +71,8 @@ tasks.test { configureSourceGates() }
 //   - Android: compileAndroidHostTest (AGP-KMP host tests) and compile<Variant>DebugUnitTestKotlin (Android modules,
 //     debug variants only), when an Android SDK is configured (ANDROID_HOME, ANDROID_SDK_ROOT or local.properties
 //     sdk.dir). Without one only the desktop/JVM half runs and the task says so; -Poc.testCompileGuard=all forces the
-//     Android half (it then fails without an SDK), =jvm skips it.
+//     Android half (it then fails without an SDK), =jvm skips it, =off lets CI shards skip the duplicate 1529-task
+//     cross-module test compilation when parallel CI shards/compile jobs already prove test compilation.
 // Compiling is incremental and build-cached, so after the first run this costs only what changed.
 val testCompileGuard = providers.gradleProperty("oc.testCompileGuard").orElse("auto")
 val androidSdkConfigured =
@@ -82,9 +88,9 @@ val compileAndroidTests =
     testCompileGuard.zip(androidSdkConfigured) { mode, sdk ->
         when (mode) {
             "all" -> true
-            "jvm" -> false
+            "jvm", "off" -> false
             "auto" -> sdk
-            else -> error("oc.testCompileGuard is auto, all or jvm (got \"$mode\")")
+            else -> error("oc.testCompileGuard is auto, all, jvm or off (got \"$mode\")")
         }
     }
 val jvmTestCompiles = setOf("compileTestKotlinDesktop", "compileTestKotlin")
@@ -109,7 +115,9 @@ val compileAllTestSources =
         val note = if (android) "desktop, JVM and Android" else "desktop and JVM only (no Android SDK, or oc.testCompileGuard=jvm)"
         doLast { logger.lifecycle("test sources compiled: $note") }
     }
-tasks.test { dependsOn(compileAllTestSources) }
+if (testCompileGuard.get() != "off") {
+    tasks.test { dependsOn(compileAllTestSources) }
+}
 
 // `:quality:scan`: the quality gates that read source text and need no other module compiled, so a builder gets their
 // verdict in about a minute instead of waiting for compileAllTestSources (every module's test sources) and the

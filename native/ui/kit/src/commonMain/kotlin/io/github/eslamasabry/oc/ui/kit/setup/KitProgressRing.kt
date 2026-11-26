@@ -80,7 +80,8 @@ public fun KitProgressRing(
             val diameter = (maxWidth.value * .64f).coerceIn(150f, 264f) // F: lib/ui/kit/kit_progress_ring.dart:199
             val stroke = (diameter * .052f).coerceIn(9f, 14f) // F: lib/ui/kit/kit_progress_ring.dart:200
             Box(Modifier.size(diameter.dp).clearAndSetSemantics {
-                contentDescription = listOfNotNull(semanticsLabel, spoken, caption).joinToString(", ")
+                contentDescription = semanticsLabel
+                stateDescription = listOfNotNull(spoken, caption).joinToString(", ")
                 progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f)
             }, contentAlignment = Alignment.Center) {
                 if (!halted && arc.value > 0) Canvas(Modifier.fillMaxSize().blur((stroke * .9f).dp, BlurredEdgeTreatment.Unbounded)) { // F: lib/ui/kit/kit_progress_ring.dart:473

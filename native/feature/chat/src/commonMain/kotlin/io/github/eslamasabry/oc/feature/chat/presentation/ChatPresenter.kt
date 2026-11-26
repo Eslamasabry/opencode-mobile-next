@@ -126,8 +126,8 @@ internal data class ChatLocal(
     /** B-169 §5: switches sent per stopped prompt ([LimitSwitchRules.promptKey]). */
     val switches: PersistentMap<String, Int> = persistentMapOf(),
     val attachAgain: AttachAgainUi? = null,
-    /** The one-time star ask is up for this wait. */
-    val starAsk: Boolean = false,
+    /** The one-time first-reply ask riding the finished reply's footer. */
+    val replyAsk: ReplyAskUi? = null,
     /** Stale-choice replacement notice the person already dismissed. */
     val dismissedModelReplaced: ReplacedModel? = null,
 )
@@ -289,6 +289,18 @@ public class ChatPresenter(
     private fun watchTurns(scope: CoroutineScope) {
         val port = star ?: return
         var wasBusy: Boolean? = null
+        var heldTurnId: String? = null
+        val hold: (String?) -> Unit = { heldTurnId = it }
+        world.requests
+            .latest { req -> req?.state?.map { it.card != null } ?: flowOf(false) }
+            .onEach { hasCard ->
+                val turnId = heldTurnId
+                if (!hasCard && turnId != null && isAskLiveAtRest()) {
+                    heldTurnId = null
+                    askAfterReply(port, turnId, hold)
+                }
+            }
+            .launchIn(scope)
         world.transcript
             .onEach { t ->
                 val busy = t.run.busy
@@ -296,35 +308,88 @@ public class ChatPresenter(
                 wasBusy = busy
                 if (before == false && busy && world.link.value == ChatLink.Live) {
                     // Never while a turn runs: a new turn takes the ask down, and counting it asks nothing.
-                    local.update { it.copy(starAsk = false) }
+                    heldTurnId = null
+                    local.update { it.copy(replyAsk = null) }
                     launcher.launch { port.promptStarted() }
                 } else if (before == true && !busy) {
-                    local.update { it.copy(starAsk = false) }
-                    val good = StarPromptTurn.succeeded(t.rows)
-                    launcher.launch {
-                        // The ask comes at rest: this turn is over and nothing new started meanwhile.
-                        if (port.replyEnded(good) && !world.transcript.value.run.busy && world.link.value == ChatLink.Live) {
-                            local.update { it.copy(starAsk = true) }
-                            port.report(StarPromptEvent.Shown)
-                        }
-                    }
+                    heldTurnId = null
+                    local.update { it.copy(replyAsk = null) }
+                    val turnId = StarPromptTurn.succeededTurnId(t.rows)
+                    if (turnId != null) askAfterReply(port, turnId, hold)
+                    else launcher.launch { port.replyEnded(false) }
                 }
             }
             .launchIn(scope)
     }
 
-    override fun starTapped() {
-        if (!local.value.starAsk) return
-        local.update { it.copy(starAsk = false) }
+    private fun isAskLiveAtRest(): Boolean =
+        !world.transcript.value.run.busy && world.link.value == ChatLink.Live
+
+    private fun askAfterReply(port: ChatStarPrompt, turnId: String, hold: (String?) -> Unit) {
+        launcher.launch {
+            if (!isAskLiveAtRest()) return@launch
+            if (world.requests.value?.state?.value?.card != null) {
+                hold(turnId)
+            } else {
+                val asked = port.replyEnded(true)
+                val clear = isAskLiveAtRest() && world.requests.value?.state?.value?.card == null
+                if (asked && clear) {
+                    local.update { it.copy(replyAsk = ReplyAskUi(turnId = turnId)) }
+                    port.report(StarPromptEvent.Shown)
+                }
+            }
+        }
+    }
+
+    override fun replyAskYes() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = cur.copy(stage = ReplyAskStage.Thanks, menu = true)) }
+        launcher.launch { star?.answered(io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer.Yes) }
+    }
+
+    override fun replyAskNo() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = cur.copy(stage = ReplyAskStage.Sorry, menu = true)) }
+        launcher.launch { star?.answered(io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer.No) }
+    }
+
+    override fun replyAskSkip() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = null) }
+        launcher.launch { star?.answered(io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskAnswer.Skip) }
+        star?.report(StarPromptEvent.Dismissed)
+    }
+
+    override fun replyAskUse(use: io.github.eslamasabry.oc.feature.chat.starprompt.ReplyAskUse) {
+        val cur = local.value.replyAsk ?: return
+        if (!cur.menu || cur.stage == ReplyAskStage.Ask) return
+        local.update { it.copy(replyAsk = cur.copy(menu = false)) }
+        launcher.launch { star?.usedFor(use) }
+    }
+
+    override fun replyAskMenuClosed() {
+        val cur = local.value.replyAsk ?: return
+        if (!cur.menu) return
+        local.update { it.copy(replyAsk = cur.copy(menu = false)) }
+    }
+
+    override fun replyAskStar() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Thanks) return
+        local.update { it.copy(replyAsk = null) }
         star?.report(StarPromptEvent.Tapped)
         // Opened on the app's own link path; a refusal costs nothing, the ask is already spent.
         outside?.openOwnLink(StarPromptRules.URL)
     }
 
-    override fun starDismissed() {
-        if (!local.value.starAsk) return
-        local.update { it.copy(starAsk = false) }
-        star?.report(StarPromptEvent.Dismissed)
+    override fun replyAskReport() {
+        val cur = local.value.replyAsk ?: return
+        if (cur.stage != ReplyAskStage.Sorry) return
+        local.update { it.copy(replyAsk = null) }
+        reportProblem()
     }
 
     private data class Five(
@@ -578,9 +643,10 @@ public class ChatPresenter(
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
-            starAsk =
-                l.starAsk && !t.run.busy && i.link == ChatLink.Live &&
-                    world.requests.value?.state?.value?.card == null,
+            replyAsk =
+                l.replyAsk?.takeIf {
+                    !t.run.busy && i.link == ChatLink.Live && world.requests.value?.state?.value?.card == null
+                },
             setUpReplies = setUpReplies(t.rows),
             signInTurns = signInTurns(t.rows, waiting = i.pending.isNotEmpty()),
         )

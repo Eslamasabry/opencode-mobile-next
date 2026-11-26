@@ -50,7 +50,6 @@ ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitRowParts.kt 
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitNumberedStep.kt | background\(colors\.surface3, CircleShape\) | A07 the step number's disc
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/status/KitTaskMark.kt | \.border\(kitHairline\(\), TaskMarkRules\.ringColor | A07 the task mark's ring
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitChoiceList.kt | \.border\(2\.dp, edge, boxShape\) | A07 the check box mark
-ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | background\(colors\.surface1\.copy\(alpha = 1f\), CircleShape\) | A07 the picture option's check mark disc
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerLimitStrip.kt | \.border\(kitHairline\(\) \* 2, colors\.text3, CircleShape\) | A07 the limit strip's ring mark
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerBox.kt | background\(colors\.ground, RoundedCornerShape\(2\.dp\)\) | A07 the Stop glyph, a square mark inside the stop disc
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/setup/KitServersLink.kt | drawRoundRect\(colors\.surface3\.copy | A11 the setup illustration's phone and laptop drawings (a picture, not a pane)

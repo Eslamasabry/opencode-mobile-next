@@ -14,4 +14,5 @@
     <string name="stateDemoModel">Model contoh</string>
     <string name="stateDemoReset">Atur ulang demo</string>
     <string name="stateDemoLeave">Keluar dari demo</string>
+    <string name="stateDemoOwn">Demo ini tidak dapat menjawab pertanyaan Anda sendiri. Demo hanya memainkan satu contoh: kirim “%1$s” untuk melihatnya. Untuk mengajukan pertanyaan sendiri, keluar dari demo dan siapkan aplikasi untuk penggunaan nyata.</string>
 </resources>

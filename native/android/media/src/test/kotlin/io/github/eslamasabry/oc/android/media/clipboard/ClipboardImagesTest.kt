@@ -23,9 +23,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 
 /** Rules: Flutter `ClipboardImagePolicyTest` (copied). Bridge: Robolectric's ClipboardManager and ContentResolver. */
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class ClipboardImagesTest {
     private object Direct : AppDispatchers {
         private val direct = UnconfinedTestDispatcher()

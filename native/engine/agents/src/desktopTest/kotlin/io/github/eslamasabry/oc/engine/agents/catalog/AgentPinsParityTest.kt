@@ -90,30 +90,30 @@ class AgentPinsParityTest {
         assertEquals("antigravity", agent.providerId)
         assertEquals(AgentSignInMethod.BrowserOAuthHost, agent.signInMethod)
         assertEquals(AgentLimitation.AntigravityGoogleSignIn, agent.limitation)
-        assertEquals("1.5.15", recipe.version)
+        assertEquals("1.5.17", recipe.version)
         assertEquals("agy", recipe.executable)
         assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
         assertEquals(listOf("acp", "--login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/" +
                 "linux-arm/cli_linux_arm64.tar.gz",
             arm.url,
         )
-        assertEquals("e5b5d7ca1dda2cfdc0b09c72931320c3ef5c481a14dbda137304107ce6e776b1", arm.sha256)
-        assertEquals(92373221L, arm.downloadBytes)
-        assertEquals(256660144L, arm.installedBytes)
+        assertEquals("d6d2b88493e6e02854da478b215cd1dd98fd8cf985b6be37829dacadea4ffc07", arm.sha256)
+        assertEquals(93662528L, arm.downloadBytes)
+        assertEquals(260657840L, arm.installedBytes)
         assertEquals("antigravity", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/" +
                 "linux-x64/cli_linux_x64.tar.gz",
             x64.url,
         )
-        assertEquals("8d9913298602049ef29e9669f35252b6b79571979ce1bd0fb27753c7bac84114", x64.sha256)
-        assertEquals(101464790L, x64.downloadBytes)
-        assertEquals(273879752L, x64.installedBytes)
+        assertEquals("6304b4f592ae97e59231cfb1b365ee29c155750c9a881f0cc8efe5f5281077cf", x64.sha256)
+        assertEquals(102886235L, x64.downloadBytes)
+        assertEquals(278438600L, x64.installedBytes)
         // Gemini stays: the catalog only gains Antigravity.
         assertNotNull(AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("gemini")))
     }
@@ -150,30 +150,30 @@ class AgentPinsParityTest {
         // Each SHA-256 equals GitHub's own asset digest and the bytes fetched on 2026-11-15; installedBytes is the
         // whole extracted tree (the installer keeps it).
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("codex"))!!.recipe!!
-        assertEquals("0.171.0", recipe.version)
+        assertEquals("0.172.0", recipe.version)
         assertEquals("codex", recipe.executable)
         assertEquals(listOf("app-server"), recipe.launchArgs)
         assertEquals(listOf("login", "--device-auth"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://github.com/openai/codex/releases/download/rust-v0.171.0/" +
+            "https://github.com/openai/codex/releases/download/rust-v0.172.0/" +
                 "codex-package-aarch64-unknown-linux-musl.tar.gz",
             arm.url,
         )
-        assertEquals("d8c43bee6cf11b01eb18b95f4d7961092bc40228180808859e70dabb7784c1c9", arm.sha256)
-        assertEquals(199315347L, arm.downloadBytes)
-        assertEquals(516528332L, arm.installedBytes)
+        assertEquals("faf17b8071927f33346a805dc8cb45de4e08c0d75cf0e5e68cecddca28b8861e", arm.sha256)
+        assertEquals(201917755L, arm.downloadBytes)
+        assertEquals(521575724L, arm.installedBytes)
         assertEquals("bin/codex", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://github.com/openai/codex/releases/download/rust-v0.171.0/" +
+            "https://github.com/openai/codex/releases/download/rust-v0.172.0/" +
                 "codex-package-x86_64-unknown-linux-musl.tar.gz",
             x64.url,
         )
-        assertEquals("8391d67757496bfd14893eca6cbf0c96994bf2627566ff1f018f70600c9ef6b3", x64.sha256)
-        assertEquals(197763180L, x64.downloadBytes)
-        assertEquals(521571182L, x64.installedBytes)
+        assertEquals("63e3b00065ed7f62166d0522e17f663cb866a31d80d03e63365482ed34a1d991", x64.sha256)
+        assertEquals(200434347L, x64.downloadBytes)
+        assertEquals(527693622L, x64.installedBytes)
         assertEquals("bin/codex", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
@@ -374,30 +374,30 @@ class AgentPinsParityTest {
         // Moved after the freeze. Each SHA-256 is of the downloaded bytes, whose sha512 equals the release manifest's
         // value for that platform.
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("antigravity"))!!.recipe!!
-        assertEquals("1.5.15", recipe.version)
+        assertEquals("1.5.17", recipe.version)
         assertEquals("agy", recipe.executable)
         assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
         assertEquals(listOf("acp", "--login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-arm/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/linux-arm/" +
                 "cli_linux_arm64.tar.gz",
             arm.url,
         )
-        assertEquals("e5b5d7ca1dda2cfdc0b09c72931320c3ef5c481a14dbda137304107ce6e776b1", arm.sha256)
-        assertEquals(92373221L, arm.downloadBytes)
-        assertEquals(256660144L, arm.installedBytes)
+        assertEquals("d6d2b88493e6e02854da478b215cd1dd98fd8cf985b6be37829dacadea4ffc07", arm.sha256)
+        assertEquals(93662528L, arm.downloadBytes)
+        assertEquals(260657840L, arm.installedBytes)
         assertEquals("antigravity", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.15-5514532022517760/linux-x64/" +
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.17-4823843970351104/linux-x64/" +
                 "cli_linux_x64.tar.gz",
             x64.url,
         )
-        assertEquals("8d9913298602049ef29e9669f35252b6b79571979ce1bd0fb27753c7bac84114", x64.sha256)
-        assertEquals(101464790L, x64.downloadBytes)
-        assertEquals(273879752L, x64.installedBytes)
+        assertEquals("6304b4f592ae97e59231cfb1b365ee29c155750c9a881f0cc8efe5f5281077cf", x64.sha256)
+        assertEquals(102886235L, x64.downloadBytes)
+        assertEquals(278438600L, x64.installedBytes)
         assertEquals("antigravity", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }

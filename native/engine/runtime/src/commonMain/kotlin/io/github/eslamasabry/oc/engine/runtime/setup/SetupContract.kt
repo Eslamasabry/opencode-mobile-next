@@ -150,6 +150,9 @@ public sealed interface SetupError {
     /** `phoneSetupErrorCannotStart`. */
     public data object CannotStart : SetupError
 
+    /** `phoneSetupErrorCannotStart`: a start that says which kind of start failed ([StartStepKind]). */
+    public data class StartStepFailed(val kind: StartStepKind) : SetupError
+
     public data class PortBusy(val port: Int) : SetupError
 
     /** `phoneSetupErrorOpenCodeNoProgram`. */

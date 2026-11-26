@@ -22,6 +22,8 @@ public data class SettingsUi(
     val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
     val hub: HubUi = HubUi(),
     val group: GroupUi? = null,
+    /** The group whose rows lie under the open page (big screens: the list beside the page); null with none open. */
+    val listGroup: GroupUi? = null,
     val appearance: AppearanceUi = AppearanceUi(),
     val voice: VoiceFacts? = null,
     val notifications: NotificationFacts? = null,

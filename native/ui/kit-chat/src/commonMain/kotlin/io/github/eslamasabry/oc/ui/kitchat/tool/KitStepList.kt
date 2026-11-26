@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitConversationCap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -106,7 +107,7 @@ public fun KitStepList(
     Column(
         modifier
             .fillMaxWidth()
-            .widthIn(max = 700.dp) // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
+            .widthIn(max = kitConversationCap()) // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
             .testTag(STEP_LIST_TAG)
             .onPlaced { rail.root = it }
             .drawBehind {

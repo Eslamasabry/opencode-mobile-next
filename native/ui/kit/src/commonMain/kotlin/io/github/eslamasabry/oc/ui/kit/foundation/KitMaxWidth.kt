@@ -6,7 +6,9 @@ import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.LayoutModifierNode
+import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Constraints
@@ -31,7 +33,8 @@ public fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAli
 
 /** Any width cap, at [align] in a wider slot (Dart `KitMaxWidth.cap`; default alignment: the middle). */
 public fun Modifier.kitMaxWidth(maxWidth: Dp, align: CapAlign = CapAlign.Center): Modifier =
-    this then KitMaxWidthElement(maxWidth, align)
+    // A centred page column grows with the pane beside a list (LocalKitPaneColumn).
+    this then KitMaxWidthElement(maxWidth, align, followsPane = PaneColumn.follows(maxWidth, align))
 
 public object KitMaxWidth {
     /**
@@ -64,12 +67,14 @@ public object KitMaxWidth {
     }
 }
 
-private data class KitMaxWidthElement(val maxWidth: Dp, val align: CapAlign) : ModifierNodeElement<KitMaxWidthNode>() {
-    override fun create(): KitMaxWidthNode = KitMaxWidthNode(maxWidth, align)
+private data class KitMaxWidthElement(val maxWidth: Dp, val align: CapAlign, val followsPane: Boolean = false) :
+    ModifierNodeElement<KitMaxWidthNode>() {
+    override fun create(): KitMaxWidthNode = KitMaxWidthNode(maxWidth, align, followsPane)
 
     override fun update(node: KitMaxWidthNode) {
         node.maxWidth = maxWidth
         node.align = align
+        node.followsPane = followsPane
     }
 
     override fun InspectorInfo.inspectableProperties() {
@@ -79,9 +84,16 @@ private data class KitMaxWidthElement(val maxWidth: Dp, val align: CapAlign) : M
     }
 }
 
-private class KitMaxWidthNode(var maxWidth: Dp, var align: CapAlign) : Modifier.Node(), LayoutModifierNode {
+private class KitMaxWidthNode(var maxWidth: Dp, var align: CapAlign, var followsPane: Boolean) :
+    Modifier.Node(), LayoutModifierNode, CompositionLocalConsumerModifierNode {
+    /** The cap in force: [maxWidth], grown with the pane's column beside a list (LocalKitPaneColumn). */
+    private fun cap(): Dp {
+        val column = if (followsPane) currentValueOf(LocalKitPaneColumn) else null
+        return if (column == null) maxWidth else PaneColumn.widened(maxWidth, column)
+    }
+
     override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
-        val placeable = measurable.measure(KitMaxWidth.inner(constraints, maxWidth.roundToPx()))
+        val placeable = measurable.measure(KitMaxWidth.inner(constraints, cap().roundToPx()))
         val width = constraints.constrainWidth(placeable.width)
         return layout(width, placeable.height) {
             placeable.placeRelative(KitMaxWidth.offset(width, placeable.width, align), 0)
@@ -89,14 +101,14 @@ private class KitMaxWidthNode(var maxWidth: Dp, var align: CapAlign) : Modifier.
     }
 
     override fun IntrinsicMeasureScope.minIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int): Int =
-        minOf(measurable.minIntrinsicWidth(height), maxWidth.roundToPx())
+        minOf(measurable.minIntrinsicWidth(height), cap().roundToPx())
 
     override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int): Int =
-        minOf(measurable.maxIntrinsicWidth(height), maxWidth.roundToPx())
+        minOf(measurable.maxIntrinsicWidth(height), cap().roundToPx())
 
     override fun IntrinsicMeasureScope.minIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int): Int =
-        measurable.minIntrinsicHeight(minOf(width, maxWidth.roundToPx()))
+        measurable.minIntrinsicHeight(minOf(width, cap().roundToPx()))
 
     override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int): Int =
-        measurable.maxIntrinsicHeight(minOf(width, maxWidth.roundToPx()))
+        measurable.maxIntrinsicHeight(minOf(width, cap().roundToPx()))
 }

@@ -83,6 +83,18 @@ private const val MAX_CHARS = 4000
 /** The line list's height when the view sits in an unbounded column (a scrolling page). */
 private val UNBOUNDED_LINES_MAX = 560.dp // NV: Flutter shrink-wraps; a lazy list needs a bound
 
+/** Maximum lines shown in an inline diff preview before switching to the full diff view. */
+private const val INLINE_MAX_LINES = 12
+
+/** Lines revealed per tap on an unchanged fold bar. */
+private const val GAP_EXPAND_STEP = 20
+
+/** Syntax highlighting cutoff for very large diffs. */
+private const val MAX_HIGHLIGHT_LINES = 2000
+
+/** Extra width factor added to line-number cells (`1.5 × space2`). */
+private const val NUMBER_CELL_PADDING_FACTOR = 1.5f
+
 private data class SelectedLines(val old: Boolean, val anchor: Int, val end: Int) {
     fun contains(oldSide: Boolean, n: Int?): Boolean =
         old == oldSide && n != null && n in minOf(anchor, end)..maxOf(anchor, end)
@@ -108,6 +120,91 @@ public data class KitDiffPosition(
     val changeOffset: Int = 0,
     val changeTotal: Int? = null,
     val onPick: (() -> Unit)? = null,
+)
+
+/** Options for [KitDiffView] (line cap, callbacks, position, layout overrides, loading/error, header name). */
+public data class KitDiffOptions(
+    val maxLines: Int = INLINE_MAX_LINES,
+    val onComment: ((String) -> Unit)? = null,
+    val onAddToPrompt: ((String) -> Unit)? = null,
+    val position: KitDiffPosition? = null,
+    val wrap: Boolean? = null,
+    val split: Boolean? = null,
+    val loading: Boolean = false,
+    val error: String? = null,
+    val onRetry: (() -> Unit)? = null,
+    val onOpenAll: (() -> Unit)? = null,
+    val showName: Boolean = true,
+)
+
+private data class DiffLabels(
+    val hunk: (oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) -> String,
+    val gap: (hidden: Int) -> String,
+)
+
+private data class DiffMetrics(
+    val numberWidth: Dp,
+    val glyphWidth: Dp,
+    val longestWidth: Dp,
+    val digits: Int,
+    val language: CodeLanguage,
+)
+
+private data class DiffHeaderNav(
+    val position: KitDiffPosition?,
+    val change: Int,
+    val changeTotal: Int,
+    val onPrevious: (() -> Unit)?,
+    val onNext: (() -> Unit)?,
+)
+
+private data class DiffHeaderControls(
+    val wrap: Boolean,
+    val canWrap: Boolean,
+    val onWrap: () -> Unit,
+    val sourceSwitch: (@Composable () -> Unit)?,
+    val showName: Boolean = true,
+)
+
+private data class DiffLinesSpec(
+    val display: List<DiffDisplay>,
+    val full: Boolean,
+    val lineWrap: Boolean,
+    val splitOn: Boolean,
+    val bounded: Boolean,
+)
+
+private data class DiffRenderContext(
+    val file: DiffFile,
+    val options: KitDiffOptions,
+    val state: DiffViewState,
+    val metrics: DiffMetrics,
+    val labels: DiffLabels,
+)
+
+private data class DiffViewState(
+    val full: Boolean,
+    val displayRows: DiffRows,
+    val display: List<DiffDisplay>,
+    val allLines: List<DiffLine>,
+    val wrapOn: Boolean,
+    val splitOn: Boolean,
+    val markdown: Boolean,
+    val source: Boolean,
+    val formatted: Boolean,
+    val selection: SelectedLines?,
+    val selectedLines: List<DiffLine>,
+    val expanded: Map<Int, Int>,
+    val change: Int,
+    val list: androidx.compose.foundation.lazy.LazyListState,
+    val onToggleWrap: () -> Unit,
+    val onToggleSource: () -> Unit,
+    val onShowSource: () -> Unit,
+    val onSelect: (Boolean, Int, Int) -> Unit,
+    val onSetSelection: (SelectedLines?) -> Unit,
+    val onExpand: (Int, Int) -> Unit,
+    val onCollapse: (Int) -> Unit,
+    val onChangeDelta: (Int) -> Unit,
 )
 
 /**
@@ -140,276 +237,485 @@ public fun KitDiffView(
     onRetry: (() -> Unit)? = null,
     onOpenAll: (() -> Unit)? = null,
 ) {
-    val full = maxLines > 12
-    if (loading) return DiffLoading(modifier)
-    if (error != null) {
-        KitStateView(
-            KitStateKind.Error,
-            stringResource(Res.string.kitDiffLoadFailed),
-            modifier,
-            body = error,
+    KitDiffView(
+        file = file,
+        hunkLabel = hunkLabel,
+        gapLabel = gapLabel,
+        options = KitDiffOptions(
+            maxLines = maxLines,
+            onComment = onComment,
+            onAddToPrompt = onAddToPrompt,
+            position = position,
+            wrap = wrap,
+            split = split,
+            loading = loading,
+            error = error,
             onRetry = onRetry,
-            retryLabel = onRetry?.let { stringResource(Res.string.kitTryAgain) },
-            size = KitStateSize.Inline,
-        )
-        return
+            onOpenAll = onOpenAll,
+        ),
+        modifier = modifier,
+    )
+}
+
+/** Full or inline diff listing configured with [options] (see the flat-parameter [KitDiffView] for details). */
+@Composable
+public fun KitDiffView(
+    file: DiffFile,
+    hunkLabel: (oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) -> String,
+    gapLabel: (hidden: Int) -> String,
+    options: KitDiffOptions,
+    modifier: Modifier = Modifier,
+) {
+    if (DiffEmptyOrState(file, options, modifier)) return
+    val state = rememberDiffViewState(file, options)
+    val metrics = rememberDiffMetrics(file, state.allLines)
+    val ctx = DiffRenderContext(file, options, state, metrics, DiffLabels(hunkLabel, gapLabel))
+    DiffViewBody(ctx, modifier)
+}
+
+@Composable
+private fun DiffEmptyOrState(file: DiffFile, options: KitDiffOptions, modifier: Modifier): Boolean {
+    val full = options.maxLines > INLINE_MAX_LINES
+    return when {
+        options.loading -> {
+            DiffLoading(modifier)
+            true
+        }
+        options.error != null -> {
+            KitStateView(
+                KitStateKind.Error,
+                stringResource(Res.string.kitDiffLoadFailed),
+                modifier,
+                body = options.error,
+                onRetry = options.onRetry,
+                retryLabel = options.onRetry?.let { stringResource(Res.string.kitTryAgain) },
+                size = KitStateSize.Inline,
+            )
+            true
+        }
+        full && !file.binary && file.segments.isEmpty() -> {
+            KitStateView(
+                KitStateKind.Empty,
+                stringResource(Res.string.kitDiffNoChanges),
+                modifier,
+                icon = KitIcons.checks,
+                size = KitStateSize.Inline,
+            )
+            true
+        }
+        else -> false
     }
-    if (full && !file.binary && file.segments.isEmpty()) {
-        KitStateView(
-            KitStateKind.Empty,
-            stringResource(Res.string.kitDiffNoChanges),
-            modifier,
-            icon = KitIcons.checks,
-            size = KitStateSize.Inline,
-        )
-        return
+}
+
+private fun expandDiffRows(base: List<DiffRow>, expanded: Map<Int, Int>): List<DiffRow> =
+    buildList {
+        for (row in base) {
+            if (row is DiffRow.Gap && row.lines != null) {
+                val count = (expanded[row.segment] ?: 0).coerceAtMost(row.lines.size)
+                val above = row.position == DiffGapPosition.Above
+                val shown = if (above) row.lines.takeLast(count) else row.lines.take(count)
+                if (!above) shown.forEach { add(DiffRow.Line(it, row.segment)) }
+                add(row.copy(hidden = row.hidden - count))
+                if (above) shown.forEach { add(DiffRow.Line(it, row.segment)) }
+            } else {
+                add(row)
+            }
+        }
     }
-    val displayRows = remember(file, maxLines) { DiffModel.displayRows(file, maxLines) }
-    val base = displayRows.rows
+
+private fun allDiffLines(file: DiffFile): List<DiffLine> =
+    file.segments.flatMap {
+        when (it) {
+            is DiffLine -> listOf(it)
+            is DiffGap -> it.lines.orEmpty()
+        }
+    }
+
+@Composable
+private fun rememberDiffViewState(file: DiffFile, options: KitDiffOptions): DiffViewState {
+    val full = options.maxLines > INLINE_MAX_LINES
+    val displayRows = remember(file, options.maxLines) { DiffModel.displayRows(file, options.maxLines) }
     val window = LocalKitWindow.current
     var userWrap by remember(file) { mutableStateOf<Boolean?>(null) }
-    val wrapOn = wrap ?: userWrap ?: (window.cls == WindowClass.Compact) // F: lib/ui/kit/kit_diff_view.dart:330-331
-    val splitOn = full && (split ?: window.cls.isWide) // F: lib/ui/kit/kit_diff_view.dart:766-768
+    val wrapOn = options.wrap ?: userWrap ?: (window.cls == WindowClass.Compact)
+    val splitOn = full && (options.split ?: window.cls.isWide)
     var source by remember(file) { mutableStateOf(false) }
     var selection by remember(file) { mutableStateOf<SelectedLines?>(null) }
     var expanded by remember(file) { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var change by remember(file) { mutableIntStateOf(0) }
     val markdown = file.path.substringAfterLast('.').lowercase() in setOf("md", "markdown", "mdx")
     val formatted = markdown && !source
-    val rows =
-        remember(base, expanded) {
-            buildList {
-                for (row in base) {
-                    if (row is DiffRow.Gap && row.lines != null) {
-                        val count = (expanded[row.segment] ?: 0).coerceAtMost(row.lines.size)
-                        val above = row.position == DiffGapPosition.Above
-                        val shown = if (above) row.lines.takeLast(count) else row.lines.take(count)
-                        if (!above) shown.forEach { add(DiffRow.Line(it, row.segment)) }
-                        add(row.copy(hidden = row.hidden - count))
-                        if (above) shown.forEach { add(DiffRow.Line(it, row.segment)) }
-                    } else add(row)
-                }
-            }
-        }
+    val rows = remember(displayRows.rows, expanded) { expandDiffRows(displayRows.rows, expanded) }
     val fenceState = remember(file) { diffFenceStates(file) }
-    val display = remember(rows, formatted, splitOn, fenceState) { diffDisplay(rows, formatted, splitOn, fenceState) }
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    val mono = LocalKitTypography.current.style(TypeRole.Mono)
-    val redactor = LocalKitRedactor.current
-    val digits = file.maxLineNumber.toString().length
-    val language = CodeLanguage.forPath(file.path)
-    val highlight = file.totalLines <= 2000
-    val density = LocalDensity.current
-    val measurer = rememberTextMeasurer()
-    val lineWrap = wrapOn || formatted
-    // F: lib/ui/kit/diff/kit_diff_chrome.dart:774-785 — the number cell, the sign cell
-    val numberWidth =
-        remember(mono, density, digits) {
-            with(density) { ceil(measurer.measure("0".repeat(digits), mono).size.width.toDp().value + Space.S2 * 1.5f).dp }
-        }
-    val glyphWidth = with(density) { ceil(mono.fontSize.toDp().value + Space.S1).dp }
+    val display = remember(rows, formatted, splitOn, fenceState) {
+        diffDisplay(rows, formatted, splitOn, fenceState)
+    }
     val list = rememberLazyListState()
-    val changeTotal = position?.changeTotal ?: file.changeCount
-    val changeOffset = position?.changeOffset ?: 0
     val changeSegment = file.changeStarts.getOrNull(change)
     LaunchedEffect(change, file) {
         val target = display.indexOfFirst { it.segment >= (changeSegment ?: 0) }
         if (full && change > 0 && target >= 0) list.animateScrollToItem(target)
     }
-    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
-    val allLines =
-        remember(file) {
-            file.segments.flatMap {
-                when (it) {
-                    is DiffLine -> listOf(it)
-                    is DiffGap -> it.lines.orEmpty()
-                }
-            }
-        }
-    val longest = remember(allLines) { allLines.maxByOrNull { it.text.length }?.text.orEmpty().take(MAX_CHARS) }
-    val longestWidth =
-        remember(longest, mono, density) {
-            with(density) { measurer.measure(longest, mono, softWrap = false, maxLines = 1).size.width.toDp() } + Space.S4.dp
-        }
+    val allLines = remember(file) { allDiffLines(file) }
     val selectedLines = allLines.filter { line ->
         line.kind != DiffLineKind.Hunk &&
             selection?.let { it.contains(it.old, if (it.old) line.oldNo else line.newNo) } == true
     }
-    fun selectedText() = selectedLines.joinToString("\n") { redactor.redact(it.text) }
-    fun select(old: Boolean, start: Int, end: Int = start) {
-        selection = selection?.takeIf { it.old == old }?.copy(end = end) ?: SelectedLines(old, start, end)
-    }
-    val selectLabel = if (full) stringResource(Res.string.kitDiffSelectHunk) else ""
-    val hideWords = stringResource(Res.string.kitDiffHideUnchanged)
-    val cells = Cells(numberWidth, glyphWidth, digits, mono, colors, selection, selectLabel, redactor::redact, ::select, language, highlight)
-    val rowContent: @Composable (Geometry, Int, DiffDisplay) -> Unit = { g, index, item ->
-        when (item) {
-            is DiffDisplay.Pair ->
-                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-                    val half = g.textWidth?.let { Modifier.width(g.number + g.glyph + it) } ?: Modifier.weight(1f)
-                    cells.Half(item.old, true, g, half)
-                    Box(Modifier.fillMaxHeight().width(kitHairline()).background(colors.hairline))
-                    cells.Half(item.current, false, g, half)
-                }
-            is DiffDisplay.Markdown -> {
-                val unit = item.unit
-                val first = unit.lines.first()
-                val old = first.kind == DiffLineKind.Removed
-                val text = redactor.redact(unit.lines.joinToString("\n") { it.text })
-                val blocks = remember(text) { KitMdSource.blocks("diff-${unit.segment}", text, false) }
-                Row(Modifier.fillMaxWidth().background(tint(colors, first.kind)).diffRemovedMark(old, colors.text2)) {
-                    cells.Number(
-                        if (old) first.oldNo else first.newNo,
-                        old,
-                        { n -> select(old, n, (if (old) unit.lines.last().oldNo else unit.lines.last().newNo) ?: n) },
-                    )
-                    cells.Glyph(first.kind)
-                    // A diff's Markdown is presentation only; source links are selectable text, never external actions.
-                    KitMarkdown(blocks, KitMarkdownActions(onLink = { source = true }), Modifier.weight(1f).padding(end = Space.S2.dp))
-                }
-            }
-            is DiffDisplay.Source ->
-                when (val row = item.row) {
-                    is DiffRow.Line -> cells.Unified(row.line, g)
-                    is DiffRow.HunkHeader -> {
-                        // F: lib/ui/kit/diff/kit_diff_rows.dart:60-64 — the fold bar above already says where it starts.
-                        val afterGap = (display.getOrNull(index - 1) as? DiffDisplay.Source)?.row is DiffRow.Gap
-                        if (!afterGap) {
-                            val label = hunkLabel(row.oldStart, row.oldEnd, row.newStart, row.newEnd)
-                            val hunk = file.hunks.firstOrNull { it.headerSegment == row.segment }
-                            val words: @Composable () -> Unit = {
-                                KitText(
-                                    label,
-                                    Modifier.padding(start = g.indent, top = Space.S1.dp, bottom = Space.S1.dp),
-                                    role = TypeRole.Mono,
-                                    tone = TextTone.Secondary,
-                                )
-                            }
-                            if (full && hunk != null)
-                                KitTappable(
-                                    {
-                                        val old = hunk.newStart == null
-                                        val start = (if (old) hunk.oldStart else hunk.newStart) ?: 0
-                                        val end = (if (old) hunk.oldEnd else hunk.newEnd) ?: start
-                                        selection = SelectedLines(old, start, end)
-                                    },
-                                    onClickLabel = selectLabel,
-                                ) { words() }
-                            else words()
-                        }
-                    }
-                    is DiffRow.Gap -> {
-                        val shown = expanded[row.segment] ?: 0
-                        val open = row.lines != null && full
-                        if (open && shown > 0) {
-                            GapBar(hideWords, KitIcons.unfoldLess, g.indent, flat = !full) { expanded = expanded - row.segment }
-                        }
-                        if (row.hidden > 0) {
-                            GapBar(gapLabel(row.hidden), null, g.indent, flat = !full, onTap = if (open) ({ expanded = expanded + (row.segment to shown + 20) }) else null)
-                        }
-                    }
-                }
-        }
-    }
-    val lines: @Composable (Modifier, Dp, Boolean) -> Unit = { frame, width, bounded ->
-        val gutter = (if (splitOn) numberWidth else numberWidth * 2) + glyphWidth
-        val textWidth: Dp?
-        val contentWidth: Dp
-        // Two columns always split the window in half and wrap inside their half: a long line never widens a side or
-        // pushes the new side past the edge (the one-column view wraps the same way on a phone).
-        val wraps = lineWrap || splitOn
-        if (wraps) {
-            textWidth = null
-            contentWidth = width
-        } else {
-            textWidth = maxOf(width - gutter, longestWidth)
-            contentWidth = gutter + textWidth
-        }
-        val g = Geometry(numberWidth, glyphWidth, wraps, splitOn, textWidth)
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            KitMarkdownSelection {
-                val sideways = if (wraps) {
-                    Modifier.fillMaxWidth()
-                } else {
-                    Modifier.horizontalScroll(rememberScrollState()).width(contentWidth)
-                }
-                if (full) {
-                    LazyColumn(
-                        frame.then(if (bounded) Modifier else Modifier.heightIn(max = UNBOUNDED_LINES_MAX)).then(sideways),
-                        state = list,
-                        contentPadding = PaddingValues(bottom = Space.S4.dp), // F: lib/ui/kit/diff/kit_diff_chrome.dart:868
-                    ) {
-                        itemsIndexed(display) { i, item -> rowContent(g, i, item) }
-                    }
-                } else {
-                    Column(frame.then(sideways)) { display.forEachIndexed { i, item -> rowContent(g, i, item) } }
-                }
+    return DiffViewState(
+        full = full,
+        displayRows = displayRows,
+        display = display,
+        allLines = allLines,
+        wrapOn = wrapOn,
+        splitOn = splitOn,
+        markdown = markdown,
+        source = source,
+        formatted = formatted,
+        selection = selection,
+        selectedLines = selectedLines,
+        expanded = expanded,
+        change = change,
+        list = list,
+        onToggleWrap = { userWrap = !wrapOn },
+        onToggleSource = { source = !source },
+        onShowSource = { source = true },
+        onSelect = { old, start, end ->
+            selection = selection?.takeIf { it.old == old }?.copy(end = end) ?: SelectedLines(old, start, end)
+        },
+        onSetSelection = { selection = it },
+        onExpand = { segment, next -> expanded = expanded + (segment to next) },
+        onCollapse = { segment -> expanded = expanded - segment },
+        onChangeDelta = { delta -> change += delta },
+    )
+}
+
+@Composable
+private fun rememberDiffMetrics(file: DiffFile, allLines: List<DiffLine>): DiffMetrics {
+    val mono = LocalKitTypography.current.style(TypeRole.Mono)
+    val digits = file.maxLineNumber.toString().length
+    val language = CodeLanguage.forPath(file.path)
+    val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    // F: lib/ui/kit/diff/kit_diff_chrome.dart:774-785 — the number cell, the sign cell
+    val numberWidth =
+        remember(mono, density, digits) {
+            with(density) {
+                val measured = measurer.measure("0".repeat(digits), mono).size.width.toDp().value
+                ceil(measured + Space.S2 * NUMBER_CELL_PADDING_FACTOR).dp
             }
         }
+    val glyphWidth = with(density) { ceil(mono.fontSize.toDp().value + Space.S1).dp }
+    val longest = remember(allLines) {
+        allLines.maxByOrNull { it.text.length }?.text.orEmpty().take(MAX_CHARS)
     }
-    val codeFill = if (colors.dark) colors.surface1 else colors.ground // F: lib/ui/kit/kit_tokens.dart detailsSurface
+    val longestWidth =
+        remember(longest, mono, density) {
+            with(density) {
+                measurer.measure(longest, mono, softWrap = false, maxLines = 1).size.width.toDp()
+            } + Space.S4.dp
+        }
+    return DiffMetrics(numberWidth, glyphWidth, longestWidth, digits, language)
+}
+
+@Composable
+private fun DiffViewBody(ctx: DiffRenderContext, modifier: Modifier) {
+    val colors = LocalKitColors.current
+    val mono = LocalKitTypography.current.style(TypeRole.Mono)
+    val redactor = LocalKitRedactor.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
+    val selectLabel = if (ctx.state.full) stringResource(Res.string.kitDiffSelectHunk) else ""
+    val cells = Cells(
+        ctx.metrics.numberWidth,
+        ctx.metrics.glyphWidth,
+        ctx.metrics.digits,
+        mono,
+        colors,
+        ctx.state.selection,
+        selectLabel,
+        redactor::redact,
+        ctx.state.onSelect,
+        ctx.metrics.language,
+        ctx.file.totalLines <= MAX_HIGHLIGHT_LINES,
+    )
+    fun selectedText() = ctx.state.selectedLines.joinToString("\n") { redactor.redact(it.text) }
     BoxWithConstraints(modifier) {
-        val bounded = constraints.hasBoundedHeight && full
+        val bounded = constraints.hasBoundedHeight && ctx.state.full
         val width = maxWidth
         Column(Modifier.fillMaxWidth()) {
-            if (full) {
-                DiffHeader(
-                    file = file,
-                    position = position,
-                    change = changeOffset + change,
-                    changeTotal = changeTotal,
-                    wrap = wrapOn,
-                    canWrap = !file.binary && !formatted && !splitOn, // two columns always wrap
-                    onWrap = { userWrap = !wrapOn },
-                    onPrevious = if (change > 0) ({ change-- }) else null,
-                    onNext = if (change < file.changeCount - 1) ({ change++ }) else null,
-                    sourceSwitch = if (markdown && !file.binary) ({ SourceSwitch(source) { source = !source } }) else null,
-                )
-            } else if (markdown) {
-                SourceSwitch(source) { source = !source }
-            }
-            if (file.binary) {
-                KitText(
-                    stringResource(Res.string.kitDiffBinary),
-                    Modifier.padding(tokens.gutter.dp).semantics(mergeDescendants = true) {},
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Secondary,
-                )
-            } else {
-                val frame = if (full) Modifier.background(codeFill) else Modifier
-                // The listing runs edge to edge like a terminal (KitTerminalView): code in its own frame, not page words
-                // on the gutter (kit_diff_chrome.dart `_codeFrame`).
-                Box((if (bounded) Modifier.weight(1f) else Modifier).fillMaxWidth().then(frame).then(if (full) Modifier.kitEdge(KitEdge.Chrome) else Modifier)) {
-                    lines(if (bounded) Modifier.fillMaxSize() else Modifier, width, bounded)
-                }
-                if (full && displayRows.cut) {
-                    // F: lib/ui/kit/diff/kit_diff_chrome.dart:645-678 — "Showing 400 of 3,200 lines" and Open all.
-                    FlowRow(
-                        Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
-                        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-                        itemVerticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        KitText(
-                            stringResource(Res.string.kitDiffTooBig, grouped(displayRows.shownLines), grouped(displayRows.totalLines)),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                        )
-                        if (onOpenAll != null) KitButton(stringResource(Res.string.kitDiffOpenAll), onOpenAll, role = KitButtonRole.Tertiary)
-                    }
+            DiffTopBand(ctx)
+            DiffMainArea(ctx, bounded) { spec, frame ->
+                DiffLinesFrame(spec, ctx, width, frame) { g, i, item ->
+                    DiffRowItem(ctx, cells, g, i, item)
                 }
             }
-            if (selection != null && full) {
+            if (ctx.state.selection != null && ctx.state.full) {
                 SelectionBar(
-                    count = selectedLines.size,
-                    onComment = onComment?.let { { it(selectedText()) } },
-                    onAddToPrompt = onAddToPrompt?.let { { it(selectedText()) } },
+                    count = ctx.state.selectedLines.size,
+                    onComment = ctx.options.onComment?.let { { it(selectedText()) } },
+                    onAddToPrompt = ctx.options.onAddToPrompt?.let { { it(selectedText()) } },
                     onCopy = { clipboard.setText(AnnotatedString(selectedText()), KitClipboardMode.Sensitive) },
-                    onClear = { selection = null },
+                    onClear = { ctx.state.onSetSelection(null) },
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DiffTopBand(ctx: DiffRenderContext) {
+    val file = ctx.file
+    val options = ctx.options
+    val state = ctx.state
+    if (state.full) {
+        val changeTotal = options.position?.changeTotal ?: file.changeCount
+        val changeOffset = options.position?.changeOffset ?: 0
+        val sourceSwitch: (@Composable () -> Unit)? =
+            if (state.markdown && !file.binary) ({ SourceSwitch(state.source, state.onToggleSource) }) else null
+        DiffHeader(
+            file = file,
+            nav = DiffHeaderNav(
+                position = options.position,
+                change = changeOffset + state.change,
+                changeTotal = changeTotal,
+                onPrevious = if (state.change > 0) ({ state.onChangeDelta(-1) }) else null,
+                onNext = if (state.change < file.changeCount - 1) ({ state.onChangeDelta(1) }) else null,
+            ),
+            controls = DiffHeaderControls(
+                wrap = state.wrapOn,
+                canWrap = !file.binary && !state.formatted && !state.splitOn,
+                onWrap = state.onToggleWrap,
+                sourceSwitch = sourceSwitch,
+                showName = options.showName,
+            ),
+        )
+    } else if (state.markdown) {
+        SourceSwitch(state.source, state.onToggleSource)
+    }
+}
+
+@Composable
+private fun ColumnScope.DiffMainArea(
+    ctx: DiffRenderContext,
+    bounded: Boolean,
+    body: @Composable (DiffLinesSpec, Modifier) -> Unit,
+) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    if (ctx.file.binary) {
+        KitText(
+            stringResource(Res.string.kitDiffBinary),
+            Modifier.padding(tokens.gutter.dp).semantics(mergeDescendants = true) {},
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+        )
+        return
+    }
+    val state = ctx.state
+    val codeFill = if (colors.dark) colors.surface1 else colors.ground
+    val frame = if (state.full) Modifier.background(codeFill) else Modifier
+    val boxMod = (if (bounded) Modifier.weight(1f) else Modifier)
+        .fillMaxWidth()
+        .then(frame)
+        .then(if (state.full) Modifier.kitEdge(KitEdge.Chrome) else Modifier)
+    val spec = DiffLinesSpec(
+        display = state.display,
+        full = state.full,
+        lineWrap = state.wrapOn || state.formatted,
+        splitOn = state.splitOn,
+        bounded = bounded,
+    )
+    Box(boxMod) {
+        body(spec, if (bounded) Modifier.fillMaxSize() else Modifier)
+    }
+    if (state.full && state.displayRows.cut) {
+        DiffCutFooter(state.displayRows, ctx.options.onOpenAll)
+    }
+}
+
+@Composable
+private fun DiffCutFooter(displayRows: DiffRows, onOpenAll: (() -> Unit)?) {
+    val tokens = LocalKitTokens.current
+    // F: lib/ui/kit/diff/kit_diff_chrome.dart:645-678 — "Showing 400 of 3,200 lines" and Open all.
+    FlowRow(
+        Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        KitText(
+            stringResource(
+                Res.string.kitDiffTooBig,
+                grouped(displayRows.shownLines),
+                grouped(displayRows.totalLines),
+            ),
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+        )
+        if (onOpenAll != null) {
+            KitButton(stringResource(Res.string.kitDiffOpenAll), onOpenAll, role = KitButtonRole.Tertiary)
+        }
+    }
+}
+
+@Composable
+private fun DiffLinesFrame(
+    spec: DiffLinesSpec,
+    ctx: DiffRenderContext,
+    width: Dp,
+    frame: Modifier,
+    rowContent: @Composable (Geometry, Int, DiffDisplay) -> Unit,
+) {
+    val metrics = ctx.metrics
+    val gutter = (if (spec.splitOn) metrics.numberWidth else metrics.numberWidth * 2) + metrics.glyphWidth
+    // Two columns always split the window in half and wrap inside their half.
+    val wraps = spec.lineWrap || spec.splitOn
+    val textWidth = if (wraps) null else maxOf(width - gutter, metrics.longestWidth)
+    val contentWidth = if (textWidth == null) width else gutter + textWidth
+    val g = Geometry(metrics.numberWidth, metrics.glyphWidth, wraps, spec.splitOn, textWidth)
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        KitMarkdownSelection {
+            val sideways = if (wraps) {
+                Modifier.fillMaxWidth()
+            } else {
+                Modifier.horizontalScroll(rememberScrollState()).width(contentWidth)
+            }
+            if (spec.full) {
+                val heightMod = if (spec.bounded) Modifier else Modifier.heightIn(max = UNBOUNDED_LINES_MAX)
+                LazyColumn(
+                    frame.then(heightMod).then(sideways),
+                    state = ctx.state.list,
+                    contentPadding = PaddingValues(bottom = Space.S4.dp),
+                ) {
+                    itemsIndexed(spec.display) { i, item -> rowContent(g, i, item) }
+                }
+            } else {
+                Column(frame.then(sideways)) {
+                    spec.display.forEachIndexed { i, item -> rowContent(g, i, item) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiffRowItem(
+    ctx: DiffRenderContext,
+    cells: Cells,
+    g: Geometry,
+    index: Int,
+    item: DiffDisplay,
+) {
+    when (item) {
+        is DiffDisplay.Pair -> DiffPairRow(item, g, cells)
+        is DiffDisplay.Markdown -> DiffMarkdownRow(item, cells, ctx.state.onShowSource)
+        is DiffDisplay.Source -> DiffSourceRow(ctx, cells, g, index, item.row)
+    }
+}
+
+@Composable
+private fun DiffPairRow(item: DiffDisplay.Pair, g: Geometry, cells: Cells) {
+    val colors = LocalKitColors.current
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+        val half = g.textWidth?.let { Modifier.width(g.number + g.glyph + it) } ?: Modifier.weight(1f)
+        cells.Half(item.old, true, g, half)
+        Box(Modifier.fillMaxHeight().width(kitHairline()).background(colors.hairline))
+        cells.Half(item.current, false, g, half)
+    }
+}
+
+@Composable
+private fun DiffMarkdownRow(item: DiffDisplay.Markdown, cells: Cells, onShowSource: () -> Unit) {
+    val colors = LocalKitColors.current
+    val redactor = LocalKitRedactor.current
+    val unit = item.unit
+    val first = unit.lines.first()
+    val old = first.kind == DiffLineKind.Removed
+    val text = redactor.redact(unit.lines.joinToString("\n") { it.text })
+    val blocks = remember(text) { KitMdSource.blocks("diff-${unit.segment}", text, false) }
+    Row(Modifier.fillMaxWidth().background(tint(colors, first.kind)).diffRemovedMark(old, colors.text2)) {
+        cells.Number(
+            if (old) first.oldNo else first.newNo,
+            old,
+            { n ->
+                val end = (if (old) unit.lines.last().oldNo else unit.lines.last().newNo) ?: n
+                cells.select(old, n, end)
+            },
+        )
+        cells.Glyph(first.kind)
+        // A diff's Markdown is presentation only; source links are selectable text, never external actions.
+        KitMarkdown(
+            blocks,
+            KitMarkdownActions(onLink = { onShowSource() }),
+            Modifier.weight(1f).padding(end = Space.S2.dp),
+        )
+    }
+}
+
+@Composable
+private fun DiffSourceRow(
+    ctx: DiffRenderContext,
+    cells: Cells,
+    g: Geometry,
+    index: Int,
+    row: DiffRow,
+) {
+    when (row) {
+        is DiffRow.Line -> cells.Unified(row.line, g)
+        is DiffRow.HunkHeader -> DiffHunkRow(ctx, g, index, row)
+        is DiffRow.Gap -> DiffGapRow(ctx, g, row)
+    }
+}
+
+@Composable
+private fun DiffHunkRow(
+    ctx: DiffRenderContext,
+    g: Geometry,
+    index: Int,
+    row: DiffRow.HunkHeader,
+) {
+    val state = ctx.state
+    val afterGap = (state.display.getOrNull(index - 1) as? DiffDisplay.Source)?.row is DiffRow.Gap
+    if (afterGap) return
+    val label = ctx.labels.hunk(row.oldStart, row.oldEnd, row.newStart, row.newEnd)
+    val hunk = ctx.file.hunks.firstOrNull { it.headerSegment == row.segment }
+    val selectLabel = if (state.full) stringResource(Res.string.kitDiffSelectHunk) else ""
+    val words: @Composable () -> Unit = {
+        KitText(
+            label,
+            Modifier.padding(start = g.indent, top = Space.S1.dp, bottom = Space.S1.dp),
+            role = TypeRole.Mono,
+            tone = TextTone.Secondary,
+        )
+    }
+    if (state.full && hunk != null) {
+        KitTappable(
+            {
+                val old = hunk.newStart == null
+                val start = (if (old) hunk.oldStart else hunk.newStart) ?: 0
+                val end = (if (old) hunk.oldEnd else hunk.newEnd) ?: start
+                state.onSetSelection(SelectedLines(old, start, end))
+            },
+            onClickLabel = selectLabel,
+        ) { words() }
+    } else {
+        words()
+    }
+}
+
+@Composable
+private fun DiffGapRow(ctx: DiffRenderContext, g: Geometry, row: DiffRow.Gap) {
+    val state = ctx.state
+    val hideWords = stringResource(Res.string.kitDiffHideUnchanged)
+    val shown = state.expanded[row.segment] ?: 0
+    val open = row.lines != null && state.full
+    if (open && shown > 0) {
+        GapBar(hideWords, KitIcons.unfoldLess, g.indent, flat = !state.full) {
+            state.onCollapse(row.segment)
+        }
+    }
+    if (row.hidden > 0) {
+        val onTap = if (open) ({ state.onExpand(row.segment, shown + GAP_EXPAND_STEP) }) else null
+        GapBar(ctx.labels.gap(row.hidden), null, g.indent, flat = !state.full, onTap = onTap)
     }
 }
 
@@ -482,126 +788,173 @@ private fun Counts(added: Int, removed: Int) {
  * toggle.
  */
 @Composable
-private fun DiffHeader(
-    file: DiffFile,
-    position: KitDiffPosition?,
-    change: Int,
-    changeTotal: Int,
-    wrap: Boolean,
-    canWrap: Boolean,
-    onWrap: () -> Unit,
-    onPrevious: (() -> Unit)?,
-    onNext: (() -> Unit)?,
-    sourceSwitch: (@Composable () -> Unit)?,
-) {
+private fun DiffHeader(file: DiffFile, nav: DiffHeaderNav, controls: DiffHeaderControls) {
     val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    val typography = LocalKitTypography.current
-    val status =
-        when (file.status) {
-            DiffFileStatus.Renamed -> file.oldPath?.let { stringResource(Res.string.kitDiffRenamed, it) }.orEmpty()
-            DiffFileStatus.Added -> stringResource(Res.string.kitDiffAddedFile)
-            DiffFileStatus.Deleted -> stringResource(Res.string.kitDiffDeletedFile)
-            DiffFileStatus.Modified -> ""
-        }
+    val status = diffFileStatusText(file)
     val folder = file.path.substringBeforeLast('/', "").let { if (it.isEmpty()) "" else "$it/" }
     val supporting = listOf(folder, status).filter { it.isNotEmpty() }.joinToString(" · ")
-    val multi = (position?.fileCount ?: 1) > 1
-    val switcher = multi // F: lib/ui/kit/diff/kit_diff_chrome.dart:276 (no file list beside a single-file view)
-    val single = changeTotal <= 1
-    val compact = single && !switcher
-    val positionWords = position?.let { stringResource(Res.string.kitDiffFilePosition, it.fileIndex + 1, it.fileCount) }
-    val name = buildAnnotatedString {
+    val switcher = (nav.position?.fileCount ?: 1) > 1
+    val compact = nav.changeTotal <= 1 && !switcher
+    val name = diffHeaderName(file, switcher, nav.position)
+    Column(Modifier.fillMaxWidth().background(colors.ground).bottomRule(colors.hairline)) {
+        if (compact) {
+            CompactDiffHeader(file, name, supporting, controls)
+        } else {
+            FullDiffHeader(file, name, supporting, nav, controls)
+        }
+    }
+}
+
+@Composable
+private fun diffFileStatusText(file: DiffFile): String =
+    when (file.status) {
+        DiffFileStatus.Renamed -> file.oldPath?.let { stringResource(Res.string.kitDiffRenamed, it) }.orEmpty()
+        DiffFileStatus.Added -> stringResource(Res.string.kitDiffAddedFile)
+        DiffFileStatus.Deleted -> stringResource(Res.string.kitDiffDeletedFile)
+        DiffFileStatus.Modified -> ""
+    }
+
+@Composable
+private fun diffHeaderName(file: DiffFile, switcher: Boolean, position: KitDiffPosition?): AnnotatedString {
+    val colors = LocalKitColors.current
+    val typography = LocalKitTypography.current
+    val positionWords = position?.let {
+        stringResource(Res.string.kitDiffFilePosition, it.fileIndex + 1, it.fileCount)
+    }
+    return buildAnnotatedString {
         withStyle(typography.style(TypeRole.RowTitle).copy(color = colors.text1).toSpanStyle()) {
             append(file.path.substringAfterLast('/'))
         }
         if (switcher && positionWords != null) {
-            withStyle(typography.style(TypeRole.Secondary).copy(color = colors.text2).toSpanStyle()) { append(" · $positionWords") }
+            withStyle(typography.style(TypeRole.Secondary).copy(color = colors.text2).toSpanStyle()) {
+                append(" · $positionWords")
+            }
         }
     }
-    val wrapButton: @Composable () -> Unit = {
-        if (canWrap) {
-            KitIconButton(KitIcons.wrapText, stringResource(Res.string.kitWrapLines), onWrap, selected = wrap)
-        }
+}
+
+@Composable
+private fun DiffWrapButton(controls: DiffHeaderControls) {
+    if (controls.canWrap) {
+        KitIconButton(
+            KitIcons.wrapText,
+            stringResource(Res.string.kitWrapLines),
+            controls.onWrap,
+            selected = controls.wrap,
+        )
     }
-    Column(Modifier.fillMaxWidth().background(colors.ground).bottomRule(colors.hairline)) {
-        if (compact) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = tokens.gutter.dp,
-                        top = Space.S1.dp,
-                        bottom = Space.S1.dp,
-                        end = if (file.binary) tokens.gutter.dp else Space.S3.dp,
-                    )
-                    .heightIn(min = tokens.minTarget.dp)
-                    .testTag("diff-file-header"),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                FlowRow(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                    itemVerticalAlignment = Alignment.CenterVertically,
-                ) {
-                    BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    if (supporting.isNotEmpty()) KitText(supporting, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
-                    Counts(file.added, file.removed)
-                }
-                sourceSwitch?.invoke()
-                wrapButton()
+}
+
+@Composable
+private fun CompactDiffHeader(
+    file: DiffFile,
+    name: AnnotatedString,
+    supporting: String,
+    controls: DiffHeaderControls,
+) {
+    val tokens = LocalKitTokens.current
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(
+                start = tokens.gutter.dp,
+                top = Space.S1.dp,
+                bottom = Space.S1.dp,
+                end = if (file.binary) tokens.gutter.dp else Space.S3.dp,
+            )
+            .heightIn(min = tokens.minTarget.dp)
+            .testTag("diff-file-header"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        FlowRow(
+            Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (controls.showName) BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (supporting.isNotEmpty()) {
+                KitText(supporting, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
             }
-        } else {
-            val row: @Composable (Modifier) -> Unit = { m ->
-                Row(
-                    m.fillMaxWidth().padding(start = tokens.gutter.dp, top = Space.S2.dp, end = tokens.gutter.dp, bottom = if (switcher) Space.S2.dp else 0.dp),
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        if (switcher) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                BasicText(name, Modifier.weight(1f, fill = false), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                Spacer(Modifier.width(Space.S1.dp))
-                                KitIcon(KitIcons.chevronRight, size = KitIconSize.Small, tone = TextTone.Secondary)
-                            }
-                        } else {
-                            BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        }
-                        if (supporting.isNotEmpty()) KitText(supporting, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2)
-                    }
-                    Spacer(Modifier.width(Space.S3.dp))
-                    Counts(file.added, file.removed)
-                }
-            }
-            val pick = position?.onPick
-            if (switcher && pick != null) KitTappable(pick) { row(Modifier) } else row(Modifier)
-            if (!compact) {
-                // The change bar is the header's toolbar: its controls own their placement (kit_diff_chrome.dart:437-441).
-                Row(
-                    Modifier.fillMaxWidth().kitEdge(KitEdge.Chrome).padding(start = Space.S1.dp, end = Space.S3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (changeTotal > 1) {
-                        val previous = stringResource(Res.string.kitDiffPreviousChange)
-                        val next = stringResource(Res.string.kitDiffNextChange)
-                        KitIconButton(KitIcons.chevronUp, previous, { onPrevious?.invoke() }, shortcut = "P")
-                        KitIconButton(KitIcons.chevronDown, next, { onNext?.invoke() }, shortcut = "N")
-                        Spacer(Modifier.width(Space.S1.dp))
-                        KitText(
-                            stringResource(Res.string.kitDiffChangeOf, (change + 1).toString(), changeTotal.toString()),
-                            Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                            role = TypeRole.Caption,
-                            tone = TextTone.Secondary,
+            Counts(file.added, file.removed)
+        }
+        controls.sourceSwitch?.invoke()
+        DiffWrapButton(controls)
+    }
+}
+
+@Composable
+private fun FullDiffHeader(
+    file: DiffFile,
+    name: AnnotatedString,
+    supporting: String,
+    nav: DiffHeaderNav,
+    controls: DiffHeaderControls,
+) {
+    val tokens = LocalKitTokens.current
+    val switcher = (nav.position?.fileCount ?: 1) > 1
+    val row: @Composable (Modifier) -> Unit = { m ->
+        Row(
+            m.fillMaxWidth().padding(
+                start = tokens.gutter.dp,
+                top = Space.S2.dp,
+                end = tokens.gutter.dp,
+                bottom = if (switcher) Space.S2.dp else 0.dp,
+            ),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(Modifier.weight(1f)) {
+                if (switcher) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BasicText(
+                            name,
+                            Modifier.weight(1f, fill = false),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
-                        Spacer(Modifier.weight(1f))
-                    } else {
-                        Spacer(Modifier.weight(1f))
+                        Spacer(Modifier.width(Space.S1.dp))
+                        KitIcon(KitIcons.chevronRight, size = KitIconSize.Small, tone = TextTone.Secondary)
                     }
-                    sourceSwitch?.invoke()
-                    wrapButton()
+                } else if (controls.showName) {
+                    BasicText(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+                if (supporting.isNotEmpty()) {
+                    KitText(supporting, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2)
                 }
             }
+            Spacer(Modifier.width(Space.S3.dp))
+            Counts(file.added, file.removed)
         }
+    }
+    val pick = nav.position?.onPick
+    if (switcher && pick != null) KitTappable(pick) { row(Modifier) } else row(Modifier)
+    DiffChangeBar(nav, controls)
+}
+
+@Composable
+private fun DiffChangeBar(nav: DiffHeaderNav, controls: DiffHeaderControls) {
+    // The change bar is the header's toolbar: its controls own their placement (kit_diff_chrome.dart:437-441).
+    Row(
+        Modifier.fillMaxWidth().kitEdge(KitEdge.Chrome).padding(start = Space.S1.dp, end = Space.S3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (nav.changeTotal > 1) {
+            val previous = stringResource(Res.string.kitDiffPreviousChange)
+            val next = stringResource(Res.string.kitDiffNextChange)
+            KitIconButton(KitIcons.chevronUp, previous, { nav.onPrevious?.invoke() }, shortcut = "P")
+            KitIconButton(KitIcons.chevronDown, next, { nav.onNext?.invoke() }, shortcut = "N")
+            Spacer(Modifier.width(Space.S1.dp))
+            KitText(
+                stringResource(Res.string.kitDiffChangeOf, (nav.change + 1).toString(), nav.changeTotal.toString()),
+                Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                role = TypeRole.Caption,
+                tone = TextTone.Secondary,
+            )
+            Spacer(Modifier.weight(1f))
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
+        controls.sourceSwitch?.invoke()
+        DiffWrapButton(controls)
     }
 }
 

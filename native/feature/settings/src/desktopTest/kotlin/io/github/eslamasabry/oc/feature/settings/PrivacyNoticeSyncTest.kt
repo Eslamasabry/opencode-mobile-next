@@ -613,6 +613,21 @@ class PrivacyNoticeSyncTest {
         }
     }
 
+    @Test
+    fun `B-SETUP-013 What we collect and the bundled policy name the start fail kinds in every offered language`() {
+        val startFailKinds = listOf("exited", "refused", "password", "withdrawn", "port_busy")
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            val page = xmlString(File(locale, "strings_s28_privacy.xml"), "collectPhoneSetup")
+            val policy = xmlString(File(locale, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            for (word in startFailKinds) {
+                assertTrue(has(page, word), "$tag What we collect (collectPhoneSetup) must name $word")
+                assertTrue(has(policy, word), "$tag bundled policy must name $word")
+            }
+        }
+    }
+
     private fun privacyMdFieldViolations(): List<String> {
         val md = File(repo, "PRIVACY.md").readText()
         val telemetry = section(

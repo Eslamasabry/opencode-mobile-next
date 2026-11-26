@@ -1,0 +1,22 @@
+# First-run docs pictures ledger (B-604) for docs/native/qa/s31-app.
+# Columns (TAB-separated): path from repo root | drawn_for (X.Y.Z or '-') | way (generator test or 'none: <reason>').
+# Before a release, redraw every STALE picture and set its drawn_for to the release version (see docs/native/release.md step 1).
+docs/native/qa/s31-app/native/native-welcome-dark.png	-	:feature:onboarding:desktopTest --tests io.github.eslamasabry.oc.feature.onboarding.S31Shots
+docs/native/qa/s31-app/native/native-welcome-computer-dark.png	-	:feature:onboarding:desktopTest --tests io.github.eslamasabry.oc.feature.onboarding.S31Shots
+docs/native/qa/s31-app/native/native-welcome-dark-ar.png	-	:feature:onboarding:desktopTest --tests io.github.eslamasabry.oc.feature.onboarding.S31Shots
+docs/native/qa/s31-app/native/native-voice-setup-offer-dark.png	-	:feature:voice:desktopTest --tests io.github.eslamasabry.oc.feature.voice.ui.S31VoiceSetupSheetTest
+docs/native/qa/s31-app/native/native-voice-setup-mobile-data-dark.png	-	:feature:voice:desktopTest --tests io.github.eslamasabry.oc.feature.voice.ui.S31VoiceSetupSheetTest
+docs/native/qa/s31-app/native/native-voice-setup-downloading-dark.png	-	:feature:voice:desktopTest --tests io.github.eslamasabry.oc.feature.voice.ui.S31VoiceSetupSheetTest
+docs/native/qa/s31-app/native/native-voice-setup-ready-dark.png	-	:feature:voice:desktopTest --tests io.github.eslamasabry.oc.feature.voice.ui.S31VoiceSetupSheetTest
+docs/native/qa/s31-app/native/native-voice-setup-offline-dark.png	-	:feature:voice:desktopTest --tests io.github.eslamasabry.oc.feature.voice.ui.S31VoiceSetupSheetTest
+docs/native/qa/s31-app/native/native-settings-conversations-dark.png	-	:feature:settings:desktopTest --tests io.github.eslamasabry.oc.feature.settings.S31ConversationsTest
+docs/native/qa/s31-app/flutter/p310_settings_group_chat_dark.png	-	none: a picture of the retired Flutter app, kept as history
+docs/native/qa/s31-app/flutter/servers_welcome_dark.png	-	none: a picture of the retired Flutter app, kept as history
+docs/native/qa/s31-app/flutter/voice_auto_setup_downloading_dark.png	-	none: a picture of the retired Flutter app, kept as history
+docs/native/qa/s31-app/flutter/voice_auto_setup_mobile_data_dark.png	-	none: a picture of the retired Flutter app, kept as history
+docs/native/qa/s31-app/flutter/voice_auto_setup_offer_dark.png	-	none: a picture of the retired Flutter app, kept as history
+docs/native/qa/s31-app/03-voice-setup-downloading-flutter-vs-native.png	-	none: a hand-made Flutter beside native comparison; Flutter is retired, so it is not redrawn
+docs/native/qa/s31-app/03-voice-setup-mobile-data-flutter-vs-native.png	-	none: a hand-made Flutter beside native comparison; Flutter is retired, so it is not redrawn
+docs/native/qa/s31-app/03-voice-setup-offer-flutter-vs-native.png	-	none: a hand-made Flutter beside native comparison; Flutter is retired, so it is not redrawn
+docs/native/qa/s31-app/05-welcome-flutter-vs-native.png	-	none: a hand-made Flutter beside native comparison; Flutter is retired, so it is not redrawn
+docs/native/qa/s31-app/06-conversations-flutter-vs-native.png	-	none: a hand-made Flutter beside native comparison; Flutter is retired, so it is not redrawn

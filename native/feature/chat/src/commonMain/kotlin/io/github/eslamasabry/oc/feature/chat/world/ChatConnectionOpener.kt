@@ -17,6 +17,9 @@ public interface ChatConnectionOpener {
 
     /** [held] is true while an open chat shows [profile], and false again once it closes. */
     public fun hold(profile: ProfileId, held: Boolean)
+
+    /** Suspends until this app is allowed to try opening [profile] (e.g. in sight and online). */
+    public suspend fun awaitChance(profile: ProfileId): Unit = Unit
 }
 
 @ContributesTo(AppScope::class)

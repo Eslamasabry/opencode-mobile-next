@@ -1251,9 +1251,7 @@ public fun ChatScreen(
                                             onStopLive = actions::stop,
                                             onUndoStopAfterStep = actions::undoStopAfterStep,
                                             onStopForSteer = actions::stopForSteer,
-                                            starAsk = state.starAsk,
-                                            onStarTap = actions::starTapped,
-                                            onStarDismiss = actions::starDismissed,
+                                            replyAsk = state.replyAsk?.let { ReplyAskHost(it, actions) },
                                             reply =
                                                 rememberReplyActions(
                                                     actions,
