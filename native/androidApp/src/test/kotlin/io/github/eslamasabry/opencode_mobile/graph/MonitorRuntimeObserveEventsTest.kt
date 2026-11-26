@@ -31,7 +31,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -77,9 +76,10 @@ class MonitorRuntimeObserveEventsTest {
         runBlocking {
             val fixture = createFixture()
             try {
-                assertIs<Outcome.Ok<Unit>>(fixture.stores.warm())
+                val warmed = fixture.stores.warm()
+                assertTrue(warmed is Outcome.Ok, "stores.warm failed: $warmed")
                 val profileId = ProfileId("mon-1")
-                assertIs<Outcome.Ok<*>>(
+                val saved =
                     fixture.stores.profiles.upsert(
                         StoredProfile(
                             id = profileId,
@@ -88,12 +88,13 @@ class MonitorRuntimeObserveEventsTest {
                             backend = BackendKind.OpenCode2,
                             username = "opencode",
                         ),
-                        SecretEdit.Set("pw"),
+                        SecretEdit.Keep,
                     )
-                )
+                assertTrue(saved is Outcome.Ok, "profiles.upsert failed: $saved")
                 fixture.runtime.start()
                 Robolectric.buildActivity(Activity::class.java).create().start()
-                assertIs<Outcome.Ok<Unit>>(fixture.runtime.setEnabled(profileId.raw, true))
+                val enabled = fixture.runtime.setEnabled(profileId.raw, true)
+                assertTrue(enabled is Outcome.Ok, "runtime.setEnabled failed: $enabled")
                 withTimeout(10_000) { fixture.recorder.firstConnect.await() }
                 // Give any wrongly-started SSE loop a brief chance to hit /api/event.
                 delay(200)
