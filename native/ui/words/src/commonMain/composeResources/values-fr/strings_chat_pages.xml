@@ -449,4 +449,28 @@
     <string name="reviewRevertNoSnapshot">Ce projet n’utilise pas Git, donc les fichiers ne peuvent pas être restaurés. L’annulation masque seulement les messages.</string>
     <string name="reviewRevertRestoreConfirmBodyNoFiles">Les messages masqués reviennent. Vous pourrez de nouveau annuler à partir d'une invite plus tard.</string>
     <string name="reviewRevertRestoredBodyNoFiles">Les messages sont revenus à leur état d'origine.</string>
+    <string name="reviewUndoMessagesOnlyTitle">Annuler les messages à partir d'ici ?</string>
+    <string name="reviewUndoMessagesOnlyBody">Ceci masque les messages à partir du début de ces changements. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez remettre les messages tant que vous ne les supprimez pas.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Ce message et tout ce qui suit sont masqués pendant la vérification, et les fichiers reviennent à leur état précédent. Rien n'est définitif avant votre choix : vous pouvez tout remettre.</string>
+    <string name="reviewRevertSheetBodyMessagesOnly">Ce message et tout ce qui suit sont masqués pendant la vérification. Les fichiers restent tels quels. Vous pouvez remettre les messages tant que vous ne les supprimez pas.</string>
+    <string name="reviewRevertFilesToggleOffHint">Les fichiers restent tels quels ; seuls les messages sont masqués.</string>
+    <plurals name="undoFromHereBodyNoGit">
+        <item quantity="one">Ce message et le message suivant sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
+        <item quantity="many">Ce message et les %1$d messages suivants sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
+        <item quantity="other">Ce message et les %1$d messages suivants sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoGit__eq0">Ce message est supprimé. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez le remettre avant d'envoyer un autre message.</string>
+    <string name="undoFromHereBodyNoGit__eq1">Ce message et le message suivant sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
+    <string name="undoFromHereBodyNoGitUnknown">Ce message et tout ce qui suit sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
+    <plurals name="undoFromHereBodyNoRollback">
+        <item quantity="one">Ce message et le message suivant sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
+        <item quantity="many">Ce message et les %1$d messages suivants sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
+        <item quantity="other">Ce message et les %1$d messages suivants sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoRollback__eq0">Ce message est supprimé. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez le remettre avant d'envoyer un autre message.</string>
+    <string name="undoFromHereBodyNoRollback__eq1">Ce message et le message suivant sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
+    <string name="undoFromHereBodyNoRollbackUnknown">Ce message et tout ce qui suit sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
+    <string name="reviewUndoStartGitRepository">Démarrer un dépôt Git pour ce projet</string>
+    <string name="reviewUndoStartGitRepositoryHint">Gardez vos fichiers ici et activez Git pour que les prochaines annulations puissent restaurer les fichiers.</string>
+    <string name="reviewUndoStartGitFailed">Impossible de démarrer un dépôt Git pour ce projet.</string>
 </resources>

@@ -226,6 +226,9 @@ public enum class ChatStatusKind {
     /** S28 story 3: turns were undone at once; "Put back" restores them. */
     Undone,
 
+    /** B-473: an undo operation is actively finishing on the server; new sends wait cleanly. */
+    FinishingUndo,
+
     /** This conversation was delegated by another one: the way back to it (Flutter `_subagentStatus`). */
     Subagent,
 

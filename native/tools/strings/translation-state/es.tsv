@@ -1573,6 +1573,7 @@ chatFeelShare	824dab65e0
 chatFeelUndoAction	2a590c7b0c
 chatFeelUndoBody	a5cf4d7a14
 chatFeelUndoTitle	393a6243f4
+chatFinishingUndo	7846426c58
 chatFreeModelAddKey	e42fa6135c
 chatFreeModelNote	dac734b9cb
 chatFreeTierNewConversation	fe71ec245c
@@ -10091,6 +10092,7 @@ reviewRevertFileSupporting	8773b54278
 reviewRevertFilesLabel	76c0f9434c
 reviewRevertFilesToggle	e13e427fcd
 reviewRevertFilesToggleHint	3bd4806c15
+reviewRevertFilesToggleOffHint	003c1382cb
 reviewRevertKeepConfirmAction	7db6f01840
 reviewRevertKeepConfirmBody	d6b0f236e4
 reviewRevertKeepConfirmTitle	b292a49975
@@ -10126,6 +10128,8 @@ reviewRevertScreenIntroCount__eq1	7d131cb40d
 reviewRevertScreenTitle	d78782d87e
 reviewRevertSheetAction	89753cf346
 reviewRevertSheetBody	086aa50c39
+reviewRevertSheetBodyMessagesOnly	2e82c0acd8
+reviewRevertSheetBodyWithFiles	55823ef51a
 reviewRevertSheetTitle	ea5cc12c40
 reviewRevertStageFailed	881315da9d
 reviewRevertStaleTitle	7e7797fef8
@@ -10139,6 +10143,11 @@ reviewToolEvidence	0b5ea7caac
 reviewTurnTitle	5681b720b8
 reviewUndoAll	7edff94c95
 reviewUndoBody	9df7df4cde
+reviewUndoMessagesOnlyBody	0c72721875
+reviewUndoMessagesOnlyTitle	c04c0ee51f
+reviewUndoStartGitFailed	ea33d83e97
+reviewUndoStartGitRepository	a6238c3ee8
+reviewUndoStartGitRepositoryHint	ba50585de9
 reviewUndoTitle	3ba8d6abd4
 reviewUndoTitle__eq1	d9665f1e3b
 reviewUndoUnavailable	be6397e03e
@@ -13913,6 +13922,14 @@ transcriptTogglesUsageOn	4548e84791
 uncertainAuthCloseHint	4a8d9a7d10
 uncertainAuthDetail	2d1e3b1506
 undoFromHereBody	2a0f600f3e
+undoFromHereBodyNoGit	d2bdf92f72
+undoFromHereBodyNoGitUnknown	a5953a087a
+undoFromHereBodyNoGit__eq0	2c25345093
+undoFromHereBodyNoGit__eq1	8927a8ac71
+undoFromHereBodyNoRollback	c491eea48f
+undoFromHereBodyNoRollbackUnknown	8926889aac
+undoFromHereBodyNoRollback__eq0	4ced0c4a87
+undoFromHereBodyNoRollback__eq1	e976d8b251
 undoFromHereBodyUnknown	958d60dca0
 undoFromHereBody__eq0	031dac4433
 undoFromHereBody__eq1	e99eda2435

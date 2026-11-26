@@ -167,6 +167,7 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertFileLines
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesLabel
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggleHint
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertFilesToggleOffHint
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConfirmAction
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConfirmBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertKeepConfirmTitle
@@ -197,7 +198,8 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenIntroCount
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenIntroCount__eq0
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetAction
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetBody
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetBodyMessagesOnly
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetBodyWithFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertStageFailed
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertStaleTitle
@@ -215,6 +217,11 @@ import io.github.eslamasabry.oc.ui.words.res.reviewToolEvidence
 import io.github.eslamasabry.oc.ui.words.res.reviewTurnTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewUndoAll
 import io.github.eslamasabry.oc.ui.words.res.reviewUndoBody
+import io.github.eslamasabry.oc.ui.words.res.reviewUndoMessagesOnlyBody
+import io.github.eslamasabry.oc.ui.words.res.reviewUndoMessagesOnlyTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewUndoStartGitFailed
+import io.github.eslamasabry.oc.ui.words.res.reviewUndoStartGitRepository
+import io.github.eslamasabry.oc.ui.words.res.reviewUndoStartGitRepositoryHint
 import io.github.eslamasabry.oc.ui.words.res.reviewUndoTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewUndoUnavailable
 import io.github.eslamasabry.oc.ui.words.res.reviewUndoUnknown
@@ -222,6 +229,12 @@ import io.github.eslamasabry.oc.ui.words.res.reviewWaiting
 import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceCommentEmpty
 import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceCommentLabel
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBody
+import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoGit
+import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoGitUnknown
+import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoGit__eq0
+import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoRollback
+import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoRollbackUnknown
+import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoRollback__eq0
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyUnknown
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBody__eq0
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereFilesLabel
@@ -588,14 +601,20 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
         if (state.confirming) {
             KitConfirmSpec(
                 title =
-                    pluralStringResource(
-                        Res.plurals.reviewUndoTitle,
-                        state.files.size,
-                        state.files.size,
-                    ),
+                    if (state.noFileCopies) stringResource(Res.string.reviewUndoMessagesOnlyTitle)
+                    else
+                        pluralStringResource(
+                            Res.plurals.reviewUndoTitle,
+                            state.files.size,
+                            state.files.size,
+                        ),
                 confirmLabel = stringResource(Res.string.reviewUndoAll),
                 kind = KitConfirmKind.Destructive,
-                body = stringResource(Res.string.reviewUndoBody),
+                body =
+                    stringResource(
+                        if (state.noFileCopies) Res.string.reviewUndoMessagesOnlyBody
+                        else Res.string.reviewUndoBody
+                    ),
             )
         } else null,
         working = state.working,
@@ -1044,55 +1063,15 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
             KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewUndoUnavailable))
         } else if (state.load == ReviewLoad.Ready) Page {
             // No early return out of a composable block: nothing is drawn until the review is ready.
-            val count = state.messagesAfter
             KitText(
-                when {
-                    state.staged -> stringResource(Res.string.reviewRevertSheetBody)
-                    count == null -> stringResource(Res.string.undoFromHereBodyUnknown)
-                    count == 0 -> stringResource(Res.string.undoFromHereBody__eq0)
-                    else -> pluralStringResource(Res.plurals.undoFromHereBody, count, count)
-                },
+                undoFromHereBodyText(state),
                 role = TypeRole.Body,
                 tone = TextTone.Secondary,
             )
             PromptGroup(state.prompt, state.promptUnavailable)
-            if (state.staged && state.noFileCopies) {
-                KitRowGroup {
-                    KitRow(
-                        title = stringResource(Res.string.reviewRevertNoSnapshot),
-                        supportingMaxLines = 3,
-                        modifier = Modifier.testTag("undo-no-file-copies"),
-                    )
-                }
-            } else if (state.staged) {
-                KitRowGroup {
-                    KitSwitchRow(
-                        title = stringResource(Res.string.reviewRevertFilesToggle),
-                        checked = state.applyFiles,
-                        supporting = stringResource(Res.string.reviewRevertFilesToggleHint),
-                        enabled =
-                            if (state.working)
-                                KitEnabled.Disabled(stringResource(Res.string.revertBusy))
-                            else KitEnabled.Enabled,
-                        modifier = Modifier.testTag("undo-files-back"),
-                        onCheckedChange = actions::putFilesBack,
-                    )
-                }
-            } else {
-                KitRowGroup(label = stringResource(Res.string.undoFromHereFilesLabel)) {
-                    if (state.edited.isEmpty()) {
-                        KitRow(title = stringResource(Res.string.undoFromHereNoEdits))
-                    } else {
-                        state.edited.forEach { path ->
-                            val cut = path.lastIndexOfAny(charArrayOf('/', '\\'))
-                            KitRow(
-                                title = if (cut < 0) path else path.substring(cut + 1),
-                                supporting = if (cut <= 0) null else path.substring(0, cut),
-                                titleIsFileName = true,
-                            )
-                        }
-                    }
-                }
+            UndoFromHereFilesSection(state, actions)
+            state.gitInitFailure?.let {
+                FailedNotice(stringResource(Res.string.reviewUndoStartGitFailed), it)
             }
             state.failure?.let {
                 FailedNotice(
@@ -1106,6 +1085,124 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
         }
     }
 }
+
+@Composable
+private fun undoFromHereBodyText(state: UndoFromHereUi): String {
+    if (state.staged) {
+        return stringResource(
+            if (!state.noFileCopies && state.applyFiles) Res.string.reviewRevertSheetBodyWithFiles
+            else Res.string.reviewRevertSheetBodyMessagesOnly
+        )
+    }
+    val count = state.messagesAfter
+    return when {
+        !state.filesRollbackSupported ->
+            when (count) {
+                null -> stringResource(Res.string.undoFromHereBodyNoRollbackUnknown)
+                0 -> stringResource(Res.string.undoFromHereBodyNoRollback__eq0)
+                else -> pluralStringResource(Res.plurals.undoFromHereBodyNoRollback, count, count)
+            }
+        state.noFileCopies ->
+            when (count) {
+                null -> stringResource(Res.string.undoFromHereBodyNoGitUnknown)
+                0 -> stringResource(Res.string.undoFromHereBodyNoGit__eq0)
+                else -> pluralStringResource(Res.plurals.undoFromHereBodyNoGit, count, count)
+            }
+        else ->
+            when (count) {
+                null -> stringResource(Res.string.undoFromHereBodyUnknown)
+                0 -> stringResource(Res.string.undoFromHereBody__eq0)
+                else -> pluralStringResource(Res.plurals.undoFromHereBody, count, count)
+            }
+    }
+}
+
+@Composable
+private fun UndoFromHereFilesSection(state: UndoFromHereUi, actions: UndoFromHereActions) {
+    when {
+        state.staged && state.noFileCopies -> {
+            KitRowGroup {
+                KitRow(
+                    title = stringResource(Res.string.reviewRevertNoSnapshot),
+                    titleMaxLines = NOTICE_TITLE_MAX_LINES,
+                    supportingMaxLines = NOTICE_SUPPORTING_MAX_LINES,
+                    modifier = Modifier.testTag("undo-no-file-copies"),
+                )
+                if (state.canInitGit) {
+                    GitInitRow(
+                        busy = state.working || state.initializingGit || state.block != null,
+                        onInit = actions::initializeGit,
+                    )
+                }
+            }
+        }
+        state.staged -> {
+            KitRowGroup {
+                KitSwitchRow(
+                    title = stringResource(Res.string.reviewRevertFilesToggle),
+                    checked = state.applyFiles,
+                    supporting =
+                        stringResource(
+                            if (state.applyFiles) Res.string.reviewRevertFilesToggleHint
+                            else Res.string.reviewRevertFilesToggleOffHint
+                        ),
+                    enabled =
+                        if (state.working) KitEnabled.Disabled(stringResource(Res.string.revertBusy))
+                        else KitEnabled.Enabled,
+                    modifier = Modifier.testTag("undo-files-back"),
+                    onCheckedChange = actions::putFilesBack,
+                )
+            }
+        }
+        else -> OneStepEditedFilesSection(state, actions)
+    }
+}
+
+@Composable
+private fun OneStepEditedFilesSection(state: UndoFromHereUi, actions: UndoFromHereActions) {
+    if (state.noFileCopies && state.canInitGit) {
+        KitRowGroup {
+            GitInitRow(
+                busy = state.working || state.initializingGit || state.block != null,
+                onInit = actions::initializeGit,
+            )
+        }
+    }
+    KitRowGroup(label = stringResource(Res.string.undoFromHereFilesLabel)) {
+        if (state.edited.isEmpty()) {
+            KitRow(title = stringResource(Res.string.undoFromHereNoEdits))
+        } else {
+            state.edited.forEach { path ->
+                val cut = path.lastIndexOfAny(charArrayOf('/', '\\'))
+                KitRow(
+                    title = if (cut < 0) path else path.substring(cut + 1),
+                    supporting = if (cut <= 0) null else path.substring(0, cut),
+                    titleIsFileName = true,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GitInitRow(busy: Boolean, onInit: () -> Unit) {
+    KitRow(
+        title = stringResource(Res.string.reviewUndoStartGitRepository),
+        supporting = stringResource(Res.string.reviewUndoStartGitRepositoryHint),
+        titleMaxLines = ACTION_TITLE_MAX_LINES,
+        supportingMaxLines = NOTICE_SUPPORTING_MAX_LINES,
+        titleAccent = true,
+        trailing = KitRowTrailing.Chevron,
+        enabled = !busy,
+        disabledReason = if (busy) stringResource(Res.string.revertBusy) else null,
+        modifier = Modifier.testTag("undo-start-git"),
+        onClick = onInit,
+    )
+}
+
+private const val NOTICE_TITLE_MAX_LINES: Int = 4
+private const val NOTICE_SUPPORTING_MAX_LINES: Int = 3
+private const val ACTION_TITLE_MAX_LINES: Int = 2
 
 @Composable
 private fun PromptGroup(prompt: String?, unavailable: Boolean) {
@@ -1259,7 +1356,8 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                                         stringResource(
                                             if (state.noFileCopies) Res.string.reviewRevertNoSnapshot
                                             else Res.string.reviewRevertNoFiles
-                                        )
+                                        ),
+                                    titleMaxLines = NOTICE_TITLE_MAX_LINES,
                                 )
                             else ->
                                 files.forEach { file ->
@@ -1287,6 +1385,15 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                                     )
                                 }
                         }
+                        if (state.noFileCopies && state.canInitGit) {
+                            GitInitRow(
+                                busy = state.working || state.busy || state.initializingGit,
+                                onInit = actions::initializeGit,
+                            )
+                        }
+                    }
+                    state.gitInitFailure?.let {
+                        FailedNotice(stringResource(Res.string.reviewUndoStartGitFailed), it)
                     }
                     KitText(
                         stringResource(Res.string.reviewOneFileUnavailable),

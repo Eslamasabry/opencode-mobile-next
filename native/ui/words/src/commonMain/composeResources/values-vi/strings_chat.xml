@@ -1252,4 +1252,5 @@
     <string name="kitToolUnanswered">Đã dừng trước khi bạn trả lời</string>
     <string name="chatErrorModelNotFoundNamed">%1$s không còn khả dụng trên %2$s.</string>
     <string name="chatModelReplacedNotice">%1$s không còn khả dụng. Đang dùng %2$s.</string>
+    <string name="chatFinishingUndo">Đang hoàn tất hoàn tác…</string>
 </resources>

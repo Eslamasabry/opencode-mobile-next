@@ -320,17 +320,18 @@ public class BasicComposerViewModel(
                         world.capabilities,
                         sending,
                         world.load,
-                        combine(world.draft, world.readOnly) { draft, readOnly ->
-                            draft to readOnly
+                        combine(world.draft, world.readOnly, world.undoing) { draft, readOnly, undoing ->
+                            Triple(draft, readOnly, undoing)
                         },
-                    ) { t, caps, inFlight, load, draftAndMode ->
-                        val (draft, readOnly) = draftAndMode
+                    ) { t, caps, inFlight, load, draftModeUndo ->
+                        val (draft, readOnly, undoing) = draftModeUndo
+                        val liveOrUndoing =
+                            load is io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Live || undoing
                         BasicComposerUi(
                             readOnly = readOnly,
                             available =
                                 readOnly == null &&
-                                    load is
-                                        io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Live &&
+                                    liveOrUndoing &&
                                     draft.ready &&
                                     draft.failure == null &&
                                     !draft.sendBlocked,

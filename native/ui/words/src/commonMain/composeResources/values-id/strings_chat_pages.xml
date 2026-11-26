@@ -427,4 +427,24 @@
     <string name="reviewRevertNoSnapshot">Ini bukan proyek Git, sehingga file tidak dapat dikembalikan. Pembatalan hanya menyembunyikan pesan.</string>
     <string name="reviewRevertRestoreConfirmBodyNoFiles">Pesan yang disembunyikan kembali. Nanti Anda bisa membatalkan lagi dari sebuah prompt.</string>
     <string name="reviewRevertRestoredBodyNoFiles">Pesan sudah kembali seperti semula.</string>
+    <string name="reviewUndoMessagesOnlyTitle">Batalkan pesan dari sini?</string>
+    <string name="reviewUndoMessagesOnlyBody">Ini menyembunyikan pesan sejak perubahan ini dimulai. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sampai dihapus.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Pesan ini dan semua setelahnya disembunyikan saat ditinjau, dan file kembali ke keadaan sebelumnya. Belum ada yang final sampai Anda memilih — semuanya bisa dikembalikan.</string>
+    <string name="reviewRevertSheetBodyMessagesOnly">Pesan ini dan semua setelahnya disembunyikan saat ditinjau. File tetap seperti sekarang. Pesan dapat dikembalikan sampai dihapus.</string>
+    <string name="reviewRevertFilesToggleOffHint">File tetap seperti sekarang; hanya pesan yang disembunyikan.</string>
+    <plurals name="undoFromHereBodyNoGit">
+        <item quantity="other">Pesan ini dan %1$d pesan setelahnya dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoGit__eq0">Pesan ini dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
+    <string name="undoFromHereBodyNoGit__eq1">Pesan ini dan pesan setelahnya dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
+    <string name="undoFromHereBodyNoGitUnknown">Pesan ini dan semua setelahnya dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
+    <plurals name="undoFromHereBodyNoRollback">
+        <item quantity="other">Pesan ini dan %1$d pesan setelahnya dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoRollback__eq0">Pesan ini dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
+    <string name="undoFromHereBodyNoRollback__eq1">Pesan ini dan pesan setelahnya dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
+    <string name="undoFromHereBodyNoRollbackUnknown">Pesan ini dan semua setelahnya dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
+    <string name="reviewUndoStartGitRepository">Mulai repositori Git untuk proyek ini</string>
+    <string name="reviewUndoStartGitRepositoryHint">Simpan file Anda di sini dan aktifkan Git agar pembatalan berikutnya dapat mengembalikan file.</string>
+    <string name="reviewUndoStartGitFailed">Tidak bisa memulai repositori Git untuk proyek ini.</string>
 </resources>

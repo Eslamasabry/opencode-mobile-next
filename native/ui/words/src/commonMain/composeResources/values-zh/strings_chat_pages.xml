@@ -428,4 +428,24 @@
     <string name="reviewRevertNoSnapshot">这不是 Git 项目，无法恢复文件。撤销只会隐藏消息。</string>
     <string name="reviewRevertRestoreConfirmBodyNoFiles">隐藏的消息会恢复。之后你仍可以从某条提示开始再次撤销。</string>
     <string name="reviewRevertRestoredBodyNoFiles">消息已恢复原状。</string>
+    <string name="reviewUndoMessagesOnlyTitle">从这里撤销消息？</string>
+    <string name="reviewUndoMessagesOnlyBody">这会隐藏从这些更改开始后的消息。这不是 Git 项目，所以文件保持原样。在删除之前，你可以随时恢复这些消息。</string>
+    <string name="reviewRevertSheetBodyWithFiles">查看期间，这条提示及之后的内容会暂时隐藏，文件会恢复到之前的样子。在你选择之前都不会生效，你可以恢复全部内容。</string>
+    <string name="reviewRevertSheetBodyMessagesOnly">查看期间，这条提示及之后的内容会暂时隐藏。文件保持原样。在删除之前，你可以随时恢复这些消息。</string>
+    <string name="reviewRevertFilesToggleOffHint">文件保持原样，仅隐藏消息。</string>
+    <plurals name="undoFromHereBodyNoGit">
+        <item quantity="other">这条提示和后面的 %1$d 条消息会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</item>
+    </plurals>
+    <string name="undoFromHereBodyNoGit__eq0">这条提示会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它。</string>
+    <string name="undoFromHereBodyNoGit__eq1">这条提示和后面的消息会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
+    <string name="undoFromHereBodyNoGitUnknown">这条提示和后面的所有内容都会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
+    <plurals name="undoFromHereBodyNoRollback">
+        <item quantity="other">这条提示和后面的 %1$d 条消息会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</item>
+    </plurals>
+    <string name="undoFromHereBodyNoRollback__eq0">这条提示会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它。</string>
+    <string name="undoFromHereBodyNoRollback__eq1">这条提示和后面的消息会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
+    <string name="undoFromHereBodyNoRollbackUnknown">这条提示和后面的所有内容都会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
+    <string name="reviewUndoStartGitRepository">为此项目初始化 Git 仓库</string>
+    <string name="reviewUndoStartGitRepositoryHint">保留现有文件并启用 Git，方便以后撤销时还原文件。</string>
+    <string name="reviewUndoStartGitFailed">无法为此项目初始化 Git 仓库。</string>
 </resources>

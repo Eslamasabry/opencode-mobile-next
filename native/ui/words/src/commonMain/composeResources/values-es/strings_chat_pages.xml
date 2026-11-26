@@ -450,4 +450,28 @@
     <string name="reviewRevertNoSnapshot">No es un proyecto Git, así que no se pueden devolver los archivos. Deshacer solo oculta mensajes.</string>
     <string name="reviewRevertRestoreConfirmBodyNoFiles">Los mensajes ocultos vuelven. Más adelante puedes volver a deshacer desde un mensaje.</string>
     <string name="reviewRevertRestoredBodyNoFiles">Los mensajes volvieron a como estaban.</string>
+    <string name="reviewUndoMessagesOnlyTitle">¿Deshacer mensajes desde aquí?</string>
+    <string name="reviewUndoMessagesOnlyBody">Esto oculta los mensajes desde donde empezaron estos cambios. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolver los mensajes hasta que los elimines.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Este mensaje y todo lo que viene después quedan ocultos mientras revisas, y los archivos vuelven a como estaban antes. Nada es definitivo hasta que elijas: puedes devolverlo todo.</string>
+    <string name="reviewRevertSheetBodyMessagesOnly">Este mensaje y todo lo que viene después quedan ocultos mientras revisas. Los archivos se quedan como están. Puedes devolver los mensajes hasta que los elimines.</string>
+    <string name="reviewRevertFilesToggleOffHint">Los archivos se quedan como están; solo se ocultan los mensajes.</string>
+    <plurals name="undoFromHereBodyNoGit">
+        <item quantity="one">Este mensaje y el mensaje posterior se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
+        <item quantity="many">Este mensaje y los %1$d mensajes posteriores se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
+        <item quantity="other">Este mensaje y los %1$d mensajes posteriores se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoGit__eq0">Este mensaje se elimina. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlo hasta que envíes otro mensaje.</string>
+    <string name="undoFromHereBodyNoGit__eq1">Este mensaje y el mensaje posterior se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
+    <string name="undoFromHereBodyNoGitUnknown">Este mensaje y todo lo que viene después se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
+    <plurals name="undoFromHereBodyNoRollback">
+        <item quantity="one">Este mensaje y el mensaje posterior se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
+        <item quantity="many">Este mensaje y los %1$d mensajes posteriores se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
+        <item quantity="other">Este mensaje y los %1$d mensajes posteriores se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoRollback__eq0">Este mensaje se elimina. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlo hasta que envíes otro mensaje.</string>
+    <string name="undoFromHereBodyNoRollback__eq1">Este mensaje y el mensaje posterior se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
+    <string name="undoFromHereBodyNoRollbackUnknown">Este mensaje y todo lo que viene después se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
+    <string name="reviewUndoStartGitRepository">Iniciar un repositorio Git para este proyecto</string>
+    <string name="reviewUndoStartGitRepositoryHint">Mantén tus archivos aquí y activa Git para que futuros deshacer puedan devolver archivos.</string>
+    <string name="reviewUndoStartGitFailed">No se pudo iniciar un repositorio Git para este proyecto.</string>
 </resources>

@@ -148,6 +148,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
 import io.github.eslamasabry.oc.ui.words.res.revertResolveBeforeSending
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.revertStaged
+import io.github.eslamasabry.oc.ui.words.res.chatFinishingUndo
 import io.github.eslamasabry.oc.ui.words.res.undoneStatus
 import io.github.eslamasabry.oc.ui.words.res.undonePutBack
 import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
@@ -1928,6 +1929,13 @@ private fun statusLine(
                         testTag = "chat-status-undo-put-back",
                         icon = KitIcons.restore,
                     ),
+            )
+        ChatStatusKind.FinishingUndo ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.chatFinishingUndo),
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
             )
         ChatStatusKind.ModelReplaced ->
             KitStatus(

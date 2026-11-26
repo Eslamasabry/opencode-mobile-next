@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.engine.delivery.queue.QueueState
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
+import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.transcript
@@ -66,6 +67,8 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -316,6 +319,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     override val title: StateFlow<String?> = mutableTitle.asStateFlow()
     private val mutableUndone = MutableStateFlow(ChatUndone.None)
     override val undone: StateFlow<ChatUndone> = mutableUndone.asStateFlow()
+    private val mutableUndoing = MutableStateFlow(false)
+    override val undoing: StateFlow<Boolean> = mutableUndoing.asStateFlow()
+    private var activeUndo: CompletableDeferred<Unit>? = null
+    private var stagedBoundary: String? = null
     override val capabilities: StateFlow<ServerCapabilities> = mutableCaps.asStateFlow()
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
     override val linkRetryAtMs: StateFlow<Long?> = mutableRetryAt.asStateFlow()
@@ -1531,9 +1538,11 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
      * last rows known (kept page or last live rows), so a reload, reconnect or missing server never blanks the chat.
      */
     private fun publishShown() {
-        val live = mutableTranscript.value
+        val boundary = stagedBoundary
+        val live = mutableTranscript.value.let { if (boundary != null) it.withoutUndoneFrom(boundary) else it }
         if (live.rows.isNotEmpty() || historyReconciled) lastRows = live.takeIf { it.rows.isNotEmpty() }
-        shownTranscript.value = if (live.rows.isEmpty() && !historyReconciled) lastRows ?: live else live
+        val fallback = lastRows?.let { if (boundary != null) it.withoutUndoneFrom(boundary) else it }
+        shownTranscript.value = if (live.rows.isEmpty() && !historyReconciled) fallback ?: live else live
     }
 
     private fun closeKept() {
@@ -2496,6 +2505,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         /** B-169: the files a stopped prompt carried, sent again instead of the draft's. */
         again: List<PromptAttachment> = emptyList(),
     ): Outcome<Unit> {
+        awaitActiveUndo()
         if (readOnlyNow()) return readOnlyFailure()
         // Issue 147: never into a folder in the phone's storage the agent cannot reach now; the notice says why.
         phoneServer.phoneFolderRefusal(ref, directory)?.let { (failure, reach) ->
@@ -2568,6 +2578,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     }
 
     override suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> {
+        awaitActiveUndo()
         if (readOnlyNow()) return readOnlyFailure()
         phoneServer.phoneFolderRefusal(ref, directory)?.let { (failure, reach) ->
             mutablePhoneFolder.value = reach
@@ -3448,6 +3459,14 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 gateway.facet<StagedRevertGateway>() != null,
                 session,
             )
+        val nextBoundary = session.stagedRevert?.messageId?.raw
+        if (stagedBoundary != nextBoundary) {
+            stagedBoundary = nextBoundary
+            if (nextBoundary != null) {
+                lastRows = lastRows?.withoutUndoneFrom(nextBoundary)
+            }
+            publishShown()
+        }
     }
 
     override suspend fun putBack(): Outcome<Unit> {
@@ -3457,6 +3476,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val r = (graph as ChatGraphAccessors).chatOperations.restoreSession(sid)
         if (r is Outcome.Ok && registry.graphFor(ref) === graph) {
             mutableUndone.value = ChatUndone.None
+            stagedBoundary = null
             bind(graph)
         }
         return r
@@ -3466,9 +3486,51 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         if (readOnlyNow()) return readOnlyFailure()
         val graph =
             currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        val r = (graph as ChatGraphAccessors).chatOperations.revertSession(sid, from)
-        if (r is Outcome.Ok && registry.graphFor(ref) === graph) bind(graph)
-        return r
+        activeUndo?.await()
+        val gate = CompletableDeferred<Unit>()
+        activeUndo = gate
+        mutableUndoing.value = true
+        return try {
+            val r = (graph as ChatGraphAccessors).chatOperations.revertSession(sid, from)
+            if (r is Outcome.Ok && registry.graphFor(ref) === graph) {
+                lastRows = lastRows?.withoutUndoneFrom(from.raw)
+                publishShown()
+                bind(graph)
+            }
+            r
+        } finally {
+            mutableUndoing.value = false
+            if (activeUndo === gate) activeUndo = null
+            gate.complete(Unit)
+        }
+    }
+
+    private suspend fun awaitActiveUndo() {
+        val gate = activeUndo ?: return
+        gate.await()
+        if (mutableLoad.value is ChatLoad.Loading) {
+            mutableLoad.first { it !is ChatLoad.Loading }
+        }
+    }
+
+    /** Immediately drops undone turns from [boundary] onward so they never linger while reload runs. */
+    private fun TranscriptState.withoutUndoneFrom(boundary: String): TranscriptState {
+        if (rows.isEmpty()) return this
+        val oldestFirst = rows.asReversed()
+        val cutIndex = oldestFirst.indexOfFirst { it.key == "prompt:$boundary" || it.turnId == boundary }
+        val kept =
+            if (cutIndex >= 0) oldestFirst.subList(0, cutIndex)
+            else oldestFirst.filter { it.turnId < boundary }
+        if (kept.size == oldestFirst.size) return this
+        val keptKeys = kept.mapTo(HashSet()) { it.key }
+        val nextPositions =
+            kept.withIndex().associate { (index, row) -> row.key to index }.toPersistentMap()
+        return copy(
+            revision = revision + 1,
+            rows = NewestFirst(kept.toPersistentList()),
+            positions = nextPositions,
+            searchText = searchText.filter { it.rowKey in keptKeys }.toImmutableList(),
+        )
     }
 
     @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)

@@ -61,6 +61,13 @@ public fun interface ReviewBranchRead {
     public suspend fun read(): Outcome<ImmutableList<FileDiff>>
 }
 
+/** One-tap Git setup for a non-Git project when the conversation lives in the server's active folder. */
+public interface ReviewProjectGitInit {
+    public suspend fun canInit(): Boolean
+
+    public suspend fun initialize(): Outcome<Unit>
+}
+
 /** Which changes the Changes page shows (Flutter `ReviewDiffScope`). */
 public enum class ReviewScope {
     /** What this conversation (or turn) changed, from the tools' records. */
@@ -169,6 +176,8 @@ public data class ChangesUi(
     val guide: GuideUi = GuideUi.Off,
     /** Cache-first: these are the last-seen rows and the live read is on its way (a quiet bar, no skeleton). */
     val updating: Boolean = false,
+    /** The folder is not under Git, so Undo all hides messages only and never promises file rollback. */
+    val noFileCopies: Boolean = false,
 ) {
     /** Rows whose diff was opened and is unchanged. */
     val viewedCount: Int get() = files.count { it.viewed }
@@ -255,6 +264,12 @@ public data class UndoFromHereUi(
     val applyFiles: Boolean = true,
     /** The folder is not under Git, so no file copies exist: files cannot be put back, and the page says so. */
     val noFileCopies: Boolean = false,
+    /** False when this server or agent does not support putting files back at all. */
+    val filesRollbackSupported: Boolean = true,
+    /** True when one-tap Git setup is available for this non-Git project on the server's active folder. */
+    val canInitGit: Boolean = false,
+    val initializingGit: Boolean = false,
+    val gitInitFailure: Failure? = null,
     val working: Boolean = false,
     val block: UndoBlock? = null,
     val failure: Failure? = null,
@@ -293,6 +308,10 @@ public data class StagedUi(
     val files: ImmutableList<FileDiff>? = null,
     /** The folder is not under Git, so no file copies exist: an empty list says why. */
     val noFileCopies: Boolean = false,
+    /** True when one-tap Git setup is available for this non-Git project on the server's active folder. */
+    val canInitGit: Boolean = false,
+    val initializingGit: Boolean = false,
+    val gitInitFailure: Failure? = null,
     val busy: Boolean = false,
     val working: Boolean = false,
     val confirm: StagedConfirm? = null,

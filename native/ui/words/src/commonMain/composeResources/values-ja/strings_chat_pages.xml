@@ -426,4 +426,24 @@
     <string name="reviewRevertNoSnapshot">Gitプロジェクトではないため、ファイルは元に戻せません。取り消しではメッセージだけが非表示になります。</string>
     <string name="reviewRevertRestoreConfirmBodyNoFiles">非表示にしたメッセージが元に戻ります。あとでプロンプトからもう一度取り消せます。</string>
     <string name="reviewRevertRestoredBodyNoFiles">メッセージが元の状態に戻りました。</string>
+    <string name="reviewUndoMessagesOnlyTitle">ここからメッセージを取り消しますか？</string>
+    <string name="reviewUndoMessagesOnlyBody">これらの変更が始まった地点からのメッセージが非表示になります。Gitプロジェクトではないため、ファイルはそのまま残ります。削除するまでメッセージは元に戻せます。</string>
+    <string name="reviewRevertSheetBodyWithFiles">確認中はこのプロンプトとその後のやり取りが非表示になり、ファイルは元の状態に戻ります。選択するまで確定せず、すべて元に戻せます。</string>
+    <string name="reviewRevertSheetBodyMessagesOnly">確認中はこのプロンプトとその後のやり取りが非表示になります。ファイルはそのまま残ります。削除するまでメッセージは元に戻せます。</string>
+    <string name="reviewRevertFilesToggleOffHint">ファイルはそのまま残り、メッセージのみ非表示になります。</string>
+    <plurals name="undoFromHereBodyNoGit">
+        <item quantity="other">このプロンプトとその後の%1$d件のメッセージが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</item>
+    </plurals>
+    <string name="undoFromHereBodyNoGit__eq0">このプロンプトが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
+    <string name="undoFromHereBodyNoGit__eq1">このプロンプトとその後のメッセージが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
+    <string name="undoFromHereBodyNoGitUnknown">このプロンプトとその後のすべてが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
+    <plurals name="undoFromHereBodyNoRollback">
+        <item quantity="other">このプロンプトとその後の%1$d件のメッセージが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</item>
+    </plurals>
+    <string name="undoFromHereBodyNoRollback__eq0">このプロンプトが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
+    <string name="undoFromHereBodyNoRollback__eq1">このプロンプトとその後のメッセージが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
+    <string name="undoFromHereBodyNoRollbackUnknown">このプロンプトとその後のすべてが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
+    <string name="reviewUndoStartGitRepository">このプロジェクトでGitリポジトリを開始</string>
+    <string name="reviewUndoStartGitRepositoryHint">ファイルを残したままGitを有効にし、今後の取り消しでファイルを戻せるようにします。</string>
+    <string name="reviewUndoStartGitFailed">このプロジェクトでGitリポジトリを開始できませんでした。</string>
 </resources>

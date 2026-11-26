@@ -201,13 +201,19 @@ public class ChangesPresenter(
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
                     // An empty folder or branch view says why: not under Git, or a clean tree (the agent's reported
-                    // edits are the Conversation view's own words).
-                    val notRepository =
-                        rows.isEmpty() && working && setup.setup() == VersionControlSetupState.Absent
+                    // edits are the Conversation view's own words). Also check Git setup when Undo all is offered so
+                    // non-Git projects never promise file rollback or pass applyFiles = true.
+                    val checkSetup =
+                        (rows.isEmpty() && working) ||
+                            (set.undoFrom != null && review.shape() == UndoShape.Staged)
+                    val setupState = if (checkSetup) setup.setup() else VersionControlSetupState.Unknown
+                    val notRepository = rows.isEmpty() && working && setupState == VersionControlSetupState.Absent
+                    val noFileCopies = setupState == VersionControlSetupState.Absent
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
                             notRepository = notRepository,
+                            noFileCopies = noFileCopies,
                             workingTree = chosen == ReviewScope.WorkingTree,
                             scope = chosen,
                             scopes = scopes,
@@ -468,9 +474,10 @@ public class ChangesPresenter(
     override fun confirmUndoAll() {
         val from = set.undoFrom ?: return
         if (state.value.working) return
+        val applyFiles = !state.value.noFileCopies
         mutable.update { it.copy(working = true) }
         scope.launch {
-            val result = review.stage(from, applyFiles = true, reviewed = basis)
+            val result = review.stage(from, applyFiles = applyFiles, reviewed = basis)
             mutable.update {
                 it.copy(
                     working = false,
@@ -768,6 +775,9 @@ public interface UndoFromHereActions {
 
     /** "Undo and review" (staged) or "Undo now" (one step). */
     public fun confirm()
+
+    /** "Start a Git repository for this project" on a non-Git project in the server's active folder. */
+    public fun initializeGit(): Unit = Unit
 }
 
 /**
@@ -782,6 +792,7 @@ public class UndoFromHerePresenter(
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
     private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
+    private val gitInit: ReviewProjectGitInit? = null,
 ) : UndoFromHereActions {
     private val shape = review.shape()
     private val mutable =
@@ -835,7 +846,9 @@ public class UndoFromHerePresenter(
             // The page is drawn once, settled: every fact it words itself with is in before it leaves Loading. No copy
             // of files is kept in a folder that is not under Git, so the switch is not offered there (and never shown
             // first); the message count and the edited files are read the same way.
-            val noFileCopies = shape == UndoShape.Staged && setup.setup() == VersionControlSetupState.Absent
+            val filesRollbackSupported = review.workingTreeAvailable()
+            val noFileCopies = filesRollbackSupported && setup.setup() == VersionControlSetupState.Absent
+            val canInitGit = noFileCopies && gitInit?.canInit() == true
             val prompt = review.prompt(promptId)
             var count: Int? = null
             var edited: kotlinx.collections.immutable.ImmutableList<String> = persistentListOf()
@@ -849,7 +862,9 @@ public class UndoFromHerePresenter(
                     prompt = (prompt as? Outcome.Ok)?.value,
                     promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
                     noFileCopies = noFileCopies,
-                    applyFiles = if (noFileCopies) false else it.applyFiles,
+                    filesRollbackSupported = filesRollbackSupported,
+                    canInitGit = canInitGit,
+                    applyFiles = if (noFileCopies || !filesRollbackSupported) false else it.applyFiles,
                     messagesAfter = count,
                     edited = edited,
                 )
@@ -861,6 +876,32 @@ public class UndoFromHerePresenter(
 
     override fun putFilesBack(apply: Boolean) {
         if (!state.value.working) mutable.update { it.copy(applyFiles = apply) }
+    }
+
+    override fun initializeGit() {
+        val init = gitInit ?: return
+        val s = state.value
+        if (!s.canInitGit || s.initializingGit) return
+        if (s.working || s.block != null) return
+        mutable.update { it.copy(initializingGit = true, gitInitFailure = null) }
+        scope.launch {
+            when (val result = init.initialize()) {
+                is Outcome.Failed ->
+                    mutable.update { it.copy(initializingGit = false, gitInitFailure = result.failure) }
+                is Outcome.Ok -> {
+                    val nowAbsent = setup.setup() == VersionControlSetupState.Absent
+                    mutable.update {
+                        it.copy(
+                            initializingGit = false,
+                            noFileCopies = nowAbsent,
+                            canInitGit = nowAbsent && init.canInit(),
+                            applyFiles = !nowAbsent,
+                            gitInitFailure = null,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     override fun confirm() {
@@ -910,6 +951,9 @@ public interface StagedActions {
     public fun confirm()
 
     public fun dismissConfirm()
+
+    /** "Start a Git repository for this project" on a non-Git project in the server's active folder. */
+    public fun initializeGit(): Unit = Unit
 }
 
 /**
@@ -924,6 +968,7 @@ public class StagedPresenter(
     private val scope: CoroutineScope,
     private val shelf: ReviewShelf? = null,
     private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
+    private val gitInit: ReviewProjectGitInit? = null,
 ) : StagedActions {
     private val mutable = MutableStateFlow(shelf?.peek(ReviewShelf.STAGED)?.staged?.frame() ?: StagedUi())
     public val state: StateFlow<StagedUi> = mutable.asStateFlow()
@@ -981,6 +1026,7 @@ public class StagedPresenter(
         val prompt = review.prompt(id)
         val count = (review.messagesAfter(id) as? Outcome.Ok)?.value
         val noFileCopies = setup.setup() == VersionControlSetupState.Absent
+        val canInitGit = noFileCopies && gitInit?.canInit() == true
         if (reviewed != current) return
         mutable.update {
             it.copy(
@@ -991,10 +1037,36 @@ public class StagedPresenter(
                 promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
                 messagesAfter = count,
                 noFileCopies = noFileCopies,
+                canInitGit = canInitGit,
                 failure = null,
             )
         }
         shelf?.keep(ReviewShelf.STAGED, KeptReview(staged = KeptStaged.of(state.value)))
+    }
+
+    override fun initializeGit() {
+        val init = gitInit ?: return
+        val s = state.value
+        if (!s.canInitGit || s.initializingGit) return
+        if (s.working || s.busy) return
+        mutable.update { it.copy(initializingGit = true, gitInitFailure = null) }
+        scope.launch {
+            when (val result = init.initialize()) {
+                is Outcome.Failed ->
+                    mutable.update { it.copy(initializingGit = false, gitInitFailure = result.failure) }
+                is Outcome.Ok -> {
+                    val nowAbsent = setup.setup() == VersionControlSetupState.Absent
+                    mutable.update {
+                        it.copy(
+                            initializingGit = false,
+                            noFileCopies = nowAbsent,
+                            canInitGit = nowAbsent && init.canInit(),
+                            gitInitFailure = null,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     override fun back(): Unit = nav.back()

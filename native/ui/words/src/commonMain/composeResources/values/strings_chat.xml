@@ -882,6 +882,7 @@
     <string name="chatDraftCopy">Copy draft</string>
     <string name="undoneStatus">Undone from a prompt</string>
     <string name="undonePutBack">Put back</string>
+    <string name="chatFinishingUndo">Finishing undo…</string>
     <string name="promptRestoredWithout">Restored without %1$s; attach them again before sending</string>
     <string name="promptStashOlderDraftsWaiting">Some older drafts have not moved here yet. They are kept on this device.</string>
     <string name="promptStashOlderDraftsFull">Older drafts are waiting to move here. Delete saved prompts to make room.</string>

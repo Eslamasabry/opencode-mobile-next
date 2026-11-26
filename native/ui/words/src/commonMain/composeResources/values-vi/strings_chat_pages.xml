@@ -427,4 +427,24 @@
     <string name="reviewRevertNoSnapshot">Đây không phải dự án Git nên không thể khôi phục tệp. Hoàn tác chỉ ẩn tin nhắn.</string>
     <string name="reviewRevertRestoreConfirmBodyNoFiles">Các tin nhắn đã ẩn sẽ quay lại. Sau này bạn vẫn có thể hoàn tác từ một lời nhắc.</string>
     <string name="reviewRevertRestoredBodyNoFiles">Các tin nhắn đã trở lại như cũ.</string>
+    <string name="reviewUndoMessagesOnlyTitle">Hoàn tác tin nhắn từ đây?</string>
+    <string name="reviewUndoMessagesOnlyBody">Thao tác này ẩn các tin nhắn từ lúc những thay đổi này bắt đầu. Đây không phải dự án Git nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục tin nhắn cho đến khi xóa chúng.</string>
+    <string name="reviewRevertSheetBodyWithFiles">Lời nhắc này và mọi thứ sau đó được ẩn trong lúc bạn xem lại, còn các tệp quay về trạng thái trước đó. Chưa có gì là cuối cùng cho đến khi bạn chọn — bạn có thể khôi phục tất cả.</string>
+    <string name="reviewRevertSheetBodyMessagesOnly">Lời nhắc này và mọi thứ sau đó được ẩn trong lúc bạn xem lại. Các tệp vẫn giữ nguyên. Bạn có thể khôi phục tin nhắn cho đến khi xóa chúng.</string>
+    <string name="reviewRevertFilesToggleOffHint">Các tệp vẫn giữ nguyên; chỉ ẩn tin nhắn.</string>
+    <plurals name="undoFromHereBodyNoGit">
+        <item quantity="other">Lời nhắc này và %1$d tin nhắn sau đó sẽ bị gỡ bỏ. Đây không phải dự án Git nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoGit__eq0">Lời nhắc này sẽ bị gỡ bỏ. Đây không phải dự án Git nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</string>
+    <string name="undoFromHereBodyNoGit__eq1">Lời nhắc này và tin nhắn sau đó sẽ bị gỡ bỏ. Đây không phải dự án Git nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</string>
+    <string name="undoFromHereBodyNoGitUnknown">Lời nhắc này và mọi thứ sau đó sẽ bị gỡ bỏ. Đây không phải dự án Git nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</string>
+    <plurals name="undoFromHereBodyNoRollback">
+        <item quantity="other">Lời nhắc này và %1$d tin nhắn sau đó sẽ bị gỡ bỏ. Tác nhân này không thể khôi phục tệp nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</item>
+    </plurals>
+    <string name="undoFromHereBodyNoRollback__eq0">Lời nhắc này sẽ bị gỡ bỏ. Tác nhân này không thể khôi phục tệp nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</string>
+    <string name="undoFromHereBodyNoRollback__eq1">Lời nhắc này và tin nhắn sau đó sẽ bị gỡ bỏ. Tác nhân này không thể khôi phục tệp nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</string>
+    <string name="undoFromHereBodyNoRollbackUnknown">Lời nhắc này và mọi thứ sau đó sẽ bị gỡ bỏ. Tác nhân này không thể khôi phục tệp nên các tệp vẫn giữ nguyên. Bạn có thể khôi phục trước khi gửi lời nhắc khác.</string>
+    <string name="reviewUndoStartGitRepository">Bắt đầu kho lưu trữ Git cho dự án này</string>
+    <string name="reviewUndoStartGitRepositoryHint">Giữ nguyên các tệp tại đây và bật Git để những lần hoàn tác sau có thể khôi phục tệp.</string>
+    <string name="reviewUndoStartGitFailed">Không thể bắt đầu kho lưu trữ Git cho dự án này.</string>
 </resources>

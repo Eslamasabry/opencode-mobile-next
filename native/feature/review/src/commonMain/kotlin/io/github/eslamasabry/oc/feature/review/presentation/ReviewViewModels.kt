@@ -154,13 +154,19 @@ public class FileDiffViewModel(
 
 /** "Undo from this prompt?". */
 @AssistedInject
-public class UndoFromHereViewModel(@Assisted route: ReviewRoute.UndoFromHere, hub: ReviewHub, nav: AppNavigator) : ViewModel(), UndoFromHereActions {
-    private val presenter = UndoFromHerePresenter(
+public class UndoFromHereViewModel(
+    @Assisted route: ReviewRoute.UndoFromHere,
+    hub: ReviewHub,
+    nav: AppNavigator,
+) : ViewModel(), UndoFromHereActions {
+    private val presenter =
+        UndoFromHerePresenter(
             hub.review(route.ref),
             route.messageId,
             RouteNavigation(nav, route.ref, null),
             viewModelScope,
             hub.conversationSetup(route.ref),
+            hub.conversationGitInit(route.ref),
         )
     public val state: StateFlow<UndoFromHereUi> = presenter.state
 
@@ -169,6 +175,8 @@ public class UndoFromHereViewModel(@Assisted route: ReviewRoute.UndoFromHere, hu
     override fun putFilesBack(apply: Boolean): Unit = presenter.putFilesBack(apply)
 
     override fun confirm(): Unit = presenter.confirm()
+
+    override fun initializeGit(): Unit = presenter.initializeGit()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
@@ -193,6 +201,7 @@ public class StagedViewModel(
             viewModelScope,
             kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
             hub.conversationSetup(route.ref),
+            hub.conversationGitInit(route.ref),
         )
     public val state: StateFlow<StagedUi> = presenter.state
 
@@ -211,6 +220,8 @@ public class StagedViewModel(
     override fun confirm(): Unit = presenter.confirm()
 
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()
+
+    override fun initializeGit(): Unit = presenter.initializeGit()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

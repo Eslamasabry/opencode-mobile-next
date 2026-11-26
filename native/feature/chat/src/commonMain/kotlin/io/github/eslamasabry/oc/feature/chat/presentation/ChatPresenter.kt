@@ -262,6 +262,7 @@ public class ChatPresenter(
         val extra =
             feed
                 .combine(world.undone) { f, u -> f to u }
+                .combine(world.undoing) { x, _ -> x }
                 .combine(world.parent) { x, _ -> x }
                 .combine(world.models.map { it.replaced }.distinctUntilChanged()) { x, _ -> x }
         // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
@@ -462,8 +463,11 @@ public class ChatPresenter(
      * lost connection, which the person must know first, comes before it.
      */
     private fun stagedFirst(line: ChatStatusUi?): ChatStatusUi? {
-        val staged = undoneLine(world.undone.value)?.takeIf { it.kind == ChatStatusKind.StagedUndo }
         val connection = line?.kind == ChatStatusKind.Offline || line?.kind == ChatStatusKind.Connecting
+        if (world.undoing.value && !connection) {
+            return ChatStatusUi(FINISHING_UNDO_STATUS, ChatStatusKind.FinishingUndo)
+        }
+        val staged = undoneLine(world.undone.value)?.takeIf { it.kind == ChatStatusKind.StagedUndo }
         return if (staged != null && !connection) staged else line
     }
 
@@ -2111,6 +2115,7 @@ private val PICTURE_NAME = Regex("\\.(png|jpe?g|gif|webp|bmp)$", RegexOption.IGN
 private const val RECEIPT_STATUS: String = "chat-receipt-check"
 private const val STAGED_UNDO_STATUS: String = "staged-revert"
 private const val UNDONE_STATUS: String = "undone"
+private const val FINISHING_UNDO_STATUS: String = "finishing-undo"
 private const val SUBAGENT_STATUS: String = "subagent"
 private const val KEPT_OFFLINE_STATUS: String = "chat-kept-offline"
 private const val MODEL_REPLACED_STATUS: String = "model-replaced"

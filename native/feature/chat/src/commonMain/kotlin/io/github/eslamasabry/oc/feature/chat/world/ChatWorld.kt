@@ -383,6 +383,10 @@ public interface ChatWorld {
     public val undone: StateFlow<ChatUndone>
         get() = NoUndone
 
+    /** B-473: true while an undo operation is actively finishing on the server (sends wait cleanly). */
+    public val undoing: StateFlow<Boolean>
+        get() = NoUndoing
+
     /**
      * S28 story 3 (Flutter `_restore`, `/redo`): brings the undone turns back on a server that undoes at once, then
      * reads the conversation again. A staged undo is reviewed on its own page instead.
@@ -652,3 +656,4 @@ public enum class ChatUndone {
 }
 
 private val NoUndone: StateFlow<ChatUndone> = kotlinx.coroutines.flow.MutableStateFlow(ChatUndone.None)
+private val NoUndoing: StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)

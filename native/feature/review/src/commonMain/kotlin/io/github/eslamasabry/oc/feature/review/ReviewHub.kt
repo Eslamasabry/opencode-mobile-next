@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.model.VcsDiffMode
 import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import io.github.eslamasabry.oc.core.model.gitProjectState
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectGitInit
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectSetup
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -157,6 +158,37 @@ public class ReviewHub(
                     ?: gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
             if (graph == null || directory == null) VersionControlSetupState.Unknown else gitSetup(graph, directory)
         }
+
+    /**
+     * One-tap Git initialization for [ref], gated to the server's active folder (`onFolder`) because
+     * `initializeGitRepository` acts on the server's current folder.
+     */
+    public fun conversationGitInit(ref: ConversationRef): ReviewProjectGitInit =
+        object : ReviewProjectGitInit {
+            override suspend fun canInit(): Boolean = activeFolderGraph(ref) != null
+
+            override suspend fun initialize(): Outcome<Unit> {
+                val graph =
+                    activeFolderGraph(ref) ?: return Failure.Unavailable(FeatureId("gitInit")).failed()
+                return graph.reviewOperations.initializeGitRepository()
+            }
+        }
+
+    private suspend fun activeFolderGraph(ref: ConversationRef): ReviewGraphAccessors? {
+        val graph = registry.graphFor(ref) as? ReviewGraphAccessors ?: return null
+        val gateway = graph.reviewGateway
+        if (!gateway.capabilities.value.gitInit) return null
+        val sessionDir =
+            (gateway.session(ref.sessionId) as? Outcome.Ok)?.value?.directory?.takeIf { it.isNotBlank() }
+        val activeDir = gateway.location.value.directory?.takeIf { it.isNotBlank() }
+        val onFolder =
+            when {
+                sessionDir == null -> activeDir != null
+                activeDir == null -> false
+                else -> sessionDir.trimEnd('/') == activeDir.trimEnd('/')
+            }
+        return graph.takeIf { onFolder }
+    }
 
     /**
      * Git, Absent or Unknown, by the one rule the chat header and the new-chat start use ([gitProjectState]): the
