@@ -51,7 +51,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } })
     public val actions: ChatActions = presenter
     public val state =
-        presenter.states(viewModelScope, world.work, SharingStarted.Eagerly)
+        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(5_000))
     public val stage = world.stage
     public val ownReplyKey = world.ownReplyKey
     public val composer =
@@ -74,7 +74,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.Eagerly,
+                SharingStarted.WhileSubscribed(5_000),
                 BasicComposerUi(available = false, sending = false, steers = false),
             )
 
@@ -82,7 +82,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
     public val requests =
         world.request
             .map(::requestSlotOf)
-            .stateIn(viewModelScope, SharingStarted.Eagerly, RequestSlotUi())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RequestSlotUi())
 
     /** One atomic screen snapshot so button dismiss, reply insert, and request card land in the same frame. */
     public val ui =
@@ -93,7 +93,7 @@ public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispat
             .filterNotNull()
             .stateIn(
                 viewModelScope,
-                SharingStarted.Eagerly,
+                SharingStarted.WhileSubscribed(5_000),
                 DemoScreenUi(state.value, stage.value, ownReplyKey.value, requests.value),
             )
 

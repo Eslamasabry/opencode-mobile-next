@@ -82,6 +82,9 @@ class DemoSampleOneTapTest {
         onNode(hasSetTextAction()).performSemanticsAction(SemanticsActions.SetText) {
             it(AnnotatedString(OWN_QUESTION))
         }
+        // Allow realistic typing duration so replacing the prefilled sample draft before sending is not an 80 ms ABA.
+        mainClock.advanceTimeBy(TYPING_MS)
+        waitForIdle()
         onNodeWithTag("chat-send-button").performClick()
         waitForIdle()
     }
@@ -97,13 +100,13 @@ class DemoSampleOneTapTest {
                 waitForIdle()
                 sendOwnQuestion()
                 onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
-                assertEquals(DemoStage.Ready, vm.stage.value)
-                assertNull(vm.requests.value.card)
+                assertEquals(DemoStage.Ready, vm.ui.value.stage)
+                assertNull(vm.ui.value.requests.card)
                 onNodeWithText(SAMPLE_PROMPT).assertIsDisplayed().performClick()
                 waitForIdle()
-                assertEquals(DemoStage.Review, vm.stage.value)
-                assertNotNull(vm.requests.value.card)
-                assertNull(vm.ownReplyKey.value)
+                assertEquals(DemoStage.Review, vm.ui.value.stage)
+                assertNotNull(vm.ui.value.requests.card)
+                assertNull(vm.ui.value.ownReplyKey)
                 onAllNodesWithText(SAMPLE_REPLY_SNIPPET, substring = true).onFirst().assertIsDisplayed()
                 onNodeWithTag("demo-run-sample").assertDoesNotExist()
             }
@@ -165,8 +168,8 @@ class DemoSampleOneTapTest {
                 sendOwnQuestion()
                 onAllNodesWithText(OWN_QUESTION, substring = true).onFirst().assertIsDisplayed()
                 onAllNodesWithText(OWN_HONEST_LINE, substring = true).onFirst().assertIsDisplayed()
-                assertEquals(DemoStage.Ready, vm.stage.value)
-                assertNull(vm.requests.value.card)
+                assertEquals(DemoStage.Ready, vm.ui.value.stage)
+                assertNull(vm.ui.value.requests.card)
             }
         } finally {
             store.clear()
@@ -218,6 +221,7 @@ class DemoSampleOneTapTest {
     private companion object {
         const val PHONE_WIDTH = 360
         const val PHONE_HEIGHT = 780
+        const val TYPING_MS = 1_100L
         const val OWN_QUESTION = "Which Excel formula adds up column B?"
         const val OWN_HONEST_LINE = "This demo can’t answer your own questions."
         const val SAMPLE_PROMPT = "Make the welcome message friendlier."

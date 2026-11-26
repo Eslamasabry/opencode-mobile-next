@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -50,7 +51,7 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
         entry<DemoRoute> {
             val vm = metroViewModel<DemoViewModel>()
             val words = demoWords()
-            remember(vm, words) { vm.configure(words) }
+            LaunchedEffect(words) { vm.configure(words) }
             val ui by vm.ui.collectAsStateWithLifecycle()
             val demoOwnReply =
                 remember(ui.ownReplyKey, ui.stage, words.prompt, vm) {
