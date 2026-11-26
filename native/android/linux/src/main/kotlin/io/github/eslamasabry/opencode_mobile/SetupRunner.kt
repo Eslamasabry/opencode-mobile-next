@@ -642,36 +642,6 @@ class SetupRunner private constructor(private val context: Context) {
         watchdog.silence.touch()
     }
 
-    /** A step running as the agent user may only have the app write where agents install. */
-    private fun agentFolders(agentUser: Boolean): List<String>? =
-        if (agentUser) RootfsPaths.AGENT_USER_FOLDERS else null
-
-    private fun installerFailure(spec: Spec, component: SetupComponentStatus, code: Int, last: String?): String? =
-        if (code == 0) null else if (spec.agentUser) {
-            // A fixed marker line from the script says more than the generic sentence, and keeps the retry rule working.
-            if (last != null) last.take(300)
-            else if (spec.id == "agent-paseo") when (component.stage) {
-                "Checking Paseo checksum" -> "Paseo did not pass its checksum check. Run setup again."
-                "Checking Paseo launch command" -> "Paseo did not pass its launch command check. Run setup again."
-                "Checking Paseo version" -> "Paseo did not pass its version check. Run setup again."
-                else -> "The agent setup could not finish. Try again."
-            } else "The agent setup could not finish. Try again."
-        } else (last ?: "exit $code").take(300)
-
-    private fun installerEvent(spec: Spec, parsed: SetupProtocol.Event?): SetupProtocol.Event? =
-        if (!spec.agentUser) parsed else when (parsed) {
-            is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(
-                // The scripts' own fixed stage words (a download, an unpacking) pass; anything else is scrubbed (an
-                // agent's output can carry a private path).
-                if ((spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES) ||
-                    FIXED_STAGE.matches(parsed.label)
-                )
-                    parsed.label else spec.stage ?: "Installing agent",
-            )
-            is SetupProtocol.Event.Version -> if (parsed.text == spec.version) parsed else null
-            else -> parsed
-        }
-
     /**
      * Waits for the app to report the step: ten minutes, or the step's own
      * `waitMinutes` (an app-side download, up to four hours).
@@ -817,12 +787,7 @@ class SetupRunner private constructor(private val context: Context) {
     companion object {
         private const val SLOT_WAIT_MS = 90_000L
         private const val SLOT_POLL_MS = 250L
-        private val PASEO_CHECK_STAGES = setOf(
-            "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
-        )
         /** An unproven ownership is looked at this many times in all (the first try included), this far apart. */
-        private val FIXED_STAGE =
-            Regex("^(Downloading|Unpacking|Preparing|Checking|Updating|Repairing)[A-Za-z0-9 .+_-]{0,60}$")
         private const val OWNERSHIP_TRIES = 3
         private const val OWNERSHIP_PAUSE_MS = 3000L
         private const val WRITE_INTERVAL_MS = 250L
@@ -836,6 +801,46 @@ class SetupRunner private constructor(private val context: Context) {
             }
     }
 }
+
+private const val MAX_INSTALLER_ERROR_CHARS = 300
+
+private val PASEO_CHECK_STAGES = setOf(
+    "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
+)
+
+private val FIXED_STAGE =
+    Regex("^(Downloading|Unpacking|Preparing|Checking|Updating|Repairing)[A-Za-z0-9 .+_-]{0,60}$")
+
+/** A step running as the agent user may only have the app write where agents install. */
+private fun agentFolders(agentUser: Boolean): List<String>? =
+    if (agentUser) RootfsPaths.AGENT_USER_FOLDERS else null
+
+private fun installerFailure(spec: SetupRunner.Spec, component: SetupComponentStatus, code: Int, last: String?):
+    String? =
+    if (code == 0) null else if (spec.agentUser) {
+        // A fixed marker line from the script says more than the generic sentence and keeps retries working.
+        if (last != null) last.take(MAX_INSTALLER_ERROR_CHARS)
+        else if (spec.id == "agent-paseo") when (component.stage) {
+            "Checking Paseo checksum" -> "Paseo did not pass its checksum check. Run setup again."
+            "Checking Paseo launch command" -> "Paseo did not pass its launch command check. Run setup again."
+            "Checking Paseo version" -> "Paseo did not pass its version check. Run setup again."
+            else -> "The agent setup could not finish. Try again."
+        } else "The agent setup could not finish. Try again."
+    } else (last ?: "exit $code").take(MAX_INSTALLER_ERROR_CHARS)
+
+private fun installerEvent(spec: SetupRunner.Spec, parsed: SetupProtocol.Event?): SetupProtocol.Event? =
+    if (!spec.agentUser) parsed else when (parsed) {
+        is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(
+            // The scripts' own fixed stage words (a download, an unpacking) pass; anything else is scrubbed (an
+            // agent's output can carry a private path).
+            if ((spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES) ||
+                FIXED_STAGE.matches(parsed.label)
+            )
+                parsed.label else spec.stage ?: "Installing agent",
+        )
+        is SetupProtocol.Event.Version -> if (parsed.text == spec.version) parsed else null
+        else -> parsed
+    }
 
 /** Per-run output state and silence watchdog for a setup script. */
 private class SetupScriptRun(
