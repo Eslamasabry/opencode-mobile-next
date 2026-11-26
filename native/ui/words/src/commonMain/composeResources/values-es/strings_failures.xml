@@ -103,4 +103,8 @@
     <string name="agentErrorServerDiskFullHintPhone">Libera algo de espacio en este teléfono y vuelve a intentarlo.</string>
     <string name="chatSendPhoneHelperNoAnswer">Los agentes de este teléfono no respondieron. Puede que aún estén arrancando; dales un momento y vuelve a intentarlo.</string>
     <string name="chatSendFailureSignedInPast">%1$s necesitaba que volvieras a iniciar sesión</string>
+    <string name="agentErrorFreeDailyLimit">Se agotaron los mensajes gratuitos de hoy.</string>
+    <string name="agentErrorFreeDailyLimitHint">Vuelven mañana. Para seguir ahora, conecta tu propio proveedor.</string>
+    <string name="agentErrorModelCountryRefused">%1$s no está disponible en tu país.</string>
+    <string name="agentErrorModelCountryRefusedHint">Elige otro modelo para seguir.</string>
 </resources>

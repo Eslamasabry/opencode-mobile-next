@@ -102,4 +102,8 @@
     <string name="agentErrorServerDiskFullHintPhone">Kosongkan sebagian ruang di ponsel ini, lalu coba lagi.</string>
     <string name="chatSendPhoneHelperNoAnswer">Agen di ponsel ini tidak menjawab. Mungkin masih memulai; beri mereka waktu sebentar, lalu coba lagi.</string>
     <string name="chatSendFailureSignedInPast">%1$s sempat meminta Anda masuk lagi</string>
+    <string name="agentErrorFreeDailyLimit">Pesan gratis untuk hari ini sudah habis.</string>
+    <string name="agentErrorFreeDailyLimitHint">Akan kembali besok. Untuk melanjutkan sekarang, hubungkan penyedia Anda sendiri.</string>
+    <string name="agentErrorModelCountryRefused">%1$s tidak ditawarkan di negara Anda.</string>
+    <string name="agentErrorModelCountryRefusedHint">Pilih model lain untuk melanjutkan.</string>
 </resources>
