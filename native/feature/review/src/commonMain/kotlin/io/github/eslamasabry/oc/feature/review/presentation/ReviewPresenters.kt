@@ -200,13 +200,11 @@ public class ChangesPresenter(
                     val rows = markViewed(chosen, if (chosen == ReviewScope.Conversation) withTreeDiffs(scopedFiles) else scopedFiles)
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
-                    val setupState = readSetupForLoad(rows.isEmpty() && working)
-                    val notRepository = rows.isEmpty() && working && setupState == VersionControlSetupState.Absent
-                    val noFileCopies = setupState == VersionControlSetupState.Absent
+                    val noFileCopies = readSetupForLoad(rows.isEmpty() && working) == VersionControlSetupState.Absent
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
-                            notRepository = notRepository,
+                            notRepository = rows.isEmpty() && working && noFileCopies,
                             noFileCopies = noFileCopies,
                             workingTree = chosen == ReviewScope.WorkingTree,
                             scope = chosen,
