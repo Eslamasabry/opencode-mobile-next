@@ -87,6 +87,10 @@ public interface SettingsHost {
     /** Appearance › Glass lab's numbers; null where the build offers no lab (only preview builds do). */
     public val glassLab: GlassLabSetting?
         get() = null
+
+    /** Settings › Help: built-in phone Linux speed mode and one-tap fast-mode retry; null off Android. */
+    public val linuxSpeed: LinuxSpeedSetting?
+        get() = null
 }
 
 /**
@@ -123,6 +127,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             problemReport = host.problemReport,
             edgeDock = host.edgeDock,
             glassLabPort = host.glassLab,
+            linuxSpeed = host.linuxSpeed,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

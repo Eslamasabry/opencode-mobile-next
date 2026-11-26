@@ -202,5 +202,8 @@ public interface SettingsActions {
 
     public fun onCopyLicense() {}
 
+    /** Settings › Help: one-tap test of fast phone Linux mode when currently in compatible mode. */
+    public fun onTryFastLinuxMode() {}
+
     public fun onLicenseWebsite() {}
 }

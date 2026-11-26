@@ -149,6 +149,32 @@ internal object LinuxProotProbe {
             true
         }
 
+    /** Whether the phone's Linux is currently running in compatible (slower) fallback mode. */
+    fun isCompatibleFallback(compatMarker: Boolean, liveProotMode: String?): Boolean =
+        compatMarker || liveProotMode == "ptrace"
+
+    /**
+     * B-486: User-triggered one-tap retry of fast Linux mode from Settings > Help. Clears any
+     * saved `proot-compat` marker, runs one bounded probe in normal (fast) mode, and keeps fast
+     * mode if it answers. If normal mode hangs or fails, falls back to compat mode and restores
+     * the marker (and also restores it on cancel/failure when it was present before) so a working
+     * compatible install is never left broken.
+     */
+    fun retryFast(
+        runner: Runner,
+        timeoutMs: Long = TIMEOUT_MS,
+        onStage: (compatRetry: Boolean) -> Unit = {},
+        killPid: (Int) -> Unit = {},
+    ): Result {
+        val hadCompat = runner.hasCompatMarker()
+        runner.clearCompatMarker()
+        val result = runFromNormal(runner, timeoutMs, onStage, killPid)
+        if (hadCompat && (result is Result.Cancelled || result is Result.Failed)) {
+            runner.writeCompatMarker()
+        }
+        return result
+    }
+
     fun run(
         runner: Runner,
         timeoutMs: Long = TIMEOUT_MS,

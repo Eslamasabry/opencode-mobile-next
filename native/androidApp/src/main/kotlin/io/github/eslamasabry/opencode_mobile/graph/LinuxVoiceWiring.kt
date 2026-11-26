@@ -116,6 +116,7 @@ object LinuxRuntimeWiring {
         policies: AppAutomationPolicies,
         consents: NativePhoneFirstStartConsents,
         gates: LocalServerGates,
+        resumedActivities: ResumedActivities,
     ): BuiltinRuntime =
         BuiltinRuntime(
                 app,
@@ -129,6 +130,7 @@ object LinuxRuntimeWiring {
                 policies,
                 consents,
                 gates,
+                resumedActivities,
             )
             .also { leases.start() }
 
@@ -424,7 +426,8 @@ internal constructor(
     private val leases: NativeChatLeases,
     private val policies: AppAutomationPolicies,
     private val consents: NativePhoneFirstStartConsents,
-    gates: LocalServerGates,
+    private val gates: LocalServerGates,
+    private val resumedActivities: ResumedActivities? = null,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
@@ -1755,6 +1758,8 @@ internal constructor(
                 override fun onActivityDestroyed(activity: Activity) = Unit
             }
         )
+        // B-486: if MainActivity already resumed before oc-startup registered this callback, catch up at once.
+        if (resumedActivities?.current != null && !foreground) resumed(true)
         scope.launch { publish() }
     }
 
@@ -1771,6 +1776,7 @@ internal constructor(
         // The runtime may refuse to follow the activity; its own recovery then stays off for that visit.
         // Nothing is told to the person: if recovery is needed and missing, the "phone server stopped" state shows.
         activityFollow.follow(on) { linux.setActivityResumed(it) }
+        gates.activityResumed.value = on
         if (on)
             scope.launch {
                 adoptNativeAddress()
@@ -1921,4 +1927,7 @@ class LocalServerGates {
 
     /** Told when the phone server's recovery was refused twice in a row (set once at app start). */
     @Volatile var followRefused: (() -> Unit)? = null
+
+    /** B-486: true once BuiltinLinux.setActivityResumed(true) ran; wakes waiting helper starts immediately. */
+    val activityResumed: MutableStateFlow<Boolean> = MutableStateFlow(false)
 }

@@ -115,6 +115,12 @@ class OcApplication : Application(), GraphOwner {
     private fun startDeferred() {
         Thread(
                 {
+                    // B-486: start built-in Linux supervision first so activityResumed and OpenCode
+                    // boot immediately without waiting behind telemetry, monitor, or budget warmups.
+                    step("builtinRuntime") {
+                        // P12-FIX-LINUX-VOICE: built-in Linux follows the activity; phone server comes back.
+                        appGraph.builtinRuntime
+                    }
                     step("telemetryContinuity") {
                         (appGraph as ContinuityAccessors).telemetryContinuity.start() // s23-continuity: Flutter 2.1.5 answers, crash offer
                     }
@@ -128,9 +134,6 @@ class OcApplication : Application(), GraphOwner {
                         (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneBudgetAccessors)
                             .nativePhoneBudget
                             .start() // restore the saved phone speed budget
-                    }
-                    step("builtinRuntime") {
-                        appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
                     }
                     step("phoneOpenCodeAutoUpdate") {
                         (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneOpenCodeAutoUpdateAccessors)

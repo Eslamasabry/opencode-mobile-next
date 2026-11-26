@@ -510,6 +510,7 @@ private fun ColumnScope.GroupBody(
         }
     }
     GroupHiddenPhrases(state, actions, page)
+    GroupLinuxSpeed(state, actions, page)
     // P-031: the saved servers are listed once, behind Servers (each opens its own page there); a second list
     // here, under a sentence for a label, repeated them.
 }

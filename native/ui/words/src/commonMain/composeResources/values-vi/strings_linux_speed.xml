@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">Tốc độ Linux trên điện thoại</string>
+    <string name="helpLinuxSpeedFast">Nhanh</string>
+    <string name="helpLinuxSpeedCompatible">Tương thích (chậm hơn)</string>
+    <string name="helpLinuxSpeedChecking">Đang kiểm tra…</string>
+    <string name="helpLinuxSpeedFastSummary">Đang chạy ở chế độ nhanh.</string>
+    <string name="helpLinuxSpeedFastRestored">Chế độ nhanh đã được bật lại.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">Đã chuyển sang chế độ tương thích nên các tác nhân khởi động chậm hơn.</string>
+    <string name="helpLinuxSpeedStayedCompatible">Điện thoại này vẫn cần chế độ tương thích.</string>
+    <string name="helpLinuxSpeedRetryFailed">Hiện chưa thể thử chế độ nhanh. Chế độ tương thích vẫn được giữ nguyên.</string>
+    <string name="helpLinuxSpeedTryFast">Thử lại chế độ nhanh</string>
+    <string name="helpLinuxSpeedTryFastSummary">Kiểm tra chế độ nhanh và tự động quay lại nếu cần.</string>
+    <string name="helpLinuxSpeedTryingFast">Đang thử chế độ nhanh trên điện thoại này…</string>
+</resources>

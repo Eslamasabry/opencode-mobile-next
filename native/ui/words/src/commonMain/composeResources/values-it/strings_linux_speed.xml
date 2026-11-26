@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">Velocità di Linux sul telefono</string>
+    <string name="helpLinuxSpeedFast">Veloce</string>
+    <string name="helpLinuxSpeedCompatible">Compatibile (più lenta)</string>
+    <string name="helpLinuxSpeedChecking">Controllo…</string>
+    <string name="helpLinuxSpeedFastSummary">In esecuzione in modalità veloce.</string>
+    <string name="helpLinuxSpeedFastRestored">La modalità veloce è di nuovo attiva.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">Passato alla modalità compatibile, quindi gli agenti si avviano più lentamente.</string>
+    <string name="helpLinuxSpeedStayedCompatible">Questo telefono ha ancora bisogno della modalità compatibile.</string>
+    <string name="helpLinuxSpeedRetryFailed">Impossibile testare la modalità veloce ora. La modalità compatibile viene mantenuta.</string>
+    <string name="helpLinuxSpeedTryFast">Riprova la modalità veloce</string>
+    <string name="helpLinuxSpeedTryFastSummary">Testa la modalità veloce e torna indietro automaticamente se serve.</string>
+    <string name="helpLinuxSpeedTryingFast">Test della modalità veloce su questo telefono…</string>
+</resources>

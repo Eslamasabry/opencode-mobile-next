@@ -69,6 +69,15 @@ public interface NotificationSettings {
     public fun refresh() {}
 }
 
+/** B-486: Settings › Help port for reading phone Linux speed mode and retrying fast mode. */
+public interface LinuxSpeedSetting {
+    public val facts: StateFlow<LinuxSpeedFacts>
+
+    public fun refresh() {}
+
+    public suspend fun tryFastMode(): Outcome<LinuxSpeedMode>
+}
+
 /** The in-app updater (plan 07 I20, plan 16 CR16-10). */
 public interface UpdateSettings {
     /** The Updates page owns its status while it is visible. */

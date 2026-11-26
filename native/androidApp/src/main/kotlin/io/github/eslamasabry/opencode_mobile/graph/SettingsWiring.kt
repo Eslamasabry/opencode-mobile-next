@@ -245,8 +245,13 @@ class AndroidSettingsHost(
     private val kept: io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost,
     // Settings › Conversations › Other conversations: Rings / Edge light / Hidden (device-wide).
     private val dock: AppEdgeDock,
+    // B-486: Settings › Help phone Linux speed mode and one-tap fast-mode retry.
+    private val builtinRuntime: Lazy<BuiltinRuntime>,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
+
+    override val linuxSpeed: io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedSetting =
+        AndroidLinuxSpeedSetting(application, dispatchers, scope, builtinRuntime)
 
     override val edgeDock: io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting =
         object : io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting {
@@ -1301,3 +1306,78 @@ internal fun certificateFingerprint(der: ByteArray): String =
     java.security.MessageDigest.getInstance("SHA-256").digest(der).joinToString("") {
         "%02X".format(it.toInt() and 0xFF)
     }
+
+/**
+ * B-486: Settings › Help adapter over [BuiltinLinux]'s speed mode and bounded fast-mode probe.
+ * Reads run on IO; a successful switch back to fast mode restarts OpenCode only when idle.
+ */
+private class AndroidLinuxSpeedSetting(
+    private val application: Application,
+    private val dispatchers: AppDispatchers,
+    private val scope: CoroutineScope,
+    private val builtinRuntime: Lazy<BuiltinRuntime>,
+) : io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedSetting {
+    private val mutable =
+        MutableStateFlow(io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedFacts())
+    override val facts:
+        StateFlow<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedFacts> =
+        mutable.asStateFlow()
+
+    override fun refresh() {
+        scope.launch {
+            val read =
+                withContext(dispatchers.io) {
+                    val linux = io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application)
+                    val installed = linux.installed
+                    val mode =
+                        if (installed && linux.isLinuxCompatibleMode()) {
+                            io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Compatible
+                        } else {
+                            io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Fast
+                        }
+                    installed to mode
+                }
+            mutable.value = mutable.value.copy(installed = read.first, mode = read.second)
+        }
+    }
+
+    override suspend fun tryFastMode():
+        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
+        val result =
+            withContext(dispatchers.io) {
+                attempt(::classifyRuntime) {
+                    val linux = io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application)
+                    if (!linux.installed) null to false
+                    else {
+                        val wasPtrace = linux.performance()["prootMode"] == "ptrace"
+                        linux.retryFastProotMode() to (linux.serverRunning && wasPtrace)
+                    }
+                }
+            }
+        if (result is Outcome.Failed) return result
+        val (probe, restartIfIdle) = (result as Outcome.Ok).value
+        return when (probe) {
+            io.github.eslamasabry.opencode_mobile.BuiltinLinux.FastModeRetry.Fast -> {
+                val mode = io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Fast
+                mutable.value = mutable.value.copy(installed = true, mode = mode)
+                if (restartIfIdle && builtinRuntime.value.mayUpdate()) {
+                    if (builtinRuntime.value.stopToReplace() is Outcome.Ok) {
+                        builtinRuntime.value.startServer()
+                    }
+                }
+                Outcome.Ok(mode)
+            }
+            io.github.eslamasabry.opencode_mobile.BuiltinLinux.FastModeRetry.Compatible -> {
+                val mode = io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Compatible
+                mutable.value = mutable.value.copy(installed = true, mode = mode)
+                Outcome.Ok(mode)
+            }
+            else -> {
+                refresh()
+                Outcome.Failed(
+                    Failure.Runtime(io.github.eslamasabry.oc.core.common.RuntimeProblem.Generic)
+                )
+            }
+        }
+    }
+}

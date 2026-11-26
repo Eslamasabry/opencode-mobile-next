@@ -75,6 +75,8 @@ public class SettingsPresenter(
     private val edgeDock: EdgeDockSetting? = null,
     /** Appearance › Glass lab's numbers; null where the build offers no lab. */
     glassLabPort: GlassLabSetting? = null,
+    /** Settings › Help: built-in phone Linux speed mode and one-tap fast-mode retry. */
+    private val linuxSpeed: LinuxSpeedSetting? = null,
 ) : SettingsActions {
     private val lab: GlassLabPresenter? = glassLabPort?.let { GlassLabPresenter(scope, it) }
     override val glassLab: GlassLabActions? get() = lab
@@ -111,6 +113,8 @@ public class SettingsPresenter(
          * chat). Back from that page leaves Settings for where the person came from, never to this visit's hub.
          */
         val entryDepth: Int? = null,
+        val linuxSpeedChecking: Boolean = false,
+        val linuxSpeedOutcome: LinuxSpeedOutcome? = null,
     )
 
     private data class Engines(
@@ -121,6 +125,7 @@ public class SettingsPresenter(
         val localModels: LocalModelStorageFacts?,
         val data: LocalDataFacts?,
         val phrases: PhraseSettingsFacts?,
+        val linuxSpeed: LinuxSpeedFacts?,
     )
 
     private val local = MutableStateFlow(Local())
@@ -136,6 +141,7 @@ public class SettingsPresenter(
         val localModels: LocalModelStorageFacts?,
         val data: LocalDataFacts?,
         val phrases: PhraseSettingsFacts?,
+        val linuxSpeed: LinuxSpeedFacts?,
     )
 
     private val extra =
@@ -143,8 +149,9 @@ public class SettingsPresenter(
             localModels?.facts ?: flowOf(null),
             localData?.facts ?: flowOf(null),
             phrases?.facts ?: flowOf(null),
-        ) { m, d, p ->
-            Extra(m, d, p)
+            linuxSpeed?.facts ?: flowOf(null),
+        ) { m, d, p, s ->
+            Extra(m, d, p, s)
         }
     private val engines =
         combine(
@@ -154,7 +161,7 @@ public class SettingsPresenter(
             updates?.facts ?: flowOf(null),
             extra,
         ) { c, v, n, u, x ->
-            Engines(c, v, n, u, x.localModels, x.data, x.phrases)
+            Engines(c, v, n, u, x.localModels, x.data, x.phrases, x.linuxSpeed)
         }
 
     private fun engineNow() =
@@ -166,6 +173,7 @@ public class SettingsPresenter(
             localModels?.facts?.value,
             localData?.facts?.value,
             phrases?.facts?.value,
+            linuxSpeed?.facts?.value,
         )
 
     public val state: StateFlow<SettingsUi> =
@@ -384,6 +392,13 @@ public class SettingsPresenter(
                     demo = f.canOpen(SettingsOutside.Demo),
                     androidKeystore = f.platform.builtinLinux,
                 ),
+            linuxSpeed =
+                e.linuxSpeed?.let { speed ->
+                    speed.copy(
+                        checking = speed.checking || l.linuxSpeedChecking,
+                        lastOutcome = l.linuxSpeedOutcome ?: speed.lastOutcome,
+                    )
+                },
         )
     }
 
@@ -596,6 +611,7 @@ public class SettingsPresenter(
         )
             notifications?.refresh()
         if (page == SettingsPage.Privacy) localData?.refresh()
+        if (page == SettingsPage.Group(SettingsGroupId.Help)) linuxSpeed?.refresh()
     }
 
     override fun onRefreshLocalModels() {
@@ -623,6 +639,25 @@ public class SettingsPresenter(
         if (local.value.stack.last() == SettingsPage.Storage) onRefreshLocalModels()
         // The hub and This app summary also show Android's current permission state.
         notifications?.refresh()
+        if (local.value.stack.last() == SettingsPage.Group(SettingsGroupId.Help)) linuxSpeed?.refresh()
+    }
+
+    override fun onTryFastLinuxMode() {
+        val port = linuxSpeed ?: return
+        if (local.value.linuxSpeedChecking) return
+        local.update { it.copy(linuxSpeedChecking = true, linuxSpeedOutcome = null) }
+        scope.launch {
+            val outcome =
+                when (val result = port.tryFastMode()) {
+                    is Outcome.Ok ->
+                        when (result.value) {
+                            LinuxSpeedMode.Fast -> LinuxSpeedOutcome.SwitchedToFast
+                            LinuxSpeedMode.Compatible -> LinuxSpeedOutcome.StayedCompatible
+                        }
+                    is Outcome.Failed -> LinuxSpeedOutcome.Failed
+                }
+            local.update { it.copy(linuxSpeedChecking = false, linuxSpeedOutcome = outcome) }
+        }
     }
 
     override fun onQuietHours(on: Boolean) {

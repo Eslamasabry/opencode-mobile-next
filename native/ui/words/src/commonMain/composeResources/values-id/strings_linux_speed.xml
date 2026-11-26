@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">Kecepatan Linux ponsel</string>
+    <string name="helpLinuxSpeedFast">Cepat</string>
+    <string name="helpLinuxSpeedCompatible">Kompatibel (lebih lambat)</string>
+    <string name="helpLinuxSpeedChecking">Memeriksa…</string>
+    <string name="helpLinuxSpeedFastSummary">Berjalan dalam mode cepat.</string>
+    <string name="helpLinuxSpeedFastRestored">Mode cepat aktif kembali.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">Beralih ke mode kompatibel, sehingga agen mulai lebih lambat.</string>
+    <string name="helpLinuxSpeedStayedCompatible">Ponsel ini masih memerlukan mode kompatibel.</string>
+    <string name="helpLinuxSpeedRetryFailed">Tidak dapat menguji mode cepat saat ini. Mode kompatibel tetap digunakan.</string>
+    <string name="helpLinuxSpeedTryFast">Coba mode cepat lagi</string>
+    <string name="helpLinuxSpeedTryFastSummary">Menguji mode cepat dan kembali otomatis jika diperlukan.</string>
+    <string name="helpLinuxSpeedTryingFast">Menguji mode cepat di ponsel ini…</string>
+</resources>

@@ -205,20 +205,32 @@ class PreviewRuntime(
             // Before any connection opens: the helper carries its phone's name, so every place that names a
             // connection (a chat's header, an alert, All conversations) reads This phone, never "Phone agents".
             stores.nameHelpersAfterPhones()
-            // 47-port-rest-2: the saved session labels show at once, marked unverified, until the
-            // server answers.
-            if (active != null) seedOpening(active)
-            // PORT-SCREENS-2: the home list records each source's failure, then the other shown
-            // sources join. Launcher shortcuts wait for this first connection (awaitInitialConnection).
-            initialConnection.complete(
-                if (active != null)
-                    connectCommand(active, makeActive = true) { turn ->
-                        connectForHome(active, makeActive = turn.activate, local = turn.local)
+            // B-486: seed active + shown phone-agent helpers and start the helper alongside OpenCode instead of
+            // waiting behind OpenCode's boot and initial connection.
+            val phoneHelpers =
+                profiles.profiles.value
+                    .filter { it.id != active && isPhoneHelper(it) && listSourceShown(it.id) }
+                    .map { it.id }
+            io.github.eslamasabry.oc.engine.runtime.server.ColdStartLaunch.run(
+                active = active,
+                phoneHelpers = phoneHelpers,
+                seed = { id ->
+                    command {
+                        seedWhileStarting(id)
+                        Unit.ok()
                     }
-                else Unit.ok()
+                },
+                startHelper = ::joinPhoneHelper,
+                adoptHelpers = ::adoptPhoneAgents,
+                connectPrimary = { id ->
+                    connectCommand(id, makeActive = true) { turn ->
+                        connectForHome(id, makeActive = turn.activate, local = turn.local)
+                    }
+                },
+                emptyPrimary = { Unit.ok() },
+                onPrimaryComplete = { initialConnection.complete(it) },
+                syncRemaining = { synchronizeListSources() },
             )
-            synchronizeListSources()
-            adoptPhoneAgents()
         }
     }
 
@@ -375,6 +387,7 @@ class PreviewRuntime(
         // The helper's own source connecting is a stage of the start ([LaunchStages]).
         val helper = isPhoneHelper(id)
         if (helper) stages.agentConnecting(id, true)
+        dropSeed(id)
         synchronized(personStopped) { personStopped.remove(id) }
         val result =
             try {
@@ -382,6 +395,7 @@ class PreviewRuntime(
             } finally {
                 if (helper) stages.agentConnecting(id, false)
             }
+        if (result is Outcome.Failed && id !in listings && listSourceShown(id)) seedWhileStarting(id)
         val stopped = result is Outcome.Failed && synchronized(personStopped) { personStopped.remove(id) }
         when {
             // The person's own stop is a state (Home says so, with Start OpenCode); it is never a source failure.
@@ -524,6 +538,16 @@ class PreviewRuntime(
             if (ready.await() is Outcome.Failed) return@launch
             helperJoins.followFront(
                 visibility.state.map { it == io.github.eslamasabry.oc.core.common.pace.Visibility.Foreground },
+                sources = { profiles.profiles.value.map { it.id } },
+                want = { wantHelper(it) },
+            )
+        }
+        // B-486: wake any helper start refused between onActivityStarted and BuiltinLinux.setActivityResumed(true)
+        // so cold start never burns a 5 s retry sleep waiting for the next poll.
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            helperJoins.followFront(
+                localGates.activityResumed,
                 sources = { profiles.profiles.value.map { it.id } },
                 want = { wantHelper(it) },
             )
@@ -1142,23 +1166,6 @@ class PreviewRuntime(
                     }
                     .toImmutableList()
         )
-
-    private fun seedOpening(id: ProfileId) {
-        val loaded = profiles.profile(id) ?: return
-        val cached = inventory.read(loaded.profile)
-        if (cached.isEmpty()) return
-        val source =
-            OpenCodeChatFeedSource(
-                id,
-                loaded.profile.name,
-                MutableStateFlow(OpenCodeListing(sessions = cached, complete = false)),
-            )
-        snapshot.value =
-            ChatFeedSnapshot(
-                items = source.current().items.map { it.copy(canReopen = false) }.toImmutableList(),
-                complete = false,
-            )
-    }
 
     private suspend fun publishReadState(
         id: ProfileId,

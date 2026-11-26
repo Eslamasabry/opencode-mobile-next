@@ -60,6 +60,8 @@ public data class SettingsUi(
     val firstGroup: GroupUi? = null,
     /** Settings › Appearance › Glass lab; null where the build has no lab. */
     val glassLab: GlassLabUi? = null,
+    /** Settings › Help: built-in Linux speed mode on this phone; null when not offered. */
+    val linuxSpeed: LinuxSpeedFacts? = null,
 ) {
     val page: SettingsPage
         get() = stack.last()
@@ -368,3 +370,24 @@ public data class WhatsNewUi(
     public val last: Boolean
         get() = index == changes.lastIndex
 }
+
+/** B-486: plain-word Linux execution speed mode shown in Settings › Help. */
+public enum class LinuxSpeedMode {
+    Fast,
+    Compatible,
+}
+
+/** Result of the person's one-tap "Try fast mode again" test in Settings › Help. */
+public enum class LinuxSpeedOutcome {
+    SwitchedToFast,
+    StayedCompatible,
+    Failed,
+}
+
+/** Built-in phone Linux speed status for Settings › Help (no copy, no Compose). */
+public data class LinuxSpeedFacts(
+    val installed: Boolean = false,
+    val mode: LinuxSpeedMode = LinuxSpeedMode.Fast,
+    val checking: Boolean = false,
+    val lastOutcome: LinuxSpeedOutcome? = null,
+)

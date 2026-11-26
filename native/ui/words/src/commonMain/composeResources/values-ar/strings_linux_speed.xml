@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">سرعة Linux على الهاتف</string>
+    <string name="helpLinuxSpeedFast">سريع</string>
+    <string name="helpLinuxSpeedCompatible">متوافق (أبطأ)</string>
+    <string name="helpLinuxSpeedChecking">جارٍ الفحص…</string>
+    <string name="helpLinuxSpeedFastSummary">يعمل في الوضع السريع.</string>
+    <string name="helpLinuxSpeedFastRestored">تم تشغيل الوضع السريع مرة أخرى.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">تم التحويل إلى وضع التوافق، لذا يبدأ الوكلاء بشكل أبطأ.</string>
+    <string name="helpLinuxSpeedStayedCompatible">ما زال هذا الهاتف يحتاج إلى وضع التوافق.</string>
+    <string name="helpLinuxSpeedRetryFailed">تعذر اختبار الوضع السريع الآن. تم الإبقاء على وضع التوافق.</string>
+    <string name="helpLinuxSpeedTryFast">جرّب الوضع السريع مرة أخرى</string>
+    <string name="helpLinuxSpeedTryFastSummary">يختبر الوضع السريع ويعود تلقائيًا إذا لزم الأمر.</string>
+    <string name="helpLinuxSpeedTryingFast">جارٍ اختبار الوضع السريع على هذا الهاتف…</string>
+</resources>

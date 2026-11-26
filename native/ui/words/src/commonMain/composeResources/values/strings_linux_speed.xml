@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="helpLinuxSpeedTitle">Phone Linux speed</string>
+    <string name="helpLinuxSpeedFast">Fast</string>
+    <string name="helpLinuxSpeedCompatible">Compatible (slower)</string>
+    <string name="helpLinuxSpeedChecking">Checking…</string>
+    <string name="helpLinuxSpeedFastSummary">Running in fast mode.</string>
+    <string name="helpLinuxSpeedFastRestored">Fast mode is on again.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">Fell back to compatible mode, so agents start slower.</string>
+    <string name="helpLinuxSpeedStayedCompatible">This phone still needs compatible mode.</string>
+    <string name="helpLinuxSpeedRetryFailed">Could not test fast mode right now. Compatible mode is kept.</string>
+    <string name="helpLinuxSpeedTryFast">Try fast mode again</string>
+    <string name="helpLinuxSpeedTryFastSummary">Tests fast mode and switches back automatically if needed.</string>
+    <string name="helpLinuxSpeedTryingFast">Testing fast mode on this phone…</string>
+</resources>

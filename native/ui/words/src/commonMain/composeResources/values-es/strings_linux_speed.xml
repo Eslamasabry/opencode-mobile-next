@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">Velocidad de Linux del teléfono</string>
+    <string name="helpLinuxSpeedFast">Rápido</string>
+    <string name="helpLinuxSpeedCompatible">Compatible (más lento)</string>
+    <string name="helpLinuxSpeedChecking">Comprobando…</string>
+    <string name="helpLinuxSpeedFastSummary">Funcionando en modo rápido.</string>
+    <string name="helpLinuxSpeedFastRestored">El modo rápido está activo de nuevo.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">Cambió al modo compatible, por lo que los agentes tardan más en iniciar.</string>
+    <string name="helpLinuxSpeedStayedCompatible">Este teléfono todavía necesita el modo compatible.</string>
+    <string name="helpLinuxSpeedRetryFailed">No se pudo probar el modo rápido ahora. Se mantiene el modo compatible.</string>
+    <string name="helpLinuxSpeedTryFast">Probar el modo rápido de nuevo</string>
+    <string name="helpLinuxSpeedTryFastSummary">Prueba el modo rápido y vuelve automáticamente si hace falta.</string>
+    <string name="helpLinuxSpeedTryingFast">Probando el modo rápido en este teléfono…</string>
+</resources>

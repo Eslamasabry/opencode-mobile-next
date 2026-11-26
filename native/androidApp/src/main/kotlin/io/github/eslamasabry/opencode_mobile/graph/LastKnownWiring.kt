@@ -206,6 +206,7 @@ internal class TranscriptLastKnownStore(
     private val store: LastKnown,
     private val profiles: ProfileStore,
     private val prefs: KeyValueStore,
+    private val ensureWarm: suspend () -> Unit = {},
     private val inventoryCount: (LoadedProfile) -> Int,
 ) {
     private val liveCounts = ConcurrentHashMap<ProfileId, Int>()
@@ -235,8 +236,13 @@ internal class TranscriptLastKnownStore(
     fun peek(ref: ConversationRef): KeptTranscript? =
         mark(ref.profileId)?.let { store.peek(ref.profileId, it, shelfFor(ref.profileId), ref.sessionId.raw) }
 
-    suspend fun read(ref: ConversationRef): KeptTranscript? =
-        mark(ref.profileId)?.let { store.read(ref.profileId, it, shelfFor(ref.profileId), ref.sessionId.raw) }
+    suspend fun read(ref: ConversationRef): KeptTranscript? {
+        if (profiles.profile(ref.profileId) == null) {
+            ensureWarm()
+            if (profiles.profile(ref.profileId) == null) profiles.load()
+        }
+        return mark(ref.profileId)?.let { store.read(ref.profileId, it, shelfFor(ref.profileId), ref.sessionId.raw) }
+    }
 
     suspend fun keep(ref: ConversationRef, title: String?, messages: List<MessageWithParts>) {
         val mark = mark(ref.profileId) ?: return
@@ -259,7 +265,12 @@ class AppChatLastKnown(
     private val appScope: AppCoroutineScope,
 ) : ChatLastKnown {
     private val pages =
-        TranscriptLastKnownStore(store, stores.profiles, stores.prefs) { loaded ->
+        TranscriptLastKnownStore(
+            store,
+            stores.profiles,
+            stores.prefs,
+            ensureWarm = { stores.warm() },
+        ) { loaded ->
             inventory.read(loaded.profile).size
         }
 

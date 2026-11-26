@@ -2898,6 +2898,62 @@ class BuiltinLinux(private val context: Context) {
         return result
     }
 
+    /** Outcome of user-triggered one-tap retry of fast Linux mode (B-486). */
+    enum class FastModeRetry {
+        Fast,
+        Compatible,
+        Failed,
+    }
+
+    /** Whether built-in Linux is currently in compatible (slower, no-seccomp) fallback mode. */
+    fun isLinuxCompatibleMode(): Boolean {
+        if (!installed) return false
+        val liveMode = performance()["prootMode"] as? String
+        return LinuxProotProbe.isCompatibleFallback(serverCompat(), liveMode)
+    }
+
+    /**
+     * B-486: Clears the saved compatibility fallback marker and tests fast (normal) proot mode
+     * once, automatically falling back and restoring compatible mode if fast mode fails or hangs.
+     */
+    fun retryFastProotMode(
+        isCancelled: () -> Boolean = { false },
+        onStage: (compatRetry: Boolean) -> Unit = {},
+        timeoutMs: Long = LinuxProotProbe.TIMEOUT_MS,
+    ): FastModeRetry {
+        synchronized(prootProbeLock) { recentProotProbe = null }
+        val runner =
+            object : LinuxProotProbe.Runner {
+                override fun hasCompatMarker(): Boolean = serverCompat()
+
+                override fun writeCompatMarker() {
+                    NodeCompatState.writeProotCompat(rootfs)
+                }
+
+                override fun clearCompatMarker() {
+                    NodeCompatState.clearProotCompat(rootfs)
+                }
+
+                override fun runOnce(
+                    mode: LinuxProotProbe.Mode,
+                    timeoutMs: Long,
+                    killPid: (Int) -> Unit,
+                ): LinuxProotProbe.Attempt = runProotLivenessAttempt(mode, timeoutMs, isCancelled, killPid)
+            }
+        val result = LinuxProotProbe.retryFast(runner, timeoutMs, onStage)
+        synchronized(prootProbeLock) {
+            recentProotProbe =
+                if (result is LinuxProotProbe.Result.Cancelled) null
+                else SystemClock.elapsedRealtime() to result
+        }
+        return when (result) {
+            is LinuxProotProbe.Result.Ready ->
+                if (result.mode == LinuxProotProbe.Mode.NORMAL) FastModeRetry.Fast
+                else FastModeRetry.Compatible
+            else -> FastModeRetry.Failed
+        }
+    }
+
     private fun runProotLivenessAttempt(
         mode: LinuxProotProbe.Mode,
         timeoutMs: Long,

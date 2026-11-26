@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">手机 Linux 速度</string>
+    <string name="helpLinuxSpeedFast">快速</string>
+    <string name="helpLinuxSpeedCompatible">兼容模式（较慢）</string>
+    <string name="helpLinuxSpeedChecking">正在检查…</string>
+    <string name="helpLinuxSpeedFastSummary">正在以快速模式运行。</string>
+    <string name="helpLinuxSpeedFastRestored">已重新开启快速模式。</string>
+    <string name="helpLinuxSpeedCompatibleSummary">已回退到兼容模式，代理启动会更慢。</string>
+    <string name="helpLinuxSpeedStayedCompatible">此手机仍需使用兼容模式。</string>
+    <string name="helpLinuxSpeedRetryFailed">目前无法测试快速模式，已保留兼容模式。</string>
+    <string name="helpLinuxSpeedTryFast">再次尝试快速模式</string>
+    <string name="helpLinuxSpeedTryFastSummary">测试快速模式，如不适用将自动切回。</string>
+    <string name="helpLinuxSpeedTryingFast">正在此手机上测试快速模式…</string>
+</resources>

@@ -1499,10 +1499,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 if (historyReconciled || kept.history.isEmpty()) return@launch
                 val messages = kept.messages()
                 // F23 (build 10113): a page kept while its newest reply still ran is behind the server (the reply
-                // went on after the person left). Drawn at once, it was replaced by the finished reply a moment later
-                // and the page jumped. It waits a bounded moment for the live read instead; only a read that has not
-                // come by then (a server away) lets the kept page draw, so the chat is never left empty.
-                if (keptMidReply(messages)) {
+                // went on after the person left). Drawn at once while already connected, it was replaced by the
+                // finished reply a moment later and the page jumped. Wait a bounded moment only when a live
+                // connection already exists; during cold start (no connection yet, B-486), draw saved messages at once.
+                if (keptMidReply(messages) && registry.graphFor(ref) != null) {
                     delay(KEPT_MID_REPLY_WAIT_MS)
                     if (historyReconciled || mutableTranscript.value.rows.isNotEmpty()) return@launch
                 }

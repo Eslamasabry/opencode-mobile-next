@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="helpLinuxSpeedTitle">Скорость Linux на телефоне</string>
+    <string name="helpLinuxSpeedFast">Быстрый</string>
+    <string name="helpLinuxSpeedCompatible">Совместимый (медленнее)</string>
+    <string name="helpLinuxSpeedChecking">Проверка…</string>
+    <string name="helpLinuxSpeedFastSummary">Работает в быстром режиме.</string>
+    <string name="helpLinuxSpeedFastRestored">Быстрый режим снова включён.</string>
+    <string name="helpLinuxSpeedCompatibleSummary">Включён режим совместимости, поэтому агенты запускаются медленнее.</string>
+    <string name="helpLinuxSpeedStayedCompatible">Этому телефону всё ещё нужен режим совместимости.</string>
+    <string name="helpLinuxSpeedRetryFailed">Сейчас не удалось проверить быстрый режим. Сохранён режим совместимости.</string>
+    <string name="helpLinuxSpeedTryFast">Попробовать быстрый режим снова</string>
+    <string name="helpLinuxSpeedTryFastSummary">Проверит быстрый режим и автоматически вернётся назад при необходимости.</string>
+    <string name="helpLinuxSpeedTryingFast">Проверка быстрого режима на этом телефоне…</string>
+</resources>

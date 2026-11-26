@@ -75,7 +75,7 @@ class B486HelpLinuxSpeedBeforeRendersTest {
     }
 
     @Test
-    fun `B-SET-486 Settings Help shows phone Linux speed mode on Android`() {
+    fun `B-SET-486 Help page without built-in Linux speed port keeps clean baseline`() {
         Locale.setDefault(Locale.ENGLISH)
         runDesktopComposeUiTest(360, 800) {
             setContent {
@@ -95,7 +95,8 @@ class B486HelpLinuxSpeedBeforeRendersTest {
                 }
             }
             waitForIdle()
-            onNodeWithText("Phone Linux speed").performScrollTo().assertIsDisplayed()
+            onNodeWithText("About").performScrollTo().assertIsDisplayed()
+            onNodeWithText("Phone Linux speed").assertDoesNotExist()
         }
     }
 }

@@ -32,8 +32,14 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 
@@ -167,5 +173,48 @@ class B486ColdStartTranscriptWarmTest {
             assertNotNull(kept, "cold-start read must warm ProfileStore so saved agent transcript shows at once")
             assertEquals("Explain the crash", kept.title)
             assertEquals("Found the root cause.", kept.history.last().parts.single().text)
+        }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `B-LINUX-486 helper start refused before activityResumed wakes immediately on resume`() =
+        runTest {
+            val joins = HelperJoins(backgroundScope, now = { testScheduler.currentTime })
+            val visibilityFront = MutableStateFlow(false)
+            val activityResumed = MutableStateFlow(false)
+            var tries = 0
+            var readyAt: Long? = null
+            val attempt: suspend () -> io.github.eslamasabry.oc.core.common.Failure? = {
+                tries++
+                if (!activityResumed.value) {
+                    io.github.eslamasabry.oc.core.common.Failure.Runtime(
+                        io.github.eslamasabry.oc.core.common.RuntimeProblem.ServerStartUnavailable
+                    )
+                } else {
+                    readyAt = testScheduler.currentTime
+                    null
+                }
+            }
+            val want: (ProfileId) -> Unit = { id ->
+                if (joins.running(id)) joins.wake(id)
+                else joins.ensure(id, HelperStartRules::keepTrying, {}, attempt)
+            }
+            backgroundScope.launch { joins.followFront(visibilityFront, { listOf(helperId) }, want) }
+            backgroundScope.launch { joins.followFront(activityResumed, { listOf(helperId) }, want) }
+
+            // onActivityStarted fires first at t = 0 before BuiltinLinux.setActivityResumed(true).
+            visibilityFront.value = true
+            runCurrent()
+            assertEquals(1, tries)
+            assertEquals(null, readyAt)
+
+            // 50 ms later MainActivity resumes and BuiltinRuntime flips activityResumed = true.
+            advanceTimeBy(50)
+            activityResumed.value = true
+            runCurrent()
+
+            assertEquals(2, tries, "must wake immediately instead of sleeping 5000 ms in QUICK_RETRY_MS")
+            assertEquals(50L, readyAt)
+            assertTrue(!joins.running(helperId))
         }
 }
