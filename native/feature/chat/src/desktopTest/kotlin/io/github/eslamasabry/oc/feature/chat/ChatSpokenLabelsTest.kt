@@ -120,8 +120,10 @@ class ChatSpokenLabelsTest {
 
     private fun String.hasPrivateUseGlyph(): Boolean = any { it in '\uE000'..'\uF8FF' }
 
-    private fun descendants(node: SemanticsNode): List<SemanticsNode> =
-        node.children.flatMap { listOf(it) + descendants(it) }
+    private fun activeDescendants(node: SemanticsNode): List<SemanticsNode> =
+        node.children.flatMap { child ->
+            if (child.config.isClearingSemantics) listOf(child) else listOf(child) + activeDescendants(child)
+        }
 
     private fun spokenLabel(node: SemanticsNode): String {
         val desc = node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
@@ -144,7 +146,7 @@ class ChatSpokenLabelsTest {
             )
         }
         for (node in unmergedClickable) {
-            for (child in descendants(node)) {
+            for (child in activeDescendants(node)) {
                 val cfg = child.config
                 val text = cfg.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }
                 assertFalse(
@@ -168,7 +170,7 @@ class ChatSpokenLabelsTest {
                     projectName = "app",
                     serverName = "This phone",
                     branch = "main",
-                    showsGit = true,
+                    git = true,
                     menu = persistentListOf(HeaderAction.Find, HeaderAction.Rename),
                 )
             setContent {

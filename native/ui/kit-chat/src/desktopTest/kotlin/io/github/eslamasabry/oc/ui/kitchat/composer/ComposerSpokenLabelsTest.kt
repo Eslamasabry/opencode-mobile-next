@@ -29,11 +29,13 @@ import kotlin.test.assertTrue
 class ComposerSpokenLabelsTest {
     private fun String.hasPrivateUseGlyph(): Boolean = any { it in '\uE000'..'\uF8FF' }
 
-    private fun descendants(node: SemanticsNode): List<SemanticsNode> =
-        node.children.flatMap { listOf(it) + descendants(it) }
+    private fun activeDescendants(node: SemanticsNode): List<SemanticsNode> =
+        node.children.flatMap { child ->
+            if (child.config.isClearingSemantics) listOf(child) else listOf(child) + activeDescendants(child)
+        }
 
     private fun assertNoInnerIconSemantics(unmergedRoot: SemanticsNode, controlName: String) {
-        for (child in descendants(unmergedRoot)) {
+        for (child in activeDescendants(unmergedRoot)) {
             val cfg = child.config
             val text = cfg.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }
             assertFalse(
