@@ -176,7 +176,7 @@ public fun KitButton(
     // other bold line. It reads as an action in every style as a native text button does: its words in the accent's
     // readable ink (danger: the attention colour), with no face at rest; the press, focus and hover state layer is its
     // touch shape. A style whose links are underlined (Brutal) underlines it too.
-    val tertiaryInk = kitTertiaryInk(danger)
+    val tertiaryInk = kitTertiaryInk(danger || destructive)
     val fill: Color =
         when {
             role == KitButtonRole.Tertiary -> Color.Transparent
